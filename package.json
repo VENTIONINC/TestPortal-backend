@@ -1,0 +1,32 @@
+{
+  "name": "result-manager-server",
+  "version": "1.0.0",
+  "description": "",
+  "type": "module",
+  "exports": "./index.js",
+  "scripts": {
+    "server": "node index.js",
+    "server:dev": "./node_modules/.bin/nodemon npm run server",
+    "seed": "node prisma/seed/index.js",
+    "studio": "npx prisma studio",
+    "migrate": "npx prisma migrate dev --name commit"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@prisma/client": "^6.3.0",
+    "@quixo3/prisma-session-store": "^3.1.13",
+    "cookie-parser": "^1.4.7",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
+    "express": "^5.0.1",
+    "express-session": "^1.18.1",
+    "fast-levenshtein": "^3.0.0",
+    "log4js": "^6.9.1",
+    "nodemon": "^3.1.7",
+    "string-similarity": "^4.0.4"
+  },
+  "devDependencies": {
+    "prisma": "^6.3.0"
+  }
+}
