@@ -1,0 +1,989 @@
+{
+  "config": {
+    "configFile": "/function/playwright.config.ts",
+    "rootDir": "/function/tests",
+    "forbidOnly": false,
+    "fullyParallel": false,
+    "globalSetup": "/function/global-setup.ts",
+    "globalTeardown": null,
+    "globalTimeout": 810000,
+    "grep": {},
+    "grepInvert": null,
+    "maxFailures": 0,
+    "metadata": {
+      "actualWorkers": 1
+    },
+    "preserveOutput": "always",
+    "reporter": [
+      [
+        "line"
+      ],
+      [
+        "/function/node_modules/allure-playwright/dist/index.js"
+      ],
+      [
+        "json"
+      ]
+    ],
+    "reportSlowTests": {
+      "max": 5,
+      "threshold": 15000
+    },
+    "quiet": false,
+    "projects": [
+      {
+        "outputDir": "/tmp/lolz",
+        "repeatEach": 1,
+        "retries": 1,
+        "metadata": {},
+        "id": "",
+        "name": "",
+        "testDir": "/function/tests",
+        "testIgnore": [],
+        "testMatch": [
+          "**/*.@(spec|test).?(c|m)[jt]s?(x)"
+        ],
+        "timeout": 420000
+      }
+    ],
+    "shard": null,
+    "updateSnapshots": "missing",
+    "version": "1.49.1",
+    "workers": 1,
+    "webServer": null
+  },
+  "suites": [
+    {
+      "title": "rn-monolith/ui/msa.premium.spec.ts",
+      "file": "rn-monolith/ui/msa.premium.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [],
+      "suites": [
+        {
+          "title": "Premium on MSA. Rate, LG, Sdr and total sum @msa-nightly-all @msa-nightly-group-2",
+          "file": "rn-monolith/ui/msa.premium.spec.ts",
+          "line": 51,
+          "column": 6,
+          "specs": [
+            {
+              "title": "<C5465> <REN-8373> RFV3. MSA Premium. No upfront discount",
+              "ok": false,
+              "tags": [
+                "msa-nightly-all",
+                "msa-nightly-group-2"
+              ],
+              "tests": [
+                {
+                  "timeout": 420000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "",
+                  "projectName": "",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "status": "failed",
+                      "duration": 179099,
+                      "error": {
+                        "message": "Error: Total sum should be calculated\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoContain\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // indexOf\u001b[22m\n\nExpected substring: \u001b[32m\"$3,161.57\"\u001b[39m\nReceived string:    \u001b[31m\"$0\"\u001b[39m",
+                        "stack": "Error: Total sum should be calculated\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoContain\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // indexOf\u001b[22m\n\nExpected substring: \u001b[32m\"$3,161.57\"\u001b[39m\nReceived string:    \u001b[31m\"$0\"\u001b[39m\n    at /function/tests/rn-monolith/ui/msa.premium.spec.ts:85:8",
+                        "matcherResult": {
+                          "message": "\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoContain\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // indexOf\u001b[22m\n\nExpected substring: \u001b[32m\"$3,161.57\"\u001b[39m\nReceived string:    \u001b[31m\"$0\"\u001b[39m",
+                          "pass": false
+                        },
+                        "location": {
+                          "file": "/function/tests/rn-monolith/ui/msa.premium.spec.ts",
+                          "column": 8,
+                          "line": 85
+                        },
+                        "snippet": "\u001b[0m \u001b[90m 83 |\u001b[39m     expect\n \u001b[90m 84 |\u001b[39m       \u001b[33m.\u001b[39msoft(paymentAndSignatureDetails\u001b[33m.\u001b[39mapplicantDetails[\u001b[35m0\u001b[39m]\u001b[33m.\u001b[39mapplicantPaid\u001b[33m,\u001b[39m \u001b[32m`Total sum should be calculated`\u001b[39m)\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 85 |\u001b[39m       \u001b[33m.\u001b[39mtoContain(expectedFormattedPremium\u001b[33m.\u001b[39mpolicyPrice)\u001b[33m;\u001b[39m\n \u001b[90m    |\u001b[39m        \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 86 |\u001b[39m   })\u001b[33m;\u001b[39m\n \u001b[90m 87 |\u001b[39m })\u001b[33m;\u001b[39m\n \u001b[90m 88 |\u001b[39m\u001b[0m"
+                      },
+                      "errors": [
+                        {
+                          "location": {
+                            "file": "/function/tests/rn-monolith/ui/msa.premium.spec.ts",
+                            "column": 8,
+                            "line": 85
+                          },
+                          "message": "Error: Total sum should be calculated\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoContain\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // indexOf\u001b[22m\n\nExpected substring: \u001b[32m\"$3,161.57\"\u001b[39m\nReceived string:    \u001b[31m\"$0\"\u001b[39m\n\n\u001b[0m \u001b[90m 83 |\u001b[39m     expect\n \u001b[90m 84 |\u001b[39m       \u001b[33m.\u001b[39msoft(paymentAndSignatureDetails\u001b[33m.\u001b[39mapplicantDetails[\u001b[35m0\u001b[39m]\u001b[33m.\u001b[39mapplicantPaid\u001b[33m,\u001b[39m \u001b[32m`Total sum should be calculated`\u001b[39m)\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 85 |\u001b[39m       \u001b[33m.\u001b[39mtoContain(expectedFormattedPremium\u001b[33m.\u001b[39mpolicyPrice)\u001b[33m;\u001b[39m\n \u001b[90m    |\u001b[39m        \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 86 |\u001b[39m   })\u001b[33m;\u001b[39m\n \u001b[90m 87 |\u001b[39m })\u001b[33m;\u001b[39m\n \u001b[90m 88 |\u001b[39m\u001b[0m\n    at /function/tests/rn-monolith/ui/msa.premium.spec.ts:85:8"
+                        }
+                      ],
+                      "stdout": [
+                        {
+                          "text": "Email Address : qa.test.renter+C5465+1747207772431@securiti.io\n"
+                        },
+                        {
+                          "text": "Email Address : qa.test.renter+co1+1747207772795@securiti.io\n"
+                        },
+                        {
+                          "text": "Email Address : qa.test.renter+co2+1747207774923@securiti.io\n"
+                        },
+                        {
+                          "text": "\n      Flow type: Auto UW v1\n      Invited by Landlord: true\n      Single renter: true\n      Corporate rate: false\n      Monthly Rent is less than $8000: 3000\n      Lease length in range from 10 to 24 month: 12\n      Building is auto uw: true\n"
+                        },
+                        {
+                          "text": "inviteData {\n  screeningStatus: \u001b[32m'Approved'\u001b[39m,\n  buildingName: \u001b[32m'Automation Property C5465'\u001b[39m,\n  unit: \u001b[32m'311'\u001b[39m,\n  monthlyRent: \u001b[32m'3000'\u001b[39m,\n  leaseStartDate: \u001b[32m'5/14/2025'\u001b[39m,\n  leaseEndDate: \u001b[32m'5/14/2026'\u001b[39m,\n  renterEmail: \u001b[32m'qa.test.renter+c5465+1747207772431@securiti.io'\u001b[39m,\n  customSdrAmount: \u001b[32m'3000'\u001b[39m,\n  customBondMonths: \u001b[32m'6'\u001b[39m\n}\n"
+                        },
+                        {
+                          "text": "Authenticating user\n"
+                        },
+                        {
+                          "text": "Getting email authenticator id\n"
+                        },
+                        {
+                          "text": "Triggering MFA email\n"
+                        },
+                        {
+                          "text": "qa.test.landlord@securiti.io\n"
+                        },
+                        {
+                          "text": "querying inbox for messages with to:(qa.test.landlord+C5465_v1@securiti.io) subject:(Here's the code you requested) after:1747207771\n"
+                        },
+                        {
+                          "text": "no emails found - (attempt 1/10)\n"
+                        },
+                        {
+                          "text": "Token refreshed.\n"
+                        },
+                        {
+                          "text": "no emails found - (attempt 2/10)\n"
+                        },
+                        {
+                          "text": "1 message(s) found\n"
+                        },
+                        {
+                          "text": "AUTH Verification Code is: 058762\n"
+                        },
+                        {
+                          "text": "Creating access token\n"
+                        },
+                        {
+                          "text": "Creating ML cookies\n"
+                        },
+                        {
+                          "text": "Retrieving buildings of landlord\n"
+                        },
+                        {
+                          "text": "Sending invitation to the renter\n"
+                        },
+                        {
+                          "text": "Starting registration of invited resident by landlord -  qa.test.renter+c5465+1747207772431@securiti.io\n"
+                        },
+                        {
+                          "text": "qa.test.renter@securiti.io\n"
+                        },
+                        {
+                          "text": "querying inbox for messages with to:(qa.test.renter+c5465+1747207772431@securiti.io) subject:(Next steps for your lease signing at) after:1747207549\n"
+                        },
+                        {
+                          "text": "no emails found - (attempt 1/10)\n"
+                        },
+                        {
+                          "text": "Token refreshed.\n"
+                        },
+                        {
+                          "text": "1 message(s) found\n"
+                        },
+                        {
+                          "text": "Setting password\n"
+                        },
+                        {
+                          "text": "Authenticating user\n"
+                        },
+                        {
+                          "text": "Getting email authenticator id\n"
+                        },
+                        {
+                          "text": "Triggering MFA email\n"
+                        },
+                        {
+                          "text": "qa.test.renter@securiti.io\n"
+                        },
+                        {
+                          "text": "querying inbox for messages with to:(qa.test.renter+c5465+1747207772431@securiti.io) subject:(Here's the code you requested) after:1747207790\n"
+                        },
+                        {
+                          "text": "no emails found - (attempt 1/25)\n"
+                        },
+                        {
+                          "text": "Token refreshed.\n"
+                        },
+                        {
+                          "text": "no emails found - (attempt 2/25)\n"
+                        },
+                        {
+                          "text": "1 message(s) found\n"
+                        },
+                        {
+                          "text": "AUTH Verification Code is: 328809\n"
+                        },
+                        {
+                          "text": "Creating access token\n"
+                        },
+                        {
+                          "text": "Creating ML cookies\n"
+                        },
+                        {
+                          "text": "Creating ML cookie\n"
+                        },
+                        {
+                          "text": "Fetching connect.sid from cookie\n"
+                        },
+                        {
+                          "text": "Required Headers: [object Object]\n"
+                        },
+                        {
+                          "text": "Accessing home page for ml to create blank application\n"
+                        },
+                        {
+                          "text": "Invoking GET /application\n"
+                        },
+                        {
+                          "text": "Invoking GET /api/v1/renter/auth\n"
+                        },
+                        {
+                          "text": "\u001b[33m200\u001b[39m\n"
+                        },
+                        {
+                          "text": "Application ID:  \u001b[33m613114\u001b[39m\n"
+                        },
+                        {
+                          "text": "Invoking POST -  /api/v1/renter/start\n"
+                        },
+                        {
+                          "text": "Submitting application\n"
+                        },
+                        {
+                          "text": "skip Approved status as not implemented\n"
+                        },
+                        {
+                          "text": "Setting up browser options for docker : headless\n"
+                        },
+                        {
+                          "text": "Launching Browser, context and page...\n"
+                        },
+                        {
+                          "text": "User-Agent: Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/131.0.6778.33 Safari/537.36\n"
+                        },
+                        {
+                          "text": "Browser executable path: /ms-playwright/chromium-1148/chrome-linux/chrome\nBrowser name: chromium\n"
+                        },
+                        {
+                          "text": "Filling credentials\n"
+                        },
+                        {
+                          "text": "Entering username\n"
+                        },
+                        {
+                          "text": "Entering password\n"
+                        },
+                        {
+                          "text": "Clicking submit button\n"
+                        },
+                        {
+                          "text": "qa.test.renter@securiti.io\n"
+                        },
+                        {
+                          "text": "querying inbox for messages with to:(qa.test.renter+c5465+1747207772431@securiti.io) subject:(Here's the code you requested) after:1747207831\n"
+                        },
+                        {
+                          "text": "no emails found - (attempt 1/10)\n"
+                        },
+                        {
+                          "text": "Token refreshed.\n"
+                        },
+                        {
+                          "text": "no emails found - (attempt 2/10)\n"
+                        },
+                        {
+                          "text": "1 message(s) found\n"
+                        },
+                        {
+                          "text": "AUTH Verification Code is: 414733\n"
+                        },
+                        {
+                          "text": "Filling otp input\n"
+                        },
+                        {
+                          "text": "Clicking continue button\n"
+                        },
+                        {
+                          "text": "Click \"Go to checkout\" button\n"
+                        },
+                        {
+                          "text": "Signing the Guarantors General Agreement of Indemnity\n"
+                        },
+                        {
+                          "text": "Clicking sign agreements\n"
+                        },
+                        {
+                          "text": "Scrolling to bottom of GAI\n"
+                        },
+                        {
+                          "text": "Clicking GAI agreement checkbox\n"
+                        },
+                        {
+                          "text": "Clicking accept agreement\n"
+                        },
+                        {
+                          "text": "Clicking monthly payment radio\n"
+                        },
+                        {
+                          "text": "Clicking Pay By Credit Card Radio\n"
+                        },
+                        {
+                          "text": "Clicking Pay Now button\n"
+                        },
+                        {
+                          "text": "Click proceed to checkout\n"
+                        },
+                        {
+                          "text": "Filling in first name with: Test\n"
+                        },
+                        {
+                          "text": "Filling in last name with: Renter\n"
+                        },
+                        {
+                          "text": "Clicking next\n"
+                        },
+                        {
+                          "text": "Filling in first name with: Test\n"
+                        },
+                        {
+                          "text": "Filling in last name with: Renter\n"
+                        },
+                        {
+                          "text": "Filling in city with: Weatherford\n"
+                        },
+                        {
+                          "text": "Selecting country: United States\n"
+                        },
+                        {
+                          "text": "Filling in state with: Texas\n"
+                        },
+                        {
+                          "text": "Clicking next in billing address\n"
+                        },
+                        {
+                          "text": "Filling in credit card number with: 4242424242424242\n"
+                        },
+                        {
+                          "text": "Filling in credit card expiry month with: 05\n"
+                        },
+                        {
+                          "text": "Filling in credit card expiry year with: 26\n"
+                        },
+                        {
+                          "text": "Filling in credit card cvv with: 123\n"
+                        },
+                        {
+                          "text": "Clicking credit card submit\n"
+                        },
+                        {
+                          "text": "Clicking confirm payment\n"
+                        },
+                        {
+                          "text": "Setting up browser options for docker : headless\n"
+                        },
+                        {
+                          "text": "Launching Browser, context and page...\n"
+                        },
+                        {
+                          "text": "User-Agent: Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/131.0.6778.33 Safari/537.36\n"
+                        },
+                        {
+                          "text": "Browser executable path: /ms-playwright/chromium-1148/chrome-linux/chrome\nBrowser name: chromium\n"
+                        },
+                        {
+                          "text": "Logging in\n"
+                        },
+                        {
+                          "text": "Entering email address\n"
+                        },
+                        {
+                          "text": "Clicking next button\n"
+                        },
+                        {
+                          "text": "Clicking select password button\n"
+                        },
+                        {
+                          "text": "Entering password\n"
+                        },
+                        {
+                          "text": "Clicking verify button\n"
+                        },
+                        {
+                          "text": "Clicking send me an email button\n"
+                        },
+                        {
+                          "text": "qa.test.admin@theguarantors.com\n"
+                        },
+                        {
+                          "text": "querying inbox for messages with to:(qa.test.admin+1714481431541@theguarantors.com) subject:(One-time verification code) after:1747207913\n"
+                        },
+                        {
+                          "text": "no emails found - (attempt 1/25)\n"
+                        },
+                        {
+                          "text": "Token refreshed.\n"
+                        },
+                        {
+                          "text": "1 message(s) found\n"
+                        },
+                        {
+                          "text": "Okta Sandbox Verification Code is: 873586\n"
+                        },
+                        {
+                          "text": "Clicking enter auth code instead link\n"
+                        },
+                        {
+                          "text": "Entering otp\n"
+                        },
+                        {
+                          "text": "Clicking verify button\n"
+                        },
+                        {
+                          "text": "Getting MSA application with email: qa.test.renter+c5465+1747207772431@securiti.io using application GET API \n"
+                        },
+                        {
+                          "text": "Getting expected rate based premium for application: 1316282\n"
+                        },
+                        {
+                          "text": "Expected Rate Based Premium Response: {\n  \"expectedPremium\": {\n    \"data\": {\n      \"premium\": {\n        \"rentCoveragePremiumBase\": 1538.46,\n        \"depositCoveragePremiumBase\": 749.25,\n        \"rentCoveragePremiumFinal\": 1538.46,\n        \"depositCoveragePremiumFinal\": 749.25,\n        \"finalPremium\": 2288,\n        \"stampingFee\": 0,\n        \"excessAndSurplusLinesTax\": 51.47999999999992,\n        \"policyPrice\": 2339.48,\n        \"transactionFee\": 0,\n        \"total\": 2339.48,\n        \"totalWithCreditCardFee\": 2409.6644\n      },\n      \"monthlyPremium\": {\n        \"rentCoveragePremiumBase\": 2079,\n        \"depositCoveragePremiumBase\": 1012.5,\n        \"rentCoveragePremiumFinal\": 2079,\n        \"depositCoveragePremiumFinal\": 1012.5,\n        \"finalPremium\": 3092,\n        \"stampingFee\": 0,\n        \"excessAndSurplusLinesTax\": 69.56756756756747,\n        \"policyPrice\": 3161.5675675675675,\n        \"transactionFee\": 94.84702702702725,\n        \"total\": 3161.5675675675675,\n        \"totalWithCreditCardFee\": 3256.4145945945947\n      },\n      \"premiumInputs\": {\n        \"property\": {\n          \"propertyId\": 64023,\n          \"propertyState\": \"VA\",\n          \"defaultLgCoverage\": 2,\n          \"defaultSdrCoverage\": 3000,\n          \"discretionaryAdjustment\": 1\n        },\n        \"coverage\": {\n          \"monthlyRent\": 3000,\n          \"lgCoverage\": 6,\n          \"sdrCoverage\": 3000\n        },\n        \"misc\": {\n          \"screeningStatus\": \"Approved\",\n          \"quoteId\": 70924\n        },\n        \"quoteService\": {\n          \"computeFactors\": {\n            \"discount\": 0.74,\n            \"flat_premium\": 0,\n            \"stamping_fee\": 1,\n            \"surplus_lines_tax\": 1.0225,\n            \"fixed_stamping_fee\": 0,\n            \"renewal_discount_factor\": 25,\n            \"deposit_factor\": 2.25,\n            \"rent_factor\": 0.77,\n            \"premium_rate\": 15\n          },\n          \"supportingFactors\": {\n            \"spf_ef_dt\": \"2025-03-31\",\n            \"location\": \"VA\",\n            \"dynamic_pricing\": false,\n            \"cov_fctr_dep_eff_dt\": \"2025-03-31T00:00:00Z\",\n            \"deposit_coverage_tier\": \"1\",\n            \"cov_fctr_ren_eff_dt\": \"2025-03-31T00:00:00Z\",\n            \"rent_coverage_tier\": \"6\",\n            \"carrier\": \"HUDSONEXCESS\"\n          }\n        }\n      },\n      \"formattedPremium\": {\n        \"rentCoveragePremiumBase\": \"$1,538.46\",\n        \"depositCoveragePremiumBase\": \"$749.25\",\n        \"rentCoveragePremiumFinal\": \"$1,538.46\",\n        \"depositCoveragePremiumFinal\": \"$749.25\",\n        \"finalPremium\": \"$2,288\",\n        \"stampingFee\": \"$0\",\n        \"excessAndSurplusLinesTax\": \"$51.48\",\n        \"policyPrice\": \"$2,339.48\",\n        \"transactionFee\": \"$0\",\n        \"total\": \"$2,339.48\",\n        \"totalWithCreditCardFee\": \"$2,409.66\",\n        \"premiumRate\": \"15\"\n      },\n      \"formattedPremiumMonthly\": {\n        \"rentCoveragePremiumBase\": \"$2,079\",\n        \"depositCoveragePremiumBase\": \"$1,012.5\",\n        \"rentCoveragePremiumFinal\": \"$2,079\",\n        \"depositCoveragePremiumFinal\": \"$1,012.5\",\n        \"finalPremium\": \"$3,092\",\n        \"stampingFee\": \"$0\",\n        \"excessAndSurplusLinesTax\": \"$69.57\",\n        \"policyPrice\": \"$3,161.57\",\n        \"transactionFee\": \"$94.85\",\n        \"total\": \"$3,161.57\",\n        \"totalWithCreditCardFee\": \"$3,256.41\",\n        \"premiumRate\": \"15\"\n      }\n    }\n  }\n}\n"
+                        },
+                        {
+                          "text": "Clicking on first application Id link in the list of applications\n"
+                        },
+                        {
+                          "text": "Getting application status\n"
+                        },
+                        {
+                          "text": "Current Deal status  'closed' matches expected : Completed\n"
+                        },
+                        {
+                          "text": "File renamed from /tmp/videos/5d52e87dac56a7e35f6e817e598459b8.webm to /tmp/videos/video_C5465_msaAdmin_0.webm\n"
+                        }
+                      ],
+                      "stderr": [
+                        {
+                          "text": "(node:61) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.\n(Use `node --trace-deprecation ...` to show where the warning was created)\n"
+                        }
+                      ],
+                      "retry": 0,
+                      "steps": [
+                        {
+                          "title": "open deal #613114",
+                          "duration": 4043,
+                          "steps": [
+                            {
+                              "title": "type renter email into search box and wait for result",
+                              "duration": 1138,
+                              "steps": [
+                                {
+                                  "title": "select search by applicant email and click search button",
+                                  "duration": 863
+                                }
+                              ]
+                            },
+                            {
+                              "title": "click on the first displayed application",
+                              "duration": 2880
+                            },
+                            {
+                              "title": "Reload Deal Page until status changes to Completed",
+                              "duration": 21
+                            }
+                          ]
+                        },
+                        {
+                          "title": "Getting payment and signature details from the deal",
+                          "duration": 262
+                        }
+                      ],
+                      "startTime": "2025-05-14T07:29:32.018Z",
+                      "attachments": [
+                        {
+                          "name": "/tmp/videos/video_C5465_msaAdmin_0.webm",
+                          "contentType": "video/webm",
+                          "path": "/tmp/lolz/rn-monolith-ui-msa.premium-1ec16-Premium-No-upfront-discount/attachments/-tmp-videos-video-C5465-msaAdmin-0-webm-ce59d1728045e12c10621ef1be8ec302ab132eb0.webm"
+                        },
+                        {
+                          "name": "trace",
+                          "contentType": "application/zip",
+                          "path": "/tmp/lolz/rn-monolith-ui-msa.premium-1ec16-Premium-No-upfront-discount/trace.zip"
+                        }
+                      ],
+                      "errorLocation": {
+                        "file": "/function/tests/rn-monolith/ui/msa.premium.spec.ts",
+                        "column": 8,
+                        "line": 85
+                      }
+                    },
+                    {
+                      "workerIndex": 1,
+                      "status": "failed",
+                      "duration": 146198,
+                      "error": {
+                        "message": "Error: Total sum should be calculated\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoContain\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // indexOf\u001b[22m\n\nExpected substring: \u001b[32m\"$3,161.57\"\u001b[39m\nReceived string:    \u001b[31m\"$0\"\u001b[39m",
+                        "stack": "Error: Total sum should be calculated\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoContain\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // indexOf\u001b[22m\n\nExpected substring: \u001b[32m\"$3,161.57\"\u001b[39m\nReceived string:    \u001b[31m\"$0\"\u001b[39m\n    at /function/tests/rn-monolith/ui/msa.premium.spec.ts:85:8",
+                        "matcherResult": {
+                          "message": "\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoContain\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // indexOf\u001b[22m\n\nExpected substring: \u001b[32m\"$3,161.57\"\u001b[39m\nReceived string:    \u001b[31m\"$0\"\u001b[39m",
+                          "pass": false
+                        },
+                        "location": {
+                          "file": "/function/tests/rn-monolith/ui/msa.premium.spec.ts",
+                          "column": 8,
+                          "line": 85
+                        },
+                        "snippet": "\u001b[0m \u001b[90m 83 |\u001b[39m     expect\n \u001b[90m 84 |\u001b[39m       \u001b[33m.\u001b[39msoft(paymentAndSignatureDetails\u001b[33m.\u001b[39mapplicantDetails[\u001b[35m0\u001b[39m]\u001b[33m.\u001b[39mapplicantPaid\u001b[33m,\u001b[39m \u001b[32m`Total sum should be calculated`\u001b[39m)\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 85 |\u001b[39m       \u001b[33m.\u001b[39mtoContain(expectedFormattedPremium\u001b[33m.\u001b[39mpolicyPrice)\u001b[33m;\u001b[39m\n \u001b[90m    |\u001b[39m        \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 86 |\u001b[39m   })\u001b[33m;\u001b[39m\n \u001b[90m 87 |\u001b[39m })\u001b[33m;\u001b[39m\n \u001b[90m 88 |\u001b[39m\u001b[0m"
+                      },
+                      "errors": [
+                        {
+                          "location": {
+                            "file": "/function/tests/rn-monolith/ui/msa.premium.spec.ts",
+                            "column": 8,
+                            "line": 85
+                          },
+                          "message": "Error: Total sum should be calculated\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoContain\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // indexOf\u001b[22m\n\nExpected substring: \u001b[32m\"$3,161.57\"\u001b[39m\nReceived string:    \u001b[31m\"$0\"\u001b[39m\n\n\u001b[0m \u001b[90m 83 |\u001b[39m     expect\n \u001b[90m 84 |\u001b[39m       \u001b[33m.\u001b[39msoft(paymentAndSignatureDetails\u001b[33m.\u001b[39mapplicantDetails[\u001b[35m0\u001b[39m]\u001b[33m.\u001b[39mapplicantPaid\u001b[33m,\u001b[39m \u001b[32m`Total sum should be calculated`\u001b[39m)\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 85 |\u001b[39m       \u001b[33m.\u001b[39mtoContain(expectedFormattedPremium\u001b[33m.\u001b[39mpolicyPrice)\u001b[33m;\u001b[39m\n \u001b[90m    |\u001b[39m        \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 86 |\u001b[39m   })\u001b[33m;\u001b[39m\n \u001b[90m 87 |\u001b[39m })\u001b[33m;\u001b[39m\n \u001b[90m 88 |\u001b[39m\u001b[0m\n    at /function/tests/rn-monolith/ui/msa.premium.spec.ts:85:8"
+                        }
+                      ],
+                      "stdout": [
+                        {
+                          "text": "Email Address : qa.test.renter+C5465+1747207961331@securiti.io\n"
+                        },
+                        {
+                          "text": "Email Address : qa.test.renter+co1+1747207964000@securiti.io\n"
+                        },
+                        {
+                          "text": "Email Address : qa.test.renter+co2+1747207964405@securiti.io\n"
+                        },
+                        {
+                          "text": "\n      Flow type: Auto UW v1\n      Invited by Landlord: true\n      Single renter: true\n      Corporate rate: false\n      Monthly Rent is less than $8000: 3000\n      Lease length in range from 10 to 24 month: 12\n      Building is auto uw: true\n"
+                        },
+                        {
+                          "text": "inviteData {\n  screeningStatus: \u001b[32m'Approved'\u001b[39m,\n  buildingName: \u001b[32m'Automation Property C5465'\u001b[39m,\n  unit: \u001b[32m'311'\u001b[39m,\n  monthlyRent: \u001b[32m'3000'\u001b[39m,\n  leaseStartDate: \u001b[32m'5/14/2025'\u001b[39m,\n  leaseEndDate: \u001b[32m'5/14/2026'\u001b[39m,\n  renterEmail: \u001b[32m'qa.test.renter+c5465+1747207961331@securiti.io'\u001b[39m,\n  customSdrAmount: \u001b[32m'3000'\u001b[39m,\n  customBondMonths: \u001b[32m'6'\u001b[39m\n}\n"
+                        },
+                        {
+                          "text": "Authenticating user\n"
+                        },
+                        {
+                          "text": "Getting email authenticator id\n"
+                        },
+                        {
+                          "text": "Triggering MFA email\n"
+                        },
+                        {
+                          "text": "qa.test.landlord@securiti.io\n"
+                        },
+                        {
+                          "text": "querying inbox for messages with to:(qa.test.landlord+C5465_v1@securiti.io) subject:(Here's the code you requested) after:1747207960\n"
+                        },
+                        {
+                          "text": "no emails found - (attempt 1/10)\n"
+                        },
+                        {
+                          "text": "Token refreshed.\n"
+                        },
+                        {
+                          "text": "no emails found - (attempt 2/10)\n"
+                        },
+                        {
+                          "text": "1 message(s) found\n"
+                        },
+                        {
+                          "text": "AUTH Verification Code is: 414737\n"
+                        },
+                        {
+                          "text": "Creating access token\n"
+                        },
+                        {
+                          "text": "Creating ML cookies\n"
+                        },
+                        {
+                          "text": "Retrieving buildings of landlord\n"
+                        },
+                        {
+                          "text": "Sending invitation to the renter\n"
+                        },
+                        {
+                          "text": "Starting registration of invited resident by landlord -  qa.test.renter+c5465+1747207961331@securiti.io\n"
+                        },
+                        {
+                          "text": "qa.test.renter@securiti.io\n"
+                        },
+                        {
+                          "text": "querying inbox for messages with to:(qa.test.renter+c5465+1747207961331@securiti.io) subject:(Next steps for your lease signing at) after:1747207739\n"
+                        },
+                        {
+                          "text": "no emails found - (attempt 1/10)\n"
+                        },
+                        {
+                          "text": "Token refreshed.\n"
+                        },
+                        {
+                          "text": "1 message(s) found\n"
+                        },
+                        {
+                          "text": "Setting password\n"
+                        },
+                        {
+                          "text": "Authenticating user\n"
+                        },
+                        {
+                          "text": "Getting email authenticator id\n"
+                        },
+                        {
+                          "text": "Triggering MFA email\n"
+                        },
+                        {
+                          "text": "qa.test.renter@securiti.io\n"
+                        },
+                        {
+                          "text": "querying inbox for messages with to:(qa.test.renter+c5465+1747207961331@securiti.io) subject:(Here's the code you requested) after:1747207979\n"
+                        },
+                        {
+                          "text": "no emails found - (attempt 1/25)\n"
+                        },
+                        {
+                          "text": "Token refreshed.\n"
+                        },
+                        {
+                          "text": "1 message(s) found\n"
+                        },
+                        {
+                          "text": "AUTH Verification Code is: 379279\n"
+                        },
+                        {
+                          "text": "Creating access token\n"
+                        },
+                        {
+                          "text": "Creating ML cookies\n"
+                        },
+                        {
+                          "text": "Creating ML cookie\n"
+                        },
+                        {
+                          "text": "Fetching connect.sid from cookie\n"
+                        },
+                        {
+                          "text": "Required Headers: [object Object]\n"
+                        },
+                        {
+                          "text": "Accessing home page for ml to create blank application\n"
+                        },
+                        {
+                          "text": "Invoking GET /application\n"
+                        },
+                        {
+                          "text": "Invoking GET /api/v1/renter/auth\n"
+                        },
+                        {
+                          "text": "\u001b[33m200\u001b[39m\n"
+                        },
+                        {
+                          "text": "Application ID:  \u001b[33m613119\u001b[39m\n"
+                        },
+                        {
+                          "text": "Invoking POST -  /api/v1/renter/start\n"
+                        },
+                        {
+                          "text": "Submitting application\n"
+                        },
+                        {
+                          "text": "skip Approved status as not implemented\n"
+                        },
+                        {
+                          "text": "Setting up browser options for docker : headless\n"
+                        },
+                        {
+                          "text": "Launching Browser, context and page...\n"
+                        },
+                        {
+                          "text": "User-Agent: Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/131.0.6778.33 Safari/537.36\n"
+                        },
+                        {
+                          "text": "Browser executable path: /ms-playwright/chromium-1148/chrome-linux/chrome\nBrowser name: chromium\n"
+                        },
+                        {
+                          "text": "Filling credentials\n"
+                        },
+                        {
+                          "text": "Entering username\n"
+                        },
+                        {
+                          "text": "Entering password\n"
+                        },
+                        {
+                          "text": "Clicking submit button\n"
+                        },
+                        {
+                          "text": "qa.test.renter@securiti.io\n"
+                        },
+                        {
+                          "text": "querying inbox for messages with to:(qa.test.renter+c5465+1747207961331@securiti.io) subject:(Here's the code you requested) after:1747208014\n"
+                        },
+                        {
+                          "text": "no emails found - (attempt 1/10)\n"
+                        },
+                        {
+                          "text": "Token refreshed.\n"
+                        },
+                        {
+                          "text": "no emails found - (attempt 2/10)\n"
+                        },
+                        {
+                          "text": "1 message(s) found\n"
+                        },
+                        {
+                          "text": "AUTH Verification Code is: 187965\n"
+                        },
+                        {
+                          "text": "Filling otp input\n"
+                        },
+                        {
+                          "text": "Clicking continue button\n"
+                        },
+                        {
+                          "text": "Click \"Go to checkout\" button\n"
+                        },
+                        {
+                          "text": "Signing the Guarantors General Agreement of Indemnity\n"
+                        },
+                        {
+                          "text": "Clicking sign agreements\n"
+                        },
+                        {
+                          "text": "Scrolling to bottom of GAI\n"
+                        },
+                        {
+                          "text": "Clicking GAI agreement checkbox\n"
+                        },
+                        {
+                          "text": "Clicking accept agreement\n"
+                        },
+                        {
+                          "text": "Clicking monthly payment radio\n"
+                        },
+                        {
+                          "text": "Clicking Pay By Credit Card Radio\n"
+                        },
+                        {
+                          "text": "Clicking Pay Now button\n"
+                        },
+                        {
+                          "text": "Click proceed to checkout\n"
+                        },
+                        {
+                          "text": "Filling in first name with: Test\n"
+                        },
+                        {
+                          "text": "Filling in last name with: Renter\n"
+                        },
+                        {
+                          "text": "Clicking next\n"
+                        },
+                        {
+                          "text": "Filling in first name with: Test\n"
+                        },
+                        {
+                          "text": "Filling in last name with: Renter\n"
+                        },
+                        {
+                          "text": "Filling in city with: Weatherford\n"
+                        },
+                        {
+                          "text": "Selecting country: United States\n"
+                        },
+                        {
+                          "text": "Filling in state with: Texas\n"
+                        },
+                        {
+                          "text": "Clicking next in billing address\n"
+                        },
+                        {
+                          "text": "Filling in credit card number with: 4242424242424242\n"
+                        },
+                        {
+                          "text": "Filling in credit card expiry month with: 05\n"
+                        },
+                        {
+                          "text": "Filling in credit card expiry year with: 26\n"
+                        },
+                        {
+                          "text": "Filling in credit card cvv with: 123\n"
+                        },
+                        {
+                          "text": "Clicking credit card submit\n"
+                        },
+                        {
+                          "text": "Clicking confirm payment\n"
+                        },
+                        {
+                          "text": "Setting up browser options for docker : headless\n"
+                        },
+                        {
+                          "text": "Launching Browser, context and page...\n"
+                        },
+                        {
+                          "text": "User-Agent: Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/131.0.6778.33 Safari/537.36\n"
+                        },
+                        {
+                          "text": "Browser executable path: /ms-playwright/chromium-1148/chrome-linux/chrome\nBrowser name: chromium\n"
+                        },
+                        {
+                          "text": "Logging in\n"
+                        },
+                        {
+                          "text": "Entering email address\n"
+                        },
+                        {
+                          "text": "Clicking next button\n"
+                        },
+                        {
+                          "text": "Clicking select password button\n"
+                        },
+                        {
+                          "text": "Entering password\n"
+                        },
+                        {
+                          "text": "Clicking verify button\n"
+                        },
+                        {
+                          "text": "Clicking send me an email button\n"
+                        },
+                        {
+                          "text": "qa.test.admin@theguarantors.com\n"
+                        },
+                        {
+                          "text": "querying inbox for messages with to:(qa.test.admin+1714481431541@theguarantors.com) subject:(One-time verification code) after:1747208068\n"
+                        },
+                        {
+                          "text": "no emails found - (attempt 1/25)\n"
+                        },
+                        {
+                          "text": "Token refreshed.\n"
+                        },
+                        {
+                          "text": "1 message(s) found\n"
+                        },
+                        {
+                          "text": "Okta Sandbox Verification Code is: 682587\n"
+                        },
+                        {
+                          "text": "Clicking enter auth code instead link\n"
+                        },
+                        {
+                          "text": "Entering otp\n"
+                        },
+                        {
+                          "text": "Clicking verify button\n"
+                        },
+                        {
+                          "text": "Getting MSA application with email: qa.test.renter+c5465+1747207961331@securiti.io using application GET API \n"
+                        },
+                        {
+                          "text": "Getting expected rate based premium for application: 1316293\n"
+                        },
+                        {
+                          "text": "Expected Rate Based Premium Response: {\n  \"expectedPremium\": {\n    \"data\": {\n      \"premium\": {\n        \"rentCoveragePremiumBase\": 1538.46,\n        \"depositCoveragePremiumBase\": 749.25,\n        \"rentCoveragePremiumFinal\": 1538.46,\n        \"depositCoveragePremiumFinal\": 749.25,\n        \"finalPremium\": 2288,\n        \"stampingFee\": 0,\n        \"excessAndSurplusLinesTax\": 51.47999999999992,\n        \"policyPrice\": 2339.48,\n        \"transactionFee\": 0,\n        \"total\": 2339.48,\n        \"totalWithCreditCardFee\": 2409.6644\n      },\n      \"monthlyPremium\": {\n        \"rentCoveragePremiumBase\": 2079,\n        \"depositCoveragePremiumBase\": 1012.5,\n        \"rentCoveragePremiumFinal\": 2079,\n        \"depositCoveragePremiumFinal\": 1012.5,\n        \"finalPremium\": 3092,\n        \"stampingFee\": 0,\n        \"excessAndSurplusLinesTax\": 69.56756756756747,\n        \"policyPrice\": 3161.5675675675675,\n        \"transactionFee\": 94.84702702702725,\n        \"total\": 3161.5675675675675,\n        \"totalWithCreditCardFee\": 3256.4145945945947\n      },\n      \"premiumInputs\": {\n        \"property\": {\n          \"propertyId\": 64023,\n          \"propertyState\": \"VA\",\n          \"defaultLgCoverage\": 2,\n          \"defaultSdrCoverage\": 3000,\n          \"discretionaryAdjustment\": 1\n        },\n        \"coverage\": {\n          \"monthlyRent\": 3000,\n          \"lgCoverage\": 6,\n          \"sdrCoverage\": 3000\n        },\n        \"misc\": {\n          \"screeningStatus\": \"Approved\",\n          \"quoteId\": 70938\n        },\n        \"quoteService\": {\n          \"computeFactors\": {\n            \"discount\": 0.74,\n            \"flat_premium\": 0,\n            \"stamping_fee\": 1,\n            \"surplus_lines_tax\": 1.0225,\n            \"fixed_stamping_fee\": 0,\n            \"renewal_discount_factor\": 25,\n            \"deposit_factor\": 2.25,\n            \"rent_factor\": 0.77,\n            \"premium_rate\": 15\n          },\n          \"supportingFactors\": {\n            \"spf_ef_dt\": \"2025-03-31\",\n            \"location\": \"VA\",\n            \"dynamic_pricing\": false,\n            \"cov_fctr_dep_eff_dt\": \"2025-03-31T00:00:00Z\",\n            \"deposit_coverage_tier\": \"1\",\n            \"cov_fctr_ren_eff_dt\": \"2025-03-31T00:00:00Z\",\n            \"rent_coverage_tier\": \"6\",\n            \"carrier\": \"HUDSONEXCESS\"\n          }\n        }\n      },\n      \"formattedPremium\": {\n        \"rentCoveragePremiumBase\": \"$1,538.46\",\n        \"depositCoveragePremiumBase\": \"$749.25\",\n        \"rentCoveragePremiumFinal\": \"$1,538.46\",\n        \"depositCoveragePremiumFinal\": \"$749.25\",\n        \"finalPremium\": \"$2,288\",\n        \"stampingFee\": \"$0\",\n        \"excessAndSurplusLinesTax\": \"$51.48\",\n        \"policyPrice\": \"$2,339.48\",\n        \"transactionFee\": \"$0\",\n        \"total\": \"$2,339.48\",\n        \"totalWithCreditCardFee\": \"$2,409.66\",\n        \"premiumRate\": \"15\"\n      },\n      \"formattedPremiumMonthly\": {\n        \"rentCoveragePremiumBase\": \"$2,079\",\n        \"depositCoveragePremiumBase\": \"$1,012.5\",\n        \"rentCoveragePremiumFinal\": \"$2,079\",\n        \"depositCoveragePremiumFinal\": \"$1,012.5\",\n        \"finalPremium\": \"$3,092\",\n        \"stampingFee\": \"$0\",\n        \"excessAndSurplusLinesTax\": \"$69.57\",\n        \"policyPrice\": \"$3,161.57\",\n        \"transactionFee\": \"$94.85\",\n        \"total\": \"$3,161.57\",\n        \"totalWithCreditCardFee\": \"$3,256.41\",\n        \"premiumRate\": \"15\"\n      }\n    }\n  }\n}\n"
+                        },
+                        {
+                          "text": "Clicking on first application Id link in the list of applications\n"
+                        },
+                        {
+                          "text": "Getting application status\n"
+                        },
+                        {
+                          "text": "Current Deal status  'closed' matches expected : Completed\n"
+                        },
+                        {
+                          "text": "File renamed from /tmp/videos/3857eb9cd300518f55c2539c37893609.webm to /tmp/videos/video_C5465_msaAdmin_1.webm\n"
+                        }
+                      ],
+                      "stderr": [
+                        {
+                          "text": "(node:186) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.\n(Use `node --trace-deprecation ...` to show where the warning was created)\n"
+                        }
+                      ],
+                      "retry": 1,
+                      "steps": [
+                        {
+                          "title": "open deal #613119",
+                          "duration": 3629,
+                          "steps": [
+                            {
+                              "title": "type renter email into search box and wait for result",
+                              "duration": 1782,
+                              "steps": [
+                                {
+                                  "title": "select search by applicant email and click search button",
+                                  "duration": 657
+                                }
+                              ]
+                            },
+                            {
+                              "title": "click on the first displayed application",
+                              "duration": 1825
+                            },
+                            {
+                              "title": "Reload Deal Page until status changes to Completed",
+                              "duration": 18
+                            }
+                          ]
+                        },
+                        {
+                          "title": "Getting payment and signature details from the deal",
+                          "duration": 271
+                        }
+                      ],
+                      "startTime": "2025-05-14T07:32:38.955Z",
+                      "attachments": [
+                        {
+                          "name": "/tmp/videos/video_C5465_msaAdmin_1.webm",
+                          "contentType": "video/webm",
+                          "path": "/tmp/lolz/rn-monolith-ui-msa.premium-1ec16-Premium-No-upfront-discount-retry1/attachments/-tmp-videos-video-C5465-msaAdmin-1-webm-b387429b29ec1a71ce0f46026ffa9ab16039ef77.webm"
+                        },
+                        {
+                          "name": "trace",
+                          "contentType": "application/zip",
+                          "path": "/tmp/lolz/rn-monolith-ui-msa.premium-1ec16-Premium-No-upfront-discount-retry1/trace.zip"
+                        }
+                      ],
+                      "errorLocation": {
+                        "file": "/function/tests/rn-monolith/ui/msa.premium.spec.ts",
+                        "column": 8,
+                        "line": 85
+                      }
+                    }
+                  ],
+                  "status": "unexpected"
+                }
+              ],
+              "id": "fec6544c96cbe6a4f9ea-5b23757bf7d83ccfdcea",
+              "file": "rn-monolith/ui/msa.premium.spec.ts",
+              "line": 63,
+              "column": 7
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "stats": {
+    "startTime": "2025-05-14T07:28:57.274Z",
+    "duration": 370253.52499999997,
+    "expected": 0,
+    "skipped": 0,
+    "unexpected": 1,
+    "flaky": 0
+  },
+  "customReport": {
+    "testName": "<C5465> <REN-8373> RFV3. MSA Premium. No upfront discount",
+    "testNameHash": "C5465_35748620d2c3e5f9e9b60e05c0d5101f",
+    "status": "failed"
+  },
+  "runId": "MSA_NIGHTLY_AUTOMATED_TEST_RUN_msa-nightly-group-2-run-14-05-2025-07:28:38",
+  "hash": "C5465_35748620d2c3e5f9e9b60e05c0d5101f"
+}
