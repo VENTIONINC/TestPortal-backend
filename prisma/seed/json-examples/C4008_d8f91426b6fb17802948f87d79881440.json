@@ -1,0 +1,500 @@
+{
+  "config": {
+    "configFile": "/function/playwright.config.ts",
+    "rootDir": "/function/tests",
+    "forbidOnly": false,
+    "fullyParallel": false,
+    "globalSetup": "/function/global-setup.ts",
+    "globalTeardown": null,
+    "globalTimeout": 810000,
+    "grep": {},
+    "grepInvert": null,
+    "maxFailures": 0,
+    "metadata": {
+      "actualWorkers": 1
+    },
+    "preserveOutput": "always",
+    "reporter": [
+      [
+        "line"
+      ],
+      [
+        "/function/node_modules/allure-playwright/dist/index.js"
+      ],
+      [
+        "json"
+      ]
+    ],
+    "reportSlowTests": {
+      "max": 5,
+      "threshold": 15000
+    },
+    "quiet": false,
+    "projects": [
+      {
+        "outputDir": "/tmp/lolz",
+        "repeatEach": 1,
+        "retries": 1,
+        "metadata": {},
+        "id": "",
+        "name": "",
+        "testDir": "/function/tests",
+        "testIgnore": [],
+        "testMatch": [
+          "**/*.@(spec|test).?(c|m)[jt]s?(x)"
+        ],
+        "timeout": 420000
+      }
+    ],
+    "shard": null,
+    "updateSnapshots": "missing",
+    "version": "1.49.1",
+    "workers": 1,
+    "webServer": null
+  },
+  "suites": [
+    {
+      "title": "rn-monolith/ui/admin.update.monthly.chargebee.spec.ts",
+      "file": "rn-monolith/ui/admin.update.monthly.chargebee.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "<C4008> <REN-6988> Validate monthly payment subscription is updated on ChargeBee correctly if premium on application was updated @monolith-nightly-group-1",
+          "ok": true,
+          "tags": [
+            "monolith-nightly-group-1"
+          ],
+          "tests": [
+            {
+              "timeout": 420000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "status": "passed",
+                  "duration": 121119,
+                  "errors": [],
+                  "stdout": [
+                    {
+                      "text": "Setting up browser options for docker : headless\n"
+                    },
+                    {
+                      "text": "Launching Browser, context and page...\n"
+                    },
+                    {
+                      "text": "User-Agent: Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/131.0.6778.33 Safari/537.36\n"
+                    },
+                    {
+                      "text": "Browser executable path: /ms-playwright/chromium-1148/chrome-linux/chrome\nBrowser name: chromium\n"
+                    },
+                    {
+                      "text": "Email Address : qa.test.renter+C4008+1747202886039@securiti.io\n"
+                    },
+                    {
+                      "text": "Entering email address\n"
+                    },
+                    {
+                      "text": "Clicking create an account button\n"
+                    },
+                    {
+                      "text": "Entering password\n"
+                    },
+                    {
+                      "text": "Entering confirm password\n"
+                    },
+                    {
+                      "text": "Clicking submit password button\n"
+                    },
+                    {
+                      "text": "Clicking Go to Login Page Button\n"
+                    },
+                    {
+                      "text": "Filling credentials\n"
+                    },
+                    {
+                      "text": "Entering username\n"
+                    },
+                    {
+                      "text": "Entering password\n"
+                    },
+                    {
+                      "text": "Clicking submit button\n"
+                    },
+                    {
+                      "text": "qa.test.renter@securiti.io\n"
+                    },
+                    {
+                      "text": "querying inbox for messages with to:(qa.test.renter+c4008+1747202886039@securiti.io) subject:(Here's the code you requested) after:1747202884\n"
+                    },
+                    {
+                      "text": "no emails found - (attempt 1/25)\n"
+                    },
+                    {
+                      "text": "Token refreshed.\n"
+                    },
+                    {
+                      "text": "1 message(s) found\n"
+                    },
+                    {
+                      "text": "AUTH Verification Code is: 259407\n"
+                    },
+                    {
+                      "text": "Filling otp input\n"
+                    },
+                    {
+                      "text": "Clicking continue button\n"
+                    },
+                    {
+                      "text": "Application ID is: 612990\n"
+                    },
+                    {
+                      "text": "Selecting if working with broker\n"
+                    },
+                    {
+                      "text": "Filling broker/agent name: test agent name\n"
+                    },
+                    {
+                      "text": "Filling broker/agent name: qa.test.broker+1234@securiti.io\n"
+                    },
+                    {
+                      "text": "Filling broker/agent company: test agent company\n"
+                    },
+                    {
+                      "text": "Filling monthly rent: 2000\n"
+                    },
+                    {
+                      "text": "Filling expected move in date: 06/01/2023\n"
+                    },
+                    {
+                      "text": "Filling expected lease length: 12\n"
+                    },
+                    {
+                      "text": "Filling first name: Laura\n"
+                    },
+                    {
+                      "text": "Clicking on dropdown\n"
+                    },
+                    {
+                      "text": "Selecting: 'Yes' option from dropdown\n"
+                    },
+                    {
+                      "text": "Selecting residencyStatus: US Citizen\n"
+                    },
+                    {
+                      "text": "Clicking on dropdown\n"
+                    },
+                    {
+                      "text": "Selecting: 'US Citizen' option from dropdown\n"
+                    },
+                    {
+                      "text": "Filling in street address with: Trapezoid\n"
+                    },
+                    {
+                      "text": "Fillling in city with: Bowling Green\n"
+                    },
+                    {
+                      "text": "Filling in state with: KY\n"
+                    },
+                    {
+                      "text": "Clicking on dropdown\n"
+                    },
+                    {
+                      "text": "Selecting: 'KY' option from dropdown\n"
+                    },
+                    {
+                      "text": "Filling in zip with: 42101\n"
+                    },
+                    {
+                      "text": "Filling telephone number: 4443334444\n"
+                    },
+                    {
+                      "text": "Clicking on dropdown\n"
+                    },
+                    {
+                      "text": "Selecting: 'International Phone' option from dropdown\n"
+                    },
+                    {
+                      "text": "Entering Other contact info\n"
+                    },
+                    {
+                      "text": "Filling DOB number: 01/01/1990\n"
+                    },
+                    {
+                      "text": "Selecting employment status: Employed\n"
+                    },
+                    {
+                      "text": "Clicking on dropdown\n"
+                    },
+                    {
+                      "text": "Selecting: 'Employed' option from dropdown\n"
+                    },
+                    {
+                      "text": "Filling 'Annual Income': 100000\n"
+                    },
+                    {
+                      "text": "Filling personal account balance: 100000\n"
+                    },
+                    {
+                      "text": "selected ssn presence\n"
+                    },
+                    {
+                      "text": "Filling SSN: 555555554\n"
+                    },
+                    {
+                      "text": "Clicking Credit Check Agree Button\n"
+                    },
+                    {
+                      "text": "Uploading document\n"
+                    },
+                    {
+                      "text": "Setting up browser options for docker : headless\n"
+                    },
+                    {
+                      "text": "Launching Browser, context and page...\n"
+                    },
+                    {
+                      "text": "User-Agent: Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/131.0.6778.33 Safari/537.36\n"
+                    },
+                    {
+                      "text": "Browser executable path: /ms-playwright/chromium-1148/chrome-linux/chrome\nBrowser name: chromium\n"
+                    },
+                    {
+                      "text": "Filling credentials\n"
+                    },
+                    {
+                      "text": "Entering username\n"
+                    },
+                    {
+                      "text": "Entering password\n"
+                    },
+                    {
+                      "text": "Clicking submit button\n"
+                    },
+                    {
+                      "text": "qa.test.admin@theguarantors.com\n"
+                    },
+                    {
+                      "text": "querying inbox for messages with to:(qa.test.admin+surety+1705415060925@theguarantors.com) subject:(Here's the code you requested) after:1747202938\n"
+                    },
+                    {
+                      "text": "no emails found - (attempt 1/10)\n"
+                    },
+                    {
+                      "text": "Token refreshed.\n"
+                    },
+                    {
+                      "text": "1 message(s) found\n"
+                    },
+                    {
+                      "text": "AUTH Verification Code is: 928842\n"
+                    },
+                    {
+                      "text": "Filling otp input\n"
+                    },
+                    {
+                      "text": "Clicking continue button\n"
+                    },
+                    {
+                      "text": "Updating lease start date to:  06/01/2025\n"
+                    },
+                    {
+                      "text": "Updating lease end date to:  06/01/2026\n"
+                    },
+                    {
+                      "text": "Updating move out date to: 06/01/2026\n"
+                    },
+                    {
+                      "text": "Updating lease Length to:  12\n"
+                    },
+                    {
+                      "text": "Updating bond Months Covered to:  6\n"
+                    },
+                    {
+                      "text": "Updating rolling Sdr Amount to:  2500\n"
+                    },
+                    {
+                      "text": "Clicking payment V2 tab\n"
+                    },
+                    {
+                      "text": "Clicking generate Invoice URL\n"
+                    },
+                    {
+                      "text": "Waiting for url to appear\n"
+                    },
+                    {
+                      "text": "Getting generated invoice URL: https://staging.theguarantors.com/v2/lease-guarantee/ddfae6ffded64dfc346155ca3ae14cc5e0323837b963a0100ea7c8b3279b5b7d\n"
+                    },
+                    {
+                      "text": "Clicking auth checkbox\n"
+                    },
+                    {
+                      "text": "Clicking complete button\n"
+                    },
+                    {
+                      "text": "Clicking pay with card\n"
+                    },
+                    {
+                      "text": "Click proceed to checkout\n"
+                    },
+                    {
+                      "text": "Filling in first name with: Test\n"
+                    },
+                    {
+                      "text": "Filling in last name with: Renter\n"
+                    },
+                    {
+                      "text": "Clicking next\n"
+                    },
+                    {
+                      "text": "Filling in first name with: Test\n"
+                    },
+                    {
+                      "text": "Filling in last name with: Renter\n"
+                    },
+                    {
+                      "text": "Filling in city with: Weatherford\n"
+                    },
+                    {
+                      "text": "Selecting country: United States\n"
+                    },
+                    {
+                      "text": "Filling in state with: Texas\n"
+                    },
+                    {
+                      "text": "Clicking next in billing address\n"
+                    },
+                    {
+                      "text": "Filling in credit card number with: 4242424242424242\n"
+                    },
+                    {
+                      "text": "Filling in credit card expiry month with: 05\n"
+                    },
+                    {
+                      "text": "Filling in credit card expiry year with: 26\n"
+                    },
+                    {
+                      "text": "Filling in credit card cvv with: 123\n"
+                    },
+                    {
+                      "text": "Clicking credit card submit\n"
+                    },
+                    {
+                      "text": "Clicking confirm payment\n"
+                    },
+                    {
+                      "text": "Getting Chargebee customer by email qa.test.renter+c4008+1747202886039@securiti.io\n"
+                    },
+                    {
+                      "text": "Updating bond Months Covered to:  8\n"
+                    },
+                    {
+                      "text": "Clicking payment V2 tab\n"
+                    },
+                    {
+                      "text": "Getting Chargebee subscription by email qa.test.renter+c4008+1747202886039@securiti.io\n"
+                    },
+                    {
+                      "text": "Getting Chargebee customer by email qa.test.renter+c4008+1747202886039@securiti.io\n"
+                    },
+                    {
+                      "text": "File renamed from /tmp/videos/f0db040bfaa709ea83a054fde64753b6.webm to /tmp/videos/video_C4008_admin_0.webm\n"
+                    },
+                    {
+                      "text": "File renamed from /tmp/videos/76f659d0dfb8f2bc9013507282fc3b91.webm to /tmp/videos/video_C4008_renter_0.webm\n"
+                    }
+                  ],
+                  "stderr": [
+                    {
+                      "text": "(node:61) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.\n(Use `node --trace-deprecation ...` to show where the warning was created)\n"
+                    }
+                  ],
+                  "retry": 0,
+                  "steps": [
+                    {
+                      "title": "open application #612990 page",
+                      "duration": 2322
+                    },
+                    {
+                      "title": "update Lease Start date to \"06/01/2025\"",
+                      "duration": 867,
+                      "steps": [
+                        {
+                          "title": "hide datepicker by setting \"display:none\"",
+                          "duration": 81
+                        }
+                      ]
+                    },
+                    {
+                      "title": "update Lease End date to \"06/01/2026\"",
+                      "duration": 459,
+                      "steps": [
+                        {
+                          "title": "hide datepicker by setting \"display:none\"",
+                          "duration": 95
+                        }
+                      ]
+                    },
+                    {
+                      "title": "update status to \"Approved\"",
+                      "duration": 68
+                    },
+                    {
+                      "title": "save application changes",
+                      "duration": 2046
+                    },
+                    {
+                      "title": "open application #612990 page",
+                      "duration": 3126
+                    },
+                    {
+                      "title": "save application changes",
+                      "duration": 3574
+                    }
+                  ],
+                  "startTime": "2025-05-14T06:08:02.408Z",
+                  "attachments": [
+                    {
+                      "name": "/tmp/videos/video_C4008_admin_0.webm",
+                      "contentType": "video/webm",
+                      "path": "/tmp/lolz/rn-monolith-ui-admin.updat-52417-ed-monolith-nightly-group-1/attachments/-tmp-videos-video-C4008-admin-0-webm-35cdba19dbee8a106fd1c5d3277a224a12b7e68f.webm"
+                    },
+                    {
+                      "name": "/tmp/videos/video_C4008_renter_0.webm",
+                      "contentType": "video/webm",
+                      "path": "/tmp/lolz/rn-monolith-ui-admin.updat-52417-ed-monolith-nightly-group-1/attachments/-tmp-videos-video-C4008-renter-0-webm-77b08cbb99e8a5dbb8e4aace86749e3125d7041f.webm"
+                    }
+                  ]
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "9f1ee283b601fcf40be2-2269a77bc1bb4f60031b",
+          "file": "rn-monolith/ui/admin.update.monthly.chargebee.spec.ts",
+          "line": 5,
+          "column": 5
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "stats": {
+    "startTime": "2025-05-14T06:07:28.578Z",
+    "duration": 155162.796,
+    "expected": 1,
+    "skipped": 0,
+    "unexpected": 0,
+    "flaky": 0
+  },
+  "customReport": {
+    "testName": "<C4008> <REN-6988> Validate monthly payment subscription is updated on ChargeBee correctly if premium on application was updated @monolith-nightly-group-1",
+    "testNameHash": "C4008_d8f91426b6fb17802948f87d79881440",
+    "status": "passed"
+  },
+  "runId": "MONOLITH_NIGHTLY_AUTOMATED_TEST_RUN_monolith-nightly-group-1-run-14-05-2025-06:06:42",
+  "hash": "C4008_d8f91426b6fb17802948f87d79881440"
+}
