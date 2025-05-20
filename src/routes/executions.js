@@ -1,18 +1,8 @@
-import {Router} from 'express';
-import {dbClient} from '../../prisma/client.js';
+import { Router } from "express";
+import { executionController } from "../controllers/executionController.js";
 
 const router = Router();
 
-router.get('/executions/:executionId', async (req, res) => {
-    const {executionId} = req.params;
-
-    const record = await dbClient.execution.findUnique({
-        where: {
-            id: Number(executionId)
-        }
-    });
-
-    return res.status(200).json(record);
-});
+router.get("/executions/:executionId", executionController.getExecutionById);
 
 export default router;
