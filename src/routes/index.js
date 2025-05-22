@@ -7,6 +7,8 @@ import executions from "./executions.js";
 import assumptions from "./assumptions.js";
 import resultErrors from "./result-errors.js";
 import autoReview from "./auto-review.js";
+import status from "./status.js";
+import mcp from "../mcp/server.js";
 
 const router = Router();
 
@@ -22,5 +24,7 @@ router.use(executions);
 router.use(assumptions);
 router.use(resultErrors);
 router.use(autoReview);
+router.use(status);
+router.use(mcp);
 
 export default router;
