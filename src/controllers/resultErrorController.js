@@ -9,7 +9,7 @@ export const resultErrorController = {
     try {
       const updatedRecord = await resultErrorModel.assignIssue(
         resultErrorId,
-        assumptionId
+        assumptionId,
       );
       return res.status(200).json(updatedRecord);
     } catch (error) {
@@ -50,7 +50,7 @@ export const resultErrorController = {
       throw new Error(
         `Unable to complete auto review for: ${errorIds.join(",")}. ${
           e.message
-        }`
+        }`,
       );
     }
   },

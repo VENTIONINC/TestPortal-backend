@@ -35,7 +35,7 @@ for (const jsonReport of jsonReports) {
           "Content-Type": "application/json",
         },
         body,
-      }
+      },
     );
     const res = await configResponse.json();
 
@@ -46,8 +46,8 @@ for (const jsonReport of jsonReports) {
         `${jsonReport.runId}, ${jsonReport.hash} , ${JSON.stringify(
           res,
           null,
-          4
-        )}`
+          4,
+        )}`,
       );
     }
   } catch (err) {
@@ -93,7 +93,7 @@ function getTestCases(suitesList, testCases = []) {
         projectId: t.projectId,
         projectName: t.projectName,
         results: t.results.map((r) => {
-          const { errors, ...rest } = r;
+          const { /* errors, */ ...rest } = r;
           const maxSize = 10000;
 
           if (

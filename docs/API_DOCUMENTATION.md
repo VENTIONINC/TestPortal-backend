@@ -6,7 +6,7 @@
 
 - **Description:** Welcome endpoint.
 - **Response:**
-  - `200 OK`: "Welcome" 
+  - `200 OK`: "Welcome"
 
 ## Assumption Routes (`src/routes/assumptions.js`)
 
@@ -127,4 +127,4 @@
 - **Description:** Retrieves a specific spec by its ID.
 - **Parameters:**
   - `specId` (in path): The ID of the spec to retrieve.
-- **Controller:** `specController.getSpecById` 
+- **Controller:** `specController.getSpecById`

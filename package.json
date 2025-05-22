@@ -7,6 +7,8 @@
   "scripts": {
     "server": "node index.js",
     "dev": "nodemon index.js",
+    "lint": "eslint .",
+    "format": "prettier --write .",
     "seed": "node prisma/seed/index.js",
     "studio": "npx prisma studio",
     "migrate": "npx prisma migrate dev --name commit"
@@ -27,6 +29,12 @@
     "string-similarity": "^4.0.4"
   },
   "devDependencies": {
+    "@eslint/js": "^9.27.0",
+    "eslint": "^8.57.1",
+    "eslint-config-airbnb-base": "^15.0.0",
+    "eslint-plugin-import": "^2.31.0",
+    "globals": "^16.1.0",
+    "prettier": "3.5.3",
     "prisma": "^6.3.0"
   }
 }

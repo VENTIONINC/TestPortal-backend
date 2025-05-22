@@ -32,7 +32,7 @@ app.use(
       dbRecordIdIsSessionId: true,
       dbRecordIdFunction: undefined,
     }),
-  })
+  }),
 );
 app.use(parseCookie());
 app.use(loggingMiddleware);
