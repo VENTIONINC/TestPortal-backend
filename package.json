@@ -6,7 +6,7 @@
   "exports": "./index.js",
   "scripts": {
     "server": "node index.js",
-    "server:dev": "./node_modules/.bin/nodemon npm run server",
+    "dev": "nodemon index.js",
     "seed": "node prisma/seed/index.js",
     "studio": "npx prisma studio",
     "migrate": "npx prisma migrate dev --name commit"
