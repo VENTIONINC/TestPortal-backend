@@ -1,38 +1,35 @@
 # test-results-manager
 
+## Setup Instructions
 
-npx prisma init --datasource-provider sqlite
-npx prisma migrate dev --name lowerCasedResultError
+1.  **Initialize Prisma and set up the database:**
 
-- Results TODO
+    ```sh
+    npx prisma init --datasource-provider sqlite
+    npm run migrate # This likely runs 'npx prisma migrate dev --name <some_name>'
+    ```
 
-Spec filters:
-- filter by error message + group by error message like allure do
-- filter mode: filter specs by 'has status' (hasFailed, hasSkipped, etc)
+2.  **Create a `.env` file** in the root of the project with the following content:
 
-Global:
-    Bulk actions:
-        - button select all:
-        - find a way to assign an issue to all selected
-        - run auto review on all selected
+    ```env
+    DATABASE_URL="file:./dev.db"
+    ```
 
-Spec section:
-    Bulk actions:
-        - select all
-        - button 'run auto review' to all selected
-        - assign new issue to all selected
-        - confirm/reject all selected
-        - auto review on all selected
+3.  **Run the server:**
 
-    View details:
-        - click on error message to view stack
-        - click on issue to view details (results?)
+    ```sh
+    npm run server
+    ```
 
+4.  **Seed the database** (assuming the server is running on port 3001):
 
------------
-find buttons
-select all
-add to all
-edit all
-confirm all
-reject all
+    ```sh
+    node prisma/seed/index.js
+    ```
+
+5.  **Open in browser:** `http://localhost:3001/api/results` (or your relevant API endpoint)
+
+## Documentation
+
+- [API Documentation](docs/API_DOCUMENTATION.md)
+- [How to Inspect the MCP Server](docs/INSPECT_MCP_SERVER.md)

@@ -11,7 +11,7 @@ export const assumptionController = {
 
       if (!resultErrorId) {
         throw new Error(
-          "Unable to create new assumption: missing result error id"
+          "Unable to create new assumption: missing result error id",
         );
       }
 
@@ -43,7 +43,7 @@ export const assumptionController = {
       if (assumption.isConfirmed) {
         const updatedRecord = await assumptionModel.update(
           assumptionId,
-          req.body
+          req.body,
         );
 
         return res.status(200).json(updatedRecord);

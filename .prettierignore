@@ -1,0 +1,8 @@
+node_modules
+dist
+.DS_Store
+*.lock
+
+# IDE specific files
+.idea
+.vscode 

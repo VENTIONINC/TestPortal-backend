@@ -5,11 +5,11 @@ const router = Router();
 
 router.patch(
   "/result-errors/:resultErrorId/assign-issue",
-  resultErrorController.assignIssue
+  resultErrorController.assignIssue,
 );
 router.patch(
   "/result-errors/:resultErrorId/review",
-  resultErrorController.reviewError
+  resultErrorController.reviewError,
 );
 router.patch("/result-errors/bulk-review", resultErrorController.bulkReview);
 
