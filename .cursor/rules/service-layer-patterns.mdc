@@ -1,0 +1,358 @@
+---
+description: 
+globs: 
+alwaysApply: false
+---
+# Service Layer Implementation Patterns
+
+## Architecture Overview
+
+Services contain the **core business logic** of the application and act as the bridge between controllers/handlers and data models. They ensure business rules are centralized and reusable across different transport layers (HTTP API, MCP, GraphQL, etc.).
+
+## Key Principles
+
+### 1. Business Logic Centralization
+Services are the **single source of truth** for business rules, data processing, and validation logic.
+
+```javascript
+// ✅ CORRECT - Business logic in service
+async getAllIssues({ category, name, page = 1, limit = 30 }) {
+  const issues = await issueModel.findMany(category, name, page, limit);
+  const totalIssues = await issueModel.count(category, name);
+
+  return {
+    issues,
+    total: totalIssues,
+    page: Number(page),
+    totalPages: Math.ceil(totalIssues / limit), // Business calculation
+  };
+}
+
+// ❌ WRONG - Business logic in controller/handler
+const issues = await issueModel.findMany(filters);
+const processed = issues.map(/* processing */); // This belongs in service
+```
+
+### 2. Transport Agnostic
+Services should **never** contain HTTP-specific logic or MCP-specific formatting. They return pure data structures.
+
+```javascript
+// ✅ CORRECT - Returns data only
+return {
+  issues: processedIssues,
+  total: totalCount,
+  page: Number(page)
+};
+
+// ❌ WRONG - HTTP concerns in service
+return res.status(200).json(data); // HTTP logic doesn't belong here
+```
+
+### 3. Input Validation & Error Handling
+Services should validate inputs and throw meaningful errors that transport layers can handle appropriately.
+
+## Standard Service Pattern
+
+### Reference Implementation
+See [src/services/issueService.js](mdc:src/services/issueService.js) for the correct pattern (excluding test-only methods like `getMockIssues`).
+
+### Template Structure
+```javascript
+import { domainModel } from "../models/domainModel.js";
+
+export const domainService = {
+  // List/Search with pagination
+  async getAll({ filter1, filter2, page = 1, limit = 30 }) {
+    // Input validation
+    const validatedPage = Number(page);
+    const validatedLimit = Number(limit);
+    
+    // Business logic - data retrieval
+    const items = await domainModel.findMany(filter1, filter2, validatedPage, validatedLimit);
+    const totalItems = await domainModel.count(filter1, filter2);
+
+    // Business logic - response structure
+    return {
+      items,
+      total: totalItems,
+      page: validatedPage,
+      totalPages: Math.ceil(totalItems / validatedLimit),
+    };
+  },
+
+  // Get by ID with validation
+  async getById(itemId) {
+    if (!itemId) {
+      throw new Error("Item ID is required");
+    }
+
+    const item = await domainModel.findById(itemId);
+
+    if (!item) {
+      throw new Error(`Item with ID ${itemId} not found`);
+    }
+
+    return item;
+  },
+
+  // Create with validation
+  async create(itemData) {
+    // Business validation
+    if (!itemData || !itemData.name) {
+      throw new Error("Unable to create item without required fields");
+    }
+
+    // Additional business rules
+    if (itemData.name.length < 3) {
+      throw new Error("Item name must be at least 3 characters");
+    }
+
+    const createdItem = await domainModel.create(itemData);
+    return createdItem;
+  },
+
+  // Update with validation and data cleaning
+  async update(itemId, updateData) {
+    if (!itemId) {
+      throw new Error("Item ID is required");
+    }
+
+    // Business logic - clean and validate update data
+    const { name, category, description, ...otherFields } = updateData;
+    
+    const cleanUpdateData = {
+      name,
+      category,
+      description,
+      ...otherFields,
+    };
+
+    // Remove undefined/null values if needed
+    Object.keys(cleanUpdateData).forEach(key => 
+      cleanUpdateData[key] === undefined && delete cleanUpdateData[key]
+    );
+
+    const updatedItem = await domainModel.update(itemId, cleanUpdateData);
+    return updatedItem;
+  },
+};
+```
+
+## Input Validation Patterns
+
+### Required Field Validation
+```javascript
+async create(itemData) {
+  if (!itemData || !itemData.name) {
+    throw new Error("Unable to create item without name");
+  }
+  
+  // Additional required field checks
+  if (!itemData.category) {
+    throw new Error("Category is required");
+  }
+}
+```
+
+### ID Validation
+```javascript
+async getById(itemId) {
+  if (!itemId) {
+    throw new Error("Item ID is required");
+  }
+  
+  // Optional: Format validation
+  if (typeof itemId !== 'string' || itemId.trim() === '') {
+    throw new Error("Invalid item ID format");
+  }
+}
+```
+
+### Data Type Validation
+```javascript
+async getAll({ page = 1, limit = 30 }) {
+  const validatedPage = Number(page);
+  const validatedLimit = Number(limit);
+  
+  if (isNaN(validatedPage) || validatedPage < 1) {
+    throw new Error("Page must be a positive number");
+  }
+  
+  if (isNaN(validatedLimit) || validatedLimit < 1 || validatedLimit > 1000) {
+    throw new Error("Limit must be between 1 and 1000");
+  }
+}
+```
+
+## Error Handling Standards
+
+### Meaningful Error Messages
+```javascript
+// ✅ GOOD - Specific, actionable error messages
+throw new Error("Issue ID is required");
+throw new Error(`Issue with ID ${issueId} not found`);
+throw new Error("Unable to create issue without name");
+
+// ❌ BAD - Generic, unhelpful errors
+throw new Error("Error occurred");
+throw new Error("Invalid input");
+```
+
+### Business Rule Errors
+```javascript
+async create(issueData) {
+  if (issueData.priority === 'critical' && !issueData.assignee) {
+    throw new Error("Critical issues must have an assignee");
+  }
+  
+  if (issueData.dueDate && new Date(issueData.dueDate) < new Date()) {
+    throw new Error("Due date cannot be in the past");
+  }
+}
+```
+
+## Data Processing Patterns
+
+### Pagination Structure
+```javascript
+return {
+  items: resultArray,
+  total: totalCount,
+  page: Number(page),
+  totalPages: Math.ceil(totalCount / limit),
+  hasNextPage: page < Math.ceil(totalCount / limit),
+  hasPrevPage: page > 1,
+};
+```
+
+### Data Transformation
+```javascript
+async getProcessedItems(filters) {
+  const rawItems = await itemModel.findMany(filters);
+  
+  // Business logic - data processing
+  const processedItems = rawItems.map(item => ({
+    ...item,
+    displayName: `${item.name} (${item.category})`,
+    isOverdue: item.dueDate && new Date(item.dueDate) < new Date(),
+    statusColor: this.getStatusColor(item.status),
+  }));
+  
+  return processedItems;
+}
+```
+
+### Aggregation Logic
+```javascript
+async getStatistics() {
+  const allItems = await itemModel.findAll();
+  
+  return {
+    total: allItems.length,
+    byStatus: this.groupByStatus(allItems),
+    byCategory: this.groupByCategory(allItems),
+    recentlyCreated: allItems.filter(item => 
+      new Date(item.createdAt) > new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)
+    ).length,
+  };
+}
+```
+
+## What NOT to Include in Services
+
+### ❌ Test-Only Methods
+```javascript
+// DON'T include mock/test methods in production services
+async getMockItems() {
+  const mockData = [/* hardcoded test data */];
+  await sleep(1000); // Artificial delays for testing
+  return mockData;
+}
+```
+
+### ❌ HTTP-Specific Logic
+```javascript
+// DON'T include HTTP status codes or response formatting
+return res.status(200).json(data);
+return { statusCode: 200, body: data };
+```
+
+### ❌ Transport-Specific Formatting
+```javascript
+// DON'T format for specific transports
+return {
+  content: [{ type: "text", text: JSON.stringify(data) }] // MCP-specific
+};
+```
+
+## Service Dependencies
+
+### Model Layer Integration
+```javascript
+import { domainModel } from "../models/domainModel.js";
+
+// Services should primarily interact with models
+const items = await domainModel.findMany(filters);
+```
+
+### Cross-Service Dependencies
+```javascript
+import { userService } from "./userService.js";
+import { notificationService } from "./notificationService.js";
+
+async create(issueData) {
+  // Validate related entities
+  if (issueData.assigneeId) {
+    await userService.getById(issueData.assigneeId); // Validates user exists
+  }
+  
+  const issue = await issueModel.create(issueData);
+  
+  // Trigger related business logic
+  if (issueData.priority === 'critical') {
+    await notificationService.sendAlert(issue);
+  }
+  
+  return issue;
+}
+```
+
+## Testing Services
+
+Services should be unit tested to verify:
+- Input validation logic
+- Business rule enforcement
+- Data transformation accuracy
+- Error handling scenarios
+- Cross-service integration
+
+## Common Service Patterns
+
+### CRUD Operations
+```javascript
+export const crudService = {
+  async getAll(filters) { /* list with filtering */ },
+  async getById(id) { /* single item retrieval */ },
+  async create(data) { /* creation with validation */ },
+  async update(id, data) { /* update with validation */ },
+  async delete(id) { /* deletion with checks */ },
+};
+```
+
+### Search & Filter
+```javascript
+async search({ query, filters, sort, page, limit }) {
+  const searchResults = await model.search({
+    query,
+    filters: this.validateFilters(filters),
+    sort: this.validateSort(sort),
+    page: Number(page),
+    limit: Number(limit),
+  });
+  
+  return this.formatSearchResults(searchResults);
+}
+```
+
+This service layer pattern ensures your business logic is reusable, testable, and enables seamless integration with multiple transport layers including MCP.
+

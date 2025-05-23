@@ -4,6 +4,13 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/streamableHttp.js";
 import { isInitializeRequest } from "@modelcontextprotocol/sdk/types.js";
 import { statusCheck } from "./tools/status-check.js";
+import {
+  getIssues,
+  getIssueById,
+  createIssue,
+  getMockIssues,
+} from "./tools/issues.js";
+import { getResults, getResultById } from "./tools/results.js";
 
 const router = Router();
 
@@ -32,12 +39,24 @@ router.post("/mcp", async (req, res) => {
         delete transports[transport.sessionId];
       }
     };
+
     const server = new McpServer({
       name: "test-portal-server",
       version: "0.0.1",
     });
 
-    server.tool("check-status", statusCheck);
+    // Register all tools
+    server.tool(...statusCheck);
+
+    // Issue tools
+    server.tool(...getIssues);
+    server.tool(...getIssueById);
+    server.tool(...createIssue);
+    server.tool(...getMockIssues);
+
+    // Result tools
+    server.tool(...getResults);
+    server.tool(...getResultById);
 
     await server.connect(transport);
     await transport.handleRequest(req, res, req.body);

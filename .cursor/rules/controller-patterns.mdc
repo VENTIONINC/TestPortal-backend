@@ -1,0 +1,297 @@
+---
+description: 
+globs: 
+alwaysApply: false
+---
+# Controller Implementation Patterns
+
+## Architecture Overview
+
+Controllers in this project follow the **Service Layer Pattern** to ensure clean separation of concerns and enable MCP compatibility. Controllers handle HTTP-specific logic while delegating business logic to services.
+
+## Key Principles
+
+### 1. Service Layer Delegation
+Controllers should **never** contain business logic. All data processing, validation, and business rules belong in the service layer.
+
+```javascript
+// ✅ CORRECT - Delegates to service
+const result = await issueService.getAllIssues(params);
+
+// ❌ WRONG - Business logic in controller
+const issues = await issueModel.findMany(filters, page, limit);
+for (const issue of issues) { /* processing */ }
+```
+
+### 2. HTTP-Only Concerns
+Controllers should only handle:
+- Parameter extraction from `req.query`, `req.params`, `req.body`
+- HTTP status codes and responses
+- Error handling with appropriate HTTP error codes
+
+## Standard Controller Pattern
+
+### Reference Implementation
+See [src/controllers/issueController.js](mdc:src/controllers/issueController.js) for the correct pattern.
+
+### Template Structure
+```javascript
+import { domainService } from "../services/domainService.js";
+
+export const domainController = {
+  // GET /domain - List with filtering/pagination
+  getAll: async (req, res) => {
+    try {
+      const { filter1, filter2, page = 1, limit = 30 } = req.query;
+      
+      const result = await domainService.getAll({
+        filter1,
+        filter2,
+        page,
+        limit,
+      });
+
+      return res.status(200).json(result);
+    } catch (error) {
+      return res.status(500).json({
+        error: `Failed to fetch items. ${error.message}`,
+      });
+    }
+  },
+
+  // GET /domain/:id - Get by ID
+  getById: async (req, res) => {
+    try {
+      const { id } = req.params;
+      const item = await domainService.getById(id);
+      return res.status(200).json(item);
+    } catch (error) {
+      return res.status(404).json({
+        error: error.message,
+      });
+    }
+  },
+
+  // POST /domain - Create new item
+  create: async (req, res) => {
+    try {
+      const itemData = req.body;
+      const item = await domainService.create(itemData);
+      return res.status(201).json(item);
+    } catch (error) {
+      return res.status(400).json({
+        error: error.message,
+      });
+    }
+  },
+
+  // PATCH/PUT /domain/:id - Update item
+  update: async (req, res) => {
+    try {
+      const { id } = req.params;
+      const updateData = req.body;
+      
+      const updatedItem = await domainService.update(id, updateData);
+      return res.status(200).json(updatedItem);
+    } catch (error) {
+      return res.status(400).json({
+        error: `Failed to update item. ${error.message}`,
+      });
+    }
+  },
+};
+```
+
+## Error Handling Standards
+
+### HTTP Status Code Guidelines
+- **200**: Successful GET, PATCH/PUT operations
+- **201**: Successful POST (creation)
+- **400**: Bad request (validation errors, malformed data)
+- **404**: Resource not found (typically for GET/UPDATE by ID)
+- **500**: Internal server error (unexpected failures)
+
+### Error Response Format
+```javascript
+// Consistent error response structure
+return res.status(statusCode).json({
+  error: error.message || "Default error message",
+});
+```
+
+### Error Handling Pattern
+```javascript
+try {
+  // Controller logic here
+  const result = await service.operation(params);
+  return res.status(200).json(result);
+} catch (error) {
+  // Log if needed for debugging
+  console.error("Operation failed:", error);
+  
+  // Return appropriate HTTP error
+  return res.status(appropriateCode).json({
+    error: `Failed to perform operation. ${error.message}`,
+  });
+}
+```
+
+## Parameter Extraction Patterns
+
+### Query Parameters (GET requests)
+```javascript
+// With defaults for pagination
+const { category, name, page = 1, limit = 30 } = req.query;
+
+// Optional filters
+const { status, environment, from, to } = req.query;
+```
+
+### Path Parameters
+```javascript
+// Single ID parameter
+const { issueId } = req.params;
+const { resultId } = req.params;
+
+// Multiple path parameters
+const { userId, projectId } = req.params;
+```
+
+### Request Body
+```javascript
+// For POST/PUT/PATCH operations
+const itemData = req.body;
+const updateData = req.body;
+
+// With destructuring if needed
+const { name, category, description } = req.body;
+```
+
+## MCP Compatibility Benefits
+
+This pattern enables MCP compatibility because:
+
+1. **Shared Business Logic**: Services can be used by both HTTP controllers and MCP handlers
+2. **Consistent Validation**: Same validation logic in services for both transport methods
+3. **Single Source of Truth**: Business rules exist in one place (services)
+4. **Easy Testing**: Services can be tested independently of transport layer
+
+### Example MCP Integration
+```javascript
+// HTTP Controller (src/controllers/issueController.js)
+const result = await issueService.getAllIssues(params);
+return res.status(200).json(result);
+
+// MCP Handler (src/handlers/mcpIssueHandler.js)  
+const result = await issueService.getAllIssues(params);
+return result; // No HTTP concerns
+```
+
+## Refactoring Existing Controllers
+
+### Before (Anti-pattern)
+```javascript
+export const oldController = {
+  getItems: async (req, res) => {
+    const { filter } = req.query;
+    
+    // ❌ Business logic in controller
+    const items = await itemModel.findMany(filter);
+    const processed = items.map(item => ({
+      ...item,
+      calculated: item.value * 2
+    }));
+    
+    return res.json(processed);
+  }
+};
+```
+
+### After (Correct pattern)
+```javascript
+export const newController = {
+  getItems: async (req, res) => {
+    try {
+      const { filter } = req.query;
+      
+      // ✅ Delegate to service
+      const items = await itemService.getItems({ filter });
+      return res.status(200).json(items);
+    } catch (error) {
+      return res.status(500).json({
+        error: `Failed to fetch items. ${error.message}`,
+      });
+    }
+  }
+};
+```
+
+## Common Patterns
+
+### List with Pagination
+```javascript
+getAllItems: async (req, res) => {
+  try {
+    const { category, status, page = 1, limit = 30 } = req.query;
+    
+    const result = await itemService.getAll({
+      category,
+      status,
+      page: Number(page),
+      limit: Number(limit),
+    });
+
+    return res.status(200).json(result);
+  } catch (error) {
+    return res.status(500).json({
+      error: `Failed to fetch items. ${error.message}`,
+    });
+  }
+},
+```
+
+### Get by ID with 404 handling
+```javascript
+getItemById: async (req, res) => {
+  try {
+    const { itemId } = req.params;
+    const item = await itemService.getById(itemId);
+    return res.status(200).json(item);
+  } catch (error) {
+    // Service should throw meaningful errors
+    return res.status(404).json({
+      error: error.message,
+    });
+  }
+},
+```
+
+### Create with 201 status
+```javascript
+createItem: async (req, res) => {
+  try {
+    const itemData = req.body;
+    const item = await itemService.create(itemData);
+    return res.status(201).json(item);
+  } catch (error) {
+    return res.status(400).json({
+      error: error.message,
+    });
+  }
+},
+```
+
+## Testing Controllers
+
+Controllers should be tested to verify:
+- Correct parameter extraction
+- Proper service method calls
+- Appropriate HTTP status codes
+- Error handling scenarios
+
+## Service Layer Requirements
+
+When creating controllers, ensure corresponding services exist in [src/services/](mdc:src/services) following the service layer patterns.
+
+This architecture ensures your controllers are clean, testable, and enable seamless MCP integration.
+

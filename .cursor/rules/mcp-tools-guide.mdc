@@ -1,0 +1,228 @@
+---
+description: 
+globs: 
+alwaysApply: false
+---
+# MCP Tools Implementation Guide
+
+## Architecture Overview
+
+The MCP tools follow a clean, layered architecture designed to minimize code duplication and ensure consistency across all tools.
+
+### Key Components
+
+- **Helpers**: [src/mcp/helpers/mcpHelpers.js](mdc:src/mcp/helpers/mcpHelpers.js) - Standardized response and error handling
+- **Common Schemas**: [src/mcp/schemas/commonSchemas.js](mdc:src/mcp/schemas/commonSchemas.js) - Shared schema patterns
+- **Domain Schemas**: Domain-specific schemas like [src/mcp/schemas/issueSchemas.js](mdc:src/mcp/schemas/issueSchemas.js) and [src/mcp/schemas/resultSchemas.js](mdc:src/mcp/schemas/resultSchemas.js)
+- **Tools**: Individual tool implementations in [src/mcp/tools/](mdc:src/mcp/tools)
+
+## Best Practices for New Tools
+
+### 1. Use the Standard Pattern
+
+Always use the `createMcpTool()` helper from [src/mcp/helpers/mcpHelpers.js](mdc:src/mcp/helpers/mcpHelpers.js):
+
+```javascript
+import { createMcpTool, createSuccessResponse } from "../helpers/mcpHelpers.js";
+import { mySchema } from "../schemas/myDomainSchemas.js";
+
+export const myTool = createMcpTool(
+  "tool-name",                    // Tool identifier (kebab-case)
+  "Clear, concise description",   // What the tool does
+  mySchema,                       // Zod validation schema
+  async (params) => {             // Handler function
+    const data = await someHandler(params);
+    return createSuccessResponse(data, "Optional success message");
+  },
+  "operation description"         // For error messages (e.g., "fetching users")
+);
+```
+
+### 2. Schema Organization
+
+#### For New Domains
+Create a new schema file: `src/mcp/schemas/[domain]Schemas.js`
+
+```javascript
+import { z } from "zod";
+
+export const getDomainItemsSchema = {
+  // Use z.string().optional() for optional string params
+  name: z.string().optional(),
+  category: z.string().optional(),
+  // Use z.number().default(N).optional() for pagination
+  page: z.number().default(1).optional(),
+  limit: z.number().default(30).optional(),
+};
+
+export const getDomainItemByIdSchema = {
+  itemId: z.string(), // Required parameters don't need .optional()
+};
+```
+
+#### For Common Patterns
+Use schemas from [src/mcp/schemas/commonSchemas.js](mdc:src/mcp/schemas/commonSchemas.js):
+
+```javascript
+import { emptySchema } from "../schemas/commonSchemas.js";
+
+// For tools that don't need parameters (like status checks)
+export const mySimpleTool = createMcpTool(
+  "simple-tool",
+  "Description",
+  emptySchema,
+  async () => { /* logic */ },
+  "operation"
+);
+```
+
+### 3. Response Patterns
+
+#### Success Responses
+```javascript
+// Simple data response
+return createSuccessResponse(data);
+
+// With success message
+return createSuccessResponse(data, "Operation completed successfully:");
+```
+
+#### Error Handling
+Errors are automatically handled by `createMcpTool()`. Just throw meaningful errors:
+
+```javascript
+if (!itemId) {
+  throw new Error('Item ID is required');
+}
+
+if (!foundItem) {
+  throw new Error(`Item with ID ${itemId} not found`);
+}
+```
+
+### 4. Tool Registration
+
+Add new tools to [src/mcp/server.js](mdc:src/mcp/server.js):
+
+```javascript
+import { myNewTool } from "./tools/myDomain.js";
+
+// In the server creation section:
+server.tool(...myNewTool);
+```
+
+### 5. Handler Integration
+
+Tools should use handlers from [src/handlers/](mdc:mcp:src/handlers) for business logic:
+
+```javascript
+import { mcpDomainHandler } from "../../handlers/mcpDomainHandler.js";
+
+async (params) => {
+  const data = await mcpDomainHandler.getData(params);
+  return createSuccessResponse(data);
+}
+```
+
+## File Organization Standards
+
+### Tool Files
+- One tool per export, multiple related tools per file
+- Use descriptive names: `getDomainItems`, `getDomainItemById`, `createDomainItem`
+- Group by domain (issues, results, users, etc.)
+
+### Schema Files  
+- One schema file per domain: `domainSchemas.js`
+- Export const schemas with descriptive names
+- Document each schema with JSDoc comments
+
+### Example Tool File Structure
+```javascript
+// src/mcp/tools/users.js
+import { mcpUserHandler } from "../../handlers/mcpUserHandler.js";
+import { createSuccessResponse, createMcpTool } from "../helpers/mcpHelpers.js";
+import { getUsersSchema, getUserByIdSchema, createUserSchema } from "../schemas/userSchemas.js";
+
+export const getUsers = createMcpTool(/* ... */);
+export const getUserById = createMcpTool(/* ... */);
+export const createUser = createMcpTool(/* ... */);
+```
+
+## Common Patterns
+
+### Pagination Tools
+```javascript
+export const getPaginatedItems = createMcpTool(
+  "get-items",
+  "Retrieve items with pagination and filtering",
+  {
+    category: z.string().optional(),
+    page: z.number().default(1).optional(),
+    limit: z.number().default(30).optional(),
+  },
+  async (params) => {
+    const items = await handler.getItems(params);
+    return createSuccessResponse(items);
+  },
+  "fetching items"
+);
+```
+
+### ID-based Retrieval
+```javascript
+export const getItemById = createMcpTool(
+  "get-item-by-id",
+  "Retrieve a specific item by its unique identifier",
+  { itemId: z.string() },
+  async (params) => {
+    const { itemId } = params;
+    const item = await handler.getById(itemId);
+    return createSuccessResponse(item);
+  },
+  "fetching item"
+);
+```
+
+### Creation Tools
+```javascript
+export const createItem = createMcpTool(
+  "create-item",
+  "Create a new item with required and optional fields",
+  {
+    name: z.string(),                    // Required
+    description: z.string().optional(), // Optional
+    category: z.string().optional(),    // Optional
+  },
+  async (params) => {
+    const item = await handler.create(params);
+    return createSuccessResponse(item, "Item created successfully:");
+  },
+  "creating item"
+);
+```
+
+## Testing New Tools
+
+1. **Start the server**: `npm run server`
+2. **Use MCP Inspector**: `npm run inspector`
+3. **Connect to**: `http://localhost:3001/api/mcp`
+4. **Verify**: Tool appears in inspector with correct schema
+5. **Test**: Run tool with various parameter combinations
+
+## Code Quality Standards
+
+- Always use TypeScript-style JSDoc comments
+- Validate all inputs with Zod schemas
+- Use meaningful error messages
+- Follow consistent naming conventions (kebab-case for tool names)
+- Keep handlers thin - business logic goes in services
+- Test edge cases (missing IDs, invalid parameters, etc.)
+
+## Examples to Reference
+
+- **Simple Tool**: [src/mcp/tools/status-check.js](mdc:src/mcp/tools/status-check.js)
+- **CRUD Tools**: [src/mcp/tools/issues.js](mdc:src/mcp/tools/issues.js)
+- **Query Tools**: [src/mcp/tools/results.js](mdc:src/mcp/tools/results.js)
+
+This architecture ensures consistency, maintainability, and easy extension of the MCP server functionality.
+

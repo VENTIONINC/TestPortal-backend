@@ -1,67 +1,53 @@
-import { resultModel } from "../models/resultModel.js";
+import { resultService } from "../services/resultService.js";
 
 export const resultController = {
   getResults: async (req, res) => {
-    const {
-      tag,
-      specId,
-      specFile,
-      specName,
-      environment,
-      type,
-      status,
-      from,
-      to,
-      page = 1,
-      limit = 1000,
-    } = req.query;
-
-    const filters = {
-      tag,
-      specId,
-      specFile,
-      specName,
-      environment,
-      type,
-      status,
-      from,
-      to,
-    };
-
     try {
-      const results = await resultModel.findMany(filters, page, limit);
-      const totalResults = await resultModel.count(filters);
+      const {
+        tag,
+        specId,
+        specFile,
+        specName,
+        environment,
+        type,
+        status,
+        from,
+        to,
+        page = 1,
+        limit = 1000,
+      } = req.query;
 
-      for (const result of results) {
-        // de-serialize stacks
-        if (result.errors && result.errors.length) {
-          for (const error of result.errors) {
-            error.callLog = JSON.parse(error.callLog);
-            error.callStack = JSON.parse(error.callStack);
-          }
-        }
-
-        // de-serialize string arrays
-        result.spec.tags = JSON.parse(result.spec.tags);
-        result.spec.annotations = JSON.parse(result.spec.annotations);
-      }
-
-      return res.json({
-        results,
-        total: totalResults,
-        page: Number(page),
-        totalPages: Math.ceil(totalResults / limit),
+      const result = await resultService.getResults({
+        tag,
+        specId,
+        specFile,
+        specName,
+        environment,
+        type,
+        status,
+        from,
+        to,
+        page,
+        limit,
       });
+
+      return res.json(result);
     } catch (error) {
-      throw new Error(`Failed to fetch results. ${error.message}`);
+      return res.status(500).json({
+        error: `Failed to fetch results. ${error.message}`,
+      });
     }
   },
 
   getResultById: async (req, res) => {
-    const { resultId } = req.params;
-
-    const resultRecord = await resultModel.findById(resultId);
-
-    return res.status(200).json(resultRecord);
+    try {
+      const { resultId } = req.params;
+      const resultRecord = await resultService.getResultById(resultId);
+      return res.status(200).json(resultRecord);
+    } catch (error) {
+      return res.status(404).json({
+        error: error.message,
+      });
+    }
   },
 };
