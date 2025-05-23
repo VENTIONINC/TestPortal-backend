@@ -28,3 +28,8 @@
     ```
 
 5.  **Open in browser:** `http://localhost:3001/api/results` (or your relevant API endpoint)
+
+## Documentation
+
+- [API Documentation](docs/API_DOCUMENTATION.md)
+- [How to Inspect the MCP Server](docs/INSPECT_MCP_SERVER.md)
