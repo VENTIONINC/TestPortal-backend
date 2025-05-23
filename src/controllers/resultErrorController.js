@@ -1,57 +1,58 @@
-import { resultErrorModel } from "../models/resultErrorModel.js";
-import { runReview } from "../lib/error-analyzer.js";
+import { resultErrorService } from "../services/resultErrorService.js";
 
 export const resultErrorController = {
   assignIssue: async (req, res) => {
-    const { resultErrorId } = req.params;
-    const { assumptionId } = req.body;
-
     try {
-      const updatedRecord = await resultErrorModel.assignIssue(
+      const { resultErrorId } = req.params;
+      const { assumptionId } = req.body;
+
+      const updatedRecord = await resultErrorService.assignIssue(
         resultErrorId,
         assumptionId,
       );
       return res.status(200).json(updatedRecord);
     } catch (error) {
-      res.status(400).json({ error: "Failed to assign issue" });
+      return res.status(400).json({
+        error: `Failed to assign issue. ${error.message}`,
+      });
     }
   },
 
   reviewError: async (req, res) => {
-    const { resultErrorId } = req.params;
-
     try {
-      const resultError = await resultErrorModel.findById(resultErrorId);
-      const record = await runReview(resultError);
-
-      console.log(record);
-
-      return res.status(200).json(record);
+      const { resultErrorId } = req.params;
+      const reviewedRecord =
+        await resultErrorService.reviewError(resultErrorId);
+      return res.status(200).json(reviewedRecord);
     } catch (error) {
       return res.status(400).json({
-        error: `Failed to review result error #${resultErrorId}, ${error.message}`,
+        error: `Failed to review result error. ${error.message}`,
       });
     }
   },
 
   bulkReview: async (req, res) => {
-    const { errorIds } = req.body;
-    const reviewResults = [];
-
     try {
-      for (const errorId of errorIds) {
-        const resultError = await resultErrorModel.findById(errorId);
-        const record = await runReview(resultError);
-        reviewResults.push(record);
-      }
+      const { errorIds } = req.body;
+      const bulkResults = await resultErrorService.bulkReview(errorIds);
+      return res.status(200).json(bulkResults);
+    } catch (error) {
+      return res.status(400).json({
+        error: `Failed to complete bulk review. ${error.message}`,
+      });
+    }
+  },
 
-      return res.status(200).json(reviewResults);
-    } catch (e) {
-      throw new Error(
-        `Unable to complete auto review for: ${errorIds.join(",")}. ${
-          e.message
-        }`,
-      );
+  getResultErrorById: async (req, res) => {
+    try {
+      const { resultErrorId } = req.params;
+      const resultError =
+        await resultErrorService.getResultErrorById(resultErrorId);
+      return res.status(200).json(resultError);
+    } catch (error) {
+      return res.status(404).json({
+        error: error.message,
+      });
     }
   },
 };

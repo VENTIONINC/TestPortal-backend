@@ -1,62 +1,51 @@
-import { assumptionModel } from "../models/assumptionModel.js";
+import { assumptionService } from "../services/assumptionService.js";
 
 export const assumptionController = {
   createAssumption: async (req, res) => {
     try {
-      const { issueId, resultErrorId, ...rest } = req.body;
-
-      if (!issueId) {
-        throw new Error("Unable to create new assumption: missing issue id");
-      }
-
-      if (!resultErrorId) {
-        throw new Error(
-          "Unable to create new assumption: missing result error id",
-        );
-      }
-
-      const assumption = {
-        issueId: Number(issueId),
-        resultErrorId: Number(resultErrorId),
-        ...rest,
-      };
-
-      const updatedRecord = await assumptionModel.create(assumption);
-
-      return res.status(201).json(updatedRecord);
+      const assumptionData = req.body;
+      const assumption =
+        await assumptionService.createAssumption(assumptionData);
+      return res.status(201).json(assumption);
     } catch (error) {
-      res
-        .status(400)
-        .json({ error: `Failed to update assumption, ${error.message}` });
+      return res.status(400).json({
+        error: `Failed to create assumption. ${error.message}`,
+      });
     }
   },
 
   updateAssumption: async (req, res) => {
     try {
       const { assumptionId } = req.params;
-      const assumption = req.body;
+      const updateData = req.body;
 
-      if (assumption.madeBy !== "user") {
-        throw new Error("Only real user can modify assumptions");
+      const result = await assumptionService.updateAssumption(
+        assumptionId,
+        updateData,
+      );
+
+      if (result.action === "deleted") {
+        return res.status(204).send();
+      } else {
+        return res.status(200).json(result.assumption);
       }
-
-      if (assumption.isConfirmed) {
-        const updatedRecord = await assumptionModel.update(
-          assumptionId,
-          req.body,
-        );
-
-        return res.status(200).json(updatedRecord);
-      }
-
-      // delete record if user confirmed assumption is wrong (isConfirmed === FALSE)
-      await assumptionModel.delete(assumptionId);
-
-      return res.status(204).send();
     } catch (error) {
-      res
-        .status(400)
-        .json({ error: `Failed to update assumption, ${error.message}` });
+      return res.status(400).json({
+        error: `Failed to update assumption. ${error.message}`,
+      });
+    }
+  },
+
+  getAssumptionById: async (req, res) => {
+    try {
+      const { assumptionId } = req.params;
+      const assumption =
+        await assumptionService.getAssumptionById(assumptionId);
+      return res.status(200).json(assumption);
+    } catch (error) {
+      return res.status(404).json({
+        error: error.message,
+      });
     }
   },
 };

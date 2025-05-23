@@ -12,5 +12,9 @@ router.patch(
   resultErrorController.reviewError,
 );
 router.patch("/result-errors/bulk-review", resultErrorController.bulkReview);
+router.get(
+  "/result-errors/:resultErrorId",
+  resultErrorController.getResultErrorById,
+);
 
 export default router;

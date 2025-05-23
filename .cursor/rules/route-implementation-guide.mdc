@@ -1,0 +1,249 @@
+---
+description: 
+globs: 
+alwaysApply: false
+---
+# Route Implementation Guide
+
+## Architecture Overview
+
+This guide provides a standardized approach for implementing new API routes or updating existing ones to follow the established **Service Layer Pattern**. The implementation ensures clean separation of concerns and optionally enables MCP protocol access when needed.
+
+## Reference Implementation
+
+Use [src/routes/assumptions.js](mdc:src/routes/assumptions.js) as the reference pattern for route structure.
+
+## Core Implementation (Always Required)
+
+### 1. Route Definition (`src/routes/[domain].js`)
+Create or update the route file following this pattern:
+
+```javascript
+import { Router } from "express";
+import { domainController } from "../controllers/domainController.js";
+
+const router = Router();
+
+// GET route for retrieving by ID
+router.get("/domain/:domainId", domainController.getDomainById);
+
+// POST route for creation
+router.post("/domain", domainController.createDomain);
+
+// PATCH route for updates
+router.patch("/domain/:domainId", domainController.updateDomain);
+
+export default router;
+```
+
+**Key Points:**
+- Use consistent parameter naming (e.g., `domainId`, `assumptionId`)
+- Follow RESTful conventions
+- Import controller from relative path
+
+### 2. Service Layer (`src/services/domainService.js`)
+Reference: [src/services/assumptionService.js](mdc:src/services/assumptionService.js)
+
+**Essential Elements:**
+- Input validation with meaningful error messages
+- Business logic centralization
+- Transport-agnostic design (no HTTP concerns)
+- Consistent error handling with `throw new Error()`
+
+```javascript
+export const domainService = {
+  async getDomainById(domainId) {
+    if (!domainId) {
+      throw new Error("Domain ID is required");
+    }
+    // Validation and business logic here
+  },
+  // Other CRUD methods...
+};
+```
+
+### 3. Controller Layer (`src/controllers/domainController.js`)
+Reference: [src/controllers/assumptionController.js](mdc:src/controllers/assumptionController.js)
+
+**Controller Pattern:**
+- Delegate all business logic to services
+- Handle only HTTP-specific concerns (status codes, request/response)
+- Use try-catch for error handling
+- Return appropriate HTTP status codes
+
+```javascript
+export const domainController = {
+  getDomainById: async (req, res) => {
+    try {
+      const { domainId } = req.params;
+      const domain = await domainService.getDomainById(domainId);
+      return res.status(200).json(domain);
+    } catch (error) {
+      return res.status(404).json({
+        error: error.message,
+      });
+    }
+  },
+};
+```
+
+## Optional MCP Integration
+
+Add these layers only when MCP support is needed:
+
+### 4. MCP Handler (`src/handlers/mcpDomainHandler.js`)
+Reference: [src/handlers/mcpAssumptionHandler.js](mdc:src/handlers/mcpAssumptionHandler.js)
+
+**Handler Pattern:**
+- Thin wrapper around service methods
+- Direct delegation to services
+- No additional logic
+
+### 5. MCP Schemas (`src/mcp/schemas/domainSchemas.js`)
+Reference: [src/mcp/schemas/assumptionSchemas.js](mdc:src/mcp/schemas/assumptionSchemas.js)
+
+**Schema Requirements:**
+- Use Zod validation (`z.string()`, `z.number()`, etc.)
+- Mark optional fields with `.optional()`
+- Provide JSDoc comments for each schema
+
+### 6. MCP Tools (`src/mcp/tools/domain.js`)
+Reference: [src/mcp/tools/assumptions.js](mdc:src/mcp/tools/assumptions.js)
+
+**Tool Implementation:**
+- Use `createMcpTool()` helper from [src/mcp/helpers/mcpHelpers.js](mdc:src/mcp/helpers/mcpHelpers.js)
+- Follow kebab-case naming convention
+- Provide clear, descriptive tool descriptions
+- Use `createSuccessResponse()` for consistent responses
+
+### 7. MCP Server Registration (`src/mcp/server.js`)
+Reference: [src/mcp/server.js](mdc:src/mcp/server.js)
+
+**Registration Steps:**
+1. Import tools at the top of the file
+2. Register tools in the server creation section
+3. Group tools by domain with comments
+
+## Implementation Options
+
+### HTTP-Only Route (Minimal)
+1. **Create Service Layer** - Implement business logic and validation
+2. **Create Controller** - HTTP-specific logic delegating to service
+3. **Define Routes** - RESTful endpoint definitions
+
+### Full HTTP + MCP Integration
+1. **HTTP-Only Route** (steps 1-3 above)
+2. **Create MCP Handler** - Bridge service to MCP tools
+3. **Define MCP Schemas** - Zod validation schemas
+4. **Implement MCP Tools** - Using standard helpers
+5. **Register with MCP Server** - Add to server tool list
+
+### For Existing Route Updates:
+1. **Refactor Controller** - Move business logic to service layer
+2. **Create Service Layer** - Extract and centralize business logic
+3. **Add MCP Support** - Follow MCP steps above (optional)
+4. **Update Error Handling** - Ensure consistent error responses
+
+## Common Patterns
+
+### ID Validation Pattern
+```javascript
+const numericId = Number(id);
+if (isNaN(numericId) || numericId <= 0) {
+  throw new Error("ID must be a valid positive number");
+}
+```
+
+### Error Response Pattern
+```javascript
+// Controller level
+return res.status(404).json({
+  error: error.message,
+});
+
+// Service level  
+throw new Error("Descriptive error message");
+```
+
+### MCP Tool Pattern (When Needed)
+```javascript
+export const getDomainById = createMcpTool(
+  "get-domain-by-id",
+  "Clear description of what the tool does",
+  getDomainByIdSchema,
+  async (params) => {
+    const { domainId } = params;
+    const domain = await mcpDomainHandler.getDomainById(domainId);
+    return createSuccessResponse(domain);
+  },
+  "fetching domain",
+);
+```
+
+## HTTP Status Code Guidelines
+
+- **200**: Successful GET, PATCH/PUT operations
+- **201**: Successful POST (creation)
+- **204**: Successful DELETE (no content)
+- **400**: Bad request (validation errors)
+- **404**: Resource not found
+- **500**: Internal server error
+
+## File Naming Conventions
+
+### Required Files
+- Routes: `src/routes/[domain-plural].js` (e.g., `assumptions.js`)
+- Controllers: `src/controllers/[domain]Controller.js`
+- Services: `src/services/[domain]Service.js`
+
+### Optional MCP Files
+- MCP Handlers: `src/handlers/mcp[Domain]Handler.js`
+- MCP Schemas: `src/mcp/schemas/[domain]Schemas.js`
+- MCP Tools: `src/mcp/tools/[domain-plural].js`
+
+## Benefits of This Pattern
+
+### Always Benefits (HTTP-Only)
+- **Clean Architecture**: Clear separation of concerns
+- **Maintainability**: Business logic centralized in services
+- **Testability**: Services can be unit tested independently
+- **Consistency**: Standardized patterns across domains
+- **Error Handling**: Consistent error responses and validation
+
+### Additional Benefits (With MCP)
+- **Dual Protocol Support**: Same business logic accessible via HTTP and MCP
+- **Future-Proof**: Easy to add MCP support later
+- **Consistent API**: Same validation and business rules across protocols
+
+## Quick Start Examples
+
+### Minimal HTTP Route
+```javascript
+// 1. Service
+export const userService = {
+  async getUserById(userId) {
+    if (!userId) throw new Error("User ID is required");
+    return await userModel.findById(userId);
+  }
+};
+
+// 2. Controller  
+export const userController = {
+  getUserById: async (req, res) => {
+    try {
+      const { userId } = req.params;
+      const user = await userService.getUserById(userId);
+      return res.status(200).json(user);
+    } catch (error) {
+      return res.status(404).json({ error: error.message });
+    }
+  }
+};
+
+// 3. Route
+router.get("/users/:userId", userController.getUserById);
+```
+
+This approach allows you to build exactly what you need - from simple HTTP endpoints to full MCP-integrated APIs - while maintaining consistent, clean patterns throughout your codebase.
+
+

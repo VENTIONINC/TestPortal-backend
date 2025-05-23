@@ -11,6 +11,19 @@ import {
   getMockIssues,
 } from "./tools/issues.js";
 import { getResults, getResultById } from "./tools/results.js";
+import {
+  createAssumption,
+  updateAssumption,
+  getAssumptionById,
+} from "./tools/assumptions.js";
+import { getExecutionById } from "./tools/executions.js";
+import {
+  assignIssue,
+  reviewError,
+  bulkReview,
+  getResultErrorById,
+} from "./tools/result-errors.js";
+import { getSpecById } from "./tools/specs.js";
 
 const router = Router();
 
@@ -57,6 +70,23 @@ router.post("/mcp", async (req, res) => {
     // Result tools
     server.tool(...getResults);
     server.tool(...getResultById);
+
+    // Assumption tools
+    server.tool(...createAssumption);
+    server.tool(...updateAssumption);
+    server.tool(...getAssumptionById);
+
+    // Execution tools
+    server.tool(...getExecutionById);
+
+    // Result Error tools
+    server.tool(...assignIssue);
+    server.tool(...reviewError);
+    server.tool(...bulkReview);
+    server.tool(...getResultErrorById);
+
+    // Spec tools
+    server.tool(...getSpecById);
 
     await server.connect(transport);
     await transport.handleRequest(req, res, req.body);

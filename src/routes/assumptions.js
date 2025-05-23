@@ -8,5 +8,9 @@ router.patch(
   "/assumptions/:assumptionId",
   assumptionController.updateAssumption,
 );
+router.get(
+  "/assumptions/:assumptionId",
+  assumptionController.getAssumptionById,
+);
 
 export default router;
