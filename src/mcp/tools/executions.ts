@@ -1,0 +1,20 @@
+import { mcpExecutionHandler } from "@/handlers/mcpExecutionHandler";
+import { createSuccessResponse, createMcpTool } from "@/mcp/helpers/mcpHelpers";
+import { getExecutionByIdSchema } from "@/mcp/schemas/executionSchemas";
+import type { MCPToolResponse } from "@/types";
+
+interface GetExecutionByIdParams {
+  executionId: string;
+}
+
+export const getExecutionById = createMcpTool(
+  "get-execution-by-id",
+  "Retrieve detailed information about a specific execution by its unique ID",
+  getExecutionByIdSchema,
+  async (params: GetExecutionByIdParams): Promise<MCPToolResponse> => {
+    const { executionId } = params;
+    const execution = await mcpExecutionHandler.getExecutionById(executionId);
+    return createSuccessResponse(execution);
+  },
+  "fetching execution",
+);

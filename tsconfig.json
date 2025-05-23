@@ -1,0 +1,63 @@
+{
+  "compilerOptions": {
+    // Target and module settings for Node.js with ES modules
+    "target": "ES2022",
+    "module": "ESNext",
+    "moduleResolution": "Node",
+    "lib": ["ES2022", "ES2023"],
+
+    // Output configuration
+    "outDir": "./dist",
+    "rootDir": "./",
+
+    // ES modules support
+    "allowSyntheticDefaultImports": true,
+    "esModuleInterop": true,
+    "forceConsistentCasingInFileNames": true,
+
+    // Strict type checking
+    "strict": true,
+    "noImplicitAny": true,
+    "strictNullChecks": true,
+    "strictFunctionTypes": true,
+    "noImplicitReturns": true,
+    "noFallthroughCasesInSwitch": true,
+    "noUncheckedIndexedAccess": true,
+
+    // Additional checks
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "exactOptionalPropertyTypes": true,
+
+    // Module resolution
+    "resolveJsonModule": true,
+    "skipLibCheck": true,
+
+    // Path mapping for clean imports
+    "baseUrl": "./",
+    "paths": {
+      "@/*": ["src/*"],
+      "@/types/*": ["src/types/*"],
+      "@/models/*": ["src/models/*"],
+      "@/services/*": ["src/services/*"],
+      "@/controllers/*": ["src/controllers/*"],
+      "@/routes/*": ["src/routes/*"],
+      "@/middleware/*": ["src/middleware/*"],
+      "@/lib/*": ["src/lib/*"],
+      "@/mcp/*": ["src/mcp/*"],
+      "@/prisma/*": ["./prisma/*"],
+      "@/root/*": ["./*"]
+    },
+
+    // Other options
+    "declaration": true,
+    "sourceMap": true,
+    "removeComments": true
+  },
+  "include": ["src/**/*", "index.ts", "path.config.ts", "prisma/**/*"],
+  "exclude": ["node_modules", "dist", "**/*.js"],
+  "ts-node": {
+    "esm": true,
+    "experimentalSpecifierResolution": "node"
+  }
+}
