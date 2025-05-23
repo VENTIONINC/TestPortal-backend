@@ -1,12 +1,17 @@
 # API Documentation
 
+## Related Documentation
+
+- [How to Inspect the MCP Server](INSPECT_MCP_SERVER.md)
+- [MCP Tools Documentation](MCP_TOOLS.md)
+
 ## Base Routes (`src/routes/index.js`)
 
 ### GET `/`
 
 - **Description:** Welcome endpoint.
 - **Response:**
-  - `200 OK`: "Welcome" 
+  - `200 OK`: "Welcome"
 
 ## Assumption Routes (`src/routes/assumptions.js`)
 
@@ -127,4 +132,55 @@
 - **Description:** Retrieves a specific spec by its ID.
 - **Parameters:**
   - `specId` (in path): The ID of the spec to retrieve.
-- **Controller:** `specController.getSpecById` 
+- **Controller:** `specController.getSpecById`
+
+## Status Route (`src/routes/status.js` - Assuming file path)
+
+### GET `/status`
+
+- **Description:** Checks the status of the server and its connections (e.g., database).
+- **Response:**
+  - `200 OK`:  An object indicating the status. Example:
+    ```json
+    {
+      "status": "ok",
+      "database": "connected",
+      "version": "0.0.1"
+    }
+    ```
+  - `503 Service Unavailable`: If any critical service is down.
+
+## MCP Routes (`src/mcp/server.js`)
+
+### POST `/api/mcp`
+
+- **Description:** Main endpoint for MCP (Model Context Protocol) communication. Handles initialization of new MCP sessions and subsequent requests within an existing session.
+- **Headers:**
+  - `mcp-session-id` (optional): If provided and valid, the request is routed to an existing session. If not provided and the request is an MCP InitializeRequest, a new session is created.
+- **Request Body:**
+  - For new sessions: MCP `InitializeRequest` JSON object.
+  - For existing sessions: MCP `Request` JSON object.
+- **Response:**
+  - Varies based on the MCP request. Typically MCP `Response` JSON objects.
+  - `400 Bad Request`: If `mcp-session-id` is invalid or if the request body is not a valid MCP InitializeRequest when no session ID is provided.
+- **Notes:**
+  - Manages MCP sessions and tool registration (e.g., `check-status` tool).
+  - Uses `StreamableHTTPServerTransport` for handling communication.
+
+### GET `/api/mcp`
+
+- **Description:** Handles ongoing MCP session requests, typically for streaming or long-polling scenarios after a session is established via POST.
+- **Headers:**
+  - `mcp-session-id` (required): The ID of an active MCP session.
+- **Response:**
+  - Varies based on the MCP transport and state.
+  - `400 Bad Request`: If `mcp-session-id` is missing or invalid.
+
+### DELETE `/api/mcp`
+
+- **Description:** Terminates an active MCP session.
+- **Headers:**
+  - `mcp-session-id` (required): The ID of the MCP session to terminate.
+- **Response:**
+  - `200 OK` (or similar success status): If the session is successfully terminated or already non-existent.
+  - `400 Bad Request`: If `mcp-session-id` is missing or invalid.

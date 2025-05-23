@@ -6,7 +6,7 @@ const router = Router();
 router.post("/assumptions", assumptionController.createAssumption);
 router.patch(
   "/assumptions/:assumptionId",
-  assumptionController.updateAssumption
+  assumptionController.updateAssumption,
 );
 
 export default router;

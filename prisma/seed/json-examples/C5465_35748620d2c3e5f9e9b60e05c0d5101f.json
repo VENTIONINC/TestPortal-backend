@@ -15,15 +15,9 @@
     },
     "preserveOutput": "always",
     "reporter": [
-      [
-        "line"
-      ],
-      [
-        "/function/node_modules/allure-playwright/dist/index.js"
-      ],
-      [
-        "json"
-      ]
+      ["line"],
+      ["/function/node_modules/allure-playwright/dist/index.js"],
+      ["json"]
     ],
     "reportSlowTests": {
       "max": 5,
@@ -40,9 +34,7 @@
         "name": "",
         "testDir": "/function/tests",
         "testIgnore": [],
-        "testMatch": [
-          "**/*.@(spec|test).?(c|m)[jt]s?(x)"
-        ],
+        "testMatch": ["**/*.@(spec|test).?(c|m)[jt]s?(x)"],
         "timeout": 420000
       }
     ],
@@ -69,10 +61,7 @@
             {
               "title": "<C5465> <REN-8373> RFV3. MSA Premium. No upfront discount",
               "ok": false,
-              "tags": [
-                "msa-nightly-all",
-                "msa-nightly-group-2"
-              ],
+              "tags": ["msa-nightly-all", "msa-nightly-group-2"],
               "tests": [
                 {
                   "timeout": 420000,

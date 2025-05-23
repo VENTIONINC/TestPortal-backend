@@ -1,13 +1,14 @@
-import {PrismaClient} from "@prisma/client";
+import { PrismaClient } from "@prisma/client";
 import getLogger from "../src/lib/logger.js";
 
 function runClient() {
-    const logger = getLogger();
-    const client = new PrismaClient();
-    logger.debug('sqlite STARTED');
-    return client;
+  const logger = getLogger();
+  const client = new PrismaClient();
+  logger.debug("sqlite STARTED");
+  return client;
 }
 
+/*
 async function _clearDatabase() {
     try {
         const client = new PrismaClient();
@@ -23,5 +24,6 @@ async function _clearDatabase() {
         console.error('Error deleting records:', error);
     }
 }
+*/
 
 export const dbClient = runClient();
