@@ -65,3 +65,7 @@ prisma/prisma
 prisma/migrations
 
 .tmp
+
+# TypeScript build output
+dist/
+*.tsbuildinfo

@@ -1,0 +1,70 @@
+import { issueService } from "@/services/issueService";
+import type { PrismaIssue } from "@/types";
+
+interface IssueFilterParams {
+  category?: string;
+  name?: string;
+  page?: number;
+  limit?: number;
+}
+
+interface GetAllIssuesResponse {
+  issues: PrismaIssue[];
+  total: number;
+  page: number;
+  totalPages: number;
+}
+
+interface CreateIssueParams {
+  name: string;
+  category: string;
+  description?: string;
+  portal?: string;
+  service?: string;
+  ticket?: string;
+}
+
+interface UpdateIssueParams {
+  name?: string;
+  category?: string;
+  description?: string;
+  portal?: string;
+  service?: string;
+  ticket?: string;
+}
+
+export const mcpIssueHandler = {
+  async getAllIssues(
+    params?: IssueFilterParams,
+  ): Promise<GetAllIssuesResponse> {
+    const { category, name, page = 1, limit = 30 } = params ?? {};
+
+    // Build parameters object, filtering out undefined values
+    const issueParams: IssueFilterParams = {};
+    if (category) issueParams.category = category;
+    if (name) issueParams.name = name;
+    if (page) issueParams.page = page;
+    if (limit) issueParams.limit = limit;
+
+    return await issueService.getAllIssues(issueParams);
+  },
+
+  async getIssueById(issueId: string): Promise<PrismaIssue> {
+    return await issueService.getIssueById(issueId);
+  },
+
+  async createIssue(issueParams: CreateIssueParams): Promise<PrismaIssue> {
+    return await issueService.createIssue(issueParams);
+  },
+
+  async updateIssue(
+    issueId: string,
+    updateData: UpdateIssueParams,
+  ): Promise<PrismaIssue> {
+    return await issueService.updateIssue(issueId, updateData);
+  },
+
+  async getMockIssues(): Promise<PrismaIssue[]> {
+    return await issueService.getMockIssues();
+  },
+};

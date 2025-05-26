@@ -66,29 +66,48 @@
 
 ### POST `/json-report`
 
-- **Description:** Processes and stores a JSON test report. This endpoint handles creating or updating execution records, spec records, and result records (including errors) based on the provided report.
+- **Description:** Processes and stores a JSON test report following the Service Layer Pattern. This endpoint handles creating or updating execution records, spec records, and result records (including errors) based on the provided report.
+- **Controller:** `jsonReportController.processReport`
+- **Service:** `jsonReportService.processReport`
 - **Request Body:** Expects a JSON object representing the test report. Key fields include:
-  - `runId`: Identifier for the test run.
+  - `runId` (required): Identifier for the test run.
   - `env`: Environment where the test run occurred.
   - `version`: Version of the software under test.
   - `stats.startTime`: Start time of the execution.
-  - `tests`: An array of test spec objects, each containing:
-    - `title`: Title of the spec (may contain a spec key like C[digits]).
+  - `tests` (required): An array of test spec objects, each containing:
+    - `title` (required): Title of the spec (may contain a spec key like C[digits]).
     - `custom_id`: Alternative custom ID for the spec.
     - `location.file`: File path of the spec.
     - `tags`: Array of tags associated with the spec.
     - `annotations`: Array of annotations for the spec.
-    - `results`: An array of result objects for the spec, each containing:
+    - `results` (required): An array of result objects for the spec, each containing:
       - `allureLink`: Link to the Allure report for this result.
       - `retry`: Retry attempt number.
       - `status`: Status of the test result (e.g., 'passed', 'failed').
       - `duration`: Duration of the test execution.
       - `startTime`: Start time of this specific test result.
-      - `error` (optional): Error details if the test failed, including `type`, `message`, `callLog`, `callStack`, `testAssertion`, `expectedPattern`, `receivedString`, `location`.
+      - `error` (optional): Error details if the test failed, including stack trace and assertion information.
 - **Response:**
-  - `200 OK`: `{ success: true }` if the report is processed successfully.
-  - Forwards to error handling middleware on failure.
-- **Note:** This route interacts heavily with the database (`dbClient`) to create and update `execution`, `spec`, `result`, and `resultError` records.
+  - `201 Created`: Report processed successfully
+    ```json
+    {
+      "success": true,
+      "executionId": 123,
+      "specsProcessed": 15
+    }
+    ```
+  - `400 Bad Request`: Invalid request data or processing error
+    ```json
+    {
+      "error": "Failed to process JSON report. [specific error message]"
+    }
+    ```
+- **Business Logic:** 
+  - Creates or finds execution record by runId
+  - Processes each test spec and creates spec records if they don't exist
+  - Creates result records for each test result
+  - Handles error parsing and creates error records when tests fail
+  - Prevents duplicate result records by checking existing startTime combinations
 
 ## Result Error Routes (`src/routes/result-errors.js`)
 
