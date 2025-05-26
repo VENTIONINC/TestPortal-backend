@@ -14,8 +14,8 @@ Controllers in this project follow the **Service Layer Pattern** to ensure clean
 ### 1. Service Layer Delegation
 Controllers should **never** contain business logic. All data processing, validation, and business rules belong in the service layer.
 
-```javascript
-// ✅ CORRECT - Delegates to service
+```typescript
+// ✅ CORRECT - Delegates to service with proper typing
 const result = await issueService.getAllIssues(params);
 
 // ❌ WRONG - Business logic in controller
@@ -25,81 +25,183 @@ for (const issue of issues) { /* processing */ }
 
 ### 2. HTTP-Only Concerns
 Controllers should only handle:
-- Parameter extraction from `req.query`, `req.params`, `req.body`
+- Parameter extraction from `req.query`, `req.params`, `req.body` with proper typing
 - HTTP status codes and responses
 - Error handling with appropriate HTTP error codes
+- Type assertions for request data
 
 ## Standard Controller Pattern
 
 ### Reference Implementation
-See [src/controllers/issueController.js](mdc:src/controllers/issueController.js) for the correct pattern.
+See [src/controllers/issueController.ts](mdc:src/controllers/issueController.ts) for the correct pattern.
 
 ### Template Structure
-```javascript
-import { domainService } from "../services/domainService.js";
+```typescript
+import type { Request, Response } from "express";
+import { domainService } from "@/services/domainService";
+import type { 
+  GetDomainsParams, 
+  CreateDomainParams, 
+  UpdateDomainParams 
+} from "@/services/domainService";
 
 export const domainController = {
   // GET /domain - List with filtering/pagination
-  getAll: async (req, res) => {
+  getAll: async (req: Request, res: Response) => {
     try {
       const { filter1, filter2, page = 1, limit = 30 } = req.query;
       
-      const result = await domainService.getAll({
-        filter1,
-        filter2,
-        page,
-        limit,
-      });
+      const params: GetDomainsParams = {
+        filter1: filter1 as string,
+        filter2: filter2 as string,
+        page: Number(page),
+        limit: Number(limit),
+      };
+      
+      const result = await domainService.getAll(params);
 
       return res.status(200).json(result);
     } catch (error) {
       return res.status(500).json({
-        error: `Failed to fetch items. ${error.message}`,
+        error: `Failed to fetch items. ${(error as Error).message}`,
       });
     }
   },
 
   // GET /domain/:id - Get by ID
-  getById: async (req, res) => {
+  getById: async (req: Request, res: Response) => {
     try {
       const { id } = req.params;
       const item = await domainService.getById(id);
       return res.status(200).json(item);
     } catch (error) {
       return res.status(404).json({
-        error: error.message,
+        error: (error as Error).message,
       });
     }
   },
 
   // POST /domain - Create new item
-  create: async (req, res) => {
+  create: async (req: Request, res: Response) => {
     try {
-      const itemData = req.body;
+      const itemData: CreateDomainParams = req.body;
       const item = await domainService.create(itemData);
       return res.status(201).json(item);
     } catch (error) {
       return res.status(400).json({
-        error: error.message,
+        error: (error as Error).message,
       });
     }
   },
 
   // PATCH/PUT /domain/:id - Update item
-  update: async (req, res) => {
+  update: async (req: Request, res: Response) => {
     try {
       const { id } = req.params;
-      const updateData = req.body;
+      const updateData: UpdateDomainParams = req.body;
       
       const updatedItem = await domainService.update(id, updateData);
       return res.status(200).json(updatedItem);
     } catch (error) {
       return res.status(400).json({
-        error: `Failed to update item. ${error.message}`,
+        error: `Failed to update item. ${(error as Error).message}`,
+      });
+    }
+  },
+
+  // DELETE /domain/:id - Delete item
+  delete: async (req: Request, res: Response) => {
+    try {
+      const { id } = req.params;
+      await domainService.delete(id);
+      return res.status(204).send(); // No content for successful deletion
+    } catch (error) {
+      return res.status(404).json({
+        error: `Failed to delete item. ${(error as Error).message}`,
       });
     }
   },
 };
+```
+
+## TypeScript Patterns for Controllers
+
+### Request Type Safety
+```typescript
+import type { Request, Response } from "express";
+
+// Type-safe parameter extraction
+const extractQueryParams = (req: Request) => {
+  const { category, name, page, limit } = req.query;
+  
+  return {
+    category: category as string,
+    name: name as string,
+    page: Number(page) || 1,
+    limit: Number(limit) || 30,
+  };
+};
+
+// Usage in controller
+getAll: async (req: Request, res: Response) => {
+  try {
+    const params = extractQueryParams(req);
+    const result = await domainService.getAll(params);
+    return res.status(200).json(result);
+  } catch (error) {
+    return res.status(500).json({
+      error: `Failed to fetch items. ${(error as Error).message}`,
+    });
+  }
+}
+```
+
+### Request Body Validation
+```typescript
+interface CreateRequestBody {
+  name: string;
+  category: string;
+  description?: string;
+}
+
+create: async (req: Request<{}, any, CreateRequestBody>, res: Response) => {
+  try {
+    const { name, category, description } = req.body;
+    
+    // Type-safe body access
+    const itemData: CreateDomainParams = {
+      name,
+      category,
+      description,
+    };
+    
+    const item = await domainService.create(itemData);
+    return res.status(201).json(item);
+  } catch (error) {
+    return res.status(400).json({
+      error: (error as Error).message,
+    });
+  }
+}
+```
+
+### Path Parameters with Types
+```typescript
+interface GetByIdParams {
+  id: string;
+}
+
+getById: async (req: Request<GetByIdParams>, res: Response) => {
+  try {
+    const { id } = req.params; // TypeScript knows this is GetByIdParams
+    const item = await domainService.getById(id);
+    return res.status(200).json(item);
+  } catch (error) {
+    return res.status(404).json({
+      error: (error as Error).message,
+    });
+  }
+}
 ```
 
 ## Error Handling Standards
@@ -107,64 +209,161 @@ export const domainController = {
 ### HTTP Status Code Guidelines
 - **200**: Successful GET, PATCH/PUT operations
 - **201**: Successful POST (creation)
+- **204**: Successful DELETE (no content)
 - **400**: Bad request (validation errors, malformed data)
 - **404**: Resource not found (typically for GET/UPDATE by ID)
 - **500**: Internal server error (unexpected failures)
 
 ### Error Response Format
-```javascript
-// Consistent error response structure
-return res.status(statusCode).json({
-  error: error.message || "Default error message",
-});
+```typescript
+// Consistent error response structure with TypeScript
+interface ErrorResponse {
+  error: string;
+}
+
+const sendErrorResponse = (res: Response, statusCode: number, message: string): Response => {
+  return res.status(statusCode).json({
+    error: message,
+  } as ErrorResponse);
+};
+
+// Usage in controllers
+} catch (error) {
+  return sendErrorResponse(res, 404, (error as Error).message);
+}
 ```
 
 ### Error Handling Pattern
-```javascript
-try {
-  // Controller logic here
-  const result = await service.operation(params);
-  return res.status(200).json(result);
-} catch (error) {
-  // Log if needed for debugging
-  console.error("Operation failed:", error);
-  
-  // Return appropriate HTTP error
-  return res.status(appropriateCode).json({
-    error: `Failed to perform operation. ${error.message}`,
-  });
+```typescript
+getById: async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    const item = await domainService.getById(id);
+    return res.status(200).json(item);
+  } catch (error) {
+    // Type-safe error handling
+    const errorMessage = (error as Error).message;
+    
+    // Log if needed for debugging (with proper typing)
+    console.error("Failed to get item by ID:", {
+      id: req.params.id,
+      error: errorMessage,
+    });
+    
+    // Return appropriate HTTP error
+    return res.status(404).json({
+      error: errorMessage,
+    });
+  }
 }
 ```
 
 ## Parameter Extraction Patterns
 
 ### Query Parameters (GET requests)
-```javascript
-// With defaults for pagination
-const { category, name, page = 1, limit = 30 } = req.query;
+```typescript
+interface GetAllQuery {
+  category?: string;
+  name?: string;
+  page?: string;
+  limit?: string;
+  status?: string;
+}
 
-// Optional filters
-const { status, environment, from, to } = req.query;
+getAll: async (req: Request<{}, any, any, GetAllQuery>, res: Response) => {
+  try {
+    // With defaults for pagination and type conversion
+    const { 
+      category, 
+      name, 
+      page = "1", 
+      limit = "30", 
+      status 
+    } = req.query;
+    
+    const params: GetAllParams = {
+      category,
+      name,
+      status,
+      page: Number(page),
+      limit: Number(limit),
+    };
+    
+    const result = await domainService.getAll(params);
+    return res.status(200).json(result);
+  } catch (error) {
+    return res.status(500).json({
+      error: `Failed to fetch items. ${(error as Error).message}`,
+    });
+  }
+}
 ```
 
 ### Path Parameters
-```javascript
+```typescript
+interface PathParams {
+  issueId: string;
+  resultId?: string;
+}
+
 // Single ID parameter
-const { issueId } = req.params;
-const { resultId } = req.params;
+getById: async (req: Request<{ issueId: string }>, res: Response) => {
+  const { issueId } = req.params;
+  // TypeScript ensures issueId exists and is a string
+}
 
 // Multiple path parameters
-const { userId, projectId } = req.params;
+getResult: async (req: Request<PathParams>, res: Response) => {
+  const { issueId, resultId } = req.params;
+  // Both parameters properly typed
+}
 ```
 
-### Request Body
-```javascript
-// For POST/PUT/PATCH operations
-const itemData = req.body;
-const updateData = req.body;
+### Request Body with Validation
+```typescript
+interface CreateItemBody {
+  name: string;
+  category: string;
+  description?: string;
+  metadata?: object;
+}
 
-// With destructuring if needed
-const { name, category, description } = req.body;
+interface UpdateItemBody {
+  name?: string;
+  category?: string;
+  description?: string;
+  metadata?: object;
+}
+
+// For POST operations
+create: async (req: Request<{}, any, CreateItemBody>, res: Response) => {
+  try {
+    const itemData: CreateItemBody = req.body;
+    
+    // TypeScript ensures proper typing
+    const result = await domainService.create(itemData);
+    return res.status(201).json(result);
+  } catch (error) {
+    return res.status(400).json({
+      error: (error as Error).message,
+    });
+  }
+}
+
+// For PATCH/PUT operations
+update: async (req: Request<{ id: string }, any, UpdateItemBody>, res: Response) => {
+  try {
+    const { id } = req.params;
+    const updateData: UpdateItemBody = req.body;
+    
+    const result = await domainService.update(id, updateData);
+    return res.status(200).json(result);
+  } catch (error) {
+    return res.status(400).json({
+      error: `Failed to update item. ${(error as Error).message}`,
+    });
+  }
+}
 ```
 
 ## MCP Compatibility Benefits
@@ -177,22 +376,69 @@ This pattern enables MCP compatibility because:
 4. **Easy Testing**: Services can be tested independently of transport layer
 
 ### Example MCP Integration
-```javascript
-// HTTP Controller (src/controllers/issueController.js)
+```typescript
+// HTTP Controller (src/controllers/issueController.ts)
 const result = await issueService.getAllIssues(params);
 return res.status(200).json(result);
 
-// MCP Handler (src/handlers/mcpIssueHandler.js)  
+// MCP Handler (src/handlers/mcpIssueHandler.ts)  
 const result = await issueService.getAllIssues(params);
 return result; // No HTTP concerns
+```
+
+## Advanced TypeScript Patterns
+
+### Generic Response Helper
+```typescript
+type ApiResponse<T> = {
+  data: T;
+  message?: string;
+};
+
+const sendSuccessResponse = <T>(
+  res: Response, 
+  data: T, 
+  statusCode: number = 200,
+  message?: string
+): Response => {
+  return res.status(statusCode).json({
+    data,
+    message,
+  } as ApiResponse<T>);
+};
+
+// Usage
+const items = await domainService.getAll(params);
+return sendSuccessResponse(res, items, 200, "Items retrieved successfully");
+```
+
+### Type-Safe Middleware Integration
+```typescript
+import type { RequestHandler } from "express";
+
+// Typed middleware
+const validateParams: RequestHandler<{ id: string }> = (req, res, next) => {
+  const { id } = req.params;
+  
+  if (!id || isNaN(Number(id))) {
+    return res.status(400).json({
+      error: "Invalid ID parameter",
+    });
+  }
+  
+  next();
+};
+
+// Usage in routes
+router.get("/domain/:id", validateParams, domainController.getById);
 ```
 
 ## Refactoring Existing Controllers
 
 ### Before (Anti-pattern)
-```javascript
+```typescript
 export const oldController = {
-  getItems: async (req, res) => {
+  getItems: async (req: any, res: any) => { // ❌ No typing
     const { filter } = req.query;
     
     // ❌ Business logic in controller
@@ -202,96 +448,114 @@ export const oldController = {
       calculated: item.value * 2
     }));
     
-    return res.json(processed);
+    return res.json(processed); // ❌ No status code
   }
 };
 ```
 
 ### After (Correct pattern)
-```javascript
-export const newController = {
-  getItems: async (req, res) => {
+```typescript
+export const domainController = {
+  getItems: async (req: Request, res: Response) => { // ✅ Proper typing
     try {
       const { filter } = req.query;
       
       // ✅ Delegate to service
-      const items = await itemService.getItems({ filter });
-      return res.status(200).json(items);
+      const result = await domainService.getItems({
+        filter: filter as string,
+      });
+      
+      return res.status(200).json(result); // ✅ Explicit status code
     } catch (error) {
       return res.status(500).json({
-        error: `Failed to fetch items. ${error.message}`,
+        error: `Failed to fetch items. ${(error as Error).message}`,
       });
     }
   }
 };
 ```
 
-## Common Patterns
-
-### List with Pagination
-```javascript
-getAllItems: async (req, res) => {
-  try {
-    const { category, status, page = 1, limit = 30 } = req.query;
-    
-    const result = await itemService.getAll({
-      category,
-      status,
-      page: Number(page),
-      limit: Number(limit),
-    });
-
-    return res.status(200).json(result);
-  } catch (error) {
-    return res.status(500).json({
-      error: `Failed to fetch items. ${error.message}`,
-    });
-  }
-},
-```
-
-### Get by ID with 404 handling
-```javascript
-getItemById: async (req, res) => {
-  try {
-    const { itemId } = req.params;
-    const item = await itemService.getById(itemId);
-    return res.status(200).json(item);
-  } catch (error) {
-    // Service should throw meaningful errors
-    return res.status(404).json({
-      error: error.message,
-    });
-  }
-},
-```
-
-### Create with 201 status
-```javascript
-createItem: async (req, res) => {
-  try {
-    const itemData = req.body;
-    const item = await itemService.create(itemData);
-    return res.status(201).json(item);
-  } catch (error) {
-    return res.status(400).json({
-      error: error.message,
-    });
-  }
-},
-```
-
 ## Testing Controllers
 
-Controllers should be tested to verify:
-- Correct parameter extraction
-- Proper service method calls
-- Appropriate HTTP status codes
-- Error handling scenarios
+### Type-Safe Testing
+```typescript
+import request from 'supertest';
+import { app } from '@/app';
 
-## Service Layer Requirements
+describe('Domain Controller', () => {
+  it('should get all domains with proper typing', async () => {
+    const response = await request(app)
+      .get('/api/domains')
+      .query({ category: 'test', page: '1', limit: '10' });
+    
+    expect(response.status).toBe(200);
+    expect(response.body).toHaveProperty('items');
+    expect(Array.isArray(response.body.items)).toBe(true);
+  });
+  
+  it('should handle errors properly', async () => {
+    const response = await request(app)
+      .get('/api/domains/invalid-id');
+    
+    expect(response.status).toBe(404);
+    expect(response.body).toHaveProperty('error');
+    expect(typeof response.body.error).toBe('string');
+  });
+});
+```
 
-When creating controllers, ensure corresponding services exist in [src/services/](mdc:src/services) following the service layer patterns.
+## Common Anti-Patterns to Avoid
 
-This architecture ensures your controllers are clean, testable, and enable seamless MCP integration.
+### ❌ Missing Type Annotations
+```typescript
+// DON'T
+export const controller = {
+  getItems: async (req, res) => { // No types
+    // Implementation
+  }
+};
+
+// DO
+export const controller = {
+  getItems: async (req: Request, res: Response) => { // Proper types
+    // Implementation
+  }
+};
+```
+
+### ❌ Business Logic in Controllers
+```typescript
+// DON'T
+const items = await itemModel.findMany();
+const filtered = items.filter(item => item.status === 'active');
+const sorted = filtered.sort((a, b) => a.name.localeCompare(b.name));
+
+// DO
+const result = await itemService.getActiveItems({ sortBy: 'name' });
+```
+
+### ❌ Generic Error Handling
+```typescript
+// DON'T
+} catch (error) {
+  return res.status(500).json({ error: "Something went wrong" });
+}
+
+// DO
+} catch (error) {
+  const errorMessage = (error as Error).message;
+  return res.status(404).json({
+    error: `Item not found: ${errorMessage}`,
+  });
+}
+```
+
+## Benefits of TypeScript Controller Pattern
+
+1. **Type Safety**: Compile-time checking of request/response types
+2. **Better IDE Support**: Autocomplete for Express types and service interfaces
+3. **Self-Documenting**: Interface definitions serve as API documentation
+4. **Error Prevention**: Catch type mismatches before runtime
+5. **Easier Refactoring**: TypeScript helps identify breaking changes
+6. **Consistent API**: Type definitions ensure consistent request/response formats
 

@@ -11,16 +11,16 @@ This guide provides a standardized approach for implementing new API routes or u
 
 ## Reference Implementation
 
-Use [src/routes/assumptions.js](mdc:src/routes/assumptions.js) as the reference pattern for route structure.
+Use [src/routes/assumptions.ts](mdc:src/routes/assumptions.ts) as the reference pattern for route structure.
 
 ## Core Implementation (Always Required)
 
-### 1. Route Definition (`src/routes/[domain].js`)
+### 1. Route Definition (`src/routes/domain.ts`)
 Create or update the route file following this pattern:
 
-```javascript
+```typescript
 import { Router } from "express";
-import { domainController } from "../controllers/domainController.js";
+import { domainController } from "@/controllers/domainController";
 
 const router = Router();
 
@@ -39,48 +39,179 @@ export default router;
 **Key Points:**
 - Use consistent parameter naming (e.g., `domainId`, `assumptionId`)
 - Follow RESTful conventions
-- Import controller from relative path
+- Import controller from alias path (no `.ts` extension needed)
+- Use TypeScript import syntax
 
-### 2. Service Layer (`src/services/domainService.js`)
-Reference: [src/services/assumptionService.js](mdc:src/services/assumptionService.js)
+### 2. Service Layer (`src/services/domainService.ts`)
+Reference: [src/services/assumptionService.ts](mdc:src/services/assumptionService.ts)
 
 **Essential Elements:**
+- Define TypeScript interfaces for parameters and responses
 - Input validation with meaningful error messages
 - Business logic centralization
 - Transport-agnostic design (no HTTP concerns)
 - Consistent error handling with `throw new Error()`
+- Proper typing with imported types
 
-```javascript
+```typescript
+import { domainModel } from "@/models/domainModel";
+import type { PrismaDomain } from "@/types";
+
+interface GetAllDomainsParams {
+  category?: string;
+  name?: string;
+  page?: number;
+  limit?: number;
+}
+
+interface GetAllDomainsResponse {
+  domains: PrismaDomain[];
+  total: number;
+  page: number;
+  totalPages: number;
+}
+
+interface CreateDomainParams {
+  name: string;
+  category: string;
+  description?: string;
+}
+
+interface UpdateDomainParams {
+  name?: string;
+  category?: string;
+  description?: string;
+}
+
 export const domainService = {
-  async getDomainById(domainId) {
+  async getAllDomains(
+    params: GetAllDomainsParams,
+  ): Promise<GetAllDomainsResponse> {
+    const { category, name, page = 1, limit = 30 } = params;
+    
+    const domains = await domainModel.findMany(category, name, page, limit);
+    const totalDomains = await domainModel.count(category, name);
+
+    return {
+      domains,
+      total: totalDomains,
+      page: Number(page),
+      totalPages: Math.ceil(totalDomains / limit),
+    };
+  },
+
+  async getDomainById(domainId: number | string): Promise<PrismaDomain> {
     if (!domainId) {
       throw new Error("Domain ID is required");
     }
-    // Validation and business logic here
+    
+    const domain = await domainModel.findById(domainId);
+    
+    if (!domain) {
+      throw new Error(`Domain with ID ${domainId} not found`);
+    }
+    
+    return domain;
   },
-  // Other CRUD methods...
+
+  async createDomain(domainParams: CreateDomainParams): Promise<PrismaDomain> {
+    if (!domainParams?.name) {
+      throw new Error("Unable to create domain without name");
+    }
+    
+    const domainRecord = await domainModel.create(domainParams);
+    return domainRecord;
+  },
+
+  async updateDomain(
+    domainId: number | string,
+    updateData: UpdateDomainParams,
+  ): Promise<PrismaDomain> {
+    if (!domainId) {
+      throw new Error("Domain ID is required");
+    }
+
+    const { name, category, description } = updateData;
+    
+    const cleanUpdateData: Partial<CreateDomainParams> = {};
+    if (name) cleanUpdateData.name = name;
+    if (category) cleanUpdateData.category = category;
+    if (description !== undefined) cleanUpdateData.description = description;
+
+    const updatedDomain = await domainModel.update(domainId, cleanUpdateData);
+    return updatedDomain;
+  },
 };
 ```
 
-### 3. Controller Layer (`src/controllers/domainController.js`)
-Reference: [src/controllers/assumptionController.js](mdc:src/controllers/assumptionController.js)
+### 3. Controller Layer (`src/controllers/domainController.ts`)
+Reference: [src/controllers/assumptionController.ts](mdc:src/controllers/assumptionController.ts)
 
 **Controller Pattern:**
+- Use proper TypeScript types for Express request/response
 - Delegate all business logic to services
 - Handle only HTTP-specific concerns (status codes, request/response)
 - Use try-catch for error handling
 - Return appropriate HTTP status codes
 
-```javascript
+```typescript
+import type { Request, Response } from "express";
+import { domainService } from "@/services/domainService";
+
 export const domainController = {
-  getDomainById: async (req, res) => {
+  getAllDomains: async (req: Request, res: Response) => {
+    try {
+      const { category, name, page = 1, limit = 30 } = req.query;
+      
+      const result = await domainService.getAllDomains({
+        category: category as string,
+        name: name as string,
+        page: Number(page),
+        limit: Number(limit),
+      });
+
+      return res.status(200).json(result);
+    } catch (error) {
+      return res.status(500).json({
+        error: `Failed to fetch domains. ${(error as Error).message}`,
+      });
+    }
+  },
+
+  getDomainById: async (req: Request, res: Response) => {
     try {
       const { domainId } = req.params;
       const domain = await domainService.getDomainById(domainId);
       return res.status(200).json(domain);
     } catch (error) {
       return res.status(404).json({
-        error: error.message,
+        error: (error as Error).message,
+      });
+    }
+  },
+
+  createDomain: async (req: Request, res: Response) => {
+    try {
+      const domainData = req.body;
+      const domain = await domainService.createDomain(domainData);
+      return res.status(201).json(domain);
+    } catch (error) {
+      return res.status(400).json({
+        error: (error as Error).message,
+      });
+    }
+  },
+
+  updateDomain: async (req: Request, res: Response) => {
+    try {
+      const { domainId } = req.params;
+      const updateData = req.body;
+      
+      const updatedDomain = await domainService.updateDomain(domainId, updateData);
+      return res.status(200).json(updatedDomain);
+    } catch (error) {
+      return res.status(400).json({
+        error: `Failed to update domain. ${(error as Error).message}`,
       });
     }
   },
@@ -91,33 +222,35 @@ export const domainController = {
 
 Add these layers only when MCP support is needed:
 
-### 4. MCP Handler (`src/handlers/mcpDomainHandler.js`)
-Reference: [src/handlers/mcpAssumptionHandler.js](mdc:src/handlers/mcpAssumptionHandler.js)
+### 4. MCP Handler (`src/handlers/mcpDomainHandler.ts`)
+Reference: [src/handlers/mcpAssumptionHandler.ts](mdc:mcp:src/handlers/mcpAssumptionHandler.ts)
 
 **Handler Pattern:**
 - Thin wrapper around service methods
 - Direct delegation to services
 - No additional logic
+- Proper TypeScript typing
 
-### 5. MCP Schemas (`src/mcp/schemas/domainSchemas.js`)
-Reference: [src/mcp/schemas/assumptionSchemas.js](mdc:src/mcp/schemas/assumptionSchemas.js)
+### 5. MCP Schemas (`src/mcp/schemas/domainSchemas.ts`)
+Reference: [src/mcp/schemas/assumptionSchemas.ts](mdc:src/mcp/schemas/assumptionSchemas.ts)
 
 **Schema Requirements:**
 - Use Zod validation (`z.string()`, `z.number()`, etc.)
 - Mark optional fields with `.optional()`
 - Provide JSDoc comments for each schema
+- Export with proper TypeScript types
 
-### 6. MCP Tools (`src/mcp/tools/domain.js`)
-Reference: [src/mcp/tools/assumptions.js](mdc:src/mcp/tools/assumptions.js)
+### 6. MCP Tools (`src/mcp/tools/domain.ts`)
+Reference: [src/mcp/tools/assumptions.ts](mdc:src/mcp/tools/assumptions.ts)
 
 **Tool Implementation:**
-- Use `createMcpTool()` helper from [src/mcp/helpers/mcpHelpers.js](mdc:src/mcp/helpers/mcpHelpers.js)
+- Use `createMcpTool()` helper from [src/mcp/helpers/mcpHelpers.ts](mdc:src/mcp/helpers/mcpHelpers.ts)
 - Follow kebab-case naming convention
 - Provide clear, descriptive tool descriptions
 - Use `createSuccessResponse()` for consistent responses
 
-### 7. MCP Server Registration (`src/mcp/server.js`)
-Reference: [src/mcp/server.js](mdc:src/mcp/server.js)
+### 7. MCP Server Registration (`src/mcp/server.ts`)
+Reference: [src/mcp/server.ts](mdc:src/mcp/server.ts)
 
 **Registration Steps:**
 1. Import tools at the top of the file
@@ -127,8 +260,8 @@ Reference: [src/mcp/server.js](mdc:src/mcp/server.js)
 ## Implementation Options
 
 ### HTTP-Only Route (Minimal)
-1. **Create Service Layer** - Implement business logic and validation
-2. **Create Controller** - HTTP-specific logic delegating to service
+1. **Create Service Layer** - Implement business logic and validation with TypeScript interfaces
+2. **Create Controller** - HTTP-specific logic delegating to service with proper typing
 3. **Define Routes** - RESTful endpoint definitions
 
 ### Full HTTP + MCP Integration
@@ -139,26 +272,64 @@ Reference: [src/mcp/server.js](mdc:src/mcp/server.js)
 5. **Register with MCP Server** - Add to server tool list
 
 ### For Existing Route Updates:
-1. **Refactor Controller** - Move business logic to service layer
-2. **Create Service Layer** - Extract and centralize business logic
+1. **Refactor Controller** - Move business logic to service layer, add TypeScript types
+2. **Create Service Layer** - Extract and centralize business logic with interfaces
 3. **Add MCP Support** - Follow MCP steps above (optional)
-4. **Update Error Handling** - Ensure consistent error responses
+4. **Update Error Handling** - Ensure consistent error responses with type safety
 
-## Common Patterns
+## TypeScript Patterns
+
+### Type Safety Pattern
+```typescript
+// Use type assertions for query parameters
+const { category, name } = req.query;
+const categoryFilter = category as string;
+const nameFilter = name as string;
+
+// Use proper error typing
+} catch (error) {
+  return res.status(404).json({
+    error: (error as Error).message,
+  });
+}
+```
+
+### Interface Definition Pattern
+```typescript
+interface ServiceParams {
+  id: number | string;
+  name?: string;
+  category?: string;
+}
+
+interface ServiceResponse {
+  data: PrismaDomain[];
+  total: number;
+  page: number;
+}
+```
 
 ### ID Validation Pattern
-```javascript
-const numericId = Number(id);
-if (isNaN(numericId) || numericId <= 0) {
-  throw new Error("ID must be a valid positive number");
+```typescript
+async getDomainById(domainId: number | string): Promise<PrismaDomain> {
+  if (!domainId) {
+    throw new Error("Domain ID is required");
+  }
+  
+  const numericId = Number(domainId);
+  if (isNaN(numericId) || numericId <= 0) {
+    throw new Error("ID must be a valid positive number");
+  }
+  
+  // Continue with logic...
 }
 ```
 
 ### Error Response Pattern
-```javascript
+```typescript
 // Controller level
-return res.status(404).json({
-  error: error.message,
+return res.status(statusCode).json({
+  error: (error as Error).message || "Default error message",
 });
 
 // Service level  
@@ -166,7 +337,7 @@ throw new Error("Descriptive error message");
 ```
 
 ### MCP Tool Pattern (When Needed)
-```javascript
+```typescript
 export const getDomainById = createMcpTool(
   "get-domain-by-id",
   "Clear description of what the tool does",
@@ -192,28 +363,28 @@ export const getDomainById = createMcpTool(
 ## File Naming Conventions
 
 ### Required Files
-- Routes: `src/routes/[domain-plural].js` (e.g., `assumptions.js`)
-- Controllers: `src/controllers/[domain]Controller.js`
-- Services: `src/services/[domain]Service.js`
+- Routes: `src/routes/[domain-plural].ts` (e.g., `assumptions.ts`)
+- Controllers: `src/controllers/[domain]Controller.ts`
+- Services: `src/services/[domain]Service.ts`
 
 ### Optional MCP Files
-- MCP Handlers: `src/handlers/mcp[Domain]Handler.js`
-- MCP Schemas: `src/mcp/schemas/[domain]Schemas.js`
-- MCP Tools: `src/mcp/tools/[domain-plural].js`
+- MCP Handlers: `src/handlers/mcp[Domain]Handler.ts`
+- MCP Schemas: `src/mcp/schemas/[domain]Schemas.ts`
+- MCP Tools: `src/mcp/tools/[domain-plural].ts`
+
+### Type Definition Files
+- Domain Types: `src/types/[domain].ts` or add to `src/types/index.ts`
+- API Types: `src/types/api.ts`
+- Database Types: `src/types/database.ts`
 
 ## Benefits of This Pattern
 
-### Always Benefits (HTTP-Only)
-- **Clean Architecture**: Clear separation of concerns
-- **Maintainability**: Business logic centralized in services
-- **Testability**: Services can be unit tested independently
-- **Consistency**: Standardized patterns across domains
-- **Error Handling**: Consistent error responses and validation
-
-### Additional Benefits (With MCP)
-- **Dual Protocol Support**: Same business logic accessible via HTTP and MCP
-- **Future-Proof**: Easy to add MCP support later
-- **Consistent API**: Same validation and business rules across protocols
+1. **Type Safety**: Compile-time error checking and better IDE support
+2. **Interface Documentation**: Clear contracts for all data structures
+3. **Maintainability**: Explicit types make refactoring safer
+4. **Code Quality**: TypeScript enforces better coding practices
+5. **MCP Compatibility**: Shared business logic between transport layers
+6. **Testability**: Services can be tested independently with type safety
 
 ## Quick Start Examples
 
