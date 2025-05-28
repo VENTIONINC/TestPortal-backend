@@ -6,13 +6,19 @@ interface ParsedError {
   testAssertion: string;
   expectedPattern: string;
   receivedString: string;
-  location?: string;
+  location: {
+    file: string;
+    line: number;
+  };
 }
 
 interface ErrorInput {
   message: string;
   stack: string;
-  location?: string;
+  location: {
+    file: string;
+    line: number;
+  };
 }
 
 export function toClearString(text = ""): string {
@@ -31,7 +37,7 @@ export function parseStackTrace(error: ErrorInput): ParsedError {
     testAssertion: " ",
     expectedPattern: " ",
     receivedString: " ",
-    ...(error.location && { location: error.location }),
+    location: { file: "", line: 0 },
   };
 
   let [type, ...rest] = error.message.split(":");
@@ -40,6 +46,10 @@ export function parseStackTrace(error: ErrorInput): ParsedError {
     // on timedOut status, there is no stack and error type
     type = "Error";
     rest = [error.message];
+  }
+
+  if (error.location) {
+    parsedError.location = error.location;
   }
 
   const splitResult = toClearString(rest.join(":").trim())
