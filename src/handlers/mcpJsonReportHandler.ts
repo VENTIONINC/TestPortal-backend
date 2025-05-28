@@ -10,8 +10,9 @@ interface ReportData {
   tests: Array<{
     title: string;
     custom_id?: string;
-    location?: {
+    location: {
       file: string;
+      line: number;
     };
     tags?: string[];
     annotations?: unknown[];
@@ -24,7 +25,10 @@ interface ReportData {
       error?: {
         message: string;
         stack: string;
-        location?: string;
+        location: {
+          file: string;
+          line: number;
+        };
       };
     }>;
   }>;
