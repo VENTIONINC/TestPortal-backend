@@ -37,14 +37,7 @@ A comprehensive Node.js Express server for managing test results with TypeScript
    docker-compose up -d postgres
    ```
 
-3. **Install PostgreSQL client library:**
-
-   ```sh
-   npm install pg
-   npm install -D @types/pg
-   ```
-
-4. **Create a `.env` file** in the root of the project:
+3. **Create a `.env` file** in the root of the project:
 
    ```env
    DATABASE_URL="postgresql://postgres:postgres@localhost:5433/test_portal"
@@ -52,13 +45,13 @@ A comprehensive Node.js Express server for managing test results with TypeScript
    NODE_ENV=development
    ```
 
-5. **Initialize Prisma and set up the database:**
+4. **Initialize Prisma and set up the database:**
 
    ```sh
    npx prisma migrate dev --name "initial-postgresql-migration"
    ```
 
-6. **Build and run the server:**
+5. **Build and run the server:**
 
    ```sh
    # Development mode with hot reloading
@@ -69,13 +62,13 @@ A comprehensive Node.js Express server for managing test results with TypeScript
    npm run server
    ```
 
-7. **Seed the database** (optional, with server running):
+6. **Seed the database** (optional, with server running):
 
    ```sh
    node prisma/seed/index.js
    ```
 
-8. **Verify installation:** 
+7. **Verify installation:** 
    
    Open `http://localhost:3001/api/results` in your browser
 
