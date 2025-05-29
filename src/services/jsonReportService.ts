@@ -24,8 +24,9 @@ interface ReportData {
 interface TestSpec {
   title: string;
   custom_id?: string;
-  location?: {
+  location: {
     file: string;
+    line: number;
   };
   tags?: string[];
   annotations?: unknown[];
@@ -44,7 +45,7 @@ interface TestResult {
 interface ErrorData {
   message: string;
   stack: string;
-  location?: string;
+  location: { file: string; line: number };
 }
 
 interface ProcessReportResult {
@@ -262,17 +263,27 @@ export const jsonReportService = {
    */
   async _createErrorRecord(errorData: ErrorData): Promise<PrismaResultError> {
     const parsedError = parseStackTrace(errorData);
+    const {
+      type,
+      message,
+      callLog,
+      callStack,
+      testAssertion,
+      expectedPattern,
+      receivedString,
+      location,
+    } = parsedError;
 
     const errorRecord = await dbClient.resultError.create({
       data: {
-        type: parsedError.type,
-        message: parsedError.message,
-        callLog: JSON.stringify(parsedError.callLog),
-        callStack: JSON.stringify(parsedError.callStack),
-        testAssertion: parsedError.testAssertion,
-        expectedPattern: parsedError.expectedPattern,
-        receivedString: parsedError.receivedString,
-        location: parsedError.location ?? "",
+        type,
+        message,
+        callLog: JSON.stringify(callLog),
+        callStack: JSON.stringify(callStack),
+        testAssertion,
+        expectedPattern,
+        receivedString,
+        location: `${location.file}:${location.line}`,
       },
     });
 
