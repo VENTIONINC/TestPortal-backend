@@ -24,7 +24,7 @@ const SuccessResponseSchema = z
 // Issue schemas
 const IssueSchema = z
   .object({
-    id: z.string(),
+    id: z.number(),
     name: z.string(),
     category: z.string().optional(),
     description: z.string().optional(),
@@ -318,7 +318,7 @@ export function generateOpenAPISpec() {
     description: "Retrieves an issue by its ID",
     request: {
       params: z.object({
-        issueId: z.string(),
+        issueId: z.number(),
       }),
     },
     responses: {
@@ -390,7 +390,7 @@ export function generateOpenAPISpec() {
     description: "Updates an existing issue",
     request: {
       params: z.object({
-        issueId: z.string(),
+        issueId: z.number(),
       }),
       body: {
         content: {

@@ -53,7 +53,7 @@ export const issueService = {
     };
   },
 
-  async getIssueById(issueId: number | string): Promise<PrismaIssue> {
+  async getIssueById(issueId: number): Promise<PrismaIssue> {
     if (!issueId) {
       throw new Error("Issue ID is required");
     }
@@ -77,7 +77,7 @@ export const issueService = {
   },
 
   async updateIssue(
-    issueId: number | string,
+    issueId: number,
     updateData: UpdateIssueParams,
   ): Promise<PrismaIssue> {
     if (!issueId) {
