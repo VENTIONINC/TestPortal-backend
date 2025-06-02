@@ -5,6 +5,7 @@ import type {
   ResultError as PrismaResultError,
   Assumption as PrismaAssumption,
   Issue as PrismaIssue,
+  User as PrismaUser,
 } from "@prisma/client";
 
 // Re-export Prisma types for convenience
@@ -15,6 +16,7 @@ export type {
   PrismaResultError,
   PrismaAssumption,
   PrismaIssue,
+  PrismaUser,
 };
 
 // Database model interfaces with relations
@@ -105,4 +107,20 @@ export interface IssueSummary {
   portal?: string;
   service?: string;
   ticket?: string;
+}
+
+export interface UserSummary {
+  id: number;
+  name: string;
+  email: string;
+  createdAt: Date;
+}
+
+export interface UserWithPassword {
+  id: number;
+  name: string;
+  email: string;
+  passwordHash: string | null;
+  createdAt: Date;
+  updatedAt: Date;
 }

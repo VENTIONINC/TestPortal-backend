@@ -80,6 +80,15 @@ model Assumption {
   resultErrorId Int?
 }
 
+model User {
+  id           Int      @id @default(autoincrement())
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  name         String
+  email        String   @unique
+  passwordHash String?
+}
+
 model Issue {
   id          Int          @id @default(autoincrement())
   createdAt   DateTime     @default(now())
