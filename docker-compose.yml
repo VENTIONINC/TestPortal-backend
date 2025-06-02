@@ -1,0 +1,42 @@
+version: "3.8"
+
+services:
+  postgres:
+    image: postgres:15
+    container_name: test-portal-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: test_portal
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_HOST_AUTH_METHOD: "trust"
+    ports:
+      - "5433:5432" # host:container
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./init-scripts:/docker-entrypoint-initdb.d
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  pgadmin:
+    image: dpage/pgadmin4:8 # stick with v8 until pgAdmin 9 is GA
+    container_name: test-portal-pgadmin
+    restart: unless-stopped
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@example.com
+      PGADMIN_DEFAULT_PASSWORD: admin123
+      PGADMIN_LISTEN_PORT: 80 # inside container
+    volumes:
+      - pgadmin_data:/var/lib/pgadmin # keeps your saved connections, UI prefs, etc.
+    ports:
+      - "5050:80" # browse http://localhost:5050
+    depends_on:
+      postgres:
+        condition: service_healthy # waits for the DB to be ready
+
+volumes:
+  postgres_data:
+  pgadmin_data:
