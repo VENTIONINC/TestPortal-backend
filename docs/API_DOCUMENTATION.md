@@ -1,5 +1,36 @@
 # API Documentation
 
+## OpenAPI Schema
+
+### GET `/api/openapi.json`
+
+- **Description:** Returns the OpenAPI 3.1.0 JSON schema specification for the entire API. This endpoint provides machine-readable documentation that can be used to generate client SDKs, API hooks, and interactive documentation.
+- **Response:**
+  - `200 OK`: OpenAPI JSON specification
+    ```json
+    {
+      "openapi": "3.1.0",
+      "info": {
+        "version": "1.0.0",
+        "title": "Test Portal API",
+        "description": "API documentation for the Test Portal Backend - handles test execution results, issues, and reporting"
+      },
+      "servers": [...],
+      "paths": {...},
+      "components": {...}
+    }
+    ```
+  - `500 Internal Server Error`: Error generating the specification
+    ```json
+    {
+      "error": "Failed to generate OpenAPI specification: [error message]"
+    }
+    ```
+
+**Usage for Frontend Hook Generation:**
+- Use tools like `@rtk-query/codegen-openapi` or `openapi-typescript` to generate TypeScript types and API hooks
+- Example: `npx openapi-typescript http://localhost:3001/api/openapi.json --output ./types/api.ts`
+
 ## Related Documentation
 
 - [How to Inspect the MCP Server](INSPECT_MCP_SERVER.md)

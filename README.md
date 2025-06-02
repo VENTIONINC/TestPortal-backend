@@ -6,11 +6,12 @@ A comprehensive Node.js Express server for managing test results with TypeScript
 
 - 🚀 **TypeScript**: Full type safety and modern development experience
 - 🏗️ **MVC Architecture**: Clean separation with models, controllers, and services
-- 🗄️ **Prisma ORM**: Type-safe database operations with SQLite
+- 🗄️ **Prisma ORM**: Type-safe database operations with PostgreSQL
 - 🔧 **MCP Integration**: Model Context Protocol for advanced tool interactions
 - 📊 **Test Analytics**: Comprehensive test result tracking and analysis
 - 🔍 **Error Analysis**: Automated error pattern recognition and categorization
 - 🎯 **RESTful API**: Well-structured API endpoints for all operations
+- 🐳 **Docker Support**: PostgreSQL database with Docker Compose
 
 ## Setup Instructions
 
@@ -18,6 +19,7 @@ A comprehensive Node.js Express server for managing test results with TypeScript
 
 - Node.js 18+ 
 - npm 8+
+- Docker and Docker Compose
 
 ### Installation
 
@@ -29,22 +31,27 @@ A comprehensive Node.js Express server for managing test results with TypeScript
    npm install
    ```
 
-2. **Initialize Prisma and set up the database:**
+2. **Start PostgreSQL with Docker:**
 
    ```sh
-   npx prisma init --datasource-provider sqlite
-   npm run migrate # This runs 'npx prisma migrate dev'
+   docker-compose up -d postgres
    ```
 
 3. **Create a `.env` file** in the root of the project:
 
    ```env
-   DATABASE_URL="file:./dev.db"
+   DATABASE_URL="postgresql://postgres:postgres@localhost:5433/test_portal"
    PORT=3001
    NODE_ENV=development
    ```
 
-4. **Build and run the server:**
+4. **Initialize Prisma and set up the database:**
+
+   ```sh
+   npx prisma migrate dev --name "initial-postgresql-migration"
+   ```
+
+5. **Build and run the server:**
 
    ```sh
    # Development mode with hot reloading
@@ -55,13 +62,13 @@ A comprehensive Node.js Express server for managing test results with TypeScript
    npm run server
    ```
 
-5. **Seed the database** (optional, with server running):
+6. **Seed the database** (optional, with server running):
 
    ```sh
    node prisma/seed/index.js
    ```
 
-6. **Verify installation:** 
+7. **Verify installation:** 
    
    Open `http://localhost:3001/api/results` in your browser
 
@@ -86,6 +93,11 @@ npm run lint
 # Database operations
 npm run migrate
 npm run db:generate
+
+# Docker operations
+docker-compose up -d postgres     # Start PostgreSQL
+docker-compose down               # Stop all services
+docker-compose logs postgres      # View PostgreSQL logs
 ```
 
 ## TypeScript Features

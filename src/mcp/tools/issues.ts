@@ -16,7 +16,7 @@ interface GetIssuesParams {
 }
 
 interface GetIssueByIdParams {
-  issueId: string;
+  issueId: number;
 }
 
 interface CreateIssueParams {
