@@ -29,8 +29,8 @@ export const assumptionService = {
     const { issueId, resultErrorId, ...rest } = assumptionData;
 
     const processedAssumption: CreateAssumptionRequest = {
-      issueId: Number(issueId),
-      resultErrorId: Number(resultErrorId),
+      issueId,
+      resultErrorId,
       ...rest,
     };
 
