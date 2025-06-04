@@ -1,20 +1,13 @@
 import levenshtein from "fast-levenshtein";
 import stringSimilarity from "string-similarity";
 import { dbClient } from "@/prisma/client";
+import type {
+  PrismaResultError,
+  PrismaAssumption,
+  ResultErrorWithRelations,
+} from "@/types/database";
 
-// Prisma generates model types at runtime. Provide minimal fallbacks so this
-// module compiles in environments where the generated types are unavailable.
-interface ResultError { [key: string]: any }
-interface Assumption { [key: string]: any }
-interface Result { [key: string]: any }
-interface Issue { [key: string]: any }
-
-interface ResultErrorWithRelations extends ResultError {
-  assumptions: (Assumption & { issue: Issue })[];
-  result: Result | null;
-}
-
-interface TargetResultError extends ResultError {
+interface TargetResultError extends PrismaResultError {
   message: string;
   callLog: string;
   callStack: string;
@@ -27,7 +20,7 @@ export async function runReview(
 ): Promise<ResultErrorWithRelations | null> {
   const start = new Date();
 
-  const resultErrors = await dbClient.resultError.findMany({
+  const resultErrors: ResultErrorWithRelations[] = await dbClient.resultError.findMany({
     where: {
       type: targetResultError.type,
       assumptions: {
@@ -79,13 +72,13 @@ export async function runReview(
       });
 
       if (!assumptionRecord) {
-        let bestAssumption = resultError.assumptions.find((a: Assumption) =>
+        let bestAssumption = resultError.assumptions.find((a: PrismaAssumption) =>
           a.isConfirmed
         );
 
         if (!bestAssumption) {
           const sorted = resultError.assumptions.sort(
-            (a: Assumption, b: Assumption) => a.score - b.score,
+            (a: PrismaAssumption, b: PrismaAssumption) => a.score - b.score,
           );
           bestAssumption = sorted[0];
         }

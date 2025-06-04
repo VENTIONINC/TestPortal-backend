@@ -1,23 +1,89 @@
-import type {
-  Execution as PrismaExecution,
-  Spec as PrismaSpec,
-  Result as PrismaResult,
-  ResultError as PrismaResultError,
-  Assumption as PrismaAssumption,
-  Issue as PrismaIssue,
-  User as PrismaUser,
-} from "@prisma/client";
 
-// Re-export Prisma types for convenience
-export type {
-  PrismaExecution,
-  PrismaSpec,
-  PrismaResult,
-  PrismaResultError,
-  PrismaAssumption,
-  PrismaIssue,
-  PrismaUser,
-};
+// Minimal Prisma model type definitions to allow compilation without the
+// generated client types. These mirror the fields defined in the Prisma
+// schema and are sufficient for type checking within this repository.
+
+export interface PrismaExecution {
+  id: number;
+  createdAt: Date;
+  updatedAt: Date;
+  type: string;
+  name: string;
+  environment: string;
+  version: string;
+  startedAt: Date;
+}
+
+export interface PrismaSpec {
+  id: number;
+  createdAt: Date;
+  updatedAt: Date;
+  key: string;
+  file: string;
+  title: string;
+  tags: string;
+  annotations?: string | null;
+}
+
+export interface PrismaResult {
+  id: number;
+  createdAt: Date;
+  updatedAt: Date;
+  allureLink?: string | null;
+  retry: number;
+  status: string;
+  duration: number;
+  startTime: Date;
+  specId: number;
+  executionId: number;
+}
+
+export interface PrismaResultError {
+  id: number;
+  createdAt: Date;
+  updatedAt: Date;
+  type: string;
+  message: string;
+  callLog?: string | null;
+  callStack: string;
+  testAssertion?: string | null;
+  expectedPattern?: string | null;
+  receivedString?: string | null;
+  location: string;
+  resultId?: number | null;
+}
+
+export interface PrismaAssumption {
+  id: number;
+  createdAt: Date;
+  updatedAt: Date;
+  isConfirmed: boolean;
+  score: number;
+  madeBy: string;
+  issueId: number;
+  resultErrorId?: number | null;
+}
+
+export interface PrismaIssue {
+  id: number;
+  createdAt: Date;
+  updatedAt: Date;
+  name: string;
+  category: string;
+  description?: string | null;
+  portal?: string | null;
+  service?: string | null;
+  ticket?: string | null;
+}
+
+export interface PrismaUser {
+  id: number;
+  createdAt: Date;
+  updatedAt: Date;
+  name: string;
+  email: string;
+  passwordHash?: string | null;
+}
 
 // Database model interfaces with relations
 export interface ExecutionWithResults extends PrismaExecution {
