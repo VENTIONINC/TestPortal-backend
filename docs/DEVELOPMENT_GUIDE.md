@@ -417,7 +417,13 @@ npm run lint
 npm run lint -- --fix
 ```
 
-### 4. Building
+### 4. Running Tests
+
+```bash
+npm test # runs Jest via ts-jest
+```
+
+### 5. Building
 
 ```bash
 # Build for production
@@ -508,7 +514,7 @@ Before committing:
 - [ ] `npm run type-check` passes
 - [ ] `npm run lint` passes
 - [ ] `npm run build` succeeds
-- [ ] Tests pass (when implemented)
+- [ ] `npm test` passes (runs Jest via ts-jest)
 - [ ] Follow TypeScript patterns
 - [ ] Use path aliases (`@/*`)
 
