@@ -81,6 +81,9 @@ npm run dev
 # Type checking
 npm run type-check
 
+# Unit tests
+npm test # runs Jest via ts-jest
+
 # Build for production
 npm run build
 
