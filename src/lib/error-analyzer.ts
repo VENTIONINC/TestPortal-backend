@@ -1,7 +1,13 @@
 import levenshtein from "fast-levenshtein";
 import stringSimilarity from "string-similarity";
 import { dbClient } from "@/prisma/client";
-import type { ResultError, Assumption, Result, Issue } from "@prisma/client";
+
+// Prisma generates model types at runtime. Provide minimal fallbacks so this
+// module compiles in environments where the generated types are unavailable.
+interface ResultError { [key: string]: any }
+interface Assumption { [key: string]: any }
+interface Result { [key: string]: any }
+interface Issue { [key: string]: any }
 
 interface ResultErrorWithRelations extends ResultError {
   assumptions: (Assumption & { issue: Issue })[];
@@ -73,7 +79,9 @@ export async function runReview(
       });
 
       if (!assumptionRecord) {
-        let bestAssumption = resultError.assumptions.find((a) => a.isConfirmed);
+        let bestAssumption = resultError.assumptions.find((a: Assumption) =>
+          a.isConfirmed
+        );
 
         if (!bestAssumption) {
           const sorted = resultError.assumptions.sort(
@@ -139,7 +147,10 @@ export async function runReview(
  * Calculates similarity between two error messages.
  * Uses both Levenshtein distance and Jaro-Winkler similarity.
  */
-function calculateErrorSimilarity(message1: string, message2: string): number {
+export function calculateErrorSimilarity(
+  message1: string,
+  message2: string,
+): number {
   if (!message1 || !message2) return 0;
 
   const normalizedMessage1 = normalizeMessage(message1);
@@ -165,7 +176,10 @@ function calculateErrorSimilarity(message1: string, message2: string): number {
 /**
  * Compare two stack traces and calculate similarity (0 to 1)
  */
-function compareStackTraces(stack1: string[], stack2: string[]): number {
+export function compareStackTraces(
+  stack1: string[],
+  stack2: string[],
+): number {
   if (!stack1.length || !stack2.length) return 0;
 
   const normalizedStack1 = stack1.map(normalizeFrame);
