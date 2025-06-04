@@ -1,16 +1,7 @@
 import { dbClient } from "@/prisma/client";
-import type { PrismaResultError } from "@/types";
-import type { Prisma } from "@prisma/client";
+import type { PrismaResultError, ResultErrorWithRelations } from "@/types";
 
-type ResultErrorWithAssumptions = Prisma.ResultErrorGetPayload<{
-  include: {
-    assumptions: {
-      include: {
-        issue: true;
-      };
-    };
-  };
-}>;
+type ResultErrorWithAssumptions = Omit<ResultErrorWithRelations, "result">;
 
 export const resultErrorModel = {
   findById: async (id: number | string): Promise<PrismaResultError | null> => {

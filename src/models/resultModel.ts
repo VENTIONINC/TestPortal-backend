@@ -1,6 +1,23 @@
 import { dbClient } from "@/prisma/client";
 import type { ResultWithRelations } from "@/types";
-import type { Prisma } from "@prisma/client";
+
+interface ResultWhereInput {
+  spec?: {
+    id?: number;
+    file?: { contains: string };
+    title?: { contains: string };
+    tags?: { contains: string };
+  };
+  execution?: {
+    environment?: string;
+    type?: string;
+  };
+  status?: string;
+  startTime?: {
+    gte?: Date;
+    lte?: Date;
+  };
+}
 
 interface ResultFilters {
   tag?: string;
@@ -61,7 +78,7 @@ export const resultModel = {
       toDate.setDate(toDate.getDate() + 1); // +1 day to include results of the whole day
     }
 
-    const whereClause: Prisma.ResultWhereInput = {};
+    const whereClause: ResultWhereInput = {};
 
     // Build spec filter
     if (specId || specFile || specName || tag) {
@@ -127,7 +144,7 @@ export const resultModel = {
       toDate.setDate(toDate.getDate() + 1);
     }
 
-    const whereClause: Prisma.ResultWhereInput = {};
+    const whereClause: ResultWhereInput = {};
 
     // Build spec filter
     if (specId || specFile || specName || tag) {

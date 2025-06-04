@@ -1,6 +1,10 @@
 import { dbClient } from "@/prisma/client";
 import type { PrismaIssue } from "@/types";
-import type { Prisma } from "@prisma/client";
+
+interface IssueWhereInput {
+  category?: string;
+  name?: { contains: string };
+}
 
 interface CreateIssueData {
   name: string;
@@ -18,7 +22,7 @@ export const issueModel = {
     page = 1,
     limit = 30,
   ): Promise<PrismaIssue[]> => {
-    const whereClause: Prisma.IssueWhereInput = {};
+    const whereClause: IssueWhereInput = {};
     if (category) whereClause.category = category;
     if (name) whereClause.name = { contains: name };
 
@@ -31,7 +35,7 @@ export const issueModel = {
   },
 
   count: async (category?: string, name?: string): Promise<number> => {
-    const whereClause: Prisma.IssueWhereInput = {};
+    const whereClause: IssueWhereInput = {};
     if (category) whereClause.category = category;
     if (name) whereClause.name = { contains: name };
 

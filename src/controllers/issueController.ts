@@ -63,7 +63,7 @@ export const issueController = {
         return;
       }
 
-      const issueRecords = await issueService.getIssueById(issueId);
+      const issueRecords = await issueService.getIssueById(Number(issueId));
       res.status(200).json(issueRecords);
     } catch (error) {
       const err = error as Error;
@@ -113,7 +113,10 @@ export const issueController = {
         return;
       }
 
-      const updatedIssue = await issueService.updateIssue(issueId, updateData);
+      const updatedIssue = await issueService.updateIssue(
+        Number(issueId),
+        updateData,
+      );
       res.status(200).json(updatedIssue);
     } catch (error) {
       const err = error as Error;

@@ -84,6 +84,7 @@ export default [
       "dist/**",
       "node_modules/**",
       "backup-js-files/**",
+      "__mocks__/**",
       "*.d.ts",
       "jest.config.ts",
     ],
