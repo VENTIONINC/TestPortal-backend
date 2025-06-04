@@ -31,8 +31,7 @@ app.use(
     cookie: {
       maxAge: 60000 * 60,
     },
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    store: new PrismaSessionStore(dbClient as any, {
+    store: new PrismaSessionStore(dbClient, {
       checkPeriod: 2 * 60 * 1000, //ms
       dbRecordIdIsSessionId: true,
     }),
