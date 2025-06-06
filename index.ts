@@ -3,9 +3,7 @@ dotenv.config();
 import express, { Request, Response, NextFunction } from "express";
 import cors from "cors";
 import parseCookie from "cookie-parser";
-import session from "express-session";
-import { PrismaSessionStore } from "@quixo3/prisma-session-store";
-import { dbClient } from "@/prisma/client";
+
 import getLogger from "@/lib/logger";
 import { errorHandler } from "@/middleware/error-handler";
 import routes from "@/routes/index";
@@ -23,20 +21,7 @@ const loggingMiddleware = (
 const app = express();
 app.use(cors());
 app.use(express.json());
-app.use(
-  session({
-    secret: "qwerty@12345",
-    saveUninitialized: false,
-    resave: false,
-    cookie: {
-      maxAge: 60000 * 60,
-    },
-    store: new PrismaSessionStore(dbClient, {
-      checkPeriod: 2 * 60 * 1000, //ms
-      dbRecordIdIsSessionId: true,
-    }),
-  }),
-);
+
 app.use(parseCookie());
 app.use(loggingMiddleware);
 

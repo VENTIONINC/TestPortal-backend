@@ -4,6 +4,7 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/streamableHttp.js";
 import { isInitializeRequest } from "@modelcontextprotocol/sdk/types.js";
 import { statusCheck } from "@/mcp/tools/status-check";
+import { currentTime } from "@/mcp/tools/current-time";
 import {
   getIssues,
   getIssueById,
@@ -71,6 +72,7 @@ router.post("/v1/mcp", async (req: Request, res: Response): Promise<void> => {
 
     // Register all tools
     server.tool(...statusCheck);
+    server.tool(...currentTime);
 
     // Issue tools
     server.tool(...getIssues);

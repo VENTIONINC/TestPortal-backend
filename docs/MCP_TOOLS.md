@@ -12,10 +12,18 @@ Tools are registered with the MCP server instance and can be invoked by clients 
 - **Source File:** `src/mcp/tools/status-check.js`
 - **Description:** Check the operational status and health of the test portal server
 - **Parameters:** None
-- **Response:** 
+- **Response:**
   - `status`: "ok" (string) - Status indicator
   - `timestamp`: ISO timestamp (string) - Current server time
   - `service`: "test-portal-server" (string) - Service identifier
+
+#### `current-time`
+- **Source File:** `src/mcp/tools/current-time.js`
+- **Description:** Return the current date and time in ISO 8601 format
+- **Parameters:** None
+- **Response:**
+  - `date`: ISO date (string) - Current date in `YYYY-MM-DD` format
+  - `timestamp`: ISO timestamp (string) - Current date and time
 
 ---
 
