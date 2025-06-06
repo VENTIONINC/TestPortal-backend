@@ -13,6 +13,8 @@ interface CreateIssueData {
   portal?: string;
   service?: string;
   ticket?: string;
+  createdById?: number;
+  updatedById?: number;
 }
 
 export const issueModel = {

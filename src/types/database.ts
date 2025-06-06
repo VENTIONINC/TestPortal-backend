@@ -73,6 +73,8 @@ export interface PrismaIssue {
   portal?: string | null;
   service?: string | null;
   ticket?: string | null;
+  createdById?: number | null;
+  updatedById?: number | null;
 }
 
 export interface PrismaUser {

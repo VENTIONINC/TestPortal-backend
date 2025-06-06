@@ -1,4 +1,5 @@
 import { Request, Response } from "express";
+import { type AuthenticatedRequest } from "@/middleware/authMiddleware";
 import { issueService } from "@/services/issueService";
 
 interface CreateIssueParams {
@@ -8,6 +9,8 @@ interface CreateIssueParams {
   portal?: string;
   service?: string;
   ticket?: string;
+  createdById?: number;
+  updatedById?: number;
 }
 
 interface UpdateIssueParams {
@@ -17,6 +20,7 @@ interface UpdateIssueParams {
   portal?: string;
   service?: string;
   ticket?: string;
+  updatedById?: number;
 }
 
 export const issueController = {
@@ -76,6 +80,11 @@ export const issueController = {
   createIssue: async (req: Request, res: Response): Promise<void> => {
     try {
       const issueParams: CreateIssueParams = req.body;
+      const user = (req as AuthenticatedRequest).user;
+      if (user) {
+        issueParams.createdById = user.id;
+        issueParams.updatedById = user.id;
+      }
 
       if (!issueParams) {
         res.status(400).json({
@@ -98,6 +107,10 @@ export const issueController = {
     try {
       const { issueId } = req.params;
       const updateData: UpdateIssueParams = req.body;
+      const user = (req as AuthenticatedRequest).user;
+      if (user) {
+        updateData.updatedById = user.id;
+      }
 
       if (!issueId) {
         res.status(400).json({
