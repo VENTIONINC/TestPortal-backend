@@ -81,12 +81,12 @@ model Assumption {
 }
 
 model User {
-  id           Int      @id @default(autoincrement())
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
-  name         String
-  email        String   @unique
-  passwordHash String?
+  id            Int      @id @default(autoincrement())
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  name          String
+  email         String   @unique
+  passwordHash  String?
   issuesCreated Issue[]  @relation("IssuesCreated")
   issuesUpdated Issue[]  @relation("IssuesUpdated")
 }

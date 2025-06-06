@@ -1,0 +1,702 @@
+{
+  "info": {
+    "name": "Issue API",
+    "description": "Complete Issue management API with v1 (public) and v2 (authenticated) endpoints. Includes automatic user tracking for createdBy/updatedBy fields and comprehensive test scenarios.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "V_2",
+      "value": "/api/v2",
+      "type": "string"
+    },
+    {
+      "key": "V_1",
+      "value": "/api/v1",
+      "type": "string"
+    },
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:3001",
+      "type": "string"
+    },
+    {
+      "key": "issueId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "accessToken",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "refreshToken",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "testEmail",
+      "value": "john.doe@example.com",
+      "type": "string"
+    },
+    {
+      "key": "testPassword",
+      "value": "SecurePassword123!",
+      "type": "string"
+    }
+  ],
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{accessToken}}",
+        "type": "string"
+      }
+    ]
+  },
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "// Auto-refresh token if access token is expired",
+          "const accessToken = pm.collectionVariables.get('accessToken');",
+          "const refreshToken = pm.collectionVariables.get('refreshToken');",
+          "",
+          "if (refreshToken && accessToken) {",
+          "    try {",
+          "        const tokenPayload = JSON.parse(atob(accessToken.split('.')[1]));",
+          "        const currentTime = Math.floor(Date.now() / 1000);",
+          "        const timeUntilExpiry = tokenPayload.exp - currentTime;",
+          "        ",
+          "        if (timeUntilExpiry < 60) {",
+          "            console.log('Access token expiring soon, attempting refresh...');",
+          "            ",
+          "            const refreshRequest = {",
+          "                url: pm.collectionVariables.get('baseUrl') + '/users/refresh-token',",
+          "                method: 'POST',",
+          "                header: { 'Content-Type': 'application/json' },",
+          "                body: {",
+          "                    mode: 'raw',",
+          "                    raw: JSON.stringify({ refreshToken: refreshToken })",
+          "                }",
+          "            };",
+          "            ",
+          "            pm.sendRequest(refreshRequest, (err, res) => {",
+          "                if (!err && res.code === 200) {",
+          "                    const responseJson = res.json();",
+          "                    pm.collectionVariables.set('accessToken', responseJson.accessToken);",
+          "                    pm.collectionVariables.set('refreshToken', responseJson.refreshToken);",
+          "                    console.log('Token refreshed successfully');",
+          "                } else {",
+          "                    console.log('Token refresh failed, clearing tokens');",
+          "                    pm.collectionVariables.set('accessToken', '');",
+          "                    pm.collectionVariables.set('refreshToken', '');",
+          "                }",
+          "            });",
+          "        }",
+          "    } catch (e) {",
+          "        console.log('Error parsing access token:', e);",
+          "    }",
+          "}"
+        ]
+      }
+    }
+  ],
+  "item": [
+    {
+      "name": "🔐 Setup Authentication",
+      "item": [
+        {
+          "name": "✅ User Login (Get Tokens)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code is 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Tokens are saved to variables', function () {",
+                  "    const responseJson = pm.response.json();",
+                  "    pm.collectionVariables.set('accessToken', responseJson.accessToken);",
+                  "    pm.collectionVariables.set('refreshToken', responseJson.refreshToken);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}{{V_2}}/users/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "{{V_2}}",
+                "users",
+                "login"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{testEmail}}\",\n  \"password\": \"{{testPassword}}\"\n}"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "📋 V1 Issues (Public)",
+      "item": [
+        {
+          "name": "✅ Get All Issues",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code is 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Response is an array', function () {",
+                  "    const responseJson = pm.response.json();",
+                  "    pm.expect(responseJson).to.be.an('array');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}{{V_1}}/issues",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "{{V_1}}",
+                "issues"
+              ]
+            }
+          }
+        },
+        {
+          "name": "✅ Create Issue (Public)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code is 201', function () {",
+                  "    pm.response.to.have.status(201);",
+                  "});",
+                  "",
+                  "pm.test('Issue created with required fields', function () {",
+                  "    const responseJson = pm.response.json();",
+                  "    pm.expect(responseJson).to.have.property('id');",
+                  "    pm.expect(responseJson).to.have.property('name');",
+                  "    pm.expect(responseJson).to.have.property('category');",
+                  "});",
+                  "",
+                  "pm.test('Issue ID saved to variable', function () {",
+                  "    const responseJson = pm.response.json();",
+                  "    pm.collectionVariables.set('issueId', responseJson.id.toString());",
+                  "});",
+                  "",
+                  "pm.test('createdBy fields are null (no auth)', function () {",
+                  "    const responseJson = pm.response.json();",
+                  "    pm.expect(responseJson.createdById).to.be.null;",
+                  "    pm.expect(responseJson.updatedById).to.be.null;",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}{{V_1}}/issues",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "{{V_1}}",
+                "issues"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Public API Test Issue\",\n  \"category\": \"Bug\",\n  \"description\": \"Test issue created via public API\",\n  \"portal\": \"test-portal\",\n  \"service\": \"api-service\",\n  \"ticket\": \"TICKET-123\"\n}"
+            }
+          }
+        },
+        {
+          "name": "✅ Get Issue by ID",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code is 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Issue has correct structure', function () {",
+                  "    const responseJson = pm.response.json();",
+                  "    pm.expect(responseJson).to.have.property('id');",
+                  "    pm.expect(responseJson).to.have.property('name');",
+                  "    pm.expect(responseJson).to.have.property('category');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}{{V_1}}/issues/{{issueId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "{{V_1}}",
+                "issues",
+                "{{issueId}}"
+              ]
+            }
+          }
+        },
+        {
+          "name": "✅ Update Issue (Public)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code is 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Issue updated successfully', function () {",
+                  "    const responseJson = pm.response.json();",
+                  "    pm.expect(responseJson).to.have.property('name', 'Updated Public Issue');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}{{V_1}}/issues/{{issueId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "{{V_1}}",
+                "issues",
+                "{{issueId}}"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Updated Public Issue\",\n  \"description\": \"This issue was updated via public API\"\n}"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "🔒 V2 Issues (Authenticated)",
+      "item": [
+        {
+          "name": "✅ Get All Issues (Auth)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code is 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Response is an array', function () {",
+                  "    const responseJson = pm.response.json();",
+                  "    pm.expect(responseJson).to.be.an('array');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}{{V_2}}/issues",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "{{V_2}}",
+                "issues"
+              ]
+            }
+          }
+        },
+        {
+          "name": "✅ Create Issue (With User Tracking)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code is 201', function () {",
+                  "    pm.response.to.have.status(201);",
+                  "});",
+                  "",
+                  "pm.test('Issue created with user tracking', function () {",
+                  "    const responseJson = pm.response.json();",
+                  "    pm.expect(responseJson).to.have.property('id');",
+                  "    pm.expect(responseJson).to.have.property('name');",
+                  "    pm.expect(responseJson).to.have.property('category');",
+                  "});",
+                  "",
+                  "pm.test('createdBy/updatedBy fields are populated', function () {",
+                  "    const responseJson = pm.response.json();",
+                  "    pm.expect(responseJson.createdById).to.not.be.null;",
+                  "    pm.expect(responseJson.updatedById).to.not.be.null;",
+                  "    pm.expect(responseJson.createdById).to.equal(responseJson.updatedById);",
+                  "});",
+                  "",
+                  "pm.test('Issue ID saved to variable', function () {",
+                  "    const responseJson = pm.response.json();",
+                  "    pm.collectionVariables.set('issueId', responseJson.id.toString());",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}{{V_2}}/issues",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "{{V_2}}",
+                "issues"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Authenticated API Test Issue\",\n  \"category\": \"Feature\",\n  \"description\": \"Test issue created via authenticated API with user tracking\",\n  \"portal\": \"secure-portal\",\n  \"service\": \"auth-service\",\n  \"ticket\": \"SECURE-456\"\n}"
+            }
+          }
+        },
+        {
+          "name": "✅ Get Issue by ID (Auth)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code is 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Issue has user tracking fields', function () {",
+                  "    const responseJson = pm.response.json();",
+                  "    pm.expect(responseJson).to.have.property('createdById');",
+                  "    pm.expect(responseJson).to.have.property('updatedById');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}{{V_2}}/issues/{{issueId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "{{V_2}}",
+                "issues",
+                "{{issueId}}"
+              ]
+            }
+          }
+        },
+        {
+          "name": "✅ Update Issue (With updatedBy Tracking)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code is 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Issue updated with tracking', function () {",
+                  "    const responseJson = pm.response.json();",
+                  "    pm.expect(responseJson).to.have.property('name', 'Updated Authenticated Issue');",
+                  "    pm.expect(responseJson.updatedById).to.not.be.null;",
+                  "});",
+                  "",
+                  "pm.test('updatedAt timestamp is recent', function () {",
+                  "    const responseJson = pm.response.json();",
+                  "    const updatedAt = new Date(responseJson.updatedAt);",
+                  "    const now = new Date();",
+                  "    const timeDiff = now - updatedAt;",
+                  "    pm.expect(timeDiff).to.be.below(5000); // Within 5 seconds",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}{{V_2}}/issues/{{issueId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "{{V_2}}",
+                "issues",
+                "{{issueId}}"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Updated Authenticated Issue\",\n  \"description\": \"This issue was updated via authenticated API with user tracking\",\n  \"category\": \"Enhancement\"\n}"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "🧪 Test Scenarios",
+      "item": [
+        {
+          "name": "❌ V2 Without Token (401)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code is 401', function () {",
+                  "    pm.response.to.have.status(401);",
+                  "});",
+                  "",
+                  "pm.test('Error message indicates missing token', function () {",
+                  "    const responseJson = pm.response.json();",
+                  "    pm.expect(responseJson).to.have.property('error');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}{{V_2}}/issues",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "{{V_2}}",
+                "issues"
+              ]
+            }
+          }
+        },
+        {
+          "name": "❌ Invalid Issue ID (404)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code is 404', function () {",
+                  "    pm.response.to.have.status(404);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}{{V_1}}/issues/999999",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "{{V_1}}",
+                "issues",
+                "999999"
+              ]
+            }
+          }
+        },
+        {
+          "name": "❌ Invalid Issue Data (400)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code is 400', function () {",
+                  "    pm.response.to.have.status(400);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}{{V_1}}/issues",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "{{V_1}}",
+                "issues"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"description\": \"Missing required name and category fields\"\n}"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "🧹 Cleanup",
+      "item": [
+        {
+          "name": "🗑️ Clear Variables",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// Clear all stored variables",
+                  "pm.collectionVariables.set('accessToken', '');",
+                  "pm.collectionVariables.set('refreshToken', '');",
+                  "pm.collectionVariables.set('issueId', '');",
+                  "",
+                  "pm.test('Variables cleared', function () {",
+                  "    console.log('All collection variables have been cleared');",
+                  "    pm.expect(true).to.be.true;",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/health",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "health"
+              ]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}
