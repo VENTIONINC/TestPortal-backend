@@ -7,8 +7,8 @@ app.use('/api', statusRouter);
 
 
 describe('status route', () => {
-  it('GET /api/status returns ok', async () => {
-    const res = await request(app).get('/api/status');
+  it('GET /api/v1/status returns ok', async () => {
+    const res = await request(app).get('/api/v1/status');
     expect(res.status).toBe(200);
     expect(res.body).toEqual({ status: 'ok' });
   });

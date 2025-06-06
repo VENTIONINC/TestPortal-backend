@@ -1,5 +1,5 @@
 ### User Signup
-POST http://localhost:3001/api/users/signup
+POST http://localhost:3001/api/v2/users/signup
 Content-Type: application/json
 
 {
@@ -9,7 +9,7 @@ Content-Type: application/json
 }
 
 ### User Login
-POST http://localhost:3001/api/users/login
+POST http://localhost:3001/api/v2/users/login
 Content-Type: application/json
 
 {
@@ -19,7 +19,7 @@ Content-Type: application/json
 
 ### Refresh Token
 # First get refreshToken from login response above
-POST http://localhost:3001/api/users/refresh-token
+POST http://localhost:3001/api/v2/users/refresh-token
 Content-Type: application/json
 
 {
@@ -28,14 +28,14 @@ Content-Type: application/json
 
 ### Protected Route (Requires JWT)
 # Replace YOUR_JWT_TOKEN with token from login
-GET http://localhost:3001/api/users/1
+GET http://localhost:3001/api/v2/users/1
 Authorization: Bearer YOUR_JWT_TOKEN
 
 ### Protected Route Without Token
-GET http://localhost:3001/api/users/1
+GET http://localhost:3001/api/v2/users/1
 
 ### Protected Update (Requires JWT)
-PATCH http://localhost:3001/api/users/1
+PATCH http://localhost:3001/api/v2/users/1
 Authorization: Bearer YOUR_JWT_TOKEN
 Content-Type: application/json
 
@@ -44,7 +44,7 @@ Content-Type: application/json
 }
 
 ### Protected Update Without Token
-PATCH http://localhost:3001/api/users/1
+PATCH http://localhost:3001/api/v2/users/1
 Content-Type: application/json
 
 {
@@ -52,10 +52,10 @@ Content-Type: application/json
 }
 
 ### Get User by ID
-GET http://localhost:3001/api/users/1
+GET http://localhost:3001/api/v2/users/1
 
 ### Update User Name
-PATCH http://localhost:3001/api/users/1
+PATCH http://localhost:3001/api/v2/users/1
 Content-Type: application/json
 
 {
@@ -63,7 +63,7 @@ Content-Type: application/json
 }
 
 ### Update User Password
-PATCH http://localhost:3001/api/users/1
+PATCH http://localhost:3001/api/v2/users/1
 Content-Type: application/json
 
 {
@@ -71,7 +71,7 @@ Content-Type: application/json
 }
 
 ### Duplicate Email Error
-POST http://localhost:3001/api/users/signup
+POST http://localhost:3001/api/v2/users/signup
 Content-Type: application/json
 
 {
@@ -81,7 +81,7 @@ Content-Type: application/json
 }
 
 ### Invalid Email Error
-POST http://localhost:3001/api/users/signup
+POST http://localhost:3001/api/v2/users/signup
 Content-Type: application/json
 
 {
@@ -91,7 +91,7 @@ Content-Type: application/json
 }
 
 ### Missing Fields Error
-POST http://localhost:3001/api/users/signup
+POST http://localhost:3001/api/v2/users/signup
 Content-Type: application/json
 
 {
@@ -99,7 +99,7 @@ Content-Type: application/json
 }
 
 ### Weak Password Error
-POST http://localhost:3001/api/users/signup
+POST http://localhost:3001/api/v2/users/signup
 Content-Type: application/json
 
 {
@@ -109,7 +109,7 @@ Content-Type: application/json
 }
 
 ### Wrong Password Error
-POST http://localhost:3001/api/users/login
+POST http://localhost:3001/api/v2/users/login
 Content-Type: application/json
 
 {

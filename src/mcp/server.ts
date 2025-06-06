@@ -41,7 +41,7 @@ interface McpServerWithTools {
 
 const transports: TransportStorage = {};
 
-router.post("/mcp", async (req: Request, res: Response): Promise<void> => {
+router.post("/v1/mcp", async (req: Request, res: Response): Promise<void> => {
   const sessionId = req.headers["mcp-session-id"] as string | undefined;
   let transport: StreamableHTTPServerTransport;
 
@@ -130,7 +130,7 @@ const handleSessionRequest = async (
   await transport.handleRequest(req, res);
 };
 
-router.get("/mcp", handleSessionRequest);
-router.delete("/mcp", handleSessionRequest);
+router.get("/v1/mcp", handleSessionRequest);
+router.delete("/v1/mcp", handleSessionRequest);
 
 export default router;

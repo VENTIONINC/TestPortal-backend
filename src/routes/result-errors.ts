@@ -4,16 +4,16 @@ import { resultErrorController } from "@/controllers/resultErrorController";
 const router = Router();
 
 router.patch(
-  "/result-errors/:resultErrorId/assign-issue",
+  "/v1/result-errors/:resultErrorId/assign-issue",
   resultErrorController.assignIssue,
 );
 router.patch(
-  "/result-errors/:resultErrorId/review",
+  "/v1/result-errors/:resultErrorId/review",
   resultErrorController.reviewError,
 );
-router.patch("/result-errors/bulk-review", resultErrorController.bulkReview);
+router.patch("/v1/result-errors/bulk-review", resultErrorController.bulkReview);
 router.get(
-  "/result-errors/:resultErrorId",
+  "/v1/result-errors/:resultErrorId",
   resultErrorController.getResultErrorById,
 );
 

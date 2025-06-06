@@ -317,7 +317,7 @@ export function generateOpenAPISpec() {
   // Base route
   registry.registerPath({
     method: "get",
-    path: "/api/",
+    path: "/api/v1/",
     description: "Welcome endpoint",
     responses: {
       200: {
@@ -335,7 +335,7 @@ export function generateOpenAPISpec() {
   // Issues routes
   registry.registerPath({
     method: "get",
-    path: "/api/issues",
+    path: "/api/v1/issues",
     description: "Retrieves all issues",
     request: {
       query: z.object({
@@ -368,7 +368,7 @@ export function generateOpenAPISpec() {
 
   registry.registerPath({
     method: "get",
-    path: "/api/issues/{issueId}",
+    path: "/api/v1/issues/{issueId}",
     description: "Retrieves an issue by its ID",
     request: {
       params: z.object({
@@ -406,7 +406,7 @@ export function generateOpenAPISpec() {
 
   registry.registerPath({
     method: "post",
-    path: "/api/issues",
+    path: "/api/v1/issues",
     description: "Creates a new issue",
     request: {
       body: {
@@ -440,7 +440,7 @@ export function generateOpenAPISpec() {
 
   registry.registerPath({
     method: "patch",
-    path: "/api/issues/{issueId}",
+    path: "/api/v1/issues/{issueId}",
     description: "Updates an existing issue",
     request: {
       params: z.object({
@@ -486,7 +486,7 @@ export function generateOpenAPISpec() {
   // Results routes
   registry.registerPath({
     method: "get",
-    path: "/api/results",
+    path: "/api/v1/results",
     description: "Retrieves results with optional filtering",
     request: {
       query: z.object({
@@ -526,7 +526,7 @@ export function generateOpenAPISpec() {
 
   registry.registerPath({
     method: "get",
-    path: "/api/results/{resultId}",
+    path: "/api/v1/results/{resultId}",
     description: "Retrieves a specific result by its ID",
     request: {
       params: z.object({
@@ -557,7 +557,7 @@ export function generateOpenAPISpec() {
   // Specs routes
   registry.registerPath({
     method: "get",
-    path: "/api/specs/{specId}",
+    path: "/api/v1/specs/{specId}",
     description: "Retrieves a specific spec by its ID",
     request: {
       params: z.object({
@@ -588,7 +588,7 @@ export function generateOpenAPISpec() {
   // Assumptions routes
   registry.registerPath({
     method: "post",
-    path: "/api/assumptions",
+    path: "/api/v1/assumptions",
     description: "Creates a new assumption",
     request: {
       body: {
@@ -622,7 +622,7 @@ export function generateOpenAPISpec() {
 
   registry.registerPath({
     method: "patch",
-    path: "/api/assumptions/{assumptionId}",
+    path: "/api/v1/assumptions/{assumptionId}",
     description: "Updates an existing assumption",
     request: {
       params: z.object({
@@ -668,7 +668,7 @@ export function generateOpenAPISpec() {
   // Result Errors routes
   registry.registerPath({
     method: "patch",
-    path: "/api/result-errors/{resultErrorId}/assign-issue",
+    path: "/api/v1/result-errors/{resultErrorId}/assign-issue",
     description: "Assigns an issue to a specific result error",
     request: {
       params: z.object({
@@ -713,7 +713,7 @@ export function generateOpenAPISpec() {
 
   registry.registerPath({
     method: "patch",
-    path: "/api/result-errors/{resultErrorId}/review",
+    path: "/api/v1/result-errors/{resultErrorId}/review",
     description: "Reviews a specific result error",
     request: {
       params: z.object({
@@ -751,7 +751,7 @@ export function generateOpenAPISpec() {
 
   registry.registerPath({
     method: "patch",
-    path: "/api/result-errors/bulk-review",
+    path: "/api/v1/result-errors/bulk-review",
     description: "Performs a bulk review of result errors",
     request: {
       body: {
@@ -786,7 +786,7 @@ export function generateOpenAPISpec() {
   // Executions routes
   registry.registerPath({
     method: "get",
-    path: "/api/executions/{executionId}",
+    path: "/api/v1/executions/{executionId}",
     description: "Retrieves an execution by its ID",
     request: {
       params: z.object({
@@ -817,7 +817,7 @@ export function generateOpenAPISpec() {
   // JSON Report route
   registry.registerPath({
     method: "post",
-    path: "/api/json-report",
+    path: "/api/v1/json-report",
     description: "Processes and stores a JSON test report",
     request: {
       body: {
@@ -852,7 +852,7 @@ export function generateOpenAPISpec() {
   // Status route
   registry.registerPath({
     method: "get",
-    path: "/api/status",
+    path: "/api/v1/status",
     description: "Checks the status of the server and its connections",
     responses: {
       200: {
@@ -878,7 +878,7 @@ export function generateOpenAPISpec() {
   // User Authentication routes
   registry.registerPath({
     method: "post",
-    path: "/api/users/signup",
+    path: "/api/v2/users/signup",
     description: "Creates a new user account with secure password hashing",
     request: {
       body: {
@@ -912,7 +912,7 @@ export function generateOpenAPISpec() {
 
   registry.registerPath({
     method: "post",
-    path: "/api/users/login",
+    path: "/api/v2/users/login",
     description: "Authenticates user credentials and returns JWT tokens",
     request: {
       body: {
@@ -947,7 +947,7 @@ export function generateOpenAPISpec() {
 
   registry.registerPath({
     method: "post",
-    path: "/api/users/refresh-token",
+    path: "/api/v2/users/refresh-token",
     description: "Refreshes access token using a valid refresh token",
     request: {
       body: {
@@ -990,7 +990,7 @@ export function generateOpenAPISpec() {
 
   registry.registerPath({
     method: "get",
-    path: "/api/users/{userId}",
+    path: "/api/v2/users/{userId}",
     description: "Retrieves user information by ID (requires authentication)",
     request: {
       params: z.object({
@@ -1039,7 +1039,7 @@ export function generateOpenAPISpec() {
 
   registry.registerPath({
     method: "patch",
-    path: "/api/users/{userId}",
+    path: "/api/v2/users/{userId}",
     description: "Updates user information (requires authentication)",
     request: {
       params: z.object({

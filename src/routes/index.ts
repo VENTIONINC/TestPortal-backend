@@ -14,7 +14,7 @@ import mcp from "@/mcp/server";
 
 const router = Router();
 
-router.get("/", (_request: Request, response: Response): void => {
+router.get("/v1", (_request: Request, response: Response): void => {
   response.status(200).send("Welcome");
 });
 

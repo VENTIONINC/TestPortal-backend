@@ -3,7 +3,7 @@
 ## 🚀 Quick Start
 
 1. **Import Collection**: Import `User_API_with_Refresh_Tokens.postman_collection.json` (the only collection needed)
-2. **Set Environment**: Configure your base URL (default: `http://localhost:3001/api`)
+2. **Set Environment**: Configure your base URL (default: `http://localhost:3001`) and ensure `V_1` and `V_2` variables are set to `/api/v1` and `/api/v2`
 3. **Run Tests**: Execute the collection folder by folder for best results
 
 ## 🔐 Smart Token Management
@@ -49,7 +49,9 @@ Comprehensive error scenarios:
 
 | Variable | Purpose | Auto-managed |
 |----------|---------|--------------|
-| `baseUrl` | API endpoint | ❌ Manual |
+| `baseUrl` | API host (no version) | ❌ Manual |
+| `V_1` | v1 API prefix (`/api/v1`) | ❌ Manual |
+| `V_2` | v2 API prefix (`/api/v2`) | ❌ Manual |
 | `userId` | Current user ID | ✅ Auto |
 | `testEmail` | Test account email | ❌ Manual |
 | `testPassword` | Test account password | ❌ Manual |
@@ -148,7 +150,9 @@ pm.test('Password hash not exposed', function () {
 ### Environment Setup
 ```json
 {
-  "baseUrl": "https://your-api.com/api",
+  "baseUrl": "https://your-api.com",
+  "V_1": "/api/v1",
+  "V_2": "/api/v2",
   "testEmail": "your-test@email.com",
   "testPassword": "YourSecurePassword123!"
 }

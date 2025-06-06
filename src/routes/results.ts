@@ -3,7 +3,7 @@ import { resultController } from "@/controllers/resultController";
 
 const router = Router();
 
-router.get("/results", resultController.getResults);
-router.get("/results/:resultId", resultController.getResultById);
+router.get("/v1/results", resultController.getResults);
+router.get("/v1/results/:resultId", resultController.getResultById);
 
 export default router;

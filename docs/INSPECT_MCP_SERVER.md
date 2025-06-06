@@ -23,7 +23,7 @@ Ensure you have the project set up and all dependencies installed.
     Once the inspector client is running and available on the 6274 port, you will need to configure it to connect to the MCP server.
     Use the following address for the connection:
 
-    `http://localhost:3001/api/mcp`
+    `http://localhost:3001/api/v1/mcp`
 
 3.  **Inspect:**
 
@@ -53,7 +53,7 @@ To connect to the MCP server from Claude Desktop app, you need to configure the 
           "command": "npx",
           "args": [
             "mcp-remote",
-            "http://localhost:3001/api/mcp"
+            "http://localhost:3001/api/v1/mcp"
           ]
         }
       }

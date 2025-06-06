@@ -6,8 +6,18 @@
   },
   "variable": [
     {
+      "key": "V_2",
+      "value": "/api/v2",
+      "type": "string"
+    },
+    {
+      "key": "V_1",
+      "value": "/api/v1",
+      "type": "string"
+    },
+    {
       "key": "baseUrl",
-      "value": "http://localhost:3001/api",
+      "value": "http://localhost:3001",
       "type": "string"
     },
     {
@@ -143,11 +153,12 @@
               }
             ],
             "url": {
-              "raw": "{{baseUrl}}/users/signup",
+              "raw": "{{baseUrl}}{{V_2}}/users/signup",
               "host": [
                 "{{baseUrl}}"
               ],
               "path": [
+                "{{V_2}}",
                 "users",
                 "signup"
               ]
@@ -208,11 +219,12 @@
               }
             ],
             "url": {
-              "raw": "{{baseUrl}}/users/login",
+              "raw": "{{baseUrl}}{{V_2}}/users/login",
               "host": [
                 "{{baseUrl}}"
               ],
               "path": [
+                "{{V_2}}",
                 "users",
                 "login"
               ]
@@ -269,11 +281,12 @@
               }
             ],
             "url": {
-              "raw": "{{baseUrl}}/users/refresh-token",
+              "raw": "{{baseUrl}}{{V_2}}/users/refresh-token",
               "host": [
                 "{{baseUrl}}"
               ],
               "path": [
+                "{{V_2}}",
                 "users",
                 "refresh-token"
               ]
@@ -313,11 +326,12 @@
               }
             ],
             "url": {
-              "raw": "{{baseUrl}}/users/login",
+              "raw": "{{baseUrl}}{{V_2}}/users/login",
               "host": [
                 "{{baseUrl}}"
               ],
               "path": [
+                "{{V_2}}",
                 "users",
                 "login"
               ]
@@ -357,11 +371,12 @@
               }
             ],
             "url": {
-              "raw": "{{baseUrl}}/users/refresh-token",
+              "raw": "{{baseUrl}}{{V_2}}/users/refresh-token",
               "host": [
                 "{{baseUrl}}"
               ],
               "path": [
+                "{{V_2}}",
                 "users",
                 "refresh-token"
               ]
@@ -401,11 +416,12 @@
               }
             ],
             "url": {
-              "raw": "{{baseUrl}}/users/refresh-token",
+              "raw": "{{baseUrl}}{{V_2}}/users/refresh-token",
               "host": [
                 "{{baseUrl}}"
               ],
               "path": [
+                "{{V_2}}",
                 "users",
                 "refresh-token"
               ]
@@ -458,11 +474,12 @@
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "{{baseUrl}}/users/{{userId}}",
+              "raw": "{{baseUrl}}{{V_2}}/users/{{userId}}",
               "host": [
                 "{{baseUrl}}"
               ],
               "path": [
+                "{{V_2}}",
                 "users",
                 "{{userId}}"
               ]
@@ -508,11 +525,12 @@
               }
             ],
             "url": {
-              "raw": "{{baseUrl}}/users/{{userId}}",
+              "raw": "{{baseUrl}}{{V_2}}/users/{{userId}}",
               "host": [
                 "{{baseUrl}}"
               ],
               "path": [
+                "{{V_2}}",
                 "users",
                 "{{userId}}"
               ]
@@ -563,11 +581,12 @@
               }
             ],
             "url": {
-              "raw": "{{baseUrl}}/users/{{userId}}",
+              "raw": "{{baseUrl}}{{V_2}}/users/{{userId}}",
               "host": [
                 "{{baseUrl}}"
               ],
               "path": [
+                "{{V_2}}",
                 "users",
                 "{{userId}}"
               ]
@@ -602,11 +621,12 @@
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "{{baseUrl}}/users/{{userId}}",
+              "raw": "{{baseUrl}}{{V_2}}/users/{{userId}}",
               "host": [
                 "{{baseUrl}}"
               ],
               "path": [
+                "{{V_2}}",
                 "users",
                 "{{userId}}"
               ]
@@ -642,11 +662,12 @@
               }
             ],
             "url": {
-              "raw": "{{baseUrl}}/users/{{userId}}",
+              "raw": "{{baseUrl}}{{V_2}}/users/{{userId}}",
               "host": [
                 "{{baseUrl}}"
               ],
               "path": [
+                "{{V_2}}",
                 "users",
                 "{{userId}}"
               ]
@@ -712,11 +733,12 @@
               }
             ],
             "url": {
-              "raw": "{{baseUrl}}/users/refresh-token",
+              "raw": "{{baseUrl}}{{V_2}}/users/refresh-token",
               "host": [
                 "{{baseUrl}}"
               ],
               "path": [
+                "{{V_2}}",
                 "users",
                 "refresh-token"
               ]
@@ -762,11 +784,12 @@
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "{{baseUrl}}/users/{{userId}}",
+              "raw": "{{baseUrl}}{{V_2}}/users/{{userId}}",
               "host": [
                 "{{baseUrl}}"
               ],
               "path": [
+                "{{V_2}}",
                 "users",
                 "{{userId}}"
               ]
@@ -805,11 +828,12 @@
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "{{baseUrl}}/users/{{userId}}",
+              "raw": "{{baseUrl}}{{V_2}}/users/{{userId}}",
               "host": [
                 "{{baseUrl}}"
               ],
               "path": [
+                "{{V_2}}",
                 "users",
                 "{{userId}}"
               ]
@@ -850,11 +874,12 @@
               }
             ],
             "url": {
-              "raw": "{{baseUrl}}/users/signup",
+              "raw": "{{baseUrl}}{{V_2}}/users/signup",
               "host": [
                 "{{baseUrl}}"
               ],
               "path": [
+                "{{V_2}}",
                 "users",
                 "signup"
               ]
@@ -894,11 +919,12 @@
               }
             ],
             "url": {
-              "raw": "{{baseUrl}}/users/signup",
+              "raw": "{{baseUrl}}{{V_2}}/users/signup",
               "host": [
                 "{{baseUrl}}"
               ],
               "path": [
+                "{{V_2}}",
                 "users",
                 "signup"
               ]
@@ -948,11 +974,12 @@
               }
             ],
             "url": {
-              "raw": "{{baseUrl}}/users/{{userId}}",
+              "raw": "{{baseUrl}}{{V_2}}/users/{{userId}}",
               "host": [
                 "{{baseUrl}}"
               ],
               "path": [
+                "{{V_2}}",
                 "users",
                 "{{userId}}"
               ]
@@ -991,11 +1018,12 @@
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "{{baseUrl}}/status",
+              "raw": "{{baseUrl}}{{V_1}}/status",
               "host": [
                 "{{baseUrl}}"
               ],
               "path": [
+                "{{V_1}}",
                 "status"
               ]
             }

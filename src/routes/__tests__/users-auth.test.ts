@@ -55,12 +55,12 @@ app.use('/api', usersRouter);
 describe('users auth flow', () => {
   it('allows signup, login and protected access', async () => {
     const signupRes = await request(app)
-      .post('/api/users/signup')
+      .post('/api/v2/users/signup')
       .send({ name: 'Test', email: 'test@example.com', password: 'password123' });
     expect(signupRes.status).toBe(201);
 
     const loginRes = await request(app)
-      .post('/api/users/login')
+      .post('/api/v2/users/login')
       .send({ email: 'test@example.com', password: 'password123' });
     expect(loginRes.status).toBe(200);
     expect(loginRes.body).toHaveProperty('accessToken');
@@ -69,11 +69,11 @@ describe('users auth flow', () => {
     const userId = loginRes.body.user.id;
     const token = loginRes.body.accessToken;
 
-    const unauthRes = await request(app).get(`/api/users/${userId}`);
+    const unauthRes = await request(app).get(`/api/v2/users/${userId}`);
     expect(unauthRes.status).toBe(401);
 
     const authRes = await request(app)
-      .get(`/api/users/${userId}`)
+      .get(`/api/v2/users/${userId}`)
       .set('Authorization', `Bearer ${token}`);
     expect(authRes.status).toBe(200);
     expect(authRes.body.email).toBe('test@example.com');
