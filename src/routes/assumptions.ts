@@ -3,13 +3,13 @@ import { assumptionController } from "@/controllers/assumptionController";
 
 const router = Router();
 
-router.post("/assumptions", assumptionController.createAssumption);
+router.post("/v1/assumptions", assumptionController.createAssumption);
 router.patch(
-  "/assumptions/:assumptionId",
+  "/v1/assumptions/:assumptionId",
   assumptionController.updateAssumption,
 );
 router.get(
-  "/assumptions/:assumptionId",
+  "/v1/assumptions/:assumptionId",
   assumptionController.getAssumptionById,
 );
 

@@ -3,10 +3,10 @@ import { issueController } from "@/controllers/issueController";
 
 const router = Router();
 
-router.get("/issues", issueController.getAllIssues);
-router.get("/issues/:issueId", issueController.getIssueById);
-router.post("/issues", issueController.createIssue);
-router.patch("/issues/:issueId", issueController.updateIssue);
-router.get("/issues-test-mcp", issueController.getIssuesTestMCP);
+router.get("/v1/issues", issueController.getAllIssues);
+router.get("/v1/issues/:issueId", issueController.getIssueById);
+router.post("/v1/issues", issueController.createIssue);
+router.patch("/v1/issues/:issueId", issueController.updateIssue);
+router.get("/v1/issues-test-mcp", issueController.getIssuesTestMCP);
 
 export default router;

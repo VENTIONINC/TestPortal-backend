@@ -3,6 +3,6 @@ import { executionController } from "@/controllers/executionController";
 
 const router = Router();
 
-router.get("/executions/:executionId", executionController.getExecutionById);
+router.get("/v1/executions/:executionId", executionController.getExecutionById);
 
 export default router;

@@ -29,7 +29,7 @@ This authentication system uses a **stateless refresh token approach** with JWT 
 ## 📋 API Endpoints
 
 ### 1. User Login
-**`POST /api/users/login`**
+**`POST /api/v2/users/login`**
 
 Returns both access and refresh tokens.
 
@@ -56,7 +56,7 @@ Returns both access and refresh tokens.
 ```
 
 ### 2. Refresh Token
-**`POST /api/users/refresh-token`**
+**`POST /api/v2/users/refresh-token`**
 
 Get new tokens using refresh token.
 
@@ -150,7 +150,7 @@ class AuthService {
   private refreshToken: string | null = null;
 
   async login(email: string, password: string) {
-    const response = await fetch('/api/users/login', {
+    const response = await fetch('/api/v2/users/login', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ email, password })
@@ -192,7 +192,7 @@ class AuthService {
     if (!this.refreshToken) return false;
     
     try {
-      const response = await fetch('/api/users/refresh-token', {
+      const response = await fetch('/api/v2/users/refresh-token', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ refreshToken: this.refreshToken })
@@ -250,16 +250,16 @@ res.cookie('refreshToken', refreshToken, {
 ### Manual Testing
 ```bash
 # 1. Login
-curl -X POST http://localhost:3001/api/users/login \
+curl -X POST http://localhost:3001/api/v2/users/login \
   -H "Content-Type: application/json" \
   -d '{"email": "user@example.com", "password": "password"}'
 
 # 2. Use access token
-curl -X GET http://localhost:3001/api/users/1 \
+curl -X GET http://localhost:3001/api/v2/users/1 \
   -H "Authorization: Bearer ACCESS_TOKEN"
 
 # 3. Refresh tokens
-curl -X POST http://localhost:3001/api/users/refresh-token \
+curl -X POST http://localhost:3001/api/v2/users/refresh-token \
   -H "Content-Type: application/json" \
   -d '{"refreshToken": "REFRESH_TOKEN"}'
 ```

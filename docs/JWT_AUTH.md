@@ -6,14 +6,14 @@ Complete JWT-based authentication system with secure token generation, verificat
 
 1. **Login to get JWT token**:
    ```bash
-   curl -X POST http://localhost:3001/api/users/login \
+   curl -X POST http://localhost:3001/api/v2/users/login \
      -H "Content-Type: application/json" \
      -d '{"email":"user@example.com","password":"password123"}'
    ```
 
 2. **Use token for protected routes**:
    ```bash
-   curl -X GET http://localhost:3001/api/users/1 \
+   curl -X GET http://localhost:3001/api/v2/users/1 \
      -H "Authorization: Bearer YOUR_JWT_TOKEN"
    ```
 
@@ -42,7 +42,7 @@ Complete JWT-based authentication system with secure token generation, verificat
 ## 📋 API Changes
 
 ### Updated Login Response
-**`POST /api/users/login`**
+**`POST /api/v2/users/login`**
 
 #### Success Response (200):
 ```json
@@ -129,13 +129,13 @@ export const jwtService = {
 ### Manual Testing
 ```bash
 # 1. Login and get token
-TOKEN=$(curl -s -X POST http://localhost:3001/api/users/login \
+TOKEN=$(curl -s -X POST http://localhost:3001/api/v2/users/login \
   -H "Content-Type: application/json" \
   -d '{"email":"user@example.com","password":"password123"}' \
   | jq -r '.token')
 
 # 2. Use token for protected request
-curl -X GET http://localhost:3001/api/users/1 \
+curl -X GET http://localhost:3001/api/v2/users/1 \
   -H "Authorization: Bearer $TOKEN"
 ```
 
