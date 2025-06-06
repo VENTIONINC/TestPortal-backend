@@ -13,6 +13,8 @@ export const resultController = {
         environment,
         type,
         status,
+        reviewStatus,
+        errorMessage,
         from,
         to,
         page = "1",
@@ -28,6 +30,8 @@ export const resultController = {
       if (environment) params.environment = environment;
       if (type) params.type = type;
       if (status) params.status = status;
+      if (reviewStatus) params.reviewStatus = reviewStatus;
+      if (errorMessage) params.errorMessage = errorMessage;
       if (from) params.from = from;
       if (to) params.to = to;
       if (page) params.page = Number(page);
@@ -65,3 +69,4 @@ export const resultController = {
     }
   },
 };
+
