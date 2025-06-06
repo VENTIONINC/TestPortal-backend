@@ -18,6 +18,8 @@ export const resultService = {
       environment,
       type,
       status,
+      reviewStatus,
+      errorMessage,
       from,
       to,
       page = 1,
@@ -33,6 +35,8 @@ export const resultService = {
     if (environment) filters.environment = environment;
     if (type) filters.type = type;
     if (status) filters.status = status;
+    if (reviewStatus) filters.reviewStatus = reviewStatus;
+    if (errorMessage) filters.errorMessage = errorMessage;
     if (from) filters.from = from;
     if (to) filters.to = to;
 
@@ -100,3 +104,4 @@ export const resultService = {
     return resultRecord;
   },
 };
+

@@ -1,23 +1,6 @@
 import { dbClient } from "@/prisma/client";
 import type { ResultWithRelations } from "@/types";
-
-interface ResultWhereInput {
-  spec?: {
-    id?: number;
-    file?: { contains: string };
-    title?: { contains: string };
-    tags?: { contains: string };
-  };
-  execution?: {
-    environment?: string;
-    type?: string;
-  };
-  status?: string;
-  startTime?: {
-    gte?: Date;
-    lte?: Date;
-  };
-}
+import { Prisma } from "@prisma/client";
 
 interface ResultFilters {
   tag?: string;
@@ -27,6 +10,8 @@ interface ResultFilters {
   environment?: string;
   type?: string;
   status?: string;
+  reviewStatus?: string;
+  errorMessage?: string;
   from?: string;
   to?: string;
 }
@@ -68,6 +53,8 @@ export const resultModel = {
       environment,
       type,
       status,
+      reviewStatus,
+      errorMessage,
       from,
       to,
     } = filters;
@@ -78,12 +65,12 @@ export const resultModel = {
       toDate.setDate(toDate.getDate() + 1); // +1 day to include results of the whole day
     }
 
-    const whereClause: ResultWhereInput = {};
+    const whereClause: Prisma.ResultWhereInput = {};
 
     // Build spec filter
     if (specId || specFile || specName || tag) {
       whereClause.spec = {};
-      if (specId) whereClause.spec.id = Number(specId);
+      if (specId) whereClause.spec.key = specId;
       if (specFile) whereClause.spec.file = { contains: specFile };
       if (specName) whereClause.spec.title = { contains: specName };
       if (tag) whereClause.spec.tags = { contains: tag };
@@ -98,6 +85,84 @@ export const resultModel = {
 
     // Add other filters
     if (status) whereClause.status = status;
+
+    // Error message filter
+    if (errorMessage) {
+      whereClause.errors = {
+        some: {
+          message: {
+            contains: errorMessage,
+            mode: "insensitive",
+          },
+        },
+      };
+    }
+
+    // Review status filter
+    if (reviewStatus) {
+      if (reviewStatus.toLowerCase() === "completed") {
+        // For 'completed': status is 'passed' OR all assumptions are confirmed
+        whereClause.OR = [
+          { status: "passed" },
+          {
+            AND: [
+              { status: { not: "passed" } },
+              {
+                errors: {
+                  every: {
+                    assumptions: {
+                      every: {
+                        isConfirmed: true,
+                      },
+                    },
+                  },
+                },
+              },
+              {
+                errors: {
+                  some: {
+                    assumptions: {
+                      some: {},
+                    },
+                  },
+                },
+              },
+            ],
+          },
+        ];
+      } else if (reviewStatus.toLowerCase() === "incompleted") {
+        // For 'inCompleted': status is not 'passed' AND (no assumptions OR not all assumptions confirmed)
+        whereClause.AND = [
+          { status: { not: "passed" } },
+          {
+            OR: [
+              // No assumptions at all
+              {
+                errors: {
+                  every: {
+                    assumptions: {
+                      none: {},
+                    },
+                  },
+                },
+              },
+              // Has assumptions but not all are confirmed
+              {
+                errors: {
+                  some: {
+                    assumptions: {
+                      some: {
+                        isConfirmed: false,
+                      },
+                    },
+                  },
+                },
+              },
+            ],
+          },
+        ];
+      }
+    }
 
     if (from || to) {
       whereClause.startTime = {};
@@ -134,6 +199,8 @@ export const resultModel = {
       environment,
       type,
       status,
+      reviewStatus,
+      errorMessage,
       from,
       to,
     } = filters;
@@ -144,12 +211,12 @@ export const resultModel = {
       toDate.setDate(toDate.getDate() + 1);
     }
 
-    const whereClause: ResultWhereInput = {};
+    const whereClause: Prisma.ResultWhereInput = {};
 
     // Build spec filter
     if (specId || specFile || specName || tag) {
       whereClause.spec = {};
-      if (specId) whereClause.spec.id = Number(specId);
+      if (specId) whereClause.spec.key = specId;
       if (specFile) whereClause.spec.file = { contains: specFile };
       if (specName) whereClause.spec.title = { contains: specName };
       if (tag) whereClause.spec.tags = { contains: tag };
@@ -165,6 +232,84 @@ export const resultModel = {
     // Add other filters
     if (status) whereClause.status = status;
 
+    // Error message filter
+    if (errorMessage) {
+      whereClause.errors = {
+        some: {
+          message: {
+            contains: errorMessage,
+            mode: "insensitive",
+          },
+        },
+      };
+    }
+
+    // Review status filter
+    if (reviewStatus) {
+      if (reviewStatus.toLowerCase() === "completed") {
+        // For 'completed': status is 'passed' OR all assumptions are confirmed
+        whereClause.OR = [
+          { status: "passed" },
+          {
+            AND: [
+              { status: { not: "passed" } },
+              {
+                errors: {
+                  every: {
+                    assumptions: {
+                      every: {
+                        isConfirmed: true,
+                      },
+                    },
+                  },
+                },
+              },
+              {
+                errors: {
+                  some: {
+                    assumptions: {
+                      some: {},
+                    },
+                  },
+                },
+              },
+            ],
+          },
+        ];
+      } else if (reviewStatus.toLowerCase() === "incompleted") {
+        // For 'inCompleted': status is not 'passed' AND (no assumptions OR not all assumptions confirmed)
+        whereClause.AND = [
+          { status: { not: "passed" } },
+          {
+            OR: [
+              // No assumptions at all
+              {
+                errors: {
+                  every: {
+                    assumptions: {
+                      none: {},
+                    },
+                  },
+                },
+              },
+              // Has assumptions but not all are confirmed
+              {
+                errors: {
+                  some: {
+                    assumptions: {
+                      some: {
+                        isConfirmed: false,
+                      },
+                    },
+                  },
+                },
+              },
+            ],
+          },
+        ];
+      }
+    }
+
     if (from || to) {
       whereClause.startTime = {};
       if (from) whereClause.startTime.gte = new Date(from);
@@ -176,3 +321,4 @@ export const resultModel = {
     });
   },
 };
+
