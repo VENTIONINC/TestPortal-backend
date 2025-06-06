@@ -20,18 +20,23 @@ export async function runReview(
 ): Promise<ResultErrorWithRelations | null> {
   const start = new Date();
 
-  const resultErrors: ResultErrorWithRelations[] = await dbClient.resultError.findMany({
-    where: {
-      type: targetResultError.type,
-      assumptions: {
-        some: {},
+  const resultErrors: ResultErrorWithRelations[] =
+    await dbClient.resultError.findMany({
+      where: {
+        type: targetResultError.type,
+        assumptions: {
+          some: {},
+        },
       },
-    },
-    include: {
-      assumptions: true,
-      result: true,
-    },
-  });
+      include: {
+        assumptions: {
+          include: {
+            issue: true,
+          },
+        },
+        result: true,
+      },
+    });
 
   for (const resultError of resultErrors) {
     const errorSimilarity = calculateErrorSimilarity(
@@ -72,8 +77,8 @@ export async function runReview(
       });
 
       if (!assumptionRecord) {
-        let bestAssumption = resultError.assumptions.find((a: PrismaAssumption) =>
-          a.isConfirmed
+        let bestAssumption = resultError.assumptions.find(
+          (a: PrismaAssumption) => a.isConfirmed,
         );
 
         if (!bestAssumption) {
@@ -169,10 +174,7 @@ export function calculateErrorSimilarity(
 /**
  * Compare two stack traces and calculate similarity (0 to 1)
  */
-export function compareStackTraces(
-  stack1: string[],
-  stack2: string[],
-): number {
+export function compareStackTraces(stack1: string[], stack2: string[]): number {
   if (!stack1.length || !stack2.length) return 0;
 
   const normalizedStack1 = stack1.map(normalizeFrame);
