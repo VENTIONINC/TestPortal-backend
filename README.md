@@ -64,9 +64,19 @@ A comprehensive Node.js Express server for managing test results with TypeScript
 
 6. **Seed the database** (optional, with server running):
 
+   **Option 1: Seed from JSON reports:**
    ```sh
-   node prisma/seed/index.js
+   npm run seed
    ```
+
+   **Option 2: Migrate data from SQLite database:**
+   ```sh
+   npm run seed:migrate
+   ```
+   
+   This will migrate all data from `prisma/dev.db` SQLite file to PostgreSQL, including:
+   - Issues, Executions, Specs, Results, Result Errors, and Assumptions
+   - Automatic sequence counter updates for proper ID generation
 
 7. **Verify installation:** 
    

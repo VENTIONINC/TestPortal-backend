@@ -13,6 +13,7 @@
     "lint": "eslint .",
     "format": "prettier --write .",
     "seed": "node prisma/seed/index.js",
+    "seed:migrate": "node prisma/seed/migrate-from-sqlite.js",
     "studio": "npx prisma studio",
     "migrate": "npx prisma migrate dev --name commit",
     "inspector": "npx @modelcontextprotocol/inspector node build/index.js",
@@ -36,6 +37,7 @@
     "log4js": "^6.9.1",
     "nodemon": "^3.1.7",
     "pg": "^8.16.0",
+    "sqlite3": "^5.1.7",
     "string-similarity": "^4.0.4",
     "zod": "^3.25.26"
   },
