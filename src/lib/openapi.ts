@@ -236,6 +236,54 @@ const StatusResponseSchema = z
   })
   .openapi("StatusResponse");
 
+// User schemas
+const UserSchema = z
+  .object({
+    id: z.number(),
+    name: z.string(),
+    email: z.string(),
+    createdAt: z.string(),
+    updatedAt: z.string(),
+  })
+  .openapi("User");
+
+const UserSignupRequestSchema = z
+  .object({
+    name: z.string(),
+    email: z.string(),
+    password: z.string(),
+  })
+  .openapi("UserSignupRequest");
+
+const UserLoginRequestSchema = z
+  .object({
+    email: z.string(),
+    password: z.string(),
+  })
+  .openapi("UserLoginRequest");
+
+const UserLoginResponseSchema = z
+  .object({
+    user: UserSchema,
+    accessToken: z.string(),
+    refreshToken: z.string(),
+  })
+  .openapi("UserLoginResponse");
+
+const RefreshTokenRequestSchema = z
+  .object({
+    refreshToken: z.string(),
+  })
+  .openapi("RefreshTokenRequest");
+
+const UserUpdateRequestSchema = z
+  .object({
+    name: z.string().optional(),
+    email: z.string().optional(),
+    password: z.string().optional(),
+  })
+  .openapi("UserUpdateRequest");
+
 export function generateOpenAPISpec() {
   const registry = new OpenAPIRegistry();
 
@@ -259,6 +307,12 @@ export function generateOpenAPISpec() {
   registry.register("JsonReportTestSpec", JsonReportTestSpecSchema);
   registry.register("JsonReportTestResult", JsonReportTestResultSchema);
   registry.register("StatusResponse", StatusResponseSchema);
+  registry.register("User", UserSchema);
+  registry.register("UserSignupRequest", UserSignupRequestSchema);
+  registry.register("UserLoginRequest", UserLoginRequestSchema);
+  registry.register("UserLoginResponse", UserLoginResponseSchema);
+  registry.register("RefreshTokenRequest", RefreshTokenRequestSchema);
+  registry.register("UserUpdateRequest", UserUpdateRequestSchema);
 
   // Base route
   registry.registerPath({
@@ -821,6 +875,224 @@ export function generateOpenAPISpec() {
     tags: ["System"],
   });
 
+  // User Authentication routes
+  registry.registerPath({
+    method: "post",
+    path: "/api/users/signup",
+    description: "Creates a new user account with secure password hashing",
+    request: {
+      body: {
+        content: {
+          "application/json": {
+            schema: UserSignupRequestSchema,
+          },
+        },
+      },
+    },
+    responses: {
+      201: {
+        description: "User created successfully",
+        content: {
+          "application/json": {
+            schema: UserSchema,
+          },
+        },
+      },
+      400: {
+        description: "Bad request - validation errors",
+        content: {
+          "application/json": {
+            schema: ErrorResponseSchema,
+          },
+        },
+      },
+    },
+    tags: ["Authentication"],
+  });
+
+  registry.registerPath({
+    method: "post",
+    path: "/api/users/login",
+    description: "Authenticates user credentials and returns JWT tokens",
+    request: {
+      body: {
+        content: {
+          "application/json": {
+            schema: UserLoginRequestSchema,
+          },
+        },
+      },
+    },
+    responses: {
+      200: {
+        description:
+          "Login successful - returns user data, access token, and refresh token",
+        content: {
+          "application/json": {
+            schema: UserLoginResponseSchema,
+          },
+        },
+      },
+      401: {
+        description: "Unauthorized - invalid credentials",
+        content: {
+          "application/json": {
+            schema: ErrorResponseSchema,
+          },
+        },
+      },
+    },
+    tags: ["Authentication"],
+  });
+
+  registry.registerPath({
+    method: "post",
+    path: "/api/users/refresh-token",
+    description: "Refreshes access token using a valid refresh token",
+    request: {
+      body: {
+        content: {
+          "application/json": {
+            schema: RefreshTokenRequestSchema,
+          },
+        },
+      },
+    },
+    responses: {
+      200: {
+        description:
+          "Token refresh successful - returns new access and refresh tokens",
+        content: {
+          "application/json": {
+            schema: UserLoginResponseSchema,
+          },
+        },
+      },
+      400: {
+        description: "Bad request - refresh token is required",
+        content: {
+          "application/json": {
+            schema: ErrorResponseSchema,
+          },
+        },
+      },
+      401: {
+        description: "Unauthorized - invalid or expired refresh token",
+        content: {
+          "application/json": {
+            schema: ErrorResponseSchema,
+          },
+        },
+      },
+    },
+    tags: ["Authentication"],
+  });
+
+  registry.registerPath({
+    method: "get",
+    path: "/api/users/{userId}",
+    description: "Retrieves user information by ID (requires authentication)",
+    request: {
+      params: z.object({
+        userId: z.number(),
+      }),
+      headers: z.object({
+        authorization: z.string().describe("Bearer JWT token"),
+      }),
+    },
+    responses: {
+      200: {
+        description: "User details",
+        content: {
+          "application/json": {
+            schema: UserSchema,
+          },
+        },
+      },
+      400: {
+        description: "Bad request",
+        content: {
+          "application/json": {
+            schema: ErrorResponseSchema,
+          },
+        },
+      },
+      401: {
+        description: "Unauthorized - invalid or missing token",
+        content: {
+          "application/json": {
+            schema: ErrorResponseSchema,
+          },
+        },
+      },
+      404: {
+        description: "User not found",
+        content: {
+          "application/json": {
+            schema: ErrorResponseSchema,
+          },
+        },
+      },
+    },
+    tags: ["Users"],
+  });
+
+  registry.registerPath({
+    method: "patch",
+    path: "/api/users/{userId}",
+    description: "Updates user information (requires authentication)",
+    request: {
+      params: z.object({
+        userId: z.number(),
+      }),
+      headers: z.object({
+        authorization: z.string().describe("Bearer JWT token"),
+      }),
+      body: {
+        content: {
+          "application/json": {
+            schema: UserUpdateRequestSchema,
+          },
+        },
+      },
+    },
+    responses: {
+      200: {
+        description: "User updated successfully",
+        content: {
+          "application/json": {
+            schema: UserSchema,
+          },
+        },
+      },
+      400: {
+        description: "Bad request - validation errors",
+        content: {
+          "application/json": {
+            schema: ErrorResponseSchema,
+          },
+        },
+      },
+      401: {
+        description: "Unauthorized - invalid or missing token",
+        content: {
+          "application/json": {
+            schema: ErrorResponseSchema,
+          },
+        },
+      },
+      404: {
+        description: "User not found",
+        content: {
+          "application/json": {
+            schema: ErrorResponseSchema,
+          },
+        },
+      },
+    },
+    tags: ["Users"],
+  });
+
   const generator = new OpenApiGeneratorV31(registry.definitions);
 
   return generator.generateDocument({
@@ -872,6 +1144,14 @@ export function generateOpenAPISpec() {
       {
         name: "Reports",
         description: "Report processing endpoints",
+      },
+      {
+        name: "Authentication",
+        description: "User authentication endpoints (signup, login)",
+      },
+      {
+        name: "Users",
+        description: "User management endpoints (protected)",
       },
     ],
   });

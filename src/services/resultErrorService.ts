@@ -1,17 +1,8 @@
 import { resultErrorModel } from "@/models/resultErrorModel";
 import { runReview } from "@/lib/error-analyzer";
 import type { PrismaResultError, ResultErrorWithRelations } from "@/types";
-import type { Prisma } from "@prisma/client";
 
-type ResultErrorWithAssumptions = Prisma.ResultErrorGetPayload<{
-  include: {
-    assumptions: {
-      include: {
-        issue: true;
-      };
-    };
-  };
-}>;
+type ResultErrorWithAssumptions = Omit<ResultErrorWithRelations, "result">;
 
 interface BulkReviewResult {
   successful: (ResultErrorWithRelations | null)[];
@@ -89,7 +80,7 @@ export const resultErrorService = {
       };
 
       const reviewedRecord = await runReview(targetResultError);
-      return reviewedRecord as ResultErrorWithRelations | null;
+      return reviewedRecord;
     } catch (error) {
       const err = error as Error;
       throw new Error(
@@ -140,7 +131,7 @@ export const resultErrorService = {
           };
 
           const reviewedRecord = await runReview(targetResultError);
-          reviewResults.push(reviewedRecord as ResultErrorWithRelations | null);
+          reviewResults.push(reviewedRecord);
         } catch (error) {
           const err = error as Error;
           failedIds.push({ id: errorId, reason: err.message });

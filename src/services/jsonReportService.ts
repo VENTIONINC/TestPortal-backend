@@ -7,7 +7,17 @@ import type {
   PrismaResult,
   PrismaResultError,
 } from "@/types";
-import type { Prisma } from "@prisma/client";
+
+interface ResultCreateInput {
+  allureLink: string | null;
+  retry: number;
+  status: string;
+  duration: number;
+  startTime: Date;
+  spec: { connect: { id: number } };
+  execution: { connect: { id: number } };
+  errors?: { connect: { id: number } };
+}
 
 const logger = getLogger("json-report-service");
 
@@ -222,7 +232,7 @@ export const jsonReportService = {
       return resultRecord; // Already exists, skip
     }
 
-    const recordData: Prisma.ResultCreateInput = {
+    const recordData: ResultCreateInput = {
       allureLink: resultData.allureLink ?? null,
       retry: resultData.retry,
       status: resultData.status,

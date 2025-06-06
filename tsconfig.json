@@ -32,6 +32,7 @@
     // Module resolution
     "resolveJsonModule": true,
     "skipLibCheck": true,
+    "types": ["node", "jest"],
 
     // Path mapping for clean imports
     "baseUrl": "./",

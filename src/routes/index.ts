@@ -8,6 +8,7 @@ import assumptions from "@/routes/assumptions";
 import resultErrors from "@/routes/result-errors";
 import autoReview from "@/routes/auto-review";
 import status from "@/routes/status";
+import users from "@/routes/users";
 import openapi from "@/routes/openapi";
 import mcp from "@/mcp/server";
 
@@ -26,7 +27,9 @@ router.use(assumptions);
 router.use(resultErrors);
 router.use(autoReview);
 router.use(status);
+router.use(users);
 router.use(openapi);
 router.use(mcp);
 
 export default router;
+

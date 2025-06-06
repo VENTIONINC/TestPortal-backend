@@ -1,14 +1,13 @@
 import levenshtein from "fast-levenshtein";
 import stringSimilarity from "string-similarity";
 import { dbClient } from "@/prisma/client";
-import type { ResultError, Assumption, Result, Issue } from "@prisma/client";
+import type {
+  PrismaResultError,
+  PrismaAssumption,
+  ResultErrorWithRelations,
+} from "@/types/database";
 
-interface ResultErrorWithRelations extends ResultError {
-  assumptions: (Assumption & { issue: Issue })[];
-  result: Result | null;
-}
-
-interface TargetResultError extends ResultError {
+interface TargetResultError extends PrismaResultError {
   message: string;
   callLog: string;
   callStack: string;
@@ -21,18 +20,23 @@ export async function runReview(
 ): Promise<ResultErrorWithRelations | null> {
   const start = new Date();
 
-  const resultErrors = await dbClient.resultError.findMany({
-    where: {
-      type: targetResultError.type,
-      assumptions: {
-        some: {},
+  const resultErrors: ResultErrorWithRelations[] =
+    await dbClient.resultError.findMany({
+      where: {
+        type: targetResultError.type,
+        assumptions: {
+          some: {},
+        },
       },
-    },
-    include: {
-      assumptions: true,
-      result: true,
-    },
-  });
+      include: {
+        assumptions: {
+          include: {
+            issue: true,
+          },
+        },
+        result: true,
+      },
+    });
 
   for (const resultError of resultErrors) {
     const errorSimilarity = calculateErrorSimilarity(
@@ -73,11 +77,13 @@ export async function runReview(
       });
 
       if (!assumptionRecord) {
-        let bestAssumption = resultError.assumptions.find((a) => a.isConfirmed);
+        let bestAssumption = resultError.assumptions.find(
+          (a: PrismaAssumption) => a.isConfirmed,
+        );
 
         if (!bestAssumption) {
           const sorted = resultError.assumptions.sort(
-            (a: Assumption, b: Assumption) => a.score - b.score,
+            (a: PrismaAssumption, b: PrismaAssumption) => a.score - b.score,
           );
           bestAssumption = sorted[0];
         }
@@ -139,7 +145,10 @@ export async function runReview(
  * Calculates similarity between two error messages.
  * Uses both Levenshtein distance and Jaro-Winkler similarity.
  */
-function calculateErrorSimilarity(message1: string, message2: string): number {
+export function calculateErrorSimilarity(
+  message1: string,
+  message2: string,
+): number {
   if (!message1 || !message2) return 0;
 
   const normalizedMessage1 = normalizeMessage(message1);
@@ -165,7 +174,7 @@ function calculateErrorSimilarity(message1: string, message2: string): number {
 /**
  * Compare two stack traces and calculate similarity (0 to 1)
  */
-function compareStackTraces(stack1: string[], stack2: string[]): number {
+export function compareStackTraces(stack1: string[], stack2: string[]): number {
   if (!stack1.length || !stack2.length) return 0;
 
   const normalizedStack1 = stack1.map(normalizeFrame);

@@ -1,0 +1,118 @@
+### User Signup
+POST http://localhost:3001/api/users/signup
+Content-Type: application/json
+
+{
+  "name": "John Doe",
+  "email": "john.doe@example.com",
+  "password": "SecurePassword123!"
+}
+
+### User Login
+POST http://localhost:3001/api/users/login
+Content-Type: application/json
+
+{
+  "email": "john.doe@example.com",
+  "password": "SecurePassword123!"
+}
+
+### Refresh Token
+# First get refreshToken from login response above
+POST http://localhost:3001/api/users/refresh-token
+Content-Type: application/json
+
+{
+  "refreshToken": "YOUR_REFRESH_TOKEN_HERE"
+}
+
+### Protected Route (Requires JWT)
+# Replace YOUR_JWT_TOKEN with token from login
+GET http://localhost:3001/api/users/1
+Authorization: Bearer YOUR_JWT_TOKEN
+
+### Protected Route Without Token
+GET http://localhost:3001/api/users/1
+
+### Protected Update (Requires JWT)
+PATCH http://localhost:3001/api/users/1
+Authorization: Bearer YOUR_JWT_TOKEN
+Content-Type: application/json
+
+{
+  "name": "Updated via Auth"
+}
+
+### Protected Update Without Token
+PATCH http://localhost:3001/api/users/1
+Content-Type: application/json
+
+{
+  "name": "Unauthorized Update"
+}
+
+### Get User by ID
+GET http://localhost:3001/api/users/1
+
+### Update User Name
+PATCH http://localhost:3001/api/users/1
+Content-Type: application/json
+
+{
+  "name": "John Smith"
+}
+
+### Update User Password
+PATCH http://localhost:3001/api/users/1
+Content-Type: application/json
+
+{
+  "password": "NewSecurePassword456!"
+}
+
+### Duplicate Email Error
+POST http://localhost:3001/api/users/signup
+Content-Type: application/json
+
+{
+  "name": "Jane Doe",
+  "email": "john.doe@example.com",
+  "password": "AnotherPassword123!"
+}
+
+### Invalid Email Error
+POST http://localhost:3001/api/users/signup
+Content-Type: application/json
+
+{
+  "name": "Invalid User",
+  "email": "invalid-email",
+  "password": "ValidPassword123!"
+}
+
+### Missing Fields Error
+POST http://localhost:3001/api/users/signup
+Content-Type: application/json
+
+{
+  "name": "Incomplete User"
+}
+
+### Weak Password Error
+POST http://localhost:3001/api/users/signup
+Content-Type: application/json
+
+{
+  "name": "Weak Password User",
+  "email": "weak@example.com",
+  "password": "123"
+}
+
+### Wrong Password Error
+POST http://localhost:3001/api/users/login
+Content-Type: application/json
+
+{
+  "email": "john.doe@example.com",
+  "password": "WrongPassword123!"
+} 
