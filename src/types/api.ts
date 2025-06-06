@@ -13,6 +13,8 @@ export interface GetResultsParams extends PaginationParams {
   environment?: string;
   type?: string;
   status?: string;
+  reviewStatus?: string;
+  errorMessage?: string;
   from?: string;
   to?: string;
 }
