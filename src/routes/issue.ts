@@ -8,7 +8,6 @@ router.get("/v1/issues", issueController.getAllIssues);
 router.get("/v1/issues/:issueId", issueController.getIssueById);
 router.post("/v1/issues", issueController.createIssue);
 router.patch("/v1/issues/:issueId", issueController.updateIssue);
-router.get("/v1/issues-test-mcp", issueController.getIssuesTestMCP);
 
 router.get("/v2/issues", authMiddleware, issueController.getAllIssues);
 router.get("/v2/issues/:issueId", authMiddleware, issueController.getIssueById);

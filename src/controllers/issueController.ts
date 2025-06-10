@@ -138,26 +138,4 @@ export const issueController = {
       });
     }
   },
-
-  // Test endpoint for MCP
-  getIssuesTestMCP: async (req: Request, res: Response): Promise<void> => {
-    try {
-      const {
-        category,
-        name,
-        page = "1",
-        limit = "30",
-      } = req.query as Record<string, string>;
-
-      console.log("getIssuesTestMCP", category, name, page, limit);
-
-      const mockIssues = await issueService.getMockIssues();
-      res.status(200).json(mockIssues);
-    } catch (error) {
-      console.log("error", error);
-      res.status(500).json({
-        error: "Failed to fetch issues",
-      });
-    }
-  },
 };
