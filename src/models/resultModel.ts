@@ -193,6 +193,9 @@ export const resultModel = {
       where: whereClause,
       skip: (page - 1) * limit,
       take: Number(limit),
+      orderBy: {
+        startTime: "desc", // Most recent results first
+      },
       include: {
         spec: true,
         execution: true,
