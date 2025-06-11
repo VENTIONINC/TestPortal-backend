@@ -15,6 +15,7 @@ export const resultController = {
         status,
         reviewStatus,
         errorMessage,
+        issueName,
         from,
         to,
         page = "1",
@@ -32,6 +33,7 @@ export const resultController = {
       if (status) params.status = status;
       if (reviewStatus) params.reviewStatus = reviewStatus;
       if (errorMessage) params.errorMessage = errorMessage;
+      if (issueName) params.issueName = issueName;
       if (from) params.from = from;
       if (to) params.to = to;
       if (page) params.page = Number(page);

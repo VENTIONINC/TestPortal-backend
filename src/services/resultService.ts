@@ -20,6 +20,7 @@ export const resultService = {
       status,
       reviewStatus,
       errorMessage,
+      issueName,
       from,
       to,
       page = 1,
@@ -37,6 +38,7 @@ export const resultService = {
     if (status) filters.status = status;
     if (reviewStatus) filters.reviewStatus = reviewStatus;
     if (errorMessage) filters.errorMessage = errorMessage;
+    if (issueName) filters.issueName = issueName;
     if (from) filters.from = from;
     if (to) filters.to = to;
 
