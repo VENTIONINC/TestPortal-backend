@@ -32,6 +32,8 @@ const IssueSchema = z
     portal: z.string().optional(),
     service: z.string().optional(),
     ticket: z.string().optional(),
+    createdById: z.number().optional(),
+    updatedById: z.number().optional(),
     createdAt: z.string(),
     updatedAt: z.string(),
   })
@@ -534,6 +536,181 @@ export function generateOpenAPISpec() {
       },
     },
     tags: ["Issues", "Results"],
+  });
+
+  // v2 Issues routes with authentication
+  const AuthHeaderSchema = z.object({
+    authorization: z.string().describe("Bearer JWT token"),
+  });
+
+  registry.registerPath({
+    method: "get",
+    path: "/api/v2/issues",
+    description: "Retrieves all issues (requires authentication)",
+    request: {
+      headers: AuthHeaderSchema,
+      query: z.object({
+        category: z.string().optional(),
+        name: z.string().optional(),
+        page: z.number().default(1).optional(),
+        limit: z.number().default(30).optional(),
+      }),
+    },
+    responses: {
+      200: {
+        description: "List of issues",
+        content: {
+          "application/json": {
+            schema: z.array(IssueSchema),
+          },
+        },
+      },
+      401: {
+        description: "Unauthorized",
+        content: {
+          "application/json": {
+            schema: ErrorResponseSchema,
+          },
+        },
+      },
+    },
+    tags: ["Issues"],
+  });
+
+  registry.registerPath({
+    method: "get",
+    path: "/api/v2/issues/{issueId}",
+    description: "Retrieves an issue by its ID (requires authentication)",
+    request: {
+      headers: AuthHeaderSchema,
+      params: z.object({
+        issueId: z.number(),
+      }),
+    },
+    responses: {
+      200: {
+        description: "Issue details",
+        content: {
+          "application/json": {
+            schema: IssueSchema,
+          },
+        },
+      },
+      401: {
+        description: "Unauthorized",
+        content: {
+          "application/json": {
+            schema: ErrorResponseSchema,
+          },
+        },
+      },
+      404: {
+        description: "Issue not found",
+        content: {
+          "application/json": {
+            schema: ErrorResponseSchema,
+          },
+        },
+      },
+    },
+    tags: ["Issues"],
+  });
+
+  registry.registerPath({
+    method: "post",
+    path: "/api/v2/issues",
+    description: "Creates a new issue (requires authentication)",
+    request: {
+      headers: AuthHeaderSchema,
+      body: {
+        content: {
+          "application/json": {
+            schema: CreateIssueRequestSchema,
+          },
+        },
+      },
+    },
+    responses: {
+      201: {
+        description: "Issue created successfully",
+        content: {
+          "application/json": {
+            schema: IssueSchema,
+          },
+        },
+      },
+      400: {
+        description: "Bad request",
+        content: {
+          "application/json": {
+            schema: ErrorResponseSchema,
+          },
+        },
+      },
+      401: {
+        description: "Unauthorized",
+        content: {
+          "application/json": {
+            schema: ErrorResponseSchema,
+          },
+        },
+      },
+    },
+    tags: ["Issues"],
+  });
+
+  registry.registerPath({
+    method: "patch",
+    path: "/api/v2/issues/{issueId}",
+    description: "Updates an existing issue (requires authentication)",
+    request: {
+      headers: AuthHeaderSchema,
+      params: z.object({
+        issueId: z.number(),
+      }),
+      body: {
+        content: {
+          "application/json": {
+            schema: UpdateIssueRequestSchema,
+          },
+        },
+      },
+    },
+    responses: {
+      200: {
+        description: "Issue updated successfully",
+        content: {
+          "application/json": {
+            schema: IssueSchema,
+          },
+        },
+      },
+      400: {
+        description: "Bad request",
+        content: {
+          "application/json": {
+            schema: ErrorResponseSchema,
+          },
+        },
+      },
+      401: {
+        description: "Unauthorized",
+        content: {
+          "application/json": {
+            schema: ErrorResponseSchema,
+          },
+        },
+      },
+      404: {
+        description: "Issue not found",
+        content: {
+          "application/json": {
+            schema: ErrorResponseSchema,
+          },
+        },
+      },
+    },
+    tags: ["Issues"],
   });
 
   // Results routes

@@ -81,12 +81,14 @@ model Assumption {
 }
 
 model User {
-  id           Int      @id @default(autoincrement())
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
-  name         String
-  email        String   @unique
-  passwordHash String?
+  id            Int      @id @default(autoincrement())
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  name          String
+  email         String   @unique
+  passwordHash  String?
+  issuesCreated Issue[]  @relation("IssuesCreated")
+  issuesUpdated Issue[]  @relation("IssuesUpdated")
 }
 
 model Issue {
@@ -99,5 +101,9 @@ model Issue {
   portal      String?
   service     String?
   ticket      String?
+  createdBy   User?        @relation("IssuesCreated", fields: [createdById], references: [id])
+  createdById Int?
+  updatedBy   User?        @relation("IssuesUpdated", fields: [updatedById], references: [id])
+  updatedById Int?
   assumptions Assumption[]
 }

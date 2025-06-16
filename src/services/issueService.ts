@@ -1,5 +1,12 @@
 import { issueModel } from "@/models/issueModel";
-import type { PrismaIssue } from "@/types";
+import type {
+  PrismaIssue,
+  PrismaUser,
+  PrismaIssueWithUsers,
+  SerializedUser,
+  SerializedIssue,
+  SerializedIssuesResponse,
+} from "@/types";
 import { dbClient } from "@/prisma/client";
 import { IssueCategory } from "@/types/enums";
 import { Prisma } from "@prisma/client";
@@ -47,6 +54,17 @@ interface GetAllIssuesWithStatsResponse {
   totalPages: number;
 }
 
+interface SerializedIssueWithStatistics extends SerializedIssue {
+  statistics: IssueStatistics;
+}
+
+interface GetAllIssuesWithStatsV2Response {
+  issues: SerializedIssueWithStatistics[];
+  total: number;
+  page: number;
+  totalPages: number;
+}
+
 interface CreateIssueParams {
   name: string;
   category: string;
@@ -54,6 +72,8 @@ interface CreateIssueParams {
   portal?: string;
   service?: string;
   ticket?: string;
+  createdById?: number;
+  updatedById?: number;
 }
 
 interface UpdateIssueParams {
@@ -63,6 +83,7 @@ interface UpdateIssueParams {
   portal?: string;
   service?: string;
   ticket?: string;
+  updatedById?: number;
 }
 
 export const issueService = {
@@ -76,6 +97,28 @@ export const issueService = {
 
     return {
       issues,
+      total: totalIssues,
+      page: Number(page),
+      totalPages: Math.ceil(totalIssues / limit),
+    };
+  },
+
+  // V2 method with serialized response
+  async getAllIssuesV2(
+    params: GetAllIssuesParams,
+  ): Promise<SerializedIssuesResponse> {
+    const { category, name, page = 1, limit = 30 } = params;
+
+    const issues = await issueModel.findManyWithUsers(
+      category,
+      name,
+      page,
+      limit,
+    );
+    const totalIssues = await issueModel.count(category, name);
+
+    return {
+      issues: issues.map(serializeIssue),
       total: totalIssues,
       page: Number(page),
       totalPages: Math.ceil(totalIssues / limit),
@@ -96,6 +139,21 @@ export const issueService = {
     return issueRecords;
   },
 
+  // V2 method with serialized response
+  async getIssueByIdV2(issueId: number): Promise<SerializedIssue> {
+    if (!issueId) {
+      throw new Error("Issue ID is required");
+    }
+
+    const issueRecords = await issueModel.findByIdWithUsers(issueId);
+
+    if (!issueRecords) {
+      throw new Error(`Issue with ID ${issueId} not found`);
+    }
+
+    return serializeIssue(issueRecords);
+  },
+
   async createIssue(issueParams: CreateIssueParams): Promise<PrismaIssue> {
     if (!issueParams?.name) {
       throw new Error("Unable to create issue without name");
@@ -113,7 +171,15 @@ export const issueService = {
       throw new Error("Issue ID is required");
     }
 
-    const { name, category, description, portal, service, ticket } = updateData;
+    const {
+      name,
+      category,
+      description,
+      portal,
+      service,
+      ticket,
+      updatedById,
+    } = updateData;
 
     const cleanUpdateData: Partial<CreateIssueParams> = {};
     if (name) cleanUpdateData.name = name;
@@ -122,6 +188,7 @@ export const issueService = {
     if (portal !== undefined) cleanUpdateData.portal = portal;
     if (service !== undefined) cleanUpdateData.service = service;
     if (ticket !== undefined) cleanUpdateData.ticket = ticket;
+    if (updatedById !== undefined) cleanUpdateData.updatedById = updatedById;
 
     const updatedIssue = await issueModel.update(issueId, cleanUpdateData);
     return updatedIssue;
@@ -240,5 +307,119 @@ export const issueService = {
       totalPages: Math.ceil(totalIssues / limit),
     };
   },
+
+  // V2 method with serialized response and statistics
+  async getAllIssuesWithStatsV2(
+    params: GetAllIssuesParams,
+  ): Promise<GetAllIssuesWithStatsV2Response> {
+    const { category, name, page = 1, limit = 10, statFrom, statTo } = params;
+
+    const issues = await issueModel.findManyWithUsers(
+      category,
+      name,
+      page,
+      limit,
+    );
+    const totalIssues = await issueModel.count(category, name);
+
+    // Get statistics for each issue
+    const issuesWithStats = await Promise.all(
+      issues.map(async (issue) => {
+        const whereClause: Prisma.ResultWhereInput = {
+          errors: {
+            some: {
+              assumptions: {
+                some: {
+                  issueId: issue.id,
+                },
+              },
+            },
+          },
+        };
+
+        // Add date range filter if provided
+        if (statFrom || statTo) {
+          whereClause.startTime = {};
+          if (statFrom) {
+            whereClause.startTime.gte = new Date(statFrom);
+          }
+          if (statTo) {
+            const toDate = new Date(statTo);
+            toDate.setHours(23, 59, 59, 999); // Include the entire day
+            whereClause.startTime.lte = toDate;
+          }
+        }
+
+        const results = await dbClient.result.findMany({
+          where: whereClause,
+          include: {
+            spec: true,
+          },
+          orderBy: {
+            startTime: "asc",
+          },
+        });
+
+        const uniqueTestIds = new Set(results.map((r) => r.spec.id));
+
+        // Calculate time distribution
+        const timeDistribution = new Map<string, number>();
+
+        results.forEach((result) => {
+          const date = result.startTime.toISOString().split("T")[0] ?? ""; // Get YYYY-MM-DD
+          timeDistribution.set(date, (timeDistribution.get(date) ?? 0) + 1);
+        });
+
+        // Convert to array and sort by date
+        const timeDistributionArray = Array.from(timeDistribution.entries())
+          .map(([date, count]) => ({ date, count }))
+          .sort((a, b) => a.date.localeCompare(b.date));
+
+        const serialized = serializeIssue(issue);
+
+        return {
+          ...serialized,
+          statistics: {
+            occurrenceCount: results.length,
+            firstOccurrence: results[0]?.startTime ?? null,
+            lastOccurrence: results[results.length - 1]?.startTime ?? null,
+            impactedTestsCount: uniqueTestIds.size,
+            timeDistribution: timeDistributionArray,
+          },
+        };
+      }),
+    );
+
+    return {
+      issues: issuesWithStats,
+      total: totalIssues,
+      page: Number(page),
+      totalPages: Math.ceil(totalIssues / limit),
+    };
+  },
 };
 
+function serializeUser(user: PrismaUser): SerializedUser {
+  return {
+    id: user.id,
+    name: user.name,
+    email: user.email,
+    createdAt: user.createdAt,
+  };
+}
+
+function serializeIssue(issue: PrismaIssueWithUsers): SerializedIssue {
+  return {
+    id: issue.id,
+    createdAt: issue.createdAt,
+    updatedAt: issue.updatedAt,
+    name: issue.name,
+    category: issue.category,
+    description: issue.description ?? null,
+    portal: issue.portal ?? null,
+    service: issue.service ?? null,
+    ticket: issue.ticket ?? null,
+    createdBy: issue.createdBy ? serializeUser(issue.createdBy) : null,
+    updatedBy: issue.updatedBy ? serializeUser(issue.updatedBy) : null,
+  };
+}

@@ -68,6 +68,8 @@ export interface CreateIssueParams {
   portal?: string;
   service?: string;
   ticket?: string;
+  createdById?: number;
+  updatedById?: number;
 }
 
 export interface UpdateIssueParams {
@@ -77,4 +79,5 @@ export interface UpdateIssueParams {
   portal?: string;
   service?: string;
   ticket?: string;
+  updatedById?: number;
 }
