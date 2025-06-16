@@ -1,18 +1,47 @@
 import { issueModel } from "@/models/issueModel";
 import type { PrismaIssue } from "@/types";
+import { dbClient } from "@/prisma/client";
+import { IssueCategory } from "@/types/enums";
+import { Prisma } from "@prisma/client";
 
 const sleep = (ms: number): Promise<void> =>
   new Promise((resolve) => setTimeout(resolve, ms));
 
 interface GetAllIssuesParams {
-  category?: string;
+  category?: IssueCategory;
   name?: string;
   page?: number;
   limit?: number;
+  statFrom?: string; // ISO date string
+  statTo?: string; // ISO date string
 }
 
 interface GetAllIssuesResponse {
   issues: PrismaIssue[];
+  total: number;
+  page: number;
+  totalPages: number;
+}
+
+interface TimeDistribution {
+  date: string; // ISO date string YYYY-MM-DD
+  count: number;
+}
+
+interface IssueStatistics {
+  occurrenceCount: number;
+  firstOccurrence: Date | null;
+  lastOccurrence: Date | null;
+  impactedTestsCount: number;
+  timeDistribution: TimeDistribution[];
+}
+
+interface IssueWithStatistics extends PrismaIssue {
+  statistics: IssueStatistics;
+}
+
+interface GetAllIssuesWithStatsResponse {
+  issues: IssueWithStatistics[];
   total: number;
   page: number;
   totalPages: number;
@@ -129,4 +158,87 @@ export const issueService = {
     await sleep(1000);
     return mockIssues;
   },
+
+  async getAllIssuesWithStats(
+    params: GetAllIssuesParams,
+  ): Promise<GetAllIssuesWithStatsResponse> {
+    const { category, name, page = 1, limit = 10, statFrom, statTo } = params;
+
+    const issues = await issueModel.findMany(category, name, page, limit);
+    const totalIssues = await issueModel.count(category, name);
+
+    // Get statistics for each issue
+    const issuesWithStats = await Promise.all(
+      issues.map(async (issue) => {
+        const whereClause: Prisma.ResultWhereInput = {
+          errors: {
+            some: {
+              assumptions: {
+                some: {
+                  issueId: issue.id,
+                },
+              },
+            },
+          },
+        };
+
+        // Add date range filter if provided
+        if (statFrom || statTo) {
+          whereClause.startTime = {};
+          if (statFrom) {
+            whereClause.startTime.gte = new Date(statFrom);
+          }
+          if (statTo) {
+            const toDate = new Date(statTo);
+            toDate.setHours(23, 59, 59, 999); // Include the entire day
+            whereClause.startTime.lte = toDate;
+          }
+        }
+
+        const results = await dbClient.result.findMany({
+          where: whereClause,
+          include: {
+            spec: true,
+          },
+          orderBy: {
+            startTime: "asc",
+          },
+        });
+
+        const uniqueTestIds = new Set(results.map((r) => r.spec.id));
+
+        // Calculate time distribution
+        const timeDistribution = new Map<string, number>();
+
+        results.forEach((result) => {
+          const date = result.startTime.toISOString().split("T")[0] ?? ""; // Get YYYY-MM-DD
+          timeDistribution.set(date, (timeDistribution.get(date) ?? 0) + 1);
+        });
+
+        // Convert to array and sort by date
+        const timeDistributionArray = Array.from(timeDistribution.entries())
+          .map(([date, count]) => ({ date, count }))
+          .sort((a, b) => a.date.localeCompare(b.date));
+
+        return {
+          ...issue,
+          statistics: {
+            occurrenceCount: results.length,
+            firstOccurrence: results[0]?.startTime ?? null,
+            lastOccurrence: results[results.length - 1]?.startTime ?? null,
+            impactedTestsCount: uniqueTestIds.size,
+            timeDistribution: timeDistributionArray,
+          },
+        };
+      }),
+    );
+
+    return {
+      issues: issuesWithStats,
+      total: totalIssues,
+      page: Number(page),
+      totalPages: Math.ceil(totalIssues / limit),
+    };
+  },
 };
+

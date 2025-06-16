@@ -39,6 +39,17 @@ export const getIssues = createMcpTool(
   "fetching issues",
 );
 
+export const getIssuesWithStats = createMcpTool(
+  "get-issues-with-stats",
+  "Retrieve issues with their statistics including occurrence count, first/last occurrence, and impacted tests count",
+  getIssuesSchema,
+  async (params: GetIssuesParams = {}): Promise<MCPToolResponse> => {
+    const issues = await mcpIssueHandler.getAllIssuesWithStats(params);
+    return createSuccessResponse(issues);
+  },
+  "fetching issues with statistics",
+);
+
 export const getIssueById = createMcpTool(
   "get-issue-by-id",
   "Retrieve detailed information about a specific issue by its unique ID",
