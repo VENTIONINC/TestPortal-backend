@@ -5,6 +5,7 @@ export * from "@/types/mcp";
 
 // Express types extensions
 import type { Request } from "express";
+import { IssueCategory } from "./enums";
 
 export interface AuthenticatedRequest extends Request {
   user?: {
@@ -58,4 +59,25 @@ export interface Filter {
   field: string;
   operator: FilterOperator;
   value: unknown;
+}
+
+export interface CreateIssueParams {
+  name: string;
+  category: IssueCategory;
+  description?: string;
+  portal?: string;
+  service?: string;
+  ticket?: string;
+  createdById?: number;
+  updatedById?: number;
+}
+
+export interface UpdateIssueParams {
+  name?: string;
+  category?: IssueCategory;
+  description?: string;
+  portal?: string;
+  service?: string;
+  ticket?: string;
+  updatedById?: number;
 }

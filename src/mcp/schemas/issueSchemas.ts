@@ -1,14 +1,17 @@
 import { z } from "zod";
 import type { MCPToolSchema } from "@/types";
+import { IssueCategory } from "@/types/enums";
 
 /**
  * Schema for filtering and paginating issues
  */
 export const getIssuesSchema: MCPToolSchema = {
-  category: z.string().optional(),
+  category: z.nativeEnum(IssueCategory).optional(),
   name: z.string().optional(),
   page: z.number().default(1).optional(),
-  limit: z.number().default(30).optional(),
+  limit: z.number().default(10).optional(),
+  statFrom: z.string().datetime().optional(),
+  statTo: z.string().datetime().optional(),
 };
 
 /**

@@ -2,26 +2,8 @@ import { Request, Response } from "express";
 import { type AuthenticatedRequest } from "@/middleware/authMiddleware";
 import { issueService } from "@/services/issueService";
 
-interface CreateIssueParams {
-  name: string;
-  category: string;
-  description?: string;
-  portal?: string;
-  service?: string;
-  ticket?: string;
-  createdById?: number;
-  updatedById?: number;
-}
-
-interface UpdateIssueParams {
-  name?: string;
-  category?: string;
-  description?: string;
-  portal?: string;
-  service?: string;
-  ticket?: string;
-  updatedById?: number;
-}
+import type { CreateIssueParams, UpdateIssueParams } from "@/types";
+import { IssueCategory } from "@/types/enums";
 
 export const issueController = {
   getAllIssues: async (req: Request, res: Response): Promise<void> => {
@@ -35,12 +17,12 @@ export const issueController = {
 
       // Build parameters object, filtering out undefined values
       const params: {
-        category?: string;
+        category?: IssueCategory;
         name?: string;
         page?: number;
         limit?: number;
       } = {};
-      if (category) params.category = category;
+      if (category) params.category = category as IssueCategory;
       if (name) params.name = name;
       if (page) params.page = Number(page);
       if (limit) params.limit = Number(limit);
@@ -55,25 +37,23 @@ export const issueController = {
       });
     }
   },
-
-  // V2 method with serialized response including user information
   getAllIssuesV2: async (req: Request, res: Response): Promise<void> => {
     try {
       const {
         category,
         name,
         page = "1",
-        limit = "30",
+        limit = "10",
       } = req.query as Record<string, string>;
 
       // Build parameters object, filtering out undefined values
       const params: {
-        category?: string;
+        category?: IssueCategory;
         name?: string;
         page?: number;
         limit?: number;
       } = {};
-      if (category) params.category = category;
+      if (category) params.category = category as IssueCategory;
       if (name) params.name = name;
       if (page) params.page = Number(page);
       if (limit) params.limit = Number(limit);
@@ -85,6 +65,44 @@ export const issueController = {
       const err = error as Error;
       res.status(500).json({
         error: `Failed to fetch issues. ${err.message}`,
+      });
+    }
+  },
+
+  getAllIssuesWithStats: async (req: Request, res: Response): Promise<void> => {
+    try {
+      const {
+        category,
+        name,
+        page = "1",
+        limit = "10",
+        statFrom,
+        statTo,
+      } = req.query as Record<string, string>;
+
+      // Build parameters object, filtering out undefined values
+      const params: {
+        category?: IssueCategory;
+        name?: string;
+        page?: number;
+        limit?: number;
+        statFrom?: string;
+        statTo?: string;
+      } = {};
+      if (category) params.category = category as IssueCategory;
+      if (name) params.name = name;
+      if (page) params.page = Number(page);
+      if (limit) params.limit = Number(limit);
+      if (statFrom) params.statFrom = statFrom;
+      if (statTo) params.statTo = statTo;
+
+      const result = await issueService.getAllIssuesWithStats(params);
+
+      res.status(200).json(result);
+    } catch (error) {
+      const err = error as Error;
+      res.status(500).json({
+        error: `Failed to fetch issues with statistics. ${err.message}`,
       });
     }
   },

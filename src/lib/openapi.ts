@@ -4,6 +4,7 @@ import {
   extendZodWithOpenApi,
 } from "@asteasolutions/zod-to-openapi";
 import { z } from "zod";
+import { IssueCategory } from "@/types/enums";
 
 // Extend Zod with OpenAPI functionality
 extendZodWithOpenApi(z);
@@ -341,7 +342,7 @@ export function generateOpenAPISpec() {
     description: "Retrieves all issues",
     request: {
       query: z.object({
-        category: z.string().optional(),
+        category: z.nativeEnum(IssueCategory).optional(),
         name: z.string().optional(),
         page: z.number().default(1).optional(),
         limit: z.number().default(30).optional(),
@@ -353,6 +354,58 @@ export function generateOpenAPISpec() {
         content: {
           "application/json": {
             schema: z.array(IssueSchema),
+          },
+        },
+      },
+      500: {
+        description: "Internal server error",
+        content: {
+          "application/json": {
+            schema: ErrorResponseSchema,
+          },
+        },
+      },
+    },
+    tags: ["Issues"],
+  });
+
+  registry.registerPath({
+    method: "get",
+    path: "/api/v1/issues/with-stats",
+    description: "Retrieves all issues with their statistics including occurrence count, first/last occurrence, impacted tests count, and time-based distribution. Optionally filter statistics by date range.",
+    request: {
+      query: z.object({
+        category: z.nativeEnum(IssueCategory).optional(),
+        name: z.string().optional(),
+        page: z.number().default(1).optional(),
+        limit: z.number().default(10).optional(),
+        statFrom: z.string().datetime().optional().describe("Start date for statistics in ISO format (YYYY-MM-DDTHH:mm:ss.sssZ)"),
+        statTo: z.string().datetime().optional().describe("End date for statistics in ISO format (YYYY-MM-DDTHH:mm:ss.sssZ)")
+      }),
+    },
+    responses: {
+      200: {
+        description: "List of issues with statistics",
+        content: {
+          "application/json": {
+            schema: z.object({
+              issues: z.array(z.object({
+                ...IssueSchema.shape,
+                statistics: z.object({
+                  occurrenceCount: z.number(),
+                  firstOccurrence: z.date().nullable(),
+                  lastOccurrence: z.date().nullable(),
+                  impactedTestsCount: z.number(),
+                  timeDistribution: z.array(z.object({
+                    date: z.string(),
+                    count: z.number()
+                  }))
+                })
+              })),
+              total: z.number(),
+              page: z.number(),
+              totalPages: z.number()
+            }),
           },
         },
       },
@@ -482,7 +535,7 @@ export function generateOpenAPISpec() {
         },
       },
     },
-    tags: ["Issues"],
+    tags: ["Issues", "Results"],
   });
 
   // v2 Issues routes with authentication
@@ -674,6 +727,9 @@ export function generateOpenAPISpec() {
         environment: z.string().optional(),
         type: z.string().optional(),
         status: z.string().optional(),
+        reviewStatus: z.string().optional(),
+        errorMessage: z.string().optional(),
+        issueName: z.string().optional(),
         from: z.string().optional(),
         to: z.string().optional(),
         page: z.number().default(1).optional(),
@@ -794,7 +850,7 @@ export function generateOpenAPISpec() {
         },
       },
     },
-    tags: ["Assumptions"],
+    tags: ["Assumptions", "Results"],
   });
 
   registry.registerPath({
@@ -839,7 +895,7 @@ export function generateOpenAPISpec() {
         },
       },
     },
-    tags: ["Assumptions"],
+    tags: ["Assumptions", "Results"],
   });
 
   // Result Errors routes
@@ -1333,3 +1389,4 @@ export function generateOpenAPISpec() {
     ],
   });
 }
+

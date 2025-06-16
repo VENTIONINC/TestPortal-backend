@@ -12,6 +12,7 @@ interface ResultFilters {
   status?: string;
   reviewStatus?: string;
   errorMessage?: string;
+  issueName?: string;
   from?: string;
   to?: string;
 }
@@ -55,6 +56,7 @@ export const resultModel = {
       status,
       reviewStatus,
       errorMessage,
+      issueName,
       from,
       to,
     } = filters;
@@ -164,6 +166,23 @@ export const resultModel = {
       }
     }
 
+    if (issueName) {
+      whereClause.errors = {
+        some: {
+          assumptions: {
+            some: {
+              issue: {
+                name: {
+                  contains: issueName,
+                  mode: "insensitive",
+                },
+              },
+            },
+          },
+        },
+      };
+    }
+
     if (from || to) {
       whereClause.startTime = {};
       if (from) whereClause.startTime.gte = new Date(from);
@@ -174,6 +193,9 @@ export const resultModel = {
       where: whereClause,
       skip: (page - 1) * limit,
       take: Number(limit),
+      orderBy: {
+        startTime: "desc", // Most recent results first
+      },
       include: {
         spec: true,
         execution: true,
@@ -201,6 +223,7 @@ export const resultModel = {
       status,
       reviewStatus,
       errorMessage,
+      issueName,
       from,
       to,
     } = filters;
@@ -308,6 +331,24 @@ export const resultModel = {
           },
         ];
       }
+    }
+
+    // Issue name filter
+    if (issueName) {
+      whereClause.errors = {
+        some: {
+          assumptions: {
+            some: {
+              issue: {
+                name: {
+                  contains: issueName,
+                  mode: "insensitive",
+                },
+              },
+            },
+          },
+        },
+      };
     }
 
     if (from || to) {
