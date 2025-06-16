@@ -4,48 +4,7 @@
     "description": "Complete user management API with signup, login, refresh tokens, and secure password handling using Argon2. Includes automatic token management and comprehensive test scenarios.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
-  "variable": [
-    {
-      "key": "V_2",
-      "value": "/api/v2",
-      "type": "string"
-    },
-    {
-      "key": "V_1",
-      "value": "/api/v1",
-      "type": "string"
-    },
-    {
-      "key": "baseUrl",
-      "value": "http://localhost:3001",
-      "type": "string"
-    },
-    {
-      "key": "userId",
-      "value": "1",
-      "type": "string"
-    },
-    {
-      "key": "testEmail",
-      "value": "john.doe@example.com",
-      "type": "string"
-    },
-    {
-      "key": "testPassword",
-      "value": "SecurePassword123!",
-      "type": "string"
-    },
-    {
-      "key": "accessToken",
-      "value": "",
-      "type": "string"
-    },
-    {
-      "key": "refreshToken",
-      "value": "",
-      "type": "string"
-    }
-  ],
+  "variable": [],
   "auth": {
     "type": "bearer",
     "bearer": [
@@ -63,8 +22,8 @@
         "type": "text/javascript",
         "exec": [
           "// Auto-refresh token if access token is expired",
-          "const accessToken = pm.collectionVariables.get('accessToken');",
-          "const refreshToken = pm.collectionVariables.get('refreshToken');",
+          "const accessToken = pm.environment.get('accessToken');",
+          "const refreshToken = pm.environment.get('refreshToken');",
           "",
           "if (refreshToken && accessToken) {",
           "    // Check if access token is about to expire (decode JWT)",
@@ -78,7 +37,7 @@
           "            console.log('Access token expiring soon, attempting refresh...');",
           "            ",
           "            const refreshRequest = {",
-          "                url: pm.collectionVariables.get('baseUrl') + '/users/refresh-token',",
+          "                url: pm.environment.get('baseUrl') + '/users/refresh-token',",
           "                method: 'POST',",
           "                header: {",
           "                    'Content-Type': 'application/json'",
@@ -94,13 +53,13 @@
           "            pm.sendRequest(refreshRequest, (err, res) => {",
           "                if (!err && res.code === 200) {",
           "                    const responseJson = res.json();",
-          "                    pm.collectionVariables.set('accessToken', responseJson.accessToken);",
-          "                    pm.collectionVariables.set('refreshToken', responseJson.refreshToken);",
+          "                    pm.environment.set('accessToken', responseJson.accessToken);",
+          "                    pm.environment.set('refreshToken', responseJson.refreshToken);",
           "                    console.log('Token refreshed successfully');",
           "                } else {",
           "                    console.log('Token refresh failed, clearing tokens');",
-          "                    pm.collectionVariables.set('accessToken', '');",
-          "                    pm.collectionVariables.set('refreshToken', '');",
+          "                    pm.environment.set('accessToken', '');",
+          "                    pm.environment.set('refreshToken', '');",
           "                }",
           "            });",
           "        }",
@@ -118,32 +77,6 @@
       "item": [
         {
           "name": "✅ User Signup",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "type": "text/javascript",
-                "exec": [
-                  "pm.test('Status code is 201', function () {",
-                  "    pm.response.to.have.status(201);",
-                  "});",
-                  "",
-                  "pm.test('Response has user data', function () {",
-                  "    const responseJson = pm.response.json();",
-                  "    pm.expect(responseJson).to.have.property('id');",
-                  "    pm.expect(responseJson).to.have.property('name');",
-                  "    pm.expect(responseJson).to.have.property('email');",
-                  "    pm.expect(responseJson).to.not.have.property('passwordHash');",
-                  "});",
-                  "",
-                  "pm.test('User ID is saved to variable', function () {",
-                  "    const responseJson = pm.response.json();",
-                  "    pm.collectionVariables.set('userId', responseJson.id.toString());",
-                  "});"
-                ]
-              }
-            }
-          ],
           "request": {
             "method": "POST",
             "header": [
@@ -171,45 +104,6 @@
         },
         {
           "name": "✅ User Login (Get Tokens)",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "type": "text/javascript",
-                "exec": [
-                  "pm.test('Status code is 200', function () {",
-                  "    pm.response.to.have.status(200);",
-                  "});",
-                  "",
-                  "pm.test('Response has user and tokens', function () {",
-                  "    const responseJson = pm.response.json();",
-                  "    pm.expect(responseJson).to.have.property('user');",
-                  "    pm.expect(responseJson).to.have.property('accessToken');",
-                  "    pm.expect(responseJson).to.have.property('refreshToken');",
-                  "});",
-                  "",
-                  "pm.test('Tokens are saved to variables', function () {",
-                  "    const responseJson = pm.response.json();",
-                  "    pm.collectionVariables.set('accessToken', responseJson.accessToken);",
-                  "    pm.collectionVariables.set('refreshToken', responseJson.refreshToken);",
-                  "    pm.collectionVariables.set('userId', responseJson.user.id.toString());",
-                  "});",
-                  "",
-                  "pm.test('Access token is valid JWT', function () {",
-                  "    const responseJson = pm.response.json();",
-                  "    const tokenParts = responseJson.accessToken.split('.');",
-                  "    pm.expect(tokenParts).to.have.lengthOf(3);",
-                  "});",
-                  "",
-                  "pm.test('Refresh token is valid JWT', function () {",
-                  "    const responseJson = pm.response.json();",
-                  "    const tokenParts = responseJson.refreshToken.split('.');",
-                  "    pm.expect(tokenParts).to.have.lengthOf(3);",
-                  "});"
-                ]
-              }
-            }
-          ],
           "request": {
             "method": "POST",
             "header": [
@@ -237,41 +131,6 @@
         },
         {
           "name": "✅ Refresh Tokens",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "type": "text/javascript",
-                "exec": [
-                  "pm.test('Status code is 200', function () {",
-                  "    pm.response.to.have.status(200);",
-                  "});",
-                  "",
-                  "pm.test('Response has new tokens', function () {",
-                  "    const responseJson = pm.response.json();",
-                  "    pm.expect(responseJson).to.have.property('user');",
-                  "    pm.expect(responseJson).to.have.property('accessToken');",
-                  "    pm.expect(responseJson).to.have.property('refreshToken');",
-                  "});",
-                  "",
-                  "pm.test('New tokens are different from old ones', function () {",
-                  "    const responseJson = pm.response.json();",
-                  "    const oldAccessToken = pm.collectionVariables.get('accessToken');",
-                  "    const oldRefreshToken = pm.collectionVariables.get('refreshToken');",
-                  "    ",
-                  "    pm.expect(responseJson.accessToken).to.not.equal(oldAccessToken);",
-                  "    pm.expect(responseJson.refreshToken).to.not.equal(oldRefreshToken);",
-                  "});",
-                  "",
-                  "pm.test('New tokens are saved', function () {",
-                  "    const responseJson = pm.response.json();",
-                  "    pm.collectionVariables.set('accessToken', responseJson.accessToken);",
-                  "    pm.collectionVariables.set('refreshToken', responseJson.refreshToken);",
-                  "});"
-                ]
-              }
-            }
-          ],
           "request": {
             "method": "POST",
             "header": [
@@ -299,24 +158,6 @@
         },
         {
           "name": "❌ Login with Wrong Password",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "type": "text/javascript",
-                "exec": [
-                  "pm.test('Status code is 401', function () {",
-                  "    pm.response.to.have.status(401);",
-                  "});",
-                  "",
-                  "pm.test('Error message is returned', function () {",
-                  "    const responseJson = pm.response.json();",
-                  "    pm.expect(responseJson).to.have.property('error');",
-                  "});"
-                ]
-              }
-            }
-          ],
           "request": {
             "method": "POST",
             "header": [
@@ -344,24 +185,6 @@
         },
         {
           "name": "❌ Refresh with Invalid Token",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "type": "text/javascript",
-                "exec": [
-                  "pm.test('Status code is 401', function () {",
-                  "    pm.response.to.have.status(401);",
-                  "});",
-                  "",
-                  "pm.test('Error message is returned', function () {",
-                  "    const responseJson = pm.response.json();",
-                  "    pm.expect(responseJson).to.have.property('error');",
-                  "});"
-                ]
-              }
-            }
-          ],
           "request": {
             "method": "POST",
             "header": [
@@ -389,24 +212,6 @@
         },
         {
           "name": "❌ Refresh without Token",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "type": "text/javascript",
-                "exec": [
-                  "pm.test('Status code is 400', function () {",
-                  "    pm.response.to.have.status(400);",
-                  "});",
-                  "",
-                  "pm.test('Error message about missing token', function () {",
-                  "    const responseJson = pm.response.json();",
-                  "    pm.expect(responseJson.error).to.include('required');",
-                  "});"
-                ]
-              }
-            }
-          ],
           "request": {
             "method": "POST",
             "header": [
@@ -439,27 +244,6 @@
       "item": [
         {
           "name": "✅ Get User by ID (With Auth)",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "type": "text/javascript",
-                "exec": [
-                  "pm.test('Status code is 200', function () {",
-                  "    pm.response.to.have.status(200);",
-                  "});",
-                  "",
-                  "pm.test('User data is returned', function () {",
-                  "    const responseJson = pm.response.json();",
-                  "    pm.expect(responseJson).to.have.property('id');",
-                  "    pm.expect(responseJson).to.have.property('name');",
-                  "    pm.expect(responseJson).to.have.property('email');",
-                  "    pm.expect(responseJson).to.not.have.property('passwordHash');",
-                  "});"
-                ]
-              }
-            }
-          ],
           "request": {
             "auth": {
               "type": "bearer",
@@ -488,24 +272,6 @@
         },
         {
           "name": "✅ Update User Name (With Auth)",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "type": "text/javascript",
-                "exec": [
-                  "pm.test('Status code is 200', function () {",
-                  "    pm.response.to.have.status(200);",
-                  "});",
-                  "",
-                  "pm.test('User name is updated', function () {",
-                  "    const responseJson = pm.response.json();",
-                  "    pm.expect(responseJson.name).to.equal('John Smith');",
-                  "});"
-                ]
-              }
-            }
-          ],
           "request": {
             "auth": {
               "type": "bearer",
@@ -543,25 +309,6 @@
         },
         {
           "name": "✅ Update User Password (With Auth)",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "type": "text/javascript",
-                "exec": [
-                  "pm.test('Status code is 200', function () {",
-                  "    pm.response.to.have.status(200);",
-                  "});",
-                  "",
-                  "pm.test('Password update successful', function () {",
-                  "    const responseJson = pm.response.json();",
-                  "    pm.expect(responseJson).to.have.property('id');",
-                  "    pm.expect(responseJson).to.not.have.property('passwordHash');",
-                  "});"
-                ]
-              }
-            }
-          ],
           "request": {
             "auth": {
               "type": "bearer",
@@ -599,24 +346,6 @@
         },
         {
           "name": "❌ Get User Without Auth",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "type": "text/javascript",
-                "exec": [
-                  "pm.test('Status code is 401', function () {",
-                  "    pm.response.to.have.status(401);",
-                  "});",
-                  "",
-                  "pm.test('Authorization error message', function () {",
-                  "    const responseJson = pm.response.json();",
-                  "    pm.expect(responseJson.error).to.include('Authorization');",
-                  "});"
-                ]
-              }
-            }
-          ],
           "request": {
             "method": "GET",
             "header": [],
@@ -635,24 +364,6 @@
         },
         {
           "name": "❌ Update User Without Auth",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "type": "text/javascript",
-                "exec": [
-                  "pm.test('Status code is 401', function () {",
-                  "    pm.response.to.have.status(401);",
-                  "});",
-                  "",
-                  "pm.test('Authorization error message', function () {",
-                  "    const responseJson = pm.response.json();",
-                  "    pm.expect(responseJson.error).to.include('Authorization');",
-                  "});"
-                ]
-              }
-            }
-          ],
           "request": {
             "method": "PATCH",
             "header": [
@@ -692,34 +403,8 @@
                 "type": "text/javascript",
                 "exec": [
                   "// Store current tokens for comparison",
-                  "pm.collectionVariables.set('oldAccessToken', pm.collectionVariables.get('accessToken'));",
-                  "pm.collectionVariables.set('oldRefreshToken', pm.collectionVariables.get('refreshToken'));"
-                ]
-              }
-            },
-            {
-              "listen": "test",
-              "script": {
-                "type": "text/javascript",
-                "exec": [
-                  "pm.test('Status code is 200', function () {",
-                  "    pm.response.to.have.status(200);",
-                  "});",
-                  "",
-                  "pm.test('New tokens are different from old tokens', function () {",
-                  "    const responseJson = pm.response.json();",
-                  "    const oldAccessToken = pm.collectionVariables.get('oldAccessToken');",
-                  "    const oldRefreshToken = pm.collectionVariables.get('oldRefreshToken');",
-                  "    ",
-                  "    pm.expect(responseJson.accessToken).to.not.equal(oldAccessToken);",
-                  "    pm.expect(responseJson.refreshToken).to.not.equal(oldRefreshToken);",
-                  "});",
-                  "",
-                  "pm.test('Tokens are saved for future use', function () {",
-                  "    const responseJson = pm.response.json();",
-                  "    pm.collectionVariables.set('accessToken', responseJson.accessToken);",
-                  "    pm.collectionVariables.set('refreshToken', responseJson.refreshToken);",
-                  "});"
+                  "pm.environment.set('oldAccessToken', pm.environment.get('accessToken'));",
+                  "pm.environment.set('oldRefreshToken', pm.environment.get('refreshToken'));"
                 ]
               }
             }
@@ -751,25 +436,6 @@
         },
         {
           "name": "✅ Use New Access Token",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "type": "text/javascript",
-                "exec": [
-                  "pm.test('Status code is 200', function () {",
-                  "    pm.response.to.have.status(200);",
-                  "});",
-                  "",
-                  "pm.test('New access token works', function () {",
-                  "    const responseJson = pm.response.json();",
-                  "    pm.expect(responseJson).to.have.property('id');",
-                  "    pm.expect(responseJson).to.have.property('email');",
-                  "});"
-                ]
-              }
-            }
-          ],
           "request": {
             "auth": {
               "type": "bearer",
@@ -798,22 +464,6 @@
         },
         {
           "name": "❌ Old Access Token Should Fail",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "type": "text/javascript",
-                "exec": [
-                  "pm.test('Status code is 401 (old token should be invalid)', function () {",
-                  "    // Note: This might pass if tokens haven't expired yet",
-                  "    // In production, implement proper token blacklisting",
-                  "    console.log('Response status:', pm.response.code);",
-                  "    // pm.response.to.have.status(401);",
-                  "});"
-                ]
-              }
-            }
-          ],
           "request": {
             "auth": {
               "type": "bearer",
@@ -847,24 +497,6 @@
       "item": [
         {
           "name": "❌ Signup with Duplicate Email",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "type": "text/javascript",
-                "exec": [
-                  "pm.test('Status code is 400', function () {",
-                  "    pm.response.to.have.status(400);",
-                  "});",
-                  "",
-                  "pm.test('Error mentions duplicate email', function () {",
-                  "    const responseJson = pm.response.json();",
-                  "    pm.expect(responseJson.error).to.include('already exists');",
-                  "});"
-                ]
-              }
-            }
-          ],
           "request": {
             "method": "POST",
             "header": [
@@ -892,24 +524,6 @@
         },
         {
           "name": "❌ Signup with Weak Password",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "type": "text/javascript",
-                "exec": [
-                  "pm.test('Status code is 400', function () {",
-                  "    pm.response.to.have.status(400);",
-                  "});",
-                  "",
-                  "pm.test('Error mentions password requirements', function () {",
-                  "    const responseJson = pm.response.json();",
-                  "    pm.expect(responseJson.error).to.include('8 characters');",
-                  "});"
-                ]
-              }
-            }
-          ],
           "request": {
             "method": "POST",
             "header": [
@@ -937,24 +551,6 @@
         },
         {
           "name": "❌ Update with Invalid Email",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "type": "text/javascript",
-                "exec": [
-                  "pm.test('Status code is 400', function () {",
-                  "    pm.response.to.have.status(400);",
-                  "});",
-                  "",
-                  "pm.test('Error mentions email format', function () {",
-                  "    const responseJson = pm.response.json();",
-                  "    pm.expect(responseJson.error).to.include('email format');",
-                  "});"
-                ]
-              }
-            }
-          ],
           "request": {
             "auth": {
               "type": "bearer",
@@ -997,23 +593,6 @@
       "item": [
         {
           "name": "Clear Tokens",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "type": "text/javascript",
-                "exec": [
-                  "// Clear all tokens from collection variables",
-                  "pm.collectionVariables.set('accessToken', '');",
-                  "pm.collectionVariables.set('refreshToken', '');",
-                  "pm.collectionVariables.set('oldAccessToken', '');",
-                  "pm.collectionVariables.set('oldRefreshToken', '');",
-                  "",
-                  "console.log('All tokens cleared from collection variables');"
-                ]
-              }
-            }
-          ],
           "request": {
             "method": "GET",
             "header": [],

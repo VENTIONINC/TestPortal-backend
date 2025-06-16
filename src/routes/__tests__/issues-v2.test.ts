@@ -69,6 +69,42 @@ jest.mock("@/models/issueModel", () => ({
         return Promise.resolve(filteredIssues.slice(startIndex, endIndex));
       },
     ),
+    // V2 method with user relations
+    findManyWithUsers: jest.fn(
+      (category?: string, name?: string, page = 1, limit = 30) => {
+        let filteredIssues = [...issues];
+
+        if (category) {
+          filteredIssues = filteredIssues.filter((i) =>
+            i.category.toLowerCase().includes(category.toLowerCase()),
+          );
+        }
+
+        if (name) {
+          filteredIssues = filteredIssues.filter((i) =>
+            i.name.toLowerCase().includes(name.toLowerCase()),
+          );
+        }
+
+        const startIndex = (Number(page) - 1) * Number(limit);
+        const endIndex = startIndex + Number(limit);
+
+        // Add user relations to issues
+        const issuesWithUsers = filteredIssues
+          .slice(startIndex, endIndex)
+          .map((issue) => ({
+            ...issue,
+            createdBy: issue.createdById
+              ? (users.find((u) => u.id === issue.createdById) ?? null)
+              : null,
+            updatedBy: issue.updatedById
+              ? (users.find((u) => u.id === issue.updatedById) ?? null)
+              : null,
+          }));
+
+        return Promise.resolve(issuesWithUsers);
+      },
+    ),
     count: jest.fn((category?: string, name?: string) => {
       let filteredIssues = [...issues];
 
@@ -89,6 +125,22 @@ jest.mock("@/models/issueModel", () => ({
     findById: jest.fn((id: number | string) => {
       const issue = issues.find((i) => i.id === Number(id));
       return Promise.resolve(issue ?? null);
+    }),
+    // V2 method with user relations
+    findByIdWithUsers: jest.fn((id: number | string) => {
+      const issue = issues.find((i) => i.id === Number(id));
+      if (!issue) return Promise.resolve(null);
+
+      const issueWithUsers = {
+        ...issue,
+        createdBy: issue.createdById
+          ? (users.find((u) => u.id === issue.createdById) ?? null)
+          : null,
+        updatedBy: issue.updatedById
+          ? (users.find((u) => u.id === issue.updatedById) ?? null)
+          : null,
+      };
+      return Promise.resolve(issueWithUsers);
     }),
     create: jest.fn((data: Partial<PrismaIssue>) => {
       const issue: PrismaIssue = {
@@ -250,6 +302,40 @@ describe("Issues v2 Routes", () => {
       expect(response.body.issues).toHaveLength(0);
       expect(response.body.total).toBe(0);
     });
+
+    it("should return serialized issues with user information", async () => {
+      // Create a test issue
+      await request(app)
+        .post("/api/v2/issues")
+        .set("Authorization", `Bearer ${authToken}`)
+        .send({ name: "Test Issue", category: "bug" });
+
+      const response = await request(app)
+        .get("/api/v2/issues")
+        .set("Authorization", `Bearer ${authToken}`);
+
+      expect(response.status).toBe(200);
+      expect(response.body.issues).toHaveLength(1);
+
+      const issue = response.body.issues[0];
+
+      // Verify serialized structure
+      expect(issue.createdBy).toBeDefined();
+      expect(issue.updatedBy).toBeDefined();
+
+      // Verify user information is properly serialized (no password)
+      expect(issue.createdBy.id).toBe(testUser.id);
+      expect(issue.createdBy.name).toBe(testUser.name);
+      expect(issue.createdBy.email).toBe(testUser.email);
+      expect(issue.createdBy.createdAt).toBeDefined();
+      expect(issue.createdBy.passwordHash).toBeUndefined(); // Should not be included
+
+      expect(issue.updatedBy.id).toBe(testUser.id);
+      expect(issue.updatedBy.name).toBe(testUser.name);
+      expect(issue.updatedBy.email).toBe(testUser.email);
+      expect(issue.updatedBy.createdAt).toBeDefined();
+      expect(issue.updatedBy.passwordHash).toBeUndefined(); // Should not be included
+    });
   });
 
   describe("GET /v2/issues/:issueId", () => {
@@ -305,6 +391,42 @@ describe("Issues v2 Routes", () => {
 
       expect(response.status).toBe(404);
       expect(response.body.error).toBe("Issue with ID 999 not found");
+    });
+
+    it("should return serialized issue with user information", async () => {
+      const createResponse = await request(app)
+        .post("/api/v2/issues")
+        .set("Authorization", `Bearer ${authToken}`)
+        .send({
+          name: "Test Issue",
+          category: "bug",
+          description: "Test description",
+        });
+
+      const issueId = createResponse.body.id;
+
+      const response = await request(app)
+        .get(`/api/v2/issues/${issueId}`)
+        .set("Authorization", `Bearer ${authToken}`);
+
+      expect(response.status).toBe(200);
+
+      // Verify serialized structure
+      expect(response.body.createdBy).toBeDefined();
+      expect(response.body.updatedBy).toBeDefined();
+
+      // Verify user information is properly serialized (no password)
+      expect(response.body.createdBy.id).toBe(testUser.id);
+      expect(response.body.createdBy.name).toBe(testUser.name);
+      expect(response.body.createdBy.email).toBe(testUser.email);
+      expect(response.body.createdBy.createdAt).toBeDefined();
+      expect(response.body.createdBy.passwordHash).toBeUndefined(); // Should not be included
+
+      expect(response.body.updatedBy.id).toBe(testUser.id);
+      expect(response.body.updatedBy.name).toBe(testUser.name);
+      expect(response.body.updatedBy.email).toBe(testUser.email);
+      expect(response.body.updatedBy.createdAt).toBeDefined();
+      expect(response.body.updatedBy.passwordHash).toBeUndefined(); // Should not be included
     });
   });
 

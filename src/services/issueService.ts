@@ -1,5 +1,12 @@
 import { issueModel } from "@/models/issueModel";
-import type { PrismaIssue } from "@/types";
+import type {
+  PrismaIssue,
+  PrismaUser,
+  PrismaIssueWithUsers,
+  SerializedUser,
+  SerializedIssue,
+  SerializedIssuesResponse,
+} from "@/types";
 
 const sleep = (ms: number): Promise<void> =>
   new Promise((resolve) => setTimeout(resolve, ms));
@@ -56,6 +63,28 @@ export const issueService = {
     };
   },
 
+  // V2 method with serialized response
+  async getAllIssuesV2(
+    params: GetAllIssuesParams,
+  ): Promise<SerializedIssuesResponse> {
+    const { category, name, page = 1, limit = 30 } = params;
+
+    const issues = await issueModel.findManyWithUsers(
+      category,
+      name,
+      page,
+      limit,
+    );
+    const totalIssues = await issueModel.count(category, name);
+
+    return {
+      issues: issues.map(serializeIssue),
+      total: totalIssues,
+      page: Number(page),
+      totalPages: Math.ceil(totalIssues / limit),
+    };
+  },
+
   async getIssueById(issueId: number): Promise<PrismaIssue> {
     if (!issueId) {
       throw new Error("Issue ID is required");
@@ -68,6 +97,21 @@ export const issueService = {
     }
 
     return issueRecords;
+  },
+
+  // V2 method with serialized response
+  async getIssueByIdV2(issueId: number): Promise<SerializedIssue> {
+    if (!issueId) {
+      throw new Error("Issue ID is required");
+    }
+
+    const issueRecords = await issueModel.findByIdWithUsers(issueId);
+
+    if (!issueRecords) {
+      throw new Error(`Issue with ID ${issueId} not found`);
+    }
+
+    return serializeIssue(issueRecords);
   },
 
   async createIssue(issueParams: CreateIssueParams): Promise<PrismaIssue> {
@@ -87,8 +131,15 @@ export const issueService = {
       throw new Error("Issue ID is required");
     }
 
-    const { name, category, description, portal, service, ticket, updatedById } =
-      updateData;
+    const {
+      name,
+      category,
+      description,
+      portal,
+      service,
+      ticket,
+      updatedById,
+    } = updateData;
 
     const cleanUpdateData: Partial<CreateIssueParams> = {};
     if (name) cleanUpdateData.name = name;
@@ -135,3 +186,29 @@ export const issueService = {
     return mockIssues;
   },
 };
+
+// Serialization utility functions
+function serializeUser(user: PrismaUser): SerializedUser {
+  return {
+    id: user.id,
+    name: user.name,
+    email: user.email,
+    createdAt: user.createdAt,
+  };
+}
+
+function serializeIssue(issue: PrismaIssueWithUsers): SerializedIssue {
+  return {
+    id: issue.id,
+    createdAt: issue.createdAt,
+    updatedAt: issue.updatedAt,
+    name: issue.name,
+    category: issue.category,
+    description: issue.description ?? null,
+    portal: issue.portal ?? null,
+    service: issue.service ?? null,
+    ticket: issue.ticket ?? null,
+    createdBy: issue.createdBy ? serializeUser(issue.createdBy) : null,
+    updatedBy: issue.updatedBy ? serializeUser(issue.updatedBy) : null,
+  };
+}

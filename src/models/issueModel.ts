@@ -1,5 +1,6 @@
 import { dbClient } from "@/prisma/client";
-import type { PrismaIssue } from "@/types";
+import type { PrismaIssue, PrismaIssueWithUsers } from "@/types";
+import { Prisma } from "@prisma/client";
 
 interface IssueWhereInput {
   category?: string;
@@ -36,6 +37,28 @@ export const issueModel = {
     });
   },
 
+  findManyWithUsers: async (
+    category?: string,
+    name?: string,
+    page = 1,
+    limit = 30,
+  ): Promise<PrismaIssueWithUsers[]> => {
+    const whereClause: Prisma.IssueWhereInput = {};
+    if (category) whereClause.category = category;
+    if (name) whereClause.name = { contains: name };
+
+    return (await dbClient.issue.findMany({
+      where: whereClause,
+      skip: (page - 1) * limit,
+      take: Number(limit),
+      orderBy: { createdAt: "desc" },
+      include: {
+        createdBy: true,
+        updatedBy: true,
+      },
+    })) as PrismaIssueWithUsers[];
+  },
+
   count: async (category?: string, name?: string): Promise<number> => {
     const whereClause: IssueWhereInput = {};
     if (category) whereClause.category = category;
@@ -52,6 +75,20 @@ export const issueModel = {
         id: Number(id),
       },
     });
+  },
+
+  findByIdWithUsers: async (
+    id: number | string,
+  ): Promise<PrismaIssueWithUsers | null> => {
+    return (await dbClient.issue.findUnique({
+      where: {
+        id: Number(id),
+      },
+      include: {
+        createdBy: true,
+        updatedBy: true,
+      },
+    })) as PrismaIssueWithUsers | null;
   },
 
   create: async (data: CreateIssueData): Promise<PrismaIssue> => {

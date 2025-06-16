@@ -191,3 +191,38 @@ export interface UserWithPassword {
   createdAt: Date;
   updatedAt: Date;
 }
+
+// V2 API Serialized Response Types
+export interface SerializedUser {
+  id: number;
+  name: string;
+  email: string;
+  createdAt: Date;
+}
+
+export interface SerializedIssue {
+  id: number;
+  createdAt: Date;
+  updatedAt: Date;
+  name: string;
+  category: string;
+  description?: string | null;
+  portal?: string | null;
+  service?: string | null;
+  ticket?: string | null;
+  createdBy?: SerializedUser | null;
+  updatedBy?: SerializedUser | null;
+}
+
+export interface SerializedIssuesResponse {
+  issues: SerializedIssue[];
+  total: number;
+  page: number;
+  totalPages: number;
+}
+
+// Extended Prisma types with relations for v2 endpoints
+export interface PrismaIssueWithUsers extends PrismaIssue {
+  createdBy?: PrismaUser | null;
+  updatedBy?: PrismaUser | null;
+}

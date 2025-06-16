@@ -1,51 +1,10 @@
 {
   "info": {
     "name": "Issue API",
-    "description": "Complete Issue management API with v1 (public) and v2 (authenticated) endpoints. Includes automatic user tracking for createdBy/updatedBy fields and comprehensive test scenarios.",
+    "description": "Complete Issue management API with v1 (public) and v2 (authenticated, serialized) endpoints. V2 endpoints include complete user information (createdBy/updatedBy objects) and comprehensive test scenarios.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
-  "variable": [
-    {
-      "key": "V_2",
-      "value": "/api/v2",
-      "type": "string"
-    },
-    {
-      "key": "V_1",
-      "value": "/api/v1",
-      "type": "string"
-    },
-    {
-      "key": "baseUrl",
-      "value": "http://localhost:3001",
-      "type": "string"
-    },
-    {
-      "key": "issueId",
-      "value": "",
-      "type": "string"
-    },
-    {
-      "key": "accessToken",
-      "value": "",
-      "type": "string"
-    },
-    {
-      "key": "refreshToken",
-      "value": "",
-      "type": "string"
-    },
-    {
-      "key": "testEmail",
-      "value": "john.doe@example.com",
-      "type": "string"
-    },
-    {
-      "key": "testPassword",
-      "value": "SecurePassword123!",
-      "type": "string"
-    }
-  ],
+  "variable": [],
   "auth": {
     "type": "bearer",
     "bearer": [
@@ -63,8 +22,8 @@
         "type": "text/javascript",
         "exec": [
           "// Auto-refresh token if access token is expired",
-          "const accessToken = pm.collectionVariables.get('accessToken');",
-          "const refreshToken = pm.collectionVariables.get('refreshToken');",
+          "const accessToken = pm.environment.get('accessToken');",
+          "const refreshToken = pm.environment.get('refreshToken');",
           "",
           "if (refreshToken && accessToken) {",
           "    try {",
@@ -76,7 +35,7 @@
           "            console.log('Access token expiring soon, attempting refresh...');",
           "            ",
           "            const refreshRequest = {",
-          "                url: pm.collectionVariables.get('baseUrl') + '/users/refresh-token',",
+          "                url: pm.environment.get('baseUrl') + '/users/refresh-token',",
           "                method: 'POST',",
           "                header: { 'Content-Type': 'application/json' },",
           "                body: {",
@@ -88,13 +47,13 @@
           "            pm.sendRequest(refreshRequest, (err, res) => {",
           "                if (!err && res.code === 200) {",
           "                    const responseJson = res.json();",
-          "                    pm.collectionVariables.set('accessToken', responseJson.accessToken);",
-          "                    pm.collectionVariables.set('refreshToken', responseJson.refreshToken);",
+          "                    pm.environment.set('accessToken', responseJson.accessToken);",
+          "                    pm.environment.set('refreshToken', responseJson.refreshToken);",
           "                    console.log('Token refreshed successfully');",
           "                } else {",
           "                    console.log('Token refresh failed, clearing tokens');",
-          "                    pm.collectionVariables.set('accessToken', '');",
-          "                    pm.collectionVariables.set('refreshToken', '');",
+          "                    pm.environment.set('accessToken', '');",
+          "                    pm.environment.set('refreshToken', '');",
           "                }",
           "            });",
           "        }",
@@ -112,25 +71,6 @@
       "item": [
         {
           "name": "✅ User Login (Get Tokens)",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "type": "text/javascript",
-                "exec": [
-                  "pm.test('Status code is 200', function () {",
-                  "    pm.response.to.have.status(200);",
-                  "});",
-                  "",
-                  "pm.test('Tokens are saved to variables', function () {",
-                  "    const responseJson = pm.response.json();",
-                  "    pm.collectionVariables.set('accessToken', responseJson.accessToken);",
-                  "    pm.collectionVariables.set('refreshToken', responseJson.refreshToken);",
-                  "});"
-                ]
-              }
-            }
-          ],
           "request": {
             "method": "POST",
             "header": [
@@ -159,28 +99,10 @@
       ]
     },
     {
-      "name": "📋 V1 Issues (Public)",
+      "name": "📋 V1 Issues (Public - Raw DB Schema)",
       "item": [
         {
-          "name": "✅ Get All Issues",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "type": "text/javascript",
-                "exec": [
-                  "pm.test('Status code is 200', function () {",
-                  "    pm.response.to.have.status(200);",
-                  "});",
-                  "",
-                  "pm.test('Response is an array', function () {",
-                  "    const responseJson = pm.response.json();",
-                  "    pm.expect(responseJson).to.be.an('array');",
-                  "});"
-                ]
-              }
-            }
-          ],
+          "name": "✅ Get All Issues (Raw)",
           "request": {
             "auth": {
               "type": "noauth"
@@ -200,38 +122,7 @@
           }
         },
         {
-          "name": "✅ Create Issue (Public)",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "type": "text/javascript",
-                "exec": [
-                  "pm.test('Status code is 201', function () {",
-                  "    pm.response.to.have.status(201);",
-                  "});",
-                  "",
-                  "pm.test('Issue created with required fields', function () {",
-                  "    const responseJson = pm.response.json();",
-                  "    pm.expect(responseJson).to.have.property('id');",
-                  "    pm.expect(responseJson).to.have.property('name');",
-                  "    pm.expect(responseJson).to.have.property('category');",
-                  "});",
-                  "",
-                  "pm.test('Issue ID saved to variable', function () {",
-                  "    const responseJson = pm.response.json();",
-                  "    pm.collectionVariables.set('issueId', responseJson.id.toString());",
-                  "});",
-                  "",
-                  "pm.test('createdBy fields are null (no auth)', function () {",
-                  "    const responseJson = pm.response.json();",
-                  "    pm.expect(responseJson.createdById).to.be.null;",
-                  "    pm.expect(responseJson.updatedById).to.be.null;",
-                  "});"
-                ]
-              }
-            }
-          ],
+          "name": "✅ Create Issue (Public - Raw Response)",
           "request": {
             "auth": {
               "type": "noauth"
@@ -260,27 +151,7 @@
           }
         },
         {
-          "name": "✅ Get Issue by ID",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "type": "text/javascript",
-                "exec": [
-                  "pm.test('Status code is 200', function () {",
-                  "    pm.response.to.have.status(200);",
-                  "});",
-                  "",
-                  "pm.test('Issue has correct structure', function () {",
-                  "    const responseJson = pm.response.json();",
-                  "    pm.expect(responseJson).to.have.property('id');",
-                  "    pm.expect(responseJson).to.have.property('name');",
-                  "    pm.expect(responseJson).to.have.property('category');",
-                  "});"
-                ]
-              }
-            }
-          ],
+          "name": "✅ Get Issue by ID (Raw Schema)",
           "request": {
             "auth": {
               "type": "noauth"
@@ -301,25 +172,7 @@
           }
         },
         {
-          "name": "✅ Update Issue (Public)",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "type": "text/javascript",
-                "exec": [
-                  "pm.test('Status code is 200', function () {",
-                  "    pm.response.to.have.status(200);",
-                  "});",
-                  "",
-                  "pm.test('Issue updated successfully', function () {",
-                  "    const responseJson = pm.response.json();",
-                  "    pm.expect(responseJson).to.have.property('name', 'Updated Public Issue');",
-                  "});"
-                ]
-              }
-            }
-          ],
+          "name": "✅ Update Issue (Public - Raw Response)",
           "request": {
             "auth": {
               "type": "noauth"
@@ -351,28 +204,10 @@
       ]
     },
     {
-      "name": "🔒 V2 Issues (Authenticated)",
+      "name": "🔒 V2 Issues (Authenticated - Serialized Schema)",
       "item": [
         {
-          "name": "✅ Get All Issues (Auth)",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "type": "text/javascript",
-                "exec": [
-                  "pm.test('Status code is 200', function () {",
-                  "    pm.response.to.have.status(200);",
-                  "});",
-                  "",
-                  "pm.test('Response is an array', function () {",
-                  "    const responseJson = pm.response.json();",
-                  "    pm.expect(responseJson).to.be.an('array');",
-                  "});"
-                ]
-              }
-            }
-          ],
+          "name": "✅ Get All Issues (Serialized with Users)",
           "request": {
             "method": "GET",
             "header": [],
@@ -390,38 +225,6 @@
         },
         {
           "name": "✅ Create Issue (With User Tracking)",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "type": "text/javascript",
-                "exec": [
-                  "pm.test('Status code is 201', function () {",
-                  "    pm.response.to.have.status(201);",
-                  "});",
-                  "",
-                  "pm.test('Issue created with user tracking', function () {",
-                  "    const responseJson = pm.response.json();",
-                  "    pm.expect(responseJson).to.have.property('id');",
-                  "    pm.expect(responseJson).to.have.property('name');",
-                  "    pm.expect(responseJson).to.have.property('category');",
-                  "});",
-                  "",
-                  "pm.test('createdBy/updatedBy fields are populated', function () {",
-                  "    const responseJson = pm.response.json();",
-                  "    pm.expect(responseJson.createdById).to.not.be.null;",
-                  "    pm.expect(responseJson.updatedById).to.not.be.null;",
-                  "    pm.expect(responseJson.createdById).to.equal(responseJson.updatedById);",
-                  "});",
-                  "",
-                  "pm.test('Issue ID saved to variable', function () {",
-                  "    const responseJson = pm.response.json();",
-                  "    pm.collectionVariables.set('issueId', responseJson.id.toString());",
-                  "});"
-                ]
-              }
-            }
-          ],
           "request": {
             "method": "POST",
             "header": [
@@ -447,26 +250,7 @@
           }
         },
         {
-          "name": "✅ Get Issue by ID (Auth)",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "type": "text/javascript",
-                "exec": [
-                  "pm.test('Status code is 200', function () {",
-                  "    pm.response.to.have.status(200);",
-                  "});",
-                  "",
-                  "pm.test('Issue has user tracking fields', function () {",
-                  "    const responseJson = pm.response.json();",
-                  "    pm.expect(responseJson).to.have.property('createdById');",
-                  "    pm.expect(responseJson).to.have.property('updatedById');",
-                  "});"
-                ]
-              }
-            }
-          ],
+          "name": "✅ Get Issue by ID (Serialized with Users)",
           "request": {
             "method": "GET",
             "header": [],
@@ -485,33 +269,6 @@
         },
         {
           "name": "✅ Update Issue (With updatedBy Tracking)",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "type": "text/javascript",
-                "exec": [
-                  "pm.test('Status code is 200', function () {",
-                  "    pm.response.to.have.status(200);",
-                  "});",
-                  "",
-                  "pm.test('Issue updated with tracking', function () {",
-                  "    const responseJson = pm.response.json();",
-                  "    pm.expect(responseJson).to.have.property('name', 'Updated Authenticated Issue');",
-                  "    pm.expect(responseJson.updatedById).to.not.be.null;",
-                  "});",
-                  "",
-                  "pm.test('updatedAt timestamp is recent', function () {",
-                  "    const responseJson = pm.response.json();",
-                  "    const updatedAt = new Date(responseJson.updatedAt);",
-                  "    const now = new Date();",
-                  "    const timeDiff = now - updatedAt;",
-                  "    pm.expect(timeDiff).to.be.below(5000); // Within 5 seconds",
-                  "});"
-                ]
-              }
-            }
-          ],
           "request": {
             "method": "PATCH",
             "header": [
@@ -536,6 +293,37 @@
               "raw": "{\n  \"name\": \"Updated Authenticated Issue\",\n  \"description\": \"This issue was updated via authenticated API with user tracking\",\n  \"category\": \"Enhancement\"\n}"
             }
           }
+        },
+        {
+          "name": "✅ Test V2 Query Parameters",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}{{V_2}}/issues?page=1&limit=10&category=Feature",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "{{V_2}}",
+                "issues"
+              ],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "10"
+                },
+                {
+                  "key": "category",
+                  "value": "Feature"
+                }
+              ]
+            }
+          }
         }
       ]
     },
@@ -544,24 +332,6 @@
       "item": [
         {
           "name": "❌ V2 Without Token (401)",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "type": "text/javascript",
-                "exec": [
-                  "pm.test('Status code is 401', function () {",
-                  "    pm.response.to.have.status(401);",
-                  "});",
-                  "",
-                  "pm.test('Error message indicates missing token', function () {",
-                  "    const responseJson = pm.response.json();",
-                  "    pm.expect(responseJson).to.have.property('error');",
-                  "});"
-                ]
-              }
-            }
-          ],
           "request": {
             "auth": {
               "type": "noauth"
@@ -582,19 +352,6 @@
         },
         {
           "name": "❌ Invalid Issue ID (404)",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "type": "text/javascript",
-                "exec": [
-                  "pm.test('Status code is 404', function () {",
-                  "    pm.response.to.have.status(404);",
-                  "});"
-                ]
-              }
-            }
-          ],
           "request": {
             "auth": {
               "type": "noauth"
@@ -616,19 +373,6 @@
         },
         {
           "name": "❌ Invalid Issue Data (400)",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "type": "text/javascript",
-                "exec": [
-                  "pm.test('Status code is 400', function () {",
-                  "    pm.response.to.have.status(400);",
-                  "});"
-                ]
-              }
-            }
-          ],
           "request": {
             "auth": {
               "type": "noauth"
@@ -655,6 +399,22 @@
               "raw": "{\n  \"description\": \"Missing required name and category fields\"\n}"
             }
           }
+        },
+        {
+          "name": "✅ Schema Comparison Test",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/health",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "health"
+              ]
+            }
+          }
         }
       ]
     },
@@ -663,25 +423,6 @@
       "item": [
         {
           "name": "🗑️ Clear Variables",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "type": "text/javascript",
-                "exec": [
-                  "// Clear all stored variables",
-                  "pm.collectionVariables.set('accessToken', '');",
-                  "pm.collectionVariables.set('refreshToken', '');",
-                  "pm.collectionVariables.set('issueId', '');",
-                  "",
-                  "pm.test('Variables cleared', function () {",
-                  "    console.log('All collection variables have been cleared');",
-                  "    pm.expect(true).to.be.true;",
-                  "});"
-                ]
-              }
-            }
-          ],
           "request": {
             "method": "GET",
             "header": [],

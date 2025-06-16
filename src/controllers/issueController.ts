@@ -56,6 +56,39 @@ export const issueController = {
     }
   },
 
+  // V2 method with serialized response including user information
+  getAllIssuesV2: async (req: Request, res: Response): Promise<void> => {
+    try {
+      const {
+        category,
+        name,
+        page = "1",
+        limit = "30",
+      } = req.query as Record<string, string>;
+
+      // Build parameters object, filtering out undefined values
+      const params: {
+        category?: string;
+        name?: string;
+        page?: number;
+        limit?: number;
+      } = {};
+      if (category) params.category = category;
+      if (name) params.name = name;
+      if (page) params.page = Number(page);
+      if (limit) params.limit = Number(limit);
+
+      const result = await issueService.getAllIssuesV2(params);
+
+      res.status(200).json(result);
+    } catch (error) {
+      const err = error as Error;
+      res.status(500).json({
+        error: `Failed to fetch issues. ${err.message}`,
+      });
+    }
+  },
+
   getIssueById: async (req: Request, res: Response): Promise<void> => {
     try {
       const { issueId } = req.params;
@@ -68,6 +101,28 @@ export const issueController = {
       }
 
       const issueRecords = await issueService.getIssueById(Number(issueId));
+      res.status(200).json(issueRecords);
+    } catch (error) {
+      const err = error as Error;
+      res.status(404).json({
+        error: err.message,
+      });
+    }
+  },
+
+  // V2 method with serialized response including user information
+  getIssueByIdV2: async (req: Request, res: Response): Promise<void> => {
+    try {
+      const { issueId } = req.params;
+
+      if (!issueId) {
+        res.status(400).json({
+          error: "Issue ID is required",
+        });
+        return;
+      }
+
+      const issueRecords = await issueService.getIssueByIdV2(Number(issueId));
       res.status(200).json(issueRecords);
     } catch (error) {
       const err = error as Error;
