@@ -12,6 +12,11 @@ router.patch("/v1/issues/:issueId", issueController.updateIssue);
 
 router.get("/v2/issues", authMiddleware, issueController.getAllIssuesV2);
 router.get(
+  "/v2/issues/with-stats",
+  authMiddleware,
+  issueController.getAllIssuesWithStatsV2,
+);
+router.get(
   "/v2/issues/:issueId",
   authMiddleware,
   issueController.getIssueByIdV2,

@@ -34,6 +34,7 @@
 
 ### 3. 🔒 V2 Issues (Authenticated - Serialized Schema)
 - **Get All Issues (Serialized with Users)** - Retrieve all issues with complete user objects
+- **Get All Issues with Stats (Serialized with Users)** - Retrieve all issues with statistics and complete user objects
 - **Create Issue (With User Tracking)** - Create issue with automatic user tracking
 - **Get Issue by ID (Serialized with Users)** - Retrieve specific issue with user objects
 - **Update Issue (With updatedBy Tracking)** - Modify issue with automatic `updatedBy` update
@@ -139,6 +140,57 @@
       },
       "createdAt": "2024-01-01T10:00:00.000Z",
       "updatedAt": "2024-01-01T15:30:00.000Z"
+    }
+  ],
+  "total": 1,
+  "page": 1,
+  "totalPages": 1
+}
+```
+
+#### Get All Issues with Stats V2
+```json
+{
+  "issues": [
+    {
+      "id": 1,
+      "name": "Database Performance Issue",
+      "category": "Bug",
+      "description": "Query taking too long",
+      "portal": "main-portal",
+      "service": "database-service",
+      "ticket": "TICKET-123",
+      "status": "Open",
+      "createdBy": {
+        "id": 1,
+        "name": "John Doe",
+        "email": "john.doe@example.com",
+        "createdAt": "2023-12-01T00:00:00.000Z"
+      },
+      "updatedBy": {
+        "id": 2,
+        "name": "Jane Smith",
+        "email": "jane.smith@example.com",
+        "createdAt": "2023-12-02T00:00:00.000Z"
+      },
+      "createdAt": "2024-01-01T10:00:00.000Z",
+      "updatedAt": "2024-01-01T15:30:00.000Z",
+      "statistics": {
+        "occurrenceCount": 10,
+        "firstOccurrence": "2024-01-01T10:00:00.000Z",
+        "lastOccurrence": "2024-01-10T10:00:00.000Z",
+        "impactedTestsCount": 5,
+        "timeDistribution": [
+          {
+            "date": "2024-01-01",
+            "count": 2
+          },
+          {
+            "date": "2024-01-02",
+            "count": 8
+          }
+        ]
+      }
     }
   ],
   "total": 1,

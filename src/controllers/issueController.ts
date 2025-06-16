@@ -107,6 +107,47 @@ export const issueController = {
     }
   },
 
+  getAllIssuesWithStatsV2: async (
+    req: Request,
+    res: Response,
+  ): Promise<void> => {
+    try {
+      const {
+        category,
+        name,
+        page = "1",
+        limit = "10",
+        statFrom,
+        statTo,
+      } = req.query as Record<string, string>;
+
+      // Build parameters object, filtering out undefined values
+      const params: {
+        category?: IssueCategory;
+        name?: string;
+        page?: number;
+        limit?: number;
+        statFrom?: string;
+        statTo?: string;
+      } = {};
+      if (category) params.category = category as IssueCategory;
+      if (name) params.name = name;
+      if (page) params.page = Number(page);
+      if (limit) params.limit = Number(limit);
+      if (statFrom) params.statFrom = statFrom;
+      if (statTo) params.statTo = statTo;
+
+      const result = await issueService.getAllIssuesWithStatsV2(params);
+
+      res.status(200).json(result);
+    } catch (error) {
+      const err = error as Error;
+      res.status(500).json({
+        error: `Failed to fetch issues with statistics. ${err.message}`,
+      });
+    }
+  },
+
   getIssueById: async (req: Request, res: Response): Promise<void> => {
     try {
       const { issueId } = req.params;

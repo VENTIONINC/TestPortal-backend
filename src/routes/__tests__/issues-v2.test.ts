@@ -727,4 +727,32 @@ describe("Issues v2 Routes", () => {
       expect(createResponse2.body.createdById).toBe(secondUser.id);
     });
   });
+
+  describe("GET /v2/issues/with-stats", () => {
+    it("should require authentication", async () => {
+      const response = await request(app).get("/api/v2/issues/with-stats");
+
+      expect(response.status).toBe(401);
+      expect(response.body.error).toBe("Authorization header is required");
+    });
+
+    it("should return all issues with stats when authenticated", async () => {
+      await request(app)
+        .post("/api/v2/issues")
+        .set("Authorization", `Bearer ${authToken}`)
+        .send({ name: "Test Issue 1", category: "bug" });
+
+      const response = await request(app)
+        .get("/api/v2/issues/with-stats")
+        .set("Authorization", `Bearer ${authToken}`);
+
+      expect(response.status).toBe(200);
+      expect(response.body.issues).toHaveLength(1);
+      expect(response.body.issues[0]).toHaveProperty("statistics");
+      expect(response.body.issues[0].statistics).toHaveProperty(
+        "occurrenceCount",
+      );
+      expect(response.body.issues[0].createdBy.id).toBe(testUser.id);
+    });
+  });
 });

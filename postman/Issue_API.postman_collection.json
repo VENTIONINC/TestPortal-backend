@@ -224,6 +224,24 @@
           }
         },
         {
+          "name": "✅ Get All Issues with Stats (Serialized with Users)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}{{V_2}}/issues/with-stats",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "{{V_2}}",
+                "issues",
+                "with-stats"
+              ]
+            }
+          }
+        },
+        {
           "name": "✅ Create Issue (With User Tracking)",
           "request": {
             "method": "POST",
