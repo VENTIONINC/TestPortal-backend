@@ -1,5 +1,10 @@
 import { resultModel } from "@/models/resultModel";
-import type { GetResultsParams, ResultWithRelations } from "@/types";
+import type {
+  GetResultsParams,
+  GetResultsStatsParams,
+  ResultsStats,
+  ResultWithRelations,
+} from "@/types";
 
 interface GetResultsResponse {
   results: ResultWithRelations[];
@@ -104,6 +109,14 @@ export const resultService = {
     }
 
     return resultRecord;
+  },
+
+  async getResultsStats(params: GetResultsStatsParams): Promise<ResultsStats> {
+    const { dates } = params;
+
+    const stats = await resultModel.getStats({ dates });
+
+    return stats;
   },
 };
 

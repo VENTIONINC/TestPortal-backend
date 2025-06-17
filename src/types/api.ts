@@ -24,6 +24,30 @@ export interface GetResultByIdParams {
   resultId: string;
 }
 
+export interface GetResultsStatsParams {
+  dates?: string[];
+}
+
+export interface ResultsStats {
+  byStatus: {
+    passed: number;
+    failed: number;
+    skipped: number;
+    timedOut: number;
+  };
+  byStatusTotal: number;
+  entityCounts: {
+    specs: number;
+    results: number;
+    executions: number;
+    issues: number;
+    errors: number;
+    assumptions: number;
+  };
+  topErrors: { title: string; count: number }[];
+  topIssues: { title: string; count: number }[];
+}
+
 // Assumption API Types
 export interface CreateAssumptionRequest {
   issueId: number;
@@ -84,3 +108,4 @@ export interface SuccessResponse<T> {
   success: true;
   data: T;
 }
+

@@ -5,5 +5,7 @@ const router = Router();
 
 router.get("/v1/results", resultController.getResults);
 router.get("/v1/results/:resultId", resultController.getResultById);
+router.get("/v1/results-stats", resultController.getResultsStats);
 
 export default router;
+

@@ -1,5 +1,10 @@
 import { resultService } from "@/services/resultService";
-import type { GetResultsParams, ResultWithRelations } from "@/types";
+import type {
+  GetResultsParams,
+  GetResultsStatsParams,
+  ResultsStats,
+  ResultWithRelations,
+} from "@/types";
 
 interface GetResultsResponse {
   results: ResultWithRelations[];
@@ -46,4 +51,10 @@ export const mcpResultHandler = {
   ): Promise<ResultWithRelations | null> {
     return await resultService.getResultById(resultId);
   },
+
+  async getResultsStats(params?: GetResultsStatsParams): Promise<ResultsStats> {
+    const { dates } = params ?? {};
+    return await resultService.getResultsStats(dates ? { dates } : {});
+  },
 };
+
