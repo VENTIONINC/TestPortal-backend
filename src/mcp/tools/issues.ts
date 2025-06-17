@@ -7,9 +7,10 @@ import {
 } from "@/mcp/schemas/issueSchemas";
 import { emptySchema } from "@/mcp/schemas/commonSchemas";
 import type { MCPToolResponse } from "@/types";
+import { IssueCategory } from "@/types/enums";
 
 interface GetIssuesParams {
-  category?: string;
+  category?: IssueCategory;
   name?: string;
   page?: number;
   limit?: number;

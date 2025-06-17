@@ -18,7 +18,7 @@ export const getIssuesSchema: MCPToolSchema = {
  * Schema for getting a specific issue by ID
  */
 export const getIssueByIdSchema: MCPToolSchema = {
-  issueId: z.number(),
+  issueId: z.string(),
 };
 
 /**
