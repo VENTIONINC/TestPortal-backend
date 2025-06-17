@@ -8,8 +8,8 @@ import { IssueCategory } from "@/types/enums";
 export const getIssuesSchema: MCPToolSchema = {
   category: z.nativeEnum(IssueCategory).optional(),
   name: z.string().optional(),
-  page: z.number().default(1).optional(),
-  limit: z.number().default(10).optional(),
+  page: z.string().default("1").optional(),
+  limit: z.string().default("10").optional(),
   statFrom: z.string().datetime().optional(),
   statTo: z.string().datetime().optional(),
 };
