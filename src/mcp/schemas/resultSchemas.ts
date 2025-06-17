@@ -24,3 +24,11 @@ export const getResultsSchema: MCPToolSchema = {
 export const getResultByIdSchema: MCPToolSchema = {
   resultId: z.string(),
 };
+
+/**
+ * Schema for getting results statistics
+ */
+export const getResultsStatsSchema: MCPToolSchema = {
+  dates: z.array(z.string()).optional(),
+};
+

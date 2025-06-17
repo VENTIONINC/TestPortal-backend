@@ -11,7 +11,11 @@ import {
   createIssue,
   getMockIssues,
 } from "@/mcp/tools/issues";
-import { getResults, getResultById } from "@/mcp/tools/results";
+import {
+  getResults,
+  getResultById,
+  getResultsStats,
+} from "@/mcp/tools/results";
 import {
   createAssumption,
   updateAssumption,
@@ -83,6 +87,7 @@ router.post("/v1/mcp", async (req: Request, res: Response): Promise<void> => {
     // Result tools
     server.tool(...getResults);
     server.tool(...getResultById);
+    server.tool(...getResultsStats);
 
     // Assumption tools
     server.tool(...createAssumption);
@@ -134,3 +139,4 @@ router.get("/v1/mcp", handleSessionRequest);
 router.delete("/v1/mcp", handleSessionRequest);
 
 export default router;
+

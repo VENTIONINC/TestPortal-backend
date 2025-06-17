@@ -1,6 +1,6 @@
 import { Request, Response } from "express";
 import { resultService } from "@/services/resultService";
-import type { GetResultsParams } from "@/types";
+import type { GetResultsParams, GetResultsStatsParams } from "@/types";
 
 export const resultController = {
   getResults: async (req: Request, res: Response): Promise<void> => {
@@ -67,6 +67,34 @@ export const resultController = {
       const err = error as Error;
       res.status(404).json({
         error: err.message,
+      });
+    }
+  },
+
+  getResultsStats: async (req: Request, res: Response): Promise<void> => {
+    try {
+      const { dates } = req.query;
+
+      // Parse dates parameter (can be a single date or comma-separated dates)
+      let parsedDates: string[] | undefined;
+      if (dates) {
+        if (typeof dates === "string") {
+          parsedDates = dates.split(",").map((d) => d.trim());
+        } else if (Array.isArray(dates)) {
+          parsedDates = dates.map((d) => String(d).trim());
+        }
+      }
+
+      const params: GetResultsStatsParams = parsedDates
+        ? { dates: parsedDates }
+        : {};
+      const stats = await resultService.getResultsStats(params);
+
+      res.json(stats);
+    } catch (error) {
+      const err = error as Error;
+      res.status(500).json({
+        error: `Failed to fetch results stats. ${err.message}`,
       });
     }
   },

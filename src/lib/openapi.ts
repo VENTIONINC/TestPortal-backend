@@ -287,6 +287,35 @@ const UserUpdateRequestSchema = z
   })
   .openapi("UserUpdateRequest");
 
+// Results Stats schemas
+const ResultsStatsSchema = z
+  .object({
+    byStatus: z.object({
+      passed: z.number(),
+      failed: z.number(),
+      skipped: z.number(),
+      timedOut: z.number(),
+    }),
+    byStatusTotal: z.number(),
+    entityCounts: z.object({
+      specs: z.number(),
+      results: z.number(),
+      executions: z.number(),
+      issues: z.number(),
+      errors: z.number(),
+      assumptions: z.number(),
+    }),
+    topErrors: z.array(z.object({
+      title: z.string(),
+      count: z.number(),
+    })),
+    topIssues: z.array(z.object({
+      title: z.string(),
+      count: z.number(),
+    })),
+  })
+  .openapi("ResultsStats");
+
 export function generateOpenAPISpec() {
   const registry = new OpenAPIRegistry();
 
@@ -316,6 +345,7 @@ export function generateOpenAPISpec() {
   registry.register("UserLoginResponse", UserLoginResponseSchema);
   registry.register("RefreshTokenRequest", RefreshTokenRequestSchema);
   registry.register("UserUpdateRequest", UserUpdateRequestSchema);
+  registry.register("ResultsStats", ResultsStatsSchema);
 
   // Base route
   registry.registerPath({
@@ -777,6 +807,36 @@ export function generateOpenAPISpec() {
       },
       404: {
         description: "Result not found",
+        content: {
+          "application/json": {
+            schema: ErrorResponseSchema,
+          },
+        },
+      },
+    },
+    tags: ["Results"],
+  });
+
+  registry.registerPath({
+    method: "get",
+    path: "/api/v1/results-stats",
+    description: "Retrieves statistical analysis of test results including status counts, entity counts, and top errors/issues for specified dates",
+    request: {
+      query: z.object({
+        dates: z.array(z.string()).optional().describe("Array of dates in YYYY-MM-DD format to filter results. If not provided, returns stats for all results."),
+      }),
+    },
+    responses: {
+      200: {
+        description: "Results statistics",
+        content: {
+          "application/json": {
+            schema: ResultsStatsSchema,
+          },
+        },
+      },
+      500: {
+        description: "Internal server error",
         content: {
           "application/json": {
             schema: ErrorResponseSchema,
