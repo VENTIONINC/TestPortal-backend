@@ -26,7 +26,8 @@ export interface OpenRouterResponse {
 
 export interface TestResultAnalysis {
   id: string;
-  category: "bug" | "infra" | "performance" | "script" | "other";
+  status: "passed" | "failed";
+  category?: "bug" | "infra" | "performance" | "script" | "other";
   confidence: number;
 }
 
@@ -85,19 +86,24 @@ export const openRouterService = {
                     type: "string",
                     description: "Test identifier extracted from test data",
                   },
+                  status: {
+                    type: "string",
+                    enum: ["passed", "failed"],
+                    description: "Test execution status",
+                  },
                   category: {
                     type: "string",
                     enum: ["bug", "infra", "performance", "script", "other"],
-                    description: "Failure category",
+                    description: "Failure category (only for failed tests)",
                   },
                   confidence: {
                     type: "number",
                     minimum: 0.0,
                     maximum: 1.0,
-                    description: "Confidence level of the categorization",
+                    description: "Confidence level of the analysis",
                   },
                 },
-                required: ["id", "category", "confidence"],
+                required: ["id", "status", "confidence"],
                 additionalProperties: false,
               },
             },
@@ -127,15 +133,17 @@ export const openRouterService = {
         );
       }
 
-            const data = (await response.json()) as OpenRouterResponse;
+      const data = (await response.json()) as OpenRouterResponse;
       const analysisContent = data.choices[0]?.message?.content;
-      
+
       if (!analysisContent) {
         throw new Error("No analysis content received from OpenRouter");
       }
 
       // With structured outputs, the response is guaranteed to be valid JSON
-      const analysisResults = JSON.parse(analysisContent) as TestResultAnalysis[];
+      const analysisResults = JSON.parse(
+        analysisContent,
+      ) as TestResultAnalysis[];
       logger.info(
         `Successfully analyzed ${analysisResults.length} test results`,
       );
@@ -200,35 +208,46 @@ export const openRouterService = {
 
   buildTestAnalysisPrompt(testResults: any[]): string {
     const prompt = `
-        Analyze the following test results and categorize each failure into one of these 5 categories only:
+        CRITICAL: You are analyzing ${testResults.length} test results. You MUST return exactly ${testResults.length} analysis objects in the JSON array.
 
-        CATEGORIES:
-        - bug: Application defects, logic errors, incorrect behavior
-        - infra: Infrastructure issues, environment problems, deployment issues  
-        - performance: Slow response times, timeouts, resource constraints
-        - script: Test script issues, automation problems, test code defects
-        - other: Everything else that doesn't fit the above categories
+        For each test result:
+        1. Determine if the test PASSED or FAILED
+        2. If FAILED, categorize the failure into one of these 5 categories:
+           - bug: Application defects, logic errors, incorrect behavior
+           - infra: Infrastructure issues, environment problems, deployment issues  
+           - performance: Slow response times, timeouts, resource constraints
+           - script: Test script issues, automation problems, test code defects
+           - other: Everything else that doesn't fit the above categories
+        3. If PASSED, do NOT include a category field
 
-        You MUST return ONLY a raw JSON array starting with [ and ending with ]:
+        You MUST return ONLY a raw JSON array:
         [
-        {
+          {
             "id": "test identifier or hash",
+            "status": "passed",
+            "confidence": 0.95
+          },
+          {
+            "id": "test identifier or hash", 
+            "status": "failed",
             "category": "bug",
             "confidence": 0.85
-        }
+          }
         ]
 
         STRICT REQUIREMENTS:
-        - NO markdown formatting (no \`\`\`json blocks)
-        - NO explanatory text before or after the JSON
         - Extract test ID from customReport.testNameHash, customReport.testName, or create from available identifiers
-        - Category must be exactly one of: bug, infra, performance, script, other
+        - Status must be exactly "passed" or "failed"
+        - Category ONLY for failed tests (one of: bug, infra, performance, script, other)
         - Confidence should be between 0.0 and 1.0
-        - Response must be valid JSON that starts with [ and ends with ]
+        - NO markdown formatting, NO explanatory text
+        - Response must be valid JSON starting with [ and ending with ]
 
-        Test Results to Analyze:
+        MANDATORY: Your response must contain exactly ${testResults.length} objects - one for each test result provided.
+
+        Test Results to Analyze (${testResults.length} total):
         ${JSON.stringify(testResults, null, 2)}
-        `;
+    `;
     return prompt;
   },
 };
