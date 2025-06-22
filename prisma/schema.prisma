@@ -35,19 +35,22 @@ model Spec {
 }
 
 model Result {
-  id          Int           @id @default(autoincrement())
-  createdAt   DateTime      @default(now())
-  updatedAt   DateTime      @updatedAt
-  allureLink  String?
-  retry       Int
-  status      String
-  duration    Int
-  startTime   DateTime
-  errors      ResultError[]
-  spec        Spec          @relation(fields: [specId], references: [id])
-  specId      Int
-  execution   Execution     @relation(fields: [executionId], references: [id])
-  executionId Int
+  id                 Int           @id @default(autoincrement())
+  createdAt          DateTime      @default(now())
+  updatedAt          DateTime      @updatedAt
+  allureLink         String?
+  retry              Int
+  status             String
+  duration           Int
+  startTime          DateTime
+  errors             ResultError[]
+  spec               Spec          @relation(fields: [specId], references: [id])
+  specId             Int
+  execution          Execution     @relation(fields: [executionId], references: [id])
+  executionId        Int
+  analysisStatus     String?       // "passed" | "failed"
+  analysisCategory   String?       // "bug" | "infra" | "performance" | "script" | "other"
+  analysisConfidence Float?        // 0.0 to 1.0
 }
 
 model ResultError {

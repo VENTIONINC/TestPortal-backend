@@ -1,6 +1,4 @@
 import getLogger from "@/lib/logger";
-import * as fs from "fs";
-import * as path from "path";
 
 const logger = getLogger("openrouter");
 
@@ -50,11 +48,9 @@ export interface OpenRouterRequest {
 }
 
 export const openRouterService = {
-  async analyzeTestResults(testResults?: any[]): Promise<TestResultAnalysis[]> {
+  async analyzeTestResults(testResults: any[]): Promise<TestResultAnalysis[]> {
     try {
-      // If no test results provided, read from local files
-      const resultsToAnalyze =
-        testResults ?? (await this.readLocalTestResults());
+      const resultsToAnalyze = testResults;
 
       const prompt = this.buildTestAnalysisPrompt(resultsToAnalyze);
 
@@ -151,57 +147,6 @@ export const openRouterService = {
       return analysisResults;
     } catch (error) {
       logger.error("Error analyzing test results:", error);
-      throw error;
-    }
-  },
-
-  async readLocalTestResults(): Promise<any[]> {
-    try {
-      const testResultsDir = path.join(
-        process.cwd(),
-        "prisma",
-        "seed",
-        "json-examples",
-      );
-
-      if (!fs.existsSync(testResultsDir)) {
-        logger.warn(`Test results directory not found: ${testResultsDir}`);
-        return [];
-      }
-
-      const files = fs
-        .readdirSync(testResultsDir)
-        .filter((file) => file.endsWith(".json"));
-
-      if (files.length === 0) {
-        logger.warn(`No JSON files found in: ${testResultsDir}`);
-        return [];
-      }
-
-      const testResults: any[] = [];
-
-      for (const file of files) {
-        try {
-          const filePath = path.join(testResultsDir, file);
-          const fileContent = fs.readFileSync(filePath, "utf-8");
-          const testResult = JSON.parse(fileContent);
-
-          // Add filename for reference
-          testResult.sourceFile = file;
-          testResults.push(testResult);
-
-          logger.info(`Loaded test result from: ${file}`);
-        } catch (fileError) {
-          logger.error(`Error reading file ${file}:`, fileError);
-        }
-      }
-
-      logger.info(
-        `Successfully loaded ${testResults.length} test result files`,
-      );
-      return testResults;
-    } catch (error) {
-      logger.error("Error reading local test results:", error);
       throw error;
     }
   },

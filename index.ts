@@ -20,7 +20,17 @@ const loggingMiddleware = (
 
 const app = express();
 app.use(cors());
-app.use(express.json());
+
+// Apply JSON parsing middleware to all routes except file upload routes
+app.use((req, res, next) => {
+  if (req.path === "/api/v1/json-report/upload") {
+    // Skip JSON parsing for file upload routes
+    next();
+  } else {
+    // Apply JSON parsing for all other routes
+    express.json()(req, res, next);
+  }
+});
 
 app.use(parseCookie());
 app.use(loggingMiddleware);
@@ -34,3 +44,4 @@ const PORT: number = parseInt(process.env.PORT ?? "3001", 10);
 app.listen(PORT, () => {
   console.log(`Running on Port ${PORT}`);
 });
+
