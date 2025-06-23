@@ -10,30 +10,31 @@ export const testAnalysisController = {
       if (testResults && !Array.isArray(testResults)) {
         res.status(400).json({
           success: false,
-          error: "testResults must be an array if provided"
+          error: "testResults must be an array if provided",
         });
         return;
       }
 
       // Call service with testResults (could be undefined to trigger local file reading)
-      const analysisResults = await testAnalysisService.analyzeTestResults(testResults);
-      
+      const analysisResults =
+        await testAnalysisService.analyzeTestResults(testResults);
+
       const dataSource = testResults ? "request body" : "local files";
-      
+
       res.status(200).json({
         success: true,
         data: {
           dataSource,
           totalTests: analysisResults.length,
-          analysisResults
-        }
+          analysisResults,
+        },
       });
     } catch (error) {
       const err = error as Error;
       res.status(500).json({
         success: false,
-        error: err.message
+        error: err.message,
       });
     }
-  }
-}; 
+  },
+};

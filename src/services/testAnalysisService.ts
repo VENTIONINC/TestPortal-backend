@@ -1,6 +1,9 @@
 import getLogger from "@/lib/logger";
+import OpenAI from "openai";
+import { getTestAnalysisPrompt } from "@/prompts/test-analysis";
 
 const logger = getLogger("test-analysis");
+const openai = new OpenAI();
 
 export interface TestAnalysisResponse {
   id: string;
@@ -27,6 +30,7 @@ export interface TestResultAnalysis {
   status: "passed" | "failed";
   category?: "bug" | "infra" | "performance" | "script" | "other";
   confidence: number;
+  conclusion: string;
 }
 
 export interface TestAnalysisRequest {
@@ -51,23 +55,17 @@ export const testAnalysisService = {
   async analyzeTestResults(testResults: any[]): Promise<TestResultAnalysis[]> {
     try {
       const resultsToAnalyze = testResults;
+      const systemPrompt = getTestAnalysisPrompt(resultsToAnalyze.length);
+      const userPrompt = JSON.stringify(resultsToAnalyze, null, 2);
 
-      const prompt = this.buildTestAnalysisPrompt(resultsToAnalyze);
-
-      const requestData: TestAnalysisRequest = {
+      const response = await openai.chat.completions.create({
         model: "gpt-4.1-mini",
         messages: [
-          {
-            role: "system",
-            content: `You are an expert test automation analyst. Analyze test results and categorize failures systematically into one of these categories: bug, infra, performance, script, other.`,
-          },
-          {
-            role: "user",
-            content: prompt,
-          },
+          { role: "system", content: systemPrompt },
+          { role: "user", content: userPrompt },
         ],
         temperature: 0.7,
-        max_tokens: 2000,
+        max_tokens: 4000,
         response_format: {
           type: "json_schema",
           json_schema: {
@@ -92,7 +90,13 @@ export const testAnalysisService = {
                       },
                       category: {
                         type: "string",
-                        enum: ["bug", "infra", "performance", "script", "other"],
+                        enum: [
+                          "bug",
+                          "infra",
+                          "performance",
+                          "script",
+                          "other",
+                        ],
                         description: "Failure category (only for failed tests)",
                       },
                       confidence: {
@@ -101,8 +105,13 @@ export const testAnalysisService = {
                         maximum: 1.0,
                         description: "Confidence level of the analysis",
                       },
+                      conclusion: {
+                        type: "string",
+                        description:
+                          "A 2-3 sentence explanation of the analysis decision.",
+                      },
                     },
-                    required: ["id", "status", "confidence"],
+                    required: ["id", "status", "confidence", "conclusion"],
                     additionalProperties: false,
                   },
                 },
@@ -112,37 +121,14 @@ export const testAnalysisService = {
             },
           },
         },
-      };
+      });
 
-      const response = await fetch(
-        "https://api.openai.com/v1/chat/completions",
-        {
-          method: "POST",
-          headers: {
-            Authorization: `Bearer ${process.env.OPENAI_API_KEY}`,
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(requestData),
-        },
-      );
-
-      if (!response.ok) {
-        const errorData = await response.text();
-        logger.error(`OpenAI API error: ${response.status} - ${errorData}`);
-        console.log(errorData);
-        throw new Error(
-          `OpenAI API error: ${response.status} - ${response.statusText}`,
-        );
-      }
-
-      const data = (await response.json()) as TestAnalysisResponse;
-      const analysisContent = data.choices[0]?.message?.content;
+      const analysisContent = response.choices[0]?.message?.content;
 
       if (!analysisContent) {
         throw new Error("No analysis content received from OpenAI");
       }
 
-      // With structured outputs, the response is guaranteed to be valid JSON
       const analysisResponse = JSON.parse(analysisContent) as {
         results: TestResultAnalysis[];
       };
@@ -153,56 +139,12 @@ export const testAnalysisService = {
 
       return analysisResults;
     } catch (error) {
+      if (error instanceof OpenAI.APIError) {
+        logger.error(`OpenAI API error: ${error.status} - ${error.message}`);
+        throw new Error(`OpenAI API error: ${error.status} - ${error.message}`);
+      }
       logger.error("Error analyzing test results:", error);
       throw error;
     }
   },
-
-  buildTestAnalysisPrompt(testResults: any[]): string {
-    const prompt = `
-        CRITICAL: You are analyzing ${testResults.length} test results. You MUST return exactly ${testResults.length} analysis objects in the JSON array.
-
-        For each test result:
-        1. Determine if the test PASSED or FAILED
-        2. If FAILED, categorize the failure into one of these 5 categories:
-           - bug: Application defects, logic errors, incorrect behavior
-           - infra: Infrastructure issues, environment problems, deployment issues  
-           - performance: Slow response times, timeouts, resource constraints
-           - script: Test script issues, automation problems, test code defects
-           - other: Everything else that doesn't fit the above categories
-        3. If PASSED, do NOT include a category field
-
-        You MUST return ONLY a JSON object with a results array:
-        {
-          "results": [
-            {
-              "id": "test identifier or hash",
-              "status": "passed",
-              "confidence": 0.95
-            },
-            {
-              "id": "test identifier or hash", 
-              "status": "failed",
-              "category": "bug",
-              "confidence": 0.85
-            }
-          ]
-        }
-
-        STRICT REQUIREMENTS:
-        - Extract test ID from customReport.testNameHash, customReport.testName, or create from available identifiers
-        - Status must be exactly "passed" or "failed"
-        - Category ONLY for failed tests (one of: bug, infra, performance, script, other)
-        - Confidence should be between 0.0 and 1.0
-        - NO markdown formatting, NO explanatory text
-        - Response must be valid JSON object with "results" array
-
-        MANDATORY: Your results array must contain exactly ${testResults.length} objects - one for each test result provided.
-
-        Test Results to Analyze (${testResults.length} total):
-        ${JSON.stringify(testResults, null, 2)}
-    `;
-    return prompt;
-  },
 };
-
