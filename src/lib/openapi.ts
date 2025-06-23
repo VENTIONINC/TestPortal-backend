@@ -159,6 +159,33 @@ const BulkReviewRequestSchema = z
   })
   .openapi("BulkReviewRequest");
 
+// Test Analysis schemas
+const TestAnalysisRequestSchema = z
+  .object({
+    testResults: z.array(z.any()).optional(),
+  })
+  .openapi("TestAnalysisRequest");
+
+const TestResultAnalysisSchema = z
+  .object({
+    id: z.string(),
+    status: z.enum(["passed", "failed"]),
+    category: z.enum(["bug", "infra", "performance", "script", "other"]).optional(),
+    confidence: z.number().min(0).max(1),
+  })
+  .openapi("TestResultAnalysis");
+
+const TestAnalysisResponseSchema = z
+  .object({
+    success: z.boolean(),
+    data: z.object({
+      dataSource: z.string(),
+      totalTests: z.number(),
+      analysisResults: z.array(TestResultAnalysisSchema),
+    }),
+  })
+  .openapi("TestAnalysisResponse");
+
 // Execution schemas
 const ExecutionSchema = z
   .object({
@@ -1446,6 +1473,49 @@ export function generateOpenAPISpec() {
     tags: ["Users"],
   });
 
+  // Test Analysis endpoint
+  registry.registerPath({
+    method: "post",
+    path: "/api/v1/test-analysis/analyze", 
+    description: "Analyzes test results using AI to categorize failures and provide insights",
+    request: {
+      body: {
+        content: {
+          "application/json": {
+            schema: TestAnalysisRequestSchema,
+          },
+        },
+      },
+    },
+    responses: {
+      200: {
+        description: "Test analysis completed successfully",
+        content: {
+          "application/json": {
+            schema: TestAnalysisResponseSchema,
+          },
+        },
+      },
+      400: {
+        description: "Bad request - invalid test results format",
+        content: {
+          "application/json": {
+            schema: ErrorResponseSchema,
+          },
+        },
+      },
+      500: {
+        description: "Internal server error - analysis failed",
+        content: {
+          "application/json": {
+            schema: ErrorResponseSchema,
+          },
+        },
+      },
+    },
+    tags: ["Test Analysis"],
+  });
+
   const generator = new OpenApiGeneratorV31(registry.definitions);
 
   return generator.generateDocument({
@@ -1505,6 +1575,10 @@ export function generateOpenAPISpec() {
       {
         name: "Users",
         description: "User management endpoints (protected)",
+      },
+      {
+        name: "Test Analysis",
+        description: "AI-powered test result analysis endpoints",
       },
     ],
   });

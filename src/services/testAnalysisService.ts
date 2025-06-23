@@ -1,8 +1,8 @@
 import getLogger from "@/lib/logger";
 
-const logger = getLogger("openrouter");
+const logger = getLogger("test-analysis");
 
-export interface OpenRouterResponse {
+export interface TestAnalysisResponse {
   id: string;
   object: string;
   created: number;
@@ -29,7 +29,7 @@ export interface TestResultAnalysis {
   confidence: number;
 }
 
-export interface OpenRouterRequest {
+export interface TestAnalysisRequest {
   model: string;
   messages: Array<{
     role: string;
@@ -47,15 +47,15 @@ export interface OpenRouterRequest {
   };
 }
 
-export const openRouterService = {
+export const testAnalysisService = {
   async analyzeTestResults(testResults: any[]): Promise<TestResultAnalysis[]> {
     try {
       const resultsToAnalyze = testResults;
 
       const prompt = this.buildTestAnalysisPrompt(resultsToAnalyze);
 
-      const requestData: OpenRouterRequest = {
-        model: "deepseek/deepseek-chat-v3-0324:free",
+      const requestData: TestAnalysisRequest = {
+        model: "gpt-4.1-mini",
         messages: [
           {
             role: "system",
@@ -72,49 +72,54 @@ export const openRouterService = {
           type: "json_schema",
           json_schema: {
             name: "test_analysis",
-            strict: true,
+            strict: false,
             schema: {
-              type: "array",
-              items: {
-                type: "object",
-                properties: {
-                  id: {
-                    type: "string",
-                    description: "Test identifier extracted from test data",
-                  },
-                  status: {
-                    type: "string",
-                    enum: ["passed", "failed"],
-                    description: "Test execution status",
-                  },
-                  category: {
-                    type: "string",
-                    enum: ["bug", "infra", "performance", "script", "other"],
-                    description: "Failure category (only for failed tests)",
-                  },
-                  confidence: {
-                    type: "number",
-                    minimum: 0.0,
-                    maximum: 1.0,
-                    description: "Confidence level of the analysis",
+              type: "object",
+              properties: {
+                results: {
+                  type: "array",
+                  items: {
+                    type: "object",
+                    properties: {
+                      id: {
+                        type: "string",
+                        description: "Test identifier extracted from test data",
+                      },
+                      status: {
+                        type: "string",
+                        enum: ["passed", "failed"],
+                        description: "Test execution status",
+                      },
+                      category: {
+                        type: "string",
+                        enum: ["bug", "infra", "performance", "script", "other"],
+                        description: "Failure category (only for failed tests)",
+                      },
+                      confidence: {
+                        type: "number",
+                        minimum: 0.0,
+                        maximum: 1.0,
+                        description: "Confidence level of the analysis",
+                      },
+                    },
+                    required: ["id", "status", "confidence"],
+                    additionalProperties: false,
                   },
                 },
-                required: ["id", "status", "confidence"],
-                additionalProperties: false,
               },
+              required: ["results"],
+              additionalProperties: false,
             },
           },
         },
       };
 
       const response = await fetch(
-        "https://openrouter.ai/api/v1/chat/completions",
+        "https://api.openai.com/v1/chat/completions",
         {
           method: "POST",
           headers: {
-            Authorization: `Bearer ${process.env.OPENROUTER_API_KEY}`,
-            "HTTP-Referer": process.env.SITE_URL ?? "http://localhost",
-            "X-Title": process.env.SITE_NAME ?? "Test Portal Backend",
+            Authorization: `Bearer ${process.env.OPENAI_API_KEY}`,
             "Content-Type": "application/json",
           },
           body: JSON.stringify(requestData),
@@ -123,23 +128,25 @@ export const openRouterService = {
 
       if (!response.ok) {
         const errorData = await response.text();
-        logger.error(`OpenRouter API error: ${response.status} - ${errorData}`);
+        logger.error(`OpenAI API error: ${response.status} - ${errorData}`);
+        console.log(errorData);
         throw new Error(
-          `OpenRouter API error: ${response.status} - ${response.statusText}`,
+          `OpenAI API error: ${response.status} - ${response.statusText}`,
         );
       }
 
-      const data = (await response.json()) as OpenRouterResponse;
+      const data = (await response.json()) as TestAnalysisResponse;
       const analysisContent = data.choices[0]?.message?.content;
 
       if (!analysisContent) {
-        throw new Error("No analysis content received from OpenRouter");
+        throw new Error("No analysis content received from OpenAI");
       }
 
       // With structured outputs, the response is guaranteed to be valid JSON
-      const analysisResults = JSON.parse(
-        analysisContent,
-      ) as TestResultAnalysis[];
+      const analysisResponse = JSON.parse(analysisContent) as {
+        results: TestResultAnalysis[];
+      };
+      const analysisResults = analysisResponse.results;
       logger.info(
         `Successfully analyzed ${analysisResults.length} test results`,
       );
@@ -165,20 +172,22 @@ export const openRouterService = {
            - other: Everything else that doesn't fit the above categories
         3. If PASSED, do NOT include a category field
 
-        You MUST return ONLY a raw JSON array:
-        [
-          {
-            "id": "test identifier or hash",
-            "status": "passed",
-            "confidence": 0.95
-          },
-          {
-            "id": "test identifier or hash", 
-            "status": "failed",
-            "category": "bug",
-            "confidence": 0.85
-          }
-        ]
+        You MUST return ONLY a JSON object with a results array:
+        {
+          "results": [
+            {
+              "id": "test identifier or hash",
+              "status": "passed",
+              "confidence": 0.95
+            },
+            {
+              "id": "test identifier or hash", 
+              "status": "failed",
+              "category": "bug",
+              "confidence": 0.85
+            }
+          ]
+        }
 
         STRICT REQUIREMENTS:
         - Extract test ID from customReport.testNameHash, customReport.testName, or create from available identifiers
@@ -186,9 +195,9 @@ export const openRouterService = {
         - Category ONLY for failed tests (one of: bug, infra, performance, script, other)
         - Confidence should be between 0.0 and 1.0
         - NO markdown formatting, NO explanatory text
-        - Response must be valid JSON starting with [ and ending with ]
+        - Response must be valid JSON object with "results" array
 
-        MANDATORY: Your response must contain exactly ${testResults.length} objects - one for each test result provided.
+        MANDATORY: Your results array must contain exactly ${testResults.length} objects - one for each test result provided.
 
         Test Results to Analyze (${testResults.length} total):
         ${JSON.stringify(testResults, null, 2)}

@@ -1,7 +1,7 @@
 import { Request, Response } from "express";
-import { openRouterService } from "@/services/openRouterService";
+import { testAnalysisService } from "@/services/testAnalysisService";
 
-export const openRouterController = {
+export const testAnalysisController = {
   analyzeTestResults: async (req: Request, res: Response): Promise<void> => {
     try {
       const { testResults } = req.body ?? {};
@@ -16,7 +16,7 @@ export const openRouterController = {
       }
 
       // Call service with testResults (could be undefined to trigger local file reading)
-      const analysisResults = await openRouterService.analyzeTestResults(testResults);
+      const analysisResults = await testAnalysisService.analyzeTestResults(testResults);
       
       const dataSource = testResults ? "request body" : "local files";
       

@@ -7,7 +7,7 @@ import type {
   PrismaResult,
   PrismaResultError,
 } from "@/types";
-import type { TestResultAnalysis } from "@/services/openRouterService";
+import type { TestResultAnalysis } from "@/services/testAnalysisService";
 
 interface ResultCreateInput {
   allureLink: string | null;

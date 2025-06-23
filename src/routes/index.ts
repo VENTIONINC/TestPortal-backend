@@ -10,7 +10,7 @@ import autoReview from "@/routes/auto-review";
 import status from "@/routes/status";
 import users from "@/routes/users";
 import openapi from "@/routes/openapi";
-import openrouter from "@/routes/openrouter";
+import testAnalysis from "@/routes/test-analysis";
 import mcp from "@/mcp/server";
 
 const router = Router();
@@ -30,7 +30,7 @@ router.use(autoReview);
 router.use(status);
 router.use(users);
 router.use(openapi);
-router.use(openrouter);
+router.use(testAnalysis);
 router.use(mcp);
 
 export default router;

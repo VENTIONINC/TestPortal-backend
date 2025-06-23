@@ -1,6 +1,6 @@
 import { Request, Response } from "express";
 import { jsonReportService } from "@/services/jsonReportService";
-import { openRouterService } from "@/services/openRouterService";
+import { testAnalysisService } from "@/services/testAnalysisService";
 
 export const jsonReportController = {
   /**
@@ -91,7 +91,7 @@ export const jsonReportController = {
       // Analyze test results before processing
       let analysisResults = null;
       try {
-        analysisResults = await openRouterService.analyzeTestResults([
+        analysisResults = await testAnalysisService.analyzeTestResults([
           rawJsonReport,
         ]);
         console.log(
