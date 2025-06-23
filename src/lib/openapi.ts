@@ -170,7 +170,9 @@ const TestResultAnalysisSchema = z
   .object({
     id: z.string(),
     status: z.enum(["passed", "failed"]),
-    category: z.enum(["bug", "infra", "performance", "script", "other"]).optional(),
+    category: z
+      .enum(["bug", "infra", "performance", "script", "other"])
+      .optional(),
     confidence: z.number().min(0).max(1),
   })
   .openapi("TestResultAnalysis");
@@ -261,10 +263,12 @@ const RawJsonReportRequestSchema = z
   .object({
     runId: z.string(),
     hash: z.string().optional(),
-    config: z.object({
-      env: z.string().optional(),
-      version: z.string().optional(),
-    }).optional(),
+    config: z
+      .object({
+        env: z.string().optional(),
+        version: z.string().optional(),
+      })
+      .optional(),
     stats: z
       .object({
         startTime: z.string().optional(),
@@ -350,14 +354,18 @@ const ResultsStatsSchema = z
       errors: z.number(),
       assumptions: z.number(),
     }),
-    topErrors: z.array(z.object({
-      title: z.string(),
-      count: z.number(),
-    })),
-    topIssues: z.array(z.object({
-      title: z.string(),
-      count: z.number(),
-    })),
+    topErrors: z.array(
+      z.object({
+        title: z.string(),
+        count: z.number(),
+      }),
+    ),
+    topIssues: z.array(
+      z.object({
+        title: z.string(),
+        count: z.number(),
+      }),
+    ),
   })
   .openapi("ResultsStats");
 
@@ -448,15 +456,28 @@ export function generateOpenAPISpec() {
   registry.registerPath({
     method: "get",
     path: "/api/v1/issues/with-stats",
-    description: "Retrieves all issues with their statistics including occurrence count, first/last occurrence, impacted tests count, and time-based distribution. Optionally filter statistics by date range.",
+    description:
+      "Retrieves all issues with their statistics including occurrence count, first/last occurrence, impacted tests count, and time-based distribution. Optionally filter statistics by date range.",
     request: {
       query: z.object({
         category: z.nativeEnum(IssueCategory).optional(),
         name: z.string().optional(),
         page: z.number().default(1).optional(),
         limit: z.number().default(10).optional(),
-        statFrom: z.string().datetime().optional().describe("Start date for statistics in ISO format (YYYY-MM-DDTHH:mm:ss.sssZ)"),
-        statTo: z.string().datetime().optional().describe("End date for statistics in ISO format (YYYY-MM-DDTHH:mm:ss.sssZ)")
+        statFrom: z
+          .string()
+          .datetime()
+          .optional()
+          .describe(
+            "Start date for statistics in ISO format (YYYY-MM-DDTHH:mm:ss.sssZ)",
+          ),
+        statTo: z
+          .string()
+          .datetime()
+          .optional()
+          .describe(
+            "End date for statistics in ISO format (YYYY-MM-DDTHH:mm:ss.sssZ)",
+          ),
       }),
     },
     responses: {
@@ -465,22 +486,26 @@ export function generateOpenAPISpec() {
         content: {
           "application/json": {
             schema: z.object({
-              issues: z.array(z.object({
-                ...IssueSchema.shape,
-                statistics: z.object({
-                  occurrenceCount: z.number(),
-                  firstOccurrence: z.date().nullable(),
-                  lastOccurrence: z.date().nullable(),
-                  impactedTestsCount: z.number(),
-                  timeDistribution: z.array(z.object({
-                    date: z.string(),
-                    count: z.number()
-                  }))
-                })
-              })),
+              issues: z.array(
+                z.object({
+                  ...IssueSchema.shape,
+                  statistics: z.object({
+                    occurrenceCount: z.number(),
+                    firstOccurrence: z.date().nullable(),
+                    lastOccurrence: z.date().nullable(),
+                    impactedTestsCount: z.number(),
+                    timeDistribution: z.array(
+                      z.object({
+                        date: z.string(),
+                        count: z.number(),
+                      }),
+                    ),
+                  }),
+                }),
+              ),
               total: z.number(),
               page: z.number(),
-              totalPages: z.number()
+              totalPages: z.number(),
             }),
           },
         },
@@ -866,10 +891,16 @@ export function generateOpenAPISpec() {
   registry.registerPath({
     method: "get",
     path: "/api/v1/results-stats",
-    description: "Retrieves statistical analysis of test results including status counts, entity counts, and top errors/issues for specified dates",
+    description:
+      "Retrieves statistical analysis of test results including status counts, entity counts, and top errors/issues for specified dates",
     request: {
       query: z.object({
-        dates: z.array(z.string()).optional().describe("Array of dates in YYYY-MM-DD format to filter results. If not provided, returns stats for all results."),
+        dates: z
+          .array(z.string())
+          .optional()
+          .describe(
+            "Array of dates in YYYY-MM-DD format to filter results. If not provided, returns stats for all results.",
+          ),
       }),
     },
     responses: {
@@ -1192,7 +1223,8 @@ export function generateOpenAPISpec() {
   registry.registerPath({
     method: "post",
     path: "/api/v1/json-report/upload",
-    description: "Accepts JSON test report files for processing. Supports large files that exceed POST body size limits.",
+    description:
+      "Accepts JSON test report files for processing. Supports large files that exceed POST body size limits.",
     request: {
       body: {
         content: {
@@ -1201,9 +1233,9 @@ export function generateOpenAPISpec() {
               report: z.string().openapi({
                 type: "string",
                 format: "binary",
-                description: "JSON test report file to upload"
-              })
-            })
+                description: "JSON test report file to upload",
+              }),
+            }),
           },
         },
       },
@@ -1226,7 +1258,7 @@ export function generateOpenAPISpec() {
         },
       },
     },
-    tags: ["Reports"],
+    tags: ["Reports", "Results"],
   });
 
   // Status route
@@ -1476,8 +1508,9 @@ export function generateOpenAPISpec() {
   // Test Analysis endpoint
   registry.registerPath({
     method: "post",
-    path: "/api/v1/test-analysis/analyze", 
-    description: "Analyzes test results using AI to categorize failures and provide insights",
+    path: "/api/v1/test-analysis/analyze",
+    description:
+      "Analyzes test results using AI to categorize failures and provide insights",
     request: {
       body: {
         content: {
