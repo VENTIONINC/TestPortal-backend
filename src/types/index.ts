@@ -2,6 +2,7 @@
 export * from "@/types/database";
 export * from "@/types/api";
 export * from "@/types/mcp";
+export * from "@/types/tests";
 
 // Express types extensions
 import type { Request } from "express";
@@ -81,3 +82,4 @@ export interface UpdateIssueParams {
   ticket?: string;
   updatedById?: number;
 }
+
