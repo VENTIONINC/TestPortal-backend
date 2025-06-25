@@ -18,6 +18,7 @@ interface ResultCreateInput {
   analysisStatus?: string;
   analysisCategory?: string;
   analysisConfidence?: number;
+  analysisConclusion?: string;
   spec: { connect: { id: number } };
   execution: { connect: { id: number } };
   errors?: { connect: { id: number } };
@@ -266,6 +267,7 @@ export const jsonReportService = {
         analysisStatus: analysis.status,
         analysisCategory: analysis.category,
         analysisConfidence: analysis.confidence,
+        analysisConclusion: analysis.conclusion,
       }),
       spec: {
         connect: {

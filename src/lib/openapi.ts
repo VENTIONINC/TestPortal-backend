@@ -174,6 +174,7 @@ const TestResultAnalysisSchema = z
       .enum(["bug", "infra", "performance", "script", "other"])
       .optional(),
     confidence: z.number().min(0).max(1),
+    conclusion: z.string().optional(),
   })
   .openapi("TestResultAnalysis");
 

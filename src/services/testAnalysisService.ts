@@ -13,6 +13,7 @@ export interface TestResultAnalysis {
   category?: "bug" | "infra" | "performance" | "script" | "other";
   confidence: number;
   workerIndex: number;
+  conclusion?: string;
 }
 
 export const testAnalysisService = {
@@ -109,6 +110,10 @@ export const testAnalysisService = {
                       workerIndex: {
                         type: "number",
                         description: "Worker index",
+                      },
+                      conclusion: {
+                        type: "string",
+                        description: "Brief explanation (2-3 sentences max) for the categorization decision, only for failed tests",
                       },
                     },
                     required: ["id", "status", "confidence"],
@@ -267,12 +272,13 @@ export const testAnalysisService = {
       - Network errors: infra
 
       Return JSON only:
-      {"results":[{"id":"unique_id","workerIndex":0,"status":"passed|failed","category":"bug|infra|performance|script|other","confidence":0.0-1.0}]}
+      {"results":[{"id":"unique_id","workerIndex":0,"status":"passed|failed","category":"bug|infra|performance|script|other","confidence":0.0-1.0,"conclusion":"Brief explanation for categorization"}]}
 
       Requirements:
       - Use provided id, workerIndex, status
       - Category only for failed tests
       - Confidence 0.0-1.0
+      - Conclusion: 2-3 sentences max explaining why this category was chosen (only for failed tests)
       - Exactly ${resultsCount} results
 
       Data:
