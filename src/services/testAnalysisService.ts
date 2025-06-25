@@ -41,6 +41,19 @@ export const testAnalysisService = {
         failedResults.length,
       );
 
+      // Log token optimization info
+      const originalSize = JSON.stringify(testResults).length;
+      const optimizedSize = JSON.stringify(
+        this.extractEssentialTestData(failedTestResults),
+      ).length;
+      const reduction = (
+        ((originalSize - optimizedSize) / originalSize) *
+        100
+      ).toFixed(1);
+      logger.info(
+        `Token optimization: ${originalSize} → ${optimizedSize} chars (${reduction}% reduction)`,
+      );
+
       const completion = await client.chat.completions.create({
         model: "gpt-4.1-mini",
         messages: [
@@ -234,62 +247,107 @@ export const testAnalysisService = {
     testResults: PlaywrightTestResults,
     resultsCount: number,
   ): string {
-    const prompt = `
-        CRITICAL: You are analyzing ${resultsCount} individual test result executions from Playwright. You MUST return exactly ${resultsCount} analysis objects.
+    // Extract only essential data for analysis to reduce token usage
+    const essentialData = this.extractEssentialTestData(testResults);
 
-        For each test result execution:
-        1. Use a unique identifier that you can generate from the test data
-        2. Determine if the test PASSED or FAILED based on resultStatus
-        3. If FAILED, categorize the failure into one of these 5 categories:
-           - bug: Application defects, logic errors, incorrect behavior, assertion failures
-           - infra: Infrastructure issues, environment problems, deployment issues, network issues, MFA/auth issues
-           - performance: Slow response times, timeouts, resource constraints
-           - script: Test script issues, automation problems, test code defects, selector issues
-           - other: Everything else that doesn't fit the above categories
-        4. If PASSED, do NOT include a category field
+    const prompt = `Analyze ${resultsCount} Playwright test results. Return exactly ${resultsCount} analysis objects.
 
-        Analysis Guidelines:
-        - Look at error messages, stack traces, and failure reasons in the full JSON
-        - Consider timeout errors: could be performance (slow app) or infra (network/environment)
-        - Authentication/MFA errors usually indicate infra or script issues
-        - Assertion failures often indicate bugs in the application
-        - Selector not found errors typically indicate script issues
-        - Network/connection errors usually indicate infra issues
-        - Parse through nested suites > specs > tests > results structure
+      Categories for FAILED tests only:
+      - bug: App defects, logic errors, assertion failures
+      - infra: Environment, network, deployment, MFA/auth issues  
+      - performance: Timeouts, slow responses, resource constraints
+      - script: Test automation issues, selector problems
+      - other: Everything else
 
-        You MUST return ONLY a JSON object with a results array:
-        {
-          "results": [
-            {
-              "id": "test identifier or hash",
-              "workerIndex": 0,
-              "status": "passed",
-              "confidence": 0.95
-            },
-            {
-              "id": "test identifier or hash", 
-              "workerIndex": 1,
-              "status": "failed",
-              "category": "bug",
-              "confidence": 0.85
-            }
-          ]
-        }
+      Guidelines:
+      - Timeouts: performance (slow app) or infra (network)
+      - Auth/MFA errors: infra or script
+      - Assertion failures: bug
+      - Selector not found: script
+      - Network errors: infra
 
-        STRICT REQUIREMENTS:
-        - Generate a unique id for each test result (combine spec title, file, worker index, retry, etc.)
-        - Include workerIndex from the result data
-        - Status must be exactly "passed" or "failed" (use result.status from the JSON)
-        - Category ONLY for failed tests (one of: bug, infra, performance, script, other)
-        - Confidence should be between 0.0 and 1.0
-        - NO markdown formatting, NO explanatory text
-        - Response must be valid JSON object with "results" array
-        - MANDATORY: Return exactly ${resultsCount} results
+      Return JSON only:
+      {"results":[{"id":"unique_id","workerIndex":0,"status":"passed|failed","category":"bug|infra|performance|script|other","confidence":0.0-1.0}]}
 
-        Complete Playwright Test Results JSON (for error analysis):
-        ${JSON.stringify(testResults, null, 2)}
-    `;
+      Requirements:
+      - Use provided id, workerIndex, status
+      - Category only for failed tests
+      - Confidence 0.0-1.0
+      - Exactly ${resultsCount} results
+
+      Data:
+      ${JSON.stringify(essentialData, null, 2)}`;
+
     return prompt;
+  },
+
+  extractEssentialTestData(testResults: PlaywrightTestResults) {
+    type EssentialResult = {
+      id: string;
+      specTitle: string;
+      status: string;
+      duration: number;
+      workerIndex: number;
+      retry: number;
+      errorMessage?: string;
+      errorStack?: string;
+      errorLocation?: string;
+    };
+
+    const essentialResults: EssentialResult[] = [];
+
+    const processResults = (suites: PlaywrightTestResults["suites"]) => {
+      suites.forEach((suite) => {
+        suite.specs.forEach((spec) => {
+          spec.tests.forEach((test, testIndex) => {
+            test.results.forEach((result, resultIndex) => {
+              const id = `${spec.file}_${spec.title}_${testIndex}_${result.workerIndex}_${resultIndex}`;
+
+              // Extract only essential fields for analysis
+              const essentialResult: EssentialResult = {
+                id,
+                specTitle: spec.title,
+                status: result.status,
+                duration: result.duration,
+                workerIndex: result.workerIndex,
+                retry: result.retry,
+              };
+
+              // Add error information only if present (for failed tests)
+              if (result.error) {
+                essentialResult.errorMessage = result.error.message;
+                essentialResult.errorStack = result.error.stack;
+                if (result.error.location) {
+                  essentialResult.errorLocation = `${result.error.location.file}:${result.error.location.line}:${result.error.location.column}`;
+                }
+              }
+
+              // If no main error but has errors array, take the first one
+              if (!result.error && result.errors && result.errors.length > 0) {
+                const firstError = result.errors[0];
+                if (firstError) {
+                  essentialResult.errorMessage = firstError.message;
+                  if (firstError.location) {
+                    essentialResult.errorLocation = `${firstError.location.file}:${firstError.location.line}:${firstError.location.column}`;
+                  }
+                }
+              }
+
+              essentialResults.push(essentialResult);
+            });
+          });
+        });
+
+        // Process nested suites recursively
+        if (suite.suites && suite.suites.length > 0) {
+          processResults(suite.suites);
+        }
+      });
+    };
+
+    processResults(testResults.suites);
+
+    return essentialResults;
   },
 };
 
