@@ -12,12 +12,21 @@ export const getTestAnalysisPrompt = (testResultsLength: number) => `
 
   <!-- ===== CATEGORIZATION SCHEMA ===== -->
   <categories>
-    <category id="bug">Application defects, logic errors, incorrect behavior.</category>
-    <category id="infra">Infrastructure / environment / deployment issues.</category>
-    <category id="performance">Slow response, timeouts, resource constraints.</category>
-    <category id="script">Automation-script or test-code defects.</category>
+    <category id="bug">App defects, logic errors, assertion failures.</category>
+    <category id="infra">Environment, network, deployment, MFA/auth issues.</category>
+    <category id="performance">Timeouts, slow responses, resource constraints.</category>
+    <category id="script">Test automation issues, selector problems.</category>
     <category id="other">Everything else</category>
   </categories>
+
+  <!-- ===== CATEGORIZATION GUIDELINES ===== -->
+  <guidelines>
+    <rule>Timeouts: performance (slow app) or infra (network)</rule>
+    <rule>Auth/MFA errors: infra or script</rule>
+    <rule>Assertion failures: bug</rule>
+    <rule>Selector not found: script</rule>
+    <rule>Network errors: infra</rule>
+  </guidelines>
 
   <!-- ===== INPUT CONTRACT ===== -->
   <input>
@@ -44,9 +53,11 @@ export const getTestAnalysisPrompt = (testResultsLength: number) => `
   <strict>
     <rule>Extract test ID from <code>customReport.testNameHash</code>,
           <code>customReport.testName</code>, or synthesise from available identifiers.</rule>
+    <rule>Use provided id, workerIndex, status from the test data.</rule>
     <rule><field>status</field> must be exactly "passed" or "failed".</rule>
     <rule><field>category</field> present only for failed tests (one of: bug, infra, performance, script, other).</rule>
     <rule><field>confidence</field> must be a float 0.0 - 1.0.</rule>
+    <rule><field>workerIndex</field> must be included as provided in the test data.</rule>
     <rule><field>conclusion</field> must be a 2-3 sentence string explaining the analysis.</rule>
     <rule>No markdown outside the JSON structure; respond with pure JSON.</rule>
     <rule>The results array length <must>match <var>${testResultsLength}</var></must>.</rule>
@@ -61,6 +72,7 @@ export const getTestAnalysisPrompt = (testResultsLength: number) => `
           {
             "id": "test identifier or hash",
             "status": "passed",
+            "workerIndex": 0,
             "confidence": 0.95,
             "conclusion": "The test passed as the API returned the expected success status. All checks were completed without errors."
           },
@@ -68,6 +80,7 @@ export const getTestAnalysisPrompt = (testResultsLength: number) => `
             "id": "test identifier or hash",
             "status": "failed",
             "category": "bug",
+            "workerIndex": 1,
             "confidence": 0.85,
             "conclusion": "The test failed due to an assertion error in the response body. This indicates a potential application defect."
           }
@@ -90,6 +103,7 @@ export const getTestAnalysisPrompt = (testResultsLength: number) => `
           "testNameHash": "abc123def456",
           "status": "failed",
           "duration": 1500,
+          "workerIndex": 0,
           "error": {
             "message": "AssertionError: Expected 'Welcome, User!' to equal 'Welcome, Admin!'",
             "stack": "at Test.Login.validCredentials (test/login.js:25:12)"
@@ -101,6 +115,7 @@ export const getTestAnalysisPrompt = (testResultsLength: number) => `
           "id": "abc123def456",
           "status": "failed",
           "category": "bug",
+          "workerIndex": 0,
           "confidence": 0.9,
           "conclusion": "The test failed because of an assertion error where the actual welcome message did not match the expected one. This points to a likely defect in the application's user greeting logic."
         }
@@ -117,6 +132,7 @@ export const getTestAnalysisPrompt = (testResultsLength: number) => `
             "status": "pass",
             "executionTime": 85
           },
+          "workerIndex": 1,
           "customReport": {
             "testName": "API health check",
             "testNameHash": "xyz789ghi012"
@@ -127,6 +143,7 @@ export const getTestAnalysisPrompt = (testResultsLength: number) => `
         {
           "id": "xyz789ghi012",
           "status": "passed",
+          "workerIndex": 1,
           "confidence": 1.0,
           "conclusion": "The test passed successfully. The API health check returned a 'pass' status and completed quickly, indicating the service is operational."
         }

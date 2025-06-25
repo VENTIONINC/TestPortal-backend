@@ -43,8 +43,6 @@ export const testAnalysisService = {
     try {
       const { passedResults, failedResults, allResults } =
         this.extractTestResults(testResults);
-      const systemPrompt = getTestAnalysisPrompt(passedResults.length);
-      const userPrompt = JSON.stringify(passedResults);
 
       if (failedResults.length === 0) {
         logger.info(
@@ -54,15 +52,14 @@ export const testAnalysisService = {
         return passedResults;
       }
 
-      // If there are failures, analyze only failed tests
       const failedTestResults = this.createFilteredTestResults(
         testResults,
         failedResults,
       );
-      const prompt = this.buildTestAnalysisPrompt(
-        failedTestResults,
-        failedResults.length,
-      );
+
+      const essentialData = this.extractEssentialTestData(failedTestResults);
+      const systemPrompt = getTestAnalysisPrompt(essentialData.length);
+      const userPrompt = JSON.stringify(essentialData);
 
       // Log token optimization info
       const originalSize = JSON.stringify(testResults).length;
@@ -268,45 +265,6 @@ export const testAnalysisService = {
       ...originalResults,
       suites: filterSuites(originalResults.suites),
     };
-  },
-
-  buildTestAnalysisPrompt(
-    testResults: PlaywrightTestResults,
-    resultsCount: number,
-  ): string {
-    // Extract only essential data for analysis to reduce token usage
-    const essentialData = this.extractEssentialTestData(testResults);
-
-    const prompt = `Analyze ${resultsCount} Playwright test results. Return exactly ${resultsCount} analysis objects.
-
-      Categories for FAILED tests only:
-      - bug: App defects, logic errors, assertion failures
-      - infra: Environment, network, deployment, MFA/auth issues  
-      - performance: Timeouts, slow responses, resource constraints
-      - script: Test automation issues, selector problems
-      - other: Everything else
-
-      Guidelines:
-      - Timeouts: performance (slow app) or infra (network)
-      - Auth/MFA errors: infra or script
-      - Assertion failures: bug
-      - Selector not found: script
-      - Network errors: infra
-
-      Return JSON only:
-      {"results":[{"id":"unique_id","workerIndex":0,"status":"passed|failed","category":"bug|infra|performance|script|other","confidence":0.0-1.0,"conclusion":"Brief explanation for categorization"}]}
-
-      Requirements:
-      - Use provided id, workerIndex, status
-      - Category only for failed tests
-      - Confidence 0.0-1.0
-      - Conclusion: 2-3 sentences max explaining why this category was chosen (only for failed tests)
-      - Exactly ${resultsCount} results
-
-      Data:
-      ${JSON.stringify(essentialData, null, 2)}`;
-
-    return prompt;
   },
 
   extractEssentialTestData(testResults: PlaywrightTestResults) {
