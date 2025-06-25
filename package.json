@@ -38,6 +38,7 @@
     "log4js": "^6.9.1",
     "multer": "^2.0.1",
     "nodemon": "^3.1.7",
+    "openai": "^5.7.0",
     "pg": "^8.16.0",
     "sqlite3": "^5.1.7",
     "string-similarity": "^4.0.4",
