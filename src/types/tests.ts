@@ -6,7 +6,7 @@ export interface PlaywrightSpecTest {
   projectName: string;
   results: Array<{
     workerIndex: number;
-    status: string;
+    status: "passed" | "failed";
     duration: number;
     error?: {
       message: string;

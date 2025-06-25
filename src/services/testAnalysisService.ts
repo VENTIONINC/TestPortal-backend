@@ -1,27 +1,11 @@
+import OpenAI from "openai";
+
 import getLogger from "@/lib/logger";
 import { PlaywrightTestResults } from "@/types";
 
-const logger = getLogger("test-analysis");
+const client = new OpenAI();
 
-export interface TestAnalysisResponse {
-  id: string;
-  object: string;
-  created: number;
-  model: string;
-  choices: Array<{
-    index: number;
-    message: {
-      role: string;
-      content: string;
-    };
-    finish_reason: string;
-  }>;
-  usage: {
-    prompt_tokens: number;
-    completion_tokens: number;
-    total_tokens: number;
-  };
-}
+const logger = getLogger("test-analysis");
 
 export interface TestResultAnalysis {
   id: string;
@@ -31,32 +15,46 @@ export interface TestResultAnalysis {
   workerIndex: number;
 }
 
-export interface TestAnalysisRequest {
-  model: string;
-  messages: Array<{
-    role: string;
-    content: string;
-  }>;
-  temperature?: number;
-  max_tokens?: number;
-  response_format?: {
-    type: "json_schema";
-    json_schema: {
-      name: string;
-      strict: boolean;
-      schema: object;
-    };
-  };
-}
-
 export const testAnalysisService = {
   async analyzeTestResults(
     testResults: PlaywrightTestResults,
   ): Promise<TestResultAnalysis[]> {
     try {
-      const prompt = this.buildTestAnalysisPrompt(testResults);
+      const { passedResults, failedResults, allResults } =
+        this.extractTestResults(testResults);
 
-      const requestData: TestAnalysisRequest = {
+      if (failedResults.length === 0) {
+        logger.info(
+          `All ${allResults.length} tests passed, skipping OpenAI analysis`,
+        );
+
+        return passedResults;
+      }
+
+      // If there are failures, analyze only failed tests
+      const failedTestResults = this.createFilteredTestResults(
+        testResults,
+        failedResults,
+      );
+      const prompt = this.buildTestAnalysisPrompt(
+        failedTestResults,
+        failedResults.length,
+      );
+
+      // Log token optimization info
+      const originalSize = JSON.stringify(testResults).length;
+      const optimizedSize = JSON.stringify(
+        this.extractEssentialTestData(failedTestResults),
+      ).length;
+      const reduction = (
+        ((originalSize - optimizedSize) / originalSize) *
+        100
+      ).toFixed(1);
+      logger.info(
+        `Token optimization: ${originalSize} → ${optimizedSize} chars (${reduction}% reduction)`,
+      );
+
+      const completion = await client.chat.completions.create({
         model: "gpt-4.1-mini",
         messages: [
           {
@@ -69,7 +67,6 @@ export const testAnalysisService = {
           },
         ],
         temperature: 0.7,
-        max_tokens: 2000,
         response_format: {
           type: "json_schema",
           json_schema: {
@@ -124,135 +121,233 @@ export const testAnalysisService = {
             },
           },
         },
-      };
+      });
 
-      const response = await fetch(
-        "https://api.openai.com/v1/chat/completions",
-        {
-          method: "POST",
-          headers: {
-            Authorization: `Bearer ${process.env.OPENAI_API_KEY}`,
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(requestData),
-        },
-      );
-
-      if (!response.ok) {
-        const errorData = await response.text();
-        logger.error(`OpenAI API error: ${response.status} - ${errorData}`);
-        console.log(errorData);
-        throw new Error(
-          `OpenAI API error: ${response.status} - ${response.statusText}`,
-        );
-      }
-
-      const data = (await response.json()) as TestAnalysisResponse;
-      const analysisContent = data.choices[0]?.message?.content;
+      const analysisContent = completion.choices[0]?.message?.content;
 
       if (!analysisContent) {
         throw new Error("No analysis content received from OpenAI");
       }
 
-      // With structured outputs, the response is guaranteed to be valid JSON
+      // Parse OpenAI response for failed tests
       const analysisResponse = JSON.parse(analysisContent) as {
         results: TestResultAnalysis[];
       };
-      const analysisResults = analysisResponse.results;
+      const failedAnalysisResults = analysisResponse.results;
+
+      const combinedResults = [...failedAnalysisResults, ...passedResults];
+
       logger.info(
-        `Successfully analyzed ${analysisResults.length} test results`,
+        `Successfully analyzed ${combinedResults.length} test results (${failedAnalysisResults.length} failed via OpenAI, ${passedResults.length} passed mocked)`,
       );
 
-      return analysisResults;
+      return combinedResults;
     } catch (error) {
       logger.error("Error analyzing test results:", error);
       throw error;
     }
   },
 
-  buildTestAnalysisPrompt(testResults: PlaywrightTestResults): string {
-    // Recursively count test results from nested suites
-    const countTestResults = (
-      suites: PlaywrightTestResults["suites"],
-    ): number => {
-      return suites.reduce((acc, suite) => {
-        // Count results from specs in this suite
-        let suiteCount = suite.specs.reduce((specAcc, spec) => {
-          return (
-            specAcc +
-            spec.tests.reduce((testAcc, test) => {
-              return testAcc + test.results.length;
-            }, 0)
-          );
-        }, 0);
+  extractTestResults(testResults: PlaywrightTestResults): {
+    passedResults: TestResultAnalysis[];
+    failedResults: TestResultAnalysis[];
+    allResults: TestResultAnalysis[];
+  } {
+    const allResults: TestResultAnalysis[] = [];
 
-        // Recursively count results from nested suites
+    const processResults = (suites: PlaywrightTestResults["suites"]) => {
+      suites.forEach((suite) => {
+        suite.specs.forEach((spec) => {
+          spec.tests.forEach((test, testIndex) => {
+            test.results.forEach((result, resultIndex) => {
+              const id = `${spec.file}_${spec.title}_${testIndex}_${result.workerIndex}_${resultIndex}`;
+              allResults.push({
+                id,
+                workerIndex: result.workerIndex,
+                status: result.status,
+                confidence: 1,
+              });
+            });
+          });
+        });
+
+        // Process nested suites recursively
         if (suite.suites && suite.suites.length > 0) {
-          suiteCount += countTestResults(suite.suites);
+          processResults(suite.suites);
         }
-
-        return acc + suiteCount;
-      }, 0);
+      });
     };
 
-    const testResultsCount = countTestResults(testResults.suites);
+    processResults(testResults.suites);
 
-    const prompt = `
-        CRITICAL: You are analyzing ${testResultsCount} individual test result executions from Playwright. You MUST return exactly ${testResultsCount} analysis objects.
+    const passedResults = allResults.filter(
+      (result) => result.status === "passed",
+    );
+    const failedResults = allResults.filter(
+      (result) => result.status !== "passed",
+    );
 
-        For each test result execution:
-        1. Use a unique identifier that you can generate from the test data
-        2. Determine if the test PASSED or FAILED based on resultStatus
-        3. If FAILED, categorize the failure into one of these 5 categories:
-           - bug: Application defects, logic errors, incorrect behavior, assertion failures
-           - infra: Infrastructure issues, environment problems, deployment issues, network issues, MFA/auth issues
-           - performance: Slow response times, timeouts, resource constraints
-           - script: Test script issues, automation problems, test code defects, selector issues
-           - other: Everything else that doesn't fit the above categories
-        4. If PASSED, do NOT include a category field
+    return { passedResults, failedResults, allResults };
+  },
 
-        Analysis Guidelines:
-        - Look at error messages, stack traces, and failure reasons in the full JSON
-        - Consider timeout errors: could be performance (slow app) or infra (network/environment)
-        - Authentication/MFA errors usually indicate infra or script issues
-        - Assertion failures often indicate bugs in the application
-        - Selector not found errors typically indicate script issues
-        - Network/connection errors usually indicate infra issues
-        - Parse through nested suites > specs > tests > results structure
+  createFilteredTestResults(
+    originalResults: PlaywrightTestResults,
+    failedResults: TestResultAnalysis[],
+  ): PlaywrightTestResults {
+    const failedIds = new Set(failedResults.map((r) => r.id));
 
-        You MUST return ONLY a JSON object with a results array:
-        {
-          "results": [
-            {
-              "id": "test identifier or hash",
-              "workerIndex": 0,
-              "status": "passed",
-              "confidence": 0.95
-            },
-            {
-              "id": "test identifier or hash", 
-              "workerIndex": 1,
-              "status": "failed",
-              "category": "bug",
-              "confidence": 0.85
-            }
-          ]
-        }
+    const filterSuites = (
+      suites: PlaywrightTestResults["suites"],
+    ): PlaywrightTestResults["suites"] => {
+      return suites
+        .map((suite) => {
+          const filteredSpecs = suite.specs
+            .map((spec) => {
+              const filteredTests = spec.tests
+                .map((test, testIndex) => {
+                  const filteredTestResults = test.results.filter(
+                    (result, resultIndex) => {
+                      const id = `${spec.file}_${spec.title}_${testIndex}_${result.workerIndex}_${resultIndex}`;
 
-        STRICT REQUIREMENTS:
-        - Generate a unique id for each test result (combine spec title, file, worker index, retry, etc.)
-        - Include workerIndex from the result data
-        - Status must be exactly "passed" or "failed" (use result.status from the JSON)
-        - Category ONLY for failed tests (one of: bug, infra, performance, script, other)
-        - Confidence should be between 0.0 and 1.0
-        - NO markdown formatting, NO explanatory text
-        - Response must be valid JSON object with "results" array
-        - MANDATORY: Return exactly ${testResultsCount} results
+                      return failedIds.has(id);
+                    },
+                  );
 
-        Complete Playwright Test Results JSON (for error analysis):
-        ${JSON.stringify(testResults, null, 2)}
-    `;
+                  return { ...test, results: filteredTestResults };
+                })
+                .filter((test) => test.results.length > 0);
+
+              return { ...spec, tests: filteredTests };
+            })
+            .filter((spec) => spec.tests.length > 0);
+
+          const filteredNestedSuites = suite.suites
+            ? filterSuites(suite.suites)
+            : [];
+
+          return {
+            ...suite,
+            specs: filteredSpecs,
+            suites: filteredNestedSuites,
+          };
+        })
+        .filter(
+          (suite) =>
+            suite.specs.length > 0 || (suite.suites && suite.suites.length > 0),
+        );
+    };
+
+    return {
+      ...originalResults,
+      suites: filterSuites(originalResults.suites),
+    };
+  },
+
+  buildTestAnalysisPrompt(
+    testResults: PlaywrightTestResults,
+    resultsCount: number,
+  ): string {
+    // Extract only essential data for analysis to reduce token usage
+    const essentialData = this.extractEssentialTestData(testResults);
+
+    const prompt = `Analyze ${resultsCount} Playwright test results. Return exactly ${resultsCount} analysis objects.
+
+      Categories for FAILED tests only:
+      - bug: App defects, logic errors, assertion failures
+      - infra: Environment, network, deployment, MFA/auth issues  
+      - performance: Timeouts, slow responses, resource constraints
+      - script: Test automation issues, selector problems
+      - other: Everything else
+
+      Guidelines:
+      - Timeouts: performance (slow app) or infra (network)
+      - Auth/MFA errors: infra or script
+      - Assertion failures: bug
+      - Selector not found: script
+      - Network errors: infra
+
+      Return JSON only:
+      {"results":[{"id":"unique_id","workerIndex":0,"status":"passed|failed","category":"bug|infra|performance|script|other","confidence":0.0-1.0}]}
+
+      Requirements:
+      - Use provided id, workerIndex, status
+      - Category only for failed tests
+      - Confidence 0.0-1.0
+      - Exactly ${resultsCount} results
+
+      Data:
+      ${JSON.stringify(essentialData, null, 2)}`;
+
     return prompt;
+  },
+
+  extractEssentialTestData(testResults: PlaywrightTestResults) {
+    type EssentialResult = {
+      id: string;
+      specTitle: string;
+      status: string;
+      duration: number;
+      workerIndex: number;
+      retry: number;
+      errorMessage?: string;
+      errorStack?: string;
+      errorLocation?: string;
+    };
+
+    const essentialResults: EssentialResult[] = [];
+
+    const processResults = (suites: PlaywrightTestResults["suites"]) => {
+      suites.forEach((suite) => {
+        suite.specs.forEach((spec) => {
+          spec.tests.forEach((test, testIndex) => {
+            test.results.forEach((result, resultIndex) => {
+              const id = `${spec.file}_${spec.title}_${testIndex}_${result.workerIndex}_${resultIndex}`;
+
+              // Extract only essential fields for analysis
+              const essentialResult: EssentialResult = {
+                id,
+                specTitle: spec.title,
+                status: result.status,
+                duration: result.duration,
+                workerIndex: result.workerIndex,
+                retry: result.retry,
+              };
+
+              // Add error information only if present (for failed tests)
+              if (result.error) {
+                essentialResult.errorMessage = result.error.message;
+                essentialResult.errorStack = result.error.stack;
+                if (result.error.location) {
+                  essentialResult.errorLocation = `${result.error.location.file}:${result.error.location.line}:${result.error.location.column}`;
+                }
+              }
+
+              // If no main error but has errors array, take the first one
+              if (!result.error && result.errors && result.errors.length > 0) {
+                const firstError = result.errors[0];
+                if (firstError) {
+                  essentialResult.errorMessage = firstError.message;
+                  if (firstError.location) {
+                    essentialResult.errorLocation = `${firstError.location.file}:${firstError.location.line}:${firstError.location.column}`;
+                  }
+                }
+              }
+
+              essentialResults.push(essentialResult);
+            });
+          });
+        });
+
+        // Process nested suites recursively
+        if (suite.suites && suite.suites.length > 0) {
+          processResults(suite.suites);
+        }
+      });
+    };
+
+    processResults(testResults.suites);
+
+    return essentialResults;
   },
 };
 
