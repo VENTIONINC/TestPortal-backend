@@ -35,6 +35,10 @@ export interface PrismaResult {
   startTime: Date;
   specId: number;
   executionId: number;
+  analysisStatus?: string | null;
+  analysisCategory?: string | null;
+  analysisConfidence?: number | null;
+  analysisConclusion?: string | null;
 }
 
 export interface PrismaResultError {

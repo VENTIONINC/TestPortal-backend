@@ -18,6 +18,7 @@ interface ResultCreateInput {
   analysisStatus?: string;
   analysisCategory?: string;
   analysisConfidence?: number;
+  analysisConclusion?: string;
   spec: { connect: { id: number } };
   execution: { connect: { id: number } };
   errors?: { connect: { id: number } };
@@ -33,7 +34,7 @@ interface ReportData {
     startTime?: string | Date;
   };
   tests: TestSpec[];
-  analysis?: TestResultAnalysis;
+  analysis?: TestResultAnalysis[];
 }
 
 interface TestSpec {
@@ -55,6 +56,7 @@ interface TestResult {
   duration: number;
   startTime: string | Date;
   error?: ErrorData;
+  workerIndex: number;
 }
 
 interface ErrorData {
@@ -150,7 +152,7 @@ export const jsonReportService = {
   async _processSpecs(
     specs: TestSpec[],
     executionRecord: PrismaExecution,
-    analysis?: TestResultAnalysis,
+    analysis?: TestResultAnalysis[],
   ): Promise<void> {
     for (const spec of specs) {
       if (!spec.title) {
@@ -212,18 +214,22 @@ export const jsonReportService = {
     spec: TestSpec,
     specRecord: PrismaSpec,
     executionRecord: PrismaExecution,
-    analysis?: TestResultAnalysis,
+    analysis?: TestResultAnalysis[],
   ): Promise<void> {
     if (!spec.results?.length) {
       throw new Error(`Spec (#${specRecord.id}) report has no results data`);
     }
 
     for (const result of spec.results) {
+      const resultAnalysis = analysis?.find(
+        (analysis) => analysis.workerIndex === result.workerIndex,
+      );
+
       await this._createResultRecord(
         result,
         specRecord,
         executionRecord,
-        analysis,
+        resultAnalysis,
       );
     }
   },
@@ -261,6 +267,7 @@ export const jsonReportService = {
         analysisStatus: analysis.status,
         analysisCategory: analysis.category,
         analysisConfidence: analysis.confidence,
+        analysisConclusion: analysis.conclusion,
       }),
       spec: {
         connect: {

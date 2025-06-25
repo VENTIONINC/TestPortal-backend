@@ -91,9 +91,8 @@ export const jsonReportController = {
       // Analyze test results before processing
       let analysisResults = null;
       try {
-        analysisResults = await testAnalysisService.analyzeTestResults([
-          rawJsonReport,
-        ]);
+        analysisResults =
+          await testAnalysisService.analyzeTestResults(rawJsonReport);
         console.log(
           "Analysis completed:",
           analysisResults.length,
@@ -109,7 +108,7 @@ export const jsonReportController = {
 
       const result = await jsonReportService.processReport({
         ...transformedReport,
-        analysis: analysisResults?.[0],
+        analysis: analysisResults,
       });
 
       // Include analysis results in the response
