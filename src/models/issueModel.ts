@@ -106,4 +106,37 @@ export const issueModel = {
       data,
     });
   },
+
+  delete: async (id: number | string): Promise<PrismaIssue> => {
+    const issueId = Number(id);
+    
+    // Check if issue exists
+    const existingIssue = await dbClient.issue.findUnique({
+      where: { id: issueId },
+      include: {
+        assumptions: true,
+      },
+    });
+
+    if (!existingIssue) {
+      throw new Error(`Issue with ID ${issueId} not found`);
+    }
+
+    // Use a transaction to safely delete assumptions first, then the issue
+    return await dbClient.$transaction(async (tx) => {
+      // Delete all assumptions associated with this issue
+      if (existingIssue.assumptions.length > 0) {
+        await tx.assumption.deleteMany({
+          where: {
+            issueId,
+          },
+        });
+      }
+
+      // Delete the issue
+      return await tx.issue.delete({
+        where: { id: issueId },
+      });
+    });
+  },
 };

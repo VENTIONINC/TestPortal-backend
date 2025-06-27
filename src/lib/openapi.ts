@@ -413,7 +413,10 @@ export function generateOpenAPISpec() {
   registry.register("RefreshTokenRequest", RefreshTokenRequestSchema);
   registry.register("UserUpdateRequest", UserUpdateRequestSchema);
   registry.register("ResultsStats", ResultsStatsSchema);
-  registry.register("UpdateResultAnalysisRequest", UpdateResultAnalysisRequestSchema);
+  registry.register(
+    "UpdateResultAnalysisRequest",
+    UpdateResultAnalysisRequestSchema,
+  );
 
   // Base route
   registry.registerPath({
@@ -534,6 +537,49 @@ export function generateOpenAPISpec() {
       },
     },
     tags: ["Issues"],
+  });
+
+  registry.registerPath({
+    method: "delete",
+    path: "/api/v1/issues/{issueId}",
+    description:
+      "Deletes an issue by its ID. Also deletes all associated assumptions (cascade delete).",
+    request: {
+      params: z.object({
+        issueId: z.number(),
+      }),
+    },
+    responses: {
+      200: {
+        description:
+          "Issue and all associated assumptions deleted successfully",
+        content: {
+          "application/json": {
+            schema: z.object({
+              message: z.string(),
+              issue: IssueSchema,
+            }),
+          },
+        },
+      },
+      400: {
+        description: "Bad request",
+        content: {
+          "application/json": {
+            schema: ErrorResponseSchema,
+          },
+        },
+      },
+      404: {
+        description: "Issue not found",
+        content: {
+          "application/json": {
+            schema: ErrorResponseSchema,
+          },
+        },
+      },
+    },
+    tags: ["Issues", "Results"],
   });
 
   registry.registerPath({
@@ -826,6 +872,58 @@ export function generateOpenAPISpec() {
       },
     },
     tags: ["Issues"],
+  });
+
+  registry.registerPath({
+    method: "delete",
+    path: "/api/v2/issues/{issueId}",
+    description:
+      "Deletes an issue by its ID (requires authentication). Also deletes all associated assumptions (cascade delete).",
+    request: {
+      headers: AuthHeaderSchema,
+      params: z.object({
+        issueId: z.number(),
+      }),
+    },
+    responses: {
+      200: {
+        description:
+          "Issue and all associated assumptions deleted successfully",
+        content: {
+          "application/json": {
+            schema: z.object({
+              message: z.string(),
+              issue: IssueSchema,
+            }),
+          },
+        },
+      },
+      400: {
+        description: "Bad request",
+        content: {
+          "application/json": {
+            schema: ErrorResponseSchema,
+          },
+        },
+      },
+      401: {
+        description: "Unauthorized",
+        content: {
+          "application/json": {
+            schema: ErrorResponseSchema,
+          },
+        },
+      },
+      404: {
+        description: "Issue not found",
+        content: {
+          "application/json": {
+            schema: ErrorResponseSchema,
+          },
+        },
+      },
+    },
+    tags: ["Issues", "Results"],
   });
 
   // Results routes

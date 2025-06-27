@@ -9,6 +9,7 @@ router.get("/v1/issues/with-stats", issueController.getAllIssuesWithStats);
 router.get("/v1/issues/:issueId", issueController.getIssueById);
 router.post("/v1/issues", issueController.createIssue);
 router.patch("/v1/issues/:issueId", issueController.updateIssue);
+router.delete("/v1/issues/:issueId", issueController.deleteIssue);
 
 router.get("/v2/issues", authMiddleware, issueController.getAllIssuesV2);
 router.get(
@@ -27,5 +28,6 @@ router.patch(
   authMiddleware,
   issueController.updateIssue,
 );
+router.delete("/v2/issues/:issueId", authMiddleware, issueController.deleteIssue);
 
 export default router;

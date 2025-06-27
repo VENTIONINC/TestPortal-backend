@@ -252,4 +252,38 @@ export const issueController = {
       });
     }
   },
+
+  deleteIssue: async (req: Request, res: Response): Promise<void> => {
+    try {
+      const { issueId } = req.params;
+
+      if (!issueId) {
+        res.status(400).json({
+          error: "Issue ID is required",
+        });
+        return;
+      }
+
+      const deletedIssue = await issueService.deleteIssue(Number(issueId));
+      res.status(200).json({
+        message: "Issue and all associated assumptions deleted successfully",
+        issue: deletedIssue,
+      });
+    } catch (error) {
+      const err = error as Error;
+      
+      // Check if it's a "not found" error
+      if (err.message.includes("not found")) {
+        res.status(404).json({
+          error: err.message,
+        });
+        return;
+      }
+      
+      // General error
+      res.status(400).json({
+        error: `Failed to delete issue. ${err.message}`,
+      });
+    }
+  },
 };

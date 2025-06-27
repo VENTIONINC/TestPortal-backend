@@ -194,6 +194,26 @@ export const issueService = {
     return updatedIssue;
   },
 
+  async deleteIssue(issueId: number): Promise<PrismaIssue> {
+    if (!issueId) {
+      throw new Error("Issue ID is required");
+    }
+
+    // Validate ID format
+    const numericId = Number(issueId);
+    if (isNaN(numericId) || numericId <= 0) {
+      throw new Error("Issue ID must be a valid positive number");
+    }
+
+    try {
+      const deletedIssue = await issueModel.delete(issueId);
+      return deletedIssue;
+    } catch (error) {
+      const err = error as Error;
+      throw new Error(`Failed to delete issue: ${err.message}`);
+    }
+  },
+
   // Mock service for testing
   async getMockIssues(): Promise<PrismaIssue[]> {
     const mockIssues: PrismaIssue[] = [
