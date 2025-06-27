@@ -98,5 +98,49 @@ export const resultController = {
       });
     }
   },
+
+  updateAnalysis: async (req: Request, res: Response): Promise<void> => {
+    try {
+      const { resultId } = req.params;
+      const { analysisStatus, analysisCategory, analysisConfidence, analysisConclusion } = req.body;
+
+      if (!resultId) {
+        res.status(400).json({
+          error: "Result ID is required",
+        });
+        return;
+      }
+
+      // Build update object with only provided fields
+      const analysisData: {
+        analysisStatus?: string;
+        analysisCategory?: string;
+        analysisConfidence?: number;
+        analysisConclusion?: string;
+      } = {};
+
+      if (analysisStatus !== undefined) analysisData.analysisStatus = analysisStatus;
+      if (analysisCategory !== undefined) analysisData.analysisCategory = analysisCategory;
+      if (analysisConfidence !== undefined) analysisData.analysisConfidence = analysisConfidence;
+      if (analysisConclusion !== undefined) analysisData.analysisConclusion = analysisConclusion;
+
+      // Check if at least one field is provided
+      if (Object.keys(analysisData).length === 0) {
+        res.status(400).json({
+          error: "At least one analysis field must be provided (analysisStatus, analysisCategory, analysisConfidence, analysisConclusion)",
+        });
+        return;
+      }
+
+      const updatedResult = await resultService.updateAnalysis(resultId, analysisData);
+
+      res.status(200).json(updatedResult);
+    } catch (error) {
+      const err = error as Error;
+      res.status(400).json({
+        error: `Failed to update result analysis. ${err.message}`,
+      });
+    }
+  },
 };
 

@@ -520,5 +520,38 @@ export const resultModel = {
 
     return stats;
   },
+
+  updateAnalysis: async (
+    resultId: number | string,
+    analysisData: {
+      analysisStatus?: string;
+      analysisCategory?: string;
+      analysisConfidence?: number;
+      analysisConclusion?: string;
+    },
+  ): Promise<ResultWithRelations> => {
+    const updatedResult = await dbClient.result.update({
+      where: {
+        id: Number(resultId),
+      },
+      data: analysisData,
+      include: {
+        spec: true,
+        execution: true,
+        errors: {
+          include: {
+            result: true,
+            assumptions: {
+              include: {
+                issue: true,
+              },
+            },
+          },
+        },
+      },
+    });
+
+    return updatedResult;
+  },
 };
 

@@ -178,6 +178,18 @@ const TestResultAnalysisSchema = z
   })
   .openapi("TestResultAnalysis");
 
+// Result analysis update schemas
+const UpdateResultAnalysisRequestSchema = z
+  .object({
+    analysisStatus: z.enum(["passed", "failed"]).optional(),
+    analysisCategory: z
+      .enum(["bug", "infra", "performance", "script", "other"])
+      .optional(),
+    analysisConfidence: z.number().min(0).max(1).optional(),
+    analysisConclusion: z.string().optional(),
+  })
+  .openapi("UpdateResultAnalysisRequest");
+
 const TestAnalysisResponseSchema = z
   .object({
     success: z.boolean(),
@@ -401,6 +413,7 @@ export function generateOpenAPISpec() {
   registry.register("RefreshTokenRequest", RefreshTokenRequestSchema);
   registry.register("UserUpdateRequest", UserUpdateRequestSchema);
   registry.register("ResultsStats", ResultsStatsSchema);
+  registry.register("UpdateResultAnalysisRequest", UpdateResultAnalysisRequestSchema);
 
   // Base route
   registry.registerPath({
@@ -915,6 +928,51 @@ export function generateOpenAPISpec() {
       },
       500: {
         description: "Internal server error",
+        content: {
+          "application/json": {
+            schema: ErrorResponseSchema,
+          },
+        },
+      },
+    },
+    tags: ["Results"],
+  });
+
+  registry.registerPath({
+    method: "patch",
+    path: "/api/v1/results/{resultId}/analysis",
+    description: "Updates the analysis fields of a specific result",
+    request: {
+      params: z.object({
+        resultId: z.string(),
+      }),
+      body: {
+        content: {
+          "application/json": {
+            schema: UpdateResultAnalysisRequestSchema,
+          },
+        },
+      },
+    },
+    responses: {
+      200: {
+        description: "Result analysis updated successfully",
+        content: {
+          "application/json": {
+            schema: ResultSchema,
+          },
+        },
+      },
+      400: {
+        description: "Bad request - Invalid input data",
+        content: {
+          "application/json": {
+            schema: ErrorResponseSchema,
+          },
+        },
+      },
+      404: {
+        description: "Result not found",
         content: {
           "application/json": {
             schema: ErrorResponseSchema,
