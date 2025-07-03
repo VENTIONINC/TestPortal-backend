@@ -209,4 +209,3 @@ export const jsonReportController = {
     return testCases;
   },
 };
-
