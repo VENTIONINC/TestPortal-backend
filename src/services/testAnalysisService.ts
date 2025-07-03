@@ -131,7 +131,7 @@ export const testAnalysisService = {
                           "Brief explanation (2-3 sentences max) for the categorization decision, only for failed tests",
                       },
                     },
-                    required: ["id", "status", "confidence", "conclusion"],
+                    required: ["id", "status", "confidence"],
                     additionalProperties: false,
                   },
                 },
