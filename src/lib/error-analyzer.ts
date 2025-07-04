@@ -36,21 +36,35 @@ export async function runReview(
         },
         result: true,
       },
+      orderBy: { createdAt: "desc" },
+      take: 100,
     });
 
+  const targetCallLog = JSON.parse(
+    targetResultError.callLog ?? "[]",
+  ) as string[];
+  const targetCallStack = JSON.parse(
+    targetResultError.callStack ?? "[]",
+  ) as string[];
+
   for (const resultError of resultErrors) {
+    const messageLengthDiff = Math.abs(
+      targetResultError.message.length - resultError.message.length,
+    );
+    if (messageLengthDiff > targetResultError.message.length * 0.5) {
+      continue;
+    }
+
     const errorSimilarity = calculateErrorSimilarity(
       targetResultError.message,
       resultError.message,
     );
-    const callLogSimilarity = compareStackTraces(
-      JSON.parse(targetResultError.callLog ?? "[]") as string[],
-      JSON.parse(resultError.callLog ?? "[]") as string[],
-    );
-    const stackSimilarity = compareStackTraces(
-      JSON.parse(targetResultError.callStack ?? "[]") as string[],
-      JSON.parse(resultError.callStack ?? "[]") as string[],
-    );
+
+    const callLog = JSON.parse(resultError.callLog ?? "[]") as string[];
+    const callStack = JSON.parse(resultError.callStack ?? "[]") as string[];
+
+    const callLogSimilarity = compareStackTraces(targetCallLog, callLog);
+    const stackSimilarity = compareStackTraces(targetCallStack, callStack);
 
     // const ERROR_THRESHOLD = 0.85;
     // const CALL_LOG_THRESHOLD = 0.7;
@@ -59,15 +73,6 @@ export async function runReview(
 
     const finalScore =
       errorSimilarity * 0.4 + callLogSimilarity * 0.3 + stackSimilarity * 0.3;
-
-    console.log("*********");
-    console.log(
-      errorSimilarity,
-      callLogSimilarity,
-      stackSimilarity,
-      finalScore,
-    );
-    console.log("*********");
 
     if (finalScore >= FINAL_SCORE_THRESHOLD) {
       let assumptionRecord = await dbClient.assumption.findFirst({
@@ -116,13 +121,9 @@ export async function runReview(
             targetResultError.id
           }, time: ${new Date().getTime() - start.getTime()}`,
         );
+
+        break;
       }
-    } else {
-      console.log(
-        `❌ No known issue found for result ${targetResultError.id}, time: ${
-          new Date().getTime() - start.getTime()
-        }`,
-      );
     }
   }
 
