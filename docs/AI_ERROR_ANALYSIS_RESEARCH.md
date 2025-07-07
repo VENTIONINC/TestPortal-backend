@@ -61,6 +61,26 @@ The codebase already includes AI capabilities:
 - **Error Handling**: Robust error handling for API failures
 - **Environment Setup**: OpenAI API key configuration already in place
 
+### Core AI Technologies to be Leveraged
+
+#### Semantic Embeddings and Vector Comparison
+
+A core component of the proposed AI enhancement is the use of semantic embeddings to understand the meaning of error messages and stack traces, going beyond simple string matching.
+
+- **What are Embeddings?**: Text embeddings are numerical representations of text (words, sentences, or entire documents) in the form of a vector. These vectors capture the semantic meaning and context of the text. Models like OpenAI's `text-embedding-ada-002` can be used for this.
+
+- **How does Vector Comparison work?**:
+
+  1. **Generation**: For each error, we generate an embedding from its key text fields (e.g., `message`, `type`, `callStack`).
+  2. **Storage**: These vectors are stored alongside the error data in our database (e.g., using PostgreSQL with the `pgvector` extension) or in a specialized vector database.
+  3. **Search**: When a new error arrives, we generate its embedding and perform a vector similarity search (using algorithms like Cosine Similarity) against the stored vectors. This efficiently finds the most semantically similar errors in the database.
+
+- **Advantages over String Similarity**: Unlike Levenshtein or Jaccard similarity, vector comparison can identify that "Network connection timed out" and "Failed to establish a connection to the host" are semantically similar, even though their wording is very different. This allows for much more accurate error clustering.
+
+- **Model Selection (Cloud vs. Local)**:
+  - **Cloud-Based (e.g., OpenAI)**: Offers access to state-of-the-art models via a simple API call. This is easy to implement but incurs per-use costs and involves sending data to a third-party service, which may have privacy implications.
+  - **Local Models (e.g., BERT, Sentence Transformers)**: Alternatively, we can host smaller, open-source models locally. This eliminates external API costs and keeps all data in-house, improving privacy and potentially reducing latency. However, it requires infrastructure to host and manage the model, which adds complexity. This choice has direct implications on the cost and performance models discussed later in this document.
+
 ## Proposed AI Enhancement Solutions
 
 ### Solution 1: Hybrid Semantic Analysis (Recommended)
@@ -71,7 +91,7 @@ The codebase already includes AI capabilities:
 
 - Keep existing similarity algorithms as base layer
 - Add AI analysis for uncertain matches (scores 0.4-0.7)
-- Use embeddings for semantic similarity calculation
+- Use vector comparison for semantic similarity calculation
 - Combine traditional and AI scores for final decision
 
 **Benefits**:
@@ -88,7 +108,7 @@ The codebase already includes AI capabilities:
 **Implementation**:
 
 - Use LLM to analyze complete error context
-- Generate semantic embeddings for similarity
+- Leverage vector comparison to find semantically similar errors
 - Provide natural language reasoning for decisions
 - Include confidence scores and explanations
 
