@@ -133,4 +133,54 @@ export const userController = {
       });
     }
   },
+
+  generateMcpToken: async (req: Request, res: Response): Promise<void> => {
+    try {
+      const { userId } = req.params;
+
+      if (!userId) {
+        res.status(400).json({
+          error: "User ID is required",
+        });
+        return;
+      }
+
+      const mcpToken = await userService.generateMcpToken(userId);
+
+      res.status(200).json({
+        mcpToken,
+        message: "MCP token generated successfully",
+      });
+    } catch (error) {
+      const err = error as Error;
+      res.status(400).json({
+        error: err.message,
+      });
+    }
+  },
+
+  revokeMcpToken: async (req: Request, res: Response): Promise<void> => {
+    try {
+      const { userId } = req.params;
+
+      if (!userId) {
+        res.status(400).json({
+          error: "User ID is required",
+        });
+        return;
+      }
+
+      await userService.revokeMcpToken(userId);
+
+      res.status(200).json({
+        message: "MCP token revoked successfully",
+      });
+    } catch (error) {
+      const err = error as Error;
+      res.status(400).json({
+        error: err.message,
+      });
+    }
+  },
+
 };
