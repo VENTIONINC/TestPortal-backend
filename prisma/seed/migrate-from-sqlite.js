@@ -37,6 +37,8 @@ async function migrateSQLiteToPostgres() {
           portal: issue.portal,
           service: issue.service,
           ticket: issue.ticket,
+          createdById: null,
+          updatedById: null,
         },
       });
     }
@@ -96,6 +98,10 @@ async function migrateSQLiteToPostgres() {
           startTime: new Date(result.startTime),
           specId: result.specId,
           executionId: result.executionId,
+          analysisStatus: null,
+          analysisCategory: null,
+          analysisConfidence: null,
+          analysisConclusion: null,
         },
       });
     }
