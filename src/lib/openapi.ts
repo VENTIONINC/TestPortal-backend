@@ -309,6 +309,7 @@ const UserSchema = z
     email: z.string(),
     createdAt: z.string(),
     updatedAt: z.string(),
+    mcpToken: z.string().optional(),
   })
   .openapi("User");
 
@@ -348,6 +349,15 @@ const UserUpdateRequestSchema = z
     password: z.string().optional(),
   })
   .openapi("UserUpdateRequest");
+
+// MCP Token schemas
+const McpTokenResponseSchema = z
+  .object({
+    token: z.string(),
+    expiresAt: z.string(),
+    message: z.string(),
+  })
+  .openapi("McpTokenResponse");
 
 // Results Stats schemas
 const ResultsStatsSchema = z
@@ -412,6 +422,7 @@ export function generateOpenAPISpec() {
   registry.register("UserLoginResponse", UserLoginResponseSchema);
   registry.register("RefreshTokenRequest", RefreshTokenRequestSchema);
   registry.register("UserUpdateRequest", UserUpdateRequestSchema);
+  registry.register("McpTokenResponse", McpTokenResponseSchema);
   registry.register("ResultsStats", ResultsStatsSchema);
   registry.register(
     "UpdateResultAnalysisRequest",
@@ -699,9 +710,29 @@ export function generateOpenAPISpec() {
     tags: ["Issues", "Results"],
   });
 
-  // v2 Issues routes with authentication
-  const AuthHeaderSchema = z.object({
-    authorization: z.string().describe("Bearer JWT token"),
+  // Register security schemes
+  registry.registerComponent("securitySchemes", "BearerAuth", {
+    type: "http",
+    scheme: "bearer",
+    bearerFormat: "JWT",
+    description: "JWT Bearer token authentication",
+  });
+
+  registry.registerComponent("securitySchemes", "McpBearerAuth", {
+    type: "http", 
+    scheme: "bearer",
+    bearerFormat: "JWT",
+    description: "MCP Bearer token authentication",
+  });
+
+  // MCP session header parameter (not for authentication)
+  const McpSessionHeaderParam = z.string().openapi({
+    param: {
+      name: "mcp-session-id",
+      in: "header",
+    },
+    description: "MCP session ID",
+    example: "session_12345",
   });
 
   registry.registerPath({
@@ -709,7 +740,6 @@ export function generateOpenAPISpec() {
     path: "/api/v2/issues",
     description: "Retrieves all issues (requires authentication)",
     request: {
-      headers: AuthHeaderSchema,
       query: z.object({
         category: z.string().optional(),
         name: z.string().optional(),
@@ -717,6 +747,7 @@ export function generateOpenAPISpec() {
         limit: z.number().default(30).optional(),
       }),
     },
+    security: [{ BearerAuth: [] }],
     responses: {
       200: {
         description: "List of issues",
@@ -743,11 +774,11 @@ export function generateOpenAPISpec() {
     path: "/api/v2/issues/{issueId}",
     description: "Retrieves an issue by its ID (requires authentication)",
     request: {
-      headers: AuthHeaderSchema,
       params: z.object({
         issueId: z.number(),
       }),
     },
+    security: [{ BearerAuth: [] }],
     responses: {
       200: {
         description: "Issue details",
@@ -782,7 +813,6 @@ export function generateOpenAPISpec() {
     path: "/api/v2/issues",
     description: "Creates a new issue (requires authentication)",
     request: {
-      headers: AuthHeaderSchema,
       body: {
         content: {
           "application/json": {
@@ -791,6 +821,7 @@ export function generateOpenAPISpec() {
         },
       },
     },
+    security: [{ BearerAuth: [] }],
     responses: {
       201: {
         description: "Issue created successfully",
@@ -825,7 +856,6 @@ export function generateOpenAPISpec() {
     path: "/api/v2/issues/{issueId}",
     description: "Updates an existing issue (requires authentication)",
     request: {
-      headers: AuthHeaderSchema,
       params: z.object({
         issueId: z.number(),
       }),
@@ -837,6 +867,7 @@ export function generateOpenAPISpec() {
         },
       },
     },
+    security: [{ BearerAuth: [] }],
     responses: {
       200: {
         description: "Issue updated successfully",
@@ -880,11 +911,11 @@ export function generateOpenAPISpec() {
     description:
       "Deletes an issue by its ID (requires authentication). Also deletes all associated assumptions (cascade delete).",
     request: {
-      headers: AuthHeaderSchema,
       params: z.object({
         issueId: z.number(),
       }),
     },
+    security: [{ BearerAuth: [] }],
     responses: {
       200: {
         description:
@@ -1565,10 +1596,8 @@ export function generateOpenAPISpec() {
       params: z.object({
         userId: z.number(),
       }),
-      headers: z.object({
-        authorization: z.string().describe("Bearer JWT token"),
-      }),
     },
+    security: [{ BearerAuth: [] }],
     responses: {
       200: {
         description: "User details",
@@ -1614,9 +1643,6 @@ export function generateOpenAPISpec() {
       params: z.object({
         userId: z.number(),
       }),
-      headers: z.object({
-        authorization: z.string().describe("Bearer JWT token"),
-      }),
       body: {
         content: {
           "application/json": {
@@ -1625,6 +1651,7 @@ export function generateOpenAPISpec() {
         },
       },
     },
+    security: [{ BearerAuth: [] }],
     responses: {
       200: {
         description: "User updated successfully",
@@ -1660,6 +1687,117 @@ export function generateOpenAPISpec() {
       },
     },
     tags: ["Users"],
+  });
+
+  // MCP Token management routes
+  registry.registerPath({
+    method: "post",
+    path: "/api/v2/users/{userId}/mcp-token",
+    description: "Generates a new MCP token for the user (requires authentication)",
+    request: {
+      params: z.object({
+        userId: z.number(),
+      }),
+    },
+    security: [{ BearerAuth: [] }],
+    responses: {
+      201: {
+        description: "MCP token generated successfully",
+        content: {
+          "application/json": {
+            schema: McpTokenResponseSchema,
+          },
+        },
+      },
+      400: {
+        description: "Bad request - invalid user ID",
+        content: {
+          "application/json": {
+            schema: ErrorResponseSchema,
+          },
+        },
+      },
+      401: {
+        description: "Unauthorized - invalid or missing token",
+        content: {
+          "application/json": {
+            schema: ErrorResponseSchema,
+          },
+        },
+      },
+      403: {
+        description: "Forbidden - user can only generate tokens for themselves",
+        content: {
+          "application/json": {
+            schema: ErrorResponseSchema,
+          },
+        },
+      },
+      404: {
+        description: "User not found",
+        content: {
+          "application/json": {
+            schema: ErrorResponseSchema,
+          },
+        },
+      },
+    },
+    tags: ["MCP"],
+  });
+
+  registry.registerPath({
+    method: "delete",
+    path: "/api/v2/users/{userId}/mcp-token",
+    description: "Revokes the user's MCP token (requires authentication)",
+    request: {
+      params: z.object({
+        userId: z.number(),
+      }),
+    },
+    security: [{ BearerAuth: [] }],
+    responses: {
+      200: {
+        description: "MCP token revoked successfully",
+        content: {
+          "application/json": {
+            schema: SuccessResponseSchema,
+          },
+        },
+      },
+      400: {
+        description: "Bad request - invalid user ID",
+        content: {
+          "application/json": {
+            schema: ErrorResponseSchema,
+          },
+        },
+      },
+      401: {
+        description: "Unauthorized - invalid or missing token",
+        content: {
+          "application/json": {
+            schema: ErrorResponseSchema,
+          },
+        },
+      },
+      403: {
+        description: "Forbidden - user can only revoke their own tokens",
+        content: {
+          "application/json": {
+            schema: ErrorResponseSchema,
+          },
+        },
+      },
+      404: {
+        description: "User not found or no MCP token to revoke",
+        content: {
+          "application/json": {
+            schema: ErrorResponseSchema,
+          },
+        },
+      },
+    },
+    tags: ["MCP"],
   });
 
   // Test Analysis endpoint
@@ -1704,6 +1842,139 @@ export function generateOpenAPISpec() {
       },
     },
     tags: ["Test Analysis"],
+  });
+
+  // MCP Server routes - requires MCP Bearer token
+  registry.registerPath({
+    method: "post",
+    path: "/api/v1/mcp",
+    description: "MCP server endpoint for tool execution (requires MCP Bearer token)",
+    request: {
+      headers: [McpSessionHeaderParam.optional()],
+      body: {
+        content: {
+          "application/json": {
+            schema: z.any().describe("MCP JSON-RPC request"),
+          },
+        },
+      },
+    },
+    security: [{ McpBearerAuth: [] }],
+    responses: {
+      200: {
+        description: "MCP response",
+        content: {
+          "application/json": {
+            schema: z.any().describe("MCP JSON-RPC response"),
+          },
+        },
+      },
+      401: {
+        description: "Unauthorized - invalid or missing MCP token",
+        content: {
+          "application/json": {
+            schema: z.object({
+              jsonrpc: z.string(),
+              error: z.object({
+                code: z.number(),
+                message: z.string(),
+              }),
+              id: z.any().nullable(),
+            }),
+          },
+        },
+      },
+      400: {
+        description: "Bad request - invalid session or request format",
+        content: {
+          "application/json": {
+            schema: z.object({
+              jsonrpc: z.string(),
+              error: z.object({
+                code: z.number(),
+                message: z.string(),
+              }),
+              id: z.any().nullable(),
+            }),
+          },
+        },
+      },
+    },
+    tags: ["MCP"],
+  });
+
+  registry.registerPath({
+    method: "get",
+    path: "/api/v1/mcp",
+    description: "MCP session management endpoint (requires MCP Bearer token)",
+    request: {
+      headers: [McpSessionHeaderParam],
+    },
+    security: [{ McpBearerAuth: [] }],
+    responses: {
+      200: {
+        description: "MCP session response",
+        content: {
+          "application/json": {
+            schema: z.any().describe("MCP session data"),
+          },
+        },
+      },
+      401: {
+        description: "Unauthorized - invalid or missing MCP token",
+        content: {
+          "application/json": {
+            schema: ErrorResponseSchema,
+          },
+        },
+      },
+      400: {
+        description: "Bad request - invalid or missing session ID",
+        content: {
+          "text/plain": {
+            schema: z.string(),
+          },
+        },
+      },
+    },
+    tags: ["MCP"],
+  });
+
+  registry.registerPath({
+    method: "delete",
+    path: "/api/v1/mcp",
+    description: "MCP session cleanup endpoint (requires MCP Bearer token)",
+    request: {
+      headers: [McpSessionHeaderParam],
+    },
+    security: [{ McpBearerAuth: [] }],
+    responses: {
+      200: {
+        description: "Session cleanup successful",
+        content: {
+          "application/json": {
+            schema: z.any().describe("MCP cleanup response"),
+          },
+        },
+      },
+      401: {
+        description: "Unauthorized - invalid or missing MCP token",
+        content: {
+          "application/json": {
+            schema: ErrorResponseSchema,
+          },
+        },
+      },
+      400: {
+        description: "Bad request - invalid or missing session ID",
+        content: {
+          "text/plain": {
+            schema: z.string(),
+          },
+        },
+      },
+    },
+    tags: ["MCP"],
   });
 
   const generator = new OpenApiGeneratorV31(registry.definitions);
@@ -1769,6 +2040,10 @@ export function generateOpenAPISpec() {
       {
         name: "Test Analysis",
         description: "AI-powered test result analysis endpoints",
+      },
+      {
+        name: "MCP",
+        description: "Model Context Protocol token management endpoints",
       },
     ],
   });
