@@ -27,6 +27,15 @@ Issue management with user tracking:
 
 **Documentation**: See `docs/Issue_API.md`
 
+### 3. 🔑 MCP API (`MCP_API.postman_collection.json`)
+Model Context Protocol server endpoints:
+- MCP token authentication (Bearer token)
+- Tool execution and session management
+- JSON-RPC protocol testing
+- Comprehensive error scenarios
+
+**Authentication**: Requires MCP token from User API
+
 ## 🔧 Environment Setup
 
 Create a Postman environment with these variables:
@@ -37,30 +46,39 @@ Create a Postman environment with these variables:
   "V_1": "/api/v1",
   "V_2": "/api/v2",
   "testEmail": "test@example.com",
-  "testPassword": "SecurePassword123!"
+  "testPassword": "SecurePassword123!",
+  "mcpToken": ""
 }
 ```
 
 ## 🔐 Authentication Flow
 
-All collections use the same authentication pattern:
+Collections use different authentication patterns:
 
-1. **Login** → Get `accessToken` + `refreshToken`
+### Standard API Authentication:
+1. **Login** → Get `accessToken` + `refreshToken`  
 2. **Auto-refresh** → Tokens renewed automatically when expired
 3. **Bearer Auth** → Collection-level authentication configured
+
+### MCP Authentication:
+1. **Login** → Get JWT `accessToken` from User API
+2. **Generate MCP Token** → Use JWT to create MCP token
+3. **MCP Access** → Use MCP token for Model Context Protocol endpoints
 
 ## 🎯 Recommended Testing Workflow
 
 ### For New API Development:
 1. **User API First** - Set up authentication
-2. **Feature APIs** - Test your specific endpoints
-3. **Integration Testing** - Run all collections together
+2. **Feature APIs** - Test your specific endpoints  
+3. **MCP API** - Test Model Context Protocol endpoints
+4. **Integration Testing** - Run all collections together
 
 ### For CI/CD Pipelines:
 ```bash
 # Run all collections via Newman
 newman run User_API.postman_collection.json -e environment.json
 newman run Issue_API.postman_collection.json -e environment.json
+newman run MCP_API.postman_collection.json -e environment.json
 ```
 
 ## 🧪 Testing Standards
@@ -100,7 +118,8 @@ When creating new collections:
   "V_1": "/api/v1", 
   "V_2": "/api/v2",
   "accessToken": "",
-  "refreshToken": ""
+  "refreshToken": "",
+  "mcpToken": ""
 }
 ```
 

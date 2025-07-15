@@ -1,0 +1,539 @@
+{
+  "info": {
+    "name": "MCP API - Model Context Protocol",
+    "description": "Test collection for MCP server endpoints with token authentication. Includes MCP tool execution, session management, and comprehensive error testing.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [],
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{mcpToken}}",
+        "type": "string"
+      }
+    ]
+  },
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "// Check if MCP token is available",
+          "const mcpToken = pm.environment.get('mcpToken');",
+          "if (!mcpToken) {",
+          "    console.warn('No MCP token found. Please generate one using the User API collection first.');",
+          "}"
+        ]
+      }
+    }
+  ],
+  "item": [
+    {
+      "name": "🔧 MCP Tool Execution",
+      "item": [
+        {
+          "name": "✅ Initialize MCP Session",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code is 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Response is valid JSON-RPC', function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('jsonrpc');",
+                  "    pm.expect(jsonData.jsonrpc).to.equal('2.0');",
+                  "});",
+                  "",
+                  "// Save session ID if present in response headers",
+                  "const sessionId = pm.response.headers.get('mcp-session-id');",
+                  "if (sessionId) {",
+                  "    pm.environment.set('mcpSessionId', sessionId);",
+                  "    console.log('MCP session ID saved:', sessionId);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{mcpToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/{{V_1}}/mcp",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "{{V_1}}",
+                "mcp"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"jsonrpc\": \"2.0\",\n  \"method\": \"initialize\",\n  \"params\": {\n    \"protocolVersion\": \"2024-11-05\",\n    \"capabilities\": {\n      \"tools\": {}\n    },\n    \"clientInfo\": {\n      \"name\": \"postman-test\",\n      \"version\": \"1.0.0\"\n    }\n  },\n  \"id\": 1\n}"
+            }
+          }
+        },
+        {
+          "name": "✅ List Available Tools",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code is 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Response contains tools list', function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('result');",
+                  "    pm.expect(jsonData.result).to.have.property('tools');",
+                  "    pm.expect(jsonData.result.tools).to.be.an('array');",
+                  "    console.log('Available tools:', jsonData.result.tools.length);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{mcpToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "mcp-session-id",
+                "value": "{{mcpSessionId}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/{{V_1}}/mcp",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "{{V_1}}",
+                "mcp"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"jsonrpc\": \"2.0\",\n  \"method\": \"tools/list\",\n  \"params\": {},\n  \"id\": 2\n}"
+            }
+          }
+        },
+        {
+          "name": "✅ Execute Status Check Tool",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code is 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Tool execution successful', function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('result');",
+                  "    pm.expect(jsonData.result).to.have.property('content');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{mcpToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "mcp-session-id",
+                "value": "{{mcpSessionId}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/{{V_1}}/mcp",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "{{V_1}}",
+                "mcp"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"jsonrpc\": \"2.0\",\n  \"method\": \"tools/call\",\n  \"params\": {\n    \"name\": \"check-status\",\n    \"arguments\": {}\n  },\n  \"id\": 3\n}"
+            }
+          }
+        },
+        {
+          "name": "✅ Execute Current Time Tool",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{mcpToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "mcp-session-id",
+                "value": "{{mcpSessionId}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/{{V_1}}/mcp",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "{{V_1}}",
+                "mcp"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"jsonrpc\": \"2.0\",\n  \"method\": \"tools/call\",\n  \"params\": {\n    \"name\": \"current-time\",\n    \"arguments\": {}\n  },\n  \"id\": 4\n}"
+            }
+          }
+        },
+        {
+          "name": "✅ Get Issues Tool",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{mcpToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "mcp-session-id",
+                "value": "{{mcpSessionId}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/{{V_1}}/mcp",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "{{V_1}}",
+                "mcp"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"jsonrpc\": \"2.0\",\n  \"method\": \"tools/call\",\n  \"params\": {\n    \"name\": \"get-issues\",\n    \"arguments\": {\n      \"page\": 1,\n      \"limit\": 5\n    }\n  },\n  \"id\": 5\n}"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "🔄 Session Management",
+      "item": [
+        {
+          "name": "✅ Get Session Info",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{mcpToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [
+              {
+                "key": "mcp-session-id",
+                "value": "{{mcpSessionId}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/{{V_1}}/mcp",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "{{V_1}}",
+                "mcp"
+              ]
+            }
+          }
+        },
+        {
+          "name": "✅ Close Session",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{mcpToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "mcp-session-id",
+                "value": "{{mcpSessionId}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/{{V_1}}/mcp",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "{{V_1}}",
+                "mcp"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "❌ Authentication Error Tests",
+      "item": [
+        {
+          "name": "❌ MCP Request Without Token",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/{{V_1}}/mcp",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "{{V_1}}",
+                "mcp"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"jsonrpc\": \"2.0\",\n  \"method\": \"initialize\",\n  \"params\": {\n    \"protocolVersion\": \"2024-11-05\",\n    \"capabilities\": {\n      \"tools\": {}\n    },\n    \"clientInfo\": {\n      \"name\": \"postman-test\",\n      \"version\": \"1.0.0\"\n    }\n  },\n  \"id\": 1\n}"
+            }
+          }
+        },
+        {
+          "name": "❌ MCP Request With Invalid Token",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "invalid-token-12345",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/{{V_1}}/mcp",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "{{V_1}}",
+                "mcp"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"jsonrpc\": \"2.0\",\n  \"method\": \"initialize\",\n  \"params\": {\n    \"protocolVersion\": \"2024-11-05\",\n    \"capabilities\": {\n      \"tools\": {}\n    },\n    \"clientInfo\": {\n      \"name\": \"postman-test\",\n      \"version\": \"1.0.0\"\n    }\n  },\n  \"id\": 1\n}"
+            }
+          }
+        },
+        {
+          "name": "❌ Session Request Without Session ID",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{mcpToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/{{V_1}}/mcp",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "{{V_1}}",
+                "mcp"
+              ]
+            }
+          }
+        },
+        {
+          "name": "❌ Session Request With Invalid Session ID",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{mcpToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [
+              {
+                "key": "mcp-session-id",
+                "value": "invalid-session-id",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/{{V_1}}/mcp",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "{{V_1}}",
+                "mcp"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "🧹 Cleanup",
+      "item": [
+        {
+          "name": "Clear MCP Session",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// Clear session ID from environment",
+                  "pm.environment.set('mcpSessionId', '');",
+                  "console.log('MCP session ID cleared');"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/{{V_1}}/status",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "{{V_1}}",
+                "status"
+              ]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -88,6 +88,7 @@ export interface PrismaUser {
   name: string;
   email: string;
   passwordHash?: string | null;
+  mcpToken?: string | null;
 }
 
 // Database model interfaces with relations

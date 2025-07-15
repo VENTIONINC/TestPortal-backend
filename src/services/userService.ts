@@ -214,11 +214,9 @@ export const userService = {
 
     const user = await this.getUserById(userId);
 
-    const mcpTokenSecret = process.env.MCP_TOKEN_SECRET;
+    const mcpTokenSecret = process.env.MCP_SECRET;
     if (!mcpTokenSecret) {
-      throw new Error(
-        "MCP_TOKEN_SECRET environment variable is not configured",
-      );
+      throw new Error("MCP_SECRET environment variable is not configured");
     }
 
     const mcpToken = generateMcpToken(user.id, mcpTokenSecret);
@@ -238,4 +236,3 @@ export const userService = {
     await userModel.update(userId, { mcpToken: "" });
   },
 };
-

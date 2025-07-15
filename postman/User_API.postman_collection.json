@@ -589,6 +589,215 @@
       ]
     },
     {
+      "name": "🔑 MCP Token Management",
+      "item": [
+        {
+          "name": "✅ Generate MCP Token",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// Auto-save MCP token on successful generation",
+                  "pm.test('Status code is 201', function () {",
+                  "    pm.response.to.have.status(201);",
+                  "});",
+                  "",
+                  "pm.test('Response contains MCP token', function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('token');",
+                  "    pm.expect(jsonData).to.have.property('expiresAt');",
+                  "    pm.expect(jsonData).to.have.property('message');",
+                  "    ",
+                  "    // Save the MCP token to environment",
+                  "    pm.environment.set('mcpToken', jsonData.token);",
+                  "    console.log('MCP token saved to environment');",
+                  "});",
+                  "",
+                  "pm.test('Token format is valid', function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.token).to.match(/^mcp_\\d+_\\d+_[a-f0-9]+\\.[a-f0-9]+$/);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/{{V_2}}/users/{{userId}}/mcp-token",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "{{V_2}}",
+                "users",
+                "{{userId}}",
+                "mcp-token"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": ""
+            }
+          }
+        },
+        {
+          "name": "✅ Revoke MCP Token",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code is 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Response contains success message', function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('message');",
+                  "    ",
+                  "    // Clear the MCP token from environment",
+                  "    pm.environment.set('mcpToken', '');",
+                  "    console.log('MCP token cleared from environment');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/{{V_2}}/users/{{userId}}/mcp-token",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "{{V_2}}",
+                "users",
+                "{{userId}}",
+                "mcp-token"
+              ]
+            }
+          }
+        },
+        {
+          "name": "❌ Generate MCP Token Without Auth",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/{{V_2}}/users/{{userId}}/mcp-token",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "{{V_2}}",
+                "users",
+                "{{userId}}",
+                "mcp-token"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": ""
+            }
+          }
+        },
+        {
+          "name": "❌ Revoke MCP Token Without Auth",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/{{V_2}}/users/{{userId}}/mcp-token",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "{{V_2}}",
+                "users",
+                "{{userId}}",
+                "mcp-token"
+              ]
+            }
+          }
+        },
+        {
+          "name": "❌ Generate MCP Token for Another User",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/{{V_2}}/users/999/mcp-token",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "{{V_2}}",
+                "users",
+                "999",
+                "mcp-token"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": ""
+            }
+          }
+        }
+      ]
+    },
+    {
       "name": "🧹 Cleanup",
       "item": [
         {
