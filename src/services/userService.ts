@@ -2,6 +2,7 @@ import { userModel } from "@/models/userModel";
 import type { PrismaUser } from "@/types";
 import argon2 from "argon2";
 import { jwtService, type AuthResponse, type JwtPayload } from "./jwtService";
+import { generateMcpToken } from "@/lib/mcp-token";
 
 export interface CreateUserParams {
   name: string;
@@ -205,4 +206,36 @@ export const userService = {
       refreshToken: newTokens.refreshToken,
     };
   },
+
+  async generateMcpToken(userId: number | string): Promise<string> {
+    if (!userId) {
+      throw new Error("User ID is required");
+    }
+
+    const user = await this.getUserById(userId);
+
+    const mcpTokenSecret = process.env.MCP_TOKEN_SECRET;
+    if (!mcpTokenSecret) {
+      throw new Error(
+        "MCP_TOKEN_SECRET environment variable is not configured",
+      );
+    }
+
+    const mcpToken = generateMcpToken(user.id, mcpTokenSecret);
+
+    await userModel.update(user.id, { mcpToken });
+
+    return mcpToken;
+  },
+
+  async revokeMcpToken(userId: number | string): Promise<void> {
+    if (!userId) {
+      throw new Error("User ID is required");
+    }
+
+    await this.getUserById(userId); // Verify user exists
+
+    await userModel.update(userId, { mcpToken: "" });
+  },
 };
+

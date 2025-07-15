@@ -5,6 +5,7 @@ interface CreateUserData {
   name: string;
   email: string;
   passwordHash: string;
+  mcpToken?: string;
 }
 
 export const userModel = {

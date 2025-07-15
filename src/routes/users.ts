@@ -13,4 +13,8 @@ router.post("/v2/users/refresh-token", userController.refreshToken);
 router.get("/v2/users/:userId", authMiddleware, userController.getUserById);
 router.patch("/v2/users/:userId", authMiddleware, userController.updateUser);
 
+// MCP TOKEN ROUTES
+router.post("/v2/users/:userId/mcp-token", authMiddleware, userController.generateMcpToken);
+router.delete("/v2/users/:userId/mcp-token", authMiddleware, userController.revokeMcpToken);
+
 export default router;
