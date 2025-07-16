@@ -392,6 +392,26 @@ const ResultsStatsSchema = z
   })
   .openapi("ResultsStats");
 
+// Error Formatter schemas
+const ErrorFormatterRequestSchema = z
+  .object({
+    name: z.string().min(1, "Name cannot be empty").max(100, "Name is too long"),
+    description: z.string().min(1, "Description cannot be empty").max(2000, "Description is too long"),
+    category: z.string().min(1, "Category cannot be empty").max(50, "Category is too long"),
+  })
+  .openapi("ErrorFormatterRequest");
+
+const ErrorFormatterResponseSchema = z
+  .object({
+    original: z.object({
+      name: z.string(),
+      description: z.string(),
+      category: z.string(),
+    }),
+    formatted: z.string(),
+  })
+  .openapi("ErrorFormatterResponse");
+
 export function generateOpenAPISpec() {
   const registry = new OpenAPIRegistry();
 
@@ -428,6 +448,8 @@ export function generateOpenAPISpec() {
     "UpdateResultAnalysisRequest",
     UpdateResultAnalysisRequestSchema,
   );
+  registry.register("ErrorFormatterRequest", ErrorFormatterRequestSchema);
+  registry.register("ErrorFormatterResponse", ErrorFormatterResponseSchema);
 
   // Base route
   registry.registerPath({
@@ -1844,6 +1866,58 @@ export function generateOpenAPISpec() {
     tags: ["Test Analysis"],
   });
 
+  // Error Formatter endpoint
+  registry.registerPath({
+    method: "post",
+    path: "/api/v2/error-formatter",
+    description: "Formats error information using AI to make it clear and actionable (requires authentication)",
+    request: {
+      body: {
+        content: {
+          "application/json": {
+            schema: ErrorFormatterRequestSchema,
+          },
+        },
+      },
+    },
+    security: [{ BearerAuth: [] }],
+    responses: {
+      200: {
+        description: "Error formatted successfully",
+        content: {
+          "application/json": {
+            schema: ErrorFormatterResponseSchema,
+          },
+        },
+      },
+      400: {
+        description: "Bad request - invalid input format",
+        content: {
+          "application/json": {
+            schema: ErrorResponseSchema,
+          },
+        },
+      },
+      401: {
+        description: "Unauthorized - invalid or missing token",
+        content: {
+          "application/json": {
+            schema: ErrorResponseSchema,
+          },
+        },
+      },
+      500: {
+        description: "Internal server error - formatting failed",
+        content: {
+          "application/json": {
+            schema: ErrorResponseSchema,
+          },
+        },
+      },
+    },
+    tags: ["Error Formatter"],
+  });
+
   // MCP Server routes - requires MCP Bearer token
   registry.registerPath({
     method: "post",
@@ -2044,6 +2118,10 @@ export function generateOpenAPISpec() {
       {
         name: "MCP",
         description: "Model Context Protocol token management endpoints",
+      },
+      {
+        name: "Error Formatter",
+        description: "AI-powered error formatting endpoints",
       },
     ],
   });
