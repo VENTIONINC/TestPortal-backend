@@ -10,9 +10,19 @@ export const getErrorFormatterPrompt = () => `
     Make it easy to understand and actionable for developers and QA engineers.
   </goal>
 
+  <!-- ===== OUTPUT FORMAT ===== -->
+  <output>
+    Return a JSON object with the following structure:
+    {
+      "name": "Improved, clear error name",
+      "description": "Formatted, actionable error description"
+    }
+  </output>
+
   <!-- ===== TASK ===== -->
   <task>
-    Take the error name, description, and category provided and format them into a single, 
-    clear, professional message. Keep it concise but informative.
+    Take the error name, description, and category provided and format them into 
+    clear, professional structured output. Make both the name and description 
+    more readable and actionable for developers and QA engineers.
   </task>
 `;

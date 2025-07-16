@@ -408,7 +408,10 @@ const ErrorFormatterResponseSchema = z
       description: z.string(),
       category: z.string(),
     }),
-    formatted: z.string(),
+    formatted: z.object({
+      name: z.string(),
+      description: z.string(),
+    }),
   })
   .openapi("ErrorFormatterResponse");
 
