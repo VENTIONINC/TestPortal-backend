@@ -60,6 +60,10 @@ export const userService = {
       throw new Error("Invalid email format");
     }
 
+    if (!userParams.email.endsWith('@ventionteams.com')) {
+      throw new Error("Registration not allowed");
+    }
+
     const existingUser = await userModel.findByEmail(userParams.email);
     if (existingUser) {
       throw new Error("User with this email already exists");
