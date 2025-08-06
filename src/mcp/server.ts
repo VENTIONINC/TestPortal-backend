@@ -1,6 +1,9 @@
 import { Router, Request, Response } from "express";
 import { randomUUID } from "node:crypto";
-import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
+import {
+  McpServer,
+  RegisteredTool,
+} from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/streamableHttp.js";
 import { isInitializeRequest } from "@modelcontextprotocol/sdk/types.js";
 import { authenticateMcpToken } from "@/mcp/middleware/auth";
@@ -30,6 +33,9 @@ import {
   getResultErrorById,
 } from "@/mcp/tools/result-errors";
 import { getSpecById } from "@/mcp/tools/specs";
+import * as testPortalAssistant from "@/mcp/prompts/test-portal-assistant";
+import * as issueAnalysisAssistant from "@/mcp/prompts/issue-analysis-assistant";
+import * as environmentPerformanceAssistant from "@/mcp/prompts/environment-performance-assistant";
 
 const router = Router();
 
@@ -39,8 +45,8 @@ interface TransportStorage {
 }
 
 // Extended MCP server interface to handle tool registration
-interface McpServerWithTools {
-  tool: (...args: unknown[]) => void;
+interface McpServerWithTools extends McpServer {
+  tool: (...args: unknown[]) => RegisteredTool;
   connect: (transport: unknown) => Promise<void>;
 }
 
@@ -80,7 +86,7 @@ router.post(
         const server = new McpServer({
           name: "test-portal-server",
           version: "0.0.1",
-        }) as unknown as McpServerWithTools;
+        }) as McpServerWithTools;
 
         // Register all tools
         server.tool(...statusCheck);
@@ -113,6 +119,56 @@ router.post(
 
         // Spec tools
         server.tool(...getSpecById);
+
+        // Test Portal Assistant
+        server.registerPrompt(
+          testPortalAssistant.testPortalAssistantName,
+          testPortalAssistant.testPortalAssistantParameters,
+          ({
+            time_period = "today",
+            report_type = "summary",
+            project_system = "jira",
+          }) =>
+            testPortalAssistant.testPortalAssistantPrompt({
+              time_period,
+              report_type,
+              project_system,
+            }),
+        );
+
+        // Issue Analysis Assistant
+        server.registerPrompt(
+          issueAnalysisAssistant.issueAnalysisAssistantName,
+          issueAnalysisAssistant.issueAnalysisAssistantParameters,
+          ({
+            analysis_scope = "recent executions",
+            error_context = "",
+            target_system = "",
+          }) =>
+            issueAnalysisAssistant.issueAnalysisAssistantPrompt({
+              analysis_scope,
+              error_context,
+              target_system,
+            }),
+        );
+
+        // Environment & Performance Assistant
+        server.registerPrompt(
+          environmentPerformanceAssistant.environmentPerformanceAssistantName,
+          environmentPerformanceAssistant.environmentPerformanceAssistantParameters,
+          ({
+            environment_scope = "all environments",
+            performance_metric = "",
+            time_range = "",
+          }) =>
+            environmentPerformanceAssistant.environmentPerformanceAssistantPrompt(
+              {
+                environment_scope,
+                performance_metric,
+                time_range,
+              },
+            ),
+        );
 
         try {
           await server.connect(transport);
