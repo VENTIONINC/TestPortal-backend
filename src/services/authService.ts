@@ -5,6 +5,7 @@ import {
   CognitoUserSession,
 } from "amazon-cognito-identity-js";
 import { userPool } from "@/config/cognitoConfig";
+import { isCognitoConfigured } from "@/config/environment";
 
 type SignInType = (params: {
   email: string;
@@ -19,8 +20,17 @@ export const signUpUser = (
   username: string,
   email: string,
   password: string,
-) => {
+): Promise<CognitoUser> => {
   return new Promise((resolve, reject) => {
+    if (!isCognitoConfigured || !userPool) {
+      reject(
+        new Error(
+          "Cognito is not configured. Please set up Cognito environment variables.",
+        ),
+      );
+      return;
+    }
+
     userPool.signUp(
       username,
       password,
@@ -43,6 +53,15 @@ export const signUpUser = (
 
 export const signInUser: SignInType = ({ email, password, newPassword }) => {
   return new Promise((resolve, reject) => {
+    if (!isCognitoConfigured || !userPool) {
+      reject(
+        new Error(
+          "Cognito is not configured. Please set up Cognito environment variables.",
+        ),
+      );
+      return;
+    }
+
     const authenticationDetails = new AuthenticationDetails({
       Username: email,
       Password: password,
@@ -87,6 +106,14 @@ export const signInUser: SignInType = ({ email, password, newPassword }) => {
 };
 
 export const signOutUser = () => {
+  if (!isCognitoConfigured || !userPool) {
+    return Promise.reject(
+      new Error(
+        "Cognito is not configured. Please set up Cognito environment variables.",
+      ),
+    );
+  }
+
   const cognitoUser = userPool.getCurrentUser();
   if (cognitoUser) {
     return new Promise((resolve) => {

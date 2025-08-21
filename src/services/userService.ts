@@ -3,6 +3,8 @@ import type { PrismaUser } from "@/types";
 import argon2 from "argon2";
 import { jwtService, type AuthResponse, type JwtPayload } from "./jwtService";
 import { generateMcpToken } from "@/lib/mcp-token";
+import { signUpUser, signInUser, signOutUser } from "@/services/authService";
+import { CognitoUser } from "amazon-cognito-identity-js";
 
 export interface CreateUserParams {
   name: string;
@@ -25,6 +27,7 @@ interface UpdateUserData {
   name?: string;
   email?: string;
   passwordHash?: string;
+  cognitoUserId?: string;
 }
 
 export const userService = {
@@ -60,7 +63,7 @@ export const userService = {
       throw new Error("Invalid email format");
     }
 
-    if (!userParams.email.endsWith('@ventionteams.com')) {
+    if (!userParams.email.endsWith("@ventionteams.com")) {
       throw new Error("Registration not allowed");
     }
 
@@ -238,5 +241,123 @@ export const userService = {
     await this.getUserById(userId); // Verify user exists
 
     await userModel.update(userId, { mcpToken: "" });
+  },
+
+  // Cognito-specific methods
+  async signupWithCognito(
+    name: string,
+    email: string,
+    password: string,
+  ): Promise<{ user: PrismaUser; cognitoUser: CognitoUser }> {
+    if (!name || !email || !password) {
+      throw new Error("Name, email, and password are required");
+    }
+
+    if (name.length < 2) {
+      throw new Error("User name must be at least 2 characters");
+    }
+
+    if (password.length < 8) {
+      throw new Error("Password must be at least 8 characters");
+    }
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      throw new Error("Invalid email format");
+    }
+
+    // Check if user already exists in our database
+    const existingUser = await userModel.findByEmail(email);
+    if (existingUser) {
+      throw new Error("User with this email already exists");
+    }
+
+    try {
+      // Sign up with Cognito
+      const cognitoUser = await signUpUser(email, email, password);
+
+      // Create user in our database without password hash (Cognito manages it)
+      const userData = {
+        name,
+        email,
+        cognitoUserId: email, // Using email as cognito user identifier for now
+      };
+
+      const userRecord = await userModel.create(userData);
+      return { user: userRecord, cognitoUser };
+    } catch (error) {
+      throw new Error(`Cognito signup failed: ${(error as Error).message}`);
+    }
+  },
+
+  async loginWithCognito(
+    email: string,
+    password: string,
+    newPassword?: string,
+  ): Promise<AuthResponse> {
+    if (!email || !password) {
+      throw new Error("Email and password are required");
+    }
+
+    try {
+      // Authenticate with Cognito
+      const cognitoResult = await signInUser({
+        email,
+        password,
+        ...(newPassword && { newPassword }),
+      });
+
+      if (cognitoResult.status === "NEW_PASSWORD_REQUIRED") {
+        throw new Error("New password required");
+      }
+
+      // Find or create user in our database
+      let user = await userModel.findByEmail(email);
+      if (!user) {
+        // Create user if they don't exist (federated users, etc.)
+        const userData = {
+          name: email.split("@")[0] ?? "Unknown", // Use email prefix as default name
+          email,
+          cognitoUserId: email,
+        };
+        user = await userModel.create(userData);
+      }
+
+      // Generate our internal JWT tokens
+      const payload: JwtPayload = {
+        userId: user.id,
+        email: user.email,
+      };
+
+      const tokens = jwtService.generateTokenPair(payload);
+
+      return {
+        user: {
+          id: user.id,
+          name: user.name,
+          email: user.email,
+          createdAt: user.createdAt,
+          updatedAt: user.updatedAt,
+        },
+        accessToken: tokens.accessToken,
+        refreshToken: tokens.refreshToken,
+        ...(cognitoResult.session && { cognitoSession: cognitoResult.session }),
+      };
+    } catch (error) {
+      throw new Error(`Cognito login failed: ${(error as Error).message}`);
+    }
+  },
+
+  async signOutFromCognito(): Promise<string> {
+    try {
+      const result = await signOutUser();
+      return result as string;
+    } catch (error) {
+      throw new Error(`Cognito sign out failed: ${(error as Error).message}`);
+    }
+  },
+
+  async findUserByCognitoId(cognitoUserId: string): Promise<PrismaUser | null> {
+    return await userModel.findByCognitoUserId(cognitoUserId);
   },
 };
