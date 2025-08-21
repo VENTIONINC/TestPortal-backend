@@ -42,7 +42,8 @@
     "pg": "^8.16.0",
     "sqlite3": "^5.1.7",
     "string-similarity": "^4.0.4",
-    "zod": "^3.25.26"
+    "zod": "^3.25.26",
+    "amazon-cognito-identity-js": "^6.3.12"
   },
   "devDependencies": {
     "@asteasolutions/zod-to-openapi": "^7.3.2",
