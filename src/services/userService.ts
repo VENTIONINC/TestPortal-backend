@@ -2,7 +2,7 @@ import { userModel } from "@/models/userModel";
 import type { PrismaUser } from "@/types";
 import argon2 from "argon2";
 import { jwtService, type AuthResponse, type JwtPayload } from "./jwtService";
-import { generateMcpToken } from "@/lib/mcp-token";
+import { generateMcpToken, generateApiKey } from "@/lib/mcp-token";
 import { signUpUser, signInUser, signOutUser } from "@/services/authService";
 import { CognitoUser } from "amazon-cognito-identity-js";
 
@@ -359,5 +359,34 @@ export const userService = {
 
   async findUserByCognitoId(cognitoUserId: string): Promise<PrismaUser | null> {
     return await userModel.findByCognitoUserId(cognitoUserId);
+  },
+
+  async generateApiKey(userId: number | string): Promise<string> {
+    if (!userId) {
+      throw new Error("User ID is required");
+    }
+
+    const user = await this.getUserById(userId);
+
+    const apiSecret = process.env.API_SECRET ?? process.env.MCP_SECRET;
+    if (!apiSecret) {
+      throw new Error("API_SECRET environment variable is not configured");
+    }
+
+    const apiKey = generateApiKey(user.id, apiSecret);
+
+    await userModel.update(user.id, { apiKey });
+
+    return apiKey;
+  },
+
+  async revokeApiKey(userId: number | string): Promise<void> {
+    if (!userId) {
+      throw new Error("User ID is required");
+    }
+
+    await this.getUserById(userId); // Verify user exists
+
+    await userModel.update(userId, { apiKey: "" });
   },
 };

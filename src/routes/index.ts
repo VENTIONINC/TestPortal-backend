@@ -2,6 +2,7 @@ import { Router, Request, Response } from "express";
 import issue from "@/routes/issue";
 import results from "@/routes/results";
 import jsonReport from "@/routes/json-report";
+import v2JsonReport from "@/routes/v2/json-report";
 import specs from "@/routes/specs";
 import executions from "@/routes/executions";
 import assumptions from "@/routes/assumptions";
@@ -21,6 +22,7 @@ router.get("/v1", (_request: Request, response: Response): void => {
 });
 
 router.use(jsonReport);
+router.use(v2JsonReport);
 router.use(results);
 router.use(issue);
 router.use(specs);

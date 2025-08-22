@@ -93,6 +93,7 @@ model User {
   passwordHash  String?
   cognitoUserId String?  @unique
   mcpToken      String?  @unique
+  apiKey        String?  @unique
   issuesCreated Issue[]  @relation("IssuesCreated")
   issuesUpdated Issue[]  @relation("IssuesUpdated")
 }

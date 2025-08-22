@@ -7,6 +7,7 @@ interface CreateUserData {
   passwordHash?: string;
   cognitoUserId?: string;
   mcpToken?: string;
+  apiKey?: string;
 }
 
 export const userModel = {
