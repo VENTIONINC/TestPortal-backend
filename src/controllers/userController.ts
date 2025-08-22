@@ -183,4 +183,77 @@ export const userController = {
     }
   },
 
+  // Cognito authentication methods
+  cognitoSignup: async (req: Request, res: Response): Promise<void> => {
+    try {
+      const { name, email, password } = req.body;
+
+      if (!name || !email || !password) {
+        res.status(400).json({
+          error: "Name, email, and password are required",
+        });
+        return;
+      }
+
+      const result = await userService.signupWithCognito(name, email, password);
+      const safeUser = createSafeUserResponse(result.user);
+
+      res.status(201).json({
+        user: safeUser,
+        message:
+          "User created successfully with Cognito. Please check your email for verification.",
+      });
+    } catch (error) {
+      const err = error as Error;
+      res.status(400).json({
+        error: err.message,
+      });
+    }
+  },
+
+  cognitoLogin: async (req: Request, res: Response): Promise<void> => {
+    try {
+      const { email, password, newPassword } = req.body;
+
+      if (!email || !password) {
+        res.status(400).json({
+          error: "Email and password are required",
+        });
+        return;
+      }
+
+      const authResponse = await userService.loginWithCognito(
+        email,
+        password,
+        newPassword,
+      );
+      res.status(200).json(authResponse);
+    } catch (error) {
+      const err = error as Error;
+      if (err.message.includes("New password required")) {
+        res.status(200).json({
+          status: "NEW_PASSWORD_REQUIRED",
+          message: "New password required for first login",
+        });
+      } else {
+        res.status(401).json({
+          error: err.message,
+        });
+      }
+    }
+  },
+
+  cognitoSignOut: async (_req: Request, res: Response): Promise<void> => {
+    try {
+      const result = await userService.signOutFromCognito();
+      res.status(200).json({
+        message: result,
+      });
+    } catch (error) {
+      const err = error as Error;
+      res.status(400).json({
+        error: err.message,
+      });
+    }
+  },
 };

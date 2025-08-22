@@ -4,7 +4,8 @@ import type { PrismaUser } from "@/types";
 interface CreateUserData {
   name: string;
   email: string;
-  passwordHash: string;
+  passwordHash?: string;
+  cognitoUserId?: string;
   mcpToken?: string;
 }
 
@@ -21,6 +22,14 @@ export const userModel = {
     return await dbClient.user.findUnique({
       where: {
         email,
+      },
+    });
+  },
+
+  findByCognitoUserId: async (cognitoUserId: string): Promise<PrismaUser | null> => {
+    return await dbClient.user.findUnique({
+      where: {
+        cognitoUserId,
       },
     });
   },
