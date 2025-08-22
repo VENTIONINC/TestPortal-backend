@@ -3,6 +3,7 @@ dotenv.config();
 import express, { Request, Response, NextFunction } from "express";
 import cors from "cors";
 import parseCookie from "cookie-parser";
+import helmet from "helmet";
 
 import getLogger from "@/lib/logger";
 import { errorHandler } from "@/middleware/error-handler";
@@ -19,6 +20,7 @@ const loggingMiddleware = (
 };
 
 const app = express();
+app.use(helmet());
 app.use(cors());
 
 // Apply JSON parsing middleware to all routes except file upload routes
