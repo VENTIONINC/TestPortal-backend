@@ -36,6 +36,7 @@ import { getSpecById } from "@/mcp/tools/specs";
 import * as testPortalAssistant from "@/mcp/prompts/test-portal-assistant";
 import * as issueAnalysisAssistant from "@/mcp/prompts/issue-analysis-assistant";
 import * as environmentPerformanceAssistant from "@/mcp/prompts/environment-performance-assistant";
+import * as developerCodeAssistant from "@/mcp/prompts/developer-code-assistant";
 
 const router = Router();
 
@@ -168,6 +169,22 @@ router.post(
                 time_range,
               },
             ),
+        );
+
+        // Developer Code Assistant
+        server.registerPrompt(
+          developerCodeAssistant.developerCodeAssistantName,
+          developerCodeAssistant.developerCodeAssistantParameters,
+          ({
+            result_id = "",
+            error_id = "",
+            context_scope = "",
+          }) =>
+            developerCodeAssistant.developerCodeAssistantPrompt({
+              result_id,
+              error_id,
+              context_scope,
+            }),
         );
 
         try {

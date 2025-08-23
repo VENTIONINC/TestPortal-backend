@@ -12,6 +12,7 @@ import users from "@/routes/users";
 import openapi from "@/routes/openapi";
 import testAnalysis from "@/routes/test-analysis";
 import errorFormatter from "@/routes/error-formatter";
+import prompts from "@/routes/promptRoutes";
 import mcp from "@/mcp/server";
 
 const router = Router();
@@ -33,6 +34,7 @@ router.use(users);
 router.use(openapi);
 router.use(testAnalysis);
 router.use(errorFormatter);
+router.use(prompts);
 router.use(mcp);
 
 export default router;
