@@ -4,10 +4,10 @@ import { authMiddleware } from "@/middleware/authMiddleware";
 
 const router = Router();
 
-router.get("/prompts", authMiddleware, PromptController.listPrompts);
-router.get("/prompts/:name", authMiddleware, PromptController.getPrompt);
+router.get("/v2/prompts", authMiddleware, PromptController.listPrompts);
+router.get("/v2/prompts/:name", authMiddleware, PromptController.getPrompt);
 router.post(
-  "/prompts/:name/generate",
+  "/v2/prompts/:name/generate",
   authMiddleware,
   PromptController.generatePrompt,
 );
