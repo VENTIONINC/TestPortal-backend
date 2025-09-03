@@ -1,6 +1,10 @@
 import getLogger from "@/lib/logger";
 import { dbClient } from "@/prisma/client";
 import { parseStackTrace } from "@/lib/parse-error";
+import {
+  generateFallbackIdentifier,
+  type IdentifierStrategy,
+} from "@/lib/executionIdentifiers";
 import type {
   PrismaExecution,
   PrismaSpec,
@@ -27,14 +31,15 @@ interface ResultCreateInput {
 const logger = getLogger("json-report-service");
 
 interface ReportData {
-  runId: string;
-  env: string;
-  version: string;
+  runId?: string;
+  env?: string;
+  version?: string;
   stats?: {
     startTime?: string | Date;
   };
   tests: TestSpec[];
   analysis?: TestResultAnalysis[];
+  identifierStrategy?: IdentifierStrategy;
 }
 
 interface TestSpec {
@@ -80,17 +85,37 @@ export const jsonReportService = {
       throw new Error("Report data is required");
     }
 
-    const { runId, env, version, stats, tests, analysis } = reportData;
-
-    if (!runId) {
-      throw new Error("Report must include a runId");
-    }
-
-    // Create or find execution record
-    const executionRecord = await this._findOrCreateExecution({
+    const {
       runId,
       env,
       version,
+      stats,
+      tests,
+      analysis,
+      identifierStrategy = "time-period",
+    } = reportData;
+
+    // Generate fallback identifier if runId is not provided
+    const executionIdentifier =
+      runId ??
+      generateFallbackIdentifier(
+        env,
+        version,
+        stats?.startTime,
+        identifierStrategy,
+      );
+
+    logger.info(
+      runId
+        ? `Processing report with runId: ${runId}`
+        : `Processing report with generated identifier: ${executionIdentifier}`,
+    );
+
+    // Create or find execution record
+    const executionRecord = await this._findOrCreateExecution({
+      runId: executionIdentifier,
+      env: env ?? "unknown",
+      version: version ?? "unknown",
       ...(stats && { stats }),
     });
 

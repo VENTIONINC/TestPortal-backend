@@ -133,15 +133,29 @@ export const resultService = {
     }
 
     // Validate analysis data
-    if (analysisData.analysisCategory && !["bug", "infra", "performance", "script", "other"].includes(analysisData.analysisCategory)) {
-      throw new Error("Invalid analysis category. Must be one of: bug, infra, performance, script, other");
+    if (
+      analysisData.analysisCategory &&
+      !["bug", "infra", "performance", "script", "other"].includes(
+        analysisData.analysisCategory,
+      )
+    ) {
+      throw new Error(
+        "Invalid analysis category. Must be one of: bug, infra, performance, script, other",
+      );
     }
 
-    if (analysisData.analysisConfidence !== undefined && (analysisData.analysisConfidence < 0 || analysisData.analysisConfidence > 1)) {
+    if (
+      analysisData.analysisConfidence !== undefined &&
+      (analysisData.analysisConfidence < 0 ||
+        analysisData.analysisConfidence > 1)
+    ) {
       throw new Error("Confidence must be between 0 and 1");
     }
 
-    const updatedResult = await resultModel.updateAnalysis(resultId, analysisData);
+    const updatedResult = await resultModel.updateAnalysis(
+      resultId,
+      analysisData,
+    );
 
     if (!updatedResult) {
       throw new Error(`Result with ID ${resultId} not found`);
@@ -150,4 +164,3 @@ export const resultService = {
     return updatedResult;
   },
 };
-

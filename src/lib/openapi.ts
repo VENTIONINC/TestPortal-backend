@@ -251,9 +251,10 @@ const JsonReportTestSpecSchema = z
 
 const JsonReportRequestSchema = z
   .object({
-    runId: z.string(),
+    runId: z.string().optional(),
     env: z.string().optional(),
     version: z.string().optional(),
+    identifierStrategy: z.enum(["time-period", "hourly", "daily"]).optional(),
     stats: z
       .object({
         startTime: z.string(),
@@ -274,7 +275,7 @@ const JsonReportResponseSchema = z
 // Raw JSON Report schema - accepts the raw JSON structure from test files
 const RawJsonReportRequestSchema = z
   .object({
-    runId: z.string(),
+    runId: z.string().optional(),
     hash: z.string().optional(),
     config: z
       .object({

@@ -132,7 +132,7 @@ export interface PlaywrightTestResults {
     testNameHash: string;
     status: string;
   };
-  runId: string;
+  runId?: string;
   hash: string;
 }
 
