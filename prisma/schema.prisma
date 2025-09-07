@@ -38,7 +38,7 @@ model Result {
   id                 Int           @id @default(autoincrement())
   createdAt          DateTime      @default(now())
   updatedAt          DateTime      @updatedAt
-  allureLink         String?
+  reportPortalLink   String?
   retry              Int
   status             String
   duration           Int

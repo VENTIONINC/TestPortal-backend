@@ -72,7 +72,7 @@ const ResultSchema = z
     environment: z.string().optional(),
     type: z.string().optional(),
     status: z.string().optional(),
-    allureLink: z.string().optional(),
+    reportPortalLink: z.string().optional(),
     retry: z.number().optional(),
     duration: z.number().optional(),
     startTime: z.string().optional(),
@@ -219,7 +219,7 @@ const ExecutionSchema = z
 // JSON Report schemas
 const JsonReportTestResultSchema = z
   .object({
-    allureLink: z.string().optional(),
+    reportPortalLink: z.string().optional(),
     retry: z.number().optional(),
     status: z.string(),
     duration: z.number().optional(),

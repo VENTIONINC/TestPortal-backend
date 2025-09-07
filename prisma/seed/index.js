@@ -12,7 +12,7 @@ for (const jsonReport of jsonReports) {
     config.hash = jsonReport.hash;
     const tests = getTestCases(jsonReport.suites).map((test) => {
       test.results = test.results.map((result) => {
-        result.allureLink =
+        result.reportPortalLink =
           "https://automation.qa.theguarantors.com/allure-report/index.html";
 
         return result;

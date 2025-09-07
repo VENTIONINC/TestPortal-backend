@@ -28,7 +28,7 @@ export interface PrismaResult {
   id: number;
   createdAt: Date;
   updatedAt: Date;
-  allureLink?: string | null;
+  reportPortalLink?: string | null;
   retry: number;
   status: string;
   duration: number;
@@ -147,7 +147,7 @@ export interface ResultSummary {
   duration: number;
   startTime: Date;
   retry: number;
-  allureLink?: string;
+  reportPortalLink?: string;
   spec: SpecSummary;
   execution: ExecutionSummary;
   errorsCount: number;

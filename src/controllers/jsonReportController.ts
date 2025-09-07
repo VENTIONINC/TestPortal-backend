@@ -140,10 +140,12 @@ export const jsonReportController = {
       ._getTestCases(rawJsonReport.suites ?? [])
       .map((test) => {
         test.results = test.results.map((result: any) => {
-          result.allureLink =
-            result.allureLink ??
-            "https://automation.qa.theguarantors.com/allure-report/index.html";
-          return result;
+          return {
+            reportPortalLink:
+              result.reportPortalLink ??
+              "https://automation.qa.theguarantors.com/allure-report/index.html",
+            ...result,
+          };
         });
         return test;
       });

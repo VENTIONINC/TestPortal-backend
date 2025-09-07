@@ -14,7 +14,7 @@ import type {
 import type { TestResultAnalysis } from "@/services/testAnalysisService";
 
 interface ResultCreateInput {
-  allureLink: string | null;
+  reportPortalLink: string | null;
   retry: number;
   status: string;
   duration: number;
@@ -55,7 +55,7 @@ interface TestSpec {
 }
 
 interface TestResult {
-  allureLink?: string;
+  reportPortalLink?: string;
   retry: number;
   status: string;
   duration: number;
@@ -282,8 +282,8 @@ export const jsonReportService = {
     }
 
     const recordData: ResultCreateInput = {
-      allureLink: resultData.allureLink ?? null,
-      retry: resultData.retry,
+      reportPortalLink: resultData.reportPortalLink ?? null,
+      retry: resultData.retry ?? 0,
       status: resultData.status,
       duration: resultData.duration,
       startTime: new Date(resultData.startTime),

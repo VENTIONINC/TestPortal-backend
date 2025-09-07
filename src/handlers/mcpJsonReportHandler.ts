@@ -19,7 +19,7 @@ interface ReportData {
     tags?: string[];
     annotations?: unknown[];
     results: Array<{
-      allureLink?: string;
+      reportPortalLink?: string;
       retry: number;
       status: string;
       duration: number;
