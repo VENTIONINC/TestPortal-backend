@@ -311,6 +311,10 @@ const UserSchema = z
     createdAt: z.string(),
     updatedAt: z.string(),
     mcpToken: z.string().optional(),
+    reportPortalUrl: z.string().nullable().optional(),
+    reportPortalEnabled: z.boolean(),
+    monitoringPortalUrl: z.string().nullable().optional(),
+    monitoringPortalEnabled: z.boolean(),
   })
   .openapi("User");
 
@@ -350,6 +354,15 @@ const UserUpdateRequestSchema = z
     password: z.string().optional(),
   })
   .openapi("UserUpdateRequest");
+
+const UserIntegrationsUpdateRequestSchema = z
+  .object({
+    reportPortalUrl: z.string().nullable().optional(),
+    reportPortalEnabled: z.boolean().optional(),
+    monitoringPortalUrl: z.string().nullable().optional(),
+    monitoringPortalEnabled: z.boolean().optional(),
+  })
+  .openapi("UserIntegrationsUpdateRequest");
 
 // MCP Token schemas
 const McpTokenResponseSchema = z
@@ -484,6 +497,7 @@ export function generateOpenAPISpec() {
   registry.register("UserLoginResponse", UserLoginResponseSchema);
   registry.register("RefreshTokenRequest", RefreshTokenRequestSchema);
   registry.register("UserUpdateRequest", UserUpdateRequestSchema);
+  registry.register("UserIntegrationsUpdateRequest", UserIntegrationsUpdateRequestSchema);
   registry.register("McpTokenResponse", McpTokenResponseSchema);
   registry.register("ResultsStats", ResultsStatsSchema);
   registry.register(
@@ -1732,6 +1746,61 @@ export function generateOpenAPISpec() {
       },
       400: {
         description: "Bad request - validation errors",
+        content: {
+          "application/json": {
+            schema: ErrorResponseSchema,
+          },
+        },
+      },
+      401: {
+        description: "Unauthorized - invalid or missing token",
+        content: {
+          "application/json": {
+            schema: ErrorResponseSchema,
+          },
+        },
+      },
+      404: {
+        description: "User not found",
+        content: {
+          "application/json": {
+            schema: ErrorResponseSchema,
+          },
+        },
+      },
+    },
+    tags: ["Users"],
+  });
+
+  // User Integrations route
+  registry.registerPath({
+    method: "patch",
+    path: "/api/v2/users/{userId}/integrations",
+    description: "Updates user integration settings for Report Portal and Monitoring Portal (requires authentication)",
+    request: {
+      params: z.object({
+        userId: z.number(),
+      }),
+      body: {
+        content: {
+          "application/json": {
+            schema: UserIntegrationsUpdateRequestSchema,
+          },
+        },
+      },
+    },
+    security: [{ BearerAuth: [] }],
+    responses: {
+      200: {
+        description: "User integrations updated successfully",
+        content: {
+          "application/json": {
+            schema: UserSchema,
+          },
+        },
+      },
+      400: {
+        description: "Bad request - validation errors or invalid URL format",
         content: {
           "application/json": {
             schema: ErrorResponseSchema,
