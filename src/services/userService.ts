@@ -18,6 +18,13 @@ export interface UpdateUserParams {
   password?: string;
 }
 
+export interface UpdateUserIntegrationsParams {
+  reportPortalUrl?: string | null;
+  reportPortalEnabled?: boolean;
+  monitoringPortalUrl?: string | null;
+  monitoringPortalEnabled?: boolean;
+}
+
 export interface LoginParams {
   email: string;
   password: string;
@@ -28,6 +35,11 @@ interface UpdateUserData {
   email?: string;
   passwordHash?: string;
   cognitoUserId?: string;
+  reportPortalUrl?: string | null;
+  reportPortalEnabled?: boolean;
+  monitoringPortalUrl?: string | null;
+  monitoringPortalEnabled?: boolean;
+  mcpToken?: string;
 }
 
 export const userService = {
@@ -359,5 +371,62 @@ export const userService = {
 
   async findUserByCognitoId(cognitoUserId: string): Promise<PrismaUser | null> {
     return await userModel.findByCognitoUserId(cognitoUserId);
+  },
+
+  async updateUserIntegrations(
+    userId: number | string,
+    integrationsData: UpdateUserIntegrationsParams,
+  ): Promise<PrismaUser> {
+    if (!userId) {
+      throw new Error("User ID is required");
+    }
+
+    await this.getUserById(userId);
+
+    const cleanIntegrationsData: {
+      reportPortalUrl?: string | null;
+      reportPortalEnabled?: boolean;
+      monitoringPortalUrl?: string | null;
+      monitoringPortalEnabled?: boolean;
+    } = {};
+
+    if (integrationsData.reportPortalUrl !== undefined) {
+      if (integrationsData.reportPortalUrl && integrationsData.reportPortalUrl.trim()) {
+        const urlString = integrationsData.reportPortalUrl.trim();
+        try {
+          new URL(urlString);
+          cleanIntegrationsData.reportPortalUrl = urlString;
+        } catch {
+          throw new Error("Invalid report portal URL format");
+        }
+      } else {
+        cleanIntegrationsData.reportPortalUrl = null;
+      }
+    }
+
+    if (integrationsData.reportPortalEnabled !== undefined) {
+      cleanIntegrationsData.reportPortalEnabled = integrationsData.reportPortalEnabled;
+    }
+
+    if (integrationsData.monitoringPortalUrl !== undefined) {
+      if (integrationsData.monitoringPortalUrl && integrationsData.monitoringPortalUrl.trim()) {
+        const urlString = integrationsData.monitoringPortalUrl.trim();
+        try {
+          new URL(urlString);
+          cleanIntegrationsData.monitoringPortalUrl = urlString;
+        } catch {
+          throw new Error("Invalid monitoring portal URL format");
+        }
+      } else {
+        cleanIntegrationsData.monitoringPortalUrl = null;
+      }
+    }
+
+    if (integrationsData.monitoringPortalEnabled !== undefined) {
+      cleanIntegrationsData.monitoringPortalEnabled = integrationsData.monitoringPortalEnabled;
+    }
+
+    const updatedUser = await userModel.update(userId, cleanIntegrationsData);
+    return updatedUser;
   },
 };

@@ -43,6 +43,12 @@ jest.mock("@/models/userModel", () => ({
         name: data.name,
         email: data.email,
         passwordHash: data.passwordHash,
+        cognitoUserId: null,
+        mcpToken: null,
+        reportPortalUrl: null,
+        reportPortalEnabled: false,
+        monitoringPortalUrl: null,
+        monitoringPortalEnabled: false,
       };
       users.push(user);
       return Promise.resolve(user);

@@ -15,6 +15,19 @@ process.env.JWT_SECRET = 'test-secret';
 const users: PrismaUser[] = [];
 let idCounter = 1;
 
+// Mock Cognito auth service
+jest.mock('@/services/authService', () => ({
+  signUpUser: jest.fn(() => Promise.resolve({ user: { Username: 'test-cognito-user' } })),
+  signInUser: jest.fn(() => Promise.resolve({ 
+    status: 'SUCCESS',
+    session: { 
+      getAccessToken: () => ({ getJwtToken: () => 'mock-token' }),
+      getIdToken: () => ({ getJwtToken: () => 'mock-id-token' })
+    }
+  })),
+  signOutUser: jest.fn(() => Promise.resolve('User signed out successfully')),
+}));
+
 jest.mock('@/models/userModel', () => ({
   userModel: {
     findById: jest.fn((id: number | string) => {
@@ -25,6 +38,10 @@ jest.mock('@/models/userModel', () => ({
       const user = users.find((u) => u.email === email);
       return Promise.resolve(user ?? null);
     }),
+    findByCognitoUserId: jest.fn((cognitoUserId: string) => {
+      const user = users.find((u) => u.cognitoUserId === cognitoUserId);
+      return Promise.resolve(user ?? null);
+    }),
     create: jest.fn((data: CreateUserData) => {
       const user: PrismaUser = {
         id: idCounter++,
@@ -33,6 +50,12 @@ jest.mock('@/models/userModel', () => ({
         name: data.name,
         email: data.email,
         passwordHash: data.passwordHash,
+        cognitoUserId: null,
+        mcpToken: null,
+        reportPortalUrl: null,
+        reportPortalEnabled: false,
+        monitoringPortalUrl: null,
+        monitoringPortalEnabled: false,
       };
       users.push(user);
       return Promise.resolve(user);

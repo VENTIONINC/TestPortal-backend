@@ -88,7 +88,12 @@ export interface PrismaUser {
   name: string;
   email: string;
   passwordHash?: string | null;
+  cognitoUserId?: string | null;
   mcpToken?: string | null;
+  reportPortalUrl?: string | null;
+  reportPortalEnabled: boolean;
+  monitoringPortalUrl?: string | null;
+  monitoringPortalEnabled: boolean;
 }
 
 // Database model interfaces with relations

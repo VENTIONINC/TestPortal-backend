@@ -7,6 +7,10 @@ interface CreateUserData {
   passwordHash?: string;
   cognitoUserId?: string;
   mcpToken?: string;
+  reportPortalUrl?: string | null;
+  reportPortalEnabled?: boolean;
+  monitoringPortalUrl?: string | null;
+  monitoringPortalEnabled?: boolean;
 }
 
 export const userModel = {

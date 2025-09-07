@@ -85,16 +85,20 @@ model Assumption {
 }
 
 model User {
-  id            Int      @id @default(autoincrement())
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
-  name          String
-  email         String   @unique
-  passwordHash  String?
-  cognitoUserId String?  @unique
-  mcpToken      String?  @unique
-  issuesCreated Issue[]  @relation("IssuesCreated")
-  issuesUpdated Issue[]  @relation("IssuesUpdated")
+  id                     Int      @id @default(autoincrement())
+  createdAt              DateTime @default(now())
+  updatedAt              DateTime @updatedAt
+  name                   String
+  email                  String   @unique
+  passwordHash           String?
+  cognitoUserId          String?  @unique
+  mcpToken               String?  @unique
+  reportPortalUrl        String?
+  reportPortalEnabled    Boolean  @default(false)
+  monitoringPortalUrl    String?
+  monitoringPortalEnabled Boolean  @default(false)
+  issuesCreated          Issue[]  @relation("IssuesCreated")
+  issuesUpdated          Issue[]  @relation("IssuesUpdated")
 }
 
 model Issue {
