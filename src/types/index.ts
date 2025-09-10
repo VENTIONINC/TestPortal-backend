@@ -83,3 +83,10 @@ export interface UpdateIssueParams {
   updatedById?: number;
 }
 
+export interface UserIntegrations {
+  reportPortalUrl?: string | null;
+  reportPortalEnabled?: boolean;
+  monitoringPortalUrl?: string | null;
+  monitoringPortalEnabled?: boolean;
+}
+

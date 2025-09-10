@@ -17,6 +17,7 @@ router.post("/v2/users/signout", userController.cognitoSignOut);
 // PROTECTED ROUTES
 router.get("/v2/users/:userId", authMiddleware, userController.getUserById);
 router.patch("/v2/users/:userId", authMiddleware, userController.updateUser);
+router.patch("/v2/users/:userId/integrations", authMiddleware, userController.updateUserIntegrations);
 
 // MCP TOKEN ROUTES
 router.post(

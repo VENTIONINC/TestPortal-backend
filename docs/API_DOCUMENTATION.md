@@ -112,7 +112,7 @@
     - `tags`: Array of tags associated with the spec.
     - `annotations`: Array of annotations for the spec.
     - `results` (required): An array of result objects for the spec, each containing:
-      - `allureLink`: Link to the Allure report for this result.
+      - `reportPortalLink`: Link to the Report Portal report for this result.
       - `retry`: Retry attempt number.
       - `status`: Status of the test result (e.g., 'passed', 'failed').
       - `duration`: Duration of the test execution.

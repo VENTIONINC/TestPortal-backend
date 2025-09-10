@@ -1,6 +1,10 @@
 import getLogger from "@/lib/logger";
 import { dbClient } from "@/prisma/client";
 import { parseStackTrace } from "@/lib/parse-error";
+import {
+  generateFallbackIdentifier,
+  type IdentifierStrategy,
+} from "@/lib/executionIdentifiers";
 import type {
   PrismaExecution,
   PrismaSpec,
@@ -10,7 +14,7 @@ import type {
 import type { TestResultAnalysis } from "@/services/testAnalysisService";
 
 interface ResultCreateInput {
-  allureLink: string | null;
+  reportPortalLink: string | null;
   retry: number;
   status: string;
   duration: number;
@@ -27,14 +31,15 @@ interface ResultCreateInput {
 const logger = getLogger("json-report-service");
 
 interface ReportData {
-  runId: string;
-  env: string;
-  version: string;
+  runId?: string;
+  env?: string;
+  version?: string;
   stats?: {
     startTime?: string | Date;
   };
   tests: TestSpec[];
   analysis?: TestResultAnalysis[];
+  identifierStrategy?: IdentifierStrategy;
 }
 
 interface TestSpec {
@@ -50,7 +55,7 @@ interface TestSpec {
 }
 
 interface TestResult {
-  allureLink?: string;
+  reportPortalLink?: string;
   retry: number;
   status: string;
   duration: number;
@@ -80,17 +85,37 @@ export const jsonReportService = {
       throw new Error("Report data is required");
     }
 
-    const { runId, env, version, stats, tests, analysis } = reportData;
-
-    if (!runId) {
-      throw new Error("Report must include a runId");
-    }
-
-    // Create or find execution record
-    const executionRecord = await this._findOrCreateExecution({
+    const {
       runId,
       env,
       version,
+      stats,
+      tests,
+      analysis,
+      identifierStrategy = "time-period",
+    } = reportData;
+
+    // Generate fallback identifier if runId is not provided
+    const executionIdentifier =
+      runId ??
+      generateFallbackIdentifier(
+        env,
+        version,
+        stats?.startTime,
+        identifierStrategy,
+      );
+
+    logger.info(
+      runId
+        ? `Processing report with runId: ${runId}`
+        : `Processing report with generated identifier: ${executionIdentifier}`,
+    );
+
+    // Create or find execution record
+    const executionRecord = await this._findOrCreateExecution({
+      runId: executionIdentifier,
+      env: env ?? "unknown",
+      version: version ?? "unknown",
       ...(stats && { stats }),
     });
 
@@ -257,8 +282,8 @@ export const jsonReportService = {
     }
 
     const recordData: ResultCreateInput = {
-      allureLink: resultData.allureLink ?? null,
-      retry: resultData.retry,
+      reportPortalLink: resultData.reportPortalLink ?? null,
+      retry: resultData.retry ?? 0,
       status: resultData.status,
       duration: resultData.duration,
       startTime: new Date(resultData.startTime),

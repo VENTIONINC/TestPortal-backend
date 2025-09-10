@@ -28,7 +28,7 @@ export interface PrismaResult {
   id: number;
   createdAt: Date;
   updatedAt: Date;
-  allureLink?: string | null;
+  reportPortalLink?: string | null;
   retry: number;
   status: string;
   duration: number;
@@ -88,7 +88,12 @@ export interface PrismaUser {
   name: string;
   email: string;
   passwordHash?: string | null;
+  cognitoUserId?: string | null;
   mcpToken?: string | null;
+  reportPortalUrl?: string | null;
+  reportPortalEnabled: boolean;
+  monitoringPortalUrl?: string | null;
+  monitoringPortalEnabled: boolean;
 }
 
 // Database model interfaces with relations
@@ -147,7 +152,7 @@ export interface ResultSummary {
   duration: number;
   startTime: Date;
   retry: number;
-  allureLink?: string;
+  reportPortalLink?: string;
   spec: SpecSummary;
   execution: ExecutionSummary;
   errorsCount: number;

@@ -91,7 +91,7 @@ async function migrateSQLiteToPostgres() {
           id: result.id,
           createdAt: new Date(result.createdAt),
           updatedAt: new Date(result.updatedAt),
-          allureLink: result.allureLink,
+          reportPortalLink: result.allureLink,
           retry: result.retry,
           status: result.status,
           duration: result.duration,

@@ -1,12 +1,14 @@
 import { jsonReportService } from "@/services/jsonReportService";
+import type { IdentifierStrategy } from "@/lib/executionIdentifiers";
 
 interface ReportData {
-  runId: string;
-  env: string;
-  version: string;
+  runId?: string;
+  env?: string;
+  version?: string;
   stats?: {
     startTime?: string | Date;
   };
+  identifierStrategy?: IdentifierStrategy;
   tests: Array<{
     title: string;
     custom_id?: string;
@@ -17,11 +19,12 @@ interface ReportData {
     tags?: string[];
     annotations?: unknown[];
     results: Array<{
-      allureLink?: string;
+      reportPortalLink?: string;
       retry: number;
       status: string;
       duration: number;
       startTime: string | Date;
+      workerIndex: number;
       error?: {
         message: string;
         stack: string;

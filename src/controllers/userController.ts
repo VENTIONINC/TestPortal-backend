@@ -3,6 +3,7 @@ import {
   userService,
   type CreateUserParams,
   type UpdateUserParams,
+  type UpdateUserIntegrationsParams,
   type LoginParams,
 } from "@/services/userService";
 import type { PrismaUser } from "@/types";
@@ -253,6 +254,36 @@ export const userController = {
       const err = error as Error;
       res.status(400).json({
         error: err.message,
+      });
+    }
+  },
+
+  updateUserIntegrations: async (req: Request, res: Response): Promise<void> => {
+    try {
+      const { userId } = req.params;
+      const integrationsData: UpdateUserIntegrationsParams = req.body;
+
+      if (!userId) {
+        res.status(400).json({
+          error: "User ID is required",
+        });
+        return;
+      }
+
+      if (!integrationsData || Object.keys(integrationsData).length === 0) {
+        res.status(400).json({
+          error: "Integration data is required",
+        });
+        return;
+      }
+
+      const updatedUser = await userService.updateUserIntegrations(userId, integrationsData);
+      const safeUser = createSafeUserResponse(updatedUser);
+      res.status(200).json(safeUser);
+    } catch (error) {
+      const err = error as Error;
+      res.status(400).json({
+        error: `Failed to update user integrations. ${err.message}`,
       });
     }
   },
