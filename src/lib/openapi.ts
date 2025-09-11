@@ -416,6 +416,11 @@ const ProjectSchema = z
     ownerId: z.number(),
     createdAt: z.string(),
     updatedAt: z.string(),
+    _count: z.object({
+      executions: z.number(),
+      specs: z.number(),
+      issues: z.number(),
+    }).optional(),
   })
   .openapi("Project");
 
@@ -2220,7 +2225,7 @@ export function generateOpenAPISpec() {
   // Projects routes
   registry.registerPath({
     method: "get",
-    path: "/api/v1/projects",
+    path: "/api/v2/projects",
     description: "Retrieves all projects for the authenticated user (requires authentication)",
     request: {
       query: z.object({
@@ -2261,7 +2266,7 @@ export function generateOpenAPISpec() {
 
   registry.registerPath({
     method: "get",
-    path: "/api/v1/projects/{id}",
+    path: "/api/v2/projects/{id}",
     description: "Retrieves a specific project by ID (requires authentication)",
     request: {
       params: z.object({
@@ -2308,7 +2313,7 @@ export function generateOpenAPISpec() {
 
   registry.registerPath({
     method: "post",
-    path: "/api/v1/projects",
+    path: "/api/v2/projects",
     description: "Creates a new project (requires authentication)",
     request: {
       body: {
@@ -2351,7 +2356,7 @@ export function generateOpenAPISpec() {
 
   registry.registerPath({
     method: "put",
-    path: "/api/v1/projects/{id}",
+    path: "/api/v2/projects/{id}",
     description: "Updates an existing project (requires authentication)",
     request: {
       params: z.object({
@@ -2405,7 +2410,7 @@ export function generateOpenAPISpec() {
 
   registry.registerPath({
     method: "delete",
-    path: "/api/v1/projects/{id}",
+    path: "/api/v2/projects/{id}",
     description: "Deletes a project by ID (requires authentication). Also deletes all associated executions, specs, and results (cascade delete).",
     request: {
       params: z.object({
