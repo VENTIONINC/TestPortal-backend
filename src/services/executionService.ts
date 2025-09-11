@@ -1,6 +1,14 @@
 import { executionModel } from "@/models/executionModel";
 import type { PrismaExecution } from "@/types";
 
+export interface GetExecutionsParams {
+  projectId?: number;
+  type?: string;
+  environment?: string;
+  limit?: number;
+  offset?: number;
+}
+
 export const executionService = {
   async getExecutionById(
     executionId: number | string,
@@ -22,5 +30,13 @@ export const executionService = {
     }
 
     return execution;
+  },
+
+  async getExecutions(params: GetExecutionsParams): Promise<PrismaExecution[]> {
+    return await executionModel.findMany(params);
+  },
+
+  async getExecutionsByProject(projectId: number): Promise<PrismaExecution[]> {
+    return await executionModel.findMany({ projectId });
   },
 };

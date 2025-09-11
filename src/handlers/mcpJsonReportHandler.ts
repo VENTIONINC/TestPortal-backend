@@ -44,7 +44,7 @@ interface ProcessReportResult {
 }
 
 export const mcpJsonReportHandler = {
-  async processReport(reportData: ReportData): Promise<ProcessReportResult> {
-    return await jsonReportService.processReport(reportData);
+  async processReport(reportData: ReportData, projectId = 1): Promise<ProcessReportResult> {
+    return await jsonReportService.processReport(reportData, projectId);
   },
 };

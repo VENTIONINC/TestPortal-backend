@@ -30,7 +30,7 @@ interface ResultCreateInput {
 
 const logger = getLogger("json-report-service");
 
-interface ReportData {
+export interface ReportData {
   runId?: string;
   env?: string;
   version?: string;
@@ -80,7 +80,10 @@ export const jsonReportService = {
   /**
    * Process a JSON report and create/update all related database records
    */
-  async processReport(reportData: ReportData): Promise<ProcessReportResult> {
+  async processReport(
+    reportData: ReportData,
+    projectId: number,
+  ): Promise<ProcessReportResult> {
     if (!reportData) {
       throw new Error("Report data is required");
     }
@@ -117,6 +120,7 @@ export const jsonReportService = {
       env: env ?? "unknown",
       version: version ?? "unknown",
       ...(stats && { stats }),
+      projectId,
     });
 
     if (!tests?.length) {
@@ -124,7 +128,7 @@ export const jsonReportService = {
     }
 
     // Process all test specs
-    await this._processSpecs(tests, executionRecord, analysis);
+    await this._processSpecs(tests, executionRecord, analysis, projectId);
 
     logger.info(
       `Successfully processed report for execution #${executionRecord.id}`,
@@ -145,8 +149,9 @@ export const jsonReportService = {
     env: string;
     version: string;
     stats?: { startTime?: string | Date };
+    projectId: number;
   }): Promise<PrismaExecution> {
-    const { runId, env, version, stats } = params;
+    const { runId, env, version, stats, projectId } = params;
 
     let executionRecord = await dbClient.execution.findFirst({
       where: {
@@ -162,6 +167,7 @@ export const jsonReportService = {
           environment: env,
           version,
           startedAt: stats?.startTime ? new Date(stats.startTime) : new Date(),
+          projectId,
         },
       });
 
@@ -178,13 +184,14 @@ export const jsonReportService = {
     specs: TestSpec[],
     executionRecord: PrismaExecution,
     analysis?: TestResultAnalysis[],
+    projectId?: number,
   ): Promise<void> {
     for (const spec of specs) {
       if (!spec.title) {
         throw new Error(`Spec data is missing title: ${spec.location?.file}`);
       }
 
-      const specRecord = await this._findOrCreateSpec(spec);
+      const specRecord = await this._findOrCreateSpec(spec, projectId);
       await this._processSpecResults(
         spec,
         specRecord,
@@ -197,7 +204,10 @@ export const jsonReportService = {
   /**
    * Find existing spec or create new one
    */
-  async _findOrCreateSpec(specData: TestSpec): Promise<PrismaSpec> {
+  async _findOrCreateSpec(
+    specData: TestSpec,
+    projectId?: number,
+  ): Promise<PrismaSpec> {
     let specKey = "";
     const titleMatch = specData.title.match(/C\d+/);
 
@@ -223,6 +233,7 @@ export const jsonReportService = {
           title: specData.title,
           tags: JSON.stringify(specData.tags ?? []),
           annotations: JSON.stringify(specData.annotations ?? []),
+          projectId: projectId ?? 1, // Default to project 1 if not provided
         },
       });
 

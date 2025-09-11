@@ -4,8 +4,31 @@ export interface PaginationParams {
   limit?: number;
 }
 
+// Project API Types
+export interface CreateProjectRequest {
+  name: string;
+  description?: string;
+}
+
+export interface UpdateProjectRequest {
+  name?: string;
+  description?: string;
+  isActive?: boolean;
+}
+
+export interface GetProjectsParams {
+  ownerId?: number;
+  isActive?: boolean;
+  name?: string;
+}
+
+export interface GetProjectByIdParams {
+  projectId: string;
+}
+
 // Result API Types
 export interface GetResultsParams extends PaginationParams {
+  projectId?: number;
   tag?: string;
   specId?: string;
   specFile?: string;
