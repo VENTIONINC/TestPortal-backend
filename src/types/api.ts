@@ -28,7 +28,7 @@ export interface GetProjectByIdParams {
 
 // Result API Types
 export interface GetResultsParams extends PaginationParams {
-  projectId?: number;
+  projectId: number;
   tag?: string;
   specId?: string;
   specFile?: string;

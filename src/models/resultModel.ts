@@ -2,7 +2,8 @@ import { dbClient } from "@/prisma/client";
 import type { ResultWithRelations, ResultsStats } from "@/types";
 import { Prisma } from "@prisma/client";
 
-interface ResultFilters {
+export interface ResultFilters {
+  projectId: number;
   tag?: string;
   specId?: string;
   specFile?: string;
@@ -47,6 +48,7 @@ export const resultModel = {
     limit = 1000,
   ): Promise<ResultWithRelations[]> => {
     const {
+      projectId,
       tag,
       specId,
       specFile,
@@ -69,21 +71,19 @@ export const resultModel = {
 
     const whereClause: Prisma.ResultWhereInput = {};
 
-    // Build spec filter
-    if (specId || specFile || specName || tag) {
-      whereClause.spec = {};
-      if (specId) whereClause.spec.key = specId;
-      if (specFile) whereClause.spec.file = { contains: specFile };
-      if (specName) whereClause.spec.title = { contains: specName };
-      if (tag) whereClause.spec.tags = { contains: tag };
-    }
+    // Build spec filter (always include projectId)
+    whereClause.spec = {};
+    whereClause.spec.projectId = projectId;
+    if (specId) whereClause.spec.key = specId;
+    if (specFile) whereClause.spec.file = { contains: specFile };
+    if (specName) whereClause.spec.title = { contains: specName };
+    if (tag) whereClause.spec.tags = { contains: tag };
 
-    // Build execution filter
-    if (environment || type) {
-      whereClause.execution = {};
-      if (environment) whereClause.execution.environment = environment;
-      if (type) whereClause.execution.type = type;
-    }
+    // Build execution filter (always include projectId)
+    whereClause.execution = {};
+    whereClause.execution.projectId = projectId;
+    if (environment) whereClause.execution.environment = environment;
+    if (type) whereClause.execution.type = type;
 
     // Add other filters
     if (status) whereClause.status = status;
@@ -214,6 +214,7 @@ export const resultModel = {
 
   count: async (filters: ResultFilters): Promise<number> => {
     const {
+      projectId,
       tag,
       specId,
       specFile,
@@ -236,21 +237,19 @@ export const resultModel = {
 
     const whereClause: Prisma.ResultWhereInput = {};
 
-    // Build spec filter
-    if (specId || specFile || specName || tag) {
-      whereClause.spec = {};
-      if (specId) whereClause.spec.key = specId;
-      if (specFile) whereClause.spec.file = { contains: specFile };
-      if (specName) whereClause.spec.title = { contains: specName };
-      if (tag) whereClause.spec.tags = { contains: tag };
-    }
+    // Build spec filter (always include projectId)
+    whereClause.spec = {};
+    whereClause.spec.projectId = projectId;
+    if (specId) whereClause.spec.key = specId;
+    if (specFile) whereClause.spec.file = { contains: specFile };
+    if (specName) whereClause.spec.title = { contains: specName };
+    if (tag) whereClause.spec.tags = { contains: tag };
 
-    // Build execution filter
-    if (environment || type) {
-      whereClause.execution = {};
-      if (environment) whereClause.execution.environment = environment;
-      if (type) whereClause.execution.type = type;
-    }
+    // Build execution filter (always include projectId)
+    whereClause.execution = {};
+    whereClause.execution.projectId = projectId;
+    if (environment) whereClause.execution.environment = environment;
+    if (type) whereClause.execution.type = type;
 
     // Add other filters
     if (status) whereClause.status = status;

@@ -1,4 +1,4 @@
-import { resultModel } from "@/models/resultModel";
+import { resultModel, type ResultFilters } from "@/models/resultModel";
 import type {
   GetResultsParams,
   GetResultsStatsParams,
@@ -16,6 +16,7 @@ interface GetResultsResponse {
 export const resultService = {
   async getResults(params: GetResultsParams): Promise<GetResultsResponse> {
     const {
+      projectId,
       tag,
       specId,
       specFile,
@@ -32,8 +33,15 @@ export const resultService = {
       limit = 1000,
     } = params;
 
-    // Build filters object, only including defined values
-    const filters: Record<string, string> = {};
+    // Validate required projectId parameter
+    if (!projectId) {
+      throw new Error("Project ID is required");
+    }
+
+    // Build filters object, always include required projectId
+    const filters: ResultFilters = {
+      projectId,
+    };
     if (tag) filters.tag = tag;
     if (specId) filters.specId = specId;
     if (specFile) filters.specFile = specFile;

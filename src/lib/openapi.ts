@@ -1080,9 +1080,10 @@ export function generateOpenAPISpec() {
   registry.registerPath({
     method: "get",
     path: "/api/v1/results",
-    description: "Retrieves results with optional filtering",
+    description: "Retrieves results with optional filtering (requires projectId)",
     request: {
       query: z.object({
+        projectId: z.number(),
         tag: z.string().optional(),
         specId: z.string().optional(),
         specFile: z.string().optional(),
@@ -1105,6 +1106,14 @@ export function generateOpenAPISpec() {
         content: {
           "application/json": {
             schema: z.array(ResultSchema),
+          },
+        },
+      },
+      400: {
+        description: "Bad request - projectId is required or invalid",
+        content: {
+          "application/json": {
+            schema: ErrorResponseSchema,
           },
         },
       },

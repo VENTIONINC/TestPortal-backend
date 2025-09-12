@@ -6,6 +6,7 @@ export const resultController = {
   getResults: async (req: Request, res: Response): Promise<void> => {
     try {
       const {
+        projectId,
         tag,
         specId,
         specFile,
@@ -22,8 +23,26 @@ export const resultController = {
         limit = "1000",
       } = req.query as Record<string, string>;
 
+      // Validate required projectId parameter
+      if (!projectId) {
+        res.status(400).json({
+          error: "Project ID is required",
+        });
+        return;
+      }
+
+      const parsedProjectId = Number(projectId);
+      if (isNaN(parsedProjectId)) {
+        res.status(400).json({
+          error: "Project ID must be a valid number",
+        });
+        return;
+      }
+
       // Convert and validate parameters, filtering out undefined values
-      const params: GetResultsParams = {};
+      const params: GetResultsParams = {
+        projectId: parsedProjectId,
+      };
       if (tag) params.tag = tag;
       if (specId) params.specId = specId;
       if (specFile) params.specFile = specFile;
