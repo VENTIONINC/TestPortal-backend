@@ -1,4 +1,4 @@
-import { Router } from "express";
+import { Router, Request, Response } from "express";
 import issue from "@/routes/issue";
 import results from "@/routes/results";
 import jsonReport from "@/routes/json-report";
@@ -17,6 +17,10 @@ import mcp from "@/mcp/server";
 
 const router = Router();
 
+router.get("/v1", (_request: Request, response: Response): void => {
+  response.status(200).send("Welcome");
+});
+
 router.use(jsonReport);
 router.use(results);
 router.use(issue);
@@ -34,3 +38,4 @@ router.use(prompts);
 router.use(mcp);
 
 export default router;
+
