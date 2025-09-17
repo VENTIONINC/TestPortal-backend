@@ -24,7 +24,7 @@ export const projectController = {
       }
 
       const project = await projectService.getProjectById(projectId);
-      
+
       if (!project) {
         res.status(404).json({ error: "Project not found" });
         return;
@@ -50,10 +50,14 @@ export const projectController = {
         res.status(400).json({ error: "Project name is required" });
         return;
       }
+      if (description && typeof description !== "string") {
+        res.status(400).json({ error: "Description must be a string" });
+        return;
+      }
 
       const project = await projectService.createProject({
         name: name.trim(),
-        description: description?.trim(),
+        description: description?.trim() ?? "",
         ownerId: req.user.id,
       });
 
@@ -79,18 +83,25 @@ export const projectController = {
       }
 
       const { name, description, isActive } = req.body;
-      const updateData: { name?: string; description?: string; isActive?: boolean } = {};
+      const updateData: {
+        name?: string;
+        description?: string;
+        isActive?: boolean;
+      } = {};
 
       if (name !== undefined) {
         if (typeof name !== "string" || name.trim().length === 0) {
-          res.status(400).json({ error: "Project name must be a non-empty string" });
+          res
+            .status(400)
+            .json({ error: "Project name must be a non-empty string" });
           return;
         }
         updateData.name = name.trim();
       }
 
       if (description !== undefined) {
-        updateData.description = typeof description === "string" ? description.trim() : description;
+        updateData.description =
+          typeof description === "string" ? description.trim() : description;
       }
 
       if (isActive !== undefined) {
