@@ -157,6 +157,7 @@ export const jsonReportService = {
     let executionRecord = await dbClient.execution.findFirst({
       where: {
         name: runId,
+        AND: { projectId },
       },
     });
 
