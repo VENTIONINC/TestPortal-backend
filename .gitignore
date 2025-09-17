@@ -70,3 +70,6 @@ dev.db
 # TypeScript build output
 dist/
 *.tsbuildinfo
+
+# exmaple files
+example-reports/

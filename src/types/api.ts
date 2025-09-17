@@ -48,6 +48,7 @@ export interface GetResultByIdParams {
 }
 
 export interface GetResultsStatsParams {
+  projectId: number;
   dates?: string[];
 }
 

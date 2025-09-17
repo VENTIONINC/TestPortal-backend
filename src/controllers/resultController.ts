@@ -92,7 +92,23 @@ export const resultController = {
 
   getResultsStats: async (req: Request, res: Response): Promise<void> => {
     try {
-      const { dates } = req.query;
+      const { projectId, dates } = req.query;
+
+      // Validate required projectId parameter
+      if (!projectId) {
+        res.status(400).json({
+          error: "Project ID is required",
+        });
+        return;
+      }
+
+      const parsedProjectId = Number(projectId);
+      if (isNaN(parsedProjectId)) {
+        res.status(400).json({
+          error: "Project ID must be a valid number",
+        });
+        return;
+      }
 
       // Parse dates parameter (can be a single date or comma-separated dates)
       let parsedDates: string[] | undefined;
@@ -104,9 +120,10 @@ export const resultController = {
         }
       }
 
-      const params: GetResultsStatsParams = parsedDates
-        ? { dates: parsedDates }
-        : {};
+      const params: GetResultsStatsParams = {
+        projectId: parsedProjectId,
+        ...(parsedDates && { dates: parsedDates }),
+      };
       const stats = await resultService.getResultsStats(params);
 
       res.json(stats);

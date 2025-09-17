@@ -30,6 +30,7 @@ export const getResultByIdSchema: MCPToolSchema = {
  * Schema for getting results statistics
  */
 export const getResultsStatsSchema: MCPToolSchema = {
+  projectId: z.number(),
   dates: z.array(z.string()).optional(),
 };
 

@@ -362,11 +362,16 @@ export const resultModel = {
   },
 
   getStats: async (filters: {
+    projectId: number;
     dates?: string[] | undefined;
   }): Promise<ResultsStats> => {
-    const { dates } = filters;
+    const { projectId, dates } = filters;
 
     const whereClause: Prisma.ResultWhereInput = {};
+
+    // Always filter by projectId through spec and execution relations
+    whereClause.spec = { projectId };
+    whereClause.execution = { projectId };
 
     if (dates && dates.length > 0) {
       // For each date, create a range from start of day to end of day
@@ -378,14 +383,20 @@ export const resultModel = {
         endOfDay.setHours(23, 59, 59, 999);
 
         return {
-          startTime: {
-            gte: startOfDay,
-            lte: endOfDay,
-          },
+          AND: [
+            { spec: { projectId } },
+            { execution: { projectId } },
+            {
+              startTime: {
+                gte: startOfDay,
+                lte: endOfDay,
+              },
+            },
+          ],
         };
       });
 
-      // Use OR to match any of the specified dates
+      // Use OR to match any of the specified dates, but always require projectId
       whereClause.OR = dateRanges;
     }
 

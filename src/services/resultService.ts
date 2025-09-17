@@ -120,9 +120,14 @@ export const resultService = {
   },
 
   async getResultsStats(params: GetResultsStatsParams): Promise<ResultsStats> {
-    const { dates } = params;
+    const { projectId, dates } = params;
 
-    const stats = await resultModel.getStats({ dates });
+    // Validate required projectId parameter
+    if (!projectId) {
+      throw new Error("Project ID is required");
+    }
+
+    const stats = await resultModel.getStats({ projectId, dates });
 
     return stats;
   },

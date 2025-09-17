@@ -416,11 +416,13 @@ const ProjectSchema = z
     ownerId: z.number(),
     createdAt: z.string(),
     updatedAt: z.string(),
-    _count: z.object({
-      executions: z.number(),
-      specs: z.number(),
-      issues: z.number(),
-    }).optional(),
+    _count: z
+      .object({
+        executions: z.number(),
+        specs: z.number(),
+        issues: z.number(),
+      })
+      .optional(),
   })
   .openapi("Project");
 
@@ -442,9 +444,18 @@ const UpdateProjectRequestSchema = z
 // Error Formatter schemas
 const ErrorFormatterRequestSchema = z
   .object({
-    name: z.string().min(1, "Name cannot be empty").max(100, "Name is too long"),
-    description: z.string().min(1, "Description cannot be empty").max(2000, "Description is too long"),
-    category: z.string().min(1, "Category cannot be empty").max(50, "Category is too long"),
+    name: z
+      .string()
+      .min(1, "Name cannot be empty")
+      .max(100, "Name is too long"),
+    description: z
+      .string()
+      .min(1, "Description cannot be empty")
+      .max(2000, "Description is too long"),
+    category: z
+      .string()
+      .min(1, "Category cannot be empty")
+      .max(50, "Category is too long"),
   })
   .openapi("ErrorFormatterRequest");
 
@@ -530,7 +541,10 @@ export function generateOpenAPISpec() {
   registry.register("UserLoginResponse", UserLoginResponseSchema);
   registry.register("RefreshTokenRequest", RefreshTokenRequestSchema);
   registry.register("UserUpdateRequest", UserUpdateRequestSchema);
-  registry.register("UserIntegrationsUpdateRequest", UserIntegrationsUpdateRequestSchema);
+  registry.register(
+    "UserIntegrationsUpdateRequest",
+    UserIntegrationsUpdateRequestSchema,
+  );
   registry.register("McpTokenResponse", McpTokenResponseSchema);
   registry.register("ResultsStats", ResultsStatsSchema);
   registry.register(
@@ -838,7 +852,7 @@ export function generateOpenAPISpec() {
   });
 
   registry.registerComponent("securitySchemes", "McpBearerAuth", {
-    type: "http", 
+    type: "http",
     scheme: "bearer",
     bearerFormat: "JWT",
     description: "MCP Bearer token authentication",
@@ -1080,10 +1094,11 @@ export function generateOpenAPISpec() {
   registry.registerPath({
     method: "get",
     path: "/api/v1/results",
-    description: "Retrieves results with optional filtering (requires projectId)",
+    description:
+      "Retrieves results with optional filtering (requires projectId)",
     request: {
       query: z.object({
-        projectId: z.number(),
+        projectId: z.string(),
         tag: z.string().optional(),
         specId: z.string().optional(),
         specFile: z.string().optional(),
@@ -1166,6 +1181,7 @@ export function generateOpenAPISpec() {
       "Retrieves statistical analysis of test results including status counts, entity counts, and top errors/issues for specified dates",
     request: {
       query: z.object({
+        projectId: z.string(),
         dates: z
           .array(z.string())
           .optional()
@@ -1546,6 +1562,9 @@ export function generateOpenAPISpec() {
         content: {
           "multipart/form-data": {
             schema: z.object({
+              projectId: z.string().openapi({
+                description: "Project ID to associate the report with",
+              }),
               report: z.string().openapi({
                 type: "string",
                 format: "binary",
@@ -1821,7 +1840,8 @@ export function generateOpenAPISpec() {
   registry.registerPath({
     method: "patch",
     path: "/api/v2/users/{userId}/integrations",
-    description: "Updates user integration settings for Report Portal and Monitoring Portal (requires authentication)",
+    description:
+      "Updates user integration settings for Report Portal and Monitoring Portal (requires authentication)",
     request: {
       params: z.object({
         userId: z.number(),
@@ -1876,7 +1896,8 @@ export function generateOpenAPISpec() {
   registry.registerPath({
     method: "post",
     path: "/api/v2/users/{userId}/mcp-token",
-    description: "Generates a new MCP token for the user (requires authentication)",
+    description:
+      "Generates a new MCP token for the user (requires authentication)",
     request: {
       params: z.object({
         userId: z.number(),
@@ -2031,7 +2052,8 @@ export function generateOpenAPISpec() {
   registry.registerPath({
     method: "post",
     path: "/api/v2/error-formatter",
-    description: "Formats error information using AI to make it clear and actionable (requires authentication)",
+    description:
+      "Formats error information using AI to make it clear and actionable (requires authentication)",
     request: {
       body: {
         content: {
@@ -2083,7 +2105,8 @@ export function generateOpenAPISpec() {
   registry.registerPath({
     method: "get",
     path: "/api/v2/prompts",
-    description: "Retrieves a list of all prompt configurations with their metadata and parameters (requires authentication)",
+    description:
+      "Retrieves a list of all prompt configurations with their metadata and parameters (requires authentication)",
     security: [{ BearerAuth: [] }],
     responses: {
       200: {
@@ -2117,10 +2140,16 @@ export function generateOpenAPISpec() {
   registry.registerPath({
     method: "get",
     path: "/api/v2/prompts/{name}",
-    description: "Retrieves the configuration for a specific prompt by name (requires authentication)",
+    description:
+      "Retrieves the configuration for a specific prompt by name (requires authentication)",
     request: {
       params: z.object({
-        name: z.enum(["developer-code-assistant", "test-portal-assistant", "issue-analysis-assistant", "environment-performance-assistant"]),
+        name: z.enum([
+          "developer-code-assistant",
+          "test-portal-assistant",
+          "issue-analysis-assistant",
+          "environment-performance-assistant",
+        ]),
       }),
     },
     security: [{ BearerAuth: [] }],
@@ -2172,10 +2201,16 @@ export function generateOpenAPISpec() {
   registry.registerPath({
     method: "post",
     path: "/api/v2/prompts/{name}/generate",
-    description: "Generates a prompt using the specified template and provided parameters (requires authentication)",
+    description:
+      "Generates a prompt using the specified template and provided parameters (requires authentication)",
     request: {
       params: z.object({
-        name: z.enum(["developer-code-assistant", "test-portal-assistant", "issue-analysis-assistant", "environment-performance-assistant"]),
+        name: z.enum([
+          "developer-code-assistant",
+          "test-portal-assistant",
+          "issue-analysis-assistant",
+          "environment-performance-assistant",
+        ]),
       }),
       body: {
         content: {
@@ -2235,7 +2270,8 @@ export function generateOpenAPISpec() {
   registry.registerPath({
     method: "get",
     path: "/api/v2/projects",
-    description: "Retrieves all projects for the authenticated user (requires authentication)",
+    description:
+      "Retrieves all projects for the authenticated user (requires authentication)",
     request: {
       query: z.object({
         ownerId: z.number().optional(),
@@ -2420,7 +2456,8 @@ export function generateOpenAPISpec() {
   registry.registerPath({
     method: "delete",
     path: "/api/v2/projects/{id}",
-    description: "Deletes a project by ID (requires authentication). Also deletes all associated executions, specs, and results (cascade delete).",
+    description:
+      "Deletes a project by ID (requires authentication). Also deletes all associated executions, specs, and results (cascade delete).",
     request: {
       params: z.object({
         id: z.number(),
@@ -2471,7 +2508,8 @@ export function generateOpenAPISpec() {
   registry.registerPath({
     method: "post",
     path: "/api/v1/mcp",
-    description: "MCP server endpoint for tool execution (requires MCP Bearer token)",
+    description:
+      "MCP server endpoint for tool execution (requires MCP Bearer token)",
     request: {
       headers: [McpSessionHeaderParam.optional()],
       body: {
@@ -2678,9 +2716,9 @@ export function generateOpenAPISpec() {
       },
       {
         name: "Projects",
-        description: "Project management endpoints for organizing test executions and results",
+        description:
+          "Project management endpoints for organizing test executions and results",
       },
     ],
   });
 }
-

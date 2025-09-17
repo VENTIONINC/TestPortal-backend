@@ -61,8 +61,14 @@ export const mcpResultHandler = {
   },
 
   async getResultsStats(params?: GetResultsStatsParams): Promise<ResultsStats> {
-    const { dates } = params ?? {};
-    return await resultService.getResultsStats(dates ? { dates } : {});
+    const { projectId, dates } = params ?? {};
+
+    // Validate required projectId parameter
+    if (!projectId) {
+      throw new Error("Project ID is required for retrieving results statistics");
+    }
+
+    return await resultService.getResultsStats({ projectId, ...(dates && { dates }) });
   },
 };
 

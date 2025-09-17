@@ -24,5 +24,4 @@ export const uploadJsonReport = multer({
   limits: {
     fileSize: 50 * 1024 * 1024, // 50MB limit
   },
-}).single("report"); // Single file with field name 'report'
-
+}).single("report");
