@@ -1,5 +1,6 @@
 import { jsonReportService } from "@/services/jsonReportService";
 import type { IdentifierStrategy } from "@/lib/executionIdentifiers";
+import { DEFAULT_PROJECT_ID } from "@/config/environment";
 
 interface ReportData {
   runId?: string;
@@ -44,7 +45,10 @@ interface ProcessReportResult {
 }
 
 export const mcpJsonReportHandler = {
-  async processReport(reportData: ReportData, projectId = 1): Promise<ProcessReportResult> {
+  async processReport(
+    reportData: ReportData,
+    projectId = DEFAULT_PROJECT_ID,
+  ): Promise<ProcessReportResult> {
     return await jsonReportService.processReport(reportData, projectId);
   },
 };

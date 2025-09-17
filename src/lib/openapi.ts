@@ -2465,16 +2465,8 @@ export function generateOpenAPISpec() {
     },
     security: [{ BearerAuth: [] }],
     responses: {
-      200: {
+      204: {
         description: "Project and all associated data deleted successfully",
-        content: {
-          "application/json": {
-            schema: z.object({
-              message: z.string(),
-              project: ProjectSchema,
-            }),
-          },
-        },
       },
       400: {
         description: "Bad request - invalid project ID",

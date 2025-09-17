@@ -12,6 +12,7 @@ import type {
   PrismaResultError,
 } from "@/types";
 import type { TestResultAnalysis } from "@/services/testAnalysisService";
+import { DEFAULT_PROJECT_ID } from "@/config/environment";
 
 interface ResultCreateInput {
   reportPortalLink: string | null;
@@ -233,7 +234,7 @@ export const jsonReportService = {
           title: specData.title,
           tags: JSON.stringify(specData.tags ?? []),
           annotations: JSON.stringify(specData.annotations ?? []),
-          projectId: projectId ?? 1, // Default to project 1 if not provided
+          projectId: projectId ?? DEFAULT_PROJECT_ID,
         },
       });
 
