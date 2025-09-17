@@ -116,7 +116,7 @@ describe("jsonReportService with optional runId", () => {
       runId: "PROVIDED_RUN_ID",
     };
 
-    const result = await jsonReportService.processReport(reportData);
+    const result = await jsonReportService.processReport(reportData, 1);
 
     expect(result.success).toBe(true);
     expect(result.executionId).toBe(1);
@@ -136,7 +136,7 @@ describe("jsonReportService with optional runId", () => {
       // No runId provided
     };
 
-    const result = await jsonReportService.processReport(reportData);
+    const result = await jsonReportService.processReport(reportData, 1);
 
     expect(result.success).toBe(true);
     expect(result.executionId).toBe(1);
@@ -157,7 +157,7 @@ describe("jsonReportService with optional runId", () => {
       // No runId provided
     };
 
-    const result = await jsonReportService.processReport(reportData);
+    const result = await jsonReportService.processReport(reportData, 1);
 
     expect(result.success).toBe(true);
     
@@ -176,7 +176,7 @@ describe("jsonReportService with optional runId", () => {
       // No env, version, or runId
     };
 
-    const result = await jsonReportService.processReport(reportData);
+    const result = await jsonReportService.processReport(reportData, 1);
 
     expect(result.success).toBe(true);
     

@@ -406,12 +406,56 @@ const ResultsStatsSchema = z
   })
   .openapi("ResultsStats");
 
+// Project schemas
+const ProjectSchema = z
+  .object({
+    id: z.number(),
+    name: z.string(),
+    description: z.string().nullable(),
+    isActive: z.boolean(),
+    ownerId: z.number(),
+    createdAt: z.string(),
+    updatedAt: z.string(),
+    _count: z
+      .object({
+        executions: z.number(),
+        specs: z.number(),
+        issues: z.number(),
+      })
+      .optional(),
+  })
+  .openapi("Project");
+
+const CreateProjectRequestSchema = z
+  .object({
+    name: z.string(),
+    description: z.string().optional(),
+  })
+  .openapi("CreateProjectRequest");
+
+const UpdateProjectRequestSchema = z
+  .object({
+    name: z.string().optional(),
+    description: z.string().optional(),
+    isActive: z.boolean().optional(),
+  })
+  .openapi("UpdateProjectRequest");
+
 // Error Formatter schemas
 const ErrorFormatterRequestSchema = z
   .object({
-    name: z.string().min(1, "Name cannot be empty").max(100, "Name is too long"),
-    description: z.string().min(1, "Description cannot be empty").max(2000, "Description is too long"),
-    category: z.string().min(1, "Category cannot be empty").max(50, "Category is too long"),
+    name: z
+      .string()
+      .min(1, "Name cannot be empty")
+      .max(100, "Name is too long"),
+    description: z
+      .string()
+      .min(1, "Description cannot be empty")
+      .max(2000, "Description is too long"),
+    category: z
+      .string()
+      .min(1, "Category cannot be empty")
+      .max(50, "Category is too long"),
   })
   .openapi("ErrorFormatterRequest");
 
@@ -497,7 +541,10 @@ export function generateOpenAPISpec() {
   registry.register("UserLoginResponse", UserLoginResponseSchema);
   registry.register("RefreshTokenRequest", RefreshTokenRequestSchema);
   registry.register("UserUpdateRequest", UserUpdateRequestSchema);
-  registry.register("UserIntegrationsUpdateRequest", UserIntegrationsUpdateRequestSchema);
+  registry.register(
+    "UserIntegrationsUpdateRequest",
+    UserIntegrationsUpdateRequestSchema,
+  );
   registry.register("McpTokenResponse", McpTokenResponseSchema);
   registry.register("ResultsStats", ResultsStatsSchema);
   registry.register(
@@ -511,6 +558,9 @@ export function generateOpenAPISpec() {
   registry.register("PromptsListResponse", PromptsListResponseSchema);
   registry.register("GeneratePromptRequest", GeneratePromptRequestSchema);
   registry.register("GeneratePromptResponse", GeneratePromptResponseSchema);
+  registry.register("Project", ProjectSchema);
+  registry.register("CreateProjectRequest", CreateProjectRequestSchema);
+  registry.register("UpdateProjectRequest", UpdateProjectRequestSchema);
 
   // Base route
   registry.registerPath({
@@ -802,7 +852,7 @@ export function generateOpenAPISpec() {
   });
 
   registry.registerComponent("securitySchemes", "McpBearerAuth", {
-    type: "http", 
+    type: "http",
     scheme: "bearer",
     bearerFormat: "JWT",
     description: "MCP Bearer token authentication",
@@ -1044,9 +1094,11 @@ export function generateOpenAPISpec() {
   registry.registerPath({
     method: "get",
     path: "/api/v1/results",
-    description: "Retrieves results with optional filtering",
+    description:
+      "Retrieves results with optional filtering (requires projectId)",
     request: {
       query: z.object({
+        projectId: z.string(),
         tag: z.string().optional(),
         specId: z.string().optional(),
         specFile: z.string().optional(),
@@ -1069,6 +1121,14 @@ export function generateOpenAPISpec() {
         content: {
           "application/json": {
             schema: z.array(ResultSchema),
+          },
+        },
+      },
+      400: {
+        description: "Bad request - projectId is required or invalid",
+        content: {
+          "application/json": {
+            schema: ErrorResponseSchema,
           },
         },
       },
@@ -1121,6 +1181,7 @@ export function generateOpenAPISpec() {
       "Retrieves statistical analysis of test results including status counts, entity counts, and top errors/issues for specified dates",
     request: {
       query: z.object({
+        projectId: z.string(),
         dates: z
           .array(z.string())
           .optional()
@@ -1501,6 +1562,9 @@ export function generateOpenAPISpec() {
         content: {
           "multipart/form-data": {
             schema: z.object({
+              projectId: z.string().openapi({
+                description: "Project ID to associate the report with",
+              }),
               report: z.string().openapi({
                 type: "string",
                 format: "binary",
@@ -1776,7 +1840,8 @@ export function generateOpenAPISpec() {
   registry.registerPath({
     method: "patch",
     path: "/api/v2/users/{userId}/integrations",
-    description: "Updates user integration settings for Report Portal and Monitoring Portal (requires authentication)",
+    description:
+      "Updates user integration settings for Report Portal and Monitoring Portal (requires authentication)",
     request: {
       params: z.object({
         userId: z.number(),
@@ -1831,7 +1896,8 @@ export function generateOpenAPISpec() {
   registry.registerPath({
     method: "post",
     path: "/api/v2/users/{userId}/mcp-token",
-    description: "Generates a new MCP token for the user (requires authentication)",
+    description:
+      "Generates a new MCP token for the user (requires authentication)",
     request: {
       params: z.object({
         userId: z.number(),
@@ -1986,7 +2052,8 @@ export function generateOpenAPISpec() {
   registry.registerPath({
     method: "post",
     path: "/api/v2/error-formatter",
-    description: "Formats error information using AI to make it clear and actionable (requires authentication)",
+    description:
+      "Formats error information using AI to make it clear and actionable (requires authentication)",
     request: {
       body: {
         content: {
@@ -2038,7 +2105,8 @@ export function generateOpenAPISpec() {
   registry.registerPath({
     method: "get",
     path: "/api/v2/prompts",
-    description: "Retrieves a list of all prompt configurations with their metadata and parameters (requires authentication)",
+    description:
+      "Retrieves a list of all prompt configurations with their metadata and parameters (requires authentication)",
     security: [{ BearerAuth: [] }],
     responses: {
       200: {
@@ -2072,10 +2140,16 @@ export function generateOpenAPISpec() {
   registry.registerPath({
     method: "get",
     path: "/api/v2/prompts/{name}",
-    description: "Retrieves the configuration for a specific prompt by name (requires authentication)",
+    description:
+      "Retrieves the configuration for a specific prompt by name (requires authentication)",
     request: {
       params: z.object({
-        name: z.enum(["developer-code-assistant", "test-portal-assistant", "issue-analysis-assistant", "environment-performance-assistant"]),
+        name: z.enum([
+          "developer-code-assistant",
+          "test-portal-assistant",
+          "issue-analysis-assistant",
+          "environment-performance-assistant",
+        ]),
       }),
     },
     security: [{ BearerAuth: [] }],
@@ -2127,10 +2201,16 @@ export function generateOpenAPISpec() {
   registry.registerPath({
     method: "post",
     path: "/api/v2/prompts/{name}/generate",
-    description: "Generates a prompt using the specified template and provided parameters (requires authentication)",
+    description:
+      "Generates a prompt using the specified template and provided parameters (requires authentication)",
     request: {
       params: z.object({
-        name: z.enum(["developer-code-assistant", "test-portal-assistant", "issue-analysis-assistant", "environment-performance-assistant"]),
+        name: z.enum([
+          "developer-code-assistant",
+          "test-portal-assistant",
+          "issue-analysis-assistant",
+          "environment-performance-assistant",
+        ]),
       }),
       body: {
         content: {
@@ -2186,11 +2266,242 @@ export function generateOpenAPISpec() {
     tags: ["Prompts"],
   });
 
+  // Projects routes
+  registry.registerPath({
+    method: "get",
+    path: "/api/v2/projects",
+    description:
+      "Retrieves all projects for the authenticated user (requires authentication)",
+    request: {
+      query: z.object({
+        ownerId: z.number().optional(),
+        isActive: z.boolean().optional(),
+        name: z.string().optional(),
+      }),
+    },
+    security: [{ BearerAuth: [] }],
+    responses: {
+      200: {
+        description: "List of projects",
+        content: {
+          "application/json": {
+            schema: z.array(ProjectSchema),
+          },
+        },
+      },
+      401: {
+        description: "Unauthorized - invalid or missing token",
+        content: {
+          "application/json": {
+            schema: ErrorResponseSchema,
+          },
+        },
+      },
+      500: {
+        description: "Internal server error",
+        content: {
+          "application/json": {
+            schema: ErrorResponseSchema,
+          },
+        },
+      },
+    },
+    tags: ["Projects"],
+  });
+
+  registry.registerPath({
+    method: "get",
+    path: "/api/v2/projects/{id}",
+    description: "Retrieves a specific project by ID (requires authentication)",
+    request: {
+      params: z.object({
+        id: z.number(),
+      }),
+    },
+    security: [{ BearerAuth: [] }],
+    responses: {
+      200: {
+        description: "Project details",
+        content: {
+          "application/json": {
+            schema: ProjectSchema,
+          },
+        },
+      },
+      400: {
+        description: "Bad request - invalid project ID",
+        content: {
+          "application/json": {
+            schema: ErrorResponseSchema,
+          },
+        },
+      },
+      401: {
+        description: "Unauthorized - invalid or missing token",
+        content: {
+          "application/json": {
+            schema: ErrorResponseSchema,
+          },
+        },
+      },
+      404: {
+        description: "Project not found",
+        content: {
+          "application/json": {
+            schema: ErrorResponseSchema,
+          },
+        },
+      },
+    },
+    tags: ["Projects"],
+  });
+
+  registry.registerPath({
+    method: "post",
+    path: "/api/v2/projects",
+    description: "Creates a new project (requires authentication)",
+    request: {
+      body: {
+        content: {
+          "application/json": {
+            schema: CreateProjectRequestSchema,
+          },
+        },
+      },
+    },
+    security: [{ BearerAuth: [] }],
+    responses: {
+      201: {
+        description: "Project created successfully",
+        content: {
+          "application/json": {
+            schema: ProjectSchema,
+          },
+        },
+      },
+      400: {
+        description: "Bad request - validation errors or name already exists",
+        content: {
+          "application/json": {
+            schema: ErrorResponseSchema,
+          },
+        },
+      },
+      401: {
+        description: "Unauthorized - invalid or missing token",
+        content: {
+          "application/json": {
+            schema: ErrorResponseSchema,
+          },
+        },
+      },
+    },
+    tags: ["Projects"],
+  });
+
+  registry.registerPath({
+    method: "put",
+    path: "/api/v2/projects/{id}",
+    description: "Updates an existing project (requires authentication)",
+    request: {
+      params: z.object({
+        id: z.number(),
+      }),
+      body: {
+        content: {
+          "application/json": {
+            schema: UpdateProjectRequestSchema,
+          },
+        },
+      },
+    },
+    security: [{ BearerAuth: [] }],
+    responses: {
+      200: {
+        description: "Project updated successfully",
+        content: {
+          "application/json": {
+            schema: ProjectSchema,
+          },
+        },
+      },
+      400: {
+        description: "Bad request - validation errors or name already exists",
+        content: {
+          "application/json": {
+            schema: ErrorResponseSchema,
+          },
+        },
+      },
+      401: {
+        description: "Unauthorized - invalid or missing token",
+        content: {
+          "application/json": {
+            schema: ErrorResponseSchema,
+          },
+        },
+      },
+      404: {
+        description: "Project not found",
+        content: {
+          "application/json": {
+            schema: ErrorResponseSchema,
+          },
+        },
+      },
+    },
+    tags: ["Projects"],
+  });
+
+  registry.registerPath({
+    method: "delete",
+    path: "/api/v2/projects/{id}",
+    description:
+      "Deletes a project by ID (requires authentication). Also deletes all associated executions, specs, and results (cascade delete).",
+    request: {
+      params: z.object({
+        id: z.number(),
+      }),
+    },
+    security: [{ BearerAuth: [] }],
+    responses: {
+      204: {
+        description: "Project and all associated data deleted successfully",
+      },
+      400: {
+        description: "Bad request - invalid project ID",
+        content: {
+          "application/json": {
+            schema: ErrorResponseSchema,
+          },
+        },
+      },
+      401: {
+        description: "Unauthorized - invalid or missing token",
+        content: {
+          "application/json": {
+            schema: ErrorResponseSchema,
+          },
+        },
+      },
+      404: {
+        description: "Project not found",
+        content: {
+          "application/json": {
+            schema: ErrorResponseSchema,
+          },
+        },
+      },
+    },
+    tags: ["Projects"],
+  });
+
   // MCP Server routes - requires MCP Bearer token
   registry.registerPath({
     method: "post",
     path: "/api/v1/mcp",
-    description: "MCP server endpoint for tool execution (requires MCP Bearer token)",
+    description:
+      "MCP server endpoint for tool execution (requires MCP Bearer token)",
     request: {
       headers: [McpSessionHeaderParam.optional()],
       body: {
@@ -2395,7 +2706,11 @@ export function generateOpenAPISpec() {
         name: "Prompts",
         description: "Prompt template management and generation endpoints",
       },
+      {
+        name: "Projects",
+        description:
+          "Project management endpoints for organizing test executions and results",
+      },
     ],
   });
 }
-

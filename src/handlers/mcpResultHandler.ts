@@ -16,6 +16,7 @@ interface GetResultsResponse {
 export const mcpResultHandler = {
   async getResults(params?: GetResultsParams): Promise<GetResultsResponse> {
     const {
+      projectId,
       tag,
       specId,
       specFile,
@@ -29,8 +30,15 @@ export const mcpResultHandler = {
       limit = 1000,
     } = params ?? {};
 
+    // Validate required projectId parameter
+    if (!projectId) {
+      throw new Error("Project ID is required for retrieving results");
+    }
+
     // Build parameters object, filtering out undefined values
-    const resultParams: GetResultsParams = {};
+    const resultParams: GetResultsParams = {
+      projectId,
+    };
     if (tag) resultParams.tag = tag;
     if (specId) resultParams.specId = specId;
     if (specFile) resultParams.specFile = specFile;
@@ -53,8 +61,14 @@ export const mcpResultHandler = {
   },
 
   async getResultsStats(params?: GetResultsStatsParams): Promise<ResultsStats> {
-    const { dates } = params ?? {};
-    return await resultService.getResultsStats(dates ? { dates } : {});
+    const { projectId, dates } = params ?? {};
+
+    // Validate required projectId parameter
+    if (!projectId) {
+      throw new Error("Project ID is required for retrieving results statistics");
+    }
+
+    return await resultService.getResultsStats({ projectId, ...(dates && { dates }) });
   },
 };
 

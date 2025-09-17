@@ -17,7 +17,14 @@ export const jsonReportController = {
         return;
       }
 
-      const result = await jsonReportService.processReport(reportData);
+      // Extract projectId from request body
+      const { projectId } = req.body;
+      if (!projectId || isNaN(Number(projectId))) {
+        res.status(400).json({ error: "Valid projectId is required" });
+        return;
+      }
+      const validProjectId = Number(projectId);
+      const result = await jsonReportService.processReport(reportData, validProjectId);
 
       res.status(201).json(result);
     } catch (error) {
@@ -46,7 +53,14 @@ export const jsonReportController = {
       const transformedReport =
         await jsonReportController._transformRawReport(rawJsonReport);
 
-      const result = await jsonReportService.processReport(transformedReport);
+      // Extract projectId from request body
+      const { projectId } = req.body;
+      if (!projectId || isNaN(Number(projectId))) {
+        res.status(400).json({ error: "Valid projectId is required" });
+        return;
+      }
+      const validProjectId = Number(projectId);
+      const result = await jsonReportService.processReport(transformedReport, validProjectId);
 
       res.status(201).json(result);
     } catch (error) {
@@ -106,10 +120,17 @@ export const jsonReportController = {
         // Continue without analysis - don't fail the entire process
       }
 
+      // Extract projectId from form data (multipart form upload)
+      const { projectId } = req.body;
+      if (!projectId || isNaN(Number(projectId))) {
+        res.status(400).json({ error: "Valid projectId is required" });
+        return;
+      }
+      const validProjectId = Number(projectId);
       const result = await jsonReportService.processReport({
         ...transformedReport,
         analysis: analysisResults,
-      });
+      }, validProjectId);
 
       // Include analysis results in the response
       const response = {

@@ -19,7 +19,7 @@ export const getResults = createMcpTool(
   "get-results",
   "Retrieve test execution results with comprehensive filtering options for analysis, reporting, and debugging",
   getResultsSchema,
-  async (params: GetResultsParams = {}): Promise<MCPToolResponse> => {
+  async (params: GetResultsParams): Promise<MCPToolResponse> => {
     const results = await mcpResultHandler.getResults(params);
     return createSuccessResponse(results);
   },
@@ -42,7 +42,7 @@ export const getResultsStats = createMcpTool(
   "get-results-stats",
   "Retrieve statistical analysis of test results including status counts, entity counts, and top errors/issues for specified dates",
   getResultsStatsSchema,
-  async (params: GetResultsStatsParams = {}): Promise<MCPToolResponse> => {
+  async (params: GetResultsStatsParams): Promise<MCPToolResponse> => {
     const stats = await mcpResultHandler.getResultsStats(params);
     return createSuccessResponse(stats);
   },

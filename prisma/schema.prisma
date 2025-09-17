@@ -10,6 +10,27 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+model Project {
+  id          Int      @id @default(autoincrement())
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  name        String   @unique
+  description String?
+  isActive    Boolean  @default(true)
+  
+  // Simple ownership
+  owner       User     @relation(fields: [ownerId], references: [id])
+  ownerId     Int
+  
+  // Relationships
+  executions  Execution[]
+  specs       Spec[]
+  issues      Issue[]
+  
+  @@index([name])
+  @@index([ownerId])
+}
+
 model Execution {
   id          Int      @id @default(autoincrement())
   createdAt   DateTime @default(now())
@@ -19,19 +40,40 @@ model Execution {
   environment String
   version     String // playwright version
   startedAt   DateTime
+  
+  // Project relationship
+  project     Project  @relation(fields: [projectId], references: [id])
+  projectId   Int
+  
   results     Result[]
+  
+  @@index([projectId])
+  @@index([projectId, environment])
+  @@index([projectId, type])
+  @@index([projectId, startedAt])
 }
 
 model Spec {
   id          Int      @id @default(autoincrement())
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
-  key         String   @unique // e.g. TestRail Id
+  key         String   // e.g. TestRail Id
   file        String
   title       String
   tags        String
   annotations String?
+  
+  // Project relationship
+  project     Project  @relation(fields: [projectId], references: [id])
+  projectId   Int
+  
   results     Result[]
+  
+  // Unique key per project
+  @@unique([projectId, key])
+  @@index([projectId])
+  @@index([projectId, file])
+  @@index([projectId, title])
 }
 
 model Result {
@@ -97,6 +139,9 @@ model User {
   reportPortalEnabled    Boolean  @default(false)
   monitoringPortalUrl    String?
   monitoringPortalEnabled Boolean  @default(false)
+  
+  // Project relationships
+  projects               Project[]
   issuesCreated          Issue[]  @relation("IssuesCreated")
   issuesUpdated          Issue[]  @relation("IssuesUpdated")
 }
@@ -111,9 +156,18 @@ model Issue {
   portal      String?
   service     String?
   ticket      String?
+  
+  // Project relationship
+  project     Project      @relation(fields: [projectId], references: [id])
+  projectId   Int
+  
   createdBy   User?        @relation("IssuesCreated", fields: [createdById], references: [id])
   createdById Int?
   updatedBy   User?        @relation("IssuesUpdated", fields: [updatedById], references: [id])
   updatedById Int?
   assumptions Assumption[]
+  
+  @@index([projectId])
+  @@index([projectId, category])
+  @@index([projectId, createdAt])
 }
