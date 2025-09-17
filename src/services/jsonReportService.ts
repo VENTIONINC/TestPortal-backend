@@ -129,7 +129,7 @@ export const jsonReportService = {
     }
 
     // Process all test specs
-    await this._processSpecs(tests, executionRecord, analysis, projectId);
+    await this._processSpecs(tests, executionRecord, projectId, analysis);
 
     logger.info(
       `Successfully processed report for execution #${executionRecord.id}`,
@@ -185,8 +185,8 @@ export const jsonReportService = {
   async _processSpecs(
     specs: TestSpec[],
     executionRecord: PrismaExecution,
+    projectId: number,
     analysis?: TestResultAnalysis[],
-    projectId?: number,
   ): Promise<void> {
     for (const spec of specs) {
       if (!spec.title) {
@@ -208,7 +208,7 @@ export const jsonReportService = {
    */
   async _findOrCreateSpec(
     specData: TestSpec,
-    projectId?: number,
+    projectId: number,
   ): Promise<PrismaSpec> {
     let specKey = "";
     const titleMatch = specData.title.match(/C\d+/);
@@ -224,6 +224,7 @@ export const jsonReportService = {
     let specRecord = await dbClient.spec.findFirst({
       where: {
         key: specKey,
+        AND: { projectId },
       },
     });
 
