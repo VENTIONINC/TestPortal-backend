@@ -25,8 +25,8 @@ export interface RefreshTokenResponse {
 }
 
 const JWT_SECRET = process.env.JWT_SECRET;
-const ACCESS_TOKEN_EXPIRES_IN = "15m"; // Short-lived access token
-const REFRESH_TOKEN_EXPIRES_IN = "7d"; // Long-lived refresh token
+const ACCESS_TOKEN_EXPIRES_IN = "7d"; // Short-lived access token
+const REFRESH_TOKEN_EXPIRES_IN = "30d"; // Long-lived refresh token
 
 if (!JWT_SECRET) {
   throw new Error("JWT_SECRET environment variable is required");
