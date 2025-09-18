@@ -24,7 +24,10 @@ export const jsonReportController = {
         return;
       }
       const validProjectId = Number(projectId);
-      const result = await jsonReportService.processReport(reportData, validProjectId);
+      const result = await jsonReportService.processReport(
+        reportData,
+        validProjectId,
+      );
 
       res.status(201).json(result);
     } catch (error) {
@@ -60,7 +63,10 @@ export const jsonReportController = {
         return;
       }
       const validProjectId = Number(projectId);
-      const result = await jsonReportService.processReport(transformedReport, validProjectId);
+      const result = await jsonReportService.processReport(
+        transformedReport,
+        validProjectId,
+      );
 
       res.status(201).json(result);
     } catch (error) {
@@ -127,10 +133,13 @@ export const jsonReportController = {
         return;
       }
       const validProjectId = Number(projectId);
-      const result = await jsonReportService.processReport({
-        ...transformedReport,
-        analysis: analysisResults,
-      }, validProjectId);
+      const result = await jsonReportService.processReport(
+        {
+          ...transformedReport,
+          analysis: analysisResults,
+        },
+        validProjectId,
+      );
 
       // Include analysis results in the response
       const response = {
@@ -161,10 +170,13 @@ export const jsonReportController = {
       ._getTestCases(rawJsonReport.suites ?? [])
       .map((test) => {
         test.results = test.results.map((result: any) => {
+          const reportPortalLink =
+            result.reportPortalLink ??
+            result.allureReportLink ??
+            "https://automation.qa.theguarantors.com/allure-report/index.html";
+
           return {
-            reportPortalLink:
-              result.reportPortalLink ??
-              "https://automation.qa.theguarantors.com/allure-report/index.html",
+            reportPortalLink,
             ...result,
           };
         });
