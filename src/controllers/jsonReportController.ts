@@ -170,10 +170,6 @@ export const jsonReportController = {
       ._getTestCases(rawJsonReport.suites ?? [])
       .map((test) => {
         test.results = test.results.map((result: any) => {
-          if (result.reportPortalLink) {
-            console.log("object :>> ", result.reportPortalLink);
-          }
-
           const reportPortalLink =
             result.reportPortalLink ??
             result.allureReportLink ??
