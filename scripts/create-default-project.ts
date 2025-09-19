@@ -5,20 +5,26 @@ import { PrismaClient } from '@prisma/client';
 const prisma = new PrismaClient();
 
 async function createDefaultProject() {
-  console.log('🚀 Starting default project creation and data migration...');
-
   try {
-    // Start a transaction to ensure data consistency
     await prisma.$transaction(async (tx) => {
-      // 1. Check if there are any existing projects
-      const existingProjects = await tx.project.count();
-      
-      if (existingProjects > 0) {
-        console.log(`✅ Found ${existingProjects} existing projects. Skipping default project creation.`);
+      // Check if Default Project exists
+      const existingDefault = await tx.project.findFirst({
+        where: { name: 'Default Project' }
+      });
+
+      if (existingDefault) {
+        // Migrate any orphaned data
+        try {
+          await tx.$executeRaw`UPDATE "Execution" SET "projectId" = ${existingDefault.id} WHERE "projectId" IS NULL`;
+          await tx.$executeRaw`UPDATE "Spec" SET "projectId" = ${existingDefault.id} WHERE "projectId" IS NULL`;
+          await tx.$executeRaw`UPDATE "Issue" SET "projectId" = ${existingDefault.id} WHERE "projectId" IS NULL`;
+        } catch {
+          // Schema might enforce NOT NULL already
+        }
         return;
       }
 
-      // 2. Find the first user to be the project owner
+      // Find first user
       const firstUser = await tx.user.findFirst({
         orderBy: { createdAt: 'asc' }
       });
@@ -27,9 +33,7 @@ async function createDefaultProject() {
         throw new Error('No users found in database. Please create a user first.');
       }
 
-      console.log(`👤 Using user "${firstUser.name}" (${firstUser.email}) as default project owner`);
-
-      // 3. Create the default project
+      // Create default project
       const defaultProject = await tx.project.create({
         data: {
           name: 'Default Project',
@@ -39,34 +43,18 @@ async function createDefaultProject() {
         }
       });
 
-      console.log(`📦 Created default project: "${defaultProject.name}" (ID: ${defaultProject.id})`);
-
-      // 4. Since schema requires projectId to be NOT NULL, all existing data
-      // should already have a projectId. This script is mainly for creating
-      // the default project if it doesn't exist.
-
-      // 5. Verify project data
-      const finalCounts = {
-        executions: await tx.execution.count({ where: { projectId: defaultProject.id } }),
-        specs: await tx.spec.count({ where: { projectId: defaultProject.id } }),
-        issues: await tx.issue.count({ where: { projectId: defaultProject.id } }),
-        results: await tx.result.count({
-          where: {
-            execution: { projectId: defaultProject.id }
-          }
-        })
-      };
-
-      console.log(`\n📊 Data associated with default project:`);
-      console.log(`  - Executions: ${finalCounts.executions}`);
-      console.log(`  - Specs: ${finalCounts.specs}`);
-      console.log(`  - Issues: ${finalCounts.issues}`);
-      console.log(`  - Results: ${finalCounts.results}`);
+      // Migrate all existing data
+      try {
+        await tx.$executeRaw`UPDATE "Execution" SET "projectId" = ${defaultProject.id} WHERE "projectId" IS NULL`;
+        await tx.$executeRaw`UPDATE "Spec" SET "projectId" = ${defaultProject.id} WHERE "projectId" IS NULL`;
+        await tx.$executeRaw`UPDATE "Issue" SET "projectId" = ${defaultProject.id} WHERE "projectId" IS NULL`;
+      } catch {
+        // Columns might not exist yet
+      }
     });
 
-    console.log('\n🎉 Migration completed successfully!');
   } catch (error) {
-    console.error('❌ Migration failed:', error);
+    console.error('Migration failed:', error);
     process.exit(1);
   } finally {
     await prisma.$disconnect();

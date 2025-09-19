@@ -15,6 +15,7 @@
     "seed": "node prisma/seed/index.js",
     "seed:migrate": "node prisma/seed/migrate-from-sqlite.js",
     "create-default-project": "tsx scripts/create-default-project.ts",
+    "check-db-state": "tsx scripts/check-database-state.ts",
     "studio": "npx prisma studio",
     "migrate": "npx prisma migrate dev --name commit",
     "inspector": "npx @modelcontextprotocol/inspector node build/index.js",
