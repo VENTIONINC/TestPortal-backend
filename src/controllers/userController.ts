@@ -38,14 +38,14 @@ export const userController = {
 
   signup: async (req: Request, res: Response): Promise<void> => {
     try {
-      const userParams: CreateUserParams = req.body;
-
-      if (!userParams) {
+      if (!req.body) {
         res.status(400).json({
           error: "User data is required",
         });
         return;
       }
+
+      const userParams: CreateUserParams = req.body;
 
       const user = await userService.signup(userParams);
       const safeUser = createSafeUserResponse(user);
@@ -61,7 +61,6 @@ export const userController = {
   updateUser: async (req: Request, res: Response): Promise<void> => {
     try {
       const { userId } = req.params;
-      const updateData: UpdateUserParams = req.body;
 
       if (!userId) {
         res.status(400).json({
@@ -70,12 +69,14 @@ export const userController = {
         return;
       }
 
-      if (!updateData || Object.keys(updateData).length === 0) {
+      if (!req.body || Object.keys(req.body).length === 0) {
         res.status(400).json({
           error: "Update data is required",
         });
         return;
       }
+
+      const updateData: UpdateUserParams = req.body;
 
       const updatedUser = await userService.updateUser(userId, updateData);
       const safeUser = createSafeUserResponse(updatedUser);
@@ -90,14 +91,14 @@ export const userController = {
 
   login: async (req: Request, res: Response): Promise<void> => {
     try {
-      const loginParams: LoginParams = req.body;
-
-      if (!loginParams) {
+      if (!req.body) {
         res.status(400).json({
           error: "Login data is required",
         });
         return;
       }
+
+      const loginParams: LoginParams = req.body;
 
       const authResponse = await userService.login(
         loginParams.email,
@@ -187,6 +188,13 @@ export const userController = {
   // Cognito authentication methods
   cognitoSignup: async (req: Request, res: Response): Promise<void> => {
     try {
+      if (!req.body) {
+        res.status(400).json({
+          error: "User data is required",
+        });
+        return;
+      }
+
       const { name, email, password } = req.body;
 
       if (!name || !email || !password) {
@@ -214,6 +222,13 @@ export const userController = {
 
   cognitoLogin: async (req: Request, res: Response): Promise<void> => {
     try {
+      if (!req.body) {
+        res.status(400).json({
+          error: "Login data is required",
+        });
+        return;
+      }
+
       const { email, password, newPassword } = req.body;
 
       if (!email || !password) {

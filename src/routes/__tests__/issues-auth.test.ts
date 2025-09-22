@@ -82,24 +82,35 @@ jest.mock('@/models/issueModel', () => ({
   },
 }));
 
-import usersRouter from '../users';
+import { Router } from "express";
+import { userController } from "@/controllers/userController";
+import { authMiddleware } from "@/middleware/authMiddleware";
 import issuesRouter from '../issue';
+
+// Create test-specific router with regular auth instead of Cognito
+const testUsersRouter = Router();
+testUsersRouter.post("/v2/users/signup", userController.signup);
+testUsersRouter.post("/v2/users/login", userController.login);
+testUsersRouter.post("/v2/users/refresh-token", userController.refreshToken);
+testUsersRouter.get("/v2/users/:userId", authMiddleware, userController.getUserById);
+testUsersRouter.patch("/v2/users/:userId", authMiddleware, userController.updateUser);
+testUsersRouter.patch("/v2/users/:userId/integrations", authMiddleware, userController.updateUserIntegrations);
 
 const app = express();
 app.use(express.json());
-app.use('/api', usersRouter);
+app.use('/api', testUsersRouter);
 app.use('/api', issuesRouter);
 
 describe('v2 issues auth flow', () => {
   it('requires auth for creating issues and sets user references', async () => {
     const signupRes = await request(app)
       .post('/api/v2/users/signup')
-      .send({ name: 'Test', email: 'test2@example.com', password: 'password123' });
+      .send({ name: 'Test', email: 'test2@ventionteams.com', password: 'password123' });
     expect(signupRes.status).toBe(201);
 
     const loginRes = await request(app)
       .post('/api/v2/users/login')
-      .send({ email: 'test2@example.com', password: 'password123' });
+      .send({ email: 'test2@ventionteams.com', password: 'password123' });
     const token = loginRes.body.accessToken;
     const userId = loginRes.body.user.id;
 

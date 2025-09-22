@@ -65,11 +65,22 @@ jest.mock("@/models/userModel", () => ({
   },
 }));
 
-import usersRouter from "../users";
+import { Router } from "express";
+import { userController } from "@/controllers/userController";
+import { authMiddleware } from "@/middleware/authMiddleware";
+
+// Create test-specific router with regular auth instead of Cognito
+const testRouter = Router();
+testRouter.post("/v2/users/signup", userController.signup);
+testRouter.post("/v2/users/login", userController.login);
+testRouter.post("/v2/users/refresh-token", userController.refreshToken);
+testRouter.get("/v2/users/:userId", authMiddleware, userController.getUserById);
+testRouter.patch("/v2/users/:userId", authMiddleware, userController.updateUser);
+testRouter.patch("/v2/users/:userId/integrations", authMiddleware, userController.updateUserIntegrations);
 
 const app = express();
 app.use(express.json());
-app.use("/api", usersRouter);
+app.use("/api", testRouter);
 
 describe("Users Route - Business Logic Tests", () => {
   beforeEach(() => {
@@ -99,13 +110,13 @@ describe("Users Route - Business Logic Tests", () => {
       // First create a user and get auth token
       await request(app).post("/api/v2/users/signup").send({
         name: "Test User",
-        email: "test@example.com",
+        email: "test@ventionteams.com",
         password: "password123",
       });
 
       const loginRes = await request(app)
         .post("/api/v2/users/login")
-        .send({ email: "test@example.com", password: "password123" });
+        .send({ email: "test@ventionteams.com", password: "password123" });
 
       const { accessToken, user } = loginRes.body;
 
@@ -122,13 +133,13 @@ describe("Users Route - Business Logic Tests", () => {
       // Create user and get token
       await request(app).post("/api/v2/users/signup").send({
         name: "Test User",
-        email: "test@example.com",
+        email: "test@ventionteams.com",
         password: "password123",
       });
 
       const loginRes = await request(app)
         .post("/api/v2/users/login")
-        .send({ email: "test@example.com", password: "password123" });
+        .send({ email: "test@ventionteams.com", password: "password123" });
 
       const { accessToken, user } = loginRes.body;
 
@@ -165,13 +176,13 @@ describe("Users Route - Business Logic Tests", () => {
       // Create user first to get valid token
       await request(app).post("/api/v2/users/signup").send({
         name: "Test User",
-        email: "test@example.com",
+        email: "test@ventionteams.com",
         password: "password123",
       });
 
       const loginRes = await request(app)
         .post("/api/v2/users/login")
-        .send({ email: "test@example.com", password: "password123" });
+        .send({ email: "test@ventionteams.com", password: "password123" });
 
       const { accessToken } = loginRes.body;
 
@@ -193,7 +204,7 @@ describe("Users Route - Business Logic Tests", () => {
 
       const res = await request(app).post("/api/v2/users/signup").send({
         name: "Test User",
-        email: "test@example.com",
+        email: "test@ventionteams.com",
         password: "password123",
       });
 
@@ -207,7 +218,7 @@ describe("Users Route - Business Logic Tests", () => {
 
       const res = await request(app)
         .post("/api/v2/users/login")
-        .send({ email: "test@example.com", password: "password123" });
+        .send({ email: "test@ventionteams.com", password: "password123" });
 
       expect(res.status).toBe(401);
       expect(res.body.error).toBe("Authentication service unavailable");
@@ -217,13 +228,13 @@ describe("Users Route - Business Logic Tests", () => {
       // Create user first
       await request(app).post("/api/v2/users/signup").send({
         name: "Test User",
-        email: "test@example.com",
+        email: "test@ventionteams.com",
         password: "password123",
       });
 
       const loginRes = await request(app)
         .post("/api/v2/users/login")
-        .send({ email: "test@example.com", password: "password123" });
+        .send({ email: "test@ventionteams.com", password: "password123" });
 
       const { accessToken, user } = loginRes.body;
 
@@ -257,13 +268,13 @@ describe("Users Route - Business Logic Tests", () => {
     it("should not expose password hash in signup response", async () => {
       const res = await request(app).post("/api/v2/users/signup").send({
         name: "Test User",
-        email: "test@example.com",
+        email: "test@ventionteams.com",
         password: "password123",
       });
 
       expect(res.status).toBe(201);
       expect(res.body.name).toBe("Test User");
-      expect(res.body.email).toBe("test@example.com");
+      expect(res.body.email).toBe("test@ventionteams.com");
       expect(res.body.passwordHash).toBeUndefined();
       expect(res.body.password).toBeUndefined();
     });
@@ -271,13 +282,13 @@ describe("Users Route - Business Logic Tests", () => {
     it("should not expose password hash in login response", async () => {
       await request(app).post("/api/v2/users/signup").send({
         name: "Test User",
-        email: "test@example.com",
+        email: "test@ventionteams.com",
         password: "password123",
       });
 
       const res = await request(app)
         .post("/api/v2/users/login")
-        .send({ email: "test@example.com", password: "password123" });
+        .send({ email: "test@ventionteams.com", password: "password123" });
 
       expect(res.status).toBe(200);
       expect(res.body.user.passwordHash).toBeUndefined();
@@ -289,13 +300,13 @@ describe("Users Route - Business Logic Tests", () => {
     it("should not expose password hash in user profile response", async () => {
       await request(app).post("/api/v2/users/signup").send({
         name: "Test User",
-        email: "test@example.com",
+        email: "test@ventionteams.com",
         password: "password123",
       });
 
       const loginRes = await request(app)
         .post("/api/v2/users/login")
-        .send({ email: "test@example.com", password: "password123" });
+        .send({ email: "test@ventionteams.com", password: "password123" });
 
       const { accessToken, user } = loginRes.body;
 
@@ -311,13 +322,13 @@ describe("Users Route - Business Logic Tests", () => {
     it("should not expose password hash in update response", async () => {
       await request(app).post("/api/v2/users/signup").send({
         name: "Test User",
-        email: "test@example.com",
+        email: "test@ventionteams.com",
         password: "password123",
       });
 
       const loginRes = await request(app)
         .post("/api/v2/users/login")
-        .send({ email: "test@example.com", password: "password123" });
+        .send({ email: "test@ventionteams.com", password: "password123" });
 
       const { accessToken, user } = loginRes.body;
 
@@ -336,13 +347,13 @@ describe("Users Route - Business Logic Tests", () => {
       // Create a user first
       await request(app).post("/api/v2/users/signup").send({
         name: "Test User",
-        email: "test@example.com",
+        email: "test@ventionteams.com",
         password: "password123",
       });
 
       const loginRes = await request(app)
         .post("/api/v2/users/login")
-        .send({ email: "test@example.com", password: "password123" });
+        .send({ email: "test@ventionteams.com", password: "password123" });
 
       const { user } = loginRes.body;
 
@@ -388,18 +399,18 @@ describe("Users Route - Business Logic Tests", () => {
       // 1. User signup
       const signupRes = await request(app).post("/api/v2/users/signup").send({
         name: "Lifecycle Test",
-        email: "lifecycle@example.com",
+        email: "lifecycle@ventionteams.com",
         password: "password123",
       });
 
       expect(signupRes.status).toBe(201);
       expect(signupRes.body.name).toBe("Lifecycle Test");
-      expect(signupRes.body.email).toBe("lifecycle@example.com");
+      expect(signupRes.body.email).toBe("lifecycle@ventionteams.com");
 
       // 2. User login
       const loginRes = await request(app)
         .post("/api/v2/users/login")
-        .send({ email: "lifecycle@example.com", password: "password123" });
+        .send({ email: "lifecycle@ventionteams.com", password: "password123" });
 
       expect(loginRes.status).toBe(200);
       expect(loginRes.body.accessToken).toBeDefined();
@@ -414,7 +425,7 @@ describe("Users Route - Business Logic Tests", () => {
 
       expect(profileRes.status).toBe(200);
       expect(profileRes.body.name).toBe("Lifecycle Test");
-      expect(profileRes.body.email).toBe("lifecycle@example.com");
+      expect(profileRes.body.email).toBe("lifecycle@ventionteams.com");
 
       // 4. Update user profile
       const updateRes = await request(app)

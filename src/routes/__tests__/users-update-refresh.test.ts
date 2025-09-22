@@ -52,11 +52,22 @@ jest.mock('@/models/userModel', () => ({
   },
 }));
 
-import usersRouter from '../users';
+import { Router } from "express";
+import { userController } from "@/controllers/userController";
+import { authMiddleware } from "@/middleware/authMiddleware";
+
+// Create test-specific router with regular auth instead of Cognito
+const testRouter = Router();
+testRouter.post("/v2/users/signup", userController.signup);
+testRouter.post("/v2/users/login", userController.login);
+testRouter.post("/v2/users/refresh-token", userController.refreshToken);
+testRouter.get("/v2/users/:userId", authMiddleware, userController.getUserById);
+testRouter.patch("/v2/users/:userId", authMiddleware, userController.updateUser);
+testRouter.patch("/v2/users/:userId/integrations", authMiddleware, userController.updateUserIntegrations);
 
 const app = express();
 app.use(express.json());
-app.use('/api', usersRouter);
+app.use('/api', testRouter);
 
 describe('users route additional flows', () => {
   beforeEach(() => {
@@ -68,11 +79,11 @@ describe('users route additional flows', () => {
   it('refreshes tokens using /refresh-token', async () => {
     await request(app)
       .post('/api/v2/users/signup')
-      .send({ name: 'Test', email: 'test@example.com', password: 'password123' });
+      .send({ name: 'Test', email: 'test@ventionteams.com', password: 'password123' });
 
     const loginRes = await request(app)
       .post('/api/v2/users/login')
-      .send({ email: 'test@example.com', password: 'password123' });
+      .send({ email: 'test@ventionteams.com', password: 'password123' });
     const { refreshToken } = loginRes.body;
 
     const refreshRes = await request(app)
@@ -86,10 +97,10 @@ describe('users route additional flows', () => {
   it('updates user data via PATCH', async () => {
     await request(app)
       .post('/api/v2/users/signup')
-      .send({ name: 'Test', email: 'test@example.com', password: 'password123' });
+      .send({ name: 'Test', email: 'test@ventionteams.com', password: 'password123' });
     const loginRes = await request(app)
       .post('/api/v2/users/login')
-      .send({ email: 'test@example.com', password: 'password123' });
+      .send({ email: 'test@ventionteams.com', password: 'password123' });
     const userId = loginRes.body.user.id;
     const token = loginRes.body.accessToken;
 

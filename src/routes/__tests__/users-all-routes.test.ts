@@ -68,11 +68,22 @@ jest.mock('@/models/userModel', () => ({
   },
 }));
 
-import usersRouter from '../users';
+import { Router } from "express";
+import { userController } from "@/controllers/userController";
+import { authMiddleware } from "@/middleware/authMiddleware";
+
+// Create test-specific router with regular auth instead of Cognito
+const testRouter = Router();
+testRouter.post("/v2/users/signup", userController.signup);
+testRouter.post("/v2/users/login", userController.login);
+testRouter.post("/v2/users/refresh-token", userController.refreshToken);
+testRouter.get("/v2/users/:userId", authMiddleware, userController.getUserById);
+testRouter.patch("/v2/users/:userId", authMiddleware, userController.updateUser);
+testRouter.patch("/v2/users/:userId/integrations", authMiddleware, userController.updateUserIntegrations);
 
 const app = express();
 app.use(express.json());
-app.use('/api', usersRouter);
+app.use('/api', testRouter);
 
 beforeEach(() => {
   users.length = 0;
@@ -84,20 +95,20 @@ describe('users routes', () => {
   it('POST /signup creates a user', async () => {
     const res = await request(app)
       .post('/api/v2/users/signup')
-      .send({ name: 'Alice', email: 'alice@example.com', password: 'password123' });
+      .send({ name: 'Alice', email: 'alice@ventionteams.com', password: 'password123' });
 
     expect(res.status).toBe(201);
-    expect(res.body.email).toBe('alice@example.com');
+    expect(res.body.email).toBe('alice@ventionteams.com');
   });
 
   it('POST /login authenticates user', async () => {
     await request(app)
       .post('/api/v2/users/signup')
-      .send({ name: 'Bob', email: 'bob@example.com', password: 'password123' });
+      .send({ name: 'Bob', email: 'bob@ventionteams.com', password: 'password123' });
 
     const res = await request(app)
       .post('/api/v2/users/login')
-      .send({ email: 'bob@example.com', password: 'password123' });
+      .send({ email: 'bob@ventionteams.com', password: 'password123' });
 
     expect(res.status).toBe(200);
     expect(res.body).toHaveProperty('accessToken');
@@ -107,11 +118,11 @@ describe('users routes', () => {
   it('GET /:userId returns user when authorized', async () => {
     await request(app)
       .post('/api/v2/users/signup')
-      .send({ name: 'Carol', email: 'carol@example.com', password: 'password123' });
+      .send({ name: 'Carol', email: 'carol@ventionteams.com', password: 'password123' });
 
     const loginRes = await request(app)
       .post('/api/v2/users/login')
-      .send({ email: 'carol@example.com', password: 'password123' });
+      .send({ email: 'carol@ventionteams.com', password: 'password123' });
     const token = loginRes.body.accessToken;
     const userId = loginRes.body.user.id;
 
@@ -123,17 +134,17 @@ describe('users routes', () => {
       .set('Authorization', `Bearer ${token}`);
 
     expect(res.status).toBe(200);
-    expect(res.body.email).toBe('carol@example.com');
+    expect(res.body.email).toBe('carol@ventionteams.com');
   });
 
   it('POST /refresh-token issues new tokens', async () => {
     await request(app)
       .post('/api/v2/users/signup')
-      .send({ name: 'Dave', email: 'dave@example.com', password: 'password123' });
+      .send({ name: 'Dave', email: 'dave@ventionteams.com', password: 'password123' });
 
     const loginRes = await request(app)
       .post('/api/v2/users/login')
-      .send({ email: 'dave@example.com', password: 'password123' });
+      .send({ email: 'dave@ventionteams.com', password: 'password123' });
     const { refreshToken } = loginRes.body;
 
     const res = await request(app)
@@ -148,11 +159,11 @@ describe('users routes', () => {
   it('PATCH /:userId updates user data', async () => {
     await request(app)
       .post('/api/v2/users/signup')
-      .send({ name: 'Eve', email: 'eve@example.com', password: 'password123' });
+      .send({ name: 'Eve', email: 'eve@ventionteams.com', password: 'password123' });
 
     const loginRes = await request(app)
       .post('/api/v2/users/login')
-      .send({ email: 'eve@example.com', password: 'password123' });
+      .send({ email: 'eve@ventionteams.com', password: 'password123' });
     const token = loginRes.body.accessToken;
     const userId = loginRes.body.user.id;
 
