@@ -55,7 +55,7 @@
     "sourceMap": true,
     "removeComments": true
   },
-  "include": ["src/**/*", "index.ts", "path.config.ts", "prisma/**/*"],
+  "include": ["src/**/*", "index.ts", "path.config.ts", "prisma/**/*", "scripts/**/*"],
   "exclude": ["node_modules", "dist", "**/*.js"],
   "ts-node": {
     "esm": true,

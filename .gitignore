@@ -62,7 +62,6 @@ typings/
 
 # Prisma
 prisma/prisma
-prisma/migrations
 dev.db
 
 .tmp
