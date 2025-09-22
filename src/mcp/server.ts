@@ -13,7 +13,6 @@ import {
   getIssues,
   getIssueById,
   createIssue,
-  getMockIssues,
 } from "@/mcp/tools/issues";
 import {
   getResults,
@@ -97,7 +96,6 @@ router.post(
         server.tool(...getIssues);
         server.tool(...getIssueById);
         server.tool(...createIssue);
-        server.tool(...getMockIssues);
 
         // Result tools
         server.tool(...getResults);

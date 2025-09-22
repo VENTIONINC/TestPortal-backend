@@ -39,6 +39,7 @@ interface CreateIssueParams {
   portal?: string;
   service?: string;
   ticket?: string;
+  projectId: string;
 }
 
 interface UpdateIssueParams {
@@ -94,9 +95,5 @@ export const mcpIssueHandler = {
     updateData: UpdateIssueParams,
   ): Promise<PrismaIssue> {
     return await issueService.updateIssue(issueId, updateData);
-  },
-
-  async getMockIssues(): Promise<PrismaIssue[]> {
-    return await issueService.getMockIssues();
   },
 };

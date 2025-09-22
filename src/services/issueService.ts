@@ -11,9 +11,6 @@ import { dbClient } from "@/prisma/client";
 import { IssueCategory } from "@/types/enums";
 import { Prisma } from "@prisma/client";
 
-const sleep = (ms: number): Promise<void> =>
-  new Promise((resolve) => setTimeout(resolve, ms));
-
 interface GetAllIssuesParams {
   category?: IssueCategory;
   name?: string;
@@ -72,6 +69,7 @@ interface CreateIssueParams {
   portal?: string;
   service?: string;
   ticket?: string;
+  projectId: string;
   createdById?: number;
   updatedById?: number;
 }
@@ -212,38 +210,6 @@ export const issueService = {
       const err = error as Error;
       throw new Error(`Failed to delete issue: ${err.message}`);
     }
-  },
-
-  // Mock service for testing
-  async getMockIssues(): Promise<PrismaIssue[]> {
-    const mockIssues: PrismaIssue[] = [
-      {
-        id: 1,
-        createdAt: new Date("2024-01-15T10:30:00Z"),
-        updatedAt: new Date("2024-01-15T10:30:00Z"),
-        name: "Login Authentication Failure",
-        category: "authentication",
-        description:
-          "Users are experiencing intermittent login failures when using multi-factor authentication",
-        portal: "user-portal",
-        service: "auth-service",
-        ticket: "TICKET-12345",
-      },
-      {
-        id: 2,
-        createdAt: new Date("2024-01-16T14:20:00Z"),
-        updatedAt: new Date("2024-01-16T15:45:00Z"),
-        name: "Payment Processing Timeout",
-        category: "payment",
-        description: "Payment transactions are timing out during peak hours",
-        portal: "checkout-portal",
-        service: "payment-service",
-        ticket: "TICKET-12346",
-      },
-    ];
-
-    await sleep(1000);
-    return mockIssues;
   },
 
   async getAllIssuesWithStats(
