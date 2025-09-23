@@ -14,6 +14,7 @@ import testAnalysis from "@/routes/test-analysis";
 import errorFormatter from "@/routes/error-formatter";
 import prompts from "@/routes/promptRoutes";
 import projects from "@/routes/projects";
+import ctrf from "@/routes/ctrf";
 import mcp from "@/mcp/server";
 
 const router = Router();
@@ -37,6 +38,7 @@ router.use(testAnalysis);
 router.use(errorFormatter);
 router.use(prompts);
 router.use(projects);
+router.use("/ctrf", ctrf);
 router.use(mcp);
 
 export default router;

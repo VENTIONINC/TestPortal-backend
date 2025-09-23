@@ -3,6 +3,7 @@ export * from "@/types/database";
 export * from "@/types/api";
 export * from "@/types/mcp";
 export * from "@/types/tests";
+export * from "@/types/ctrf";
 
 // Express types extensions
 import type { Request } from "express";
