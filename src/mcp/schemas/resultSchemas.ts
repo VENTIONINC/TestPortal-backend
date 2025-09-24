@@ -5,7 +5,7 @@ import type { MCPToolSchema } from "@/types";
  * Schema for filtering and paginating test results
  */
 export const getResultsSchema: MCPToolSchema = {
-  projectId: z.number(),
+  projectId: z.string(),
   tag: z.string().optional(),
   specId: z.string().optional(),
   specFile: z.string().optional(),
@@ -30,7 +30,7 @@ export const getResultByIdSchema: MCPToolSchema = {
  * Schema for getting results statistics
  */
 export const getResultsStatsSchema: MCPToolSchema = {
-  projectId: z.number(),
+  projectId: z.string(),
   dates: z.array(z.string()).optional(),
 };
 

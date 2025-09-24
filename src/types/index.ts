@@ -69,6 +69,7 @@ export interface CreateIssueParams {
   portal?: string;
   service?: string;
   ticket?: string;
+  projectId: string;
   createdById?: number;
   updatedById?: number;
 }

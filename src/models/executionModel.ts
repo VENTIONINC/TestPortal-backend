@@ -3,7 +3,7 @@ import type { PrismaExecution } from "@/types";
 import type { Prisma } from "@prisma/client";
 
 export interface FindManyParams {
-  projectId?: number;
+  projectId?: string;
   type?: string;
   environment?: string;
   limit?: number;

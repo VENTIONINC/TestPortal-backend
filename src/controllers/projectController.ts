@@ -16,9 +16,9 @@ export const projectController = {
   async getProjectById(req: Request, res: Response): Promise<void> {
     try {
       const { id } = req.params;
-      const projectId = Number(id);
+      const projectId = id;
 
-      if (isNaN(projectId)) {
+      if (!projectId || typeof projectId !== "string") {
         res.status(400).json({ error: "Invalid project ID" });
         return;
       }
@@ -75,9 +75,9 @@ export const projectController = {
   async updateProject(req: Request, res: Response): Promise<void> {
     try {
       const { id } = req.params;
-      const projectId = Number(id);
+      const projectId = id;
 
-      if (isNaN(projectId)) {
+      if (!projectId || typeof projectId !== "string") {
         res.status(400).json({ error: "Invalid project ID" });
         return;
       }
@@ -129,9 +129,9 @@ export const projectController = {
   async deleteProject(req: Request, res: Response): Promise<void> {
     try {
       const { id } = req.params;
-      const projectId = Number(id);
+      const projectId = id;
 
-      if (isNaN(projectId)) {
+      if (!projectId || typeof projectId !== "string") {
         res.status(400).json({ error: "Invalid project ID" });
         return;
       }

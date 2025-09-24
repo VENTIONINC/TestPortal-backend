@@ -3,7 +3,7 @@ import type { ResultWithRelations, ResultsStats } from "@/types";
 import { Prisma } from "@prisma/client";
 
 export interface ResultFilters {
-  projectId: number;
+  projectId: string;
   tag?: string;
   specId?: string;
   specFile?: string;
@@ -189,7 +189,7 @@ export const resultModel = {
       if (toDate) whereClause.startTime.lte = toDate;
     }
 
-    return (await dbClient.result.findMany({
+    return await dbClient.result.findMany({
       where: whereClause,
       skip: (page - 1) * limit,
       take: Number(limit),
@@ -209,7 +209,7 @@ export const resultModel = {
           },
         },
       },
-    })) as ResultWithRelations[];
+    }) as ResultWithRelations[];
   },
 
   count: async (filters: ResultFilters): Promise<number> => {
@@ -362,7 +362,7 @@ export const resultModel = {
   },
 
   getStats: async (filters: {
-    projectId: number;
+    projectId: string;
     dates?: string[] | undefined;
   }): Promise<ResultsStats> => {
     const { projectId, dates } = filters;

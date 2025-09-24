@@ -31,17 +31,16 @@ export const resultController = {
         return;
       }
 
-      const parsedProjectId = Number(projectId);
-      if (isNaN(parsedProjectId)) {
+      if (!projectId || typeof projectId !== "string") {
         res.status(400).json({
-          error: "Project ID must be a valid number",
+          error: "Project ID must be a valid string",
         });
         return;
       }
 
       // Convert and validate parameters, filtering out undefined values
       const params: GetResultsParams = {
-        projectId: parsedProjectId,
+        projectId: projectId,
       };
       if (tag) params.tag = tag;
       if (specId) params.specId = specId;
@@ -102,10 +101,9 @@ export const resultController = {
         return;
       }
 
-      const parsedProjectId = Number(projectId);
-      if (isNaN(parsedProjectId)) {
+      if (!projectId || typeof projectId !== "string") {
         res.status(400).json({
-          error: "Project ID must be a valid number",
+          error: "Project ID must be a valid string",
         });
         return;
       }
@@ -121,7 +119,7 @@ export const resultController = {
       }
 
       const params: GetResultsStatsParams = {
-        projectId: parsedProjectId,
+        projectId: projectId,
         ...(parsedDates && { dates: parsedDates }),
       };
       const stats = await resultService.getResultsStats(params);

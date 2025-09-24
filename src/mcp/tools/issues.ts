@@ -5,7 +5,6 @@ import {
   getIssueByIdSchema,
   createIssueSchema,
 } from "@/mcp/schemas/issueSchemas";
-import { emptySchema } from "@/mcp/schemas/commonSchemas";
 import type { MCPToolResponse } from "@/types";
 import { IssueCategory } from "@/types/enums";
 
@@ -27,6 +26,7 @@ interface CreateIssueParams {
   portal?: string;
   service?: string;
   ticket?: string;
+  projectId: string;
 }
 
 export const getIssues = createMcpTool(
@@ -72,15 +72,4 @@ export const createIssue = createMcpTool(
     return createSuccessResponse(issue, "Issue created successfully:");
   },
   "creating issue",
-);
-
-export const getMockIssues = createMcpTool(
-  "get-mock-issues",
-  "Get mock issues for testing and demonstration purposes",
-  emptySchema,
-  async (): Promise<MCPToolResponse> => {
-    const issues = await mcpIssueHandler.getMockIssues();
-    return createSuccessResponse(issues);
-  },
-  "fetching mock issues",
 );
