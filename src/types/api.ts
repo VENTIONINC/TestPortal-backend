@@ -28,7 +28,7 @@ export interface GetProjectByIdParams {
 
 // Result API Types
 export interface GetResultsParams extends PaginationParams {
-  projectId: number;
+  projectId: string;
   tag?: string;
   specId?: string;
   specFile?: string;
@@ -48,7 +48,7 @@ export interface GetResultByIdParams {
 }
 
 export interface GetResultsStatsParams {
-  projectId: number;
+  projectId: string;
   dates?: string[];
 }
 
@@ -132,4 +132,3 @@ export interface SuccessResponse<T> {
   success: true;
   data: T;
 }
-

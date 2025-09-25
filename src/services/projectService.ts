@@ -34,10 +34,10 @@ export interface ProjectWithDetails extends Project {
 
 export const projectService = {
   async getProjects(params: GetProjectsParams): Promise<ProjectWithDetails[]> {
-    return await projectModel.findMany(params) as ProjectWithDetails[];
+    return (await projectModel.findMany(params)) as ProjectWithDetails[];
   },
 
-  async getProjectById(id: number): Promise<ProjectWithDetails | null> {
+  async getProjectById(id: string): Promise<ProjectWithDetails | null> {
     return await projectModel.findById(id);
   },
 
@@ -55,7 +55,10 @@ export const projectService = {
     return await projectModel.create(params);
   },
 
-  async updateProject(id: number, params: UpdateProjectParams): Promise<Project> {
+  async updateProject(
+    id: string,
+    params: UpdateProjectParams,
+  ): Promise<Project> {
     // If updating name, check if it already exists
     if (params.name) {
       const existingProject = await projectModel.findByName(params.name);
@@ -67,17 +70,24 @@ export const projectService = {
     return await projectModel.update(id, params);
   },
 
-  async deleteProject(id: number): Promise<Project> {
+  async deleteProject(id: string): Promise<Project> {
     // Check if project has associated data
     const project = await projectModel.findById(id);
-    if (project && (project._count.executions > 0 || project._count.specs > 0 || project._count.issues > 0)) {
-      throw new Error("Cannot delete project with existing data. Please move or delete associated executions, specs, and issues first.");
+    if (
+      project &&
+      (project._count.executions > 0 ||
+        project._count.specs > 0 ||
+        project._count.issues > 0)
+    ) {
+      throw new Error(
+        "Cannot delete project with existing data. Please move or delete associated executions, specs, and issues first.",
+      );
     }
 
     return await projectModel.delete(id);
   },
 
-  async validateProjectExists(projectId: number): Promise<boolean> {
+  async validateProjectExists(projectId: string): Promise<boolean> {
     const project = await projectModel.findById(projectId);
     return !!project && project.isActive;
   },

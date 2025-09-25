@@ -9,19 +9,19 @@ export const projectModel = {
     name?: string;
   }): Promise<Project[]> {
     const where: Prisma.ProjectWhereInput = {};
-    
+
     if (filters?.ownerId) {
       where.ownerId = filters.ownerId;
     }
-    
+
     if (filters?.isActive !== undefined) {
       where.isActive = filters.isActive;
     }
-    
+
     if (filters?.name) {
       where.name = {
         contains: filters.name,
-        mode: 'insensitive',
+        mode: "insensitive",
       };
     }
 
@@ -44,19 +44,22 @@ export const projectModel = {
         },
       },
       orderBy: {
-        createdAt: 'desc',
+        createdAt: "desc",
       },
     });
   },
 
-  async findById(id: number): Promise<Project & {
-    owner: { id: number; name: string; email: string };
-    _count: {
-      executions: number;
-      specs: number;
-      issues: number;
-    };
-  } | null> {
+  async findById(id: string): Promise<
+    | (Project & {
+        owner: { id: number; name: string; email: string };
+        _count: {
+          executions: number;
+          specs: number;
+          issues: number;
+        };
+      })
+    | null
+  > {
     return await prisma.project.findUnique({
       where: { id },
       include: {
@@ -108,12 +111,12 @@ export const projectModel = {
   },
 
   async update(
-    id: number,
+    id: string,
     data: {
       name?: string;
       description?: string;
       isActive?: boolean;
-    }
+    },
   ): Promise<Project> {
     return await prisma.project.update({
       where: { id },
@@ -130,13 +133,13 @@ export const projectModel = {
     });
   },
 
-  async delete(id: number): Promise<Project> {
+  async delete(id: string): Promise<Project> {
     return await prisma.project.delete({
       where: { id },
     });
   },
 
-  async checkOwnership(projectId: number, userId: number): Promise<boolean> {
+  async checkOwnership(projectId: string, userId: number): Promise<boolean> {
     const project = await prisma.project.findUnique({
       where: {
         id: projectId,
@@ -162,7 +165,7 @@ export const projectModel = {
         },
       },
       orderBy: {
-        createdAt: 'desc',
+        createdAt: "desc",
       },
     });
   },

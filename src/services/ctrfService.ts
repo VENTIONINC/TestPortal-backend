@@ -1,16 +1,22 @@
 import getLogger from "@/lib/logger";
 import type { CTRFReport, CTRFTest } from "@/types/ctrf";
-import type { ReportData } from "@/services/jsonReportService";
+import type {
+  ReportData,
+  ProcessReportResult,
+} from "@/services/jsonReportService";
 import { jsonReportService } from "@/services/jsonReportService";
 
 const logger = getLogger("ctrf-service");
 
 interface CTRFProcessOptions {
-  projectId: number;
+  projectId: string;
 }
 
 export const ctrfService = {
-  async processReport(ctrfReport: CTRFReport, options: CTRFProcessOptions) {
+  async processReport(
+    ctrfReport: CTRFReport,
+    options: CTRFProcessOptions,
+  ): Promise<ProcessReportResult> {
     const { projectId } = options;
     const { results } = ctrfReport;
 
@@ -18,7 +24,10 @@ export const ctrfService = {
 
     const reportData = this.transformCtrfToReportData(ctrfReport);
 
-    return await jsonReportService.processReport(reportData, projectId);
+    return await jsonReportService.processReport(
+      reportData,
+      projectId.toString(),
+    );
   },
 
   transformCtrfToReportData(ctrfReport: CTRFReport): ReportData {
@@ -42,30 +51,35 @@ export const ctrfService = {
   transformCtrfTest(ctrfTest: CTRFTest) {
     const results = [
       {
-        reportPortalLink: undefined,
         retry: ctrfTest.retry ?? 0,
         status: this.mapCtrfStatus(ctrfTest.status),
         duration: ctrfTest.duration,
         startTime: new Date(),
-        error: ctrfTest.message
+        ...(ctrfTest.message
           ? {
-              message: ctrfTest.message,
-              stack: ctrfTest.trace ?? "",
-              location: this.parseLocation(ctrfTest.filePath),
+              error: {
+                message: ctrfTest.message,
+                stack: ctrfTest.trace ?? "",
+                location: this.parseLocation(ctrfTest.filePath),
+              },
             }
-          : undefined,
+          : {}),
         workerIndex: 0,
       },
     ];
 
-    return {
+    const testSpec = {
       title: ctrfTest.name,
-      custom_id: (ctrfTest.meta?.testId as string) || undefined,
       location: this.parseLocation(ctrfTest.filePath),
       tags: ctrfTest.tags ?? [],
       annotations: [],
       results,
+      ...(ctrfTest.meta?.testId
+        ? { custom_id: ctrfTest.meta.testId as string }
+        : {}),
     };
+
+    return testSpec;
   },
 
   mapCtrfStatus(status: string): string {

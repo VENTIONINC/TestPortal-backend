@@ -16,14 +16,13 @@ export const projectController = {
   async getProjectById(req: Request, res: Response): Promise<void> {
     try {
       const { id } = req.params;
-      const projectId = Number(id);
 
-      if (isNaN(projectId)) {
+      if (!id) {
         res.status(400).json({ error: "Invalid project ID" });
         return;
       }
 
-      const project = await projectService.getProjectById(projectId);
+      const project = await projectService.getProjectById(id);
 
       if (!project) {
         res.status(404).json({ error: "Project not found" });
@@ -75,9 +74,8 @@ export const projectController = {
   async updateProject(req: Request, res: Response): Promise<void> {
     try {
       const { id } = req.params;
-      const projectId = Number(id);
 
-      if (isNaN(projectId)) {
+      if (!id) {
         res.status(400).json({ error: "Invalid project ID" });
         return;
       }
@@ -112,7 +110,7 @@ export const projectController = {
         updateData.isActive = isActive;
       }
 
-      const project = await projectService.updateProject(projectId, updateData);
+      const project = await projectService.updateProject(id, updateData);
       res.json(project);
     } catch (error) {
       const err = error as Error;
@@ -129,14 +127,13 @@ export const projectController = {
   async deleteProject(req: Request, res: Response): Promise<void> {
     try {
       const { id } = req.params;
-      const projectId = Number(id);
 
-      if (isNaN(projectId)) {
+      if (!id) {
         res.status(400).json({ error: "Invalid project ID" });
         return;
       }
 
-      await projectService.deleteProject(projectId);
+      await projectService.deleteProject(id);
       res.status(204).send();
     } catch (error) {
       const err = error as Error;

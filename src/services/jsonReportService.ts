@@ -71,7 +71,7 @@ interface ErrorData {
   location: { file: string; line: number };
 }
 
-interface ProcessReportResult {
+export interface ProcessReportResult {
   success: boolean;
   executionId: number;
   specsProcessed: number;
@@ -83,7 +83,7 @@ export const jsonReportService = {
    */
   async processReport(
     reportData: ReportData,
-    projectId: number,
+    projectId: string,
   ): Promise<ProcessReportResult> {
     if (!reportData) {
       throw new Error("Report data is required");
@@ -150,7 +150,7 @@ export const jsonReportService = {
     env: string;
     version: string;
     stats?: { startTime?: string | Date };
-    projectId: number;
+    projectId: string;
   }): Promise<PrismaExecution> {
     const { runId, env, version, stats, projectId } = params;
 
@@ -185,7 +185,7 @@ export const jsonReportService = {
   async _processSpecs(
     specs: TestSpec[],
     executionRecord: PrismaExecution,
-    projectId: number,
+    projectId: string,
     analysis?: TestResultAnalysis[],
   ): Promise<void> {
     for (const spec of specs) {
@@ -208,7 +208,7 @@ export const jsonReportService = {
    */
   async _findOrCreateSpec(
     specData: TestSpec,
-    projectId: number,
+    projectId: string,
   ): Promise<PrismaSpec> {
     let specKey = "";
     const titleMatch = specData.title.match(/C\d+/);

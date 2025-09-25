@@ -3,7 +3,7 @@ import type { ResultWithRelations, ResultsStats } from "@/types";
 import { Prisma } from "@prisma/client";
 
 export interface ResultFilters {
-  projectId: number;
+  projectId: string;
   tag?: string;
   specId?: string;
   specFile?: string;
@@ -362,7 +362,7 @@ export const resultModel = {
   },
 
   getStats: async (filters: {
-    projectId: number;
+    projectId: string;
     dates?: string[] | undefined;
   }): Promise<ResultsStats> => {
     const { projectId, dates } = filters;
@@ -564,4 +564,3 @@ export const resultModel = {
     return updatedResult;
   },
 };
-

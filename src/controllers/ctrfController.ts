@@ -9,7 +9,7 @@ export const ctrfController = {
   async processReport(req: Request, res: Response): Promise<void> {
     try {
       const ctrfReport: CTRFReport = req.body;
-      const projectId = parseInt(req.query.projectId as string) || 1;
+      const projectId = (req.query.projectId as string) || "1";
 
       if (!ctrfReport?.results) {
         res.status(400).json({
