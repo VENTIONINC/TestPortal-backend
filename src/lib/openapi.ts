@@ -511,6 +511,99 @@ const GeneratePromptResponseSchema = z
   })
   .openapi("GeneratePromptResponse");
 
+// CTRF (Common Test Result Format) schemas
+const CTRFTestStatusSchema = z
+  .enum(["passed", "failed", "skipped", "pending", "other"])
+  .openapi("CTRFTestStatus");
+
+const CTRFToolSchema = z
+  .object({
+    name: z.string().describe("Test tool name (e.g., 'playwright', 'jest')"),
+    version: z.string().optional().describe("Tool version"),
+  })
+  .openapi("CTRFTool");
+
+const CTRFSummarySchema = z
+  .object({
+    tests: z.number().describe("Total number of tests"),
+    passed: z.number().describe("Number of passed tests"),
+    failed: z.number().describe("Number of failed tests"),
+    pending: z.number().describe("Number of pending tests"),
+    skipped: z.number().describe("Number of skipped tests"),
+    other: z.number().describe("Number of tests with other status"),
+    start: z.number().describe("Start timestamp (Unix epoch)"),
+    stop: z.number().describe("End timestamp (Unix epoch)"),
+  })
+  .openapi("CTRFSummary");
+
+const CTRFTestSchema = z
+  .object({
+    name: z.string().describe("Test name/title"),
+    status: CTRFTestStatusSchema,
+    duration: z.number().describe("Test duration in milliseconds"),
+    message: z.string().optional().describe("Error/failure message"),
+    trace: z.string().optional().describe("Stack trace or detailed error info"),
+    rawStatus: z.string().optional().describe("Original status from test framework"),
+    type: z.string().optional().describe("Test type (e.g., 'unit', 'integration')"),
+    filePath: z.string().optional().describe("Path to test file"),
+    retry: z.number().optional().describe("Retry attempt number"),
+    flaky: z.boolean().optional().describe("Whether test is flaky"),
+    suite: z.string().optional().describe("Test suite name"),
+    tags: z.array(z.string()).optional().describe("Array of test tags"),
+    meta: z.record(z.string(), z.any()).optional().describe("Custom test metadata"),
+  })
+  .openapi("CTRFTest");
+
+const CTRFEnvironmentSchema = z
+  .object({
+    appName: z.string().optional().describe("Application name"),
+    buildName: z.string().optional().describe("Build name"),
+    buildNumber: z.string().optional().describe("Build number"),
+    buildUrl: z.string().optional().describe("Build URL"),
+    repositoryName: z.string().optional().describe("Repository name"),
+    repositoryUrl: z.string().optional().describe("Repository URL"),
+    branchName: z.string().optional().describe("Git branch name"),
+    testEnvironment: z.string().optional().describe("Test environment (e.g., 'staging', 'prod')"),
+    extra: z.record(z.string(), z.any()).optional().describe("Custom environment metadata"),
+  })
+  .openapi("CTRFEnvironment");
+
+const CTRFResultsSchema = z
+  .object({
+    tool: CTRFToolSchema,
+    summary: CTRFSummarySchema,
+    tests: z.array(CTRFTestSchema),
+    environment: CTRFEnvironmentSchema.optional(),
+    extra: z.record(z.string(), z.any()).optional().describe("Custom metadata"),
+  })
+  .openapi("CTRFResults");
+
+const CTRFReportRequestSchema = z
+  .object({
+    results: CTRFResultsSchema,
+  })
+  .openapi("CTRFReportRequest");
+
+const CTRFReportResponseSchema = z
+  .object({
+    success: z.boolean(),
+    message: z.string(),
+    executionId: z.number().describe("Execution ID for the processed report"),
+    data: z.object({
+      specsProcessed: z.number().describe("Number of test specs processed"),
+      executionId: z.number().describe("Database execution ID"),
+    }),
+  })
+  .openapi("CTRFReportResponse");
+
+const CTRFReportUpdateRequestSchema = z
+  .object({
+    results: CTRFResultsSchema.partial().extend({
+      tests: z.array(CTRFTestSchema.partial()).optional(),
+    }),
+  })
+  .openapi("CTRFReportUpdateRequest");
+
 export function generateOpenAPISpec() {
   const registry = new OpenAPIRegistry();
 
@@ -561,7 +654,15 @@ export function generateOpenAPISpec() {
   registry.register("Project", ProjectSchema);
   registry.register("CreateProjectRequest", CreateProjectRequestSchema);
   registry.register("UpdateProjectRequest", UpdateProjectRequestSchema);
-
+  registry.register("CTRFTestStatus", CTRFTestStatusSchema);
+  registry.register("CTRFTool", CTRFToolSchema);
+  registry.register("CTRFSummary", CTRFSummarySchema);
+  registry.register("CTRFTest", CTRFTestSchema);
+  registry.register("CTRFEnvironment", CTRFEnvironmentSchema);
+  registry.register("CTRFResults", CTRFResultsSchema);
+  registry.register("CTRFReportRequest", CTRFReportRequestSchema);
+  registry.register("CTRFReportResponse", CTRFReportResponseSchema);
+  registry.register("CTRFReportUpdateRequest", CTRFReportUpdateRequestSchema);
   // Base route
   registry.registerPath({
     method: "get",
@@ -2496,6 +2597,123 @@ export function generateOpenAPISpec() {
     tags: ["Projects"],
   });
 
+  // CTRF (Common Test Result Format) routes
+  registry.registerPath({
+    method: "post",
+    path: "/api/v2/ctrf/report",
+    description: "Processes and stores a CTRF (Common Test Result Format) report (requires authentication)",
+    request: {
+      query: z.object({
+        projectId: z.string().describe("Project ID to associate the report with"),
+      }),
+      body: {
+        content: {
+          "application/json": {
+            schema: CTRFReportRequestSchema,
+          },
+        },
+      },
+    },
+    security: [{ BearerAuth: [] }],
+    responses: {
+      200: {
+        description: "CTRF report processed successfully",
+        content: {
+          "application/json": {
+            schema: CTRFReportResponseSchema,
+          },
+        },
+      },
+      400: {
+        description: "Bad request - Invalid CTRF report format or missing projectId",
+        content: {
+          "application/json": {
+            schema: ErrorResponseSchema,
+          },
+        },
+      },
+      401: {
+        description: "Unauthorized - invalid or missing token",
+        content: {
+          "application/json": {
+            schema: ErrorResponseSchema,
+          },
+        },
+      },
+      500: {
+        description: "Internal server error - failed to process CTRF report",
+        content: {
+          "application/json": {
+            schema: ErrorResponseSchema,
+          },
+        },
+      },
+    },
+    tags: ["CTRF"],
+  });
+
+  registry.registerPath({
+    method: "patch",
+    path: "/api/v2/ctrf/report/{executionId}",
+    description: "Updates an existing CTRF report execution (requires authentication)",
+    request: {
+      params: z.object({
+        executionId: z.number().describe("Execution ID to update"),
+      }),
+      body: {
+        content: {
+          "application/json": {
+            schema: CTRFReportUpdateRequestSchema,
+          },
+        },
+      },
+    },
+    security: [{ BearerAuth: [] }],
+    responses: {
+      200: {
+        description: "CTRF report updated successfully",
+        content: {
+          "application/json": {
+            schema: CTRFReportResponseSchema,
+          },
+        },
+      },
+      400: {
+        description: "Bad request - Invalid update data or execution ID",
+        content: {
+          "application/json": {
+            schema: ErrorResponseSchema,
+          },
+        },
+      },
+      401: {
+        description: "Unauthorized - invalid or missing token",
+        content: {
+          "application/json": {
+            schema: ErrorResponseSchema,
+          },
+        },
+      },
+      404: {
+        description: "Execution not found",
+        content: {
+          "application/json": {
+            schema: ErrorResponseSchema,
+          },
+        },
+      },
+      500: {
+        description: "Internal server error - failed to update CTRF report",
+        content: {
+          "application/json": {
+            schema: ErrorResponseSchema,
+          },
+        },
+      },
+    },
+    tags: ["CTRF"],
+  });
+
   // MCP Server routes - requires MCP Bearer token
   registry.registerPath({
     method: "post",
@@ -2710,6 +2928,11 @@ export function generateOpenAPISpec() {
         name: "Projects",
         description:
           "Project management endpoints for organizing test executions and results",
+      },
+      {
+        name: "CTRF",
+        description:
+          "CTRF (Common Test Result Format) endpoints for processing standardized test results",
       },
     ],
   });

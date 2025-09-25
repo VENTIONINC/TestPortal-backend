@@ -38,7 +38,7 @@ router.use(testAnalysis);
 router.use(errorFormatter);
 router.use(prompts);
 router.use(projects);
-router.use("/ctrf", ctrf);
+router.use(ctrf);
 router.use(mcp);
 
 export default router;

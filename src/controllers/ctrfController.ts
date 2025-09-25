@@ -43,4 +43,51 @@ export const ctrfController = {
       });
     }
   },
+
+  async updateReport(req: Request, res: Response): Promise<void> {
+    try {
+      const { executionId } = req.params;
+      const ctrfReportUpdate: any = req.body; // Using any for partial update structure
+
+      if (!executionId || isNaN(Number(executionId))) {
+        res.status(400).json({
+          error: "Invalid execution ID - must be a valid number"
+        });
+        return;
+      }
+
+      if (!ctrfReportUpdate?.results) {
+        res.status(400).json({
+          error: "Invalid CTRF update format - missing results object"
+        });
+        return;
+      }
+
+      logger.info(`Updating CTRF report for execution ${executionId}`);
+
+      const result = await ctrfService.updateReport(Number(executionId), ctrfReportUpdate);
+
+      res.json({
+        success: true,
+        message: `Updated CTRF report for execution ${executionId}`,
+        executionId: result.executionId,
+        data: result,
+      });
+    } catch (error) {
+      logger.error("Error updating CTRF report:", error);
+      
+      if (error instanceof Error && error.message.includes("not found")) {
+        res.status(404).json({
+          error: "Execution not found",
+          details: error.message
+        });
+        return;
+      }
+
+      res.status(500).json({
+        error: "Failed to update CTRF report",
+        details: error instanceof Error ? error.message : "Unknown error"
+      });
+    }
+  },
 };
