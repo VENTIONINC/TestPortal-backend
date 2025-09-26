@@ -55,7 +55,14 @@
     "sourceMap": true,
     "removeComments": true
   },
-  "include": ["src/**/*", "index.ts", "path.config.ts", "prisma/**/*", "scripts/**/*"],
+  "include": [
+    "src/**/*",
+    "index.ts",
+    "path.config.ts",
+    "prisma/**/*",
+    "scripts/**/*",
+    "jest.setup.ts"
+  ],
   "exclude": ["node_modules", "dist", "**/*.js"],
   "ts-node": {
     "esm": true,
