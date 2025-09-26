@@ -71,7 +71,7 @@ interface ErrorData {
   location: { file: string; line: number };
 }
 
-interface ProcessReportResult {
+export interface ProcessReportResult {
   success: boolean;
   executionId: number;
   specsProcessed: number;

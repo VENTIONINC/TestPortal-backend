@@ -31,16 +31,9 @@ export const resultController = {
         return;
       }
 
-      if (!projectId || typeof projectId !== "string") {
-        res.status(400).json({
-          error: "Project ID must be a valid string",
-        });
-        return;
-      }
-
       // Convert and validate parameters, filtering out undefined values
       const params: GetResultsParams = {
-        projectId: projectId,
+        projectId,
       };
       if (tag) params.tag = tag;
       if (specId) params.specId = specId;
@@ -94,16 +87,9 @@ export const resultController = {
       const { projectId, dates } = req.query;
 
       // Validate required projectId parameter
-      if (!projectId) {
-        res.status(400).json({
-          error: "Project ID is required",
-        });
-        return;
-      }
-
       if (!projectId || typeof projectId !== "string") {
         res.status(400).json({
-          error: "Project ID must be a valid string",
+          error: "Project ID is required",
         });
         return;
       }
@@ -119,7 +105,7 @@ export const resultController = {
       }
 
       const params: GetResultsStatsParams = {
-        projectId: projectId,
+        projectId,
         ...(parsedDates && { dates: parsedDates }),
       };
       const stats = await resultService.getResultsStats(params);

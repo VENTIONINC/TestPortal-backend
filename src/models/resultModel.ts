@@ -564,4 +564,3 @@ export const resultModel = {
     return updatedResult;
   },
 };
-
