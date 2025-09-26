@@ -1,7 +1,8 @@
+import '@/test-utils/testEnv';
 import { jest } from '@jest/globals';
-import request from 'supertest';
-import express from 'express';
 import type { PrismaUser } from '@/types';
+import { userController } from '@/controllers/userController';
+import { executeController, executeProtectedController } from '@/test-utils/httpMocks';
 
 interface CreateUserData {
   name: string;
@@ -9,21 +10,20 @@ interface CreateUserData {
   passwordHash: string;
 }
 
-process.env.JWT_SECRET = 'test-secret';
-
 const users: PrismaUser[] = [];
 let idCounter = 1;
 
-// Mock Cognito auth service
 jest.mock('@/services/authService', () => ({
   signUpUser: jest.fn(() => Promise.resolve({ user: { Username: 'test-cognito-user' } })),
-  signInUser: jest.fn(() => Promise.resolve({ 
-    status: 'SUCCESS',
-    session: { 
-      getAccessToken: () => ({ getJwtToken: () => 'mock-token' }),
-      getIdToken: () => ({ getJwtToken: () => 'mock-id-token' })
-    }
-  })),
+  signInUser: jest.fn(() =>
+    Promise.resolve({
+      status: 'SUCCESS',
+      session: {
+        getAccessToken: () => ({ getJwtToken: () => 'mock-token' }),
+        getIdToken: () => ({ getJwtToken: () => 'mock-id-token' }),
+      },
+    }),
+  ),
   signOutUser: jest.fn(() => Promise.resolve('User signed out successfully')),
 }));
 
@@ -68,116 +68,109 @@ jest.mock('@/models/userModel', () => ({
   },
 }));
 
-import { Router } from "express";
-import { userController } from "@/controllers/userController";
-import { authMiddleware } from "@/middleware/authMiddleware";
-
-// Create test-specific router with regular auth instead of Cognito
-const testRouter = Router();
-testRouter.post("/v2/users/signup", userController.signup);
-testRouter.post("/v2/users/login", userController.login);
-testRouter.post("/v2/users/refresh-token", userController.refreshToken);
-testRouter.get("/v2/users/:userId", authMiddleware, userController.getUserById);
-testRouter.patch("/v2/users/:userId", authMiddleware, userController.updateUser);
-testRouter.patch("/v2/users/:userId/integrations", authMiddleware, userController.updateUserIntegrations);
-
-const app = express();
-app.use(express.json());
-app.use('/api', testRouter);
-
-beforeEach(() => {
-  users.length = 0;
-  idCounter = 1;
-  jest.clearAllMocks();
-});
-
 describe('users routes', () => {
-  it('POST /signup creates a user', async () => {
-    const res = await request(app)
-      .post('/api/v2/users/signup')
-      .send({ name: 'Alice', email: 'alice@ventionteams.com', password: 'password123' });
+  beforeEach(() => {
+    users.length = 0;
+    idCounter = 1;
+    jest.clearAllMocks();
+  });
 
-    expect(res.status).toBe(201);
-    expect(res.body.email).toBe('alice@ventionteams.com');
+  const signup = async (name: string, email: string) =>
+    executeController(userController.signup, {
+      method: 'POST',
+      body: { name, email, password: 'password123' },
+    });
+
+  const login = async (email: string) =>
+    executeController(userController.login, {
+      method: 'POST',
+      body: { email, password: 'password123' },
+    });
+
+  it('POST /signup creates a user', async () => {
+    const res = await signup('Alice', 'alice@ventionteams.com');
+    expect(res.statusCode).toBe(201);
+    const body = res.body as any;
+    expect(body?.email).toBe('alice@ventionteams.com');
   });
 
   it('POST /login authenticates user', async () => {
-    await request(app)
-      .post('/api/v2/users/signup')
-      .send({ name: 'Bob', email: 'bob@ventionteams.com', password: 'password123' });
+    await signup('Bob', 'bob@ventionteams.com');
 
-    const res = await request(app)
-      .post('/api/v2/users/login')
-      .send({ email: 'bob@ventionteams.com', password: 'password123' });
+    const res = await login('bob@ventionteams.com');
 
-    expect(res.status).toBe(200);
-    expect(res.body).toHaveProperty('accessToken');
-    expect(res.body).toHaveProperty('refreshToken');
+    expect(res.statusCode).toBe(200);
+    const body = res.body as any;
+    expect(body).toHaveProperty('accessToken');
+    expect(body).toHaveProperty('refreshToken');
   });
 
   it('GET /:userId returns user when authorized', async () => {
-    await request(app)
-      .post('/api/v2/users/signup')
-      .send({ name: 'Carol', email: 'carol@ventionteams.com', password: 'password123' });
+    await signup('Carol', 'carol@ventionteams.com');
 
-    const loginRes = await request(app)
-      .post('/api/v2/users/login')
-      .send({ email: 'carol@ventionteams.com', password: 'password123' });
-    const token = loginRes.body.accessToken;
-    const userId = loginRes.body.user.id;
+    const loginRes = await login('carol@ventionteams.com');
+    const loginBody = loginRes.body as any;
+    const token = loginBody.accessToken as string;
+    const userId = String(loginBody.user.id);
 
-    const unauthRes = await request(app).get(`/api/v2/users/${userId}`);
-    expect(unauthRes.status).toBe(401);
+    const unauthRes = await executeProtectedController(userController.getUserById, {
+      method: 'GET',
+      params: { userId },
+    });
+    expect(unauthRes.statusCode).toBe(401);
 
-    const res = await request(app)
-      .get(`/api/v2/users/${userId}`)
-      .set('Authorization', `Bearer ${token}`);
+    const res = await executeProtectedController(userController.getUserById, {
+      method: 'GET',
+      params: { userId },
+      token,
+    });
 
-    expect(res.status).toBe(200);
-    expect(res.body.email).toBe('carol@ventionteams.com');
+    expect(res.statusCode).toBe(200);
+    const body = res.body as any;
+    expect(body?.email).toBe('carol@ventionteams.com');
   });
 
   it('POST /refresh-token issues new tokens', async () => {
-    await request(app)
-      .post('/api/v2/users/signup')
-      .send({ name: 'Dave', email: 'dave@ventionteams.com', password: 'password123' });
+    await signup('Dave', 'dave@ventionteams.com');
 
-    const loginRes = await request(app)
-      .post('/api/v2/users/login')
-      .send({ email: 'dave@ventionteams.com', password: 'password123' });
-    const { refreshToken } = loginRes.body;
+    const loginRes = await login('dave@ventionteams.com');
+    const loginBody = loginRes.body as any;
+    const { refreshToken } = loginBody;
 
-    const res = await request(app)
-      .post('/api/v2/users/refresh-token')
-      .send({ refreshToken });
+    const res = await executeController(userController.refreshToken, {
+      method: 'POST',
+      body: { refreshToken },
+    });
 
-    expect(res.status).toBe(200);
+    expect(res.statusCode).toBe(200);
     expect(res.body).toHaveProperty('accessToken');
     expect(res.body).toHaveProperty('refreshToken');
   });
 
   it('PATCH /:userId updates user data', async () => {
-    await request(app)
-      .post('/api/v2/users/signup')
-      .send({ name: 'Eve', email: 'eve@ventionteams.com', password: 'password123' });
+    await signup('Eve', 'eve@ventionteams.com');
 
-    const loginRes = await request(app)
-      .post('/api/v2/users/login')
-      .send({ email: 'eve@ventionteams.com', password: 'password123' });
-    const token = loginRes.body.accessToken;
-    const userId = loginRes.body.user.id;
+    const loginRes = await login('eve@ventionteams.com');
+    const loginBody = loginRes.body as any;
+    const token = loginBody.accessToken as string;
+    const userId = String(loginBody.user.id);
 
-    const unauthRes = await request(app)
-      .patch(`/api/v2/users/${userId}`)
-      .send({ name: 'NewEve' });
-    expect(unauthRes.status).toBe(401);
+    const unauthRes = await executeProtectedController(userController.updateUser, {
+      method: 'PATCH',
+      params: { userId },
+      body: { name: 'NewEve' },
+    });
+    expect(unauthRes.statusCode).toBe(401);
 
-    const res = await request(app)
-      .patch(`/api/v2/users/${userId}`)
-      .set('Authorization', `Bearer ${token}`)
-      .send({ name: 'NewEve' });
+    const res = await executeProtectedController(userController.updateUser, {
+      method: 'PATCH',
+      params: { userId },
+      body: { name: 'NewEve' },
+      token,
+    });
 
-    expect(res.status).toBe(200);
-    expect(res.body.name).toBe('NewEve');
+    expect(res.statusCode).toBe(200);
+    const body = res.body as any;
+    expect(body?.name).toBe('NewEve');
   });
 });

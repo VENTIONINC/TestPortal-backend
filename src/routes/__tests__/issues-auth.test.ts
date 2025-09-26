@@ -1,11 +1,10 @@
+import '@/test-utils/testEnv';
 import { jest } from '@jest/globals';
-import request from 'supertest';
-import express from 'express';
 import type { PrismaUser, PrismaIssue } from '@/types';
+import { userController } from '@/controllers/userController';
+import { issueController } from '@/controllers/issueController';
+import { executeController, executeProtectedController } from '@/test-utils/httpMocks';
 
-process.env.JWT_SECRET = 'test-secret';
-
-// in-memory stores
 const users: PrismaUser[] = [];
 let userIdCounter = 1;
 const issues: PrismaIssue[] = [];
@@ -66,7 +65,7 @@ jest.mock('@/models/issueModel', () => ({
         portal: data.portal ?? null,
         service: data.service ?? null,
         ticket: data.ticket ?? null,
-        projectId: data.projectId || "test-project-uuid",
+        projectId: data.projectId || 'test-project-uuid',
         createdById: data.createdById ?? null,
         updatedById: data.updatedById ?? null,
       };
@@ -82,49 +81,50 @@ jest.mock('@/models/issueModel', () => ({
   },
 }));
 
-import { Router } from "express";
-import { userController } from "@/controllers/userController";
-import { authMiddleware } from "@/middleware/authMiddleware";
-import issuesRouter from '../issue';
-
-// Create test-specific router with regular auth instead of Cognito
-const testUsersRouter = Router();
-testUsersRouter.post("/v2/users/signup", userController.signup);
-testUsersRouter.post("/v2/users/login", userController.login);
-testUsersRouter.post("/v2/users/refresh-token", userController.refreshToken);
-testUsersRouter.get("/v2/users/:userId", authMiddleware, userController.getUserById);
-testUsersRouter.patch("/v2/users/:userId", authMiddleware, userController.updateUser);
-testUsersRouter.patch("/v2/users/:userId/integrations", authMiddleware, userController.updateUserIntegrations);
-
-const app = express();
-app.use(express.json());
-app.use('/api', testUsersRouter);
-app.use('/api', issuesRouter);
-
 describe('v2 issues auth flow', () => {
+  beforeEach(() => {
+    users.length = 0;
+    issues.length = 0;
+    userIdCounter = 1;
+    issueIdCounter = 1;
+    jest.clearAllMocks();
+  });
+
+  const signup = async () =>
+    executeController(userController.signup, {
+      method: 'POST',
+      body: { name: 'Test', email: 'test2@ventionteams.com', password: 'password123' },
+    });
+
+  const login = async () =>
+    executeController(userController.login, {
+      method: 'POST',
+      body: { email: 'test2@ventionteams.com', password: 'password123' },
+    });
+
   it('requires auth for creating issues and sets user references', async () => {
-    const signupRes = await request(app)
-      .post('/api/v2/users/signup')
-      .send({ name: 'Test', email: 'test2@ventionteams.com', password: 'password123' });
-    expect(signupRes.status).toBe(201);
+    const signupRes = await signup();
+    expect(signupRes.statusCode).toBe(201);
 
-    const loginRes = await request(app)
-      .post('/api/v2/users/login')
-      .send({ email: 'test2@ventionteams.com', password: 'password123' });
-    const token = loginRes.body.accessToken;
-    const userId = loginRes.body.user.id;
+    const loginRes = await login();
+    const loginBody = loginRes.body as any;
+    const token = loginBody.accessToken as string;
+    const userId = loginBody.user.id as number;
 
-    const unauthRes = await request(app)
-      .post('/api/v2/issues')
-      .send({ name: 'Issue1', category: 'bug' });
-    expect(unauthRes.status).toBe(401);
+    const unauthRes = await executeProtectedController(issueController.createIssue, {
+      method: 'POST',
+      body: { name: 'Issue1', category: 'bug' },
+    });
+    expect(unauthRes.statusCode).toBe(401);
 
-    const authRes = await request(app)
-      .post('/api/v2/issues')
-      .set('Authorization', `Bearer ${token}`)
-      .send({ name: 'Issue1', category: 'bug' });
-    expect(authRes.status).toBe(201);
-    expect(authRes.body.createdById).toBe(userId);
-    expect(authRes.body.updatedById).toBe(userId);
+    const authRes = await executeProtectedController(issueController.createIssue, {
+      method: 'POST',
+      body: { name: 'Issue1', category: 'bug' },
+      token,
+    });
+    expect(authRes.statusCode).toBe(201);
+    const authBody = authRes.body as any;
+    expect(authBody?.createdById).toBe(userId);
+    expect(authBody?.updatedById).toBe(userId);
   });
 });

@@ -60,8 +60,7 @@
     "index.ts",
     "path.config.ts",
     "prisma/**/*",
-    "scripts/**/*",
-    "jest.setup.ts"
+    "scripts/**/*"
   ],
   "exclude": ["node_modules", "dist", "**/*.js"],
   "ts-node": {
