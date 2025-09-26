@@ -1,7 +1,8 @@
+import '@/test-utils/testEnv';
 import { jest } from '@jest/globals';
-import request from 'supertest';
-import express from 'express';
 import type { PrismaUser } from '@/types';
+import { userController } from '@/controllers/userController';
+import { executeController, executeProtectedController } from '@/test-utils/httpMocks';
 
 interface CreateUserData {
   name: string;
@@ -9,9 +10,6 @@ interface CreateUserData {
   passwordHash: string;
 }
 
-process.env.JWT_SECRET = 'test-secret';
-
-// in-memory user store for mocking
 const users: PrismaUser[] = [];
 let idCounter = 1;
 
@@ -52,13 +50,19 @@ jest.mock('@/models/userModel', () => ({
   },
 }));
 
-import usersRouter from '../users';
-
-const app = express();
-app.use(express.json());
-app.use('/api', usersRouter);
-
 describe('users route additional flows', () => {
+  const signup = async () =>
+    executeController(userController.signup, {
+      method: 'POST',
+      body: { name: 'Test', email: 'test@ventionteams.com', password: 'password123' },
+    });
+
+  const login = async () =>
+    executeController(userController.login, {
+      method: 'POST',
+      body: { email: 'test@ventionteams.com', password: 'password123' },
+    });
+
   beforeEach(() => {
     users.length = 0;
     idCounter = 1;
@@ -66,43 +70,42 @@ describe('users route additional flows', () => {
   });
 
   it('refreshes tokens using /refresh-token', async () => {
-    await request(app)
-      .post('/api/v2/users/signup')
-      .send({ name: 'Test', email: 'test@example.com', password: 'password123' });
+    await signup();
+    const loginRes = await login();
+    const loginBody = loginRes.body as any;
+    const { refreshToken } = loginBody;
 
-    const loginRes = await request(app)
-      .post('/api/v2/users/login')
-      .send({ email: 'test@example.com', password: 'password123' });
-    const { refreshToken } = loginRes.body;
-
-    const refreshRes = await request(app)
-      .post('/api/v2/users/refresh-token')
-      .send({ refreshToken });
-    expect(refreshRes.status).toBe(200);
+    const refreshRes = await executeController(userController.refreshToken, {
+      method: 'POST',
+      body: { refreshToken },
+    });
+    expect(refreshRes.statusCode).toBe(200);
     expect(refreshRes.body).toHaveProperty('accessToken');
     expect(refreshRes.body).toHaveProperty('refreshToken');
   });
 
   it('updates user data via PATCH', async () => {
-    await request(app)
-      .post('/api/v2/users/signup')
-      .send({ name: 'Test', email: 'test@example.com', password: 'password123' });
-    const loginRes = await request(app)
-      .post('/api/v2/users/login')
-      .send({ email: 'test@example.com', password: 'password123' });
-    const userId = loginRes.body.user.id;
-    const token = loginRes.body.accessToken;
+    await signup();
+    const loginRes = await login();
+    const loginBody = loginRes.body as any;
+    const userId = String(loginBody.user.id);
+    const token = loginBody.accessToken as string;
 
-    const patchResUnauth = await request(app)
-      .patch(`/api/v2/users/${userId}`)
-      .send({ name: 'Updated' });
-    expect(patchResUnauth.status).toBe(401);
+    const patchResUnauth = await executeProtectedController(userController.updateUser, {
+      method: 'PATCH',
+      params: { userId },
+      body: { name: 'Updated' },
+    });
+    expect(patchResUnauth.statusCode).toBe(401);
 
-    const patchRes = await request(app)
-      .patch(`/api/v2/users/${userId}`)
-      .set('Authorization', `Bearer ${token}`)
-      .send({ name: 'Updated' });
-    expect(patchRes.status).toBe(200);
-    expect(patchRes.body.name).toBe('Updated');
+    const patchRes = await executeProtectedController(userController.updateUser, {
+      method: 'PATCH',
+      params: { userId },
+      body: { name: 'Updated' },
+      token,
+    });
+    expect(patchRes.statusCode).toBe(200);
+    const body = patchRes.body as any;
+    expect(body?.name).toBe('Updated');
   });
 });

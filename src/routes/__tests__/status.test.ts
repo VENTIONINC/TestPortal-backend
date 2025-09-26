@@ -1,15 +1,10 @@
-import request from 'supertest';
-import express from 'express';
-import statusRouter from '../status';
-
-const app = express();
-app.use('/api', statusRouter);
-
+import { statusHandler } from '../status';
+import { executeController } from '@/test-utils/httpMocks';
 
 describe('status route', () => {
-  it('GET /api/v1/status returns ok', async () => {
-    const res = await request(app).get('/api/v1/status');
-    expect(res.status).toBe(200);
+  it('GET /v1/status returns ok', async () => {
+    const res = await executeController(statusHandler, { method: 'GET' });
+    expect(res.statusCode).toBe(200);
     expect(res.body).toEqual({ status: 'ok' });
   });
 });
