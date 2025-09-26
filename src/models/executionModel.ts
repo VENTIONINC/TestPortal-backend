@@ -21,15 +21,15 @@ export const executionModel = {
 
   findMany: async (params: FindManyParams): Promise<PrismaExecution[]> => {
     const where: Prisma.ExecutionWhereInput = {};
-    
+
     if (params.projectId) {
       where.projectId = params.projectId;
     }
-    
+
     if (params.type) {
       where.type = params.type;
     }
-    
+
     if (params.environment) {
       where.environment = params.environment;
     }
@@ -39,7 +39,7 @@ export const executionModel = {
       ...(params.limit && { take: params.limit }),
       ...(params.offset && { skip: params.offset }),
       orderBy: {
-        startedAt: 'desc',
+        startedAt: "desc",
       },
       include: {
         project: {

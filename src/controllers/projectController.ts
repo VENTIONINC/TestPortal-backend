@@ -23,7 +23,7 @@ export const projectController = {
         return;
       }
 
-      const project = await projectService.getProjectById(projectId);
+      const project = await projectService.getProjectById(id);
 
       if (!project) {
         res.status(404).json({ error: "Project not found" });
@@ -112,7 +112,7 @@ export const projectController = {
         updateData.isActive = isActive;
       }
 
-      const project = await projectService.updateProject(projectId, updateData);
+      const project = await projectService.updateProject(id, updateData);
       res.json(project);
     } catch (error) {
       const err = error as Error;
@@ -136,7 +136,7 @@ export const projectController = {
         return;
       }
 
-      await projectService.deleteProject(projectId);
+      await projectService.deleteProject(id);
       res.status(204).send();
     } catch (error) {
       const err = error as Error;

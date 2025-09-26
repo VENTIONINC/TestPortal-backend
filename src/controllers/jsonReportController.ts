@@ -23,10 +23,10 @@ export const jsonReportController = {
         res.status(400).json({ error: "Valid projectId is required" });
         return;
       }
-      const validProjectId = projectId;
+
       const result = await jsonReportService.processReport(
         reportData,
-        validProjectId,
+        projectId,
       );
 
       res.status(201).json(result);
@@ -62,10 +62,9 @@ export const jsonReportController = {
         res.status(400).json({ error: "Valid projectId is required" });
         return;
       }
-      const validProjectId = projectId;
       const result = await jsonReportService.processReport(
         transformedReport,
-        validProjectId,
+        projectId,
       );
 
       res.status(201).json(result);
@@ -128,17 +127,16 @@ export const jsonReportController = {
 
       // Extract projectId from form data (multipart form upload)
       const { projectId } = req.body;
-      if (!projectId || typeof projectId !== "string") {
+      if (!projectId) {
         res.status(400).json({ error: "Valid projectId is required" });
         return;
       }
-      const validProjectId = projectId;
       const result = await jsonReportService.processReport(
         {
           ...transformedReport,
           analysis: analysisResults,
         },
-        validProjectId,
+        projectId,
       );
 
       // Include analysis results in the response
