@@ -1,5 +1,5 @@
 import { Router, Request, Response } from "express";
-import { generateOpenAPISpec } from "@/lib/openapi";
+import { generateOpenAPISpec } from "@/lib/openapi/index";
 
 const router = Router();
 
