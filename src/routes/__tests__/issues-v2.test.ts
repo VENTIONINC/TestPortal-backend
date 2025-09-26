@@ -159,6 +159,7 @@ jest.mock("@/models/issueModel", () => ({
         portal: data.portal ?? null,
         service: data.service ?? null,
         ticket: data.ticket ?? null,
+        projectId: data.projectId || "test-project-uuid",
         createdById: data.createdById ?? null,
         updatedById: data.updatedById ?? null,
       };

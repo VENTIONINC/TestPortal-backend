@@ -19,10 +19,11 @@ export const jsonReportController = {
 
       // Extract projectId from request body
       const { projectId } = req.body;
-      if (!projectId) {
+      if (!projectId || typeof projectId !== "string") {
         res.status(400).json({ error: "Valid projectId is required" });
         return;
       }
+
       const result = await jsonReportService.processReport(
         reportData,
         projectId,
@@ -57,7 +58,7 @@ export const jsonReportController = {
 
       // Extract projectId from request body
       const { projectId } = req.body;
-      if (!projectId) {
+      if (!projectId || typeof projectId !== "string") {
         res.status(400).json({ error: "Valid projectId is required" });
         return;
       }

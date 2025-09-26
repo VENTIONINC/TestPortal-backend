@@ -189,7 +189,7 @@ export const resultModel = {
       if (toDate) whereClause.startTime.lte = toDate;
     }
 
-    return (await dbClient.result.findMany({
+    return await dbClient.result.findMany({
       where: whereClause,
       skip: (page - 1) * limit,
       take: Number(limit),
@@ -209,7 +209,7 @@ export const resultModel = {
           },
         },
       },
-    })) as ResultWithRelations[];
+    }) as ResultWithRelations[];
   },
 
   count: async (filters: ResultFilters): Promise<number> => {

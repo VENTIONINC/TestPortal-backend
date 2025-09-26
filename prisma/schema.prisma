@@ -11,22 +11,22 @@ datasource db {
 }
 
 model Project {
-  id          Int      @id @default(autoincrement())
+  id          String   @id @default(uuid()) @db.Uuid
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
   name        String   @unique
   description String?
   isActive    Boolean  @default(true)
-  
+
   // Simple ownership
-  owner       User     @relation(fields: [ownerId], references: [id])
-  ownerId     Int
-  
+  owner   User @relation(fields: [ownerId], references: [id])
+  ownerId Int
+
   // Relationships
-  executions  Execution[]
-  specs       Spec[]
-  issues      Issue[]
-  
+  executions Execution[]
+  specs      Spec[]
+  issues     Issue[]
+
   @@index([name])
   @@index([ownerId])
 }
@@ -40,13 +40,13 @@ model Execution {
   environment String
   version     String // playwright version
   startedAt   DateTime
-  
+
   // Project relationship
-  project     Project  @relation(fields: [projectId], references: [id])
-  projectId   Int
-  
-  results     Result[]
-  
+  project   Project @relation(fields: [projectId], references: [id])
+  projectId String  @db.Uuid
+
+  results Result[]
+
   @@index([projectId])
   @@index([projectId, environment])
   @@index([projectId, type])
@@ -57,18 +57,18 @@ model Spec {
   id          Int      @id @default(autoincrement())
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
-  key         String   // e.g. TestRail Id
+  key         String // e.g. TestRail Id
   file        String
   title       String
   tags        String
   annotations String?
-  
+
   // Project relationship
-  project     Project  @relation(fields: [projectId], references: [id])
-  projectId   Int
-  
-  results     Result[]
-  
+  project   Project @relation(fields: [projectId], references: [id])
+  projectId String  @db.Uuid
+
+  results Result[]
+
   // Unique key per project
   @@unique([projectId, key])
   @@index([projectId])
@@ -90,10 +90,10 @@ model Result {
   specId             Int
   execution          Execution     @relation(fields: [executionId], references: [id])
   executionId        Int
-  analysisStatus     String?       // "passed" | "failed"
-  analysisCategory   String?       // "bug" | "infra" | "performance" | "script" | "other"
-  analysisConfidence Float?        // 0.0 to 1.0
-  analysisConclusion String?       // Brief explanation for the categorization decision
+  analysisStatus     String? // "passed" | "failed"
+  analysisCategory   String? // "bug" | "infra" | "performance" | "script" | "other"
+  analysisConfidence Float? // 0.0 to 1.0
+  analysisConclusion String? // Brief explanation for the categorization decision
 }
 
 model ResultError {
@@ -127,46 +127,46 @@ model Assumption {
 }
 
 model User {
-  id                     Int      @id @default(autoincrement())
-  createdAt              DateTime @default(now())
-  updatedAt              DateTime @updatedAt
-  name                   String
-  email                  String   @unique
-  passwordHash           String?
-  cognitoUserId          String?  @unique
-  mcpToken               String?  @unique
-  reportPortalUrl        String?
-  reportPortalEnabled    Boolean  @default(false)
-  monitoringPortalUrl    String?
+  id                      Int      @id @default(autoincrement())
+  createdAt               DateTime @default(now())
+  updatedAt               DateTime @updatedAt
+  name                    String
+  email                   String   @unique
+  passwordHash            String?
+  cognitoUserId           String?  @unique
+  mcpToken                String?  @unique
+  reportPortalUrl         String?
+  reportPortalEnabled     Boolean  @default(false)
+  monitoringPortalUrl     String?
   monitoringPortalEnabled Boolean  @default(false)
-  
+
   // Project relationships
-  projects               Project[]
-  issuesCreated          Issue[]  @relation("IssuesCreated")
-  issuesUpdated          Issue[]  @relation("IssuesUpdated")
+  projects      Project[]
+  issuesCreated Issue[]   @relation("IssuesCreated")
+  issuesUpdated Issue[]   @relation("IssuesUpdated")
 }
 
 model Issue {
-  id          Int          @id @default(autoincrement())
-  createdAt   DateTime     @default(now())
-  updatedAt   DateTime     @updatedAt
+  id          Int      @id @default(autoincrement())
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
   name        String
   category    String
   description String?
   portal      String?
   service     String?
   ticket      String?
-  
+
   // Project relationship
-  project     Project      @relation(fields: [projectId], references: [id])
-  projectId   Int
-  
+  project   Project @relation(fields: [projectId], references: [id])
+  projectId String  @db.Uuid
+
   createdBy   User?        @relation("IssuesCreated", fields: [createdById], references: [id])
   createdById Int?
   updatedBy   User?        @relation("IssuesUpdated", fields: [updatedById], references: [id])
   updatedById Int?
   assumptions Assumption[]
-  
+
   @@index([projectId])
   @@index([projectId, category])
   @@index([projectId, createdAt])

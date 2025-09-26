@@ -11,6 +11,7 @@ export interface PrismaExecution {
   environment: string;
   version: string;
   startedAt: Date;
+  projectId: string; // UUID reference to Project
 }
 
 export interface PrismaSpec {
@@ -22,6 +23,7 @@ export interface PrismaSpec {
   title: string;
   tags: string;
   annotations?: string | null;
+  projectId: string; // UUID reference to Project
 }
 
 export interface PrismaResult {
@@ -77,8 +79,19 @@ export interface PrismaIssue {
   portal?: string | null;
   service?: string | null;
   ticket?: string | null;
+  projectId: string; // UUID reference to Project
   createdById?: number | null;
   updatedById?: number | null;
+}
+
+export interface PrismaProject {
+  id: string; // UUID
+  createdAt: Date;
+  updatedAt: Date;
+  name: string;
+  description?: string | null;
+  isActive: boolean;
+  ownerId: number;
 }
 
 export interface PrismaUser {
@@ -97,12 +110,21 @@ export interface PrismaUser {
 }
 
 // Database model interfaces with relations
+export interface ProjectWithRelations extends PrismaProject {
+  owner: PrismaUser;
+  executions: PrismaExecution[];
+  specs: PrismaSpec[];
+  issues: PrismaIssue[];
+}
+
 export interface ExecutionWithResults extends PrismaExecution {
   results: ResultWithRelations[];
+  project: PrismaProject;
 }
 
 export interface SpecWithResults extends PrismaSpec {
   results: ResultWithRelations[];
+  project: PrismaProject;
 }
 
 export interface ResultWithRelations extends PrismaResult {
@@ -126,6 +148,15 @@ export interface IssueWithAssumptions extends PrismaIssue {
 }
 
 // Simplified interfaces for API responses
+export interface ProjectSummary {
+  id: string; // UUID
+  name: string;
+  description?: string;
+  isActive: boolean;
+  createdAt: Date;
+  owner: UserSummary;
+}
+
 export interface ExecutionSummary {
   id: number;
   name: string;
@@ -135,6 +166,7 @@ export interface ExecutionSummary {
   startedAt: Date;
   createdAt: Date;
   resultsCount: number;
+  projectId: string;
 }
 
 export interface SpecSummary {
@@ -144,6 +176,7 @@ export interface SpecSummary {
   title: string;
   tags: string;
   resultsCount: number;
+  projectId: string;
 }
 
 export interface ResultSummary {

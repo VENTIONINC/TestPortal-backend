@@ -409,7 +409,7 @@ const ResultsStatsSchema = z
 // Project schemas
 const ProjectSchema = z
   .object({
-    id: z.number(),
+    id: z.string(),
     name: z.string(),
     description: z.string().nullable(),
     isActive: z.boolean(),
@@ -2416,7 +2416,7 @@ export function generateOpenAPISpec() {
     description: "Retrieves a specific project by ID (requires authentication)",
     request: {
       params: z.object({
-        id: z.number(),
+        id: z.string(),
       }),
     },
     security: [{ BearerAuth: [] }],
@@ -2506,7 +2506,7 @@ export function generateOpenAPISpec() {
     description: "Updates an existing project (requires authentication)",
     request: {
       params: z.object({
-        id: z.number(),
+        id: z.string(),
       }),
       body: {
         content: {
@@ -2561,7 +2561,7 @@ export function generateOpenAPISpec() {
       "Deletes a project by ID (requires authentication). Also deletes all associated executions, specs, and results (cascade delete).",
     request: {
       params: z.object({
-        id: z.number(),
+        id: z.string(),
       }),
     },
     security: [{ BearerAuth: [] }],
