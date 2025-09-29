@@ -5,6 +5,7 @@ import type {
   ProcessReportResult,
 } from "@/services/jsonReportService";
 import { jsonReportService } from "@/services/jsonReportService";
+import { executionModel } from "@/models/executionModel";
 
 const logger = getLogger("ctrf-service");
 
@@ -51,10 +52,14 @@ export const ctrfService = {
     // Note: This is a simplified approach - in a full implementation,
     // you might want to implement proper partial updates
     try {
-      // For this implementation, we'll just process it as a new report
-      // since jsonReportService doesn't have updateExecution method yet
-      const projectId = "1"; // This should be retrieved from the execution
-      return await jsonReportService.processReport(reportData, projectId);
+      // Get the execution to retrieve the projectId
+      const execution = await executionModel.findById(executionId);
+      
+      if (!execution) {
+        throw new Error(`Execution with ID ${executionId} not found`);
+      }
+
+      return await jsonReportService.processReport(reportData, execution.projectId);
     } catch (error) {
       throw new Error(`Failed to update execution ${executionId}: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
