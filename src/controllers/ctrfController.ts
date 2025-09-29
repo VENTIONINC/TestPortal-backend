@@ -9,7 +9,14 @@ export const ctrfController = {
   async processReport(req: Request, res: Response): Promise<void> {
     try {
       const ctrfReport: CTRFReport = req.body;
-      const projectId = (req.query.projectId as string) || "1";
+      const projectId = req.query.projectId as string;
+
+      if (!projectId) {
+        res.status(400).json({
+          error: "Missing required query parameter: projectId"
+        });
+        return;
+      }
 
       if (!ctrfReport?.results) {
         res.status(400).json({
@@ -86,6 +93,72 @@ export const ctrfController = {
 
       res.status(500).json({
         error: "Failed to update CTRF report",
+        details: error instanceof Error ? error.message : "Unknown error"
+      });
+    }
+  },
+
+  async processRawReportFile(req: Request, res: Response): Promise<void> {
+    try {
+      const file = req.file;
+
+      if (!file) {
+        res.status(400).json({
+          error: "CTRF report file is required",
+        });
+        return;
+      }
+
+      // Parse the file content as JSON
+      const fileContent = file.buffer.toString("utf8");
+      let ctrfReport: CTRFReport;
+
+      try {
+        ctrfReport = JSON.parse(fileContent);
+      } catch (parseError) {
+        res.status(400).json({
+          error: `Invalid JSON format in uploaded file: ${parseError instanceof Error ? parseError.message : "Unknown parsing error"}`,
+        });
+        return;
+      }
+
+      // Extract projectId from form data (multipart form upload)
+      const { projectId } = req.body;
+      if (!projectId) {
+        res.status(400).json({
+          error: "Missing required form field: projectId"
+        });
+        return;
+      }
+
+      if (!ctrfReport?.results) {
+        res.status(400).json({
+          error: "Invalid CTRF report format - missing results object"
+        });
+        return;
+      }
+
+      if (!ctrfReport.results.tests || !Array.isArray(ctrfReport.results.tests)) {
+        res.status(400).json({
+          error: "Invalid CTRF report format - missing or invalid tests array"
+        });
+        return;
+      }
+
+      logger.info(`Processing uploaded CTRF report with ${ctrfReport.results.tests.length} tests for project ${projectId}`);
+
+      const result = await ctrfService.processReport(ctrfReport, { projectId });
+
+      res.json({
+        success: true,
+        message: `Processed ${result.specsProcessed} test specs from uploaded file`,
+        executionId: result.executionId,
+        data: result,
+      });
+    } catch (error) {
+      logger.error("Error processing uploaded CTRF report file:", error);
+      res.status(500).json({
+        error: "Failed to process uploaded CTRF report file",
         details: error instanceof Error ? error.message : "Unknown error"
       });
     }
