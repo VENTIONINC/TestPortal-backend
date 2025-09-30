@@ -4,7 +4,7 @@ import { ErrorResponseSchema } from "./common";
 
 const SpecSchema = z
   .object({
-    id: z.string(),
+    id: z.string().uuid(),
     title: z.string(),
     custom_id: z.string().optional(),
     file: z.string().optional(),
@@ -24,7 +24,7 @@ export function registerSpecRoutes(registry: OpenAPIRegistry) {
     description: "Retrieves a specific spec by its ID",
     request: {
       params: z.object({
-        specId: z.string(),
+        specId: z.string().uuid(),
       }),
     },
     responses: {

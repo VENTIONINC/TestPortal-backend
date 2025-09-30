@@ -4,9 +4,9 @@ import { ErrorResponseSchema } from "./common";
 
 const ResultSchema = z
   .object({
-    id: z.string(),
+    id: z.string().uuid(),
     tag: z.string().optional(),
-    specId: z.string().optional(),
+    specId: z.string().uuid().optional(),
     specFile: z.string().optional(),
     specName: z.string().optional(),
     environment: z.string().optional(),
@@ -76,7 +76,7 @@ export function registerResultRoutes(registry: OpenAPIRegistry) {
       "Retrieves results with optional filtering (requires projectId)",
     request: {
       query: z.object({
-        projectId: z.string(),
+        projectId: z.string().uuid(),
         tag: z.string().optional(),
         specId: z.string().optional(),
         specFile: z.string().optional(),
@@ -128,7 +128,7 @@ export function registerResultRoutes(registry: OpenAPIRegistry) {
     description: "Retrieves a specific result by its ID",
     request: {
       params: z.object({
-        resultId: z.string(),
+        resultId: z.string().uuid(),
       }),
     },
     responses: {
@@ -159,7 +159,7 @@ export function registerResultRoutes(registry: OpenAPIRegistry) {
       "Retrieves statistical analysis of test results including status counts, entity counts, and top errors/issues for specified dates",
     request: {
       query: z.object({
-        projectId: z.string(),
+        projectId: z.string().uuid(),
         dates: z
           .array(z.string())
           .optional()
@@ -195,7 +195,7 @@ export function registerResultRoutes(registry: OpenAPIRegistry) {
     description: "Updates the analysis fields of a specific result",
     request: {
       params: z.object({
-        resultId: z.string(),
+        resultId: z.string().uuid(),
       }),
       body: {
         content: {

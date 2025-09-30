@@ -78,10 +78,16 @@ const CTRFReportResponseSchema = z
   .object({
     success: z.boolean(),
     message: z.string(),
-    executionId: z.number().describe("Execution ID for the processed report"),
+    executionId: z
+      .string()
+      .uuid()
+      .describe("Execution ID for the processed report"),
     data: z.object({
       specsProcessed: z.number().describe("Number of test specs processed"),
-      executionId: z.number().describe("Database execution ID"),
+      executionId: z
+        .string()
+        .uuid()
+        .describe("Database execution ID"),
     }),
   })
   .openapi("CTRFReportResponse");
@@ -111,7 +117,10 @@ export function registerCtrfRoutes(registry: OpenAPIRegistry) {
     description: "Processes and stores a CTRF (Common Test Result Format) report (requires authentication)",
     request: {
       query: z.object({
-        projectId: z.string().describe("Project ID to associate the report with"),
+        projectId: z
+          .string()
+          .uuid()
+          .describe("Project ID to associate the report with"),
       }),
       body: {
         content: {
@@ -165,7 +174,10 @@ export function registerCtrfRoutes(registry: OpenAPIRegistry) {
     description: "Updates an existing CTRF report execution (requires authentication)",
     request: {
       params: z.object({
-        executionId: z.number().describe("Execution ID to update"),
+        executionId: z
+          .string()
+          .uuid()
+          .describe("Execution ID to update"),
       }),
       body: {
         content: {

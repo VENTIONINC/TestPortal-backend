@@ -4,7 +4,7 @@ import { ErrorResponseSchema } from "./common";
 
 const ExecutionSchema = z
   .object({
-    id: z.string(),
+    id: z.string().uuid(),
     runId: z.string(),
     env: z.string().optional(),
     version: z.string().optional(),
@@ -25,7 +25,7 @@ export function registerExecutionRoutes(registry: OpenAPIRegistry) {
     description: "Retrieves an execution by its ID",
     request: {
       params: z.object({
-        executionId: z.string(),
+        executionId: z.string().uuid(),
       }),
     },
     responses: {
