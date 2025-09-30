@@ -1,92 +1,98 @@
-import '@/test-utils/testEnv';
-import { jest } from '@jest/globals';
-import type { PrismaIssue, PrismaUser } from '@/types';
-import { issueService } from '@/services/issueService';
-import { IssueCategory } from '@/types/enums';
+import "@/test-utils/testEnv";
+import { jest } from "@jest/globals";
+import type { PrismaIssue, PrismaUser } from "@/types";
+import { issueService } from "@/services/issueService";
+import { IssueCategory } from "@/types/enums";
 
 const users: PrismaUser[] = [];
-let userIdCounter = 1;
 const issues: PrismaIssue[] = [];
 let issueIdCounter = 1;
 
-type ResultFindMany = (...args: any[]) => Promise<any[]>;
-var mockResultFindMany: jest.MockedFunction<ResultFindMany>;
+const generateUserId = () => crypto.randomUUID();
 
-jest.mock('@/models/userModel', () => ({
+const mockResultFindMany = jest.fn(async () => [] as unknown[]);
+
+jest.mock("@/models/userModel", () => ({
   userModel: {
-    findById: jest.fn((id: number | string) => {
-      const user = users.find((u) => u.id === Number(id));
+    findById: jest.fn((id: string) => {
+      const user = users.find((u) => u.id === id);
       return Promise.resolve(user ?? null);
     }),
     findByEmail: jest.fn((email: string) => {
       const user = users.find((u) => u.email === email);
       return Promise.resolve(user ?? null);
     }),
-    create: jest.fn((data: { name: string; email: string; passwordHash: string }) => {
-      const user: PrismaUser = {
-        id: userIdCounter++,
-        createdAt: new Date(),
-        updatedAt: new Date(),
-        name: data.name,
-        email: data.email,
-        passwordHash: data.passwordHash,
-        cognitoUserId: null,
-        mcpToken: null,
-        reportPortalUrl: null,
-        reportPortalEnabled: false,
-        monitoringPortalUrl: null,
-        monitoringPortalEnabled: false,
-      };
-      users.push(user);
-      return Promise.resolve(user);
-    }),
+    create: jest.fn(
+      (data: { name: string; email: string; passwordHash: string }) => {
+        const user: PrismaUser = {
+          id: generateUserId(),
+          createdAt: new Date(),
+          updatedAt: new Date(),
+          name: data.name,
+          email: data.email,
+          passwordHash: data.passwordHash,
+          cognitoUserId: null,
+          mcpToken: null,
+          reportPortalUrl: null,
+          reportPortalEnabled: false,
+          monitoringPortalUrl: null,
+          monitoringPortalEnabled: false,
+        };
+        users.push(user);
+        return Promise.resolve(user);
+      },
+    ),
   },
 }));
 
-jest.mock('@/models/issueModel', () => ({
+jest.mock("@/models/issueModel", () => ({
   issueModel: {
-    findMany: jest.fn((category?: string, name?: string, page = 1, limit = 30) => {
-      let filtered = [...issues];
-      if (category) {
-        filtered = filtered.filter((issue) =>
-          issue.category.toLowerCase().includes(category.toLowerCase()),
+    findMany: jest.fn(
+      (category?: string, name?: string, page = 1, limit = 30) => {
+        let filtered = [...issues];
+        if (category) {
+          filtered = filtered.filter((issue) =>
+            issue.category.toLowerCase().includes(category.toLowerCase()),
+          );
+        }
+        if (name) {
+          filtered = filtered.filter((issue) =>
+            issue.name.toLowerCase().includes(name.toLowerCase()),
+          );
+        }
+        const startIndex = (Number(page) - 1) * Number(limit);
+        const endIndex = startIndex + Number(limit);
+        return Promise.resolve(filtered.slice(startIndex, endIndex));
+      },
+    ),
+    findManyWithUsers: jest.fn(
+      (category?: string, name?: string, page = 1, limit = 30) => {
+        let filtered = [...issues];
+        if (category) {
+          filtered = filtered.filter((issue) =>
+            issue.category.toLowerCase().includes(category.toLowerCase()),
+          );
+        }
+        if (name) {
+          filtered = filtered.filter((issue) =>
+            issue.name.toLowerCase().includes(name.toLowerCase()),
+          );
+        }
+        const startIndex = (Number(page) - 1) * Number(limit);
+        const endIndex = startIndex + Number(limit);
+        return Promise.resolve(
+          filtered.slice(startIndex, endIndex).map((issue) => ({
+            ...issue,
+            createdBy: issue.createdById
+              ? (users.find((u) => u.id === issue.createdById) ?? null)
+              : null,
+            updatedBy: issue.updatedById
+              ? (users.find((u) => u.id === issue.updatedById) ?? null)
+              : null,
+          })),
         );
-      }
-      if (name) {
-        filtered = filtered.filter((issue) =>
-          issue.name.toLowerCase().includes(name.toLowerCase()),
-        );
-      }
-      const startIndex = (Number(page) - 1) * Number(limit);
-      const endIndex = startIndex + Number(limit);
-      return Promise.resolve(filtered.slice(startIndex, endIndex));
-    }),
-    findManyWithUsers: jest.fn((category?: string, name?: string, page = 1, limit = 30) => {
-      let filtered = [...issues];
-      if (category) {
-        filtered = filtered.filter((issue) =>
-          issue.category.toLowerCase().includes(category.toLowerCase()),
-        );
-      }
-      if (name) {
-        filtered = filtered.filter((issue) =>
-          issue.name.toLowerCase().includes(name.toLowerCase()),
-        );
-      }
-      const startIndex = (Number(page) - 1) * Number(limit);
-      const endIndex = startIndex + Number(limit);
-      return Promise.resolve(
-        filtered.slice(startIndex, endIndex).map((issue) => ({
-          ...issue,
-          createdBy: issue.createdById
-            ? users.find((u) => u.id === issue.createdById) ?? null
-            : null,
-          updatedBy: issue.updatedById
-            ? users.find((u) => u.id === issue.updatedById) ?? null
-            : null,
-        })),
-      );
-    }),
+      },
+    ),
     count: jest.fn((category?: string, name?: string) => {
       let filtered = [...issues];
       if (category) {
@@ -111,10 +117,10 @@ jest.mock('@/models/issueModel', () => ({
       return Promise.resolve({
         ...issue,
         createdBy: issue.createdById
-          ? users.find((u) => u.id === issue.createdById) ?? null
+          ? (users.find((u) => u.id === issue.createdById) ?? null)
           : null,
         updatedBy: issue.updatedById
-          ? users.find((u) => u.id === issue.updatedById) ?? null
+          ? (users.find((u) => u.id === issue.updatedById) ?? null)
           : null,
       });
     }),
@@ -129,7 +135,7 @@ jest.mock('@/models/issueModel', () => ({
         portal: data.portal ?? null,
         service: data.service ?? null,
         ticket: data.ticket ?? null,
-        projectId: data.projectId || 'test-project',
+        projectId: data.projectId ?? "test-project",
         createdById: data.createdById ?? null,
         updatedById: data.updatedById ?? null,
       };
@@ -138,36 +144,33 @@ jest.mock('@/models/issueModel', () => ({
     }),
     update: jest.fn((id: number | string, data: Partial<PrismaIssue>) => {
       const issue = issues.find((i) => i.id === Number(id));
-      if (!issue) throw new Error('Issue not found');
+      if (!issue) throw new Error("Issue not found");
       Object.assign(issue, data, { updatedAt: new Date() });
       return Promise.resolve(issue);
     }),
     delete: jest.fn((id: number | string) => {
       const index = issues.findIndex((i) => i.id === Number(id));
-      if (index === -1) throw new Error('Issue not found');
+      if (index === -1) throw new Error("Issue not found");
       issues.splice(index, 1);
       return Promise.resolve();
     }),
   },
 }));
 
-jest.mock('@/prisma/client', () => {
-  mockResultFindMany = jest.fn(async () => [] as any[]);
-  return {
-    dbClient: {
-      result: {
-        findMany: (...args: unknown[]) => mockResultFindMany(...args),
-      },
+jest.mock("@/prisma/client", () => ({
+  dbClient: {
+    result: {
+      findMany: () => mockResultFindMany(),
     },
-  };
-});
+  },
+}));
 
 const addUser = (name: string, email: string): PrismaUser => {
   const user: PrismaUser = {
-    id: userIdCounter++,
+    id: generateUserId(),
     name,
     email,
-    passwordHash: 'hash',
+    passwordHash: "hash",
     createdAt: new Date(),
     updatedAt: new Date(),
     cognitoUserId: null,
@@ -189,71 +192,76 @@ const createIssueRecord = async (
   issueService.createIssue({
     name,
     category,
-    projectId: 'test-project',
+    projectId: "test-project",
     createdById: user.id,
     updatedById: user.id,
   });
 
-describe('Issue service V2 behaviours', () => {
+describe("Issue service V2 behaviours", () => {
   let primaryUser: PrismaUser;
 
   beforeEach(async () => {
     users.length = 0;
     issues.length = 0;
-    userIdCounter = 1;
     issueIdCounter = 1;
     mockResultFindMany.mockResolvedValue([]);
-    primaryUser = addUser('Primary User', 'primary@ventionteams.com');
+    primaryUser = addUser("Primary User", "primary@ventionteams.com");
   });
 
-  it('fetches issues with user relations', async () => {
-    await createIssueRecord('Login bug', 'bug', primaryUser);
+  it("fetches issues with user relations", async () => {
+    await createIssueRecord("Login bug", "bug", primaryUser);
 
     const result = await issueService.getAllIssuesV2({});
 
     expect(result.issues).toHaveLength(1);
     const [firstIssue] = result.issues;
-    expect(firstIssue!.createdBy?.id).toBe(primaryUser.id);
+    expect(firstIssue?.createdBy?.id).toBe(primaryUser.id);
   });
 
-  it('supports filtering by category and name', async () => {
-    await createIssueRecord('Login bug', 'bug', primaryUser);
-    await createIssueRecord('Signup bug', 'bug', primaryUser);
-    await createIssueRecord('Perf issue', 'performance', primaryUser);
+  it("supports filtering by category and name", async () => {
+    await createIssueRecord("Login bug", "bug", primaryUser);
+    await createIssueRecord("Signup bug", "bug", primaryUser);
+    await createIssueRecord("Perf issue", "performance", primaryUser);
 
-    const bugResult = await issueService.getAllIssuesV2({ category: IssueCategory.Bug });
+    const bugResult = await issueService.getAllIssuesV2({
+      category: IssueCategory.Bug,
+    });
     expect(bugResult.issues).toHaveLength(2);
 
-    const nameResult = await issueService.getAllIssuesV2({ name: 'Login' });
+    const nameResult = await issueService.getAllIssuesV2({ name: "Login" });
     expect(nameResult.issues).toHaveLength(1);
     const [loginIssue] = nameResult.issues;
-    expect(loginIssue!.name).toBe('Login bug');
+    expect(loginIssue?.name).toBe("Login bug");
   });
 
-  it('supports full CRUD workflow', async () => {
-    const created = await createIssueRecord('CRUD Issue', 'test', primaryUser);
+  it("supports full CRUD workflow", async () => {
+    const created = await createIssueRecord("CRUD Issue", "test", primaryUser);
 
     const fetched = await issueService.getIssueByIdV2(created.id);
-    expect(fetched.name).toBe('CRUD Issue');
+    expect(fetched.name).toBe("CRUD Issue");
 
     await issueService.updateIssue(created.id, {
-      name: 'Updated CRUD Issue',
-      category: 'updated',
+      name: "Updated CRUD Issue",
+      category: "updated",
       updatedById: primaryUser.id,
     });
 
     const list = await issueService.getAllIssuesV2({});
-    expect(list.issues[0]?.name).toBe('Updated CRUD Issue');
+    expect(list.issues[0]?.name).toBe("Updated CRUD Issue");
   });
 
-  it('maintains user context across operations', async () => {
-    const secondUser = addUser('Second User', 'second@ventionteams.com');
+  it("maintains user context across operations", async () => {
+    const secondUser = addUser("Second User", "second@ventionteams.com");
 
-    const created = await createIssueRecord('Ownership test', 'test', primaryUser);
+    const created = await createIssueRecord(
+      "Ownership test",
+      "test",
+      primaryUser,
+    );
     expect(created.createdById).toBe(primaryUser.id);
 
     const updated = await issueService.updateIssue(created.id, {
-      description: 'Updated by second user',
+      description: "Updated by second user",
       updatedById: secondUser.id,
     });
 
@@ -261,16 +269,16 @@ describe('Issue service V2 behaviours', () => {
     expect(updated.createdById).toBe(primaryUser.id);
   });
 
-  it('returns statistics when requested', async () => {
-    await createIssueRecord('Stat Issue', 'bug', primaryUser);
+  it("returns statistics when requested", async () => {
+    await createIssueRecord("Stat Issue", "bug", primaryUser);
     mockResultFindMany.mockResolvedValueOnce([
       {
-        startTime: new Date('2024-01-01T10:00:00Z'),
-        spec: { id: 'spec-1' },
+        startTime: new Date("2024-01-01T10:00:00Z"),
+        spec: { id: "spec-1" },
       },
       {
-        startTime: new Date('2024-01-02T12:00:00Z'),
-        spec: { id: 'spec-2' },
+        startTime: new Date("2024-01-02T12:00:00Z"),
+        spec: { id: "spec-2" },
       },
     ]);
 

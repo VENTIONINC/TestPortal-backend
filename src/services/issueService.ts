@@ -70,8 +70,8 @@ interface CreateIssueParams {
   service?: string;
   ticket?: string;
   projectId: string;
-  createdById?: number;
-  updatedById?: number;
+  createdById?: string;
+  updatedById?: string;
 }
 
 interface UpdateIssueParams {
@@ -81,7 +81,7 @@ interface UpdateIssueParams {
   portal?: string;
   service?: string;
   ticket?: string;
-  updatedById?: number;
+  updatedById?: string;
 }
 
 export const issueService = {

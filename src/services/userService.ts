@@ -43,7 +43,7 @@ interface UpdateUserData {
 }
 
 export const userService = {
-  async getUserById(userId: number | string): Promise<PrismaUser> {
+  async getUserById(userId: string): Promise<PrismaUser> {
     if (!userId) {
       throw new Error("User ID is required");
     }
@@ -102,7 +102,7 @@ export const userService = {
   },
 
   async updateUser(
-    userId: number | string,
+    userId: string,
     updateData: UpdateUserParams,
   ): Promise<PrismaUser> {
     if (!userId) {
@@ -126,7 +126,7 @@ export const userService = {
       }
 
       const existingUser = await userModel.findByEmail(email);
-      if (existingUser && existingUser.id !== Number(userId)) {
+      if (existingUser && existingUser.id !== userId) {
         throw new Error("Email is already in use by another user");
       }
 
@@ -226,7 +226,7 @@ export const userService = {
     };
   },
 
-  async generateMcpToken(userId: number | string): Promise<string> {
+  async generateMcpToken(userId: string): Promise<string> {
     if (!userId) {
       throw new Error("User ID is required");
     }
@@ -245,7 +245,7 @@ export const userService = {
     return mcpToken;
   },
 
-  async revokeMcpToken(userId: number | string): Promise<void> {
+  async revokeMcpToken(userId: string): Promise<void> {
     if (!userId) {
       throw new Error("User ID is required");
     }
@@ -374,7 +374,7 @@ export const userService = {
   },
 
   async updateUserIntegrations(
-    userId: number | string,
+    userId: string,
     integrationsData: UpdateUserIntegrationsParams,
   ): Promise<PrismaUser> {
     if (!userId) {

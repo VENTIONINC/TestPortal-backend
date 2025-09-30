@@ -3,7 +3,7 @@ import { validateMcpToken } from "@/lib/mcp-token";
 
 // Extended request interface with mcpUserId
 export interface RequestWithMcpUser extends Request {
-  mcpUserId?: number;
+  mcpUserId?: string;
 }
 
 // MCP token validation middleware

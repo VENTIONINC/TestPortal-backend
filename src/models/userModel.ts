@@ -14,10 +14,10 @@ interface CreateUserData {
 }
 
 export const userModel = {
-  findById: async (id: number | string): Promise<PrismaUser | null> => {
+  findById: async (id: string): Promise<PrismaUser | null> => {
     return await dbClient.user.findUnique({
       where: {
-        id: Number(id),
+        id,
       },
     });
   },
@@ -45,11 +45,11 @@ export const userModel = {
   },
 
   update: async (
-    id: number | string,
+    id: string,
     data: Partial<CreateUserData>,
   ): Promise<PrismaUser> => {
     return await dbClient.user.update({
-      where: { id: Number(id) },
+      where: { id },
       data,
     });
   },

@@ -8,7 +8,7 @@ const ProjectSchema = z
     name: z.string(),
     description: z.string().nullable(),
     isActive: z.boolean(),
-    ownerId: z.number(),
+    ownerId: z.string().uuid(),
     createdAt: z.string(),
     updatedAt: z.string(),
     _count: z
@@ -48,7 +48,7 @@ export function registerProjectRoutes(registry: OpenAPIRegistry) {
       "Retrieves all projects for the authenticated user (requires authentication)",
     request: {
       query: z.object({
-        ownerId: z.number().optional(),
+        ownerId: z.string().uuid().optional(),
         isActive: z.boolean().optional(),
         name: z.string().optional(),
       }),

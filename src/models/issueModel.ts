@@ -15,8 +15,8 @@ interface CreateIssueData {
   service?: string;
   ticket?: string;
   projectId: string;
-  createdById?: number;
-  updatedById?: number;
+  createdById?: string;
+  updatedById?: string;
 }
 
 export const issueModel = {

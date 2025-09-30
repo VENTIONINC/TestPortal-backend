@@ -4,7 +4,7 @@ import { userService } from "@/services/userService";
 
 export interface AuthenticatedRequest extends Request {
   user?: {
-    id: number;
+    id: string;
     name: string;
     email: string;
     createdAt: Date;

@@ -11,7 +11,7 @@ import { IssueCategory } from "./enums";
 
 export interface AuthenticatedRequest extends Request {
   user?: {
-    id: number;
+    id: string;
     username: string;
     role: string;
   };
@@ -71,8 +71,8 @@ export interface CreateIssueParams {
   service?: string;
   ticket?: string;
   projectId: string;
-  createdById?: number;
-  updatedById?: number;
+  createdById?: string;
+  updatedById?: string;
 }
 
 export interface UpdateIssueParams {
@@ -82,7 +82,7 @@ export interface UpdateIssueParams {
   portal?: string;
   service?: string;
   ticket?: string;
-  updatedById?: number;
+  updatedById?: string;
 }
 
 export interface UserIntegrations {

@@ -4,7 +4,7 @@ import { ErrorResponseSchema, SuccessResponseSchema } from "./common";
 
 const UserSchema = z
   .object({
-    id: z.number(),
+    id: z.string().uuid(),
     name: z.string(),
     email: z.string(),
     createdAt: z.string(),
@@ -57,7 +57,7 @@ export function registerUserRoutes(registry: OpenAPIRegistry) {
     description: "Retrieves user information by ID (requires authentication)",
     request: {
       params: z.object({
-        userId: z.number(),
+        userId: z.string().uuid(),
       }),
     },
     security: [{ BearerAuth: [] }],
@@ -214,7 +214,7 @@ export function registerUserRoutes(registry: OpenAPIRegistry) {
       "Generates a new MCP token for the user (requires authentication)",
     request: {
       params: z.object({
-        userId: z.number(),
+        userId: z.string().uuid(),
       }),
     },
     security: [{ BearerAuth: [] }],
@@ -269,7 +269,7 @@ export function registerUserRoutes(registry: OpenAPIRegistry) {
     description: "Revokes the user's MCP token (requires authentication)",
     request: {
       params: z.object({
-        userId: z.number(),
+        userId: z.string().uuid(),
       }),
     },
     security: [{ BearerAuth: [] }],

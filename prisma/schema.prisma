@@ -19,8 +19,8 @@ model Project {
   isActive    Boolean  @default(true)
 
   // Simple ownership
-  owner   User @relation(fields: [ownerId], references: [id])
-  ownerId Int
+  owner   User   @relation(fields: [ownerId], references: [id])
+  ownerId String @db.Uuid
 
   // Relationships
   executions Execution[]
@@ -127,7 +127,7 @@ model Assumption {
 }
 
 model User {
-  id                      Int      @id @default(autoincrement())
+  id                      String   @id @default(uuid()) @db.Uuid
   createdAt               DateTime @default(now())
   updatedAt               DateTime @updatedAt
   name                    String
@@ -161,10 +161,10 @@ model Issue {
   project   Project @relation(fields: [projectId], references: [id])
   projectId String  @db.Uuid
 
-  createdBy   User?        @relation("IssuesCreated", fields: [createdById], references: [id])
-  createdById Int?
-  updatedBy   User?        @relation("IssuesUpdated", fields: [updatedById], references: [id])
-  updatedById Int?
+  createdBy   User?   @relation("IssuesCreated", fields: [createdById], references: [id])
+  createdById String? @db.Uuid
+  updatedBy   User?   @relation("IssuesUpdated", fields: [updatedById], references: [id])
+  updatedById String? @db.Uuid
   assumptions Assumption[]
 
   @@index([projectId])

@@ -11,17 +11,17 @@ interface CreateUserData {
 }
 
 const users: PrismaUser[] = [];
-let idCounter = 1;
+const generateUserId = () => crypto.randomUUID();
 let shouldThrowDatabaseError = false;
 let databaseErrorMessage = 'Database error';
 
 jest.mock('@/models/userModel', () => ({
   userModel: {
-    findById: jest.fn((id: number | string) => {
+    findById: jest.fn((id: string) => {
       if (shouldThrowDatabaseError) {
         throw new Error(databaseErrorMessage);
       }
-      const user = users.find((u) => u.id === Number(id));
+      const user = users.find((u) => u.id === id);
       return Promise.resolve(user ?? null);
     }),
     findByEmail: jest.fn((email: string) => {
@@ -36,7 +36,7 @@ jest.mock('@/models/userModel', () => ({
         throw new Error(databaseErrorMessage);
       }
       const user: PrismaUser = {
-        id: idCounter++,
+        id: generateUserId(),
         createdAt: new Date(),
         updatedAt: new Date(),
         name: data.name,
@@ -52,11 +52,11 @@ jest.mock('@/models/userModel', () => ({
       users.push(user);
       return Promise.resolve(user);
     }),
-    update: jest.fn((id: number | string, data: Partial<CreateUserData>) => {
+    update: jest.fn((id: string, data: Partial<CreateUserData>) => {
       if (shouldThrowDatabaseError) {
         throw new Error(databaseErrorMessage);
       }
-      const user = users.find((u) => u.id === Number(id));
+      const user = users.find((u) => u.id === id);
       if (!user) throw new Error('User not found');
       Object.assign(user, data, { updatedAt: new Date() });
       return Promise.resolve(user);
@@ -79,7 +79,6 @@ describe('Users Route - Business Logic Tests', () => {
 
   beforeEach(() => {
     users.length = 0;
-    idCounter = 1;
     shouldThrowDatabaseError = false;
     databaseErrorMessage = 'Database error';
     jest.clearAllMocks();

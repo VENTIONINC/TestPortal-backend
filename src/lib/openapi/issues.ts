@@ -12,8 +12,8 @@ const IssueSchema = z
     portal: z.string().optional(),
     service: z.string().optional(),
     ticket: z.string().optional(),
-    createdById: z.number().optional(),
-    updatedById: z.number().optional(),
+    createdById: z.string().uuid().optional(),
+    updatedById: z.string().uuid().optional(),
     createdAt: z.string(),
     updatedAt: z.string(),
   })

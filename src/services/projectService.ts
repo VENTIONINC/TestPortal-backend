@@ -4,7 +4,7 @@ import type { Project } from "@prisma/client";
 export interface CreateProjectParams {
   name: string;
   description?: string;
-  ownerId: number;
+  ownerId: string;
 }
 
 export interface UpdateProjectParams {
@@ -14,14 +14,14 @@ export interface UpdateProjectParams {
 }
 
 export interface GetProjectsParams {
-  ownerId?: number;
+  ownerId?: string;
   isActive?: boolean;
   name?: string;
 }
 
 export interface ProjectWithDetails extends Project {
   owner: {
-    id: number;
+    id: string;
     name: string;
     email: string;
   };
@@ -41,7 +41,7 @@ export const projectService = {
     return await projectModel.findById(id);
   },
 
-  async getUserProjects(userId: number): Promise<Project[]> {
+  async getUserProjects(userId: string): Promise<Project[]> {
     return await projectModel.findUserProjects(userId);
   },
 
