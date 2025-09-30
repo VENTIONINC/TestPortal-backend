@@ -346,7 +346,7 @@ export const testAnalysisService = {
 
       logger.info(`Analyzing ${tests.length} CTRF test results`);
 
-      const { passedResults, failedResults, allResults } = 
+      const { passedResults, failedResults, allResults } =
         this.extractCtrfTestResults(tests);
 
       if (failedResults.length === 0) {
@@ -356,7 +356,7 @@ export const testAnalysisService = {
         return passedResults;
       }
 
-      const failedTests = tests.filter(test => test.status !== "passed");
+      const failedTests = tests.filter((test) => test.status !== "passed");
       const essentialData = this.extractCtrfEssentialData(failedTests);
       const systemPrompt = getTestAnalysisPrompt(essentialData.length);
       const userPrompt = JSON.stringify(essentialData);
@@ -365,14 +365,15 @@ export const testAnalysisService = {
       const originalSize = JSON.stringify(tests).length;
       const optimizedSize = JSON.stringify(essentialData).length;
       const reduction = (
-        ((originalSize - optimizedSize) / originalSize) * 100
+        ((originalSize - optimizedSize) / originalSize) *
+        100
       ).toFixed(1);
       logger.info(
         `CTRF Token optimization: ${originalSize} → ${optimizedSize} chars (${reduction}% reduction)`,
       );
 
       const completion = await client.chat.completions.create({
-        model: "gpt-4o-mini",
+        model: "gpt-5-mini",
         messages: [
           { role: "system", content: systemPrompt },
           { role: "user", content: userPrompt },
@@ -510,7 +511,7 @@ export const testAnalysisService = {
 
     const essentialResults: EssentialCtrfResult[] = tests.map((test, index) => {
       const id = test.meta?.testNameHash ?? test.name ?? `ctrf-test-${index}`;
-      
+
       const essentialResult: EssentialCtrfResult = {
         id: String(id),
         name: test.name,
@@ -524,7 +525,7 @@ export const testAnalysisService = {
       if (test.message) {
         essentialResult.errorMessage = test.message;
       }
-      
+
       if (test.trace) {
         essentialResult.errorTrace = test.trace;
       }
