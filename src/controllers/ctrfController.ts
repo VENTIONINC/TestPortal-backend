@@ -1,5 +1,6 @@
 import type { Request, Response } from "express";
 import { ctrfService } from "@/services/ctrfService";
+import { testAnalysisService } from "@/services/testAnalysisService";
 import type { CTRFReport } from "@/types/ctrf";
 import getLogger from "@/lib/logger";
 
@@ -147,14 +148,35 @@ export const ctrfController = {
 
       logger.info(`Processing uploaded CTRF report with ${ctrfReport.results.tests.length} tests for project ${projectId}`);
 
+      // Analyze test results before processing
+      let analysisResults = null;
+      try {
+        analysisResults = await testAnalysisService.analyzeCtrfTestResults(ctrfReport);
+        logger.info(
+          "CTRF Analysis completed:",
+          analysisResults.length,
+          "tests analyzed",
+        );
+      } catch (analysisError) {
+        logger.warn(
+          "CTRF Analysis failed, proceeding without analysis:",
+          analysisError,
+        );
+        // Continue without analysis - don't fail the entire process
+      }
+
       const result = await ctrfService.processReport(ctrfReport, { projectId });
 
-      res.json({
+      // Include analysis results in the response
+      const response = {
         success: true,
         message: `Processed ${result.specsProcessed} test specs from uploaded file`,
         executionId: result.executionId,
         data: result,
-      });
+        ...(analysisResults && { analysis: analysisResults }),
+      };
+
+      res.json(response);
     } catch (error) {
       logger.error("Error processing uploaded CTRF report file:", error);
       res.status(500).json({
