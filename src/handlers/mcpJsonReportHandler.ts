@@ -40,7 +40,7 @@ interface ReportData {
 
 interface ProcessReportResult {
   success: boolean;
-  executionId: number;
+  executionId: string;
   specsProcessed: number;
 }
 

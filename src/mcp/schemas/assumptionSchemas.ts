@@ -5,8 +5,8 @@ import type { MCPToolSchema } from "@/types";
  * Schema for creating a new assumption
  */
 export const createAssumptionSchema: MCPToolSchema = {
-  issueId: z.number(),
-  resultErrorId: z.number(),
+  issueId: z.string().describe("UUID of the issue"),
+  resultErrorId: z.string().describe("UUID of the result error"),
   madeBy: z.string().optional(),
   isConfirmed: z.boolean().optional(),
   description: z.string().optional(),
@@ -18,7 +18,7 @@ export const createAssumptionSchema: MCPToolSchema = {
  * Schema for updating an assumption
  */
 export const updateAssumptionSchema: MCPToolSchema = {
-  assumptionId: z.string(),
+  assumptionId: z.string().describe("UUID of the assumption"),
   madeBy: z.string(),
   isConfirmed: z.boolean().optional(),
   description: z.string().optional(),
@@ -30,5 +30,5 @@ export const updateAssumptionSchema: MCPToolSchema = {
  * Schema for getting a specific assumption by ID
  */
 export const getAssumptionByIdSchema: MCPToolSchema = {
-  assumptionId: z.string(),
+  assumptionId: z.string().describe("UUID of the assumption"),
 };

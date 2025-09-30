@@ -24,9 +24,9 @@ interface ResultCreateInput {
   analysisCategory?: string;
   analysisConfidence?: number;
   analysisConclusion?: string;
-  spec: { connect: { id: number } };
-  execution: { connect: { id: number } };
-  errors?: { connect: { id: number } };
+  spec: { connect: { id: string } }; // UUID reference to Spec
+  execution: { connect: { id: string } }; // UUID reference to Execution
+  errors?: { connect: { id: string } }; // UUID reference to ResultError
 }
 
 const logger = getLogger("json-report-service");
@@ -73,7 +73,7 @@ interface ErrorData {
 
 export interface ProcessReportResult {
   success: boolean;
-  executionId: number;
+  executionId: string;
   specsProcessed: number;
 }
 
@@ -292,7 +292,7 @@ export const jsonReportService = {
     });
 
     if (resultRecord) {
-      return resultRecord; // Already exists, skip
+      return resultRecord as PrismaResult; // Already exists, skip
     }
 
     const recordData: ResultCreateInput = {
@@ -335,7 +335,7 @@ export const jsonReportService = {
     });
 
     logger.info(`Created result record: ${resultRecord.id}`);
-    return resultRecord;
+    return resultRecord as PrismaResult;
   },
 
   /**
@@ -368,6 +368,6 @@ export const jsonReportService = {
     });
 
     logger.info(`Created error record: ${errorRecord.id}`);
-    return errorRecord;
+    return errorRecord as PrismaResultError;
   },
 };

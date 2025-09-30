@@ -74,8 +74,8 @@ export interface ResultsStats {
 
 // Assumption API Types
 export interface CreateAssumptionRequest {
-  issueId: number;
-  resultErrorId?: number;
+  issueId: string; // UUID reference to Issue
+  resultErrorId?: string; // UUID reference to ResultError
   madeBy: string;
   isConfirmed: boolean;
   score: number;
@@ -85,7 +85,7 @@ export interface CreateAssumptionRequest {
 }
 
 export interface UpdateAssumptionRequest {
-  assumptionId: string;
+  assumptionId: string; // UUID reference to Assumption
   madeBy?: string;
   isConfirmed?: boolean;
   score?: number;
@@ -95,7 +95,7 @@ export interface UpdateAssumptionRequest {
 }
 
 export interface GetAssumptionByIdParams {
-  assumptionId: string;
+  assumptionId: string; // UUID reference to Assumption
 }
 
 // Common API Response Types

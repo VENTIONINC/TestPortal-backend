@@ -10,7 +10,7 @@ import type { MCPToolResponse } from "@/types";
 
 interface AssignIssueParams {
   resultErrorId: string;
-  assumptionId: number;
+  assumptionId: string; // UUID
 }
 
 interface ReviewErrorParams {

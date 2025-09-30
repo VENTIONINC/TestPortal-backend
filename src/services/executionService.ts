@@ -10,17 +10,9 @@ export interface GetExecutionsParams {
 }
 
 export const executionService = {
-  async getExecutionById(
-    executionId: number | string,
-  ): Promise<PrismaExecution> {
+  async getExecutionById(executionId: string): Promise<PrismaExecution> {
     if (!executionId) {
       throw new Error("Execution ID is required");
-    }
-
-    // Validate ID format
-    const numericId = Number(executionId);
-    if (isNaN(numericId) || numericId <= 0) {
-      throw new Error("Execution ID must be a valid positive number");
     }
 
     const execution = await executionModel.findById(executionId);

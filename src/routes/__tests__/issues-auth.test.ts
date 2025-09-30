@@ -10,9 +10,9 @@ import {
 
 const users: PrismaUser[] = [];
 const issues: PrismaIssue[] = [];
-let issueIdCounter = 1;
 
 const generateUserId = () => crypto.randomUUID();
+const generateIssueId = () => crypto.randomUUID();
 
 jest.mock("@/models/userModel", () => ({
   userModel: {
@@ -61,13 +61,13 @@ jest.mock("@/models/userModel", () => ({
 jest.mock("@/models/issueModel", () => ({
   issueModel: {
     findMany: jest.fn(() => Promise.resolve(issues)),
-    findById: jest.fn((id: number | string) => {
-      const issue = issues.find((i) => i.id === Number(id));
+    findById: jest.fn((id: string) => {
+      const issue = issues.find((i) => i.id === id);
       return Promise.resolve(issue ?? null);
     }),
     create: jest.fn((data: Partial<PrismaIssue>) => {
       const issue: PrismaIssue = {
-        id: issueIdCounter++,
+        id: generateIssueId(),
         createdAt: new Date(),
         updatedAt: new Date(),
         name: data.name as string,
@@ -83,8 +83,8 @@ jest.mock("@/models/issueModel", () => ({
       issues.push(issue);
       return Promise.resolve(issue);
     }),
-    update: jest.fn((id: number | string, data: Partial<PrismaIssue>) => {
-      const issue = issues.find((i) => i.id === Number(id));
+    update: jest.fn((id: string, data: Partial<PrismaIssue>) => {
+      const issue = issues.find((i) => i.id === id);
       if (!issue) throw new Error("Issue not found");
       Object.assign(issue, data, { updatedAt: new Date() });
       return Promise.resolve(issue);
@@ -96,7 +96,6 @@ describe("v2 issues auth flow", () => {
   beforeEach(() => {
     users.length = 0;
     issues.length = 0;
-    issueIdCounter = 1;
     jest.clearAllMocks();
   });
 

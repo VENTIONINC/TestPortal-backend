@@ -9,7 +9,7 @@ import type {
 interface AssumptionUpdateResult {
   action: "updated" | "deleted";
   assumption?: AssumptionWithRelations;
-  assumptionId?: number;
+  assumptionId?: string; // UUID
 }
 
 export const assumptionService = {
@@ -34,28 +34,20 @@ export const assumptionService = {
       ...rest,
     };
 
-    // Validate that the numbers are valid
-    if (
-      isNaN(processedAssumption.issueId) ||
-      processedAssumption.issueId <= 0
-    ) {
-      throw new Error("Issue ID must be a valid positive number");
+    // Validate that issueId (UUID) is provided
+    if (!processedAssumption.issueId) {
+      throw new Error("Issue ID is required");
     }
 
-    if (
-      processedAssumption.resultErrorId &&
-      (isNaN(processedAssumption.resultErrorId) ||
-        processedAssumption.resultErrorId <= 0)
-    ) {
-      throw new Error("Result error ID must be a valid positive number");
-    }
+    // No additional validation needed for resultErrorId (UUID string)
+    // Prisma will validate the UUID format
 
     const createdAssumption = await assumptionModel.create(processedAssumption);
     return createdAssumption;
   },
 
   async updateAssumption(
-    assumptionId: number | string,
+    assumptionId: string,
     updateData: Partial<UpdateAssumptionRequest>,
   ): Promise<AssumptionUpdateResult> {
     // Input validation
@@ -83,7 +75,7 @@ export const assumptionService = {
     } else if (updateData.isConfirmed === false) {
       // Delete the assumption if user confirmed it's wrong
       await assumptionModel.delete(assumptionId);
-      return { action: "deleted", assumptionId: Number(assumptionId) };
+      return { action: "deleted", assumptionId };
     } else {
       // Handle other updates that don't involve confirmation
       const updatedAssumption = await assumptionModel.update(
@@ -95,7 +87,7 @@ export const assumptionService = {
   },
 
   async getAssumptionById(
-    assumptionId: number | string,
+    assumptionId: string,
   ): Promise<PrismaAssumption> {
     if (!assumptionId) {
       throw new Error("Assumption ID is required");

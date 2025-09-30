@@ -41,7 +41,7 @@ export interface MCPToolResponse {
 // Error Analysis Types (for MCP error analyzer tool)
 export interface ErrorAnalysisInput {
   targetResultError: {
-    id: number;
+    id: string;
     type: string;
     message: string;
     callLog: string;
@@ -51,13 +51,13 @@ export interface ErrorAnalysisInput {
 
 export interface ErrorAnalysisOutput {
   similarErrors: Array<{
-    id: number;
+    id: string;
     similarity: number;
     assumptions: Array<{
-      id: number;
+      id: string;
       isConfirmed: boolean;
       issue: {
-        id: number;
+        id: string;
         name: string;
         category: string;
       };

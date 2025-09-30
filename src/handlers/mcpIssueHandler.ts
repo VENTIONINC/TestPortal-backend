@@ -82,7 +82,7 @@ export const mcpIssueHandler = {
     return await issueService.getAllIssuesWithStats(issueParams);
   },
 
-  async getIssueById(issueId: number): Promise<PrismaIssue> {
+  async getIssueById(issueId: string): Promise<PrismaIssue> {
     return await issueService.getIssueById(issueId);
   },
 
@@ -91,7 +91,7 @@ export const mcpIssueHandler = {
   },
 
   async updateIssue(
-    issueId: number,
+    issueId: string,
     updateData: UpdateIssueParams,
   ): Promise<PrismaIssue> {
     return await issueService.updateIssue(issueId, updateData);

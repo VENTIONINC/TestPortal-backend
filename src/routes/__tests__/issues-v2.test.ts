@@ -6,9 +6,9 @@ import { IssueCategory } from "@/types/enums";
 
 const users: PrismaUser[] = [];
 const issues: PrismaIssue[] = [];
-let issueIdCounter = 1;
 
 const generateUserId = () => crypto.randomUUID();
+const generateIssueId = () => crypto.randomUUID();
 
 const mockResultFindMany = jest.fn(async () => [] as unknown[]);
 
@@ -107,12 +107,12 @@ jest.mock("@/models/issueModel", () => ({
       }
       return Promise.resolve(filtered.length);
     }),
-    findById: jest.fn((id: number | string) => {
-      const issue = issues.find((i) => i.id === Number(id));
+    findById: jest.fn((id: string) => {
+      const issue = issues.find((i) => i.id === id);
       return Promise.resolve(issue ?? null);
     }),
-    findByIdWithUsers: jest.fn((id: number | string) => {
-      const issue = issues.find((i) => i.id === Number(id));
+    findByIdWithUsers: jest.fn((id: string) => {
+      const issue = issues.find((i) => i.id === id);
       if (!issue) return Promise.resolve(null);
       return Promise.resolve({
         ...issue,
@@ -126,7 +126,7 @@ jest.mock("@/models/issueModel", () => ({
     }),
     create: jest.fn((data: Partial<PrismaIssue>) => {
       const issue: PrismaIssue = {
-        id: issueIdCounter++,
+        id: generateIssueId(),
         createdAt: new Date(),
         updatedAt: new Date(),
         name: data.name as string,
@@ -142,14 +142,14 @@ jest.mock("@/models/issueModel", () => ({
       issues.push(issue);
       return Promise.resolve(issue);
     }),
-    update: jest.fn((id: number | string, data: Partial<PrismaIssue>) => {
-      const issue = issues.find((i) => i.id === Number(id));
+    update: jest.fn((id: string, data: Partial<PrismaIssue>) => {
+      const issue = issues.find((i) => i.id === id);
       if (!issue) throw new Error("Issue not found");
       Object.assign(issue, data, { updatedAt: new Date() });
       return Promise.resolve(issue);
     }),
-    delete: jest.fn((id: number | string) => {
-      const index = issues.findIndex((i) => i.id === Number(id));
+    delete: jest.fn((id: string) => {
+      const index = issues.findIndex((i) => i.id === id);
       if (index === -1) throw new Error("Issue not found");
       issues.splice(index, 1);
       return Promise.resolve();
@@ -203,7 +203,6 @@ describe("Issue service V2 behaviours", () => {
   beforeEach(async () => {
     users.length = 0;
     issues.length = 0;
-    issueIdCounter = 1;
     mockResultFindMany.mockResolvedValue([]);
     primaryUser = addUser("Primary User", "primary@ventionteams.com");
   });

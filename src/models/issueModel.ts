@@ -70,20 +70,20 @@ export const issueModel = {
     });
   },
 
-  findById: async (id: number | string): Promise<PrismaIssue | null> => {
+  findById: async (id: string): Promise<PrismaIssue | null> => {
     return await dbClient.issue.findUnique({
       where: {
-        id: Number(id),
+        id,
       },
     });
   },
 
   findByIdWithUsers: async (
-    id: number | string,
+    id: string,
   ): Promise<PrismaIssueWithUsers | null> => {
     return (await dbClient.issue.findUnique({
       where: {
-        id: Number(id),
+        id,
       },
       include: {
         createdBy: true,
@@ -99,28 +99,26 @@ export const issueModel = {
   },
 
   update: async (
-    id: number | string,
+    id: string,
     data: Partial<CreateIssueData>,
   ): Promise<PrismaIssue> => {
     return await dbClient.issue.update({
-      where: { id: Number(id) },
+      where: { id },
       data,
     });
   },
 
-  delete: async (id: number | string): Promise<PrismaIssue> => {
-    const issueId = Number(id);
-    
+  delete: async (id: string): Promise<PrismaIssue> => {
     // Check if issue exists
     const existingIssue = await dbClient.issue.findUnique({
-      where: { id: issueId },
+      where: { id },
       include: {
         assumptions: true,
       },
     });
 
     if (!existingIssue) {
-      throw new Error(`Issue with ID ${issueId} not found`);
+      throw new Error(`Issue with ID ${id} not found`);
     }
 
     // Use a transaction to safely delete assumptions first, then the issue
@@ -129,14 +127,14 @@ export const issueModel = {
       if (existingIssue.assumptions.length > 0) {
         await tx.assumption.deleteMany({
           where: {
-            issueId,
+            issueId: id,
           },
         });
       }
 
       // Delete the issue
       return await tx.issue.delete({
-        where: { id: issueId },
+        where: { id },
       });
     });
   },

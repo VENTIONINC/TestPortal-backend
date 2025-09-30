@@ -104,7 +104,7 @@ export function registerUserRoutes(registry: OpenAPIRegistry) {
     description: "Updates user information (requires authentication)",
     request: {
       params: z.object({
-        userId: z.number(),
+        userId: z.string().uuid(),
       }),
       body: {
         content: {
@@ -159,7 +159,7 @@ export function registerUserRoutes(registry: OpenAPIRegistry) {
       "Updates user integration settings for Report Portal and Monitoring Portal (requires authentication)",
     request: {
       params: z.object({
-        userId: z.number(),
+        userId: z.string().uuid(),
       }),
       body: {
         content: {

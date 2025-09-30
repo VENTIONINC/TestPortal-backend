@@ -123,7 +123,7 @@ export const issueService = {
     };
   },
 
-  async getIssueById(issueId: number): Promise<PrismaIssue> {
+  async getIssueById(issueId: string): Promise<PrismaIssue> {
     if (!issueId) {
       throw new Error("Issue ID is required");
     }
@@ -138,7 +138,7 @@ export const issueService = {
   },
 
   // V2 method with serialized response
-  async getIssueByIdV2(issueId: number): Promise<SerializedIssue> {
+  async getIssueByIdV2(issueId: string): Promise<SerializedIssue> {
     if (!issueId) {
       throw new Error("Issue ID is required");
     }
@@ -162,7 +162,7 @@ export const issueService = {
   },
 
   async updateIssue(
-    issueId: number,
+    issueId: string,
     updateData: UpdateIssueParams,
   ): Promise<PrismaIssue> {
     if (!issueId) {
@@ -192,15 +192,9 @@ export const issueService = {
     return updatedIssue;
   },
 
-  async deleteIssue(issueId: number): Promise<PrismaIssue> {
+  async deleteIssue(issueId: string): Promise<PrismaIssue> {
     if (!issueId) {
       throw new Error("Issue ID is required");
-    }
-
-    // Validate ID format
-    const numericId = Number(issueId);
-    if (isNaN(numericId) || numericId <= 0) {
-      throw new Error("Issue ID must be a valid positive number");
     }
 
     try {

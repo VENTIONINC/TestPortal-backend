@@ -9,7 +9,7 @@ import type {
 interface AssumptionUpdateResult {
   action: "updated" | "deleted";
   assumption?: AssumptionWithRelations;
-  assumptionId?: number;
+  assumptionId?: string; // UUID
 }
 
 export const mcpAssumptionHandler = {

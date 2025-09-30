@@ -24,7 +24,7 @@ export const resultModel = {
   ): Promise<ResultWithRelations | null> => {
     return (await dbClient.result.findUnique({
       where: {
-        id: Number(id),
+        id: String(id),
       },
       include: {
         spec: true,
@@ -420,25 +420,25 @@ export const resultModel = {
 
     // Initialize tracking maps (same approach as frontend)
     const specMap = new Map<
-      number,
-      { id: number; key: string; title: string; file: string; tags: string }
+      string,
+      { id: string; key: string; title: string; file: string; tags: string }
     >();
     const executionMap = new Map<
-      number,
-      { id: number; environment: string; type: string }
+      string,
+      { id: string; environment: string; type: string }
     >();
-    const errorMap = new Map<number, { id: number; message: string | null }>();
+    const errorMap = new Map<string, { id: string; message: string | null }>();
     const assumptionMap = new Map<
-      number,
-      { id: number; isConfirmed: boolean }
+      string,
+      { id: string; isConfirmed: boolean }
     >();
     const resultMap = new Map<
-      number,
-      { id: number; status: string; startTime: Date }
+      string,
+      { id: string; status: string; startTime: Date }
     >();
     const issueMap = new Map<
-      number,
-      { id: number; name: string | null; category: string | null }
+      string,
+      { id: string; name: string | null; category: string | null }
     >();
 
     // Local tracking for errors and issues (not stored in final stats)
@@ -542,7 +542,7 @@ export const resultModel = {
   ): Promise<ResultWithRelations> => {
     const updatedResult = await dbClient.result.update({
       where: {
-        id: Number(resultId),
+        id: String(resultId),
       },
       data: analysisData,
       include: {

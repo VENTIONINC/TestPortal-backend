@@ -3,7 +3,7 @@
 // schema and are sufficient for type checking within this repository.
 
 export interface PrismaExecution {
-  id: number;
+  id: string; // UUID
   createdAt: Date;
   updatedAt: Date;
   type: string;
@@ -15,7 +15,7 @@ export interface PrismaExecution {
 }
 
 export interface PrismaSpec {
-  id: number;
+  id: string; // UUID
   createdAt: Date;
   updatedAt: Date;
   key: string;
@@ -27,7 +27,7 @@ export interface PrismaSpec {
 }
 
 export interface PrismaResult {
-  id: number;
+  id: string; // UUID
   createdAt: Date;
   updatedAt: Date;
   reportPortalLink?: string | null;
@@ -35,8 +35,8 @@ export interface PrismaResult {
   status: string;
   duration: number;
   startTime: Date;
-  specId: number;
-  executionId: number;
+  specId: string; // UUID reference to Spec
+  executionId: string; // UUID reference to Execution
   analysisStatus?: string | null;
   analysisCategory?: string | null;
   analysisConfidence?: number | null;
@@ -44,7 +44,7 @@ export interface PrismaResult {
 }
 
 export interface PrismaResultError {
-  id: number;
+  id: string; // UUID
   createdAt: Date;
   updatedAt: Date;
   type: string;
@@ -55,22 +55,22 @@ export interface PrismaResultError {
   expectedPattern?: string | null;
   receivedString?: string | null;
   location: string;
-  resultId?: number | null;
+  resultId?: string | null; // UUID reference to Result
 }
 
 export interface PrismaAssumption {
-  id: number;
+  id: string; // UUID
   createdAt: Date;
   updatedAt: Date;
   isConfirmed: boolean;
   score: number;
   madeBy: string;
-  issueId: number;
-  resultErrorId?: number | null;
+  issueId: string; // UUID reference to Issue
+  resultErrorId?: string | null; // UUID reference to ResultError
 }
 
 export interface PrismaIssue {
-  id: number;
+  id: string; // UUID
   createdAt: Date;
   updatedAt: Date;
   name: string;
@@ -244,7 +244,7 @@ export interface SerializedUser {
 }
 
 export interface SerializedIssue {
-  id: number;
+  id: string; // UUID
   createdAt: Date;
   updatedAt: Date;
   name: string;
