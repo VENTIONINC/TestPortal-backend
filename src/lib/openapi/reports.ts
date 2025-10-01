@@ -52,7 +52,7 @@ const JsonReportRequestSchema = z
 const JsonReportResponseSchema = z
   .object({
     success: z.boolean(),
-    executionId: z.number(),
+    executionId: z.string().uuid(),
     specsProcessed: z.number(),
   })
   .openapi("JsonReportResponse");
@@ -127,9 +127,12 @@ export function registerReportRoutes(registry: OpenAPIRegistry) {
         content: {
           "multipart/form-data": {
             schema: z.object({
-              projectId: z.string().openapi({
-                description: "Project ID to associate the report with",
-              }),
+              projectId: z
+                .string()
+                .uuid()
+                .openapi({
+                  description: "Project ID to associate the report with",
+                }),
               report: z.string().openapi({
                 type: "string",
                 format: "binary",

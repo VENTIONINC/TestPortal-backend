@@ -2,13 +2,13 @@ import jwt from "jsonwebtoken";
 import type { CognitoUserSession } from "amazon-cognito-identity-js";
 
 export interface JwtPayload {
-  userId: number;
+  userId: string;
   email: string;
 }
 
 export interface AuthResponse {
   user: {
-    id: number;
+    id: string;
     name: string;
     email: string;
     createdAt: Date;

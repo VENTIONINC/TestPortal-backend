@@ -4,8 +4,8 @@ import { ErrorResponseSchema, SuccessResponseSchema } from "./common";
 
 const ResultErrorSchema = z
   .object({
-    id: z.string(),
-    resultId: z.string(),
+    id: z.string().uuid(),
+    resultId: z.string().uuid(),
     errorMessage: z.string(),
     stackTrace: z.string().optional(),
     assertionInfo: z.string().optional(),
@@ -16,13 +16,13 @@ const ResultErrorSchema = z
 
 const AssignIssueRequestSchema = z
   .object({
-    issueId: z.number(),
+    issueId: z.string().uuid(),
   })
   .openapi("AssignIssueRequest");
 
 const BulkReviewRequestSchema = z
   .object({
-    errorIds: z.array(z.number()),
+    errorIds: z.array(z.string().uuid()),
   })
   .openapi("BulkReviewRequest");
 
@@ -37,7 +37,7 @@ export function registerResultErrorRoutes(registry: OpenAPIRegistry) {
     description: "Assigns an issue to a specific result error",
     request: {
       params: z.object({
-        resultErrorId: z.string(),
+        resultErrorId: z.string().uuid(),
       }),
       body: {
         content: {
@@ -82,7 +82,7 @@ export function registerResultErrorRoutes(registry: OpenAPIRegistry) {
     description: "Reviews a specific result error",
     request: {
       params: z.object({
-        resultErrorId: z.string(),
+        resultErrorId: z.string().uuid(),
       }),
     },
     responses: {

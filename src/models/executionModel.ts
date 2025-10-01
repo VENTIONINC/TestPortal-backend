@@ -11,10 +11,10 @@ export interface FindManyParams {
 }
 
 export const executionModel = {
-  findById: async (id: number | string): Promise<PrismaExecution | null> => {
+  findById: async (id: string): Promise<PrismaExecution | null> => {
     return await dbClient.execution.findUnique({
       where: {
-        id: Number(id),
+        id,
       },
     });
   },

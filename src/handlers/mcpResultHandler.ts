@@ -54,9 +54,7 @@ export const mcpResultHandler = {
     return await resultService.getResults(resultParams);
   },
 
-  async getResultById(
-    resultId: string | number,
-  ): Promise<ResultWithRelations | null> {
+  async getResultById(resultId: string): Promise<ResultWithRelations | null> {
     return await resultService.getResultById(resultId);
   },
 
@@ -65,10 +63,14 @@ export const mcpResultHandler = {
 
     // Validate required projectId parameter
     if (!projectId) {
-      throw new Error("Project ID is required for retrieving results statistics");
+      throw new Error(
+        "Project ID is required for retrieving results statistics",
+      );
     }
 
-    return await resultService.getResultsStats({ projectId, ...(dates && { dates }) });
+    return await resultService.getResultsStats({
+      projectId,
+      ...(dates && { dates }),
+    });
   },
 };
-

@@ -7,15 +7,9 @@ interface ProcessedSpec extends Omit<PrismaSpec, "tags" | "annotations"> {
 }
 
 export const specService = {
-  async getSpecById(specId: number | string): Promise<ProcessedSpec> {
+  async getSpecById(specId: string): Promise<ProcessedSpec> {
     if (!specId) {
       throw new Error("Spec ID is required");
-    }
-
-    // Validate ID format
-    const numericId = Number(specId);
-    if (isNaN(numericId) || numericId <= 0) {
-      throw new Error("Spec ID must be a valid positive number");
     }
 
     const spec = await specModel.findById(specId);

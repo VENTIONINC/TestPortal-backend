@@ -4,9 +4,9 @@ import { ErrorResponseSchema } from "./common";
 
 const AssumptionSchema = z
   .object({
-    id: z.string(),
-    issueId: z.number(),
-    resultErrorId: z.number(),
+    id: z.string().uuid(),
+    issueId: z.string().uuid(),
+    resultErrorId: z.string().uuid(),
     madeBy: z.string().optional(),
     isConfirmed: z.boolean().optional(),
     description: z.string().optional(),
@@ -19,8 +19,8 @@ const AssumptionSchema = z
 
 const CreateAssumptionRequestSchema = z
   .object({
-    issueId: z.number(),
-    resultErrorId: z.number(),
+    issueId: z.string().uuid(),
+    resultErrorId: z.string().uuid(),
     madeBy: z.string().optional(),
     isConfirmed: z.boolean().optional(),
     description: z.string().optional(),
@@ -85,7 +85,7 @@ export function registerAssumptionRoutes(registry: OpenAPIRegistry) {
     description: "Updates an existing assumption",
     request: {
       params: z.object({
-        assumptionId: z.string(),
+        assumptionId: z.string().uuid(),
       }),
       body: {
         content: {

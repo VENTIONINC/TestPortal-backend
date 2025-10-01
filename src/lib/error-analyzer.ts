@@ -11,7 +11,7 @@ interface TargetResultError extends PrismaResultError {
   message: string;
   callLog: string;
   callStack: string;
-  id: number;
+  id: string; // UUID
   type: string;
 }
 

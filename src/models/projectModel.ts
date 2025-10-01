@@ -4,7 +4,7 @@ const prisma = new PrismaClient();
 
 export const projectModel = {
   async findMany(filters?: {
-    ownerId?: number;
+    ownerId?: string;
     isActive?: boolean;
     name?: string;
   }): Promise<Project[]> {
@@ -51,7 +51,7 @@ export const projectModel = {
 
   async findById(id: string): Promise<
     | (Project & {
-        owner: { id: number; name: string; email: string };
+        owner: { id: string; name: string; email: string };
         _count: {
           executions: number;
           specs: number;
@@ -90,7 +90,7 @@ export const projectModel = {
   async create(data: {
     name: string;
     description?: string;
-    ownerId: number;
+    ownerId: string;
   }): Promise<Project> {
     return await prisma.project.create({
       data: {
@@ -139,7 +139,7 @@ export const projectModel = {
     });
   },
 
-  async checkOwnership(projectId: string, userId: number): Promise<boolean> {
+  async checkOwnership(projectId: string, userId: string): Promise<boolean> {
     const project = await prisma.project.findUnique({
       where: {
         id: projectId,
@@ -149,7 +149,7 @@ export const projectModel = {
     return !!project;
   },
 
-  async findUserProjects(userId: number): Promise<Project[]> {
+  async findUserProjects(userId: string): Promise<Project[]> {
     return await prisma.project.findMany({
       where: {
         ownerId: userId,

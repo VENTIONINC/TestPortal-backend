@@ -19,8 +19,8 @@ model Project {
   isActive    Boolean  @default(true)
 
   // Simple ownership
-  owner   User @relation(fields: [ownerId], references: [id])
-  ownerId Int
+  owner   User   @relation(fields: [ownerId], references: [id])
+  ownerId String @db.Uuid
 
   // Relationships
   executions Execution[]
@@ -32,7 +32,7 @@ model Project {
 }
 
 model Execution {
-  id          Int      @id @default(autoincrement())
+  id          String   @id @default(uuid()) @db.Uuid
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
   type        String
@@ -54,7 +54,7 @@ model Execution {
 }
 
 model Spec {
-  id          Int      @id @default(autoincrement())
+  id          String   @id @default(uuid()) @db.Uuid
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
   key         String // e.g. TestRail Id
@@ -77,7 +77,7 @@ model Spec {
 }
 
 model Result {
-  id                 Int           @id @default(autoincrement())
+  id                 String        @id @default(uuid()) @db.Uuid
   createdAt          DateTime      @default(now())
   updatedAt          DateTime      @updatedAt
   reportPortalLink   String?
@@ -87,9 +87,9 @@ model Result {
   startTime          DateTime
   errors             ResultError[]
   spec               Spec          @relation(fields: [specId], references: [id])
-  specId             Int
+  specId             String        @db.Uuid
   execution          Execution     @relation(fields: [executionId], references: [id])
-  executionId        Int
+  executionId        String        @db.Uuid
   analysisStatus     String? // "passed" | "failed"
   analysisCategory   String? // "bug" | "infra" | "performance" | "script" | "other"
   analysisConfidence Float? // 0.0 to 1.0
@@ -97,7 +97,7 @@ model Result {
 }
 
 model ResultError {
-  id              Int          @id @default(autoincrement())
+  id              String       @id @default(uuid()) @db.Uuid
   createdAt       DateTime     @default(now())
   updatedAt       DateTime     @updatedAt
   type            String
@@ -109,25 +109,25 @@ model ResultError {
   receivedString  String?
   location        String
   result          Result?      @relation(fields: [resultId], references: [id])
-  resultId        Int?
+  resultId        String?      @db.Uuid
   assumptions     Assumption[]
 }
 
 model Assumption {
-  id            Int          @id @default(autoincrement())
+  id            String       @id @default(uuid()) @db.Uuid
   createdAt     DateTime     @default(now())
   updatedAt     DateTime     @updatedAt
   isConfirmed   Boolean
   score         Float
   madeBy        String
   issue         Issue        @relation(fields: [issueId], references: [id])
-  issueId       Int
+  issueId       String       @db.Uuid
   resultError   ResultError? @relation(fields: [resultErrorId], references: [id])
-  resultErrorId Int?
+  resultErrorId String?      @db.Uuid
 }
 
 model User {
-  id                      Int      @id @default(autoincrement())
+  id                      String   @id @default(uuid()) @db.Uuid
   createdAt               DateTime @default(now())
   updatedAt               DateTime @updatedAt
   name                    String
@@ -147,7 +147,7 @@ model User {
 }
 
 model Issue {
-  id          Int      @id @default(autoincrement())
+  id          String   @id @default(uuid()) @db.Uuid
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
   name        String
@@ -161,10 +161,10 @@ model Issue {
   project   Project @relation(fields: [projectId], references: [id])
   projectId String  @db.Uuid
 
-  createdBy   User?        @relation("IssuesCreated", fields: [createdById], references: [id])
-  createdById Int?
-  updatedBy   User?        @relation("IssuesUpdated", fields: [updatedById], references: [id])
-  updatedById Int?
+  createdBy   User?   @relation("IssuesCreated", fields: [createdById], references: [id])
+  createdById String? @db.Uuid
+  updatedBy   User?   @relation("IssuesUpdated", fields: [updatedById], references: [id])
+  updatedById String? @db.Uuid
   assumptions Assumption[]
 
   @@index([projectId])

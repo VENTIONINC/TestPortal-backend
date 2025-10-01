@@ -5,15 +5,15 @@ import { ErrorResponseSchema } from "./common";
 
 const IssueSchema = z
   .object({
-    id: z.number(),
+    id: z.string().uuid(),
     name: z.string(),
     category: z.string().optional(),
     description: z.string().optional(),
     portal: z.string().optional(),
     service: z.string().optional(),
     ticket: z.string().optional(),
-    createdById: z.number().optional(),
-    updatedById: z.number().optional(),
+    createdById: z.string().uuid().optional(),
+    updatedById: z.string().uuid().optional(),
     createdAt: z.string(),
     updatedAt: z.string(),
   })
@@ -155,7 +155,7 @@ export function registerIssueRoutes(registry: OpenAPIRegistry) {
       "Deletes an issue by its ID. Also deletes all associated assumptions (cascade delete).",
     request: {
       params: z.object({
-        issueId: z.number(),
+        issueId: z.string().uuid(),
       }),
     },
     responses: {
@@ -197,7 +197,7 @@ export function registerIssueRoutes(registry: OpenAPIRegistry) {
     description: "Retrieves an issue by its ID",
     request: {
       params: z.object({
-        issueId: z.number(),
+        issueId: z.string().uuid(),
       }),
     },
     responses: {
@@ -269,7 +269,7 @@ export function registerIssueRoutes(registry: OpenAPIRegistry) {
     description: "Updates an existing issue",
     request: {
       params: z.object({
-        issueId: z.number(),
+        issueId: z.string().uuid(),
       }),
       body: {
         content: {
@@ -348,7 +348,7 @@ export function registerIssueRoutes(registry: OpenAPIRegistry) {
     description: "Retrieves an issue by its ID (requires authentication)",
     request: {
       params: z.object({
-        issueId: z.number(),
+        issueId: z.string().uuid(),
       }),
     },
     security: [{ BearerAuth: [] }],
@@ -430,7 +430,7 @@ export function registerIssueRoutes(registry: OpenAPIRegistry) {
     description: "Updates an existing issue (requires authentication)",
     request: {
       params: z.object({
-        issueId: z.number(),
+        issueId: z.string().uuid(),
       }),
       body: {
         content: {
@@ -485,7 +485,7 @@ export function registerIssueRoutes(registry: OpenAPIRegistry) {
       "Deletes an issue by its ID (requires authentication). Also deletes all associated assumptions (cascade delete).",
     request: {
       params: z.object({
-        issueId: z.number(),
+        issueId: z.string().uuid(),
       }),
     },
     security: [{ BearerAuth: [] }],

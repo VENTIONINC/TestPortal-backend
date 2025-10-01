@@ -1,8 +1,11 @@
-import '@/test-utils/testEnv';
-import { jest } from '@jest/globals';
-import type { PrismaUser } from '@/types';
-import { userController } from '@/controllers/userController';
-import { executeController, executeProtectedController } from '@/test-utils/httpMocks';
+import "@/test-utils/testEnv";
+import { jest } from "@jest/globals";
+import type { PrismaUser } from "@/types";
+import { userController } from "@/controllers/userController";
+import {
+  executeController,
+  executeProtectedController,
+} from "@/test-utils/httpMocks";
 
 interface CreateUserData {
   name: string;
@@ -11,12 +14,12 @@ interface CreateUserData {
 }
 
 const users: PrismaUser[] = [];
-let idCounter = 1;
+const generateUserId = () => crypto.randomUUID();
 
-jest.mock('@/models/userModel', () => ({
+jest.mock("@/models/userModel", () => ({
   userModel: {
-    findById: jest.fn((id: number | string) => {
-      const user = users.find((u) => u.id === Number(id));
+    findById: jest.fn((id: string) => {
+      const user = users.find((u) => u.id === id);
       return Promise.resolve(user ?? null);
     }),
     findByEmail: jest.fn((email: string) => {
@@ -25,7 +28,7 @@ jest.mock('@/models/userModel', () => ({
     }),
     create: jest.fn((data: CreateUserData) => {
       const user: PrismaUser = {
-        id: idCounter++,
+        id: generateUserId(),
         createdAt: new Date(),
         updatedAt: new Date(),
         name: data.name,
@@ -41,71 +44,80 @@ jest.mock('@/models/userModel', () => ({
       users.push(user);
       return Promise.resolve(user);
     }),
-    update: jest.fn((id: number | string, data: Partial<CreateUserData>) => {
-      const user = users.find((u) => u.id === Number(id));
-      if (!user) throw new Error('User not found');
+    update: jest.fn((id: string, data: Partial<CreateUserData>) => {
+      const user = users.find((u) => u.id === id);
+      if (!user) throw new Error("User not found");
       Object.assign(user, data, { updatedAt: new Date() });
       return Promise.resolve(user);
     }),
   },
 }));
 
-describe('users route additional flows', () => {
+describe("users route additional flows", () => {
   const signup = async () =>
     executeController(userController.signup, {
-      method: 'POST',
-      body: { name: 'Test', email: 'test@ventionteams.com', password: 'password123' },
+      method: "POST",
+      body: {
+        name: "Test",
+        email: "test@ventionteams.com",
+        password: "password123",
+      },
     });
 
   const login = async () =>
     executeController(userController.login, {
-      method: 'POST',
-      body: { email: 'test@ventionteams.com', password: 'password123' },
+      method: "POST",
+      body: { email: "test@ventionteams.com", password: "password123" },
     });
 
   beforeEach(() => {
     users.length = 0;
-    idCounter = 1;
     jest.clearAllMocks();
   });
 
-  it('refreshes tokens using /refresh-token', async () => {
+  it("refreshes tokens using /refresh-token", async () => {
     await signup();
     const loginRes = await login();
-    const loginBody = loginRes.body as any;
+    const loginBody = loginRes.body;
     const { refreshToken } = loginBody;
 
     const refreshRes = await executeController(userController.refreshToken, {
-      method: 'POST',
+      method: "POST",
       body: { refreshToken },
     });
     expect(refreshRes.statusCode).toBe(200);
-    expect(refreshRes.body).toHaveProperty('accessToken');
-    expect(refreshRes.body).toHaveProperty('refreshToken');
+    expect(refreshRes.body).toHaveProperty("accessToken");
+    expect(refreshRes.body).toHaveProperty("refreshToken");
   });
 
-  it('updates user data via PATCH', async () => {
+  it("updates user data via PATCH", async () => {
     await signup();
     const loginRes = await login();
-    const loginBody = loginRes.body as any;
+    const loginBody = loginRes.body;
     const userId = String(loginBody.user.id);
     const token = loginBody.accessToken as string;
 
-    const patchResUnauth = await executeProtectedController(userController.updateUser, {
-      method: 'PATCH',
-      params: { userId },
-      body: { name: 'Updated' },
-    });
+    const patchResUnauth = await executeProtectedController(
+      userController.updateUser,
+      {
+        method: "PATCH",
+        params: { userId },
+        body: { name: "Updated" },
+      },
+    );
     expect(patchResUnauth.statusCode).toBe(401);
 
-    const patchRes = await executeProtectedController(userController.updateUser, {
-      method: 'PATCH',
-      params: { userId },
-      body: { name: 'Updated' },
-      token,
-    });
+    const patchRes = await executeProtectedController(
+      userController.updateUser,
+      {
+        method: "PATCH",
+        params: { userId },
+        body: { name: "Updated" },
+        token,
+      },
+    );
     expect(patchRes.statusCode).toBe(200);
-    const body = patchRes.body as any;
-    expect(body?.name).toBe('Updated');
+    const body = patchRes.body;
+    expect(body?.name).toBe("Updated");
   });
 });

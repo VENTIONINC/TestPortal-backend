@@ -5,6 +5,7 @@ Complete JWT-based authentication system with secure token generation, verificat
 ## 🚀 Quick Start
 
 1. **Login to get JWT token**:
+
    ```bash
    curl -X POST http://localhost:3001/api/v2/users/login \
      -H "Content-Type: application/json" \
@@ -22,12 +23,14 @@ Complete JWT-based authentication system with secure token generation, verificat
 ## 🔑 JWT Features
 
 ### Security Configuration
+
 - **Algorithm**: HS256 (HMAC SHA-256)
 - **Token Expiration**: 24 hours
 - **Secret**: Environment variable (`JWT_SECRET`)
 - **Payload**: User ID and email only (minimal data)
 
 ### Token Structure
+
 ```json
 {
   "userId": 123,
@@ -42,9 +45,11 @@ Complete JWT-based authentication system with secure token generation, verificat
 ## 📋 API Changes
 
 ### Updated Login Response
+
 **`POST /api/v2/users/login`**
 
 #### Success Response (200):
+
 ```json
 {
   "user": {
@@ -59,6 +64,7 @@ Complete JWT-based authentication system with secure token generation, verificat
 ```
 
 ### Authorization Header Format
+
 ```
 Authorization: Bearer <jwt-token>
 ```
@@ -68,6 +74,7 @@ Authorization: Bearer <jwt-token>
 ## 🛡️ Auth Middleware
 
 ### Usage
+
 ```typescript
 import { authMiddleware } from "@/middleware/authMiddleware";
 
@@ -76,12 +83,13 @@ router.get("/protected", authMiddleware, controller.method);
 ```
 
 ### Request Enhancement
+
 The middleware adds user data to the request object:
 
 ```typescript
 interface AuthenticatedRequest extends Request {
   user?: {
-    id: number;
+    id: string;
     name: string;
     email: string;
     createdAt: Date;
@@ -91,6 +99,7 @@ interface AuthenticatedRequest extends Request {
 ```
 
 ### Error Responses
+
 - **401**: `{ "error": "Authorization header is required" }`
 - **401**: `{ "error": "Authorization header must start with 'Bearer '" }`
 - **401**: `{ "error": "Token is required" }`
@@ -102,6 +111,7 @@ interface AuthenticatedRequest extends Request {
 ## 🔧 Implementation Details
 
 ### JWT Service (`src/services/jwtService.ts`)
+
 ```typescript
 export const jwtService = {
   generateToken(payload: JwtPayload): string,
@@ -111,6 +121,7 @@ export const jwtService = {
 ```
 
 ### Auth Middleware (`src/middleware/authMiddleware.ts`)
+
 - Extracts JWT from Authorization header
 - Verifies token signature and expiration
 - Fetches user data from database
@@ -118,6 +129,7 @@ export const jwtService = {
 - Handles all auth errors gracefully
 
 ### Updated User Service
+
 - New `login()` method returns user + JWT token
 - Existing `verifyPassword()` method still available
 - Clean separation of concerns
@@ -127,6 +139,7 @@ export const jwtService = {
 ## 🧪 Testing
 
 ### Manual Testing
+
 ```bash
 # 1. Login and get token
 TOKEN=$(curl -s -X POST http://localhost:3001/api/v2/users/login \
@@ -140,6 +153,7 @@ curl -X GET http://localhost:3001/api/v2/users/1 \
 ```
 
 ### Test Cases
+
 ✅ **Valid login returns token**
 ✅ **Protected route works with valid token**
 ✅ **Protected route blocks requests without token**
@@ -152,6 +166,7 @@ curl -X GET http://localhost:3001/api/v2/users/1 \
 ## 🚨 Security Considerations
 
 ### Best Practices Implemented
+
 - **Environment-based secrets**: JWT secret from `.env`
 - **Minimal payload**: Only essential user data in token
 - **Token expiration**: 24-hour expiry prevents long-term exposure
@@ -160,6 +175,7 @@ curl -X GET http://localhost:3001/api/v2/users/1 \
 - **Error handling**: No sensitive data in error responses
 
 ### Production Recommendations
+
 1. **Use strong JWT secrets** (256-bit minimum)
 2. **Implement token refresh** for better UX
 3. **Add rate limiting** on auth endpoints
@@ -172,12 +188,14 @@ curl -X GET http://localhost:3001/api/v2/users/1 \
 ## 🔄 Migration Guide
 
 ### For Existing APIs
+
 1. **Login endpoint now returns JWT token**
 2. **Old login format still works** (backward compatible)
 3. **Add auth middleware to protected routes**
 4. **Update client apps to handle tokens**
 
 ### Example Route Protection
+
 ```typescript
 // Before (no protection)
 router.get("/users/:id", userController.getUserById);
@@ -191,12 +209,14 @@ router.get("/users/:id", authMiddleware, userController.getUserById);
 ## 📊 Performance Impact
 
 ### Benchmarks
+
 - **Token Generation**: ~1-2ms
 - **Token Verification**: ~1-2ms
 - **Middleware Overhead**: ~5-10ms (includes DB lookup)
 - **Login Response**: +1-2ms (token generation)
 
 ### Optimization Tips
+
 - Cache user data to reduce DB lookups
 - Use Redis for token blacklisting
 - Consider stateless tokens for microservices
@@ -207,12 +227,14 @@ router.get("/users/:id", authMiddleware, userController.getUserById);
 ## 🛠️ Environment Configuration
 
 ### Required Environment Variables
+
 ```bash
 # .env file
 JWT_SECRET="your-super-secret-jwt-key-change-in-production-2024"
 ```
 
 ### Optional Configuration
+
 ```bash
 JWT_EXPIRES_IN="24h"  # Default: 24 hours
 JWT_ALGORITHM="HS256" # Default: HS256
@@ -223,6 +245,7 @@ JWT_ALGORITHM="HS256" # Default: HS256
 ## 🚀 Future Enhancements
 
 ### Planned Features
+
 - **Refresh tokens** for extended sessions
 - **Token blacklisting** for logout functionality
 - **Role-based access control** (RBAC)
@@ -231,8 +254,9 @@ JWT_ALGORITHM="HS256" # Default: HS256
 - **OAuth2 integration** for social login
 
 ### Integration Ideas
+
 - **API rate limiting** based on user
 - **Audit logging** with user context
 - **Session management** with Redis
 - **Multi-factor authentication** (MFA)
-- **Single sign-on** (SSO) support 
+- **Single sign-on** (SSO) support

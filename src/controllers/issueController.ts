@@ -159,7 +159,7 @@ export const issueController = {
         return;
       }
 
-      const issueRecords = await issueService.getIssueById(Number(issueId));
+      const issueRecords = await issueService.getIssueById(issueId);
       res.status(200).json(issueRecords);
     } catch (error) {
       const err = error as Error;
@@ -181,7 +181,7 @@ export const issueController = {
         return;
       }
 
-      const issueRecords = await issueService.getIssueByIdV2(Number(issueId));
+      const issueRecords = await issueService.getIssueByIdV2(issueId);
       res.status(200).json(issueRecords);
     } catch (error) {
       const err = error as Error;
@@ -241,7 +241,7 @@ export const issueController = {
       }
 
       const updatedIssue = await issueService.updateIssue(
-        Number(issueId),
+        issueId,
         updateData,
       );
       res.status(200).json(updatedIssue);
@@ -264,14 +264,14 @@ export const issueController = {
         return;
       }
 
-      const deletedIssue = await issueService.deleteIssue(Number(issueId));
+      const deletedIssue = await issueService.deleteIssue(issueId);
       res.status(200).json({
         message: "Issue and all associated assumptions deleted successfully",
         issue: deletedIssue,
       });
     } catch (error) {
       const err = error as Error;
-      
+
       // Check if it's a "not found" error
       if (err.message.includes("not found")) {
         res.status(404).json({
@@ -279,7 +279,7 @@ export const issueController = {
         });
         return;
       }
-      
+
       // General error
       res.status(400).json({
         error: `Failed to delete issue. ${err.message}`,

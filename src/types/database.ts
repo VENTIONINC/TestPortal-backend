@@ -3,7 +3,7 @@
 // schema and are sufficient for type checking within this repository.
 
 export interface PrismaExecution {
-  id: number;
+  id: string; // UUID
   createdAt: Date;
   updatedAt: Date;
   type: string;
@@ -15,7 +15,7 @@ export interface PrismaExecution {
 }
 
 export interface PrismaSpec {
-  id: number;
+  id: string; // UUID
   createdAt: Date;
   updatedAt: Date;
   key: string;
@@ -27,7 +27,7 @@ export interface PrismaSpec {
 }
 
 export interface PrismaResult {
-  id: number;
+  id: string; // UUID
   createdAt: Date;
   updatedAt: Date;
   reportPortalLink?: string | null;
@@ -35,8 +35,8 @@ export interface PrismaResult {
   status: string;
   duration: number;
   startTime: Date;
-  specId: number;
-  executionId: number;
+  specId: string; // UUID reference to Spec
+  executionId: string; // UUID reference to Execution
   analysisStatus?: string | null;
   analysisCategory?: string | null;
   analysisConfidence?: number | null;
@@ -44,7 +44,7 @@ export interface PrismaResult {
 }
 
 export interface PrismaResultError {
-  id: number;
+  id: string; // UUID
   createdAt: Date;
   updatedAt: Date;
   type: string;
@@ -55,22 +55,22 @@ export interface PrismaResultError {
   expectedPattern?: string | null;
   receivedString?: string | null;
   location: string;
-  resultId?: number | null;
+  resultId?: string | null; // UUID reference to Result
 }
 
 export interface PrismaAssumption {
-  id: number;
+  id: string; // UUID
   createdAt: Date;
   updatedAt: Date;
   isConfirmed: boolean;
   score: number;
   madeBy: string;
-  issueId: number;
-  resultErrorId?: number | null;
+  issueId: string; // UUID reference to Issue
+  resultErrorId?: string | null; // UUID reference to ResultError
 }
 
 export interface PrismaIssue {
-  id: number;
+  id: string; // UUID
   createdAt: Date;
   updatedAt: Date;
   name: string;
@@ -80,8 +80,8 @@ export interface PrismaIssue {
   service?: string | null;
   ticket?: string | null;
   projectId: string; // UUID reference to Project
-  createdById?: number | null;
-  updatedById?: number | null;
+  createdById?: string | null;
+  updatedById?: string | null;
 }
 
 export interface PrismaProject {
@@ -91,11 +91,11 @@ export interface PrismaProject {
   name: string;
   description?: string | null;
   isActive: boolean;
-  ownerId: number;
+  ownerId: string;
 }
 
 export interface PrismaUser {
-  id: number;
+  id: string;
   createdAt: Date;
   updatedAt: Date;
   name: string;
@@ -158,7 +158,7 @@ export interface ProjectSummary {
 }
 
 export interface ExecutionSummary {
-  id: number;
+  id: string;
   name: string;
   type: string;
   environment: string;
@@ -170,7 +170,7 @@ export interface ExecutionSummary {
 }
 
 export interface SpecSummary {
-  id: number;
+  id: string;
   key: string;
   file: string;
   title: string;
@@ -180,7 +180,7 @@ export interface SpecSummary {
 }
 
 export interface ResultSummary {
-  id: number;
+  id: string;
   status: string;
   duration: number;
   startTime: Date;
@@ -192,7 +192,7 @@ export interface ResultSummary {
 }
 
 export interface ResultErrorSummary {
-  id: number;
+  id: string;
   type: string;
   message: string;
   location: string;
@@ -201,7 +201,7 @@ export interface ResultErrorSummary {
 }
 
 export interface AssumptionSummary {
-  id: number;
+  id: string;
   isConfirmed: boolean;
   score: number;
   madeBy: string;
@@ -210,7 +210,7 @@ export interface AssumptionSummary {
 }
 
 export interface IssueSummary {
-  id: number;
+  id: string;
   name: string;
   category: string;
   description?: string;
@@ -220,14 +220,14 @@ export interface IssueSummary {
 }
 
 export interface UserSummary {
-  id: number;
+  id: string;
   name: string;
   email: string;
   createdAt: Date;
 }
 
 export interface UserWithPassword {
-  id: number;
+  id: string;
   name: string;
   email: string;
   passwordHash: string | null;
@@ -237,14 +237,14 @@ export interface UserWithPassword {
 
 // V2 API Serialized Response Types
 export interface SerializedUser {
-  id: number;
+  id: string;
   name: string;
   email: string;
   createdAt: Date;
 }
 
 export interface SerializedIssue {
-  id: number;
+  id: string; // UUID
   createdAt: Date;
   updatedAt: Date;
   name: string;

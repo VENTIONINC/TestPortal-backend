@@ -37,7 +37,7 @@ jest.mock('../jwtService', () => ({
 import { userService } from '../userService';
 
 describe('userService MCP Token Operations', () => {
-  const mockUserId = 12345;
+  const mockUserId = '550e8400-e29b-41d4-a716-446655440000';
   const mockUser = {
     id: mockUserId,
     name: 'Test User',
@@ -45,7 +45,7 @@ describe('userService MCP Token Operations', () => {
     passwordHash: 'hashedpassword',
     mcpToken: '',
   };
-  const mockMcpToken = 'mcp_12345_1234567890_randomhex.signature';
+  const mockMcpToken = `mcp_${mockUserId}_1234567890_randomhex.signature`;
 
   beforeEach(() => {
     jest.clearAllMocks();
@@ -70,16 +70,17 @@ describe('userService MCP Token Operations', () => {
       expect(result).toBe(mockMcpToken);
     });
 
-    it('should handle string userId', async () => {
-      const stringUserId = '12345';
-      mockUserModel.findById.mockResolvedValue(mockUser);
+    it('should handle different UUID', async () => {
+      const differentUserId = '6fa459ea-ee8a-3ca4-894e-db77e160355e';
+      const differentUser = { ...mockUser, id: differentUserId };
+      mockUserModel.findById.mockResolvedValue(differentUser);
       mockGenerateMcpToken.mockReturnValue(mockMcpToken);
       mockUserModel.update.mockResolvedValue(undefined);
 
-      const result = await userService.generateMcpToken(stringUserId);
+      const result = await userService.generateMcpToken(differentUserId);
 
-      expect(mockUserModel.findById).toHaveBeenCalledWith(stringUserId);
-      expect(mockGenerateMcpToken).toHaveBeenCalledWith(mockUserId, 'test-secret');
+      expect(mockUserModel.findById).toHaveBeenCalledWith(differentUserId);
+      expect(mockGenerateMcpToken).toHaveBeenCalledWith(differentUserId, 'test-secret');
       expect(result).toBe(mockMcpToken);
     });
 

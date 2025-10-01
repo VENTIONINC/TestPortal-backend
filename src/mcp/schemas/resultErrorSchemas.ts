@@ -5,8 +5,8 @@ import type { MCPToolSchema } from "@/types";
  * Schema for assigning an issue to a result error
  */
 export const assignIssueSchema: MCPToolSchema = {
-  resultErrorId: z.string(),
-  assumptionId: z.number(),
+  resultErrorId: z.string().describe("UUID of the result error"),
+  assumptionId: z.string().describe("UUID of the assumption"),
 };
 
 /**
