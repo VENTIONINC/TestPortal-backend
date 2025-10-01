@@ -15,6 +15,7 @@ import errorFormatter from "@/routes/error-formatter";
 import prompts from "@/routes/promptRoutes";
 import projects from "@/routes/projects";
 import ctrf from "@/routes/ctrf";
+import upload from "@/routes/upload";
 import mcp from "@/mcp/server";
 
 const router = Router();
@@ -39,6 +40,7 @@ router.use(errorFormatter);
 router.use(prompts);
 router.use(projects);
 router.use(ctrf);
+router.use(upload);
 router.use(mcp);
 
 export default router;

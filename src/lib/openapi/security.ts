@@ -14,4 +14,11 @@ export function registerSecuritySchemes(registry: OpenAPIRegistry) {
     bearerFormat: "JWT",
     description: "MCP Bearer token authentication",
   });
+
+  registry.registerComponent("securitySchemes", "ApiKeyAuth", {
+    type: "apiKey",
+    in: "header",
+    name: "X-API-Key",
+    description: "API key authentication for upload endpoints. Generate keys via /api/v2/upload/generate-key",
+  });
 }
