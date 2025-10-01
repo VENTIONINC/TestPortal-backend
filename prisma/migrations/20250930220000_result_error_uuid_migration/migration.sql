@@ -26,23 +26,27 @@ SET "resultErrorId_new" = re."id_new"
 FROM "ResultError" re
 WHERE a."resultErrorId" = re."id";
 
--- Step 7: Drop the old ResultError.id primary key constraint
-ALTER TABLE "ResultError" DROP CONSTRAINT "ResultError_pkey";
+-- Step 7: Drop foreign key constraint from Assumption before dropping ResultError primary key
+ALTER TABLE "Assumption" DROP CONSTRAINT IF EXISTS "Assumption_resultErrorId_fkey";
 
--- Step 8: Rename new id column
+-- Step 8: Drop the old ResultError.id primary key constraint and column
+ALTER TABLE "ResultError" DROP CONSTRAINT "ResultError_pkey";
+ALTER TABLE "ResultError" DROP COLUMN "id";
+
+-- Step 9: Rename new id column
 ALTER TABLE "ResultError" RENAME COLUMN "id_new" TO "id";
 
--- Step 9: Set new primary key
+-- Step 10: Set new primary key
 ALTER TABLE "ResultError" ADD CONSTRAINT "ResultError_pkey" PRIMARY KEY ("id");
 
--- Step 10: Make the new id column NOT NULL (should already be due to default)
+-- Step 11: Make the new id column NOT NULL (should already be due to default)
 ALTER TABLE "ResultError" ALTER COLUMN "id" SET NOT NULL;
 
--- Step 11: Re-create foreign key constraint for resultId (now UUID)
+-- Step 12: Re-create foreign key constraint for resultId (now UUID)
 ALTER TABLE "ResultError" ADD CONSTRAINT "ResultError_resultId_fkey"
   FOREIGN KEY ("resultId") REFERENCES "Result"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
--- Step 12: Complete Assumption.resultErrorId migration
+-- Step 13: Complete Assumption.resultErrorId migration
 -- Drop old Int column
 ALTER TABLE "Assumption" DROP COLUMN "resultErrorId";
 

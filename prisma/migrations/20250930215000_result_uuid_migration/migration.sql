@@ -17,17 +17,21 @@ SET "resultId_new" = r."id_new"
 FROM "Result" r
 WHERE re."resultId" = r."id";
 
--- Step 4: Drop the old Result.id primary key constraint and column
-ALTER TABLE "Result" DROP CONSTRAINT "Result_pkey";
+-- Step 4: Drop foreign key constraint from ResultError before dropping Result primary key
+ALTER TABLE "ResultError" DROP CONSTRAINT IF EXISTS "ResultError_resultId_fkey";
 
--- Step 5: Rename new column to id
+-- Step 5: Drop the old Result.id primary key constraint and column
+ALTER TABLE "Result" DROP CONSTRAINT "Result_pkey";
+ALTER TABLE "Result" DROP COLUMN "id";
+
+-- Step 6: Rename new column to id
 ALTER TABLE "Result" RENAME COLUMN "id_new" TO "id";
 
--- Step 6: Set new primary key
+-- Step 7: Set new primary key
 ALTER TABLE "Result" ADD CONSTRAINT "Result_pkey" PRIMARY KEY ("id");
 
--- Step 7: Make the new id column NOT NULL (should already be due to default)
+-- Step 8: Make the new id column NOT NULL (should already be due to default)
 ALTER TABLE "Result" ALTER COLUMN "id" SET NOT NULL;
 
--- Step 8: Drop old ResultError foreign key column (will be recreated in next migration)
+-- Step 9: Drop old ResultError foreign key column (will be recreated in next migration)
 -- This is handled in the ResultError migration
