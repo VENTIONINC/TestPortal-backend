@@ -3,6 +3,7 @@ import OpenAI from "openai";
 import getLogger from "@/lib/logger";
 import { getTestAnalysisPrompt } from "@/prompts/test-analysis";
 import { PlaywrightTestResults } from "@/types";
+import type { CTRFReport, CTRFTest } from "@/types/ctrf";
 
 const client = new OpenAI();
 
@@ -332,6 +333,213 @@ export const testAnalysisService = {
     };
 
     processResults(testResults.suites);
+
+    return essentialResults;
+  },
+
+  async analyzeCtrfTestResults(
+    ctrfReport: CTRFReport,
+  ): Promise<TestResultAnalysis[]> {
+    try {
+      const { results } = ctrfReport;
+      const { tests } = results;
+
+      logger.info(`Analyzing ${tests.length} CTRF test results`);
+
+      const { passedResults, failedResults, allResults } =
+        this.extractCtrfTestResults(tests);
+
+      if (failedResults.length === 0) {
+        logger.info(
+          `All ${allResults.length} CTRF tests passed, skipping OpenAI analysis`,
+        );
+        return passedResults;
+      }
+
+      const failedTests = tests.filter((test) => test.status !== "passed");
+      const essentialData = this.extractCtrfEssentialData(failedTests);
+      const systemPrompt = getTestAnalysisPrompt(essentialData.length);
+      const userPrompt = JSON.stringify(essentialData);
+
+      // Log token optimization info
+      const originalSize = JSON.stringify(tests).length;
+      const optimizedSize = JSON.stringify(essentialData).length;
+      const reduction = (
+        ((originalSize - optimizedSize) / originalSize) *
+        100
+      ).toFixed(1);
+      logger.info(
+        `CTRF Token optimization: ${originalSize} → ${optimizedSize} chars (${reduction}% reduction)`,
+      );
+
+      const completion = await client.chat.completions.create({
+        model: "gpt-5-mini",
+        messages: [
+          { role: "system", content: systemPrompt },
+          { role: "user", content: userPrompt },
+        ],
+        temperature: 0.7,
+        max_tokens: 4000,
+        response_format: {
+          type: "json_schema",
+          json_schema: {
+            name: "test_analysis",
+            strict: false,
+            schema: {
+              type: "object",
+              properties: {
+                results: {
+                  type: "array",
+                  items: {
+                    type: "object",
+                    properties: {
+                      id: {
+                        type: "string",
+                        description: "Test identifier from CTRF test name",
+                      },
+                      status: {
+                        type: "string",
+                        enum: ["passed", "failed"],
+                        description: "Test execution status",
+                      },
+                      category: {
+                        type: "string",
+                        enum: [
+                          "bug",
+                          "infra",
+                          "performance",
+                          "script",
+                          "other",
+                        ],
+                        description: "Failure category (only for failed tests)",
+                      },
+                      confidence: {
+                        type: "number",
+                        minimum: 0.0,
+                        maximum: 1.0,
+                        description: "Confidence level of the analysis",
+                      },
+                      workerIndex: {
+                        type: "number",
+                        description: "Worker index (0 for CTRF)",
+                      },
+                      conclusion: {
+                        type: "string",
+                        description:
+                          "Brief explanation (2-3 sentences max) for the categorization decision, only for failed tests",
+                      },
+                    },
+                    required: ["id", "status", "confidence"],
+                    additionalProperties: false,
+                  },
+                },
+              },
+              required: ["results"],
+              additionalProperties: false,
+            },
+          },
+        },
+      });
+
+      const analysisContent = completion.choices[0]?.message?.content;
+
+      if (!analysisContent) {
+        throw new Error("No analysis content received from OpenAI");
+      }
+
+      // Parse OpenAI response for failed tests
+      const analysisResponse = JSON.parse(analysisContent) as {
+        results: TestResultAnalysis[];
+      };
+      const failedAnalysisResults = analysisResponse.results;
+
+      const combinedResults = [...failedAnalysisResults, ...passedResults];
+
+      logger.info(
+        `Successfully analyzed ${combinedResults.length} CTRF test results (${failedAnalysisResults.length} failed via OpenAI, ${passedResults.length} passed mocked)`,
+      );
+
+      return combinedResults;
+    } catch (error) {
+      if (error instanceof OpenAI.APIError) {
+        logger.error(`OpenAI API error: ${error.status} - ${error.message}`);
+        throw new Error(`OpenAI API error: ${error.status} - ${error.message}`);
+      }
+      logger.error("Error analyzing CTRF test results:", error);
+      throw error;
+    }
+  },
+
+  extractCtrfTestResults(tests: CTRFTest[]): {
+    passedResults: TestResultAnalysis[];
+    failedResults: TestResultAnalysis[];
+    allResults: TestResultAnalysis[];
+  } {
+    const allResults: TestResultAnalysis[] = tests.map((test, index) => {
+      const id = test.meta?.testNameHash ?? test.name ?? `ctrf-test-${index}`;
+      return {
+        id: String(id),
+        workerIndex: 0, // CTRF doesn't have worker concept, use 0
+        status: test.status === "passed" ? "passed" : "failed",
+        confidence: 1,
+      };
+    });
+
+    const passedResults = allResults.filter(
+      (result) => result.status === "passed",
+    );
+    const failedResults = allResults.filter(
+      (result) => result.status !== "passed",
+    );
+
+    return { passedResults, failedResults, allResults };
+  },
+
+  extractCtrfEssentialData(tests: CTRFTest[]) {
+    type EssentialCtrfResult = {
+      id: string;
+      name: string;
+      status: string;
+      duration: number;
+      workerIndex: number;
+      retry?: number;
+      errorMessage?: string;
+      errorTrace?: string;
+      suite?: string;
+      filePath?: string;
+    };
+
+    const essentialResults: EssentialCtrfResult[] = tests.map((test, index) => {
+      const id = test.meta?.testNameHash ?? test.name ?? `ctrf-test-${index}`;
+
+      const essentialResult: EssentialCtrfResult = {
+        id: String(id),
+        name: test.name,
+        status: test.status,
+        duration: test.duration,
+        workerIndex: 0, // CTRF doesn't have worker concept
+        retry: test.retry ?? 0,
+      };
+
+      // Add error information if present (for failed tests)
+      if (test.message) {
+        essentialResult.errorMessage = test.message;
+      }
+
+      if (test.trace) {
+        essentialResult.errorTrace = test.trace;
+      }
+
+      if (test.suite) {
+        essentialResult.suite = test.suite;
+      }
+
+      if (test.filePath) {
+        essentialResult.filePath = test.filePath;
+      }
+
+      return essentialResult;
+    });
 
     return essentialResults;
   },

@@ -232,6 +232,67 @@ export function registerCtrfRoutes(registry: OpenAPIRegistry) {
     },
     tags: ["CTRF"],
   });
+
+  registry.registerPath({
+    method: "post",
+    path: "/api/v2/ctrf/report/upload",
+    summary: "Upload CTRF report file",
+    description: "Uploads and processes a CTRF (Common Test Result Format) report from a JSON file (requires authentication)",
+    request: {
+      body: {
+        content: {
+          "multipart/form-data": {
+            schema: z.object({
+              report: z
+                .any()
+                .describe("CTRF report JSON file to upload")
+                .openapi({
+                  type: "string",
+                  format: "binary",
+                }),
+              projectId: z.string().describe("Project ID to associate the report with"),
+            }),
+          },
+        },
+      },
+    },
+    security: [{ BearerAuth: [] }],
+    responses: {
+      200: {
+        description: "CTRF report file processed successfully",
+        content: {
+          "application/json": {
+            schema: CTRFReportResponseSchema,
+          },
+        },
+      },
+      400: {
+        description: "Bad request - Invalid file format, missing file, or missing projectId",
+        content: {
+          "application/json": {
+            schema: ErrorResponseSchema,
+          },
+        },
+      },
+      401: {
+        description: "Unauthorized - invalid or missing token",
+        content: {
+          "application/json": {
+            schema: ErrorResponseSchema,
+          },
+        },
+      },
+      500: {
+        description: "Internal server error - failed to process uploaded CTRF report",
+        content: {
+          "application/json": {
+            schema: ErrorResponseSchema,
+          },
+        },
+      },
+    },
+    tags: ["CTRF"],
+  });
 }
 
 export {
