@@ -31,4 +31,5 @@ export const createIssueSchema: MCPToolSchema = {
   portal: z.string().optional(),
   service: z.string().optional(),
   ticket: z.string().optional(),
+  projectId: z.string().describe("The UUID of the project this issue belongs to"),
 };

@@ -12,6 +12,7 @@ const IssueSchema = z
     portal: z.string().optional(),
     service: z.string().optional(),
     ticket: z.string().optional(),
+    projectId: z.string().uuid(),
     createdById: z.string().uuid().optional(),
     updatedById: z.string().uuid().optional(),
     createdAt: z.string(),
@@ -27,6 +28,7 @@ const CreateIssueRequestSchema = z
     portal: z.string().optional(),
     service: z.string().optional(),
     ticket: z.string().optional(),
+    projectId: z.string().uuid().describe("The UUID of the project this issue belongs to"),
   })
   .openapi("CreateIssueRequest");
 
