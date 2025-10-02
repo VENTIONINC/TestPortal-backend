@@ -207,6 +207,13 @@ export const issueController = {
         return;
       }
 
+      if (!issueParams.projectId) {
+        res.status(400).json({
+          error: "Project ID is required",
+        });
+        return;
+      }
+
       const issueRecord = await issueService.createIssue(issueParams);
       res.status(201).json(issueRecord);
     } catch (error) {
