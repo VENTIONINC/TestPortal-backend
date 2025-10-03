@@ -1,6 +1,20 @@
 import { Request, Response } from "express";
-import { jsonReportService } from "@/services/jsonReportService";
-import { testAnalysisService } from "@/services/testAnalysisService";
+import {
+  jsonReportService,
+  type ProcessReportResult,
+} from "@/services/jsonReportService";
+import {
+  testAnalysisService,
+  type TestResultAnalysis,
+} from "@/services/testAnalysisService";
+import type { ApiKeyAuthenticatedRequest } from "@/middleware/apiKeyMiddleware";
+import getLogger from "@/lib/logger";
+
+const logger = getLogger("json-report-controller");
+
+interface ProcessReportResponse extends ProcessReportResult {
+  analysis?: TestResultAnalysis[];
+}
 
 export const jsonReportController = {
   /**
@@ -77,73 +91,105 @@ export const jsonReportController = {
   },
 
   /**
+   * Core method to process raw JSON report file
+   * Used by both JWT and API key authentication routes
+   */
+  _processRawReportFileCore: async (
+    file: Express.Multer.File | undefined,
+    projectId: string | undefined,
+  ): Promise<ProcessReportResponse> => {
+    if (!file) {
+      throw new Error("JSON report file is required");
+    }
+
+    if (!projectId) {
+      throw new Error("Valid projectId is required");
+    }
+
+    // Parse the file content as JSON
+    const fileContent = file.buffer.toString("utf8");
+    let rawJsonReport;
+
+    try {
+      rawJsonReport = JSON.parse(fileContent);
+    } catch (parseError) {
+      throw new Error(
+        `Invalid JSON format in uploaded file: ${parseError instanceof Error ? parseError.message : "Unknown parsing error"}`,
+      );
+    }
+
+    // Transform raw JSON to the expected format (like seed script does)
+    const transformedReport =
+      await jsonReportController._transformRawReport(rawJsonReport);
+
+    // Analyze test results before processing
+    let analysisResults = null;
+    try {
+      analysisResults =
+        await testAnalysisService.analyzeTestResults(rawJsonReport);
+      logger.info(
+        `Analysis completed: ${analysisResults.length} tests analyzed`,
+      );
+    } catch (analysisError) {
+      logger.warn(
+        "Analysis failed, proceeding without analysis:",
+        analysisError,
+      );
+      // Continue without analysis - don't fail the entire process
+    }
+
+    const result = await jsonReportService.processReport(
+      {
+        ...transformedReport,
+        analysis: analysisResults,
+      },
+      projectId,
+    );
+
+    // Include analysis results in the response
+    return {
+      ...result,
+      ...(analysisResults && { analysis: analysisResults }),
+    };
+  },
+
+  /**
    * Handle POST request to process raw JSON report file and transform it
    */
   processRawReportFile: async (req: Request, res: Response): Promise<void> => {
     try {
-      const file = req.file;
-
-      if (!file) {
-        res.status(400).json({
-          error: "JSON report file is required",
-        });
-        return;
-      }
-
-      // Parse the file content as JSON
-      const fileContent = file.buffer.toString("utf8");
-      let rawJsonReport;
-
-      try {
-        rawJsonReport = JSON.parse(fileContent);
-      } catch (parseError) {
-        res.status(400).json({
-          error: `Invalid JSON format in uploaded file: ${parseError instanceof Error ? parseError.message : "Unknown parsing error"}`,
-        });
-        return;
-      }
-
-      // Transform raw JSON to the expected format (like seed script does)
-      const transformedReport =
-        await jsonReportController._transformRawReport(rawJsonReport);
-
-      // Analyze test results before processing
-      let analysisResults = null;
-      try {
-        analysisResults =
-          await testAnalysisService.analyzeTestResults(rawJsonReport);
-        console.log(
-          "Analysis completed:",
-          analysisResults.length,
-          "tests analyzed",
-        );
-      } catch (analysisError) {
-        console.warn(
-          "Analysis failed, proceeding without analysis:",
-          analysisError,
-        );
-        // Continue without analysis - don't fail the entire process
-      }
-
       // Extract projectId from form data (multipart form upload)
-      const { projectId } = req.body;
-      if (!projectId) {
-        res.status(400).json({ error: "Valid projectId is required" });
-        return;
-      }
-      const result = await jsonReportService.processReport(
-        {
-          ...transformedReport,
-          analysis: analysisResults,
-        },
+      const projectId = req.body.projectId;
+
+      const response = await jsonReportController._processRawReportFileCore(
+        req.file,
         projectId,
       );
 
-      // Include analysis results in the response
-      const response = {
-        ...result,
-        ...(analysisResults && { analysis: analysisResults }),
-      };
+      res.status(201).json(response);
+    } catch (error) {
+      const err = error as Error;
+      res.status(400).json({
+        error: `Failed to process raw JSON report file. ${err.message}`,
+      });
+    }
+  },
+
+  /**
+   * Handle POST request to process raw JSON report file with API key authentication
+   */
+  processRawReportFileWithApiKey: async (
+    req: ApiKeyAuthenticatedRequest,
+    res: Response,
+  ): Promise<void> => {
+    try {
+      // Extract projectId from validated API key
+      const projectId = req.apiKey?.projectId;
+
+      const response = await jsonReportController._processRawReportFileCore(
+        req.file,
+        projectId,
+      );
 
       res.status(201).json(response);
     } catch (error) {

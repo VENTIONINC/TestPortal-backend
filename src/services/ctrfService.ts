@@ -47,7 +47,7 @@ export const ctrfService = {
   },
 
   async updateReport(
-    executionId: number,
+    executionId: string,
     ctrfReportUpdate: any,
   ): Promise<ProcessReportResult> {
     logger.info(`Updating CTRF report for execution ${executionId}`);

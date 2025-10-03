@@ -25,7 +25,10 @@ app.use(cors());
 
 // Apply JSON parsing middleware to all routes except file upload routes
 app.use((req, res, next) => {
-  if (req.path === "/api/v1/json-report/upload") {
+  if (
+    req.path === "/api/v1/json-report/upload" ||
+    req.path === "/api/v2/json-report/upload"
+  ) {
     // Skip JSON parsing for file upload routes
     next();
   } else {

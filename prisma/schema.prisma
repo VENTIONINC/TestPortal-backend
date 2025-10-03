@@ -23,9 +23,10 @@ model Project {
   ownerId String @db.Uuid
 
   // Relationships
-  executions Execution[]
-  specs      Spec[]
-  issues     Issue[]
+  executions    Execution[]
+  specs         Spec[]
+  issues        Issue[]
+  uploadApiKeys UploadApiKey[]
 
   @@index([name])
   @@index([ownerId])
@@ -142,8 +143,9 @@ model User {
 
   // Project relationships
   projects      Project[]
-  issuesCreated Issue[]   @relation("IssuesCreated")
-  issuesUpdated Issue[]   @relation("IssuesUpdated")
+  issuesCreated Issue[]        @relation("IssuesCreated")
+  issuesUpdated Issue[]        @relation("IssuesUpdated")
+  uploadApiKeys UploadApiKey[]
 }
 
 model Issue {
@@ -170,4 +172,24 @@ model Issue {
   @@index([projectId])
   @@index([projectId, category])
   @@index([projectId, createdAt])
+}
+
+model UploadApiKey {
+  id        String   @id @default(uuid()) @db.Uuid
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  apiKey    String   @unique
+  isActive  Boolean  @default(true)
+
+  // Project relationship
+  project   Project @relation(fields: [projectId], references: [id])
+  projectId String  @db.Uuid
+
+  // Owner relationship
+  owner   User   @relation(fields: [ownerId], references: [id])
+  ownerId String @db.Uuid
+
+  @@index([projectId])
+  @@index([ownerId])
+  @@index([apiKey])
 }

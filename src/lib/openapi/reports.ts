@@ -57,6 +57,17 @@ const JsonReportResponseSchema = z
   })
   .openapi("JsonReportResponse");
 
+const JsonReportResponseWithAnalysisSchema = z
+  .object({
+    success: z.boolean(),
+    executionId: z.string().uuid(),
+    specsProcessed: z.number(),
+    analysis: z.array(z.any()).optional().openapi({
+      description: "Optional AI analysis results for test failures",
+    }),
+  })
+  .openapi("JsonReportResponseWithAnalysis");
+
 const RawJsonReportRequestSchema = z
   .object({
     runId: z.string().optional(),
@@ -81,6 +92,7 @@ export function registerReportRoutes(registry: OpenAPIRegistry) {
   registry.register("JsonReportTestSpec", JsonReportTestSpecSchema);
   registry.register("JsonReportRequest", JsonReportRequestSchema);
   registry.register("JsonReportResponse", JsonReportResponseSchema);
+  registry.register("JsonReportResponseWithAnalysis", JsonReportResponseWithAnalysisSchema);
   registry.register("RawJsonReportRequest", RawJsonReportRequestSchema);
 
   registry.registerPath({
@@ -163,11 +175,62 @@ export function registerReportRoutes(registry: OpenAPIRegistry) {
     },
     tags: ["Reports", "Results"],
   });
+
+  registry.registerPath({
+    method: "post",
+    path: "/api/v2/json-report/upload",
+    description:
+      "Accepts JSON test report files for processing with API key authentication. The project ID is automatically extracted from the validated API key. Supports large files and includes optional AI analysis of test failures.",
+    security: [{ ApiKeyAuth: [] }],
+    request: {
+      body: {
+        content: {
+          "multipart/form-data": {
+            schema: z.object({
+              report: z.string().openapi({
+                type: "string",
+                format: "binary",
+                description: "JSON test report file to upload (CTRF format)",
+              }),
+            }),
+          },
+        },
+      },
+    },
+    responses: {
+      201: {
+        description: "File report processed successfully with optional AI analysis",
+        content: {
+          "application/json": {
+            schema: JsonReportResponseWithAnalysisSchema,
+          },
+        },
+      },
+      400: {
+        description: "Invalid file format, missing file, or processing error",
+        content: {
+          "application/json": {
+            schema: ErrorResponseSchema,
+          },
+        },
+      },
+      401: {
+        description: "Invalid or missing API key",
+        content: {
+          "application/json": {
+            schema: ErrorResponseSchema,
+          },
+        },
+      },
+    },
+    tags: ["Reports", "Results", "Upload"],
+  });
 }
 
 export {
   JsonReportRequestSchema,
   JsonReportResponseSchema,
+  JsonReportResponseWithAnalysisSchema,
   JsonReportTestSpecSchema,
   JsonReportTestResultSchema,
   RawJsonReportRequestSchema,

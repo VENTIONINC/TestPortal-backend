@@ -18,6 +18,7 @@ import { registerPromptRoutes } from "./prompts";
 import { registerProjectRoutes } from "./projects";
 import { registerCtrfRoutes } from "./ctrf";
 import { registerMcpRoutes } from "./mcp";
+import { registerUploadApiKeyRoutes } from "./uploadApiKey";
 import "./zod";
 
 export function generateOpenAPISpec() {
@@ -41,6 +42,7 @@ export function generateOpenAPISpec() {
   registerProjectRoutes(registry);
   registerCtrfRoutes(registry);
   registerMcpRoutes(registry);
+  registerUploadApiKeyRoutes(registry);
 
   const generator = new OpenApiGeneratorV31(registry.definitions);
 
@@ -127,6 +129,16 @@ export function generateOpenAPISpec() {
         name: "CTRF",
         description:
           "CTRF (Common Test Result Format) endpoints for processing standardized test results",
+      },
+      {
+        name: "Upload API Keys",
+        description:
+          "Upload API key management endpoints for generating and managing API keys for project uploads",
+      },
+      {
+        name: "Upload",
+        description:
+          "File upload endpoints for test reports and results with API key authentication",
       },
     ],
   });
