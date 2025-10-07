@@ -6,6 +6,14 @@ const DEFAULT_PROJECT_ID =
 
 const TEST_USER_EMAIL = process.env.TEST_USER_EMAIL ?? "test@example.com";
 const TEST_USER_PASSWORD = process.env.TEST_USER_PASSWORD ?? "testpassword123";
+
+// LangSmith Configuration
+const LANGSMITH_TRACING =
+  process.env.LANGSMITH_TRACING?.toLowerCase() === "true";
+const LANGSMITH_ENDPOINT =
+  process.env.LANGSMITH_ENDPOINT ?? "https://api.smith.langchain.com";
+const LANGSMITH_API_KEY = process.env.LANGSMITH_API_KEY ?? "";
+const LANGSMITH_PROJECT = process.env.LANGSMITH_PROJECT ?? "test-portal-backend";
 // Check if Cognito is configured
 export const isCognitoConfigured = Boolean(
   COGNITO_USER_POOL_ID && COGNITO_CLIENT_ID && COGNITO_POOL_REGION,
@@ -18,6 +26,40 @@ if (!isCognitoConfigured) {
   );
 }
 
+// Check if LangSmith is configured
+export const isLangSmithConfigured = Boolean(
+  LANGSMITH_TRACING && LANGSMITH_API_KEY,
+);
+
+if (LANGSMITH_TRACING && !LANGSMITH_API_KEY) {
+  console.warn(
+    "LangSmith tracing is enabled but LANGSMITH_API_KEY is not set. Tracing will not work.",
+  );
+} else if (isLangSmithConfigured) {
+  console.log(
+    `LangSmith tracing enabled for project: ${LANGSMITH_PROJECT}`,
+  );
+}
+
+export const environment = {
+  cognito: {
+    userPoolId: COGNITO_USER_POOL_ID,
+    clientId: COGNITO_CLIENT_ID,
+    region: COGNITO_POOL_REGION,
+  },
+  langsmith: {
+    tracingEnabled: LANGSMITH_TRACING,
+    endpoint: LANGSMITH_ENDPOINT,
+    apiKey: LANGSMITH_API_KEY,
+    project: LANGSMITH_PROJECT,
+  },
+  defaultProjectId: DEFAULT_PROJECT_ID,
+  testUser: {
+    email: TEST_USER_EMAIL,
+    password: TEST_USER_PASSWORD,
+  },
+};
+
 export {
   COGNITO_USER_POOL_ID,
   COGNITO_CLIENT_ID,
@@ -25,4 +67,8 @@ export {
   DEFAULT_PROJECT_ID,
   TEST_USER_EMAIL,
   TEST_USER_PASSWORD,
+  LANGSMITH_TRACING,
+  LANGSMITH_ENDPOINT,
+  LANGSMITH_API_KEY,
+  LANGSMITH_PROJECT,
 };

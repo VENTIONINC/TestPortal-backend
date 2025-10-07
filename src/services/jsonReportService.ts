@@ -11,7 +11,7 @@ import type {
   PrismaResult,
   PrismaResultError,
 } from "@/types";
-import type { TestResultAnalysis } from "@/services/testAnalysisService";
+import type { TestResultAnalysis } from "@/schemas/testAnalysisSchemas";
 import { DEFAULT_PROJECT_ID } from "@/config/environment";
 
 interface ResultCreateInput {

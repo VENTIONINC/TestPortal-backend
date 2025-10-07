@@ -73,7 +73,7 @@ export const ctrfController = {
 
       logger.info(`Updating CTRF report for execution ${executionId}`);
 
-      const result = await ctrfService.updateReport(Number(executionId), ctrfReportUpdate);
+      const result = await ctrfService.updateReport(executionId, ctrfReportUpdate);
 
       res.json({
         success: true,
