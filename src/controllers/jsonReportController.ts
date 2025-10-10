@@ -3,10 +3,8 @@ import {
   jsonReportService,
   type ProcessReportResult,
 } from "@/services/jsonReportService";
-import {
-  testAnalysisService,
-  type TestResultAnalysis,
-} from "@/services/testAnalysisService";
+import { testAnalysisService } from "@/services/testAnalysisService";
+import type { TestResultAnalysis } from "@/schemas/testAnalysisSchemas";
 import type { ApiKeyAuthenticatedRequest } from "@/middleware/apiKeyMiddleware";
 import getLogger from "@/lib/logger";
 

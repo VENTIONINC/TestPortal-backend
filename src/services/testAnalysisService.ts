@@ -1,23 +1,16 @@
-import OpenAI from "openai";
+import { ChatOpenAI } from "@langchain/openai";
+import { z } from "zod";
 
 import getLogger from "@/lib/logger";
 import { getTestAnalysisPrompt } from "@/prompts/test-analysis";
+import {
+  testAnalysisSchema,
+  type TestResultAnalysis,
+} from "@/schemas/testAnalysisSchemas";
 import { PlaywrightTestResults } from "@/types";
 import type { CTRFReport, CTRFTest } from "@/types/ctrf";
 
-const client = new OpenAI();
-
 const logger = getLogger("test-analysis");
-
-export interface TestResultAnalysis {
-  id: string;
-  status: "passed" | "failed";
-  category?: "bug" | "infra" | "performance" | "script" | "other";
-  confidence: number;
-
-  workerIndex: number;
-  conclusion?: string;
-}
 
 export interface TestAnalysisRequest {
   model: string;
@@ -47,7 +40,7 @@ export const testAnalysisService = {
 
       if (failedResults.length === 0) {
         logger.info(
-          `All ${allResults.length} tests passed, skipping OpenAI analysis`,
+          `All ${allResults.length} tests passed, skipping LangChain analysis`,
         );
 
         return passedResults;
@@ -75,99 +68,51 @@ export const testAnalysisService = {
         `Token optimization: ${originalSize} → ${optimizedSize} chars (${reduction}% reduction)`,
       );
 
-      const completion = await client.chat.completions.create({
-        model: "gpt-4.1-mini",
-        messages: [
-          { role: "system", content: systemPrompt },
-          { role: "user", content: userPrompt },
-        ],
-        temperature: 0.7,
-        max_tokens: 4000,
-        response_format: {
-          type: "json_schema",
-          json_schema: {
-            name: "test_analysis",
-            strict: false,
-            schema: {
-              type: "object",
-              properties: {
-                results: {
-                  type: "array",
-                  items: {
-                    type: "object",
-                    properties: {
-                      id: {
-                        type: "string",
-                        description: "Test identifier extracted from test data",
-                      },
-                      status: {
-                        type: "string",
-                        enum: ["passed", "failed"],
-                        description: "Test execution status",
-                      },
-                      category: {
-                        type: "string",
-                        enum: [
-                          "bug",
-                          "infra",
-                          "performance",
-                          "script",
-                          "other",
-                        ],
-                        description: "Failure category (only for failed tests)",
-                      },
-                      confidence: {
-                        type: "number",
-                        minimum: 0.0,
-                        maximum: 1.0,
-                        description: "Confidence level of the analysis",
-                      },
-                      workerIndex: {
-                        type: "number",
-                        description: "Worker index",
-                      },
-                      conclusion: {
-                        type: "string",
-                        description:
-                          "Brief explanation (2-3 sentences max) for the categorization decision, only for failed tests",
-                      },
-                    },
-                    required: ["id", "status", "confidence"],
-                    additionalProperties: false,
-                  },
-                },
-              },
-              required: ["results"],
-              additionalProperties: false,
-            },
-          },
-        },
+      const model = new ChatOpenAI({
+        model: "gpt-5-mini",
+        maxTokens: 4000,
+        maxRetries: 2,
       });
 
-      const analysisContent = completion.choices[0]?.message?.content;
+      const structuredModel = model.withStructuredOutput<
+        z.infer<typeof testAnalysisSchema>
+      >(testAnalysisSchema, {
+        name: "test_analysis",
+      });
 
-      if (!analysisContent) {
-        throw new Error("No analysis content received from OpenAI");
-      }
+      const analysisResponse = await structuredModel.invoke([
+        { role: "system", content: systemPrompt },
+        { role: "user", content: userPrompt },
+      ]);
 
-      // Parse OpenAI response for failed tests
-      const analysisResponse = JSON.parse(analysisContent) as {
-        results: TestResultAnalysis[];
-      };
-      const failedAnalysisResults = analysisResponse.results;
+      const failedAnalysisResults: TestResultAnalysis[] =
+        analysisResponse.results.map((result) => {
+          const mapped: TestResultAnalysis = {
+            id: result.id,
+            status: result.status,
+            confidence: result.confidence,
+            workerIndex: result.workerIndex,
+          };
+          if (result.category !== undefined) {
+            mapped.category = result.category;
+          }
+          if (result.conclusion !== undefined) {
+            mapped.conclusion = result.conclusion;
+          }
+          return mapped;
+        });
 
-      const combinedResults = [...failedAnalysisResults, ...passedResults];
+      const combinedResults: TestResultAnalysis[] = [
+        ...failedAnalysisResults,
+        ...passedResults,
+      ];
 
       logger.info(
-        `Successfully analyzed ${combinedResults.length} test results (${failedAnalysisResults.length} failed via OpenAI, ${passedResults.length} passed mocked)`,
+        `Successfully analyzed ${combinedResults.length} test results (${failedAnalysisResults.length} failed via LangChain, ${passedResults.length} passed mocked)`,
       );
 
       return combinedResults;
     } catch (error) {
-      if (error instanceof OpenAI.APIError) {
-        logger.error(`OpenAI API error: ${error.status} - ${error.message}`);
-        throw new Error(`OpenAI API error: ${error.status} - ${error.message}`);
-      }
       logger.error("Error analyzing test results:", error);
       throw error;
     }
@@ -351,7 +296,7 @@ export const testAnalysisService = {
 
       if (failedResults.length === 0) {
         logger.info(
-          `All ${allResults.length} CTRF tests passed, skipping OpenAI analysis`,
+          `All ${allResults.length} CTRF tests passed, skipping LangChain analysis`,
         );
         return passedResults;
       }
@@ -372,99 +317,51 @@ export const testAnalysisService = {
         `CTRF Token optimization: ${originalSize} → ${optimizedSize} chars (${reduction}% reduction)`,
       );
 
-      const completion = await client.chat.completions.create({
+      const model = new ChatOpenAI({
         model: "gpt-5-mini",
-        messages: [
-          { role: "system", content: systemPrompt },
-          { role: "user", content: userPrompt },
-        ],
-        temperature: 0.7,
-        max_tokens: 4000,
-        response_format: {
-          type: "json_schema",
-          json_schema: {
-            name: "test_analysis",
-            strict: false,
-            schema: {
-              type: "object",
-              properties: {
-                results: {
-                  type: "array",
-                  items: {
-                    type: "object",
-                    properties: {
-                      id: {
-                        type: "string",
-                        description: "Test identifier from CTRF test name",
-                      },
-                      status: {
-                        type: "string",
-                        enum: ["passed", "failed"],
-                        description: "Test execution status",
-                      },
-                      category: {
-                        type: "string",
-                        enum: [
-                          "bug",
-                          "infra",
-                          "performance",
-                          "script",
-                          "other",
-                        ],
-                        description: "Failure category (only for failed tests)",
-                      },
-                      confidence: {
-                        type: "number",
-                        minimum: 0.0,
-                        maximum: 1.0,
-                        description: "Confidence level of the analysis",
-                      },
-                      workerIndex: {
-                        type: "number",
-                        description: "Worker index (0 for CTRF)",
-                      },
-                      conclusion: {
-                        type: "string",
-                        description:
-                          "Brief explanation (2-3 sentences max) for the categorization decision, only for failed tests",
-                      },
-                    },
-                    required: ["id", "status", "confidence"],
-                    additionalProperties: false,
-                  },
-                },
-              },
-              required: ["results"],
-              additionalProperties: false,
-            },
-          },
-        },
+        maxTokens: 4000,
+        maxRetries: 2,
       });
 
-      const analysisContent = completion.choices[0]?.message?.content;
+      const structuredModel = model.withStructuredOutput<
+        z.infer<typeof testAnalysisSchema>
+      >(testAnalysisSchema, {
+        name: "test_analysis",
+      });
 
-      if (!analysisContent) {
-        throw new Error("No analysis content received from OpenAI");
-      }
+      const analysisResponse = await structuredModel.invoke([
+        { role: "system", content: systemPrompt },
+        { role: "user", content: userPrompt },
+      ]);
 
-      // Parse OpenAI response for failed tests
-      const analysisResponse = JSON.parse(analysisContent) as {
-        results: TestResultAnalysis[];
-      };
-      const failedAnalysisResults = analysisResponse.results;
+      const failedAnalysisResults: TestResultAnalysis[] =
+        analysisResponse.results.map((result) => {
+          const mapped: TestResultAnalysis = {
+            id: result.id,
+            status: result.status,
+            confidence: result.confidence,
+            workerIndex: result.workerIndex,
+          };
+          if (result.category !== undefined) {
+            mapped.category = result.category;
+          }
+          if (result.conclusion !== undefined) {
+            mapped.conclusion = result.conclusion;
+          }
+          return mapped;
+        });
 
-      const combinedResults = [...failedAnalysisResults, ...passedResults];
+      const combinedResults: TestResultAnalysis[] = [
+        ...failedAnalysisResults,
+        ...passedResults,
+      ];
 
       logger.info(
-        `Successfully analyzed ${combinedResults.length} CTRF test results (${failedAnalysisResults.length} failed via OpenAI, ${passedResults.length} passed mocked)`,
+        `Successfully analyzed ${combinedResults.length} CTRF test results (${failedAnalysisResults.length} failed via LangChain, ${passedResults.length} passed mocked)`,
       );
 
       return combinedResults;
     } catch (error) {
-      if (error instanceof OpenAI.APIError) {
-        logger.error(`OpenAI API error: ${error.status} - ${error.message}`);
-        throw new Error(`OpenAI API error: ${error.status} - ${error.message}`);
-      }
       logger.error("Error analyzing CTRF test results:", error);
       throw error;
     }
