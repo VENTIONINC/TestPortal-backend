@@ -20,7 +20,6 @@ export const errorFormatterService = {
 
       const model = new ChatOpenAI({
         model: "gpt-5-mini",
-        temperature: 0.7,
         maxTokens: 500,
         maxRetries: 2,
       });

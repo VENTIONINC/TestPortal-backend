@@ -70,7 +70,6 @@ export const testAnalysisService = {
 
       const model = new ChatOpenAI({
         model: "gpt-5-mini",
-        temperature: 0.7,
         maxTokens: 4000,
         maxRetries: 2,
       });
@@ -320,7 +319,6 @@ export const testAnalysisService = {
 
       const model = new ChatOpenAI({
         model: "gpt-5-mini",
-        temperature: 0.7,
         maxTokens: 4000,
         maxRetries: 2,
       });

@@ -9,7 +9,6 @@ export const testResultSchema = z.object({
   status: z.enum(["passed", "failed"]).describe("Test execution status"),
   category: z
     .enum(["bug", "infra", "performance", "script", "other"])
-    .optional()
     .describe("Failure category (only for failed tests)"),
   confidence: z
     .number()
@@ -19,7 +18,6 @@ export const testResultSchema = z.object({
   workerIndex: z.number().describe("Worker index"),
   conclusion: z
     .string()
-    .optional()
     .describe(
       "Brief explanation (2-3 sentences max) for the categorization decision, only for failed tests",
     ),
