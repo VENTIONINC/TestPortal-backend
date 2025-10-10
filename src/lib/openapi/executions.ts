@@ -8,6 +8,7 @@ const ExecutionSchema = z
     runId: z.string(),
     env: z.string().optional(),
     version: z.string().optional(),
+    provider: z.string(),
     startTime: z.string(),
     endTime: z.string().optional(),
     status: z.string(),

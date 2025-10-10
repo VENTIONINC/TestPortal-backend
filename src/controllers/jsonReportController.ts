@@ -37,7 +37,10 @@ export const jsonReportController = {
       }
 
       const result = await jsonReportService.processReport(
-        reportData,
+        {
+          ...reportData,
+          provider: "Playwright",
+        },
         projectId,
       );
 
@@ -75,7 +78,10 @@ export const jsonReportController = {
         return;
       }
       const result = await jsonReportService.processReport(
-        transformedReport,
+        {
+          ...transformedReport,
+          provider: "Playwright",
+        },
         projectId,
       );
 
@@ -140,6 +146,7 @@ export const jsonReportController = {
       {
         ...transformedReport,
         analysis: analysisResults,
+        provider: "Playwright",
       },
       projectId,
     );

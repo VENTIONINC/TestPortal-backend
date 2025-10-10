@@ -41,6 +41,7 @@ model Execution {
   environment String
   version     String // playwright version
   startedAt   DateTime
+  provider    String   @default("Playwright")
 
   // Project relationship
   project   Project @relation(fields: [projectId], references: [id])
