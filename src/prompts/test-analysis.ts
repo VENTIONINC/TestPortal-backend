@@ -7,7 +7,7 @@ export const getTestAnalysisPrompt = (testResultsLength: number) => `
 
   <!-- ===== PRIMARY OBJECTIVE ===== -->
   <goal>
-    Analyze JSON test-result reports of *any* structure, extract every test, decide its pass/fail status, and categorize failed tests into one of five buckets.
+    Analyze JSON test-result reports of *any* structure, extract every test, and categorize failed tests into one of five buckets.
   </goal>
 
   <!-- ===== CATEGORIZATION SCHEMA ===== -->
@@ -28,14 +28,6 @@ export const getTestAnalysisPrompt = (testResultsLength: number) => `
     <rule>Network errors: infra</rule>
   </guidelines>
 
-  <!-- ===== INPUT CONTRACT ===== -->
-  <input>
-    The assistant receives **one JSON document** per invocation.
-    The JSON will be provided as raw text only—no extra commentary—parse and analyze it.
-    Each document may contain nested suites, cases, steps, logs, or custom keys;
-    discover relevant fields dynamically (no fixed schema).
-  </input>
-
   <!-- ===== CRITICAL / STRICT REQUIREMENTS ===== -->
   <critical>
     You are analyzing <var>${testResultsLength}</var> test results.
@@ -43,10 +35,6 @@ export const getTestAnalysisPrompt = (testResultsLength: number) => `
   </critical>
 
   <steps>
-    <step>Determine if each test <status>PASSED</status> or <status>FAILED</status>.</step>
-    <step>If <status>FAILED</status>, assign one <category-ref/> from
-          <bug/>, <infra/>, <performance/>, <script/>, <other/>.</step>
-    <step>If <status>PASSED</status>, omit the <field>category</field>.</step>
     <step>Write a concise 2-3 sentence conclusion explaining the reasoning for the status and category assignment.</step>
   </steps>
 
@@ -54,8 +42,7 @@ export const getTestAnalysisPrompt = (testResultsLength: number) => `
     <rule>Extract test ID from <code>customReport.testNameHash</code>,
           <code>customReport.testName</code>, or synthesise from available identifiers.</rule>
     <rule>Use provided id, workerIndex, status from the test data.</rule>
-    <rule><field>status</field> must be exactly "passed" or "failed".</rule>
-    <rule><field>category</field> present only for failed tests (one of: bug, infra, performance, script, other).</rule>
+    <rule><field>category</field> one of: bug, infra, performance, script, other.</rule>
     <rule><field>confidence</field> must be a float 0.0 - 1.0.</rule>
     <rule><field>workerIndex</field> must be included as provided in the test data.</rule>
     <rule><field>conclusion</field> must be a 2-3 sentence string explaining the analysis.</rule>
@@ -69,13 +56,6 @@ export const getTestAnalysisPrompt = (testResultsLength: number) => `
     <schema>
       {
         "results": [
-          {
-            "id": "test identifier or hash",
-            "status": "passed",
-            "workerIndex": 0,
-            "confidence": 0.95,
-            "conclusion": "The test passed as the API returned the expected success status. All checks were completed without errors."
-          },
           {
             "id": "test identifier or hash",
             "status": "failed",
@@ -123,29 +103,28 @@ export const getTestAnalysisPrompt = (testResultsLength: number) => `
     </example>
 
     <example n="2">
-      <name>A passed API health check</name>
+      <name>A failed API health check</name>
       <input_json>
         {
-          "testFile": "tests/api/health.spec.js",
-          "title": "API health check",
-          "result": {
-            "status": "pass",
-            "executionTime": 85
-          },
+          "suiteName": "API Tests",
+          "testName": "Health check returns 200 status",
+          "testNameHash": "xyz789ghi012",
+          "status": "failed",
+          "duration": 1500,
           "workerIndex": 1,
-          "customReport": {
-            "testName": "API health check",
-            "testNameHash": "xyz789ghi012"
+          "error": {
+            "message": "None",
+            "stack": "at Test.API.healthCheck (test/api.js:10:5)"
           }
         }
       </input_json>
       <output_analysis>
         {
           "id": "xyz789ghi012",
-          "status": "passed",
+          "status": "failed",
           "workerIndex": 1,
-          "confidence": 1.0,
-          "conclusion": "The test passed successfully. The API health check returned a 'pass' status and completed quickly, indicating the service is operational."
+          "confidence": 0.8,
+          "conclusion": "The test failed because the API health check returned a 500 status code instead of the expected 200. This indicates a potential issue with the API endpoint."
         }
       </output_analysis>
     </example>

@@ -69,7 +69,8 @@ export const testAnalysisService = {
       );
 
       const model = new ChatOpenAI({
-        model: "gpt-5-mini",
+        model: "gpt-4.1-mini",
+        temperature: 0.7,
         maxTokens: 4000,
         maxRetries: 2,
       });
@@ -92,13 +93,10 @@ export const testAnalysisService = {
             status: result.status,
             confidence: result.confidence,
             workerIndex: result.workerIndex,
+            category: result.category ?? "other",
+            conclusion: result.conclusion ?? "No conclusion provided",
           };
-          if (result.category !== undefined) {
-            mapped.category = result.category;
-          }
-          if (result.conclusion !== undefined) {
-            mapped.conclusion = result.conclusion;
-          }
+
           return mapped;
         });
 
@@ -318,7 +316,8 @@ export const testAnalysisService = {
       );
 
       const model = new ChatOpenAI({
-        model: "gpt-5-mini",
+        model: "gpt-4.1-mini",
+        temperature: 0.7,
         maxTokens: 4000,
         maxRetries: 2,
       });
