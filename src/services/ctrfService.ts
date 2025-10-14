@@ -5,7 +5,6 @@ import type {
   ProcessReportResult,
 } from "@/services/jsonReportService";
 import { jsonReportService } from "@/services/jsonReportService";
-import { executionModel } from "@/models/executionModel";
 import { testAnalysisService } from "@/services/testAnalysisService";
 
 const logger = getLogger("ctrf-service");
@@ -47,48 +46,6 @@ export const ctrfService = {
       },
       projectId.toString(),
     );
-  },
-
-  async updateReport(
-    executionId: string,
-    ctrfReportUpdate: any,
-  ): Promise<ProcessReportResult> {
-    logger.info(`Updating CTRF report for execution ${executionId}`);
-
-    // For now, implement a basic update that processes the partial data
-    // In a full implementation, you might want to merge with existing data
-    const { results } = ctrfReportUpdate;
-
-    if (!results) {
-      throw new Error("Invalid update data - missing results object");
-    }
-
-    // Transform the partial CTRF data to ReportData format
-    const reportData = this.transformCtrfToReportData({ results } as any);
-
-    // Use the existing jsonReportService to update the execution
-    // Note: This is a simplified approach - in a full implementation,
-    // you might want to implement proper partial updates
-    try {
-      // Get the execution to retrieve the projectId
-      const execution = await executionModel.findById(executionId);
-
-      if (!execution) {
-        throw new Error(`Execution with ID ${executionId} not found`);
-      }
-
-      return await jsonReportService.processReport(
-        {
-          ...reportData,
-          provider: "ctrf",
-        },
-        execution.projectId,
-      );
-    } catch (error) {
-      throw new Error(
-        `Failed to update execution ${executionId}: ${error instanceof Error ? error.message : "Unknown error"}`,
-      );
-    }
   },
 
   transformCtrfToReportData(ctrfReport: CTRFReport): ReportData {

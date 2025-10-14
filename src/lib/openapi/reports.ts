@@ -97,40 +97,6 @@ export function registerReportRoutes(registry: OpenAPIRegistry) {
 
   registry.registerPath({
     method: "post",
-    path: "/api/v1/json-report",
-    description: "Processes and stores a JSON test report",
-    request: {
-      body: {
-        content: {
-          "application/json": {
-            schema: JsonReportRequestSchema,
-          },
-        },
-      },
-    },
-    responses: {
-      201: {
-        description: "Report processed successfully",
-        content: {
-          "application/json": {
-            schema: JsonReportResponseSchema,
-          },
-        },
-      },
-      400: {
-        description: "Invalid request data or processing error",
-        content: {
-          "application/json": {
-            schema: ErrorResponseSchema,
-          },
-        },
-      },
-    },
-    tags: ["Reports"],
-  });
-
-  registry.registerPath({
-    method: "post",
     path: "/api/v1/json-report/upload",
     description:
       "Accepts JSON test report files for processing. Supports large files that exceed POST body size limits.",

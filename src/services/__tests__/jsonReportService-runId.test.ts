@@ -48,7 +48,7 @@ const { dbClient } = require("@/prisma/client");
 describe("jsonReportService with optional runId", () => {
   beforeEach(() => {
     jest.clearAllMocks();
-    
+
     // Mock execution creation
     dbClient.execution.findFirst.mockResolvedValue(null);
     dbClient.execution.create.mockResolvedValue({
@@ -60,7 +60,7 @@ describe("jsonReportService with optional runId", () => {
       startedAt: new Date(),
     });
 
-    // Mock spec creation  
+    // Mock spec creation
     dbClient.spec.findFirst.mockResolvedValue(null);
     dbClient.spec.create.mockResolvedValue({
       id: 1,
@@ -86,6 +86,7 @@ describe("jsonReportService with optional runId", () => {
 
   const mockTestData = {
     env: "test",
+    provider: "TEST",
     version: "1.0.0",
     stats: {
       startTime: new Date("2025-05-14T10:30:00Z"),
@@ -116,7 +117,10 @@ describe("jsonReportService with optional runId", () => {
       runId: "PROVIDED_RUN_ID",
     };
 
-    const result = await jsonReportService.processReport(reportData, "b4225bdf-9e2b-43f9-8f13-5bb6f5079176");
+    const result = await jsonReportService.processReport(
+      reportData,
+      "b4225bdf-9e2b-43f9-8f13-5bb6f5079176",
+    );
 
     expect(result.success).toBe(true);
     expect(result.executionId).toBe(1);
@@ -136,7 +140,10 @@ describe("jsonReportService with optional runId", () => {
       // No runId provided
     };
 
-    const result = await jsonReportService.processReport(reportData, "b4225bdf-9e2b-43f9-8f13-5bb6f5079176");
+    const result = await jsonReportService.processReport(
+      reportData,
+      "b4225bdf-9e2b-43f9-8f13-5bb6f5079176",
+    );
 
     expect(result.success).toBe(true);
     expect(result.executionId).toBe(1);
@@ -145,7 +152,9 @@ describe("jsonReportService with optional runId", () => {
     // Verify execution was created with a generated identifier
     expect(dbClient.execution.create).toHaveBeenCalledWith({
       data: expect.objectContaining({
-        name: expect.stringMatching(/^TEST_1\.0\.0_\d{4}-\d{2}-\d{2}_(NIGHT|MORNING|AFTERNOON|EVENING)$/),
+        name: expect.stringMatching(
+          /^TEST_1\.0\.0_\d{4}-\d{2}-\d{2}_(NIGHT|MORNING|AFTERNOON|EVENING)$/,
+        ),
       }),
     });
   });
@@ -157,10 +166,13 @@ describe("jsonReportService with optional runId", () => {
       // No runId provided
     };
 
-    const result = await jsonReportService.processReport(reportData, "b4225bdf-9e2b-43f9-8f13-5bb6f5079176");
+    const result = await jsonReportService.processReport(
+      reportData,
+      "b4225bdf-9e2b-43f9-8f13-5bb6f5079176",
+    );
 
     expect(result.success).toBe(true);
-    
+
     // Verify execution was created with hourly strategy identifier
     expect(dbClient.execution.create).toHaveBeenCalledWith({
       data: expect.objectContaining({
@@ -173,17 +185,23 @@ describe("jsonReportService with optional runId", () => {
     const reportData = {
       tests: mockTestData.tests,
       stats: mockTestData.stats,
+      provider: mockTestData.provider,
       // No env, version, or runId
     };
 
-    const result = await jsonReportService.processReport(reportData, "b4225bdf-9e2b-43f9-8f13-5bb6f5079176");
+    const result = await jsonReportService.processReport(
+      reportData,
+      "b4225bdf-9e2b-43f9-8f13-5bb6f5079176",
+    );
 
     expect(result.success).toBe(true);
-    
+
     // Verify execution was created with "unknown" defaults
     expect(dbClient.execution.create).toHaveBeenCalledWith({
       data: expect.objectContaining({
-        name: expect.stringMatching(/^UNKNOWN_UNKNOWN_\d{4}-\d{2}-\d{2}_(NIGHT|MORNING|AFTERNOON|EVENING)$/),
+        name: expect.stringMatching(
+          /^UNKNOWN_UNKNOWN_\d{4}-\d{2}-\d{2}_(NIGHT|MORNING|AFTERNOON|EVENING)$/,
+        ),
       }),
     });
   });

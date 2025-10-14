@@ -284,36 +284,21 @@ export const testAnalysisService = {
     ctrfReport: CTRFReport,
   ): Promise<TestResultAnalysis[]> {
     try {
-      const { results } = ctrfReport;
-      const { tests } = results;
+      const { tests } = ctrfReport.results;
 
       logger.info(`Analyzing ${tests.length} CTRF test results`);
 
-      const { passedResults, failedResults, allResults } =
-        this.extractCtrfTestResults(tests);
+      const { failedResults } = this.extractCtrfTestResults(tests);
 
       if (failedResults.length === 0) {
-        logger.info(
-          `All ${allResults.length} CTRF tests passed, skipping LangChain analysis`,
-        );
-        return passedResults;
+        logger.info("All CTRF tests passed, skipping LangChain analysis");
+        return [];
       }
 
       const failedTests = tests.filter((test) => test.status !== "passed");
       const essentialData = this.extractCtrfEssentialData(failedTests);
       const systemPrompt = getTestAnalysisPrompt(essentialData.length);
       const userPrompt = JSON.stringify(essentialData);
-
-      // Log token optimization info
-      const originalSize = JSON.stringify(tests).length;
-      const optimizedSize = JSON.stringify(essentialData).length;
-      const reduction = (
-        ((originalSize - optimizedSize) / originalSize) *
-        100
-      ).toFixed(1);
-      logger.info(
-        `CTRF Token optimization: ${originalSize} → ${optimizedSize} chars (${reduction}% reduction)`,
-      );
 
       const model = new ChatOpenAI({
         model: "gpt-4.1-mini",
@@ -334,32 +319,13 @@ export const testAnalysisService = {
       ]);
 
       const failedAnalysisResults: TestResultAnalysis[] =
-        analysisResponse.results.map((result) => {
-          const mapped: TestResultAnalysis = {
-            id: result.id,
-            status: result.status,
-            confidence: result.confidence,
-            workerIndex: result.workerIndex,
-          };
-          if (result.category !== undefined) {
-            mapped.category = result.category;
-          }
-          if (result.conclusion !== undefined) {
-            mapped.conclusion = result.conclusion;
-          }
-          return mapped;
-        });
-
-      const combinedResults: TestResultAnalysis[] = [
-        ...failedAnalysisResults,
-        ...passedResults,
-      ];
+        analysisResponse.results;
 
       logger.info(
-        `Successfully analyzed ${combinedResults.length} CTRF test results (${failedAnalysisResults.length} failed via LangChain, ${passedResults.length} passed mocked)`,
+        `Successfully analyzed CTRF test results (${failedAnalysisResults.length} failed via LangChain)`,
       );
 
-      return combinedResults;
+      return failedAnalysisResults;
     } catch (error) {
       logger.error("Error analyzing CTRF test results:", error);
       throw error;
