@@ -19,7 +19,8 @@ export const errorFormatterService = {
       logger.info("Formatting error message with LangChain");
 
       const model = new ChatOpenAI({
-        model: "gpt-5-mini",
+        model: "gpt-4.1-mini",
+        temperature: 0.7,
         maxTokens: 500,
         maxRetries: 2,
       });

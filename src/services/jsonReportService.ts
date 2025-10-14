@@ -35,6 +35,7 @@ export interface ReportData {
   runId?: string;
   env?: string;
   version?: string;
+  provider: string;
   stats?: {
     startTime?: string | Date;
   };
@@ -93,6 +94,7 @@ export const jsonReportService = {
       runId,
       env,
       version,
+      provider,
       stats,
       tests,
       analysis,
@@ -120,6 +122,7 @@ export const jsonReportService = {
       runId: executionIdentifier,
       env: env ?? "unknown",
       version: version ?? "unknown",
+      provider,
       ...(stats && { stats }),
       projectId,
     });
@@ -149,10 +152,11 @@ export const jsonReportService = {
     runId: string;
     env: string;
     version: string;
+    provider: string;
     stats?: { startTime?: string | Date };
     projectId: string;
   }): Promise<PrismaExecution> {
-    const { runId, env, version, stats, projectId } = params;
+    const { runId, env, version, provider, stats, projectId } = params;
 
     let executionRecord = await dbClient.execution.findFirst({
       where: {
@@ -168,6 +172,7 @@ export const jsonReportService = {
           name: runId,
           environment: env,
           version,
+          provider,
           startedAt: stats?.startTime ? new Date(stats.startTime) : new Date(),
           projectId,
         },
