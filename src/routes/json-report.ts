@@ -6,12 +6,6 @@ import { apiKeyMiddleware } from "@/middleware/apiKeyMiddleware";
 
 const router = Router();
 
-router.post(
-  "/v1/json-report",
-  authMiddleware,
-  jsonReportController.processReport,
-);
-
 // POST route for uploading and processing raw JSON report files
 router.post(
   "/v1/json-report/upload",

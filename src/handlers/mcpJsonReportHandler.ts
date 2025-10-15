@@ -9,6 +9,7 @@ interface ReportData {
   stats?: {
     startTime?: string | Date;
   };
+  provider: string;
   identifierStrategy?: IdentifierStrategy;
   tests: Array<{
     title: string;
