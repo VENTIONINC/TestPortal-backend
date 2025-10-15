@@ -1,12 +1,16 @@
 import { jsonReportService } from "@/services/jsonReportService";
+import type { IdentifierStrategy } from "@/lib/executionIdentifiers";
+import { DEFAULT_PROJECT_ID } from "@/config/environment";
 
 interface ReportData {
-  runId: string;
-  env: string;
-  version: string;
+  runId?: string;
+  env?: string;
+  version?: string;
   stats?: {
     startTime?: string | Date;
   };
+  provider: string;
+  identifierStrategy?: IdentifierStrategy;
   tests: Array<{
     title: string;
     custom_id?: string;
@@ -17,11 +21,12 @@ interface ReportData {
     tags?: string[];
     annotations?: unknown[];
     results: Array<{
-      allureLink?: string;
+      reportPortalLink?: string;
       retry: number;
       status: string;
       duration: number;
       startTime: string | Date;
+      workerIndex: number;
       error?: {
         message: string;
         stack: string;
@@ -36,12 +41,15 @@ interface ReportData {
 
 interface ProcessReportResult {
   success: boolean;
-  executionId: number;
+  executionId: string;
   specsProcessed: number;
 }
 
 export const mcpJsonReportHandler = {
-  async processReport(reportData: ReportData): Promise<ProcessReportResult> {
-    return await jsonReportService.processReport(reportData);
+  async processReport(
+    reportData: ReportData,
+    projectId = DEFAULT_PROJECT_ID,
+  ): Promise<ProcessReportResult> {
+    return await jsonReportService.processReport(reportData, projectId);
   },
 };

@@ -1,8 +1,9 @@
 import { dbClient } from "@/prisma/client";
-import type { ResultWithRelations } from "@/types";
-import type { Prisma } from "@prisma/client";
+import type { ResultWithRelations, ResultsStats } from "@/types";
+import { Prisma } from "@prisma/client";
 
-interface ResultFilters {
+export interface ResultFilters {
+  projectId: string;
   tag?: string;
   specId?: string;
   specFile?: string;
@@ -10,6 +11,9 @@ interface ResultFilters {
   environment?: string;
   type?: string;
   status?: string;
+  reviewStatus?: string;
+  errorMessage?: string;
+  issueName?: string;
   from?: string;
   to?: string;
 }
@@ -20,7 +24,7 @@ export const resultModel = {
   ): Promise<ResultWithRelations | null> => {
     return (await dbClient.result.findUnique({
       where: {
-        id: Number(id),
+        id: String(id),
       },
       include: {
         spec: true,
@@ -44,6 +48,7 @@ export const resultModel = {
     limit = 1000,
   ): Promise<ResultWithRelations[]> => {
     const {
+      projectId,
       tag,
       specId,
       specFile,
@@ -51,6 +56,9 @@ export const resultModel = {
       environment,
       type,
       status,
+      reviewStatus,
+      errorMessage,
+      issueName,
       from,
       to,
     } = filters;
@@ -63,24 +71,117 @@ export const resultModel = {
 
     const whereClause: Prisma.ResultWhereInput = {};
 
-    // Build spec filter
-    if (specId || specFile || specName || tag) {
-      whereClause.spec = {};
-      if (specId) whereClause.spec.id = Number(specId);
-      if (specFile) whereClause.spec.file = { contains: specFile };
-      if (specName) whereClause.spec.title = { contains: specName };
-      if (tag) whereClause.spec.tags = { contains: tag };
-    }
+    // Build spec filter (always include projectId)
+    whereClause.spec = {};
+    whereClause.spec.projectId = projectId;
+    if (specId) whereClause.spec.key = specId;
+    if (specFile) whereClause.spec.file = { contains: specFile };
+    if (specName) whereClause.spec.title = { contains: specName };
+    if (tag) whereClause.spec.tags = { contains: tag };
 
-    // Build execution filter
-    if (environment || type) {
-      whereClause.execution = {};
-      if (environment) whereClause.execution.environment = environment;
-      if (type) whereClause.execution.type = type;
-    }
+    // Build execution filter (always include projectId)
+    whereClause.execution = {};
+    whereClause.execution.projectId = projectId;
+    if (environment) whereClause.execution.environment = environment;
+    if (type) whereClause.execution.type = type;
 
     // Add other filters
     if (status) whereClause.status = status;
+
+    // Error message filter
+    if (errorMessage) {
+      whereClause.errors = {
+        some: {
+          message: {
+            contains: errorMessage,
+            mode: "insensitive",
+          },
+        },
+      };
+    }
+
+    // Review status filter
+    if (reviewStatus) {
+      if (reviewStatus.toLowerCase() === "completed") {
+        // For 'completed': status is 'passed' OR all assumptions are confirmed
+        whereClause.OR = [
+          { status: "passed" },
+          {
+            AND: [
+              { status: { not: "passed" } },
+              {
+                errors: {
+                  every: {
+                    assumptions: {
+                      every: {
+                        isConfirmed: true,
+                      },
+                    },
+                  },
+                },
+              },
+              {
+                errors: {
+                  some: {
+                    assumptions: {
+                      some: {},
+                    },
+                  },
+                },
+              },
+            ],
+          },
+        ];
+      } else if (reviewStatus.toLowerCase() === "incompleted") {
+        // For 'inCompleted': status is not 'passed' AND (no assumptions OR not all assumptions confirmed)
+        whereClause.AND = [
+          { status: { not: "passed" } },
+          {
+            OR: [
+              // No assumptions at all
+              {
+                errors: {
+                  every: {
+                    assumptions: {
+                      none: {},
+                    },
+                  },
+                },
+              },
+              // Has assumptions but not all are confirmed
+              {
+                errors: {
+                  some: {
+                    assumptions: {
+                      some: {
+                        isConfirmed: false,
+                      },
+                    },
+                  },
+                },
+              },
+            ],
+          },
+        ];
+      }
+    }
+
+    if (issueName) {
+      whereClause.errors = {
+        some: {
+          assumptions: {
+            some: {
+              issue: {
+                name: {
+                  contains: issueName,
+                  mode: "insensitive",
+                },
+              },
+            },
+          },
+        },
+      };
+    }
 
     if (from || to) {
       whereClause.startTime = {};
@@ -88,10 +189,13 @@ export const resultModel = {
       if (toDate) whereClause.startTime.lte = toDate;
     }
 
-    return (await dbClient.result.findMany({
+    return await dbClient.result.findMany({
       where: whereClause,
       skip: (page - 1) * limit,
       take: Number(limit),
+      orderBy: {
+        startTime: "desc", // Most recent results first
+      },
       include: {
         spec: true,
         execution: true,
@@ -105,11 +209,12 @@ export const resultModel = {
           },
         },
       },
-    })) as ResultWithRelations[];
+    }) as ResultWithRelations[];
   },
 
   count: async (filters: ResultFilters): Promise<number> => {
     const {
+      projectId,
       tag,
       specId,
       specFile,
@@ -117,6 +222,9 @@ export const resultModel = {
       environment,
       type,
       status,
+      reviewStatus,
+      errorMessage,
+      issueName,
       from,
       to,
     } = filters;
@@ -129,24 +237,118 @@ export const resultModel = {
 
     const whereClause: Prisma.ResultWhereInput = {};
 
-    // Build spec filter
-    if (specId || specFile || specName || tag) {
-      whereClause.spec = {};
-      if (specId) whereClause.spec.id = Number(specId);
-      if (specFile) whereClause.spec.file = { contains: specFile };
-      if (specName) whereClause.spec.title = { contains: specName };
-      if (tag) whereClause.spec.tags = { contains: tag };
-    }
+    // Build spec filter (always include projectId)
+    whereClause.spec = {};
+    whereClause.spec.projectId = projectId;
+    if (specId) whereClause.spec.key = specId;
+    if (specFile) whereClause.spec.file = { contains: specFile };
+    if (specName) whereClause.spec.title = { contains: specName };
+    if (tag) whereClause.spec.tags = { contains: tag };
 
-    // Build execution filter
-    if (environment || type) {
-      whereClause.execution = {};
-      if (environment) whereClause.execution.environment = environment;
-      if (type) whereClause.execution.type = type;
-    }
+    // Build execution filter (always include projectId)
+    whereClause.execution = {};
+    whereClause.execution.projectId = projectId;
+    if (environment) whereClause.execution.environment = environment;
+    if (type) whereClause.execution.type = type;
 
     // Add other filters
     if (status) whereClause.status = status;
+
+    // Error message filter
+    if (errorMessage) {
+      whereClause.errors = {
+        some: {
+          message: {
+            contains: errorMessage,
+            mode: "insensitive",
+          },
+        },
+      };
+    }
+
+    // Review status filter
+    if (reviewStatus) {
+      if (reviewStatus.toLowerCase() === "completed") {
+        // For 'completed': status is 'passed' OR all assumptions are confirmed
+        whereClause.OR = [
+          { status: "passed" },
+          {
+            AND: [
+              { status: { not: "passed" } },
+              {
+                errors: {
+                  every: {
+                    assumptions: {
+                      every: {
+                        isConfirmed: true,
+                      },
+                    },
+                  },
+                },
+              },
+              {
+                errors: {
+                  some: {
+                    assumptions: {
+                      some: {},
+                    },
+                  },
+                },
+              },
+            ],
+          },
+        ];
+      } else if (reviewStatus.toLowerCase() === "incompleted") {
+        // For 'inCompleted': status is not 'passed' AND (no assumptions OR not all assumptions confirmed)
+        whereClause.AND = [
+          { status: { not: "passed" } },
+          {
+            OR: [
+              // No assumptions at all
+              {
+                errors: {
+                  every: {
+                    assumptions: {
+                      none: {},
+                    },
+                  },
+                },
+              },
+              // Has assumptions but not all are confirmed
+              {
+                errors: {
+                  some: {
+                    assumptions: {
+                      some: {
+                        isConfirmed: false,
+                      },
+                    },
+                  },
+                },
+              },
+            ],
+          },
+        ];
+      }
+    }
+
+    // Issue name filter
+    if (issueName) {
+      whereClause.errors = {
+        some: {
+          assumptions: {
+            some: {
+              issue: {
+                name: {
+                  contains: issueName,
+                  mode: "insensitive",
+                },
+              },
+            },
+          },
+        },
+      };
+    }
 
     if (from || to) {
       whereClause.startTime = {};
@@ -157,5 +359,208 @@ export const resultModel = {
     return await dbClient.result.count({
       where: whereClause,
     });
+  },
+
+  getStats: async (filters: {
+    projectId: string;
+    dates?: string[] | undefined;
+  }): Promise<ResultsStats> => {
+    const { projectId, dates } = filters;
+
+    const whereClause: Prisma.ResultWhereInput = {};
+
+    // Always filter by projectId through spec and execution relations
+    whereClause.spec = { projectId };
+    whereClause.execution = { projectId };
+
+    if (dates && dates.length > 0) {
+      // For each date, create a range from start of day to end of day
+      const dateRanges = dates.map((dateStr) => {
+        const startOfDay = new Date(dateStr);
+        startOfDay.setHours(0, 0, 0, 0);
+
+        const endOfDay = new Date(dateStr);
+        endOfDay.setHours(23, 59, 59, 999);
+
+        return {
+          AND: [
+            { spec: { projectId } },
+            { execution: { projectId } },
+            {
+              startTime: {
+                gte: startOfDay,
+                lte: endOfDay,
+              },
+            },
+          ],
+        };
+      });
+
+      // Use OR to match any of the specified dates, but always require projectId
+      whereClause.OR = dateRanges;
+    }
+
+    // Single database query to get all results with relations
+    const results = await dbClient.result.findMany({
+      where: whereClause,
+      include: {
+        spec: true,
+        execution: true,
+        errors: {
+          include: {
+            assumptions: {
+              include: {
+                issue: true,
+              },
+            },
+          },
+        },
+      },
+    });
+
+    // Initialize tracking maps (same approach as frontend)
+    const specMap = new Map<
+      string,
+      { id: string; key: string; title: string; file: string; tags: string }
+    >();
+    const executionMap = new Map<
+      string,
+      { id: string; environment: string; type: string }
+    >();
+    const errorMap = new Map<string, { id: string; message: string | null }>();
+    const assumptionMap = new Map<
+      string,
+      { id: string; isConfirmed: boolean }
+    >();
+    const resultMap = new Map<
+      string,
+      { id: string; status: string; startTime: Date }
+    >();
+    const issueMap = new Map<
+      string,
+      { id: string; name: string | null; category: string | null }
+    >();
+
+    // Local tracking for errors and issues (not stored in final stats)
+    const errorCounts = new Map<string, number>();
+    const issueCounts = new Map<string, number>();
+
+    // Initialize stats object
+    const stats: ResultsStats = {
+      byStatus: { passed: 0, failed: 0, skipped: 0, timedOut: 0 },
+      byStatusTotal: 0,
+      entityCounts: {
+        specs: 0,
+        results: 0,
+        executions: 0,
+        issues: 0,
+        errors: 0,
+        assumptions: 0,
+      },
+      topErrors: [],
+      topIssues: [],
+    };
+
+    // Single pass through all results to calculate everything
+    for (const result of results) {
+      // Count by status
+      if (result.status && result.status in stats.byStatus) {
+        stats.byStatus[result.status as keyof typeof stats.byStatus]++;
+      }
+
+      // Track unique entities
+      if (!specMap.has(result.spec.id))
+        specMap.set(result.spec.id, result.spec);
+      if (!executionMap.has(result.execution.id))
+        executionMap.set(result.execution.id, result.execution);
+      if (!resultMap.has(result.id)) resultMap.set(result.id, result);
+
+      // Process errors and assumptions
+      result.errors?.forEach((error) => {
+        const errorKey = error.id;
+        if (!errorMap.has(errorKey)) errorMap.set(errorKey, error);
+
+        // Count error messages
+        const errorMessage = error.message ?? "Unknown Error";
+        errorCounts.set(errorMessage, (errorCounts.get(errorMessage) ?? 0) + 1);
+
+        // Process assumptions
+        error.assumptions?.forEach((assumption) => {
+          const assumptionKey = assumption.id;
+          if (!assumptionMap.has(assumptionKey))
+            assumptionMap.set(assumptionKey, assumption);
+
+          // Process issues
+          if (assumption.issue) {
+            const issue = assumption.issue;
+            if (!issueMap.has(issue.id)) issueMap.set(issue.id, issue);
+
+            // Count issue names
+            const issueName = issue.name ?? "Unknown Issue Name";
+            issueCounts.set(issueName, (issueCounts.get(issueName) ?? 0) + 1);
+          }
+        });
+      });
+    }
+
+    // Set final counts
+    stats.entityCounts.specs = specMap.size;
+    stats.entityCounts.results = resultMap.size;
+    stats.entityCounts.executions = executionMap.size;
+    stats.entityCounts.issues = issueMap.size;
+    stats.entityCounts.errors = errorMap.size;
+    stats.entityCounts.assumptions = assumptionMap.size;
+
+    // Calculate total status count
+    stats.byStatusTotal = Object.values(stats.byStatus).reduce(
+      (acc, count) => acc + count,
+      0,
+    );
+
+    // Calculate top 10 errors and issues
+    stats.topErrors = Array.from(errorCounts.entries())
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 10)
+      .map(([title, count]) => ({ title, count }));
+
+    stats.topIssues = Array.from(issueCounts.entries())
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 10)
+      .map(([title, count]) => ({ title, count }));
+
+    return stats;
+  },
+
+  updateAnalysis: async (
+    resultId: number | string,
+    analysisData: {
+      analysisStatus?: string;
+      analysisCategory?: string;
+      analysisConfidence?: number;
+      analysisConclusion?: string;
+    },
+  ): Promise<ResultWithRelations> => {
+    const updatedResult = await dbClient.result.update({
+      where: {
+        id: String(resultId),
+      },
+      data: analysisData,
+      include: {
+        spec: true,
+        execution: true,
+        errors: {
+          include: {
+            result: true,
+            assumptions: {
+              include: {
+                issue: true,
+              },
+            },
+          },
+        },
+      },
+    });
+
+    return updatedResult;
   },
 };

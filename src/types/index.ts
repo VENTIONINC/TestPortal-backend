@@ -2,13 +2,16 @@
 export * from "@/types/database";
 export * from "@/types/api";
 export * from "@/types/mcp";
+export * from "@/types/tests";
+export * from "@/types/ctrf";
 
 // Express types extensions
 import type { Request } from "express";
+import { IssueCategory } from "./enums";
 
 export interface AuthenticatedRequest extends Request {
   user?: {
-    id: number;
+    id: string;
     username: string;
     role: string;
   };
@@ -59,3 +62,33 @@ export interface Filter {
   operator: FilterOperator;
   value: unknown;
 }
+
+export interface CreateIssueParams {
+  name: string;
+  category: IssueCategory;
+  description?: string;
+  portal?: string;
+  service?: string;
+  ticket?: string;
+  projectId: string;
+  createdById?: string;
+  updatedById?: string;
+}
+
+export interface UpdateIssueParams {
+  name?: string;
+  category?: IssueCategory;
+  description?: string;
+  portal?: string;
+  service?: string;
+  ticket?: string;
+  updatedById?: string;
+}
+
+export interface UserIntegrations {
+  reportPortalUrl?: string | null;
+  reportPortalEnabled?: boolean;
+  monitoringPortalUrl?: string | null;
+  monitoringPortalEnabled?: boolean;
+}
+

@@ -1,29 +1,130 @@
-import type {
-  Execution as PrismaExecution,
-  Spec as PrismaSpec,
-  Result as PrismaResult,
-  ResultError as PrismaResultError,
-  Assumption as PrismaAssumption,
-  Issue as PrismaIssue,
-} from "@prisma/client";
+// Minimal Prisma model type definitions to allow compilation without the
+// generated client types. These mirror the fields defined in the Prisma
+// schema and are sufficient for type checking within this repository.
 
-// Re-export Prisma types for convenience
-export type {
-  PrismaExecution,
-  PrismaSpec,
-  PrismaResult,
-  PrismaResultError,
-  PrismaAssumption,
-  PrismaIssue,
-};
+export interface PrismaExecution {
+  id: string; // UUID
+  createdAt: Date;
+  updatedAt: Date;
+  type: string;
+  name: string;
+  environment: string;
+  version: string;
+  startedAt: Date;
+  projectId: string; // UUID reference to Project
+}
+
+export interface PrismaSpec {
+  id: string; // UUID
+  createdAt: Date;
+  updatedAt: Date;
+  key: string;
+  file: string;
+  title: string;
+  tags: string;
+  annotations?: string | null;
+  projectId: string; // UUID reference to Project
+}
+
+export interface PrismaResult {
+  id: string; // UUID
+  createdAt: Date;
+  updatedAt: Date;
+  reportPortalLink?: string | null;
+  retry: number;
+  status: string;
+  duration: number;
+  startTime: Date;
+  specId: string; // UUID reference to Spec
+  executionId: string; // UUID reference to Execution
+  analysisStatus?: string | null;
+  analysisCategory?: string | null;
+  analysisConfidence?: number | null;
+  analysisConclusion?: string | null;
+}
+
+export interface PrismaResultError {
+  id: string; // UUID
+  createdAt: Date;
+  updatedAt: Date;
+  type: string;
+  message: string;
+  callLog?: string | null;
+  callStack: string;
+  testAssertion?: string | null;
+  expectedPattern?: string | null;
+  receivedString?: string | null;
+  location: string;
+  resultId?: string | null; // UUID reference to Result
+}
+
+export interface PrismaAssumption {
+  id: string; // UUID
+  createdAt: Date;
+  updatedAt: Date;
+  isConfirmed: boolean;
+  score: number;
+  madeBy: string;
+  issueId: string; // UUID reference to Issue
+  resultErrorId?: string | null; // UUID reference to ResultError
+}
+
+export interface PrismaIssue {
+  id: string; // UUID
+  createdAt: Date;
+  updatedAt: Date;
+  name: string;
+  category: string;
+  description?: string | null;
+  portal?: string | null;
+  service?: string | null;
+  ticket?: string | null;
+  projectId: string; // UUID reference to Project
+  createdById?: string | null;
+  updatedById?: string | null;
+}
+
+export interface PrismaProject {
+  id: string; // UUID
+  createdAt: Date;
+  updatedAt: Date;
+  name: string;
+  description?: string | null;
+  isActive: boolean;
+  ownerId: string;
+}
+
+export interface PrismaUser {
+  id: string;
+  createdAt: Date;
+  updatedAt: Date;
+  name: string;
+  email: string;
+  passwordHash?: string | null;
+  cognitoUserId?: string | null;
+  mcpToken?: string | null;
+  reportPortalUrl?: string | null;
+  reportPortalEnabled: boolean;
+  monitoringPortalUrl?: string | null;
+  monitoringPortalEnabled: boolean;
+}
 
 // Database model interfaces with relations
+export interface ProjectWithRelations extends PrismaProject {
+  owner: PrismaUser;
+  executions: PrismaExecution[];
+  specs: PrismaSpec[];
+  issues: PrismaIssue[];
+}
+
 export interface ExecutionWithResults extends PrismaExecution {
   results: ResultWithRelations[];
+  project: PrismaProject;
 }
 
 export interface SpecWithResults extends PrismaSpec {
   results: ResultWithRelations[];
+  project: PrismaProject;
 }
 
 export interface ResultWithRelations extends PrismaResult {
@@ -33,7 +134,7 @@ export interface ResultWithRelations extends PrismaResult {
 }
 
 export interface ResultErrorWithRelations extends PrismaResultError {
-  result?: PrismaResult;
+  result: PrismaResult | null;
   assumptions: AssumptionWithRelations[];
 }
 
@@ -47,8 +148,17 @@ export interface IssueWithAssumptions extends PrismaIssue {
 }
 
 // Simplified interfaces for API responses
+export interface ProjectSummary {
+  id: string; // UUID
+  name: string;
+  description?: string;
+  isActive: boolean;
+  createdAt: Date;
+  owner: UserSummary;
+}
+
 export interface ExecutionSummary {
-  id: number;
+  id: string;
   name: string;
   type: string;
   environment: string;
@@ -56,31 +166,33 @@ export interface ExecutionSummary {
   startedAt: Date;
   createdAt: Date;
   resultsCount: number;
+  projectId: string;
 }
 
 export interface SpecSummary {
-  id: number;
+  id: string;
   key: string;
   file: string;
   title: string;
   tags: string;
   resultsCount: number;
+  projectId: string;
 }
 
 export interface ResultSummary {
-  id: number;
+  id: string;
   status: string;
   duration: number;
   startTime: Date;
   retry: number;
-  allureLink?: string;
+  reportPortalLink?: string;
   spec: SpecSummary;
   execution: ExecutionSummary;
   errorsCount: number;
 }
 
 export interface ResultErrorSummary {
-  id: number;
+  id: string;
   type: string;
   message: string;
   location: string;
@@ -89,7 +201,7 @@ export interface ResultErrorSummary {
 }
 
 export interface AssumptionSummary {
-  id: number;
+  id: string;
   isConfirmed: boolean;
   score: number;
   madeBy: string;
@@ -98,11 +210,62 @@ export interface AssumptionSummary {
 }
 
 export interface IssueSummary {
-  id: number;
+  id: string;
   name: string;
   category: string;
   description?: string;
   portal?: string;
   service?: string;
   ticket?: string;
+}
+
+export interface UserSummary {
+  id: string;
+  name: string;
+  email: string;
+  createdAt: Date;
+}
+
+export interface UserWithPassword {
+  id: string;
+  name: string;
+  email: string;
+  passwordHash: string | null;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+// V2 API Serialized Response Types
+export interface SerializedUser {
+  id: string;
+  name: string;
+  email: string;
+  createdAt: Date;
+}
+
+export interface SerializedIssue {
+  id: string; // UUID
+  createdAt: Date;
+  updatedAt: Date;
+  name: string;
+  category: string;
+  description?: string | null;
+  portal?: string | null;
+  service?: string | null;
+  ticket?: string | null;
+  createdBy?: SerializedUser | null;
+  updatedBy?: SerializedUser | null;
+}
+
+export interface SerializedIssuesResponse {
+  issues: SerializedIssue[];
+  total: number;
+  page: number;
+  totalPages: number;
+}
+
+// Extended Prisma types with relations for v2 endpoints
+export interface PrismaIssueWithUsers extends PrismaIssue {
+  createdBy?: PrismaUser | null;
+  updatedBy?: PrismaUser | null;
 }

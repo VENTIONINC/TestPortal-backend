@@ -1,5 +1,10 @@
-import { resultModel } from "@/models/resultModel";
-import type { GetResultsParams, ResultWithRelations } from "@/types";
+import { resultModel, type ResultFilters } from "@/models/resultModel";
+import type {
+  GetResultsParams,
+  GetResultsStatsParams,
+  ResultsStats,
+  ResultWithRelations,
+} from "@/types";
 
 interface GetResultsResponse {
   results: ResultWithRelations[];
@@ -11,6 +16,7 @@ interface GetResultsResponse {
 export const resultService = {
   async getResults(params: GetResultsParams): Promise<GetResultsResponse> {
     const {
+      projectId,
       tag,
       specId,
       specFile,
@@ -18,14 +24,24 @@ export const resultService = {
       environment,
       type,
       status,
+      reviewStatus,
+      errorMessage,
+      issueName,
       from,
       to,
       page = 1,
       limit = 1000,
     } = params;
 
-    // Build filters object, only including defined values
-    const filters: Record<string, string> = {};
+    // Validate required projectId parameter
+    if (!projectId) {
+      throw new Error("Project ID is required");
+    }
+
+    // Build filters object, always include required projectId
+    const filters: ResultFilters = {
+      projectId,
+    };
     if (tag) filters.tag = tag;
     if (specId) filters.specId = specId;
     if (specFile) filters.specFile = specFile;
@@ -33,6 +49,9 @@ export const resultService = {
     if (environment) filters.environment = environment;
     if (type) filters.type = type;
     if (status) filters.status = status;
+    if (reviewStatus) filters.reviewStatus = reviewStatus;
+    if (errorMessage) filters.errorMessage = errorMessage;
+    if (issueName) filters.issueName = issueName;
     if (from) filters.from = from;
     if (to) filters.to = to;
 
@@ -98,5 +117,63 @@ export const resultService = {
     }
 
     return resultRecord;
+  },
+
+  async getResultsStats(params: GetResultsStatsParams): Promise<ResultsStats> {
+    const { projectId, dates } = params;
+
+    // Validate required projectId parameter
+    if (!projectId) {
+      throw new Error("Project ID is required");
+    }
+
+    const stats = await resultModel.getStats({ projectId, dates });
+
+    return stats;
+  },
+
+  async updateAnalysis(
+    resultId: number | string,
+    analysisData: {
+      analysisStatus?: string;
+      analysisCategory?: string;
+      analysisConfidence?: number;
+      analysisConclusion?: string;
+    },
+  ): Promise<ResultWithRelations> {
+    if (!resultId) {
+      throw new Error("Result ID is required");
+    }
+
+    // Validate analysis data
+    if (
+      analysisData.analysisCategory &&
+      !["bug", "infra", "performance", "script", "other"].includes(
+        analysisData.analysisCategory,
+      )
+    ) {
+      throw new Error(
+        "Invalid analysis category. Must be one of: bug, infra, performance, script, other",
+      );
+    }
+
+    if (
+      analysisData.analysisConfidence !== undefined &&
+      (analysisData.analysisConfidence < 0 ||
+        analysisData.analysisConfidence > 1)
+    ) {
+      throw new Error("Confidence must be between 0 and 1");
+    }
+
+    const updatedResult = await resultModel.updateAnalysis(
+      resultId,
+      analysisData,
+    );
+
+    if (!updatedResult) {
+      throw new Error(`Result with ID ${resultId} not found`);
+    }
+
+    return updatedResult;
   },
 };

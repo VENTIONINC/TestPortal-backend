@@ -4,6 +4,7 @@ logs
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+.DS_Store
 
 # Runtime data
 pids
@@ -62,7 +63,6 @@ typings/
 
 # Prisma
 prisma/prisma
-prisma/migrations
 dev.db
 
 .tmp
@@ -70,3 +70,6 @@ dev.db
 # TypeScript build output
 dist/
 *.tsbuildinfo
+
+# exmaple files
+example-reports/

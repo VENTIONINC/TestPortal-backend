@@ -1,36 +1,27 @@
 import { dbClient } from "@/prisma/client";
-import type { PrismaResultError } from "@/types";
-import type { Prisma } from "@prisma/client";
+import type { PrismaResultError, ResultErrorWithRelations } from "@/types";
 
-type ResultErrorWithAssumptions = Prisma.ResultErrorGetPayload<{
-  include: {
-    assumptions: {
-      include: {
-        issue: true;
-      };
-    };
-  };
-}>;
+type ResultErrorWithAssumptions = Omit<ResultErrorWithRelations, "result">;
 
 export const resultErrorModel = {
-  findById: async (id: number | string): Promise<PrismaResultError | null> => {
+  findById: async (id: string): Promise<PrismaResultError | null> => {
     return await dbClient.resultError.findUnique({
       where: {
-        id: Number(id),
+        id,
       },
     });
   },
 
   assignIssue: async (
-    resultErrorId: number | string,
-    assumptionId: number | string,
+    resultErrorId: string,
+    assumptionId: string,
   ): Promise<ResultErrorWithAssumptions> => {
-    return await dbClient.resultError.update({
-      where: { id: Number(resultErrorId) },
+    return (await dbClient.resultError.update({
+      where: { id: resultErrorId },
       data: {
         assumptions: {
           connect: {
-            id: Number(assumptionId),
+            id: assumptionId,
           },
         },
       },
@@ -41,6 +32,6 @@ export const resultErrorModel = {
           },
         },
       },
-    });
+    })) as ResultErrorWithAssumptions;
   },
 };

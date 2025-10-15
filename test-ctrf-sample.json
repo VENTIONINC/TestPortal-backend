@@ -1,0 +1,53 @@
+{
+  "results": {
+    "tool": {
+      "name": "playwright",
+      "version": "1.43.0"
+    },
+    "summary": {
+      "tests": 3,
+      "passed": 1,
+      "failed": 2,
+      "pending": 0,
+      "skipped": 0,
+      "other": 0,
+      "start": 1703847600123,
+      "stop": 1703847606358
+    },
+    "tests": [
+      {
+        "name": "should authenticate valid user",
+        "status": "passed",
+        "duration": 45,
+        "filePath": "/tests/auth.test.js",
+        "suite": "Auth Service",
+        "retry": 0
+      },
+      {
+        "name": "should handle password reset",
+        "status": "failed",
+        "duration": 156,
+        "message": "expect(received).toBe(expected)",
+        "trace": "expect(received).toBe(expected) // Object.is equality\n    at /tests/auth.test.js:42:18",
+        "filePath": "/tests/auth.test.js",
+        "suite": "Auth Service",
+        "retry": 1
+      },
+      {
+        "name": "should validate user permissions",
+        "status": "failed",
+        "duration": 89,
+        "message": "Timeout 30000ms exceeded",
+        "trace": "Error: Timeout 30000ms exceeded\n    at /tests/permissions.test.js:15:10",
+        "filePath": "/tests/permissions.test.js",
+        "suite": "Permission Service",
+        "retry": 0
+      }
+    ],
+    "environment": {
+      "testEnvironment": "ci",
+      "branchName": "main",
+      "buildNumber": "123"
+    }
+  }
+}

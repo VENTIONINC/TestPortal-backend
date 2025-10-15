@@ -1,0 +1,93 @@
+import { OpenAPIRegistry } from "@asteasolutions/zod-to-openapi";
+import { z } from "./zod";
+import { ErrorResponseSchema } from "./common";
+
+const ErrorFormatterRequestSchema = z
+  .object({
+    name: z
+      .string()
+      .min(1, "Name cannot be empty")
+      .max(100, "Name is too long"),
+    description: z
+      .string()
+      .min(1, "Description cannot be empty")
+      .max(2000, "Description is too long"),
+    category: z
+      .string()
+      .min(1, "Category cannot be empty")
+      .max(50, "Category is too long"),
+  })
+  .openapi("ErrorFormatterRequest");
+
+const ErrorFormatterResponseSchema = z
+  .object({
+    original: z.object({
+      name: z.string(),
+      description: z.string(),
+      category: z.string(),
+    }),
+    formatted: z.object({
+      name: z.string(),
+      description: z.string(),
+    }),
+  })
+  .openapi("ErrorFormatterResponse");
+
+export function registerErrorFormatterRoutes(registry: OpenAPIRegistry) {
+  registry.register("ErrorFormatterRequest", ErrorFormatterRequestSchema);
+  registry.register("ErrorFormatterResponse", ErrorFormatterResponseSchema);
+
+  registry.registerPath({
+    method: "post",
+    path: "/api/v2/error-formatter",
+    description:
+      "Formats error information using AI to make it clear and actionable (requires authentication)",
+    request: {
+      body: {
+        content: {
+          "application/json": {
+            schema: ErrorFormatterRequestSchema,
+          },
+        },
+      },
+    },
+    security: [{ BearerAuth: [] }],
+    responses: {
+      200: {
+        description: "Error formatted successfully",
+        content: {
+          "application/json": {
+            schema: ErrorFormatterResponseSchema,
+          },
+        },
+      },
+      400: {
+        description: "Bad request - invalid input format",
+        content: {
+          "application/json": {
+            schema: ErrorResponseSchema,
+          },
+        },
+      },
+      401: {
+        description: "Unauthorized - invalid or missing token",
+        content: {
+          "application/json": {
+            schema: ErrorResponseSchema,
+          },
+        },
+      },
+      500: {
+        description: "Internal server error - formatting failed",
+        content: {
+          "application/json": {
+            schema: ErrorResponseSchema,
+          },
+        },
+      },
+    },
+    tags: ["Error Formatter"],
+  });
+}
+
+export { ErrorFormatterRequestSchema, ErrorFormatterResponseSchema };

@@ -4,8 +4,31 @@ export interface PaginationParams {
   limit?: number;
 }
 
+// Project API Types
+export interface CreateProjectRequest {
+  name: string;
+  description?: string;
+}
+
+export interface UpdateProjectRequest {
+  name?: string;
+  description?: string;
+  isActive?: boolean;
+}
+
+export interface GetProjectsParams {
+  ownerId?: number;
+  isActive?: boolean;
+  name?: string;
+}
+
+export interface GetProjectByIdParams {
+  projectId: string;
+}
+
 // Result API Types
 export interface GetResultsParams extends PaginationParams {
+  projectId: string;
   tag?: string;
   specId?: string;
   specFile?: string;
@@ -13,6 +36,9 @@ export interface GetResultsParams extends PaginationParams {
   environment?: string;
   type?: string;
   status?: string;
+  reviewStatus?: string;
+  errorMessage?: string;
+  issueName?: string;
   from?: string;
   to?: string;
 }
@@ -21,10 +47,35 @@ export interface GetResultByIdParams {
   resultId: string;
 }
 
+export interface GetResultsStatsParams {
+  projectId: string;
+  dates?: string[];
+}
+
+export interface ResultsStats {
+  byStatus: {
+    passed: number;
+    failed: number;
+    skipped: number;
+    timedOut: number;
+  };
+  byStatusTotal: number;
+  entityCounts: {
+    specs: number;
+    results: number;
+    executions: number;
+    issues: number;
+    errors: number;
+    assumptions: number;
+  };
+  topErrors: { title: string; count: number }[];
+  topIssues: { title: string; count: number }[];
+}
+
 // Assumption API Types
 export interface CreateAssumptionRequest {
-  issueId: number;
-  resultErrorId?: number;
+  issueId: string; // UUID reference to Issue
+  resultErrorId?: string; // UUID reference to ResultError
   madeBy: string;
   isConfirmed: boolean;
   score: number;
@@ -34,7 +85,7 @@ export interface CreateAssumptionRequest {
 }
 
 export interface UpdateAssumptionRequest {
-  assumptionId: string;
+  assumptionId: string; // UUID reference to Assumption
   madeBy?: string;
   isConfirmed?: boolean;
   score?: number;
@@ -44,7 +95,7 @@ export interface UpdateAssumptionRequest {
 }
 
 export interface GetAssumptionByIdParams {
-  assumptionId: string;
+  assumptionId: string; // UUID reference to Assumption
 }
 
 // Common API Response Types

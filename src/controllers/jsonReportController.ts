@@ -1,29 +1,216 @@
 import { Request, Response } from "express";
-import { jsonReportService } from "@/services/jsonReportService";
+import {
+  jsonReportService,
+  type ProcessReportResult,
+} from "@/services/jsonReportService";
+import { testAnalysisService } from "@/services/testAnalysisService";
+import type { TestResultAnalysis } from "@/schemas/testAnalysisSchemas";
+import type { ApiKeyAuthenticatedRequest } from "@/middleware/apiKeyMiddleware";
+import getLogger from "@/lib/logger";
+
+const logger = getLogger("json-report-controller");
+
+interface ProcessReportResponse extends ProcessReportResult {
+  analysis?: TestResultAnalysis[];
+}
 
 export const jsonReportController = {
   /**
-   * Handle POST request to process JSON test report
+   * Core method to process raw JSON report file
+   * Used by both JWT and API key authentication routes
    */
-  processReport: async (req: Request, res: Response): Promise<void> => {
+  _processRawReportFileCore: async (
+    file: Express.Multer.File | undefined,
+    projectId: string | undefined,
+  ): Promise<ProcessReportResponse> => {
+    if (!file) {
+      throw new Error("JSON report file is required");
+    }
+
+    if (!projectId) {
+      throw new Error("Valid projectId is required");
+    }
+
+    // Parse the file content as JSON
+    const fileContent = file.buffer.toString("utf8");
+    let rawJsonReport;
+
     try {
-      const reportData = req.body;
+      rawJsonReport = JSON.parse(fileContent);
+    } catch (parseError) {
+      throw new Error(
+        `Invalid JSON format in uploaded file: ${parseError instanceof Error ? parseError.message : "Unknown parsing error"}`,
+      );
+    }
 
-      if (!reportData) {
-        res.status(400).json({
-          error: "Report data is required",
-        });
-        return;
-      }
+    // Transform raw JSON to the expected format (like seed script does)
+    const transformedReport =
+      await jsonReportController._transformRawReport(rawJsonReport);
 
-      const result = await jsonReportService.processReport(reportData);
+    // Analyze test results before processing
+    let analysisResults = null;
+    try {
+      analysisResults =
+        await testAnalysisService.analyzeTestResults(rawJsonReport);
+      logger.info(
+        `Analysis completed: ${analysisResults.length} tests analyzed`,
+      );
+    } catch (analysisError) {
+      logger.warn(
+        "Analysis failed, proceeding without analysis:",
+        analysisError,
+      );
+      // Continue without analysis - don't fail the entire process
+    }
 
-      res.status(201).json(result);
+    const result = await jsonReportService.processReport(
+      {
+        ...transformedReport,
+        analysis: analysisResults,
+        provider: "Playwright",
+      },
+      projectId,
+    );
+
+    // Include analysis results in the response
+    return {
+      ...result,
+      ...(analysisResults && { analysis: analysisResults }),
+    };
+  },
+
+  /**
+   * Handle POST request to process raw JSON report file and transform it
+   */
+  processRawReportFile: async (req: Request, res: Response): Promise<void> => {
+    try {
+      // Extract projectId from form data (multipart form upload)
+      const projectId = req.body.projectId;
+
+      const response = await jsonReportController._processRawReportFileCore(
+        req.file,
+        projectId,
+      );
+
+      res.status(201).json(response);
     } catch (error) {
       const err = error as Error;
       res.status(400).json({
-        error: `Failed to process JSON report. ${err.message}`,
+        error: `Failed to process raw JSON report file. ${err.message}`,
       });
     }
+  },
+
+  /**
+   * Handle POST request to process raw JSON report file with API key authentication
+   */
+  processRawReportFileWithApiKey: async (
+    req: ApiKeyAuthenticatedRequest,
+    res: Response,
+  ): Promise<void> => {
+    try {
+      // Extract projectId from validated API key
+      const projectId = req.apiKey?.projectId;
+
+      const response = await jsonReportController._processRawReportFileCore(
+        req.file,
+        projectId,
+      );
+
+      res.status(201).json(response);
+    } catch (error) {
+      const err = error as Error;
+      res.status(400).json({
+        error: `Failed to process raw JSON report file. ${err.message}`,
+      });
+    }
+  },
+
+  /**
+   * Transform raw JSON report to the expected format
+   */
+  _transformRawReport: async (rawJsonReport: any) => {
+    const config = rawJsonReport.config ?? {};
+    config.env = config.env ?? "staging";
+    config.runId = rawJsonReport.runId;
+    config.stats = rawJsonReport.stats;
+    config.hash = rawJsonReport.hash;
+
+    const tests = jsonReportController
+      ._getTestCases(rawJsonReport.suites ?? [])
+      .map((test) => {
+        test.results = test.results.map((result: any) => {
+          const reportPortalLink =
+            result.reportPortalLink ??
+            result.allureReportLink ??
+            "https://automation.qa.theguarantors.com/allure-report/index.html";
+
+          return {
+            reportPortalLink,
+            ...result,
+          };
+        });
+        return test;
+      });
+
+    return {
+      ...config,
+      tests,
+      isJson: true,
+    };
+  },
+
+  /**
+   * Extract and flatten test cases from suites (like seed script does)
+   */
+  _getTestCases: (suitesList: any[], testCases: any[] = []) => {
+    for (const { suites, specs } of suitesList) {
+      if (suites) {
+        jsonReportController._getTestCases(suites, testCases);
+      }
+
+      if (specs) {
+        for (const spec of specs) {
+          const flatSpecs = spec.tests.map((t: any) => ({
+            ok: spec.ok,
+            custom_id: spec.id,
+            location: {
+              file: spec.file,
+              line: spec.line,
+              column: spec.column,
+            },
+            title: spec.title,
+            tags: spec.tags,
+            timeout: t.timeout,
+            annotations: t.annotations,
+            expectedStatus: t.expectedStatus,
+            projectId: t.projectId,
+            projectName: t.projectName,
+            results: t.results.map((r: any) => {
+              const { /* errors, */ ...rest } = r;
+              const maxSize = 10000;
+
+              if (rest.error?.message?.length > maxSize) {
+                rest.error.message = rest.error.message.slice(0, maxSize);
+                rest.error.stack = rest.error.stack.slice(0, maxSize);
+
+                if (rest.error.matcherResult) {
+                  rest.error.matcherResult.message =
+                    rest.error.matcherResult.message.slice(0, maxSize);
+                }
+              }
+
+              return rest;
+            }),
+            status: t.status,
+            titlePath: [spec.file],
+          }));
+
+          testCases.push(...flatSpecs);
+        }
+      }
+    }
+
+    return testCases;
   },
 };

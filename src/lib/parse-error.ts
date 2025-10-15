@@ -63,7 +63,7 @@ export function parseStackTrace(error: ErrorInput): ParsedError {
   parsedError.message = message;
   parsedError.callLog = callLog;
 
-  if (error) {
+  if (error.stack) {
     const lines = error.stack.trim().split("\n");
 
     lines.forEach((line, index) => {

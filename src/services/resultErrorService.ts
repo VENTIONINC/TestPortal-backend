@@ -1,21 +1,12 @@
 import { resultErrorModel } from "@/models/resultErrorModel";
 import { runReview } from "@/lib/error-analyzer";
 import type { PrismaResultError, ResultErrorWithRelations } from "@/types";
-import type { Prisma } from "@prisma/client";
 
-type ResultErrorWithAssumptions = Prisma.ResultErrorGetPayload<{
-  include: {
-    assumptions: {
-      include: {
-        issue: true;
-      };
-    };
-  };
-}>;
+type ResultErrorWithAssumptions = Omit<ResultErrorWithRelations, "result">;
 
 interface BulkReviewResult {
   successful: (ResultErrorWithRelations | null)[];
-  failed: Array<{ id: number; reason: string }>;
+  failed: Array<{ id: string; reason: string }>;
   totalProcessed: number;
   successCount: number;
   failureCount: number;
@@ -23,8 +14,8 @@ interface BulkReviewResult {
 
 export const resultErrorService = {
   async assignIssue(
-    resultErrorId: number | string,
-    assumptionId: number | string,
+    resultErrorId: string,
+    assumptionId: string,
   ): Promise<ResultErrorWithAssumptions> {
     // Input validation
     if (!resultErrorId) {
@@ -33,18 +24,6 @@ export const resultErrorService = {
 
     if (!assumptionId) {
       throw new Error("Assumption ID is required");
-    }
-
-    // Validate ID formats
-    const numericResultErrorId = Number(resultErrorId);
-    const numericAssumptionId = Number(assumptionId);
-
-    if (isNaN(numericResultErrorId) || numericResultErrorId <= 0) {
-      throw new Error("Result error ID must be a valid positive number");
-    }
-
-    if (isNaN(numericAssumptionId) || numericAssumptionId <= 0) {
-      throw new Error("Assumption ID must be a valid positive number");
     }
 
     // Business logic - assign the issue
@@ -61,17 +40,11 @@ export const resultErrorService = {
   },
 
   async reviewError(
-    resultErrorId: number | string,
+    resultErrorId: string,
   ): Promise<ResultErrorWithRelations | null> {
     // Input validation
     if (!resultErrorId) {
       throw new Error("Result error ID is required");
-    }
-
-    // Validate ID format
-    const numericId = Number(resultErrorId);
-    if (isNaN(numericId) || numericId <= 0) {
-      throw new Error("Result error ID must be a valid positive number");
     }
 
     // Business logic - get the error and run review
@@ -89,7 +62,7 @@ export const resultErrorService = {
       };
 
       const reviewedRecord = await runReview(targetResultError);
-      return reviewedRecord as ResultErrorWithRelations | null;
+      return reviewedRecord;
     } catch (error) {
       const err = error as Error;
       throw new Error(
@@ -108,20 +81,12 @@ export const resultErrorService = {
       throw new Error("At least one error ID must be provided");
     }
 
-    // Validate all IDs
-    const validatedIds = errorIds.map((id) => {
-      const numericId = Number(id);
-      if (isNaN(numericId) || numericId <= 0) {
-        throw new Error(
-          `Invalid error ID: ${id}. All IDs must be valid positive numbers`,
-        );
-      }
-      return numericId;
-    });
+    // Convert all IDs to strings (UUID format)
+    const validatedIds = errorIds.map((id) => String(id));
 
     // Business logic - process bulk review
     const reviewResults: (ResultErrorWithRelations | null)[] = [];
-    const failedIds: Array<{ id: number; reason: string }> = [];
+    const failedIds: Array<{ id: string; reason: string }> = [];
 
     try {
       for (const errorId of validatedIds) {
@@ -140,7 +105,7 @@ export const resultErrorService = {
           };
 
           const reviewedRecord = await runReview(targetResultError);
-          reviewResults.push(reviewedRecord as ResultErrorWithRelations | null);
+          reviewResults.push(reviewedRecord);
         } catch (error) {
           const err = error as Error;
           failedIds.push({ id: errorId, reason: err.message });
@@ -161,16 +126,10 @@ export const resultErrorService = {
   },
 
   async getResultErrorById(
-    resultErrorId: number | string,
+    resultErrorId: string,
   ): Promise<PrismaResultError> {
     if (!resultErrorId) {
       throw new Error("Result error ID is required");
-    }
-
-    // Validate ID format
-    const numericId = Number(resultErrorId);
-    if (isNaN(numericId) || numericId <= 0) {
-      throw new Error("Result error ID must be a valid positive number");
     }
 
     const resultError = await resultErrorModel.findById(resultErrorId);

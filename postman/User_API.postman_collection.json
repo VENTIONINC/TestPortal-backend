@@ -1,0 +1,823 @@
+{
+  "info": {
+    "name": "User API with Refresh Tokens",
+    "description": "Complete user management API with signup, login, refresh tokens, and secure password handling using Argon2. Includes automatic token management and comprehensive test scenarios.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [],
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{accessToken}}",
+        "type": "string"
+      }
+    ]
+  },
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "// Auto-refresh token if access token is expired",
+          "const accessToken = pm.environment.get('accessToken');",
+          "const refreshToken = pm.environment.get('refreshToken');",
+          "",
+          "if (refreshToken && accessToken) {",
+          "    // Check if access token is about to expire (decode JWT)",
+          "    try {",
+          "        const tokenPayload = JSON.parse(atob(accessToken.split('.')[1]));",
+          "        const currentTime = Math.floor(Date.now() / 1000);",
+          "        const timeUntilExpiry = tokenPayload.exp - currentTime;",
+          "        ",
+          "        // Refresh if token expires in less than 1 minute",
+          "        if (timeUntilExpiry < 60) {",
+          "            console.log('Access token expiring soon, attempting refresh...');",
+          "            ",
+          "            const refreshRequest = {",
+          "                url: pm.environment.get('baseUrl') + '/users/refresh-token',",
+          "                method: 'POST',",
+          "                header: {",
+          "                    'Content-Type': 'application/json'",
+          "                },",
+          "                body: {",
+          "                    mode: 'raw',",
+          "                    raw: JSON.stringify({",
+          "                        refreshToken: refreshToken",
+          "                    })",
+          "                }",
+          "            };",
+          "            ",
+          "            pm.sendRequest(refreshRequest, (err, res) => {",
+          "                if (!err && res.code === 200) {",
+          "                    const responseJson = res.json();",
+          "                    pm.environment.set('accessToken', responseJson.accessToken);",
+          "                    pm.environment.set('refreshToken', responseJson.refreshToken);",
+          "                    console.log('Token refreshed successfully');",
+          "                } else {",
+          "                    console.log('Token refresh failed, clearing tokens');",
+          "                    pm.environment.set('accessToken', '');",
+          "                    pm.environment.set('refreshToken', '');",
+          "                }",
+          "            });",
+          "        }",
+          "    } catch (e) {",
+          "        console.log('Error parsing access token:', e);",
+          "    }",
+          "}"
+        ]
+      }
+    }
+  ],
+  "item": [
+    {
+      "name": "🔐 Authentication",
+      "item": [
+        {
+          "name": "✅ User Signup",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}{{V_2}}/users/signup",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "{{V_2}}",
+                "users",
+                "signup"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"John Doe\",\n  \"email\": \"{{testEmail}}\",\n  \"password\": \"{{testPassword}}\"\n}"
+            }
+          }
+        },
+        {
+          "name": "✅ User Login (Get Tokens)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}{{V_2}}/users/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "{{V_2}}",
+                "users",
+                "login"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{testEmail}}\",\n  \"password\": \"{{testPassword}}\"\n}"
+            }
+          }
+        },
+        {
+          "name": "✅ Refresh Tokens",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}{{V_2}}/users/refresh-token",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "{{V_2}}",
+                "users",
+                "refresh-token"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"refreshToken\": \"{{refreshToken}}\"\n}"
+            }
+          }
+        },
+        {
+          "name": "❌ Login with Wrong Password",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}{{V_2}}/users/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "{{V_2}}",
+                "users",
+                "login"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{testEmail}}\",\n  \"password\": \"WrongPassword123!\"\n}"
+            }
+          }
+        },
+        {
+          "name": "❌ Refresh with Invalid Token",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}{{V_2}}/users/refresh-token",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "{{V_2}}",
+                "users",
+                "refresh-token"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"refreshToken\": \"invalid-token\"\n}"
+            }
+          }
+        },
+        {
+          "name": "❌ Refresh without Token",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}{{V_2}}/users/refresh-token",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "{{V_2}}",
+                "users",
+                "refresh-token"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{}"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "👤 Protected User Operations",
+      "item": [
+        {
+          "name": "✅ Get User by ID (With Auth)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}{{V_2}}/users/{{userId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "{{V_2}}",
+                "users",
+                "{{userId}}"
+              ]
+            }
+          }
+        },
+        {
+          "name": "✅ Update User Name (With Auth)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}{{V_2}}/users/{{userId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "{{V_2}}",
+                "users",
+                "{{userId}}"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"John Smith\"\n}"
+            }
+          }
+        },
+        {
+          "name": "✅ Update User Password (With Auth)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}{{V_2}}/users/{{userId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "{{V_2}}",
+                "users",
+                "{{userId}}"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"password\": \"NewSecurePassword456!\"\n}"
+            }
+          }
+        },
+        {
+          "name": "❌ Get User Without Auth",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}{{V_2}}/users/{{userId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "{{V_2}}",
+                "users",
+                "{{userId}}"
+              ]
+            }
+          }
+        },
+        {
+          "name": "❌ Update User Without Auth",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}{{V_2}}/users/{{userId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "{{V_2}}",
+                "users",
+                "{{userId}}"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Unauthorized Update\"\n}"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "🧪 Token Lifecycle Tests",
+      "item": [
+        {
+          "name": "✅ Token Rotation Test",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// Store current tokens for comparison",
+                  "pm.environment.set('oldAccessToken', pm.environment.get('accessToken'));",
+                  "pm.environment.set('oldRefreshToken', pm.environment.get('refreshToken'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}{{V_2}}/users/refresh-token",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "{{V_2}}",
+                "users",
+                "refresh-token"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"refreshToken\": \"{{refreshToken}}\"\n}"
+            }
+          }
+        },
+        {
+          "name": "✅ Use New Access Token",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}{{V_2}}/users/{{userId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "{{V_2}}",
+                "users",
+                "{{userId}}"
+              ]
+            }
+          }
+        },
+        {
+          "name": "❌ Old Access Token Should Fail",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{oldAccessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}{{V_2}}/users/{{userId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "{{V_2}}",
+                "users",
+                "{{userId}}"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "❌ Error Test Cases",
+      "item": [
+        {
+          "name": "❌ Signup with Duplicate Email",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}{{V_2}}/users/signup",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "{{V_2}}",
+                "users",
+                "signup"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Jane Doe\",\n  \"email\": \"{{testEmail}}\",\n  \"password\": \"AnotherPassword123!\"\n}"
+            }
+          }
+        },
+        {
+          "name": "❌ Signup with Weak Password",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}{{V_2}}/users/signup",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "{{V_2}}",
+                "users",
+                "signup"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Weak Password User\",\n  \"email\": \"weak@example.com\",\n  \"password\": \"123\"\n}"
+            }
+          }
+        },
+        {
+          "name": "❌ Update with Invalid Email",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}{{V_2}}/users/{{userId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "{{V_2}}",
+                "users",
+                "{{userId}}"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"invalid-email-format\"\n}"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "🔑 MCP Token Management",
+      "item": [
+        {
+          "name": "✅ Generate MCP Token",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// Auto-save MCP token on successful generation",
+                  "pm.test('Status code is 201', function () {",
+                  "    pm.response.to.have.status(201);",
+                  "});",
+                  "",
+                  "pm.test('Response contains MCP token', function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('token');",
+                  "    pm.expect(jsonData).to.have.property('expiresAt');",
+                  "    pm.expect(jsonData).to.have.property('message');",
+                  "    ",
+                  "    // Save the MCP token to environment",
+                  "    pm.environment.set('mcpToken', jsonData.token);",
+                  "    console.log('MCP token saved to environment');",
+                  "});",
+                  "",
+                  "pm.test('Token format is valid', function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.token).to.match(/^mcp_\\d+_\\d+_[a-f0-9]+\\.[a-f0-9]+$/);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/{{V_2}}/users/{{userId}}/mcp-token",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "{{V_2}}",
+                "users",
+                "{{userId}}",
+                "mcp-token"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": ""
+            }
+          }
+        },
+        {
+          "name": "✅ Revoke MCP Token",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code is 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Response contains success message', function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('message');",
+                  "    ",
+                  "    // Clear the MCP token from environment",
+                  "    pm.environment.set('mcpToken', '');",
+                  "    console.log('MCP token cleared from environment');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/{{V_2}}/users/{{userId}}/mcp-token",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "{{V_2}}",
+                "users",
+                "{{userId}}",
+                "mcp-token"
+              ]
+            }
+          }
+        },
+        {
+          "name": "❌ Generate MCP Token Without Auth",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/{{V_2}}/users/{{userId}}/mcp-token",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "{{V_2}}",
+                "users",
+                "{{userId}}",
+                "mcp-token"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": ""
+            }
+          }
+        },
+        {
+          "name": "❌ Revoke MCP Token Without Auth",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/{{V_2}}/users/{{userId}}/mcp-token",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "{{V_2}}",
+                "users",
+                "{{userId}}",
+                "mcp-token"
+              ]
+            }
+          }
+        },
+        {
+          "name": "❌ Generate MCP Token for Another User",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/{{V_2}}/users/999/mcp-token",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "{{V_2}}",
+                "users",
+                "999",
+                "mcp-token"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": ""
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "🧹 Cleanup",
+      "item": [
+        {
+          "name": "Clear Tokens",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}{{V_1}}/status",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "{{V_1}}",
+                "status"
+              ]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

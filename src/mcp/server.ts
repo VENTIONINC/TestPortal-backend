@@ -1,16 +1,24 @@
 import { Router, Request, Response } from "express";
 import { randomUUID } from "node:crypto";
-import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
+import {
+  McpServer,
+  RegisteredTool,
+} from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/streamableHttp.js";
 import { isInitializeRequest } from "@modelcontextprotocol/sdk/types.js";
+import { authenticateMcpToken } from "@/mcp/middleware/auth";
 import { statusCheck } from "@/mcp/tools/status-check";
+import { currentTime } from "@/mcp/tools/current-time";
 import {
   getIssues,
   getIssueById,
   createIssue,
-  getMockIssues,
 } from "@/mcp/tools/issues";
-import { getResults, getResultById } from "@/mcp/tools/results";
+import {
+  getResults,
+  getResultById,
+  getResultsStats,
+} from "@/mcp/tools/results";
 import {
   createAssumption,
   updateAssumption,
@@ -24,6 +32,10 @@ import {
   getResultErrorById,
 } from "@/mcp/tools/result-errors";
 import { getSpecById } from "@/mcp/tools/specs";
+import * as testPortalAssistant from "@/mcp/prompts/test-portal-assistant";
+import * as issueAnalysisAssistant from "@/mcp/prompts/issue-analysis-assistant";
+import * as environmentPerformanceAssistant from "@/mcp/prompts/environment-performance-assistant";
+import * as developerCodeAssistant from "@/mcp/prompts/developer-code-assistant";
 
 const router = Router();
 
@@ -33,86 +45,177 @@ interface TransportStorage {
 }
 
 // Extended MCP server interface to handle tool registration
-interface McpServerWithTools {
-  tool: (...args: unknown[]) => void;
+interface McpServerWithTools extends McpServer {
+  tool: (...args: unknown[]) => RegisteredTool;
   connect: (transport: unknown) => Promise<void>;
 }
 
 const transports: TransportStorage = {};
 
-router.post("/mcp", async (req: Request, res: Response): Promise<void> => {
-  const sessionId = req.headers["mcp-session-id"] as string | undefined;
-  let transport: StreamableHTTPServerTransport;
+router.post(
+  "/v1/mcp",
+  authenticateMcpToken,
+  async (req: Request, res: Response): Promise<void> => {
+    try {
+      const sessionId = req.headers["mcp-session-id"] as string | undefined;
+      let transport: StreamableHTTPServerTransport;
 
-  if (sessionId && transports[sessionId]) {
-    transport = transports[sessionId];
-    await transport.handleRequest(req, res, req.body);
-    return;
-  }
-
-  if (!sessionId && isInitializeRequest(req.body)) {
-    transport = new StreamableHTTPServerTransport({
-      sessionIdGenerator: () => randomUUID(),
-      onsessioninitialized: (sessionId: string) => {
-        transports[sessionId] = transport;
-      },
-    });
-
-    transport.onclose = () => {
-      if (transport.sessionId) {
-        delete transports[transport.sessionId];
+      if (sessionId && transports[sessionId]) {
+        transport = transports[sessionId];
+        await transport.handleRequest(req, res, req.body);
+        return;
       }
-    };
 
-    const server = new McpServer({
-      name: "test-portal-server",
-      version: "0.0.1",
-    }) as unknown as McpServerWithTools;
+      if (!sessionId && isInitializeRequest(req.body)) {
+        transport = new StreamableHTTPServerTransport({
+          sessionIdGenerator: () => randomUUID(),
+          onsessioninitialized: (sessionId: string) => {
+            transports[sessionId] = transport;
+          },
+        });
 
-    // Register all tools
-    server.tool(...statusCheck);
+        transport.onclose = () => {
+          console.error(
+            `MCP transport closed for session: ${transport.sessionId}`,
+          );
+          if (transport.sessionId) {
+            delete transports[transport.sessionId];
+          }
+        };
 
-    // Issue tools
-    server.tool(...getIssues);
-    server.tool(...getIssueById);
-    server.tool(...createIssue);
-    server.tool(...getMockIssues);
+        const server = new McpServer({
+          name: "test-portal-server",
+          version: "0.0.1",
+        }) as McpServerWithTools;
 
-    // Result tools
-    server.tool(...getResults);
-    server.tool(...getResultById);
+        // Register all tools
+        server.tool(...statusCheck);
+        server.tool(...currentTime);
 
-    // Assumption tools
-    server.tool(...createAssumption);
-    server.tool(...updateAssumption);
-    server.tool(...getAssumptionById);
+        // Issue tools
+        server.tool(...getIssues);
+        server.tool(...getIssueById);
+        server.tool(...createIssue);
 
-    // Execution tools
-    server.tool(...getExecutionById);
+        // Result tools
+        server.tool(...getResults);
+        server.tool(...getResultById);
+        server.tool(...getResultsStats);
 
-    // Result Error tools
-    server.tool(...assignIssue);
-    server.tool(...reviewError);
-    server.tool(...bulkReview);
-    server.tool(...getResultErrorById);
+        // Assumption tools
+        server.tool(...createAssumption);
+        server.tool(...updateAssumption);
+        server.tool(...getAssumptionById);
 
-    // Spec tools
-    server.tool(...getSpecById);
+        // Execution tools
+        server.tool(...getExecutionById);
 
-    await server.connect(transport);
-    await transport.handleRequest(req, res, req.body);
-    return;
-  }
+        // Result Error tools
+        server.tool(...assignIssue);
+        server.tool(...reviewError);
+        server.tool(...bulkReview);
+        server.tool(...getResultErrorById);
 
-  res.status(400).json({
-    jsonrpc: "2.0",
-    error: {
-      code: -32000,
-      message: "Bad Request: No valid session ID provided",
-    },
-    id: null,
-  });
-});
+        // Spec tools
+        server.tool(...getSpecById);
+
+        // Test Portal Assistant
+        server.registerPrompt(
+          testPortalAssistant.testPortalAssistantName,
+          testPortalAssistant.testPortalAssistantParameters,
+          ({
+            time_period = "today",
+            report_type = "summary",
+            project_system = "jira",
+          }) =>
+            testPortalAssistant.testPortalAssistantPrompt({
+              time_period,
+              report_type,
+              project_system,
+            }),
+        );
+
+        // Issue Analysis Assistant
+        server.registerPrompt(
+          issueAnalysisAssistant.issueAnalysisAssistantName,
+          issueAnalysisAssistant.issueAnalysisAssistantParameters,
+          ({
+            analysis_scope = "recent executions",
+            error_context = "",
+            target_system = "",
+          }) =>
+            issueAnalysisAssistant.issueAnalysisAssistantPrompt({
+              analysis_scope,
+              error_context,
+              target_system,
+            }),
+        );
+
+        // Environment & Performance Assistant
+        server.registerPrompt(
+          environmentPerformanceAssistant.environmentPerformanceAssistantName,
+          environmentPerformanceAssistant.environmentPerformanceAssistantParameters,
+          ({
+            environment_scope = "all environments",
+            performance_metric = "",
+            time_range = "",
+          }) =>
+            environmentPerformanceAssistant.environmentPerformanceAssistantPrompt(
+              {
+                environment_scope,
+                performance_metric,
+                time_range,
+              },
+            ),
+        );
+
+        // Developer Code Assistant
+        server.registerPrompt(
+          developerCodeAssistant.developerCodeAssistantName,
+          developerCodeAssistant.developerCodeAssistantParameters,
+          ({
+            result_id = "",
+            error_id = "",
+            context_scope = "",
+          }) =>
+            developerCodeAssistant.developerCodeAssistantPrompt({
+              result_id,
+              error_id,
+              context_scope,
+            }),
+        );
+
+        try {
+          await server.connect(transport);
+          await transport.handleRequest(req, res, req.body);
+        } catch (error) {
+          console.error("MCP server connection error:", error);
+          throw error;
+        }
+        return;
+      }
+
+      res.status(400).json({
+        jsonrpc: "2.0",
+        error: {
+          code: -32000,
+          message: "Bad Request: No valid session ID provided",
+        },
+        id: null,
+      });
+    } catch (error) {
+      console.error("MCP server handler error:", error);
+      res.status(500).json({
+        jsonrpc: "2.0",
+        error: {
+          code: -32603,
+          message: "Internal error",
+        },
+        id: null,
+      });
+    }
+  },
+);
 
 const handleSessionRequest = async (
   req: Request,
@@ -128,7 +231,7 @@ const handleSessionRequest = async (
   await transport.handleRequest(req, res);
 };
 
-router.get("/mcp", handleSessionRequest);
-router.delete("/mcp", handleSessionRequest);
+router.get("/v1/mcp", authenticateMcpToken, handleSessionRequest);
+router.delete("/v1/mcp", authenticateMcpToken, handleSessionRequest);
 
 export default router;

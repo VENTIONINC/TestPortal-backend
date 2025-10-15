@@ -68,8 +68,25 @@ export default [
     },
   },
 
+  // Override for configuration files that aren't part of the TS project
+  {
+    files: ["jest.config.ts"],
+    languageOptions: {
+      parserOptions: {
+        project: null,
+      },
+    },
+  },
+
   // Global ignores
   {
-    ignores: ["dist/**", "node_modules/**", "backup-js-files/**", "*.d.ts"],
+    ignores: [
+      "dist/**",
+      "node_modules/**",
+      "backup-js-files/**",
+      "__mocks__/**",
+      "*.d.ts",
+      "jest.config.ts",
+    ],
   },
 ];

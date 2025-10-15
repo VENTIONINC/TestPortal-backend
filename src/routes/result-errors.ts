@@ -1,19 +1,23 @@
 import { Router } from "express";
 import { resultErrorController } from "@/controllers/resultErrorController";
+import { authMiddleware } from "@/middleware/authMiddleware";
 
 const router = Router();
 
 router.patch(
-  "/result-errors/:resultErrorId/assign-issue",
+  "/v1/result-errors/:resultErrorId/assign-issue",
+  authMiddleware,
   resultErrorController.assignIssue,
 );
 router.patch(
-  "/result-errors/:resultErrorId/review",
+  "/v1/result-errors/:resultErrorId/review",
+  authMiddleware,
   resultErrorController.reviewError,
 );
-router.patch("/result-errors/bulk-review", resultErrorController.bulkReview);
+router.patch("/v1/result-errors/bulk-review", authMiddleware, resultErrorController.bulkReview);
 router.get(
-  "/result-errors/:resultErrorId",
+  "/v1/result-errors/:resultErrorId",
+  authMiddleware,
   resultErrorController.getResultErrorById,
 );
 

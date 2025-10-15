@@ -2,7 +2,7 @@ import { Request, Response } from "express";
 import { resultErrorService } from "@/services/resultErrorService";
 
 interface AssignIssueRequest {
-  assumptionId: number | string;
+  assumptionId: string; // UUID
 }
 
 interface BulkReviewRequest {

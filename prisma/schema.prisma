@@ -10,8 +10,30 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+model Project {
+  id          String   @id @default(uuid()) @db.Uuid
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  name        String   @unique
+  description String?
+  isActive    Boolean  @default(true)
+
+  // Simple ownership
+  owner   User   @relation(fields: [ownerId], references: [id])
+  ownerId String @db.Uuid
+
+  // Relationships
+  executions    Execution[]
+  specs         Spec[]
+  issues        Issue[]
+  uploadApiKeys UploadApiKey[]
+
+  @@index([name])
+  @@index([ownerId])
+}
+
 model Execution {
-  id          Int      @id @default(autoincrement())
+  id          String   @id @default(uuid()) @db.Uuid
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
   type        String
@@ -19,39 +41,65 @@ model Execution {
   environment String
   version     String // playwright version
   startedAt   DateTime
-  results     Result[]
+  provider    String   @default("Playwright")
+
+  // Project relationship
+  project   Project @relation(fields: [projectId], references: [id])
+  projectId String  @db.Uuid
+
+  results Result[]
+
+  @@index([projectId])
+  @@index([projectId, environment])
+  @@index([projectId, type])
+  @@index([projectId, startedAt])
 }
 
 model Spec {
-  id          Int      @id @default(autoincrement())
+  id          String   @id @default(uuid()) @db.Uuid
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
-  key         String   @unique // e.g. TestRail Id
+  key         String // e.g. TestRail Id
   file        String
   title       String
   tags        String
   annotations String?
-  results     Result[]
+
+  // Project relationship
+  project   Project @relation(fields: [projectId], references: [id])
+  projectId String  @db.Uuid
+
+  results Result[]
+
+  // Unique key per project
+  @@unique([projectId, key])
+  @@index([projectId])
+  @@index([projectId, file])
+  @@index([projectId, title])
 }
 
 model Result {
-  id          Int           @id @default(autoincrement())
-  createdAt   DateTime      @default(now())
-  updatedAt   DateTime      @updatedAt
-  allureLink  String?
-  retry       Int
-  status      String
-  duration    Int
-  startTime   DateTime
-  errors      ResultError[]
-  spec        Spec          @relation(fields: [specId], references: [id])
-  specId      Int
-  execution   Execution     @relation(fields: [executionId], references: [id])
-  executionId Int
+  id                 String        @id @default(uuid()) @db.Uuid
+  createdAt          DateTime      @default(now())
+  updatedAt          DateTime      @updatedAt
+  reportPortalLink   String?
+  retry              Int
+  status             String
+  duration           Int
+  startTime          DateTime
+  errors             ResultError[]
+  spec               Spec          @relation(fields: [specId], references: [id])
+  specId             String        @db.Uuid
+  execution          Execution     @relation(fields: [executionId], references: [id])
+  executionId        String        @db.Uuid
+  analysisStatus     String? // "passed" | "failed"
+  analysisCategory   String? // "bug" | "infra" | "performance" | "script" | "other"
+  analysisConfidence Float? // 0.0 to 1.0
+  analysisConclusion String? // Brief explanation for the categorization decision
 }
 
 model ResultError {
-  id              Int          @id @default(autoincrement())
+  id              String       @id @default(uuid()) @db.Uuid
   createdAt       DateTime     @default(now())
   updatedAt       DateTime     @updatedAt
   type            String
@@ -63,32 +111,86 @@ model ResultError {
   receivedString  String?
   location        String
   result          Result?      @relation(fields: [resultId], references: [id])
-  resultId        Int?
+  resultId        String?      @db.Uuid
   assumptions     Assumption[]
 }
 
 model Assumption {
-  id            Int          @id @default(autoincrement())
+  id            String       @id @default(uuid()) @db.Uuid
   createdAt     DateTime     @default(now())
   updatedAt     DateTime     @updatedAt
   isConfirmed   Boolean
   score         Float
   madeBy        String
   issue         Issue        @relation(fields: [issueId], references: [id])
-  issueId       Int
+  issueId       String       @db.Uuid
   resultError   ResultError? @relation(fields: [resultErrorId], references: [id])
-  resultErrorId Int?
+  resultErrorId String?      @db.Uuid
+}
+
+model User {
+  id                      String   @id @default(uuid()) @db.Uuid
+  createdAt               DateTime @default(now())
+  updatedAt               DateTime @updatedAt
+  name                    String
+  email                   String   @unique
+  passwordHash            String?
+  cognitoUserId           String?  @unique
+  mcpToken                String?  @unique
+  reportPortalUrl         String?
+  reportPortalEnabled     Boolean  @default(false)
+  monitoringPortalUrl     String?
+  monitoringPortalEnabled Boolean  @default(false)
+
+  // Project relationships
+  projects      Project[]
+  issuesCreated Issue[]        @relation("IssuesCreated")
+  issuesUpdated Issue[]        @relation("IssuesUpdated")
+  uploadApiKeys UploadApiKey[]
 }
 
 model Issue {
-  id          Int          @id @default(autoincrement())
-  createdAt   DateTime     @default(now())
-  updatedAt   DateTime     @updatedAt
+  id          String   @id @default(uuid()) @db.Uuid
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
   name        String
   category    String
   description String?
   portal      String?
   service     String?
   ticket      String?
+
+  // Project relationship
+  project   Project @relation(fields: [projectId], references: [id])
+  projectId String  @db.Uuid
+
+  createdBy   User?   @relation("IssuesCreated", fields: [createdById], references: [id])
+  createdById String? @db.Uuid
+  updatedBy   User?   @relation("IssuesUpdated", fields: [updatedById], references: [id])
+  updatedById String? @db.Uuid
   assumptions Assumption[]
+
+  @@index([projectId])
+  @@index([projectId, category])
+  @@index([projectId, createdAt])
+}
+
+model UploadApiKey {
+  id        String   @id @default(uuid()) @db.Uuid
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  apiKey    String   @unique
+  isActive  Boolean  @default(true)
+
+  // Project relationship
+  project   Project @relation(fields: [projectId], references: [id])
+  projectId String  @db.Uuid
+
+  // Owner relationship
+  owner   User   @relation(fields: [ownerId], references: [id])
+  ownerId String @db.Uuid
+
+  @@index([projectId])
+  @@index([ownerId])
+  @@index([apiKey])
 }

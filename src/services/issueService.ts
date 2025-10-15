@@ -1,18 +1,62 @@
 import { issueModel } from "@/models/issueModel";
-import type { PrismaIssue } from "@/types";
-
-const sleep = (ms: number): Promise<void> =>
-  new Promise((resolve) => setTimeout(resolve, ms));
+import type {
+  PrismaIssue,
+  PrismaUser,
+  PrismaIssueWithUsers,
+  SerializedUser,
+  SerializedIssue,
+  SerializedIssuesResponse,
+} from "@/types";
+import { dbClient } from "@/prisma/client";
+import { IssueCategory } from "@/types/enums";
+import { Prisma } from "@prisma/client";
 
 interface GetAllIssuesParams {
-  category?: string;
+  category?: IssueCategory;
   name?: string;
   page?: number;
   limit?: number;
+  statFrom?: string; // ISO date string
+  statTo?: string; // ISO date string
 }
 
 interface GetAllIssuesResponse {
   issues: PrismaIssue[];
+  total: number;
+  page: number;
+  totalPages: number;
+}
+
+interface TimeDistribution {
+  date: string; // ISO date string YYYY-MM-DD
+  count: number;
+}
+
+interface IssueStatistics {
+  occurrenceCount: number;
+  firstOccurrence: Date | null;
+  lastOccurrence: Date | null;
+  impactedTestsCount: number;
+  timeDistribution: TimeDistribution[];
+}
+
+interface IssueWithStatistics extends PrismaIssue {
+  statistics: IssueStatistics;
+}
+
+interface GetAllIssuesWithStatsResponse {
+  issues: IssueWithStatistics[];
+  total: number;
+  page: number;
+  totalPages: number;
+}
+
+interface SerializedIssueWithStatistics extends SerializedIssue {
+  statistics: IssueStatistics;
+}
+
+interface GetAllIssuesWithStatsV2Response {
+  issues: SerializedIssueWithStatistics[];
   total: number;
   page: number;
   totalPages: number;
@@ -25,6 +69,9 @@ interface CreateIssueParams {
   portal?: string;
   service?: string;
   ticket?: string;
+  projectId: string;
+  createdById?: string;
+  updatedById?: string;
 }
 
 interface UpdateIssueParams {
@@ -34,6 +81,7 @@ interface UpdateIssueParams {
   portal?: string;
   service?: string;
   ticket?: string;
+  updatedById?: string;
 }
 
 export const issueService = {
@@ -53,7 +101,29 @@ export const issueService = {
     };
   },
 
-  async getIssueById(issueId: number): Promise<PrismaIssue> {
+  // V2 method with serialized response
+  async getAllIssuesV2(
+    params: GetAllIssuesParams,
+  ): Promise<SerializedIssuesResponse> {
+    const { category, name, page = 1, limit = 30 } = params;
+
+    const issues = await issueModel.findManyWithUsers(
+      category,
+      name,
+      page,
+      limit,
+    );
+    const totalIssues = await issueModel.count(category, name);
+
+    return {
+      issues: issues.map(serializeIssue),
+      total: totalIssues,
+      page: Number(page),
+      totalPages: Math.ceil(totalIssues / limit),
+    };
+  },
+
+  async getIssueById(issueId: string): Promise<PrismaIssue> {
     if (!issueId) {
       throw new Error("Issue ID is required");
     }
@@ -67,6 +137,21 @@ export const issueService = {
     return issueRecords;
   },
 
+  // V2 method with serialized response
+  async getIssueByIdV2(issueId: string): Promise<SerializedIssue> {
+    if (!issueId) {
+      throw new Error("Issue ID is required");
+    }
+
+    const issueRecords = await issueModel.findByIdWithUsers(issueId);
+
+    if (!issueRecords) {
+      throw new Error(`Issue with ID ${issueId} not found`);
+    }
+
+    return serializeIssue(issueRecords);
+  },
+
   async createIssue(issueParams: CreateIssueParams): Promise<PrismaIssue> {
     if (!issueParams?.name) {
       throw new Error("Unable to create issue without name");
@@ -77,14 +162,22 @@ export const issueService = {
   },
 
   async updateIssue(
-    issueId: number,
+    issueId: string,
     updateData: UpdateIssueParams,
   ): Promise<PrismaIssue> {
     if (!issueId) {
       throw new Error("Issue ID is required");
     }
 
-    const { name, category, description, portal, service, ticket } = updateData;
+    const {
+      name,
+      category,
+      description,
+      portal,
+      service,
+      ticket,
+      updatedById,
+    } = updateData;
 
     const cleanUpdateData: Partial<CreateIssueParams> = {};
     if (name) cleanUpdateData.name = name;
@@ -93,40 +186,220 @@ export const issueService = {
     if (portal !== undefined) cleanUpdateData.portal = portal;
     if (service !== undefined) cleanUpdateData.service = service;
     if (ticket !== undefined) cleanUpdateData.ticket = ticket;
+    if (updatedById !== undefined) cleanUpdateData.updatedById = updatedById;
 
     const updatedIssue = await issueModel.update(issueId, cleanUpdateData);
     return updatedIssue;
   },
 
-  // Mock service for testing
-  async getMockIssues(): Promise<PrismaIssue[]> {
-    const mockIssues: PrismaIssue[] = [
-      {
-        id: 1,
-        createdAt: new Date("2024-01-15T10:30:00Z"),
-        updatedAt: new Date("2024-01-15T10:30:00Z"),
-        name: "Login Authentication Failure",
-        category: "authentication",
-        description:
-          "Users are experiencing intermittent login failures when using multi-factor authentication",
-        portal: "user-portal",
-        service: "auth-service",
-        ticket: "TICKET-12345",
-      },
-      {
-        id: 2,
-        createdAt: new Date("2024-01-16T14:20:00Z"),
-        updatedAt: new Date("2024-01-16T15:45:00Z"),
-        name: "Payment Processing Timeout",
-        category: "payment",
-        description: "Payment transactions are timing out during peak hours",
-        portal: "checkout-portal",
-        service: "payment-service",
-        ticket: "TICKET-12346",
-      },
-    ];
+  async deleteIssue(issueId: string): Promise<PrismaIssue> {
+    if (!issueId) {
+      throw new Error("Issue ID is required");
+    }
 
-    await sleep(1000);
-    return mockIssues;
+    try {
+      const deletedIssue = await issueModel.delete(issueId);
+      return deletedIssue;
+    } catch (error) {
+      const err = error as Error;
+      throw new Error(`Failed to delete issue: ${err.message}`);
+    }
+  },
+
+  async getAllIssuesWithStats(
+    params: GetAllIssuesParams,
+  ): Promise<GetAllIssuesWithStatsResponse> {
+    const { category, name, page = 1, limit = 10, statFrom, statTo } = params;
+
+    const issues = await issueModel.findMany(category, name, page, limit);
+    const totalIssues = await issueModel.count(category, name);
+
+    // Get statistics for each issue
+    const issuesWithStats = await Promise.all(
+      issues.map(async (issue) => {
+        const whereClause: Prisma.ResultWhereInput = {
+          errors: {
+            some: {
+              assumptions: {
+                some: {
+                  issueId: issue.id,
+                },
+              },
+            },
+          },
+        };
+
+        // Add date range filter if provided
+        if (statFrom || statTo) {
+          whereClause.startTime = {};
+          if (statFrom) {
+            whereClause.startTime.gte = new Date(statFrom);
+          }
+          if (statTo) {
+            const toDate = new Date(statTo);
+            toDate.setHours(23, 59, 59, 999); // Include the entire day
+            whereClause.startTime.lte = toDate;
+          }
+        }
+
+        const results = await dbClient.result.findMany({
+          where: whereClause,
+          include: {
+            spec: true,
+          },
+          orderBy: {
+            startTime: "asc",
+          },
+        });
+
+        const uniqueTestIds = new Set(results.map((r) => r.spec.id));
+
+        // Calculate time distribution
+        const timeDistribution = new Map<string, number>();
+
+        results.forEach((result) => {
+          const date = result.startTime.toISOString().split("T")[0] ?? ""; // Get YYYY-MM-DD
+          timeDistribution.set(date, (timeDistribution.get(date) ?? 0) + 1);
+        });
+
+        // Convert to array and sort by date
+        const timeDistributionArray = Array.from(timeDistribution.entries())
+          .map(([date, count]) => ({ date, count }))
+          .sort((a, b) => a.date.localeCompare(b.date));
+
+        return {
+          ...issue,
+          statistics: {
+            occurrenceCount: results.length,
+            firstOccurrence: results[0]?.startTime ?? null,
+            lastOccurrence: results[results.length - 1]?.startTime ?? null,
+            impactedTestsCount: uniqueTestIds.size,
+            timeDistribution: timeDistributionArray,
+          },
+        };
+      }),
+    );
+
+    return {
+      issues: issuesWithStats,
+      total: totalIssues,
+      page: Number(page),
+      totalPages: Math.ceil(totalIssues / limit),
+    };
+  },
+
+  // V2 method with serialized response and statistics
+  async getAllIssuesWithStatsV2(
+    params: GetAllIssuesParams,
+  ): Promise<GetAllIssuesWithStatsV2Response> {
+    const { category, name, page = 1, limit = 10, statFrom, statTo } = params;
+
+    const issues = await issueModel.findManyWithUsers(
+      category,
+      name,
+      page,
+      limit,
+    );
+    const totalIssues = await issueModel.count(category, name);
+
+    // Get statistics for each issue
+    const issuesWithStats = await Promise.all(
+      issues.map(async (issue) => {
+        const whereClause: Prisma.ResultWhereInput = {
+          errors: {
+            some: {
+              assumptions: {
+                some: {
+                  issueId: issue.id,
+                },
+              },
+            },
+          },
+        };
+
+        // Add date range filter if provided
+        if (statFrom || statTo) {
+          whereClause.startTime = {};
+          if (statFrom) {
+            whereClause.startTime.gte = new Date(statFrom);
+          }
+          if (statTo) {
+            const toDate = new Date(statTo);
+            toDate.setHours(23, 59, 59, 999); // Include the entire day
+            whereClause.startTime.lte = toDate;
+          }
+        }
+
+        const results = await dbClient.result.findMany({
+          where: whereClause,
+          include: {
+            spec: true,
+          },
+          orderBy: {
+            startTime: "asc",
+          },
+        });
+
+        const uniqueTestIds = new Set(results.map((r) => r.spec.id));
+
+        // Calculate time distribution
+        const timeDistribution = new Map<string, number>();
+
+        results.forEach((result) => {
+          const date = result.startTime.toISOString().split("T")[0] ?? ""; // Get YYYY-MM-DD
+          timeDistribution.set(date, (timeDistribution.get(date) ?? 0) + 1);
+        });
+
+        // Convert to array and sort by date
+        const timeDistributionArray = Array.from(timeDistribution.entries())
+          .map(([date, count]) => ({ date, count }))
+          .sort((a, b) => a.date.localeCompare(b.date));
+
+        const serialized = serializeIssue(issue);
+
+        return {
+          ...serialized,
+          statistics: {
+            occurrenceCount: results.length,
+            firstOccurrence: results[0]?.startTime ?? null,
+            lastOccurrence: results[results.length - 1]?.startTime ?? null,
+            impactedTestsCount: uniqueTestIds.size,
+            timeDistribution: timeDistributionArray,
+          },
+        };
+      }),
+    );
+
+    return {
+      issues: issuesWithStats,
+      total: totalIssues,
+      page: Number(page),
+      totalPages: Math.ceil(totalIssues / limit),
+    };
   },
 };
+
+function serializeUser(user: PrismaUser): SerializedUser {
+  return {
+    id: user.id,
+    name: user.name,
+    email: user.email,
+    createdAt: user.createdAt,
+  };
+}
+
+function serializeIssue(issue: PrismaIssueWithUsers): SerializedIssue {
+  return {
+    id: issue.id,
+    createdAt: issue.createdAt,
+    updatedAt: issue.updatedAt,
+    name: issue.name,
+    category: issue.category,
+    description: issue.description ?? null,
+    portal: issue.portal ?? null,
+    service: issue.service ?? null,
+    ticket: issue.ticket ?? null,
+    createdBy: issue.createdBy ? serializeUser(issue.createdBy) : null,
+    updatedBy: issue.updatedBy ? serializeUser(issue.updatedBy) : null,
+  };
+}

@@ -112,7 +112,7 @@
     - `tags`: Array of tags associated with the spec.
     - `annotations`: Array of annotations for the spec.
     - `results` (required): An array of result objects for the spec, each containing:
-      - `allureLink`: Link to the Allure report for this result.
+      - `reportPortalLink`: Link to the Report Portal report for this result.
       - `retry`: Retry attempt number.
       - `status`: Status of the test result (e.g., 'passed', 'failed').
       - `duration`: Duration of the test execution.
@@ -202,7 +202,7 @@
 
 ## MCP Routes (`src/mcp/server.js`)
 
-### POST `/api/mcp`
+### POST `/api/v1/mcp`
 
 - **Description:** Main endpoint for MCP (Model Context Protocol) communication. Handles initialization of new MCP sessions and subsequent requests within an existing session.
 - **Headers:**
@@ -217,7 +217,7 @@
   - Manages MCP sessions and tool registration (e.g., `check-status` tool).
   - Uses `StreamableHTTPServerTransport` for handling communication.
 
-### GET `/api/mcp`
+### GET `/api/v1/mcp`
 
 - **Description:** Handles ongoing MCP session requests, typically for streaming or long-polling scenarios after a session is established via POST.
 - **Headers:**
@@ -226,7 +226,7 @@
   - Varies based on the MCP transport and state.
   - `400 Bad Request`: If `mcp-session-id` is missing or invalid.
 
-### DELETE `/api/mcp`
+### DELETE `/api/v1/mcp`
 
 - **Description:** Terminates an active MCP session.
 - **Headers:**

@@ -64,13 +64,23 @@ A comprehensive Node.js Express server for managing test results with TypeScript
 
 6. **Seed the database** (optional, with server running):
 
+   **Option 1: Seed from JSON reports:**
    ```sh
-   node prisma/seed/index.js
+   npm run seed
    ```
+
+   **Option 2: Migrate data from SQLite database:**
+   ```sh
+   npm run seed:migrate
+   ```
+   
+   This will migrate all data from `prisma/dev.db` SQLite file to PostgreSQL, including:
+   - Issues, Executions, Specs, Results, Result Errors, and Assumptions
+   - Automatic sequence counter updates for proper ID generation
 
 7. **Verify installation:** 
    
-   Open `http://localhost:3001/api/results` in your browser
+   Open `http://localhost:3001/api/v1/results` in your browser
 
 ## Development Scripts
 
@@ -80,6 +90,9 @@ npm run dev
 
 # Type checking
 npm run type-check
+
+# Unit tests
+npm test # runs Jest via ts-jest
 
 # Build for production
 npm run build
@@ -130,19 +143,19 @@ src/
 ## API Endpoints
 
 ### Core Resources
-- `GET /api/results` - Get test results with filtering
-- `GET /api/executions` - Get test executions
-- `GET /api/specs` - Get test specifications
-- `GET /api/issues` - Get identified issues
-- `GET /api/assumptions` - Get error assumptions
+- `GET /api/v1/results` - Get test results with filtering
+- `GET /api/v1/executions` - Get test executions
+- `GET /api/v1/specs` - Get test specifications
+- `GET /api/v1/issues` - Get identified issues
+- `GET /api/v1/assumptions` - Get error assumptions
 
 ### Analysis & Reports
-- `POST /api/json-report` - Process test report JSON
-- `POST /api/result-errors/:id/review` - Analyze error patterns
-- `PUT /api/result-errors/:id/assign` - Assign issue to error
+- `POST /api/v1/json-report` - Process test report JSON
+- `POST /api/v1/result-errors/:id/review` - Analyze error patterns
+- `PUT /api/v1/result-errors/:id/assign` - Assign issue to error
 
 ### Status & Health
-- `GET /api/status` - System health check
+- `GET /api/v1/status` - System health check
 
 ## Documentation
 

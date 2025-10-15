@@ -1,24 +1,47 @@
 import getLogger from "@/lib/logger";
 import { dbClient } from "@/prisma/client";
 import { parseStackTrace } from "@/lib/parse-error";
+import {
+  generateFallbackIdentifier,
+  type IdentifierStrategy,
+} from "@/lib/executionIdentifiers";
 import type {
   PrismaExecution,
   PrismaSpec,
   PrismaResult,
   PrismaResultError,
 } from "@/types";
-import type { Prisma } from "@prisma/client";
+import type { TestResultAnalysis } from "@/schemas/testAnalysisSchemas";
+import { DEFAULT_PROJECT_ID } from "@/config/environment";
+
+interface ResultCreateInput {
+  reportPortalLink: string | null;
+  retry: number;
+  status: string;
+  duration: number;
+  startTime: Date;
+  analysisStatus?: string;
+  analysisCategory?: string;
+  analysisConfidence?: number;
+  analysisConclusion?: string;
+  spec: { connect: { id: string } }; // UUID reference to Spec
+  execution: { connect: { id: string } }; // UUID reference to Execution
+  errors?: { connect: { id: string } }; // UUID reference to ResultError
+}
 
 const logger = getLogger("json-report-service");
 
-interface ReportData {
-  runId: string;
-  env: string;
-  version: string;
+export interface ReportData {
+  runId?: string;
+  env?: string;
+  version?: string;
+  provider: string;
   stats?: {
     startTime?: string | Date;
   };
   tests: TestSpec[];
+  analysis?: TestResultAnalysis[];
+  identifierStrategy?: IdentifierStrategy;
 }
 
 interface TestSpec {
@@ -34,12 +57,13 @@ interface TestSpec {
 }
 
 interface TestResult {
-  allureLink?: string;
+  reportPortalLink?: string;
   retry: number;
   status: string;
   duration: number;
   startTime: string | Date;
   error?: ErrorData;
+  workerIndex: number;
 }
 
 interface ErrorData {
@@ -48,9 +72,9 @@ interface ErrorData {
   location: { file: string; line: number };
 }
 
-interface ProcessReportResult {
+export interface ProcessReportResult {
   success: boolean;
-  executionId: number;
+  executionId: string;
   specsProcessed: number;
 }
 
@@ -58,23 +82,49 @@ export const jsonReportService = {
   /**
    * Process a JSON report and create/update all related database records
    */
-  async processReport(reportData: ReportData): Promise<ProcessReportResult> {
+  async processReport(
+    reportData: ReportData,
+    projectId: string,
+  ): Promise<ProcessReportResult> {
     if (!reportData) {
       throw new Error("Report data is required");
     }
 
-    const { runId, env, version, stats, tests } = reportData;
-
-    if (!runId) {
-      throw new Error("Report must include a runId");
-    }
-
-    // Create or find execution record
-    const executionRecord = await this._findOrCreateExecution({
+    const {
       runId,
       env,
       version,
+      provider,
+      stats,
+      tests,
+      analysis,
+      identifierStrategy = "time-period",
+    } = reportData;
+
+    // Generate fallback identifier if runId is not provided
+    const executionIdentifier =
+      runId ??
+      generateFallbackIdentifier(
+        env,
+        version,
+        stats?.startTime,
+        identifierStrategy,
+      );
+
+    logger.info(
+      runId
+        ? `Processing report with runId: ${runId}`
+        : `Processing report with generated identifier: ${executionIdentifier}`,
+    );
+
+    // Create or find execution record
+    const executionRecord = await this._findOrCreateExecution({
+      runId: executionIdentifier,
+      env: env ?? "unknown",
+      version: version ?? "unknown",
+      provider,
       ...(stats && { stats }),
+      projectId,
     });
 
     if (!tests?.length) {
@@ -82,7 +132,7 @@ export const jsonReportService = {
     }
 
     // Process all test specs
-    await this._processSpecs(tests, executionRecord);
+    await this._processSpecs(tests, executionRecord, projectId, analysis);
 
     logger.info(
       `Successfully processed report for execution #${executionRecord.id}`,
@@ -102,13 +152,16 @@ export const jsonReportService = {
     runId: string;
     env: string;
     version: string;
+    provider: string;
     stats?: { startTime?: string | Date };
+    projectId: string;
   }): Promise<PrismaExecution> {
-    const { runId, env, version, stats } = params;
+    const { runId, env, version, provider, stats, projectId } = params;
 
     let executionRecord = await dbClient.execution.findFirst({
       where: {
         name: runId,
+        AND: { projectId },
       },
     });
 
@@ -119,7 +172,9 @@ export const jsonReportService = {
           name: runId,
           environment: env,
           version,
+          provider,
           startedAt: stats?.startTime ? new Date(stats.startTime) : new Date(),
+          projectId,
         },
       });
 
@@ -135,21 +190,31 @@ export const jsonReportService = {
   async _processSpecs(
     specs: TestSpec[],
     executionRecord: PrismaExecution,
+    projectId: string,
+    analysis?: TestResultAnalysis[],
   ): Promise<void> {
     for (const spec of specs) {
       if (!spec.title) {
         throw new Error(`Spec data is missing title: ${spec.location?.file}`);
       }
 
-      const specRecord = await this._findOrCreateSpec(spec);
-      await this._processSpecResults(spec, specRecord, executionRecord);
+      const specRecord = await this._findOrCreateSpec(spec, projectId);
+      await this._processSpecResults(
+        spec,
+        specRecord,
+        executionRecord,
+        analysis,
+      );
     }
   },
 
   /**
    * Find existing spec or create new one
    */
-  async _findOrCreateSpec(specData: TestSpec): Promise<PrismaSpec> {
+  async _findOrCreateSpec(
+    specData: TestSpec,
+    projectId: string,
+  ): Promise<PrismaSpec> {
     let specKey = "";
     const titleMatch = specData.title.match(/C\d+/);
 
@@ -164,6 +229,7 @@ export const jsonReportService = {
     let specRecord = await dbClient.spec.findFirst({
       where: {
         key: specKey,
+        AND: { projectId },
       },
     });
 
@@ -175,6 +241,7 @@ export const jsonReportService = {
           title: specData.title,
           tags: JSON.stringify(specData.tags ?? []),
           annotations: JSON.stringify(specData.annotations ?? []),
+          projectId: projectId ?? DEFAULT_PROJECT_ID,
         },
       });
 
@@ -191,13 +258,23 @@ export const jsonReportService = {
     spec: TestSpec,
     specRecord: PrismaSpec,
     executionRecord: PrismaExecution,
+    analysis?: TestResultAnalysis[],
   ): Promise<void> {
     if (!spec.results?.length) {
       throw new Error(`Spec (#${specRecord.id}) report has no results data`);
     }
 
     for (const result of spec.results) {
-      await this._createResultRecord(result, specRecord, executionRecord);
+      const resultAnalysis = analysis?.find(
+        (analysis) => analysis.workerIndex === result.workerIndex,
+      );
+
+      await this._createResultRecord(
+        result,
+        specRecord,
+        executionRecord,
+        resultAnalysis,
+      );
     }
   },
 
@@ -208,6 +285,7 @@ export const jsonReportService = {
     resultData: TestResult,
     specRecord: PrismaSpec,
     executionRecord: PrismaExecution,
+    analysis?: TestResultAnalysis,
   ): Promise<PrismaResult> {
     // Check if result already exists
     let resultRecord = await dbClient.result.findFirst({
@@ -219,15 +297,22 @@ export const jsonReportService = {
     });
 
     if (resultRecord) {
-      return resultRecord; // Already exists, skip
+      return resultRecord as PrismaResult; // Already exists, skip
     }
 
-    const recordData: Prisma.ResultCreateInput = {
-      allureLink: resultData.allureLink ?? null,
-      retry: resultData.retry,
+    const recordData: ResultCreateInput = {
+      reportPortalLink: resultData.reportPortalLink ?? null,
+      retry: resultData.retry ?? 0,
       status: resultData.status,
       duration: resultData.duration,
       startTime: new Date(resultData.startTime),
+      // Add analysis fields if available
+      ...(analysis && {
+        analysisStatus: analysis.status,
+        analysisCategory: analysis.category,
+        analysisConfidence: analysis.confidence,
+        analysisConclusion: analysis.conclusion,
+      }),
       spec: {
         connect: {
           id: specRecord.id,
@@ -255,7 +340,7 @@ export const jsonReportService = {
     });
 
     logger.info(`Created result record: ${resultRecord.id}`);
-    return resultRecord;
+    return resultRecord as PrismaResult;
   },
 
   /**
@@ -288,6 +373,6 @@ export const jsonReportService = {
     });
 
     logger.info(`Created error record: ${errorRecord.id}`);
-    return errorRecord;
+    return errorRecord as PrismaResultError;
   },
 };

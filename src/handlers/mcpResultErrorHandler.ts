@@ -3,7 +3,7 @@ import type { PrismaResultError, ResultErrorWithRelations } from "@/types";
 
 interface BulkReviewResult {
   successful: (ResultErrorWithRelations | null)[];
-  failed: Array<{ id: number; reason: string }>;
+  failed: Array<{ id: string; reason: string }>;
   totalProcessed: number;
   successCount: number;
   failureCount: number;
@@ -12,7 +12,7 @@ interface BulkReviewResult {
 export const mcpResultErrorHandler = {
   async assignIssue(
     resultErrorId: string,
-    assumptionId: number | string,
+    assumptionId: string,
   ): Promise<unknown> {
     return await resultErrorService.assignIssue(resultErrorId, assumptionId);
   },

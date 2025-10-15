@@ -1,8 +1,9 @@
 import { Router } from "express";
 import { specController } from "@/controllers/specController";
+import { authMiddleware } from "@/middleware/authMiddleware";
 
 const router = Router();
 
-router.get("/specs/:specId", specController.getSpecById);
+router.get("/v1/specs/:specId", authMiddleware, specController.getSpecById);
 
 export default router;
