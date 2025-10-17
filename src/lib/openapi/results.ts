@@ -67,11 +67,14 @@ const UpdateResultAnalysisRequestSchema = z
 export function registerResultRoutes(registry: OpenAPIRegistry) {
   registry.register("Result", ResultSchema);
   registry.register("ResultsStats", ResultsStatsSchema);
-  registry.register("UpdateResultAnalysisRequest", UpdateResultAnalysisRequestSchema);
+  registry.register(
+    "UpdateResultAnalysisRequest",
+    UpdateResultAnalysisRequestSchema,
+  );
 
   registry.registerPath({
     method: "get",
-    path: "/api/v1/results",
+    path: "/api/v2/results",
     description:
       "Retrieves results with optional filtering (requires projectId)",
     request: {
@@ -124,7 +127,7 @@ export function registerResultRoutes(registry: OpenAPIRegistry) {
 
   registry.registerPath({
     method: "get",
-    path: "/api/v1/results/{resultId}",
+    path: "/api/v2/results/{resultId}",
     description: "Retrieves a specific result by its ID",
     request: {
       params: z.object({
@@ -154,7 +157,7 @@ export function registerResultRoutes(registry: OpenAPIRegistry) {
 
   registry.registerPath({
     method: "get",
-    path: "/api/v1/results-stats",
+    path: "/api/v2/results-stats",
     description:
       "Retrieves statistical analysis of test results including status counts, entity counts, and top errors/issues for specified dates",
     request: {
@@ -191,7 +194,7 @@ export function registerResultRoutes(registry: OpenAPIRegistry) {
 
   registry.registerPath({
     method: "patch",
-    path: "/api/v1/results/{resultId}/analysis",
+    path: "/api/v2/results/{resultId}/analysis",
     description: "Updates the analysis fields of a specific result",
     request: {
       params: z.object({

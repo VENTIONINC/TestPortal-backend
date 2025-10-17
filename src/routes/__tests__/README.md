@@ -1,6 +1,6 @@
 # Users Route Test Documentation
 
-This directory contains tests for the users route (`/api/v2/users/*`). Tests are organized by purpose and responsibility.
+This directory contains tests for the users route (`/api/users/*`). Tests are organized by purpose and responsibility.
 
 ## Test File Organization
 

@@ -9,11 +9,7 @@ import { isInitializeRequest } from "@modelcontextprotocol/sdk/types.js";
 import { authenticateMcpToken } from "@/mcp/middleware/auth";
 import { statusCheck } from "@/mcp/tools/status-check";
 import { currentTime } from "@/mcp/tools/current-time";
-import {
-  getIssues,
-  getIssueById,
-  createIssue,
-} from "@/mcp/tools/issues";
+import { getIssues, getIssueById, createIssue } from "@/mcp/tools/issues";
 import {
   getResults,
   getResultById,
@@ -53,7 +49,7 @@ interface McpServerWithTools extends McpServer {
 const transports: TransportStorage = {};
 
 router.post(
-  "/v1/mcp",
+  "/v2/mcp",
   authenticateMcpToken,
   async (req: Request, res: Response): Promise<void> => {
     try {
@@ -173,11 +169,7 @@ router.post(
         server.registerPrompt(
           developerCodeAssistant.developerCodeAssistantName,
           developerCodeAssistant.developerCodeAssistantParameters,
-          ({
-            result_id = "",
-            error_id = "",
-            context_scope = "",
-          }) =>
+          ({ result_id = "", error_id = "", context_scope = "" }) =>
             developerCodeAssistant.developerCodeAssistantPrompt({
               result_id,
               error_id,
@@ -231,7 +223,7 @@ const handleSessionRequest = async (
   await transport.handleRequest(req, res);
 };
 
-router.get("/v1/mcp", authenticateMcpToken, handleSessionRequest);
-router.delete("/v1/mcp", authenticateMcpToken, handleSessionRequest);
+router.get("/v2/mcp", authenticateMcpToken, handleSessionRequest);
+router.delete("/v2/mcp", authenticateMcpToken, handleSessionRequest);
 
 export default router;

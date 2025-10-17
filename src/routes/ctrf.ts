@@ -7,9 +7,9 @@ import { uploadJsonReport } from "@/middleware/fileUploadMiddleware";
 const router = Router();
 
 // Upload and process raw CTRF report file (JWT authentication)
-router.post("/v1/ctrf/report/upload", authMiddleware, uploadJsonReport, ctrfController.processRawReportFile);
+router.post("/v2/upload-ctrf-report", authMiddleware, uploadJsonReport, ctrfController.processRawReportFile);
 
 // Upload and process raw CTRF report file (API key authentication)
-router.post("/v2/ctrf/report/upload", apiKeyMiddleware, uploadJsonReport, ctrfController.processRawReportFileWithApiKey);
+router.post("/v2/upload-ctrf-report-api-key", apiKeyMiddleware, uploadJsonReport, ctrfController.processRawReportFileWithApiKey);
 
 export default router;

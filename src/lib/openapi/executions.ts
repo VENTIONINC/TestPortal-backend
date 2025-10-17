@@ -22,19 +22,30 @@ export function registerExecutionRoutes(registry: OpenAPIRegistry) {
 
   registry.registerPath({
     method: "get",
-    path: "/api/v1/executions/{executionId}",
-    description: "Retrieves an execution by its ID",
+    path: "/api/v2/executions/{executionId}",
+    description: "Retrieves an execution by its ID (v2)",
+    security: [{ BearerAuth: [] }],
     request: {
       params: z.object({
-        executionId: z.string().uuid(),
+        executionId: z.string().uuid().openapi({
+          description: "Unique identifier of the execution",
+        }),
       }),
     },
     responses: {
       200: {
-        description: "Execution details",
+        description: "Execution details retrieved successfully",
         content: {
           "application/json": {
             schema: ExecutionSchema,
+          },
+        },
+      },
+      401: {
+        description: "Unauthorized - Authentication token is missing or invalid",
+        content: {
+          "application/json": {
+            schema: ErrorResponseSchema,
           },
         },
       },

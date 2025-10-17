@@ -202,7 +202,7 @@
 
 ## MCP Routes (`src/mcp/server.js`)
 
-### POST `/api/v1/mcp`
+### POST `/api/v2/mcp`
 
 - **Description:** Main endpoint for MCP (Model Context Protocol) communication. Handles initialization of new MCP sessions and subsequent requests within an existing session.
 - **Headers:**
@@ -217,7 +217,7 @@
   - Manages MCP sessions and tool registration (e.g., `check-status` tool).
   - Uses `StreamableHTTPServerTransport` for handling communication.
 
-### GET `/api/v1/mcp`
+### GET `/api/v2/mcp`
 
 - **Description:** Handles ongoing MCP session requests, typically for streaming or long-polling scenarios after a session is established via POST.
 - **Headers:**
@@ -226,7 +226,7 @@
   - Varies based on the MCP transport and state.
   - `400 Bad Request`: If `mcp-session-id` is missing or invalid.
 
-### DELETE `/api/v1/mcp`
+### DELETE `/api/v2/mcp`
 
 - **Description:** Terminates an active MCP session.
 - **Headers:**

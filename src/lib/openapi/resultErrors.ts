@@ -33,7 +33,7 @@ export function registerResultErrorRoutes(registry: OpenAPIRegistry) {
 
   registry.registerPath({
     method: "patch",
-    path: "/api/v1/result-errors/{resultErrorId}/assign-issue",
+    path: "/api/v2/result-errors/{resultErrorId}/assign-issue",
     description: "Assigns an issue to a specific result error",
     request: {
       params: z.object({
@@ -74,11 +74,12 @@ export function registerResultErrorRoutes(registry: OpenAPIRegistry) {
       },
     },
     tags: ["Result Errors"],
+    security: [{ BearerAuth: [] }],
   });
 
   registry.registerPath({
     method: "patch",
-    path: "/api/v1/result-errors/{resultErrorId}/review",
+    path: "/api/v2/result-errors/{resultErrorId}/review",
     description: "Reviews a specific result error",
     request: {
       params: z.object({
@@ -112,11 +113,12 @@ export function registerResultErrorRoutes(registry: OpenAPIRegistry) {
       },
     },
     tags: ["Result Errors"],
+    security: [{ BearerAuth: [] }],
   });
 
   registry.registerPath({
     method: "patch",
-    path: "/api/v1/result-errors/bulk-review",
+    path: "/api/v2/result-errors/bulk-review",
     description: "Performs a bulk review of result errors",
     request: {
       body: {
@@ -146,6 +148,48 @@ export function registerResultErrorRoutes(registry: OpenAPIRegistry) {
       },
     },
     tags: ["Result Errors"],
+    security: [{ BearerAuth: [] }],
+  });
+
+  registry.registerPath({
+    method: "get",
+    path: "/api/v2/result-errors/{resultErrorId}",
+    description: "Retrieves a specific result error by ID",
+    request: {
+      params: z.object({
+        resultErrorId: z.string().uuid(),
+      }),
+    },
+    responses: {
+      200: {
+        description: "Result error retrieved successfully",
+        content: {
+          "application/json": {
+            schema: z.object({
+              data: ResultErrorSchema,
+            }),
+          },
+        },
+      },
+      400: {
+        description: "Bad request",
+        content: {
+          "application/json": {
+            schema: ErrorResponseSchema,
+          },
+        },
+      },
+      404: {
+        description: "Result error not found",
+        content: {
+          "application/json": {
+            schema: ErrorResponseSchema,
+          },
+        },
+      },
+    },
+    tags: ["Result Errors"],
+    security: [{ BearerAuth: [] }],
   });
 }
 

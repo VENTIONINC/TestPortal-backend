@@ -14,26 +14,10 @@ const StatusResponseSchema = z
 export function registerSystemRoutes(registry: OpenAPIRegistry) {
   registry.register("StatusResponse", StatusResponseSchema);
 
+  // V2 Status endpoint - public route
   registry.registerPath({
     method: "get",
-    path: "/api/v1/",
-    description: "Welcome endpoint",
-    responses: {
-      200: {
-        description: "Welcome message",
-        content: {
-          "text/plain": {
-            schema: z.string(),
-          },
-        },
-      },
-    },
-    tags: ["System"],
-  });
-
-  registry.registerPath({
-    method: "get",
-    path: "/api/v1/status",
+    path: "/api/v2/status",
     description: "Checks the status of the server and its connections",
     responses: {
       200: {

@@ -1,10 +1,10 @@
-import { statusHandler } from '../status';
-import { executeController } from '@/test-utils/httpMocks';
+import { statusHandler } from "../status";
+import { executeController } from "@/test-utils/httpMocks";
 
-describe('status route', () => {
-  it('GET /v1/status returns ok', async () => {
-    const res = await executeController(statusHandler, { method: 'GET' });
+describe("status route", () => {
+  it("GET /v2/status returns ok", async () => {
+    const res = await executeController(statusHandler, { method: "GET" });
     expect(res.statusCode).toBe(200);
-    expect(res.body).toEqual({ status: 'ok' });
+    expect(res.body).toEqual({ status: "ok" });
   });
 });

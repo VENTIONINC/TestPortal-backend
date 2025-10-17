@@ -45,10 +45,12 @@ export function registerAssumptionRoutes(registry: OpenAPIRegistry) {
   registry.register("CreateAssumptionRequest", CreateAssumptionRequestSchema);
   registry.register("UpdateAssumptionRequest", UpdateAssumptionRequestSchema);
 
+  // V2 Create Assumption Route
   registry.registerPath({
     method: "post",
-    path: "/api/v1/assumptions",
-    description: "Creates a new assumption",
+    path: "/api/v2/assumptions",
+    description: "Create a new assumption for a specific issue and result error (requires authentication)",
+    security: [{ BearerAuth: [] }],
     request: {
       body: {
         content: {
@@ -60,7 +62,7 @@ export function registerAssumptionRoutes(registry: OpenAPIRegistry) {
     },
     responses: {
       201: {
-        description: "Assumption created successfully",
+        description: "Successfully created assumption",
         content: {
           "application/json": {
             schema: AssumptionSchema,
@@ -68,7 +70,15 @@ export function registerAssumptionRoutes(registry: OpenAPIRegistry) {
         },
       },
       400: {
-        description: "Bad request",
+        description: "Bad request validation error",
+        content: {
+          "application/json": {
+            schema: ErrorResponseSchema,
+          },
+        },
+      },
+      401: {
+        description: "Unauthorized access",
         content: {
           "application/json": {
             schema: ErrorResponseSchema,
@@ -76,13 +86,15 @@ export function registerAssumptionRoutes(registry: OpenAPIRegistry) {
         },
       },
     },
-    tags: ["Assumptions", "Results"],
+    tags: ["Assumptions"],
   });
 
+  // V2 Update Assumption Route
   registry.registerPath({
     method: "patch",
-    path: "/api/v1/assumptions/{assumptionId}",
-    description: "Updates an existing assumption",
+    path: "/api/v2/assumptions/{assumptionId}",
+    description: "Update an existing assumption by its ID (requires authentication)",
+    security: [{ BearerAuth: [] }],
     request: {
       params: z.object({
         assumptionId: z.string().uuid(),
@@ -97,7 +109,7 @@ export function registerAssumptionRoutes(registry: OpenAPIRegistry) {
     },
     responses: {
       200: {
-        description: "Assumption updated successfully",
+        description: "Successfully updated assumption",
         content: {
           "application/json": {
             schema: AssumptionSchema,
@@ -105,7 +117,15 @@ export function registerAssumptionRoutes(registry: OpenAPIRegistry) {
         },
       },
       400: {
-        description: "Bad request",
+        description: "Bad request validation error",
+        content: {
+          "application/json": {
+            schema: ErrorResponseSchema,
+          },
+        },
+      },
+      401: {
+        description: "Unauthorized access",
         content: {
           "application/json": {
             schema: ErrorResponseSchema,
@@ -121,7 +141,47 @@ export function registerAssumptionRoutes(registry: OpenAPIRegistry) {
         },
       },
     },
-    tags: ["Assumptions", "Results"],
+    tags: ["Assumptions"],
+  });
+
+  // V2 Get Assumption by ID Route
+  registry.registerPath({
+    method: "get",
+    path: "/api/v2/assumptions/{assumptionId}",
+    description: "Retrieve an existing assumption by its ID (requires authentication)",
+    security: [{ BearerAuth: [] }],
+    request: {
+      params: z.object({
+        assumptionId: z.string().uuid(),
+      }),
+    },
+    responses: {
+      200: {
+        description: "Successfully retrieved assumption",
+        content: {
+          "application/json": {
+            schema: AssumptionSchema,
+          },
+        },
+      },
+      401: {
+        description: "Unauthorized access",
+        content: {
+          "application/json": {
+            schema: ErrorResponseSchema,
+          },
+        },
+      },
+      404: {
+        description: "Assumption not found",
+        content: {
+          "application/json": {
+            schema: ErrorResponseSchema,
+          },
+        },
+      },
+    },
+    tags: ["Assumptions"],
   });
 }
 

@@ -7,8 +7,8 @@ Complete user management API with secure authentication, password handling using
 1. **Start Server**: `npm run dev`
 2. **Import Postman Collection**: `postman/User_API_with_Passwords.postman_collection.json`
 3. **Authentication Workflow**:
-   - Sign up: `POST /api/v2/users/signup`
-   - Login: `POST /api/v2/users/login` → Get JWT token
+   - Sign up: `POST /api/users/signup`
+   - Login: `POST /api/users/login` → Get JWT token
    - Use token for protected routes: `Authorization: Bearer <token>`
 4. **Run Tests**: Use the `.http` files or Postman collection
 
@@ -40,7 +40,7 @@ Authorization: Bearer <jwt-token>
 ---
 
 ### 1. User Signup (PUBLIC)
-**`POST /api/v2/users/signup`**
+**`POST /api/users/signup`**
 
 Create a new user account with secure password hashing.
 
@@ -84,7 +84,7 @@ Create a new user account with secure password hashing.
 ---
 
 ### 2. User Login (PUBLIC)
-**`POST /api/v2/users/login`**
+**`POST /api/users/login`**
 
 Authenticate user credentials and return user data.
 
@@ -122,7 +122,7 @@ Authenticate user credentials and return user data.
 ---
 
 ### 3. Get User by ID (PROTECTED)
-**`GET /api/v2/users/:userId`**
+**`GET /api/users/:userId`**
 
 Retrieve user information by ID. **Requires authentication.**
 
@@ -146,7 +146,7 @@ Retrieve user information by ID. **Requires authentication.**
 ---
 
 ### 4. Update User (PROTECTED)
-**`PATCH /api/v2/users/:userId`**
+**`PATCH /api/users/:userId`**
 
 Update user information (name, email, or password). **Requires authentication.**
 
@@ -194,7 +194,7 @@ Use `test-signup.http` for comprehensive testing:
 
 ```http
 ### Test User Signup
-POST http://localhost:3001/api/v2/users/signup
+POST http://localhost:3001/api/users/signup
 Content-Type: application/json
 
 {
@@ -204,11 +204,11 @@ Content-Type: application/json
 }
 
 ### Test User Login
-POST http://localhost:3001/api/v2/users/login
+POST http://localhost:3001/api/users/login
 Content-Type: application/json
 
 {
-  "email": "john.doe@example.com", 
+  "email": "john.doe@example.com",
   "password": "SecurePassword123!"
 }
 ```

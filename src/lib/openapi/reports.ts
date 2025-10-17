@@ -97,7 +97,7 @@ export function registerReportRoutes(registry: OpenAPIRegistry) {
 
   registry.registerPath({
     method: "post",
-    path: "/api/v1/json-report/upload",
+    path: "/api/v2/upload-json-report",
     description:
       "Accepts JSON test report files for processing. Supports large files that exceed POST body size limits.",
     request: {
@@ -144,7 +144,7 @@ export function registerReportRoutes(registry: OpenAPIRegistry) {
 
   registry.registerPath({
     method: "post",
-    path: "/api/v2/json-report/upload",
+    path: "/api/v2/upload-json-report-api-key",
     description:
       "Accepts JSON test report files for processing with API key authentication. The project ID is automatically extracted from the validated API key. Supports large files and includes optional AI analysis of test failures.",
     security: [{ ApiKeyAuth: [] }],

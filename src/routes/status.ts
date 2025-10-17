@@ -6,6 +6,6 @@ export const statusHandler = (_req: Request, res: Response): void => {
   res.status(200).json({ status: "ok" });
 };
 
-router.get("/v1/status", statusHandler);
+router.get("/v2/status", statusHandler);
 
 export default router;

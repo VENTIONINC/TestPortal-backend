@@ -55,8 +55,6 @@ Reset collection state:
 | Variable | Purpose | Auto-managed | Example |
 |----------|---------|--------------|---------|
 | `baseUrl` | API host | ❌ Manual | `http://localhost:3001` |
-| `V_1` | v1 API prefix | ❌ Manual | `/api/v1` |
-| `V_2` | v2 API prefix | ❌ Manual | `/api/v2` |
 | `userId` | Current user ID | ✅ Auto | `1` |
 | `testEmail` | Test account email | ❌ Manual | `john.doe@example.com` |
 | `testPassword` | Test account password | ❌ Manual | `SecurePassword123!` |
@@ -181,8 +179,6 @@ newman run User_API.postman_collection.json \
 ```json
 {
   "baseUrl": "http://localhost:3001",
-  "V_1": "/api/v1",
-  "V_2": "/api/v2",
   "testEmail": "your-test@email.com",
   "testPassword": "YourSecurePassword123!"
 }

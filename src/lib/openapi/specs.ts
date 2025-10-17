@@ -20,8 +20,8 @@ export function registerSpecRoutes(registry: OpenAPIRegistry) {
 
   registry.registerPath({
     method: "get",
-    path: "/api/v1/specs/{specId}",
-    description: "Retrieves a specific spec by its ID",
+    path: "/api/v2/specs/{specId}",
+    description: "Retrieves a specific spec by its ID (V2 endpoint)",
     request: {
       params: z.object({
         specId: z.string().uuid(),
@@ -36,6 +36,30 @@ export function registerSpecRoutes(registry: OpenAPIRegistry) {
           },
         },
       },
+      400: {
+        description: "Bad Request - Invalid spec ID format",
+        content: {
+          "application/json": {
+            schema: ErrorResponseSchema,
+          },
+        },
+      },
+      401: {
+        description: "Unauthorized - Authentication required",
+        content: {
+          "application/json": {
+            schema: ErrorResponseSchema,
+          },
+        },
+      },
+      403: {
+        description: "Forbidden - Insufficient permissions",
+        content: {
+          "application/json": {
+            schema: ErrorResponseSchema,
+          },
+        },
+      },
       404: {
         description: "Spec not found",
         content: {
@@ -45,6 +69,11 @@ export function registerSpecRoutes(registry: OpenAPIRegistry) {
         },
       },
     },
+    security: [
+      {
+        BearerAuth: [],
+      },
+    ],
     tags: ["Specs"],
   });
 }

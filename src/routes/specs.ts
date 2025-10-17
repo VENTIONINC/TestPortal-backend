@@ -4,6 +4,6 @@ import { authMiddleware } from "@/middleware/authMiddleware";
 
 const router = Router();
 
-router.get("/v1/specs/:specId", authMiddleware, specController.getSpecById);
+router.get("/v2/specs/:specId", authMiddleware, specController.getSpecById);
 
 export default router;
