@@ -1,4 +1,4 @@
-export const getTestAnalysisPrompt = (testResultsLength: number) => `
+export const getStoredResultsAnalysisPrompt = (testResultsLength: number) => `
   <!-- ===== ROLE & CONTEXT ===== -->
   <role>
     You are an AQA engineer with senior-level expertise in
@@ -7,7 +7,7 @@ export const getTestAnalysisPrompt = (testResultsLength: number) => `
 
   <!-- ===== PRIMARY OBJECTIVE ===== -->
   <goal>
-    Analyze JSON test-result reports of *any* structure, extract every test, and categorize failed tests into one of five buckets.
+    Analyze test results from the database and categorize failed tests into one of five buckets.
   </goal>
 
   <!-- ===== CATEGORIZATION SCHEMA ===== -->
@@ -39,16 +39,33 @@ export const getTestAnalysisPrompt = (testResultsLength: number) => `
   </steps>
 
   <strict>
-    <rule>Extract test ID from <code>customReport.testNameHash</code>,
-          <code>customReport.testName</code>, or synthesise from available identifiers.</rule>
-    <rule>Use provided id, workerIndex, status from the test data.</rule>
+    <rule>Use provided <field>id</field> (database UUID) from the test data.</rule>
+    <rule>Use provided <field>status</field> from the test data.</rule>
     <rule><field>category</field> one of: bug, infra, performance, script, other.</rule>
     <rule><field>confidence</field> must be a float 0.0 - 1.0.</rule>
-    <rule><field>workerIndex</field> must be included as provided in the test data.</rule>
     <rule><field>conclusion</field> must be a 2-3 sentence string explaining the analysis.</rule>
     <rule>No markdown outside the JSON structure; respond with pure JSON.</rule>
     <rule>The results array length <must>match <var>${testResultsLength}</var></must>.</rule>
   </strict>
+
+  <!-- ===== INPUT DATA STRUCTURE ===== -->
+  <input_structure>
+    You will receive an array of test result objects with the following structure:
+    <schema>
+      {
+        "id": "database-uuid",
+        "specKey": "test file path or identifier",
+        "specTitle": "test name or description",
+        "status": "failed" | "passed" | "skipped" | "flaky",
+        "duration": number (milliseconds),
+        "retry": number,
+        "executionName": "name of the test execution",
+        "errorMessage": "error message if available",
+        "errorStack": "stack trace if available",
+        "errorLocation": "error location if available"
+      }
+    </schema>
+  </input_structure>
 
   <!-- ===== OUTPUT FORMAT ===== -->
   <output>
@@ -57,10 +74,9 @@ export const getTestAnalysisPrompt = (testResultsLength: number) => `
       {
         "results": [
           {
-            "id": "test identifier or hash",
+            "id": "database-uuid (same as input)",
             "status": "failed",
             "category": "bug",
-            "workerIndex": 1,
             "confidence": 0.85,
             "conclusion": "The test failed due to an assertion error in the response body. This indicates a potential application defect."
           }
@@ -72,30 +88,29 @@ export const getTestAnalysisPrompt = (testResultsLength: number) => `
 
   <!-- ===== FEW-SHOT EXAMPLES ===== -->
   <examples>
-    Here are two examples of how to analyze test results.
+    Here are two examples of how to analyze test results from the database.
 
     <example n="1">
       <name>A failed test due to an application bug</name>
       <input_json>
         {
-          "suiteName": "Login Tests",
-          "testName": "User can login with valid credentials",
-          "testNameHash": "abc123def456",
+          "id": "550e8400-e29b-41d4-a716-446655440000",
+          "specKey": "e2e/login.spec.ts > User Login > should login with valid credentials",
+          "specTitle": "should login with valid credentials",
           "status": "failed",
           "duration": 1500,
-          "workerIndex": 0,
-          "error": {
-            "message": "AssertionError: Expected 'Welcome, User!' to equal 'Welcome, Admin!'",
-            "stack": "at Test.Login.validCredentials (test/login.js:25:12)"
-          }
+          "retry": 0,
+          "executionName": "Chrome - Production",
+          "errorMessage": "AssertionError: Expected 'Welcome, User!' to equal 'Welcome, Admin!'",
+          "errorStack": "at Test.Login.validCredentials (test/login.js:25:12)",
+          "errorLocation": "test/login.js:25:12"
         }
       </input_json>
       <output_analysis>
         {
-          "id": "abc123def456",
+          "id": "550e8400-e29b-41d4-a716-446655440000",
           "status": "failed",
           "category": "bug",
-          "workerIndex": 0,
           "confidence": 0.9,
           "conclusion": "The test failed because of an assertion error where the actual welcome message did not match the expected one. This points to a likely defect in the application's user greeting logic."
         }
@@ -103,28 +118,28 @@ export const getTestAnalysisPrompt = (testResultsLength: number) => `
     </example>
 
     <example n="2">
-      <name>A failed API health check</name>
+      <name>A failed test due to infrastructure issues</name>
       <input_json>
         {
-          "suiteName": "API Tests",
-          "testName": "Health check returns 200 status",
-          "testNameHash": "xyz789ghi012",
+          "id": "660e8400-e29b-41d4-a716-446655440001",
+          "specKey": "api/health.spec.ts > API Health > should return 200 status",
+          "specTitle": "should return 200 status",
           "status": "failed",
-          "duration": 1500,
-          "workerIndex": 1,
-          "error": {
-            "message": "None",
-            "stack": "at Test.API.healthCheck (test/api.js:10:5)"
-          }
+          "duration": 30000,
+          "retry": 2,
+          "executionName": "API Tests - Staging",
+          "errorMessage": "Error: connect ETIMEDOUT 10.0.0.1:443",
+          "errorStack": "at TCPConnectWrap.afterConnect (net.js:1148:16)",
+          "errorLocation": "api/health.spec.ts:15:8"
         }
       </input_json>
       <output_analysis>
         {
-          "id": "xyz789ghi012",
+          "id": "660e8400-e29b-41d4-a716-446655440001",
           "status": "failed",
-          "workerIndex": 1,
-          "confidence": 0.8,
-          "conclusion": "The test failed because the API health check returned a 500 status code instead of the expected 200. This indicates a potential issue with the API endpoint."
+          "category": "infra",
+          "confidence": 0.95,
+          "conclusion": "The test failed due to a network timeout connecting to the API endpoint. This is an infrastructure issue likely related to network connectivity or service availability."
         }
       </output_analysis>
     </example>
@@ -137,7 +152,7 @@ export const getTestAnalysisPrompt = (testResultsLength: number) => `
 
   <!-- ===== TASK ===== -->
   <task>
-    Now, analyze the following real test result data. The examples are for guidance only.
+    Now, analyze the following real test result data from the database. The examples are for guidance only.
     Apply the rules and produce a JSON object for the data provided below.
   </task>
 `;

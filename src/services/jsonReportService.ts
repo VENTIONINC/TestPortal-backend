@@ -97,7 +97,6 @@ export const jsonReportService = {
       provider,
       stats,
       tests,
-      analysis,
       identifierStrategy = "time-period",
     } = reportData;
 
@@ -132,13 +131,7 @@ export const jsonReportService = {
     }
 
     // Process all test specs
-    await this._processSpecs(
-      tests,
-      executionRecord,
-      projectId,
-      analysis,
-      provider,
-    );
+    await this._processSpecs(tests, executionRecord, projectId);
 
     logger.info(
       `Successfully processed report for execution #${executionRecord.id}`,
@@ -197,8 +190,6 @@ export const jsonReportService = {
     specs: TestSpec[],
     executionRecord: PrismaExecution,
     projectId: string,
-    analysis?: TestResultAnalysis[],
-    provider?: string,
   ): Promise<void> {
     for (const spec of specs) {
       if (!spec.title) {
@@ -206,13 +197,7 @@ export const jsonReportService = {
       }
 
       const specRecord = await this._findOrCreateSpec(spec, projectId);
-      await this._processSpecResults(
-        spec,
-        specRecord,
-        executionRecord,
-        analysis,
-        provider,
-      );
+      await this._processSpecResults(spec, specRecord, executionRecord);
     }
   },
 
@@ -266,25 +251,18 @@ export const jsonReportService = {
     spec: TestSpec,
     specRecord: PrismaSpec,
     executionRecord: PrismaExecution,
-    analysis?: TestResultAnalysis[],
-    provider?: string,
   ): Promise<void> {
     if (!spec.results?.length) {
       throw new Error(`Spec (#${specRecord.id}) report has no results data`);
     }
 
     for (const result of spec.results) {
-      // Skip analysis matching for CTRF - it will be done post-persist
-      const resultAnalysis =
-        provider !== "ctrf" && analysis
-          ? analysis.find((a) => a.workerIndex === result.workerIndex)
-          : undefined;
-
+      // Analysis is now always done post-persist for both CTRF and Playwright
       await this._createResultRecord(
         result,
         specRecord,
         executionRecord,
-        resultAnalysis,
+        undefined, // Analysis added via separate update after persist
       );
     }
   },

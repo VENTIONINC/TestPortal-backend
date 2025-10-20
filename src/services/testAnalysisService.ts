@@ -2,8 +2,7 @@ import { ChatOpenAI } from "@langchain/openai";
 import { z } from "zod";
 
 import getLogger from "@/lib/logger";
-import { getCtrfAnalysisPrompt } from "@/prompts/ctrf-analysis";
-import { getTestAnalysisPrompt } from "@/prompts/test-analysis";
+import { getStoredResultsAnalysisPrompt } from "@/prompts/stored-results-analysis";
 import {
   testAnalysisSchema,
   type TestResultAnalysis,
@@ -53,7 +52,7 @@ export const testAnalysisService = {
       );
 
       const essentialData = this.extractEssentialTestData(failedTestResults);
-      const systemPrompt = getTestAnalysisPrompt(essentialData.length);
+      const systemPrompt = getStoredResultsAnalysisPrompt(essentialData.length);
       const userPrompt = JSON.stringify(essentialData);
 
       // Log token optimization info
@@ -93,7 +92,6 @@ export const testAnalysisService = {
             id: result.id,
             status: result.status,
             confidence: result.confidence,
-            workerIndex: result.workerIndex,
             category: result.category ?? "other",
             conclusion: result.conclusion ?? "No conclusion provided",
           };
@@ -132,7 +130,6 @@ export const testAnalysisService = {
               const id = `${spec.file}_${spec.title}_${testIndex}_${result.workerIndex}_${resultIndex}`;
               allResults.push({
                 id,
-                workerIndex: result.workerIndex,
                 status: result.status,
                 confidence: 1,
               });
@@ -218,7 +215,6 @@ export const testAnalysisService = {
       specTitle: string;
       status: string;
       duration: number;
-      workerIndex: number;
       retry: number;
       errorMessage?: string;
       errorStack?: string;
@@ -240,7 +236,6 @@ export const testAnalysisService = {
                 specTitle: spec.title,
                 status: result.status,
                 duration: result.duration,
-                workerIndex: result.workerIndex,
                 retry: result.retry,
               };
 
@@ -298,7 +293,7 @@ export const testAnalysisService = {
 
       const failedTests = tests.filter((test) => test.status !== "passed");
       const essentialData = this.extractCtrfEssentialData(failedTests);
-      const systemPrompt = getTestAnalysisPrompt(essentialData.length);
+      const systemPrompt = getStoredResultsAnalysisPrompt(essentialData.length);
       const userPrompt = JSON.stringify(essentialData);
 
       const model = new ChatOpenAI({
@@ -342,7 +337,6 @@ export const testAnalysisService = {
       const id = test.meta?.testNameHash ?? test.name ?? `ctrf-test-${index}`;
       return {
         id: String(id),
-        workerIndex: 0, // CTRF doesn't have worker concept, use 0
         status: test.status === "passed" ? "passed" : "failed",
         confidence: 1,
       };
@@ -364,7 +358,6 @@ export const testAnalysisService = {
       name: string;
       status: string;
       duration: number;
-      workerIndex: number;
       retry?: number;
       errorMessage?: string;
       errorTrace?: string;
@@ -380,7 +373,6 @@ export const testAnalysisService = {
         name: test.name,
         status: test.status,
         duration: test.duration,
-        workerIndex: 0, // CTRF doesn't have worker concept
         retry: test.retry ?? 0,
       };
 
@@ -482,7 +474,7 @@ export const testAnalysisService = {
         return essentialResult;
       });
 
-      const systemPrompt = getCtrfAnalysisPrompt(essentialData.length);
+      const systemPrompt = getStoredResultsAnalysisPrompt(essentialData.length);
       const userPrompt = JSON.stringify(essentialData);
 
       const model = new ChatOpenAI({
@@ -514,7 +506,6 @@ export const testAnalysisService = {
           id: result.id,
           status: result.status,
           confidence: result.confidence,
-          workerIndex: 0, // Not used for stored results
           category: result.category ?? "other",
           conclusion: result.conclusion ?? "No conclusion provided",
         });
