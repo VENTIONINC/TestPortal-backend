@@ -1,17 +1,11 @@
 import type { Request, Response } from "express";
 import { ctrfService } from "@/services/ctrfService";
-import { testAnalysisService } from "@/services/testAnalysisService";
 import type { CTRFReport } from "@/types/ctrf";
 import type { ApiKeyAuthenticatedRequest } from "@/middleware/apiKeyMiddleware";
 import type { ProcessReportResult } from "@/services/jsonReportService";
-import type { TestResultAnalysis } from "@/schemas/testAnalysisSchemas";
 import getLogger from "@/lib/logger";
 
 const logger = getLogger("ctrf-controller");
-
-interface ProcessReportResponse extends ProcessReportResult {
-  analysis?: TestResultAnalysis[];
-}
 
 export const ctrfController = {
   /**
@@ -21,7 +15,7 @@ export const ctrfController = {
   async _processRawReportFileCore(
     file: Express.Multer.File | undefined,
     projectId: string | undefined,
-  ): Promise<ProcessReportResponse> {
+  ): Promise<ProcessReportResult> {
     if (!file) {
       throw new Error("CTRF report file is required");
     }
@@ -56,29 +50,9 @@ export const ctrfController = {
       `Processing uploaded CTRF report with ${ctrfReport.results.tests.length} tests for project ${projectId}`,
     );
 
-    // Analyze test results before processing
-    let analysisResults = null;
-    try {
-      analysisResults =
-        await testAnalysisService.analyzeCtrfTestResults(ctrfReport);
-      logger.info(
-        "CTRF Analysis completed:",
-        analysisResults.length,
-        "tests analyzed",
-      );
-    } catch (analysisError) {
-      logger.warn(
-        "CTRF Analysis failed, proceeding without analysis:",
-        analysisError,
-      );
-    }
-
     const result = await ctrfService.processReport(ctrfReport, { projectId });
 
-    return {
-      ...result,
-      ...(analysisResults && { analysis: analysisResults }),
-    };
+    return result;
   },
 
   async processRawReportFile(req: Request, res: Response): Promise<void> {
