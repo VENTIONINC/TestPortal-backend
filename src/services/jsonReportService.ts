@@ -132,7 +132,13 @@ export const jsonReportService = {
     }
 
     // Process all test specs
-    await this._processSpecs(tests, executionRecord, projectId, analysis);
+    await this._processSpecs(
+      tests,
+      executionRecord,
+      projectId,
+      analysis,
+      provider,
+    );
 
     logger.info(
       `Successfully processed report for execution #${executionRecord.id}`,
@@ -192,6 +198,7 @@ export const jsonReportService = {
     executionRecord: PrismaExecution,
     projectId: string,
     analysis?: TestResultAnalysis[],
+    provider?: string,
   ): Promise<void> {
     for (const spec of specs) {
       if (!spec.title) {
@@ -204,6 +211,7 @@ export const jsonReportService = {
         specRecord,
         executionRecord,
         analysis,
+        provider,
       );
     }
   },
@@ -259,15 +267,18 @@ export const jsonReportService = {
     specRecord: PrismaSpec,
     executionRecord: PrismaExecution,
     analysis?: TestResultAnalysis[],
+    provider?: string,
   ): Promise<void> {
     if (!spec.results?.length) {
       throw new Error(`Spec (#${specRecord.id}) report has no results data`);
     }
 
     for (const result of spec.results) {
-      const resultAnalysis = analysis?.find(
-        (analysis) => analysis.workerIndex === result.workerIndex,
-      );
+      // Skip analysis matching for CTRF - it will be done post-persist
+      const resultAnalysis =
+        provider !== "ctrf" && analysis
+          ? analysis.find((a) => a.workerIndex === result.workerIndex)
+          : undefined;
 
       await this._createResultRecord(
         result,
