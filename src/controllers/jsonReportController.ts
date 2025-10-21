@@ -11,7 +11,7 @@ import getLogger from "@/lib/logger";
 const logger = getLogger("json-report-controller");
 
 interface ProcessReportResponse extends ProcessReportResult {
-  analysis?: TestResultAnalysis[];
+  analysis?: TestResultAnalysis[] | undefined;
 }
 
 export const jsonReportController = {
@@ -47,35 +47,65 @@ export const jsonReportController = {
     const transformedReport =
       await jsonReportController._transformRawReport(rawJsonReport);
 
-    // Analyze test results before processing
-    let analysisResults = null;
-    try {
-      analysisResults =
-        await testAnalysisService.analyzeTestResults(rawJsonReport);
-      logger.info(
-        `Analysis completed: ${analysisResults.length} tests analyzed`,
-      );
-    } catch (analysisError) {
-      logger.warn(
-        "Analysis failed, proceeding without analysis:",
-        analysisError,
-      );
-      // Continue without analysis - don't fail the entire process
-    }
-
-    const result = await jsonReportService.processReport(
+    // Step 1: Persist to database WITHOUT analysis
+    const processResult = await jsonReportService.processReport(
       {
         ...transformedReport,
-        analysis: analysisResults,
         provider: "Playwright",
       },
       projectId,
     );
 
-    // Include analysis results in the response
+    // Step 2: Fetch just-created results from DB with relations
+    const { dbClient } = await import("@/prisma/client");
+    const createdResults = await dbClient.result.findMany({
+      where: { executionId: processResult.executionId },
+      include: {
+        spec: true,
+        execution: true,
+        errors: true,
+      },
+    });
+
+    logger.info(
+      `Fetched ${createdResults.length} results from DB for analysis`,
+    );
+
+    // Step 3: Analyze stored results (POST-PERSIST)
+    let analysisMap = null;
+    try {
+      analysisMap = await testAnalysisService.analyzeStoredResults(createdResults);
+
+      // Step 4: Update results with analysis fields
+      logger.info(`Updating ${analysisMap.size} results with analysis data`);
+
+      await Promise.all(
+        Array.from(analysisMap.entries()).map(([resultId, analysis]) =>
+          dbClient.result.update({
+            where: { id: resultId },
+            data: {
+              analysisStatus: analysis.status,
+              analysisCategory: analysis.category ?? null,
+              analysisConfidence: analysis.confidence,
+              analysisConclusion: analysis.conclusion ?? null,
+            },
+          }),
+        ),
+      );
+
+      logger.info(
+        `Successfully updated ${analysisMap.size} results with analysis`,
+      );
+    } catch (analysisError) {
+      logger.warn(
+        "Analysis failed, results saved without analysis:",
+        analysisError,
+      );
+    }
+
     return {
-      ...result,
-      ...(analysisResults && { analysis: analysisResults }),
+      ...processResult,
+      analysis: analysisMap ? Array.from(analysisMap.values()) : undefined,
     };
   },
 

@@ -15,7 +15,6 @@ export const testResultSchema = z.object({
     .min(0.0)
     .max(1.0)
     .describe("Confidence level of the analysis"),
-  workerIndex: z.number().describe("Worker index"),
   conclusion: z
     .string()
     .describe(
@@ -40,7 +39,6 @@ export interface TestResultAnalysis {
   status: "passed" | "failed";
   category?: "bug" | "infra" | "performance" | "script" | "other";
   confidence: number;
-  workerIndex: number;
   conclusion?: string;
 }
 
