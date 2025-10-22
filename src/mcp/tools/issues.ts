@@ -9,6 +9,7 @@ import type { MCPToolResponse } from "@/types";
 import { IssueCategory } from "@/types/enums";
 
 interface GetIssuesParams {
+  projectId: string;
   category?: IssueCategory;
   name?: string;
   page?: number;
@@ -17,6 +18,7 @@ interface GetIssuesParams {
 
 interface GetIssueByIdParams {
   issueId: string;
+  projectId: string;
 }
 
 interface CreateIssueParams {
@@ -31,9 +33,9 @@ interface CreateIssueParams {
 
 export const getIssues = createMcpTool(
   "get-issues",
-  "Retrieve issues with optional filtering by category, name, with pagination support",
+  "Retrieve issues with optional filtering by category, name, with pagination support. Requires projectId parameter.",
   getIssuesSchema,
-  async (params: GetIssuesParams = {}): Promise<MCPToolResponse> => {
+  async (params: GetIssuesParams): Promise<MCPToolResponse> => {
     const issues = await mcpIssueHandler.getAllIssues(params);
     return createSuccessResponse(issues);
   },
@@ -42,9 +44,9 @@ export const getIssues = createMcpTool(
 
 export const getIssuesWithStats = createMcpTool(
   "get-issues-with-stats",
-  "Retrieve issues with their statistics including occurrence count, first/last occurrence, and impacted tests count",
+  "Retrieve issues with their statistics including occurrence count, first/last occurrence, and impacted tests count. Requires projectId parameter.",
   getIssuesSchema,
-  async (params: GetIssuesParams = {}): Promise<MCPToolResponse> => {
+  async (params: GetIssuesParams): Promise<MCPToolResponse> => {
     const issues = await mcpIssueHandler.getAllIssuesWithStats(params);
     return createSuccessResponse(issues);
   },
@@ -53,11 +55,11 @@ export const getIssuesWithStats = createMcpTool(
 
 export const getIssueById = createMcpTool(
   "get-issue-by-id",
-  "Retrieve detailed information about a specific issue by its unique ID",
+  "Retrieve detailed information about a specific issue by its unique ID. Requires projectId parameter.",
   getIssueByIdSchema,
   async (params: GetIssueByIdParams): Promise<MCPToolResponse> => {
-    const { issueId } = params;
-    const issue = await mcpIssueHandler.getIssueById(issueId);
+    const { issueId, projectId } = params;
+    const issue = await mcpIssueHandler.getIssueById(issueId, projectId);
     return createSuccessResponse(issue);
   },
   "fetching issue",
