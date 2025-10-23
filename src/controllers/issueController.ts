@@ -1,32 +1,35 @@
 import { Request, Response } from "express";
 import { type AuthenticatedRequest } from "@/middleware/authMiddleware";
 import { issueService } from "@/services/issueService";
+import { buildIssueParams } from "@/lib/params-builder";
 
 import type { CreateIssueParams, UpdateIssueParams } from "@/types";
-import { IssueCategory } from "@/types/enums";
 
 export const issueController = {
   getAllIssues: async (req: Request, res: Response): Promise<void> => {
     try {
       const {
+        projectId,
         category,
         name,
         page = "1",
         limit = "30",
       } = req.query as Record<string, string>;
 
-      // Build parameters object, filtering out undefined values
-      const params: {
-        category?: IssueCategory;
-        name?: string;
-        page?: number;
-        limit?: number;
-      } = {};
-      if (category) params.category = category as IssueCategory;
-      if (name) params.name = name;
-      if (page) params.page = Number(page);
-      if (limit) params.limit = Number(limit);
+      if (!projectId) {
+        res.status(400).json({
+          error: "projectId query parameter is required",
+        });
+        return;
+      }
 
+      const params = buildIssueParams({
+        projectId,
+        category,
+        name,
+        page,
+        limit,
+      });
       const result = await issueService.getAllIssues(params);
 
       res.status(200).json(result);
@@ -40,24 +43,27 @@ export const issueController = {
   getAllIssuesV2: async (req: Request, res: Response): Promise<void> => {
     try {
       const {
+        projectId,
         category,
         name,
         page = "1",
         limit = "10",
       } = req.query as Record<string, string>;
 
-      // Build parameters object, filtering out undefined values
-      const params: {
-        category?: IssueCategory;
-        name?: string;
-        page?: number;
-        limit?: number;
-      } = {};
-      if (category) params.category = category as IssueCategory;
-      if (name) params.name = name;
-      if (page) params.page = Number(page);
-      if (limit) params.limit = Number(limit);
+      if (!projectId) {
+        res.status(400).json({
+          error: "projectId query parameter is required",
+        });
+        return;
+      }
 
+      const params = buildIssueParams({
+        projectId,
+        category,
+        name,
+        page,
+        limit,
+      });
       const result = await issueService.getAllIssuesV2(params);
 
       res.status(200).json(result);
@@ -72,6 +78,7 @@ export const issueController = {
   getAllIssuesWithStats: async (req: Request, res: Response): Promise<void> => {
     try {
       const {
+        projectId,
         category,
         name,
         page = "1",
@@ -80,22 +87,22 @@ export const issueController = {
         statTo,
       } = req.query as Record<string, string>;
 
-      // Build parameters object, filtering out undefined values
-      const params: {
-        category?: IssueCategory;
-        name?: string;
-        page?: number;
-        limit?: number;
-        statFrom?: string;
-        statTo?: string;
-      } = {};
-      if (category) params.category = category as IssueCategory;
-      if (name) params.name = name;
-      if (page) params.page = Number(page);
-      if (limit) params.limit = Number(limit);
-      if (statFrom) params.statFrom = statFrom;
-      if (statTo) params.statTo = statTo;
+      if (!projectId) {
+        res.status(400).json({
+          error: "projectId query parameter is required",
+        });
+        return;
+      }
 
+      const params = buildIssueParams({
+        projectId,
+        category,
+        name,
+        page,
+        limit,
+        statFrom,
+        statTo,
+      });
       const result = await issueService.getAllIssuesWithStats(params);
 
       res.status(200).json(result);
@@ -113,6 +120,7 @@ export const issueController = {
   ): Promise<void> => {
     try {
       const {
+        projectId,
         category,
         name,
         page = "1",
@@ -121,22 +129,22 @@ export const issueController = {
         statTo,
       } = req.query as Record<string, string>;
 
-      // Build parameters object, filtering out undefined values
-      const params: {
-        category?: IssueCategory;
-        name?: string;
-        page?: number;
-        limit?: number;
-        statFrom?: string;
-        statTo?: string;
-      } = {};
-      if (category) params.category = category as IssueCategory;
-      if (name) params.name = name;
-      if (page) params.page = Number(page);
-      if (limit) params.limit = Number(limit);
-      if (statFrom) params.statFrom = statFrom;
-      if (statTo) params.statTo = statTo;
+      if (!projectId) {
+        res.status(400).json({
+          error: "projectId query parameter is required",
+        });
+        return;
+      }
 
+      const params = buildIssueParams({
+        projectId,
+        category,
+        name,
+        page,
+        limit,
+        statFrom,
+        statTo,
+      });
       const result = await issueService.getAllIssuesWithStatsV2(params);
 
       res.status(200).json(result);
@@ -151,6 +159,7 @@ export const issueController = {
   getIssueById: async (req: Request, res: Response): Promise<void> => {
     try {
       const { issueId } = req.params;
+      const { projectId } = req.query as Record<string, string>;
 
       if (!issueId) {
         res.status(400).json({
@@ -159,7 +168,15 @@ export const issueController = {
         return;
       }
 
-      const issueRecords = await issueService.getIssueById(issueId);
+      // Validate required projectId
+      if (!projectId) {
+        res.status(400).json({
+          error: "projectId query parameter is required",
+        });
+        return;
+      }
+
+      const issueRecords = await issueService.getIssueById(issueId, projectId);
       res.status(200).json(issueRecords);
     } catch (error) {
       const err = error as Error;
@@ -173,6 +190,7 @@ export const issueController = {
   getIssueByIdV2: async (req: Request, res: Response): Promise<void> => {
     try {
       const { issueId } = req.params;
+      const { projectId } = req.query as Record<string, string>;
 
       if (!issueId) {
         res.status(400).json({
@@ -181,7 +199,18 @@ export const issueController = {
         return;
       }
 
-      const issueRecords = await issueService.getIssueByIdV2(issueId);
+      // Validate required projectId
+      if (!projectId) {
+        res.status(400).json({
+          error: "projectId query parameter is required",
+        });
+        return;
+      }
+
+      const issueRecords = await issueService.getIssueByIdV2(
+        issueId,
+        projectId,
+      );
       res.status(200).json(issueRecords);
     } catch (error) {
       const err = error as Error;
@@ -247,10 +276,7 @@ export const issueController = {
         return;
       }
 
-      const updatedIssue = await issueService.updateIssue(
-        issueId,
-        updateData,
-      );
+      const updatedIssue = await issueService.updateIssue(issueId, updateData);
       res.status(200).json(updatedIssue);
     } catch (error) {
       const err = error as Error;

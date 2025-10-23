@@ -54,6 +54,7 @@ export function registerIssueRoutes(registry: OpenAPIRegistry) {
     description: "Retrieves all issues (requires authentication)",
     request: {
       query: z.object({
+        projectId: z.string().uuid().describe("Project ID to filter issues"),
         category: z.string().optional(),
         name: z.string().optional(),
         page: z.number().default(1).optional(),
@@ -67,6 +68,14 @@ export function registerIssueRoutes(registry: OpenAPIRegistry) {
         content: {
           "application/json": {
             schema: z.array(IssueSchema),
+          },
+        },
+      },
+      400: {
+        description: "Bad request - missing required projectId parameter",
+        content: {
+          "application/json": {
+            schema: ErrorResponseSchema,
           },
         },
       },
@@ -90,6 +99,9 @@ export function registerIssueRoutes(registry: OpenAPIRegistry) {
       params: z.object({
         issueId: z.string().uuid(),
       }),
+      query: z.object({
+        projectId: z.string().uuid().describe("Project ID to verify ownership of the issue"),
+      }),
     },
     security: [{ BearerAuth: [] }],
     responses: {
@@ -98,6 +110,14 @@ export function registerIssueRoutes(registry: OpenAPIRegistry) {
         content: {
           "application/json": {
             schema: IssueSchema,
+          },
+        },
+      },
+      400: {
+        description: "Bad request - missing required projectId parameter",
+        content: {
+          "application/json": {
+            schema: ErrorResponseSchema,
           },
         },
       },
@@ -277,6 +297,7 @@ export function registerIssueRoutes(registry: OpenAPIRegistry) {
       "Retrieves all issues with their statistics including occurrence count, first/last occurrence, impacted tests count, and time-based distribution. Requires authentication. Optionally filter statistics by date range.",
     request: {
       query: z.object({
+        projectId: z.string().uuid().describe("Project ID to filter issues with statistics"),
         category: z.nativeEnum(IssueCategory).optional(),
         name: z.string().optional(),
         page: z.number().default(1).optional(),
@@ -325,6 +346,14 @@ export function registerIssueRoutes(registry: OpenAPIRegistry) {
               page: z.number(),
               totalPages: z.number(),
             }),
+          },
+        },
+      },
+      400: {
+        description: "Bad request - missing required projectId parameter",
+        content: {
+          "application/json": {
+            schema: ErrorResponseSchema,
           },
         },
       },
