@@ -289,6 +289,7 @@ export const issueController = {
   deleteIssue: async (req: Request, res: Response): Promise<void> => {
     try {
       const { issueId } = req.params;
+      const { projectId } = req.query as Record<string, string>;
 
       if (!issueId) {
         res.status(400).json({
@@ -297,7 +298,15 @@ export const issueController = {
         return;
       }
 
-      const deletedIssue = await issueService.deleteIssue(issueId);
+      // Validate required projectId
+      if (!projectId) {
+        res.status(400).json({
+          error: "projectId query parameter is required",
+        });
+        return;
+      }
+
+      const deletedIssue = await issueService.deleteIssue(issueId, projectId);
       res.status(200).json({
         message: "Issue and all associated assumptions deleted successfully",
         issue: deletedIssue,

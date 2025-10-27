@@ -206,13 +206,13 @@ export const issueService = {
     return updatedIssue;
   },
 
-  async deleteIssue(issueId: string): Promise<PrismaIssue> {
+  async deleteIssue(issueId: string, projectId: string): Promise<PrismaIssue> {
     if (!issueId) {
       throw new Error("Issue ID is required");
     }
 
     try {
-      const deletedIssue = await issueModel.delete(issueId);
+      const deletedIssue = await issueModel.delete(issueId, projectId);
       return deletedIssue;
     } catch (error) {
       const err = error as Error;
