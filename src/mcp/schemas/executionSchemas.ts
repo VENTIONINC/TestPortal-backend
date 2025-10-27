@@ -6,4 +6,5 @@ import type { MCPToolSchema } from "@/types";
  */
 export const getExecutionByIdSchema: MCPToolSchema = {
   executionId: z.string(),
+  projectId: z.string(),
 };

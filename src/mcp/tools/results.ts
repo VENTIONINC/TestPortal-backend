@@ -13,6 +13,7 @@ import type {
 
 interface GetResultByIdParams {
   resultId: string;
+  projectId: string;
 }
 
 export const getResults = createMcpTool(
@@ -31,8 +32,8 @@ export const getResultById = createMcpTool(
   "Retrieve complete details for a specific test result including error information, call stacks, and execution data",
   getResultByIdSchema,
   async (params: GetResultByIdParams): Promise<MCPToolResponse> => {
-    const { resultId } = params;
-    const result = await mcpResultHandler.getResultById(resultId);
+    const { resultId, projectId } = params;
+    const result = await mcpResultHandler.getResultById(resultId, projectId);
     return createSuccessResponse(result);
   },
   "fetching result",

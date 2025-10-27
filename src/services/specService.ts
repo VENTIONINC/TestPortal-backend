@@ -7,12 +7,16 @@ interface ProcessedSpec extends Omit<PrismaSpec, "tags" | "annotations"> {
 }
 
 export const specService = {
-  async getSpecById(specId: string): Promise<ProcessedSpec> {
+  async getSpecById(specId: string, projectId: string): Promise<ProcessedSpec> {
     if (!specId) {
       throw new Error("Spec ID is required");
     }
 
-    const spec = await specModel.findById(specId);
+    if (!projectId) {
+      throw new Error("Project ID is required");
+    }
+
+    const spec = await specModel.findById(specId, projectId);
 
     if (!spec) {
       throw new Error(`Spec with ID ${specId} not found`);

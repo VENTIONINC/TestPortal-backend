@@ -6,4 +6,5 @@ import type { MCPToolSchema } from "@/types";
  */
 export const getSpecByIdSchema: MCPToolSchema = {
   specId: z.string(),
+  projectId: z.string(),
 };

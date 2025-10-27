@@ -247,6 +247,9 @@ export function registerIssueRoutes(registry: OpenAPIRegistry) {
       params: z.object({
         issueId: z.string().uuid(),
       }),
+      query: z.object({
+        projectId: z.string().uuid().describe("Project ID to verify ownership of the issue"),
+      }),
     },
     security: [{ BearerAuth: [] }],
     responses: {

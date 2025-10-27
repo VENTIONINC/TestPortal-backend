@@ -88,6 +88,7 @@ export const resultErrorController = {
   getResultErrorById: async (req: Request, res: Response): Promise<void> => {
     try {
       const { resultErrorId } = req.params;
+      const { projectId } = req.query;
 
       if (!resultErrorId) {
         res.status(400).json({
@@ -96,8 +97,15 @@ export const resultErrorController = {
         return;
       }
 
+      if (!projectId) {
+        res.status(400).json({
+          error: "Project ID is required",
+        });
+        return;
+      }
+
       const resultError =
-        await resultErrorService.getResultErrorById(resultErrorId);
+        await resultErrorService.getResultErrorById(resultErrorId, projectId as string);
       res.status(200).json(resultError);
     } catch (error) {
       const err = error as Error;

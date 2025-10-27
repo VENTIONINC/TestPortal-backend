@@ -27,7 +27,7 @@ export const mcpResultErrorHandler = {
     return await resultErrorService.bulkReview(errorIds);
   },
 
-  async getResultErrorById(resultErrorId: string): Promise<PrismaResultError> {
-    return await resultErrorService.getResultErrorById(resultErrorId);
+  async getResultErrorById(resultErrorId: string, projectId: string): Promise<PrismaResultError> {
+    return await resultErrorService.getResultErrorById(resultErrorId, projectId);
   },
 };

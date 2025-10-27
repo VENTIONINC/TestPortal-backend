@@ -23,13 +23,16 @@ export function registerExecutionRoutes(registry: OpenAPIRegistry) {
   registry.registerPath({
     method: "get",
     path: "/api/v2/executions/{executionId}",
-    description: "Retrieves an execution by its ID (v2)",
+    description: "Retrieves an execution by its ID (requires projectId)",
     security: [{ BearerAuth: [] }],
     request: {
       params: z.object({
         executionId: z.string().uuid().openapi({
           description: "Unique identifier of the execution",
         }),
+      }),
+      query: z.object({
+        projectId: z.string().uuid().describe("Project ID to verify ownership of the execution"),
       }),
     },
     responses: {
@@ -38,6 +41,14 @@ export function registerExecutionRoutes(registry: OpenAPIRegistry) {
         content: {
           "application/json": {
             schema: ExecutionSchema,
+          },
+        },
+      },
+      400: {
+        description: "Bad request - missing required projectId parameter",
+        content: {
+          "application/json": {
+            schema: ErrorResponseSchema,
           },
         },
       },

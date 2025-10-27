@@ -5,6 +5,7 @@ export const executionController = {
   getExecutionById: async (req: Request, res: Response): Promise<void> => {
     try {
       const { executionId } = req.params;
+      const { projectId } = req.query as Record<string, string>;
 
       if (!executionId) {
         res.status(400).json({
@@ -13,7 +14,14 @@ export const executionController = {
         return;
       }
 
-      const execution = await executionService.getExecutionById(executionId);
+      if (!projectId) {
+        res.status(400).json({
+          error: "Project ID is required",
+        });
+        return;
+      }
+
+      const execution = await executionService.getExecutionById(executionId, projectId);
       res.status(200).json(execution);
     } catch (error) {
       const err = error as Error;

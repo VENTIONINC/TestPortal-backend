@@ -121,10 +121,13 @@ export const issueModel = {
     });
   },
 
-  delete: async (id: string): Promise<PrismaIssue> => {
-    // Check if issue exists
-    const existingIssue = await dbClient.issue.findUnique({
-      where: { id },
+  delete: async (id: string, projectId: string): Promise<PrismaIssue> => {
+    // Check if issue exists and belongs to the project
+    const existingIssue = await dbClient.issue.findFirst({
+      where: {
+        id,
+        projectId,
+      },
       include: {
         assumptions: true,
       },

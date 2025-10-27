@@ -4,7 +4,20 @@ import type { PrismaResultError, ResultErrorWithRelations } from "@/types";
 type ResultErrorWithAssumptions = Omit<ResultErrorWithRelations, "result">;
 
 export const resultErrorModel = {
-  findById: async (id: string): Promise<PrismaResultError | null> => {
+  findById: async (id: string, projectId: string): Promise<PrismaResultError | null> => {
+    return await dbClient.resultError.findFirst({
+      where: {
+        id,
+        result: {
+          execution: {
+            projectId,
+          },
+        },
+      },
+    });
+  },
+
+  findByIdInternal: async (id: string): Promise<PrismaResultError | null> => {
     return await dbClient.resultError.findUnique({
       where: {
         id,

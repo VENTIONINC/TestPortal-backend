@@ -154,10 +154,13 @@ export function registerResultErrorRoutes(registry: OpenAPIRegistry) {
   registry.registerPath({
     method: "get",
     path: "/api/v2/result-errors/{resultErrorId}",
-    description: "Retrieves a specific result error by ID",
+    description: "Retrieves a specific result error by ID (requires projectId)",
     request: {
       params: z.object({
         resultErrorId: z.string().uuid(),
+      }),
+      query: z.object({
+        projectId: z.string().uuid().describe("Project ID to verify ownership of the result error"),
       }),
     },
     responses: {
@@ -172,7 +175,7 @@ export function registerResultErrorRoutes(registry: OpenAPIRegistry) {
         },
       },
       400: {
-        description: "Bad request",
+        description: "Bad request - missing required projectId parameter",
         content: {
           "application/json": {
             schema: ErrorResponseSchema,

@@ -31,4 +31,5 @@ export const updateAssumptionSchema: MCPToolSchema = {
  */
 export const getAssumptionByIdSchema: MCPToolSchema = {
   assumptionId: z.string().describe("UUID of the assumption"),
+  projectId: z.string().describe("UUID of the project"),
 };

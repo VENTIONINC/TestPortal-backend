@@ -28,4 +28,5 @@ export const bulkReviewSchema: MCPToolSchema = {
  */
 export const getResultErrorByIdSchema: MCPToolSchema = {
   resultErrorId: z.string(),
+  projectId: z.string(),
 };

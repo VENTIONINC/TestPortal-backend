@@ -21,10 +21,13 @@ export function registerSpecRoutes(registry: OpenAPIRegistry) {
   registry.registerPath({
     method: "get",
     path: "/api/v2/specs/{specId}",
-    description: "Retrieves a specific spec by its ID (V2 endpoint)",
+    description: "Retrieves a specific spec by its ID (requires projectId)",
     request: {
       params: z.object({
         specId: z.string().uuid(),
+      }),
+      query: z.object({
+        projectId: z.string().uuid().describe("Project ID to verify ownership of the spec"),
       }),
     },
     responses: {
