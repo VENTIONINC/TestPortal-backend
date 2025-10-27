@@ -88,6 +88,8 @@ export const jsonReportController = {
               analysisCategory: analysis.category ?? null,
               analysisConfidence: analysis.confidence,
               analysisConclusion: analysis.conclusion ?? null,
+              analysisErrorQuality: analysis.errorQuality ?? null,
+              analysisErrorQualityConclusion: analysis.errorQualityConclusion ?? null,
             },
           }),
         ),

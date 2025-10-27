@@ -38,12 +38,37 @@ export const getStoredResultsAnalysisPrompt = (testResultsLength: number) => `
     <step>Write a concise 2-3 sentence conclusion explaining the reasoning for the status and category assignment.</step>
   </steps>
 
+  <!-- ===== CONFIDENCE SCALE ===== -->
+  <confidence_scale>
+    <level value="1">Very Low - Highly uncertain, multiple possible causes</level>
+    <level value="2">Low - Uncertain, leaning toward categorization but significant doubt</level>
+    <level value="3">Medium - Moderately confident, reasonable evidence</level>
+    <level value="4">High - Confident, strong evidence supports categorization</level>
+    <level value="5">Very High - Extremely confident, clear/definitive evidence</level>
+  </confidence_scale>
+
+  <!-- ===== ERROR QUALITY SCALE ===== -->
+  <error_quality_scale>
+    <description>
+      Evaluate the quality of error messages and diagnostic information provided by the test.
+      This helps identify tests that need better error reporting.
+      Only applicable to failed tests.
+    </description>
+    <level value="1">Very Poor - Generic or missing error information (e.g., "Test failed", "Error occurred")</level>
+    <level value="2">Poor - Vague error message that lacks specific details about what went wrong</level>
+    <level value="3">Adequate - Basic error information present with some context but incomplete</level>
+    <level value="4">Good - Clear error message with meaningful context and location information</level>
+    <level value="5">Excellent - Detailed error with full stack trace, assertion details, and comprehensive diagnostic information</level>
+  </error_quality_scale>
+
   <strict>
     <rule>Use provided <field>id</field> (database UUID) from the test data.</rule>
     <rule>Use provided <field>status</field> from the test data.</rule>
     <rule><field>category</field> one of: bug, infra, performance, script, other.</rule>
-    <rule><field>confidence</field> must be a float 0.0 - 1.0.</rule>
+    <rule><field>confidence</field> must be an integer 1-5 (see confidence scale above).</rule>
     <rule><field>conclusion</field> must be a 2-3 sentence string explaining the analysis.</rule>
+    <rule><field>errorQuality</field> must be an integer 1-5 (see error quality scale above) - ONLY for failed tests, omit for passed tests.</rule>
+    <rule><field>errorQualityConclusion</field> must be a brief 1-2 sentence string explaining the error quality rating - ONLY for failed tests, omit for passed tests.</rule>
     <rule>No markdown outside the JSON structure; respond with pure JSON.</rule>
     <rule>The results array length <must>match <var>${testResultsLength}</var></must>.</rule>
   </strict>
@@ -77,21 +102,24 @@ export const getStoredResultsAnalysisPrompt = (testResultsLength: number) => `
             "id": "database-uuid (same as input)",
             "status": "failed",
             "category": "bug",
-            "confidence": 0.85,
-            "conclusion": "The test failed due to an assertion error in the response body. This indicates a potential application defect."
+            "confidence": 4,
+            "conclusion": "The test failed due to an assertion error in the response body. This indicates a potential application defect.",
+            "errorQuality": 4,
+            "errorQualityConclusion": "The error message provides clear assertion details with expected and actual values, making it easy to understand the failure."
           }
         ]
       }
     </schema>
     The <code>results</code> array must contain <var>${testResultsLength}</var> objects.
+    Note: <field>errorQuality</field> and <field>errorQualityConclusion</field> should ONLY be present for failed tests.
   </output>
 
   <!-- ===== FEW-SHOT EXAMPLES ===== -->
   <examples>
-    Here are two examples of how to analyze test results from the database.
+    Here are three examples of how to analyze test results from the database.
 
     <example n="1">
-      <name>A failed test due to an application bug</name>
+      <name>A failed test due to an application bug (high confidence)</name>
       <input_json>
         {
           "id": "550e8400-e29b-41d4-a716-446655440000",
@@ -111,14 +139,16 @@ export const getStoredResultsAnalysisPrompt = (testResultsLength: number) => `
           "id": "550e8400-e29b-41d4-a716-446655440000",
           "status": "failed",
           "category": "bug",
-          "confidence": 0.9,
-          "conclusion": "The test failed because of an assertion error where the actual welcome message did not match the expected one. This points to a likely defect in the application's user greeting logic."
+          "confidence": 5,
+          "conclusion": "The test failed because of an assertion error where the actual welcome message did not match the expected one. This points to a likely defect in the application's user greeting logic.",
+          "errorQuality": 5,
+          "errorQualityConclusion": "Excellent error quality with clear assertion details, showing both expected and actual values, along with precise location information."
         }
       </output_analysis>
     </example>
 
     <example n="2">
-      <name>A failed test due to infrastructure issues</name>
+      <name>A failed test due to infrastructure issues (high confidence)</name>
       <input_json>
         {
           "id": "660e8400-e29b-41d4-a716-446655440001",
@@ -138,8 +168,39 @@ export const getStoredResultsAnalysisPrompt = (testResultsLength: number) => `
           "id": "660e8400-e29b-41d4-a716-446655440001",
           "status": "failed",
           "category": "infra",
-          "confidence": 0.95,
-          "conclusion": "The test failed due to a network timeout connecting to the API endpoint. This is an infrastructure issue likely related to network connectivity or service availability."
+          "confidence": 5,
+          "conclusion": "The test failed due to a network timeout connecting to the API endpoint. This is an infrastructure issue likely related to network connectivity or service availability.",
+          "errorQuality": 4,
+          "errorQualityConclusion": "Good error quality with specific error code (ETIMEDOUT), target endpoint, and stack trace location information."
+        }
+      </output_analysis>
+    </example>
+
+    <example n="3">
+      <name>An ambiguous failure with uncertain root cause (very low confidence)</name>
+      <input_json>
+        {
+          "id": "770e8400-e29b-41d4-a716-446655440002",
+          "specKey": "e2e/dashboard.spec.ts > Dashboard > should load user data",
+          "specTitle": "should load user data",
+          "status": "failed",
+          "duration": 8500,
+          "retry": 0,
+          "executionName": "Chrome - Production",
+          "errorMessage": "Error: Test failed",
+          "errorStack": null,
+          "errorLocation": null
+        }
+      </input_json>
+      <output_analysis>
+        {
+          "id": "770e8400-e29b-41d4-a716-446655440002",
+          "status": "failed",
+          "category": "other",
+          "confidence": 1,
+          "conclusion": "The test failed with a generic error message and no stack trace or error location details. Without additional context, it's impossible to determine if this is an application bug, infrastructure issue, performance problem, or script error.",
+          "errorQuality": 1,
+          "errorQualityConclusion": "Very poor error quality with only a generic 'Test failed' message and no diagnostic information, stack trace, or context."
         }
       </output_analysis>
     </example>

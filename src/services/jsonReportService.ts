@@ -24,6 +24,8 @@ interface ResultCreateInput {
   analysisCategory?: string;
   analysisConfidence?: number;
   analysisConclusion?: string;
+  analysisErrorQuality?: number;
+  analysisErrorQualityConclusion?: string;
   spec: { connect: { id: string } }; // UUID reference to Spec
   execution: { connect: { id: string } }; // UUID reference to Execution
   errors?: { connect: { id: string } }; // UUID reference to ResultError
@@ -258,12 +260,7 @@ export const jsonReportService = {
 
     for (const result of spec.results) {
       // Analysis is now always done post-persist for both CTRF and Playwright
-      await this._createResultRecord(
-        result,
-        specRecord,
-        executionRecord,
-        undefined, // Analysis added via separate update after persist
-      );
+      await this._createResultRecord(result, specRecord, executionRecord);
     }
   },
 
@@ -274,7 +271,6 @@ export const jsonReportService = {
     resultData: TestResult,
     specRecord: PrismaSpec,
     executionRecord: PrismaExecution,
-    analysis?: TestResultAnalysis,
   ): Promise<PrismaResult> {
     // Check if result already exists
     let resultRecord = await dbClient.result.findFirst({
@@ -295,13 +291,6 @@ export const jsonReportService = {
       status: resultData.status,
       duration: resultData.duration,
       startTime: new Date(resultData.startTime),
-      // Add analysis fields if available
-      ...(analysis && {
-        analysisStatus: analysis.status,
-        analysisCategory: analysis.category,
-        analysisConfidence: analysis.confidence,
-        analysisConclusion: analysis.conclusion,
-      }),
       spec: {
         connect: {
           id: specRecord.id,
