@@ -5,6 +5,7 @@ import type { MCPToolResponse } from "@/types";
 
 interface GetSpecByIdParams {
   specId: string;
+  projectId: string;
 }
 
 export const getSpecById = createMcpTool(
@@ -12,8 +13,8 @@ export const getSpecById = createMcpTool(
   "Retrieve detailed information about a specific spec by its unique ID, including parsed tags and annotations",
   getSpecByIdSchema,
   async (params: GetSpecByIdParams): Promise<MCPToolResponse> => {
-    const { specId } = params;
-    const spec = await mcpSpecHandler.getSpecById(specId);
+    const { specId, projectId } = params;
+    const spec = await mcpSpecHandler.getSpecById(specId, projectId);
     return createSuccessResponse(spec);
   },
   "fetching spec",

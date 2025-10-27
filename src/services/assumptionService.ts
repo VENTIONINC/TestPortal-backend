@@ -88,12 +88,17 @@ export const assumptionService = {
 
   async getAssumptionById(
     assumptionId: string,
+    projectId: string,
   ): Promise<PrismaAssumption> {
     if (!assumptionId) {
       throw new Error("Assumption ID is required");
     }
 
-    const assumption = await assumptionModel.findById(assumptionId);
+    if (!projectId) {
+      throw new Error("Project ID is required");
+    }
+
+    const assumption = await assumptionModel.findById(assumptionId, projectId);
 
     if (!assumption) {
       throw new Error(`Assumption with ID ${assumptionId} not found`);

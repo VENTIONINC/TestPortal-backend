@@ -128,10 +128,13 @@ export function registerResultRoutes(registry: OpenAPIRegistry) {
   registry.registerPath({
     method: "get",
     path: "/api/v2/results/{resultId}",
-    description: "Retrieves a specific result by its ID",
+    description: "Retrieves a specific result by its ID (requires projectId)",
     request: {
       params: z.object({
         resultId: z.string().uuid(),
+      }),
+      query: z.object({
+        projectId: z.string().uuid().describe("Project ID to verify ownership of the result"),
       }),
     },
     responses: {
@@ -140,6 +143,14 @@ export function registerResultRoutes(registry: OpenAPIRegistry) {
         content: {
           "application/json": {
             schema: ResultSchema,
+          },
+        },
+      },
+      400: {
+        description: "Bad request - missing required projectId parameter",
+        content: {
+          "application/json": {
+            schema: ErrorResponseSchema,
           },
         },
       },

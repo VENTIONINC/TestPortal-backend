@@ -21,10 +21,17 @@ export interface ResultFilters {
 export const resultModel = {
   findById: async (
     id: number | string,
+    projectId: string,
   ): Promise<ResultWithRelations | null> => {
-    return (await dbClient.result.findUnique({
+    return (await dbClient.result.findFirst({
       where: {
         id: String(id),
+        spec: {
+          projectId,
+        },
+        execution: {
+          projectId,
+        },
       },
       include: {
         spec: true,

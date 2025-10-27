@@ -105,12 +105,16 @@ export const resultService = {
     };
   },
 
-  async getResultById(resultId: number | string): Promise<ResultWithRelations> {
+  async getResultById(resultId: number | string, projectId: string): Promise<ResultWithRelations> {
     if (!resultId) {
       throw new Error("Result ID is required");
     }
 
-    const resultRecord = await resultModel.findById(resultId);
+    if (!projectId) {
+      throw new Error("Project ID is required");
+    }
+
+    const resultRecord = await resultModel.findById(resultId, projectId);
 
     if (!resultRecord) {
       throw new Error(`Result with ID ${resultId} not found`);

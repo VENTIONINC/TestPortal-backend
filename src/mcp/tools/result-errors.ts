@@ -23,6 +23,7 @@ interface BulkReviewParams {
 
 interface GetResultErrorByIdParams {
   resultErrorId: string;
+  projectId: string;
 }
 
 export const assignIssue = createMcpTool(
@@ -78,9 +79,9 @@ export const getResultErrorById = createMcpTool(
   "Retrieve detailed information about a specific result error by its unique ID",
   getResultErrorByIdSchema,
   async (params: GetResultErrorByIdParams): Promise<MCPToolResponse> => {
-    const { resultErrorId } = params;
+    const { resultErrorId, projectId } = params;
     const resultError =
-      await mcpResultErrorHandler.getResultErrorById(resultErrorId);
+      await mcpResultErrorHandler.getResultErrorById(resultErrorId, projectId);
     return createSuccessResponse(resultError);
   },
   "fetching result error",

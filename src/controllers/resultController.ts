@@ -1,54 +1,20 @@
 import { Request, Response } from "express";
 import { resultService } from "@/services/resultService";
-import type { GetResultsParams, GetResultsStatsParams } from "@/types";
+import type { GetResultsStatsParams } from "@/types";
+import { buildResultParams } from "@/lib/params-builder";
 
 export const resultController = {
   getResults: async (req: Request, res: Response): Promise<void> => {
     try {
-      const {
-        projectId,
-        tag,
-        specId,
-        specFile,
-        specName,
-        environment,
-        type,
-        status,
-        reviewStatus,
-        errorMessage,
-        issueName,
-        from,
-        to,
-        page = "1",
-        limit = "1000",
-      } = req.query as Record<string, string>;
+      const params = buildResultParams(req.query as Record<string, string>);
 
       // Validate required projectId parameter
-      if (!projectId) {
+      if (!params.projectId) {
         res.status(400).json({
           error: "Project ID is required",
         });
         return;
       }
-
-      // Convert and validate parameters, filtering out undefined values
-      const params: GetResultsParams = {
-        projectId,
-      };
-      if (tag) params.tag = tag;
-      if (specId) params.specId = specId;
-      if (specFile) params.specFile = specFile;
-      if (specName) params.specName = specName;
-      if (environment) params.environment = environment;
-      if (type) params.type = type;
-      if (status) params.status = status;
-      if (reviewStatus) params.reviewStatus = reviewStatus;
-      if (errorMessage) params.errorMessage = errorMessage;
-      if (issueName) params.issueName = issueName;
-      if (from) params.from = from;
-      if (to) params.to = to;
-      if (page) params.page = Number(page);
-      if (limit) params.limit = Number(limit);
 
       const result = await resultService.getResults(params);
 
@@ -64,6 +30,7 @@ export const resultController = {
   getResultById: async (req: Request, res: Response): Promise<void> => {
     try {
       const { resultId } = req.params;
+      const { projectId } = req.query as Record<string, string>;
 
       if (!resultId) {
         res.status(400).json({
@@ -72,7 +39,14 @@ export const resultController = {
         return;
       }
 
-      const resultRecord = await resultService.getResultById(resultId);
+      if (!projectId) {
+        res.status(400).json({
+          error: "Project ID is required",
+        });
+        return;
+      }
+
+      const resultRecord = await resultService.getResultById(resultId, projectId);
       res.status(200).json(resultRecord);
     } catch (error) {
       const err = error as Error;

@@ -7,7 +7,7 @@ interface ProcessedSpec extends Omit<PrismaSpec, "tags" | "annotations"> {
 }
 
 export const mcpSpecHandler = {
-  async getSpecById(specId: string): Promise<ProcessedSpec> {
-    return await specService.getSpecById(specId);
+  async getSpecById(specId: string, projectId: string): Promise<ProcessedSpec> {
+    return await specService.getSpecById(specId, projectId);
   },
 };

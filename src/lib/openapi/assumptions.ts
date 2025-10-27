@@ -148,11 +148,14 @@ export function registerAssumptionRoutes(registry: OpenAPIRegistry) {
   registry.registerPath({
     method: "get",
     path: "/api/v2/assumptions/{assumptionId}",
-    description: "Retrieve an existing assumption by its ID (requires authentication)",
+    description: "Retrieve an existing assumption by its ID (requires projectId)",
     security: [{ BearerAuth: [] }],
     request: {
       params: z.object({
         assumptionId: z.string().uuid(),
+      }),
+      query: z.object({
+        projectId: z.string().uuid().describe("Project ID to verify ownership of the assumption"),
       }),
     },
     responses: {
@@ -161,6 +164,14 @@ export function registerAssumptionRoutes(registry: OpenAPIRegistry) {
         content: {
           "application/json": {
             schema: AssumptionSchema,
+          },
+        },
+      },
+      400: {
+        description: "Bad request - missing required projectId parameter",
+        content: {
+          "application/json": {
+            schema: ErrorResponseSchema,
           },
         },
       },
