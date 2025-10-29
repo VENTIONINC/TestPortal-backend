@@ -98,17 +98,6 @@ const UpdateResultAnalysisRequestSchema = z
       .string()
       .optional()
       .describe("Explanation for the categorization decision"),
-    analysisErrorQuality: z
-      .number()
-      .int()
-      .min(1)
-      .max(5)
-      .optional()
-      .describe("Quality rating of error messages (1-5 scale, only for failed tests)"),
-    analysisErrorQualityConclusion: z
-      .string()
-      .optional()
-      .describe("Explanation for the error quality rating"),
   })
   .openapi("UpdateResultAnalysisRequest");
 
