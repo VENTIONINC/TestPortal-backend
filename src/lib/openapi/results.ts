@@ -16,6 +16,33 @@ const ResultSchema = z
     retry: z.number().optional(),
     duration: z.number().optional(),
     startTime: z.string().optional(),
+    analysisStatus: z.enum(["passed", "failed"]).optional().describe("Test analysis status"),
+    analysisCategory: z
+      .enum(["bug", "infra", "performance", "script", "other"])
+      .optional()
+      .describe("Failure category from AI analysis"),
+    analysisConfidence: z
+      .number()
+      .int()
+      .min(1)
+      .max(5)
+      .optional()
+      .describe("Confidence level of analysis (1-5 scale)"),
+    analysisConclusion: z
+      .string()
+      .optional()
+      .describe("Explanation for the categorization decision"),
+    analysisErrorQuality: z
+      .number()
+      .int()
+      .min(1)
+      .max(5)
+      .optional()
+      .describe("Quality rating of error messages (1-5 scale, only for failed tests)"),
+    analysisErrorQualityConclusion: z
+      .string()
+      .optional()
+      .describe("Explanation for the error quality rating"),
     createdAt: z.string(),
     updatedAt: z.string(),
   })
@@ -55,12 +82,33 @@ const ResultsStatsSchema = z
 
 const UpdateResultAnalysisRequestSchema = z
   .object({
-    analysisStatus: z.enum(["passed", "failed"]).optional(),
+    analysisStatus: z.enum(["passed", "failed"]).optional().describe("Test analysis status"),
     analysisCategory: z
       .enum(["bug", "infra", "performance", "script", "other"])
-      .optional(),
-    analysisConfidence: z.number().min(0).max(1).optional(),
-    analysisConclusion: z.string().optional(),
+      .optional()
+      .describe("Failure category from AI analysis"),
+    analysisConfidence: z
+      .number()
+      .int()
+      .min(1)
+      .max(5)
+      .optional()
+      .describe("Confidence level of analysis (1-5 scale)"),
+    analysisConclusion: z
+      .string()
+      .optional()
+      .describe("Explanation for the categorization decision"),
+    analysisErrorQuality: z
+      .number()
+      .int()
+      .min(1)
+      .max(5)
+      .optional()
+      .describe("Quality rating of error messages (1-5 scale, only for failed tests)"),
+    analysisErrorQualityConclusion: z
+      .string()
+      .optional()
+      .describe("Explanation for the error quality rating"),
   })
   .openapi("UpdateResultAnalysisRequest");
 

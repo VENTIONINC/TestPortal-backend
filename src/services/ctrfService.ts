@@ -58,9 +58,8 @@ export const ctrfService = {
     // Step 4: Analyze stored results (POST-PERSIST)
     let analysisMap: Map<string, TestResultAnalysis> | null = null;
     try {
-      analysisMap = await testAnalysisService.analyzeStoredResults(
-        createdResults,
-      );
+      analysisMap =
+        await testAnalysisService.analyzeStoredResults(createdResults);
 
       // Step 5: Update results with analysis fields
       logger.info(`Updating ${analysisMap.size} results with analysis data`);
@@ -74,6 +73,9 @@ export const ctrfService = {
               analysisCategory: analysis.category ?? null,
               analysisConfidence: analysis.confidence,
               analysisConclusion: analysis.conclusion ?? null,
+              analysisErrorQuality: analysis.errorQuality ?? null,
+              analysisErrorQualityConclusion:
+                analysis.errorQualityConclusion ?? null,
             },
           }),
         ),
