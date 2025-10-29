@@ -12,13 +12,29 @@ export const testResultSchema = z.object({
     .describe("Failure category (only for failed tests)"),
   confidence: z
     .number()
-    .min(0.0)
-    .max(1.0)
-    .describe("Confidence level of the analysis"),
+    .int()
+    .min(1)
+    .max(5)
+    .describe("Confidence level of the analysis (1-5 scale)"),
   conclusion: z
     .string()
     .describe(
       "Brief explanation (2-3 sentences max) for the categorization decision, only for failed tests",
+    ),
+  errorQuality: z
+    .number()
+    .int()
+    .min(1)
+    .max(5)
+    .nullable()
+    .describe(
+      "Error description quality rating (1-5 scale, only for failed tests)",
+    ),
+  errorQualityConclusion: z
+    .string()
+    .nullable()
+    .describe(
+      "Brief explanation for the error quality rating (only for failed tests)",
     ),
 });
 
@@ -40,6 +56,8 @@ export interface TestResultAnalysis {
   category?: "bug" | "infra" | "performance" | "script" | "other";
   confidence: number;
   conclusion?: string;
+  errorQuality: number | null;
+  errorQualityConclusion: string | null;
 }
 
 /**

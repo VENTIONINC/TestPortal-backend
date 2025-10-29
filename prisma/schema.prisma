@@ -79,23 +79,25 @@ model Spec {
 }
 
 model Result {
-  id                 String        @id @default(uuid()) @db.Uuid
-  createdAt          DateTime      @default(now())
-  updatedAt          DateTime      @updatedAt
-  reportPortalLink   String?
-  retry              Int
-  status             String
-  duration           Int
-  startTime          DateTime
-  errors             ResultError[]
-  spec               Spec          @relation(fields: [specId], references: [id])
-  specId             String        @db.Uuid
-  execution          Execution     @relation(fields: [executionId], references: [id])
-  executionId        String        @db.Uuid
-  analysisStatus     String? // "passed" | "failed"
-  analysisCategory   String? // "bug" | "infra" | "performance" | "script" | "other"
-  analysisConfidence Float? // 0.0 to 1.0
-  analysisConclusion String? // Brief explanation for the categorization decision
+  id                              String        @id @default(uuid()) @db.Uuid
+  createdAt                       DateTime      @default(now())
+  updatedAt                       DateTime      @updatedAt
+  reportPortalLink                String?
+  retry                           Int
+  status                          String
+  duration                        Int
+  startTime                       DateTime
+  errors                          ResultError[]
+  spec                            Spec          @relation(fields: [specId], references: [id])
+  specId                          String        @db.Uuid
+  execution                       Execution     @relation(fields: [executionId], references: [id])
+  executionId                     String        @db.Uuid
+  analysisStatus                  String? // "passed" | "failed"
+  analysisCategory                String? // "bug" | "infra" | "performance" | "script" | "other"
+  analysisConfidence              Int? // 1 to 5
+  analysisConclusion              String? // Brief explanation for the categorization decision
+  analysisErrorQuality            Int? // 1 to 5 (only for failed tests)
+  analysisErrorQualityConclusion  String? // Brief explanation for error quality rating (only for failed tests)
 }
 
 model ResultError {
