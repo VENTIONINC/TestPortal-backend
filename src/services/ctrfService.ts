@@ -41,7 +41,23 @@ export const ctrfService = {
       projectId.toString(),
     );
 
-    // Step 3: Fetch just-created results from DB with relations
+    // Step 3: Check if analysis is enabled for project owner
+    const project = await dbClient.project.findUnique({
+      where: { id: projectId },
+      include: { owner: true },
+    });
+
+    const shouldAnalyze = project?.owner.analyzeEnabled ?? false;
+
+    if (!shouldAnalyze) {
+      logger.info("Analysis disabled for user, skipping analysis");
+      return {
+        ...processResult,
+        analysis: undefined,
+      };
+    }
+
+    // Step 4: Fetch just-created results from DB with relations
     const createdResults = await dbClient.result.findMany({
       where: { executionId: processResult.executionId },
       include: {
@@ -55,13 +71,13 @@ export const ctrfService = {
       `Fetched ${createdResults.length} results from DB for analysis`,
     );
 
-    // Step 4: Analyze stored results (POST-PERSIST)
+    // Step 5: Analyze stored results (POST-PERSIST)
     let analysisMap: Map<string, TestResultAnalysis> | null = null;
     try {
       analysisMap =
         await testAnalysisService.analyzeStoredResults(createdResults);
 
-      // Step 5: Update results with analysis fields
+      // Step 6: Update results with analysis fields
       logger.info(`Updating ${analysisMap.size} results with analysis data`);
 
       await Promise.all(

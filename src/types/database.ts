@@ -109,6 +109,7 @@ export interface PrismaUser {
   reportPortalEnabled: boolean;
   monitoringPortalUrl?: string | null;
   monitoringPortalEnabled: boolean;
+  analyzeEnabled: boolean;
 }
 
 // Database model interfaces with relations

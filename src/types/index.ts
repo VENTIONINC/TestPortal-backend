@@ -90,5 +90,6 @@ export interface UserIntegrations {
   reportPortalEnabled?: boolean;
   monitoringPortalUrl?: string | null;
   monitoringPortalEnabled?: boolean;
+  analyzeEnabled?: boolean;
 }
 

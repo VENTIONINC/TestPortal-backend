@@ -6,6 +6,7 @@ import {
 import { testAnalysisService } from "@/services/testAnalysisService";
 import type { TestResultAnalysis } from "@/schemas/testAnalysisSchemas";
 import type { ApiKeyAuthenticatedRequest } from "@/middleware/apiKeyMiddleware";
+import { dbClient } from "@/prisma/client";
 import getLogger from "@/lib/logger";
 
 const logger = getLogger("json-report-controller");
@@ -56,8 +57,23 @@ export const jsonReportController = {
       projectId,
     );
 
-    // Step 2: Fetch just-created results from DB with relations
-    const { dbClient } = await import("@/prisma/client");
+    // Step 2: Check if analysis is enabled for project owner
+    const project = await dbClient.project.findUnique({
+      where: { id: projectId },
+      include: { owner: true },
+    });
+
+    const shouldAnalyze = project?.owner.analyzeEnabled ?? false;
+
+    if (!shouldAnalyze) {
+      logger.info("Analysis disabled for user, skipping analysis");
+      return {
+        ...processResult,
+        analysis: undefined,
+      };
+    }
+
+    // Step 3: Fetch just-created results from DB with relations
     const createdResults = await dbClient.result.findMany({
       where: { executionId: processResult.executionId },
       include: {
@@ -71,12 +87,12 @@ export const jsonReportController = {
       `Fetched ${createdResults.length} results from DB for analysis`,
     );
 
-    // Step 3: Analyze stored results (POST-PERSIST)
+    // Step 4: Analyze stored results (POST-PERSIST)
     let analysisMap = null;
     try {
       analysisMap = await testAnalysisService.analyzeStoredResults(createdResults);
 
-      // Step 4: Update results with analysis fields
+      // Step 5: Update results with analysis fields
       logger.info(`Updating ${analysisMap.size} results with analysis data`);
 
       await Promise.all(
