@@ -143,6 +143,7 @@ model User {
   reportPortalEnabled     Boolean  @default(false)
   monitoringPortalUrl     String?
   monitoringPortalEnabled Boolean  @default(false)
+  analyzeEnabled          Boolean  @default(false)
 
   // Project relationships
   projects      Project[]

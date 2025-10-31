@@ -23,6 +23,7 @@ export interface UpdateUserIntegrationsParams {
   reportPortalEnabled?: boolean;
   monitoringPortalUrl?: string | null;
   monitoringPortalEnabled?: boolean;
+  analyzeEnabled?: boolean;
 }
 
 export interface LoginParams {
@@ -388,10 +389,11 @@ export const userService = {
       reportPortalEnabled?: boolean;
       monitoringPortalUrl?: string | null;
       monitoringPortalEnabled?: boolean;
+      analyzeEnabled?: boolean;
     } = {};
 
     if (integrationsData.reportPortalUrl !== undefined) {
-      if (integrationsData.reportPortalUrl && integrationsData.reportPortalUrl.trim()) {
+      if (integrationsData.reportPortalUrl?.trim()) {
         const urlString = integrationsData.reportPortalUrl.trim();
         try {
           new URL(urlString);
@@ -405,11 +407,12 @@ export const userService = {
     }
 
     if (integrationsData.reportPortalEnabled !== undefined) {
-      cleanIntegrationsData.reportPortalEnabled = integrationsData.reportPortalEnabled;
+      cleanIntegrationsData.reportPortalEnabled =
+        integrationsData.reportPortalEnabled;
     }
 
     if (integrationsData.monitoringPortalUrl !== undefined) {
-      if (integrationsData.monitoringPortalUrl && integrationsData.monitoringPortalUrl.trim()) {
+      if (integrationsData.monitoringPortalUrl?.trim()) {
         const urlString = integrationsData.monitoringPortalUrl.trim();
         try {
           new URL(urlString);
@@ -423,7 +426,12 @@ export const userService = {
     }
 
     if (integrationsData.monitoringPortalEnabled !== undefined) {
-      cleanIntegrationsData.monitoringPortalEnabled = integrationsData.monitoringPortalEnabled;
+      cleanIntegrationsData.monitoringPortalEnabled =
+        integrationsData.monitoringPortalEnabled;
+    }
+
+    if (integrationsData.analyzeEnabled !== undefined) {
+      cleanIntegrationsData.analyzeEnabled = integrationsData.analyzeEnabled;
     }
 
     const updatedUser = await userModel.update(userId, cleanIntegrationsData);

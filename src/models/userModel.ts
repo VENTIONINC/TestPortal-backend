@@ -11,6 +11,7 @@ interface CreateUserData {
   reportPortalEnabled?: boolean;
   monitoringPortalUrl?: string | null;
   monitoringPortalEnabled?: boolean;
+  analyzeEnabled?: boolean;
 }
 
 export const userModel = {
