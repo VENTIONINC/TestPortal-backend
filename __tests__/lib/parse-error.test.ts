@@ -1,4 +1,4 @@
-import { toClearString } from '../parse-error';
+import { toClearString } from '@/lib/parse-error';
 
 describe('toClearString', () => {
   it('removes ANSI escape codes', () => {

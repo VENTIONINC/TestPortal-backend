@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import { PromptController } from "../promptController";
+import { PromptController } from "@/controllers/promptController";
 import { PromptParameterService } from "@/services/promptParameterService";
 
 // Mock the service

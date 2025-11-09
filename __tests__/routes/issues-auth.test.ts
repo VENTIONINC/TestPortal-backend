@@ -39,6 +39,7 @@ jest.mock("@/models/userModel", () => ({
           reportPortalEnabled: false,
           monitoringPortalUrl: null,
           monitoringPortalEnabled: false,
+          analyzeEnabled: false,
         };
         users.push(user);
         return Promise.resolve(user);
@@ -137,7 +138,7 @@ describe("v2 issues auth flow", () => {
       issueController.createIssue,
       {
         method: "POST",
-        body: { name: "Issue1", category: "bug" },
+        body: { name: "Issue1", category: "bug", projectId: "test-project-uuid" },
         token,
       },
     );

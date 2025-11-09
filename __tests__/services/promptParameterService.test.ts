@@ -1,4 +1,4 @@
-import { PromptParameterService } from "../promptParameterService";
+import { PromptParameterService } from "@/services/promptParameterService";
 import { developerCodeAssistantPrompt } from "@/mcp/prompts/developer-code-assistant";
 import { testPortalAssistantPrompt } from "@/mcp/prompts/test-portal-assistant";
 import { issueAnalysisAssistantPrompt } from "@/mcp/prompts/issue-analysis-assistant";
