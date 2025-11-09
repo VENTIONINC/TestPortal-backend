@@ -105,7 +105,10 @@ export const resultService = {
     };
   },
 
-  async getResultById(resultId: number | string, projectId: string): Promise<ResultWithRelations> {
+  async getResultById(
+    resultId: number | string,
+    projectId: string,
+  ): Promise<ResultWithRelations> {
     if (!resultId) {
       throw new Error("Result ID is required");
     }
@@ -179,5 +182,17 @@ export const resultService = {
     }
 
     return updatedResult;
+  },
+
+  async deleteResult(resultId: string, projectId: string): Promise<void> {
+    if (!resultId) {
+      throw new Error("Result ID is required");
+    }
+
+    if (!projectId) {
+      throw new Error("Project ID is required");
+    }
+
+    await resultModel.delete(resultId, projectId);
   },
 };

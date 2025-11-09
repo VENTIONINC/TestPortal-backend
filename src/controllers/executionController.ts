@@ -30,4 +30,39 @@ export const executionController = {
       });
     }
   },
+
+  deleteExecution: async (req: Request, res: Response): Promise<void> => {
+    try {
+      const { executionId } = req.params;
+      const { projectId } = req.query as Record<string, string>;
+
+      if (!executionId) {
+        res.status(400).json({
+          error: "Execution ID is required",
+        });
+        return;
+      }
+
+      if (!projectId) {
+        res.status(400).json({
+          error: "Project ID is required",
+        });
+        return;
+      }
+
+      await executionService.deleteExecution(executionId, projectId);
+      res.status(204).send();
+    } catch (error) {
+      const err = error as Error;
+      if (err.message.includes("not found")) {
+        res.status(404).json({
+          error: err.message,
+        });
+      } else {
+        res.status(500).json({
+          error: `Failed to delete execution. ${err.message}`,
+        });
+      }
+    }
+  },
 };

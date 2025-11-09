@@ -40,6 +40,12 @@ export const assumptionModel = {
     });
   },
 
+  findByIdSimple: async (id: string): Promise<PrismaAssumption | null> => {
+    return await dbClient.assumption.findUnique({
+      where: { id },
+    });
+  },
+
   findByIdWithRelations: async (
     id: string,
   ): Promise<AssumptionWithRelations | null> => {

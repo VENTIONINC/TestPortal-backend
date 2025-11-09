@@ -15,5 +15,10 @@ router.get(
   authMiddleware,
   assumptionController.getAssumptionById,
 );
+router.delete(
+  "/v2/assumptions/:assumptionId",
+  authMiddleware,
+  assumptionController.deleteAssumption,
+);
 
 export default router;

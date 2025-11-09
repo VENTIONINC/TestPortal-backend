@@ -149,4 +149,39 @@ export const resultController = {
       });
     }
   },
+
+  deleteResult: async (req: Request, res: Response): Promise<void> => {
+    try {
+      const { resultId } = req.params;
+      const { projectId } = req.query as Record<string, string>;
+
+      if (!resultId) {
+        res.status(400).json({
+          error: "Result ID is required",
+        });
+        return;
+      }
+
+      if (!projectId) {
+        res.status(400).json({
+          error: "Project ID is required",
+        });
+        return;
+      }
+
+      await resultService.deleteResult(resultId, projectId);
+      res.status(204).send();
+    } catch (error) {
+      const err = error as Error;
+      if (err.message.includes("not found")) {
+        res.status(404).json({
+          error: err.message,
+        });
+      } else {
+        res.status(500).json({
+          error: `Failed to delete result. ${err.message}`,
+        });
+      }
+    }
+  },
 };
