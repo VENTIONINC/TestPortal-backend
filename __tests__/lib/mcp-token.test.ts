@@ -1,5 +1,5 @@
 import { jest } from "@jest/globals";
-import { generateMcpToken, validateMcpToken } from "../mcp-token";
+import { generateMcpToken, validateMcpToken } from "@/lib/mcp-token";
 
 describe("MCP Token Generation and Validation", () => {
   const mockSecret = "test-secret-key";

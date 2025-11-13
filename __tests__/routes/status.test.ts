@@ -1,4 +1,4 @@
-import { statusHandler } from "../status";
+import { statusHandler } from "@/routes/status";
 import { executeController } from "@/test-utils/httpMocks";
 
 describe("status route", () => {

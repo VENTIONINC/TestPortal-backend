@@ -1,4 +1,4 @@
-import { jsonReportService } from "../jsonReportService";
+import { jsonReportService } from "@/services/jsonReportService";
 
 // Mock the database client and logger
 jest.mock("@/prisma/client", () => ({

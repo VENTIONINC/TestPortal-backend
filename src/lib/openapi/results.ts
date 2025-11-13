@@ -284,6 +284,62 @@ export function registerResultRoutes(registry: OpenAPIRegistry) {
     },
     tags: ["Results"],
   });
+
+  // V2 Delete Result Route
+  registry.registerPath({
+    method: "delete",
+    path: "/api/v2/results/{resultId}",
+    description: "Delete a specific result by its ID (requires projectId and authentication)",
+    security: [{ BearerAuth: [] }],
+    request: {
+      params: z.object({
+        resultId: z.string().uuid().openapi({
+          description: "Unique identifier of the result to delete",
+        }),
+      }),
+      query: z.object({
+        projectId: z.string().uuid().describe("Project ID to verify ownership of the result"),
+      }),
+    },
+    responses: {
+      204: {
+        description: "Successfully deleted result",
+      },
+      400: {
+        description: "Bad request - missing required projectId parameter",
+        content: {
+          "application/json": {
+            schema: ErrorResponseSchema,
+          },
+        },
+      },
+      401: {
+        description: "Unauthorized access",
+        content: {
+          "application/json": {
+            schema: ErrorResponseSchema,
+          },
+        },
+      },
+      404: {
+        description: "Result not found",
+        content: {
+          "application/json": {
+            schema: ErrorResponseSchema,
+          },
+        },
+      },
+      500: {
+        description: "Internal server error",
+        content: {
+          "application/json": {
+            schema: ErrorResponseSchema,
+          },
+        },
+      },
+    },
+    tags: ["Results"],
+  });
 }
 
 export { ResultSchema, ResultsStatsSchema, UpdateResultAnalysisRequestSchema };

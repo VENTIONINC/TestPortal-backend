@@ -48,6 +48,7 @@ jest.mock('@/models/userModel', () => ({
         reportPortalEnabled: false,
         monitoringPortalUrl: null,
         monitoringPortalEnabled: false,
+        analyzeEnabled: false,
       };
       users.push(user);
       return Promise.resolve(user);

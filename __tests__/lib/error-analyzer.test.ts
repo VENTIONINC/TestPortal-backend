@@ -3,7 +3,7 @@ import { jest } from '@jest/globals';
 // Mock the prisma client to prevent Prisma from initializing during tests
 jest.mock('@/prisma/client', () => ({ dbClient: {} }));
 
-import { calculateErrorSimilarity, compareStackTraces } from '../error-analyzer';
+import { calculateErrorSimilarity, compareStackTraces } from '@/lib/error-analyzer';
 
 describe('calculateErrorSimilarity', () => {
   it('returns 1 for very similar messages', () => {

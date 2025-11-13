@@ -22,7 +22,6 @@ export const specService = {
       throw new Error(`Spec with ID ${specId} not found`);
     }
 
-    // Business logic - parse JSON fields
     try {
       const processedSpec: ProcessedSpec = {
         ...spec,
@@ -35,5 +34,17 @@ export const specService = {
       const error = parseError as Error;
       throw new Error(`Failed to parse spec data: ${error.message}`);
     }
+  },
+
+  async deleteSpec(specId: string, projectId: string): Promise<void> {
+    if (!specId) {
+      throw new Error("Spec ID is required");
+    }
+
+    if (!projectId) {
+      throw new Error("Project ID is required");
+    }
+
+    await specModel.delete(specId, projectId);
   },
 };

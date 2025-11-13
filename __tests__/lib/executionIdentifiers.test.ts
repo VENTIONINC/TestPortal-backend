@@ -5,7 +5,7 @@ import {
   generateExecutionIdentifier,
   extractDateFromRunId,
   generateFallbackIdentifier,
-} from "../executionIdentifiers";
+} from "@/lib/executionIdentifiers";
 
 describe("executionIdentifiers", () => {
   describe("getTimePeriod", () => {

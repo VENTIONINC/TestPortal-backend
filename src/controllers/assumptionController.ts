@@ -91,4 +91,41 @@ export const assumptionController = {
       });
     }
   },
+
+  deleteAssumption: async (req: Request, res: Response): Promise<void> => {
+    try {
+      const { assumptionId } = req.params;
+      const { projectId } = req.query as Record<string, string>;
+
+      if (!assumptionId) {
+        res.status(400).json({
+          error: "Assumption ID is required",
+        });
+        return;
+      }
+
+      if (!projectId) {
+        res.status(400).json({
+          error: "Project ID is required",
+        });
+        return;
+      }
+
+      await assumptionService.deleteAssumption(assumptionId, projectId);
+      res.status(204).send();
+    } catch (error) {
+      const err = error as Error;
+
+      if (err.message.includes("not found")) {
+        res.status(404).json({
+          error: err.message,
+        });
+        return;
+      }
+
+      res.status(400).json({
+        error: `Failed to delete assumption. ${err.message}`,
+      });
+    }
+  },
 };

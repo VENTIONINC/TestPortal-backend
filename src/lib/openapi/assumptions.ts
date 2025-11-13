@@ -194,6 +194,62 @@ export function registerAssumptionRoutes(registry: OpenAPIRegistry) {
     },
     tags: ["Assumptions"],
   });
+
+  // V2 Delete Assumption Route
+  registry.registerPath({
+    method: "delete",
+    path: "/api/v2/assumptions/{assumptionId}",
+    description: "Delete an existing assumption by its ID (requires projectId and authentication)",
+    security: [{ BearerAuth: [] }],
+    request: {
+      params: z.object({
+        assumptionId: z.string().uuid().openapi({
+          description: "Unique identifier of the assumption to delete",
+        }),
+      }),
+      query: z.object({
+        projectId: z.string().uuid().describe("Project ID to verify ownership of the assumption"),
+      }),
+    },
+    responses: {
+      204: {
+        description: "Successfully deleted assumption",
+      },
+      400: {
+        description: "Bad request - missing required projectId parameter",
+        content: {
+          "application/json": {
+            schema: ErrorResponseSchema,
+          },
+        },
+      },
+      401: {
+        description: "Unauthorized access",
+        content: {
+          "application/json": {
+            schema: ErrorResponseSchema,
+          },
+        },
+      },
+      404: {
+        description: "Assumption not found",
+        content: {
+          "application/json": {
+            schema: ErrorResponseSchema,
+          },
+        },
+      },
+      500: {
+        description: "Internal server error",
+        content: {
+          "application/json": {
+            schema: ErrorResponseSchema,
+          },
+        },
+      },
+    },
+    tags: ["Assumptions"],
+  });
 }
 
 export {

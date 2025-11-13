@@ -1,4 +1,4 @@
-import { parseStackTrace } from '../parse-error';
+import { parseStackTrace } from '@/lib/parse-error';
 
 const sampleError = {
   message: 'TypeError: Something failed\nstep1\nstep2',

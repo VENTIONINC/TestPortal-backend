@@ -35,4 +35,16 @@ export const executionService = {
   async getExecutionsByProject(projectId: string): Promise<PrismaExecution[]> {
     return await executionModel.findMany({ projectId });
   },
+
+  async deleteExecution(executionId: string, projectId: string): Promise<void> {
+    if (!executionId) {
+      throw new Error("Execution ID is required");
+    }
+
+    if (!projectId) {
+      throw new Error("Project ID is required");
+    }
+
+    await executionModel.delete(executionId, projectId);
+  },
 };
