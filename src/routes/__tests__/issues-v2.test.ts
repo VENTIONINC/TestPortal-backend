@@ -67,8 +67,14 @@ jest.mock("@/models/issueModel", () => ({
       },
     ),
     findManyWithUsers: jest.fn(
-      (category?: string, name?: string, page = 1, limit = 30) => {
-        let filtered = [...issues];
+      (
+        projectId: string,
+        category?: string,
+        name?: string,
+        page = 1,
+        limit = 30,
+      ) => {
+        let filtered = issues.filter((i) => i.projectId === projectId);
         if (category) {
           filtered = filtered.filter((issue) =>
             issue.category.toLowerCase().includes(category.toLowerCase()),
@@ -94,8 +100,8 @@ jest.mock("@/models/issueModel", () => ({
         );
       },
     ),
-    count: jest.fn((category?: string, name?: string) => {
-      let filtered = [...issues];
+    count: jest.fn((projectId: string, category?: string, name?: string) => {
+      let filtered = issues.filter((i) => i.projectId === projectId);
       if (category) {
         filtered = filtered.filter((issue) =>
           issue.category.toLowerCase().includes(category.toLowerCase()),
@@ -112,8 +118,10 @@ jest.mock("@/models/issueModel", () => ({
       const issue = issues.find((i) => i.id === id);
       return Promise.resolve(issue ?? null);
     }),
-    findByIdWithUsers: jest.fn((id: string) => {
-      const issue = issues.find((i) => i.id === id);
+    findByIdWithUsers: jest.fn((id: string, projectId: string) => {
+      const issue = issues.find(
+        (i) => i.id === id && i.projectId === projectId,
+      );
       if (!issue) return Promise.resolve(null);
       return Promise.resolve({
         ...issue,
@@ -194,7 +202,7 @@ const createIssueRecord = async (
   issueService.createIssue({
     name,
     category,
-    projectId: "test-project",
+    projectId: "test-project-uuid",
     createdById: user.id,
     updatedById: user.id,
   });

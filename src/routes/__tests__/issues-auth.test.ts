@@ -129,7 +129,7 @@ describe("v2 issues auth flow", () => {
       issueController.createIssue,
       {
         method: "POST",
-        body: { name: "Issue1", category: "bug" },
+        body: { name: "Issue1", category: "bug", projectId: "test-project-uuid" },
       },
     );
     expect(unauthRes.statusCode).toBe(401);
@@ -138,7 +138,7 @@ describe("v2 issues auth flow", () => {
       issueController.createIssue,
       {
         method: "POST",
-        body: { name: "Issue1", category: "bug" },
+        body: { name: "Issue1", category: "bug", projectId: "test-project-uuid" },
         token,
       },
     );
