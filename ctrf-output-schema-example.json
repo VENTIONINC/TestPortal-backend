@@ -1,0 +1,63 @@
+{
+  "results": {
+    "tool": {
+      "name": "vitest"
+    },
+    "summary": {
+      "tests": 4,
+      "passed": 2,
+      "failed": 1,
+      "pending": 1,
+      "skipped": 0,
+      "other": 0,
+      "start": 1761646529949,
+      "stop": 1761646529953
+    },
+    "tests": [
+      {
+        "name": "subtraction 4 - 2 to equal 2",
+        "status": "passed",
+        "duration": 0.7601250000000022,
+        "suite": "subtraction",
+        "filePath": "/Users/sviatlana/Documents/test-portal/vitest-junit/subtraction.test.ts",
+        "rawStatus": "passed"
+      },
+      {
+        "name": "subtraction 4 - 0 to equal 0",
+        "status": "skipped",
+        "duration": 0,
+        "suite": "subtraction",
+        "filePath": "/Users/sviatlana/Documents/test-portal/vitest-junit/subtraction.test.ts",
+        "rawStatus": "skipped"
+      },
+      {
+        "name": "subtraction 0 - 4 to equal -4",
+        "status": "failed",
+        "duration": 3.1943749999999937,
+        "suite": "subtraction",
+        "filePath": "/Users/sviatlana/Documents/test-portal/vitest-junit/subtraction.test.ts",
+        "message": "AssertionError: expected 100 to be -4 // Object.is equality",
+        "trace": "AssertionError: expected 100 to be -4 // Object.is equality\n    at /Users/sviatlana/Documents/test-portal/vitest-junit/subtraction.test.ts:14:29\n    at file:///Users/sviatlana/Documents/test-portal/vitest-junit/node_modules/@vitest/runner/dist/index.js:157:11\n    at file:///Users/sviatlana/Documents/test-portal/vitest-junit/node_modules/@vitest/runner/dist/index.js:753:26\n    at file:///Users/sviatlana/Documents/test-portal/vitest-junit/node_modules/@vitest/runner/dist/index.js:1636:20\n    at new Promise (<anonymous>)\n    at runWithTimeout (file:///Users/sviatlana/Documents/test-portal/vitest-junit/node_modules/@vitest/runner/dist/index.js:1602:10)\n    at runTest (file:///Users/sviatlana/Documents/test-portal/vitest-junit/node_modules/@vitest/runner/dist/index.js:1309:12)\n    at processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at runSuite (file:///Users/sviatlana/Documents/test-portal/vitest-junit/node_modules/@vitest/runner/dist/index.js:1468:8)\n    at runFiles (file:///Users/sviatlana/Documents/test-portal/vitest-junit/node_modules/@vitest/runner/dist/index.js:1526:3)",
+        "rawStatus": "failed"
+      },
+      {
+        "name": "adds 1 + 2 to equal 3",
+        "status": "passed",
+        "duration": 0.7833339999999964,
+        "suite": "sum",
+        "filePath": "/Users/sviatlana/Documents/test-portal/vitest-junit/sum.test.ts",
+        "rawStatus": "passed"
+      }
+    ],
+    "environment": {
+      "appName": "test-portal-vitest",
+      "buildName": "PR-42",
+      "buildNumber": "156",
+      "buildUrl": "https://ci.example.com/builds/156",
+      "repositoryName": "test-portal",
+      "repositoryUrl": "https://github.com/example/test-portal",
+      "branchName": "feature/vitest-integration",
+      "testEnvironment": "staging"
+    }
+  }
+}

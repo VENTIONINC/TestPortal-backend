@@ -36,7 +36,7 @@ export const ctrfService = {
     const processResult = await jsonReportService.processReport(
       {
         ...reportData,
-        provider: "ctrf",
+        provider: reportData.provider || "ctrf",
       },
       projectId.toString(),
     );
@@ -125,7 +125,7 @@ export const ctrfService = {
       runId: environment?.buildNumber ?? `ctrf-${Date.now()}`,
       env: environment?.testEnvironment ?? "unknown",
       version: tool.version ?? "unknown",
-      provider: "ctrf",
+      provider: tool.name || "ctrf",
       stats: {
         startTime: new Date(summary.start),
       },
