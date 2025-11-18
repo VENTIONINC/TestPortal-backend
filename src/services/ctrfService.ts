@@ -121,11 +121,13 @@ export const ctrfService = {
       .filter((test) => test.status !== "skipped" && test.status !== "pending")
       .map((test) => this.transformCtrfTest(test));
 
+    const providerName = tool?.name.toLowerCase() || "ctrf";
+
     return {
-      runId: environment?.buildNumber ?? `ctrf-${Date.now()}`,
-      env: environment?.testEnvironment ?? "unknown",
-      version: tool.version ?? "unknown",
-      provider: tool.name || "ctrf",
+      runId: environment?.buildNumber ?? `${providerName}-${Date.now()}`,
+      env: environment?.testEnvironment ?? "N/A",
+      version: tool.version ?? "N/A",
+      provider: providerName,
       stats: {
         startTime: new Date(summary.start),
       },
