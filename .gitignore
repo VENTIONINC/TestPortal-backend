@@ -73,3 +73,6 @@ dist/
 
 # exmaple files
 example-reports/
+
+# IDEs and editors
+.vscode/

@@ -32,6 +32,7 @@ import * as testPortalAssistant from "@/mcp/prompts/test-portal-assistant";
 import * as issueAnalysisAssistant from "@/mcp/prompts/issue-analysis-assistant";
 import * as environmentPerformanceAssistant from "@/mcp/prompts/environment-performance-assistant";
 import * as developerCodeAssistant from "@/mcp/prompts/developer-code-assistant";
+import * as documentationArchitect from "@/mcp/prompts/documentation-architect";
 
 const router = Router();
 
@@ -174,6 +175,26 @@ router.post(
               result_id,
               error_id,
               context_scope,
+            }),
+        );
+
+        // Documentation Architect
+        server.registerPrompt(
+          documentationArchitect.softwareDocumentationAssistantName,
+          documentationArchitect.softwareDocumentationAssistantParameters,
+          ({
+            file_paths = "",
+            documentation_type = "",
+            target_audience = "",
+            scope = "",
+            publish = "",
+          }) =>
+            documentationArchitect.softwareDocumentationAssistantPrompt({
+              file_paths,
+              documentation_type,
+              target_audience,
+              scope,
+              publish,
             }),
         );
 
