@@ -24,6 +24,8 @@ interface ResultCreateInput {
   analysisCategory?: string;
   analysisConfidence?: number;
   analysisConclusion?: string;
+  analysisErrorQuality?: number;
+  analysisErrorQualityConclusion?: string;
   spec: { connect: { id: string } }; // UUID reference to Spec
   execution: { connect: { id: string } }; // UUID reference to Execution
   errors?: { connect: { id: string } }; // UUID reference to ResultError
@@ -97,7 +99,6 @@ export const jsonReportService = {
       provider,
       stats,
       tests,
-      analysis,
       identifierStrategy = "time-period",
     } = reportData;
 
@@ -132,7 +133,7 @@ export const jsonReportService = {
     }
 
     // Process all test specs
-    await this._processSpecs(tests, executionRecord, projectId, analysis);
+    await this._processSpecs(tests, executionRecord, projectId);
 
     logger.info(
       `Successfully processed report for execution #${executionRecord.id}`,
@@ -191,7 +192,6 @@ export const jsonReportService = {
     specs: TestSpec[],
     executionRecord: PrismaExecution,
     projectId: string,
-    analysis?: TestResultAnalysis[],
   ): Promise<void> {
     for (const spec of specs) {
       if (!spec.title) {
@@ -199,12 +199,7 @@ export const jsonReportService = {
       }
 
       const specRecord = await this._findOrCreateSpec(spec, projectId);
-      await this._processSpecResults(
-        spec,
-        specRecord,
-        executionRecord,
-        analysis,
-      );
+      await this._processSpecResults(spec, specRecord, executionRecord);
     }
   },
 
@@ -258,23 +253,14 @@ export const jsonReportService = {
     spec: TestSpec,
     specRecord: PrismaSpec,
     executionRecord: PrismaExecution,
-    analysis?: TestResultAnalysis[],
   ): Promise<void> {
     if (!spec.results?.length) {
       throw new Error(`Spec (#${specRecord.id}) report has no results data`);
     }
 
     for (const result of spec.results) {
-      const resultAnalysis = analysis?.find(
-        (analysis) => analysis.workerIndex === result.workerIndex,
-      );
-
-      await this._createResultRecord(
-        result,
-        specRecord,
-        executionRecord,
-        resultAnalysis,
-      );
+      // Analysis is now always done post-persist for both CTRF and Playwright
+      await this._createResultRecord(result, specRecord, executionRecord);
     }
   },
 
@@ -285,7 +271,6 @@ export const jsonReportService = {
     resultData: TestResult,
     specRecord: PrismaSpec,
     executionRecord: PrismaExecution,
-    analysis?: TestResultAnalysis,
   ): Promise<PrismaResult> {
     // Check if result already exists
     let resultRecord = await dbClient.result.findFirst({
@@ -306,13 +291,6 @@ export const jsonReportService = {
       status: resultData.status,
       duration: resultData.duration,
       startTime: new Date(resultData.startTime),
-      // Add analysis fields if available
-      ...(analysis && {
-        analysisStatus: analysis.status,
-        analysisCategory: analysis.category,
-        analysisConfidence: analysis.confidence,
-        analysisConclusion: analysis.conclusion,
-      }),
       spec: {
         connect: {
           id: specRecord.id,

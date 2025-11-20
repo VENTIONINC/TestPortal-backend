@@ -41,6 +41,8 @@ export interface PrismaResult {
   analysisCategory?: string | null;
   analysisConfidence?: number | null;
   analysisConclusion?: string | null;
+  analysisErrorQuality?: number | null;
+  analysisErrorQualityConclusion?: string | null;
 }
 
 export interface PrismaResultError {
@@ -107,6 +109,7 @@ export interface PrismaUser {
   reportPortalEnabled: boolean;
   monitoringPortalUrl?: string | null;
   monitoringPortalEnabled: boolean;
+  analyzeEnabled: boolean;
 }
 
 // Database model interfaces with relations

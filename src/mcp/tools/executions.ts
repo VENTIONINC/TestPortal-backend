@@ -5,6 +5,7 @@ import type { MCPToolResponse } from "@/types";
 
 interface GetExecutionByIdParams {
   executionId: string;
+  projectId: string;
 }
 
 export const getExecutionById = createMcpTool(
@@ -12,8 +13,8 @@ export const getExecutionById = createMcpTool(
   "Retrieve detailed information about a specific execution by its unique ID",
   getExecutionByIdSchema,
   async (params: GetExecutionByIdParams): Promise<MCPToolResponse> => {
-    const { executionId } = params;
-    const execution = await mcpExecutionHandler.getExecutionById(executionId);
+    const { executionId, projectId } = params;
+    const execution = await mcpExecutionHandler.getExecutionById(executionId, projectId);
     return createSuccessResponse(execution);
   },
   "fetching execution",

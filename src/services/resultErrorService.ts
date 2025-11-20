@@ -49,7 +49,7 @@ export const resultErrorService = {
 
     // Business logic - get the error and run review
     try {
-      const resultError = await resultErrorModel.findById(resultErrorId);
+      const resultError = await resultErrorModel.findByIdInternal(resultErrorId);
 
       if (!resultError) {
         throw new Error(`Result error with ID ${resultErrorId} not found`);
@@ -91,7 +91,7 @@ export const resultErrorService = {
     try {
       for (const errorId of validatedIds) {
         try {
-          const resultError = await resultErrorModel.findById(errorId);
+          const resultError = await resultErrorModel.findByIdInternal(errorId);
 
           if (!resultError) {
             failedIds.push({ id: errorId, reason: "Result error not found" });
@@ -127,12 +127,17 @@ export const resultErrorService = {
 
   async getResultErrorById(
     resultErrorId: string,
+    projectId: string,
   ): Promise<PrismaResultError> {
     if (!resultErrorId) {
       throw new Error("Result error ID is required");
     }
 
-    const resultError = await resultErrorModel.findById(resultErrorId);
+    if (!projectId) {
+      throw new Error("Project ID is required");
+    }
+
+    const resultError = await resultErrorModel.findById(resultErrorId, projectId);
 
     if (!resultError) {
       throw new Error(`Result error with ID ${resultErrorId} not found`);

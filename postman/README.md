@@ -43,8 +43,6 @@ Create a Postman environment with these variables:
 ```json
 {
   "baseUrl": "http://localhost:3001",
-  "V_1": "/api/v1",
-  "V_2": "/api/v2",
   "testEmail": "test@example.com",
   "testPassword": "SecurePassword123!",
   "mcpToken": ""
@@ -115,8 +113,6 @@ When creating new collections:
 // Standard variables for all collections
 {
   "baseUrl": "http://localhost:3001",
-  "V_1": "/api/v1", 
-  "V_2": "/api/v2",
   "accessToken": "",
   "refreshToken": "",
   "mcpToken": ""
@@ -129,17 +125,9 @@ When creating new collections:
 3. **❌ Error Cases** - Failure scenarios
 4. **🧹 Cleanup** - Reset state
 
-## 🚦 API Versioning Strategy
+## 🚦 API Authentication
 
-### V1 APIs (Public)
-- No authentication required
-- Basic functionality
-- Backward compatibility focus
-
-### V2 APIs (Authenticated)  
-- JWT token required
-- Enhanced features (user tracking, etc.)
-- Latest functionality
+All APIs require JWT token authentication with enhanced features like user tracking.
 
 ## 📈 Performance Testing
 

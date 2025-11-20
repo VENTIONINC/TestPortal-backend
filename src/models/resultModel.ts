@@ -21,10 +21,17 @@ export interface ResultFilters {
 export const resultModel = {
   findById: async (
     id: number | string,
+    projectId: string,
   ): Promise<ResultWithRelations | null> => {
-    return (await dbClient.result.findUnique({
+    return (await dbClient.result.findFirst({
       where: {
         id: String(id),
+        spec: {
+          projectId,
+        },
+        execution: {
+          projectId,
+        },
       },
       include: {
         spec: true,
@@ -189,7 +196,7 @@ export const resultModel = {
       if (toDate) whereClause.startTime.lte = toDate;
     }
 
-    return await dbClient.result.findMany({
+    return (await dbClient.result.findMany({
       where: whereClause,
       skip: (page - 1) * limit,
       take: Number(limit),
@@ -209,7 +216,7 @@ export const resultModel = {
           },
         },
       },
-    }) as ResultWithRelations[];
+    })) as unknown as ResultWithRelations[];
   },
 
   count: async (filters: ResultFilters): Promise<number> => {
@@ -562,5 +569,52 @@ export const resultModel = {
     });
 
     return updatedResult;
+  },
+
+  delete: async (id: string, projectId: string): Promise<void> => {
+    const existingResult = await dbClient.result.findFirst({
+      where: {
+        id,
+        spec: {
+          projectId,
+        },
+        execution: {
+          projectId,
+        },
+      },
+      include: {
+        errors: {
+          include: {
+            assumptions: true,
+          },
+        },
+      },
+    });
+
+    if (!existingResult) {
+      throw new Error(`Result with ID ${id} not found`);
+    }
+
+    await dbClient.$transaction(async (tx) => {
+      for (const error of existingResult.errors) {
+        if (error.assumptions.length > 0) {
+          await tx.assumption.deleteMany({
+            where: {
+              resultErrorId: error.id,
+            },
+          });
+        }
+      }
+
+      await tx.resultError.deleteMany({
+        where: {
+          resultId: id,
+        },
+      });
+
+      await tx.result.delete({
+        where: { id },
+      });
+    });
   },
 };

@@ -36,6 +36,7 @@ jest.mock("@/models/userModel", () => ({
         passwordHash: data.passwordHash,
         cognitoUserId: null,
         mcpToken: null,
+        analyzeEnabled: false,
         reportPortalUrl: null,
         reportPortalEnabled: false,
         monitoringPortalUrl: null,

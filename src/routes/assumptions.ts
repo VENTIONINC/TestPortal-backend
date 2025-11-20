@@ -4,16 +4,21 @@ import { authMiddleware } from "@/middleware/authMiddleware";
 
 const router = Router();
 
-router.post("/v1/assumptions", authMiddleware, assumptionController.createAssumption);
+router.post("/v2/assumptions", authMiddleware, assumptionController.createAssumption);
 router.patch(
-  "/v1/assumptions/:assumptionId",
+  "/v2/assumptions/:assumptionId",
   authMiddleware,
   assumptionController.updateAssumption,
 );
 router.get(
-  "/v1/assumptions/:assumptionId",
+  "/v2/assumptions/:assumptionId",
   authMiddleware,
   assumptionController.getAssumptionById,
+);
+router.delete(
+  "/v2/assumptions/:assumptionId",
+  authMiddleware,
+  assumptionController.deleteAssumption,
 );
 
 export default router;

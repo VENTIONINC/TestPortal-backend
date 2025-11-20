@@ -17,6 +17,7 @@ interface UpdateAssumptionParams extends UpdateAssumptionRequest {
 
 interface GetAssumptionByIdParams {
   assumptionId: string;
+  projectId: string;
 }
 
 export const createAssumption = createMcpTool(
@@ -64,9 +65,9 @@ export const getAssumptionById = createMcpTool(
   "Retrieve detailed information about a specific assumption by its unique ID",
   getAssumptionByIdSchema,
   async (params: GetAssumptionByIdParams): Promise<MCPToolResponse> => {
-    const { assumptionId } = params;
+    const { assumptionId, projectId } = params;
     const assumption =
-      await mcpAssumptionHandler.getAssumptionById(assumptionId);
+      await mcpAssumptionHandler.getAssumptionById(assumptionId, projectId);
     return createSuccessResponse(assumption);
   },
   "fetching assumption",

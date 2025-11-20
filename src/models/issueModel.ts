@@ -5,6 +5,7 @@ import { Prisma } from "@prisma/client";
 interface IssueWhereInput {
   category?: string;
   name?: { contains: string };
+  projectId?: string;
 }
 
 interface CreateIssueData {
@@ -21,12 +22,13 @@ interface CreateIssueData {
 
 export const issueModel = {
   findMany: async (
+    projectId: string,
     category?: string,
     name?: string,
     page = 1,
     limit = 30,
   ): Promise<PrismaIssue[]> => {
-    const whereClause: IssueWhereInput = {};
+    const whereClause: IssueWhereInput = { projectId };
     if (category) whereClause.category = category;
     if (name) whereClause.name = { contains: name };
 
@@ -39,12 +41,13 @@ export const issueModel = {
   },
 
   findManyWithUsers: async (
+    projectId: string,
     category?: string,
     name?: string,
     page = 1,
     limit = 30,
   ): Promise<PrismaIssueWithUsers[]> => {
-    const whereClause: Prisma.IssueWhereInput = {};
+    const whereClause: Prisma.IssueWhereInput = { projectId };
     if (category) whereClause.category = category;
     if (name) whereClause.name = { contains: name };
 
@@ -60,8 +63,12 @@ export const issueModel = {
     })) as PrismaIssueWithUsers[];
   },
 
-  count: async (category?: string, name?: string): Promise<number> => {
-    const whereClause: IssueWhereInput = {};
+  count: async (
+    projectId: string,
+    category?: string,
+    name?: string,
+  ): Promise<number> => {
+    const whereClause: IssueWhereInput = { projectId };
     if (category) whereClause.category = category;
     if (name) whereClause.name = { contains: name };
 
@@ -70,20 +77,26 @@ export const issueModel = {
     });
   },
 
-  findById: async (id: string): Promise<PrismaIssue | null> => {
-    return await dbClient.issue.findUnique({
+  findById: async (
+    id: string,
+    projectId: string,
+  ): Promise<PrismaIssue | null> => {
+    return await dbClient.issue.findFirst({
       where: {
         id,
+        projectId,
       },
     });
   },
 
   findByIdWithUsers: async (
     id: string,
+    projectId: string,
   ): Promise<PrismaIssueWithUsers | null> => {
-    return (await dbClient.issue.findUnique({
+    return (await dbClient.issue.findFirst({
       where: {
         id,
+        projectId,
       },
       include: {
         createdBy: true,
@@ -108,10 +121,13 @@ export const issueModel = {
     });
   },
 
-  delete: async (id: string): Promise<PrismaIssue> => {
-    // Check if issue exists
-    const existingIssue = await dbClient.issue.findUnique({
-      where: { id },
+  delete: async (id: string, projectId: string): Promise<PrismaIssue> => {
+    // Check if issue exists and belongs to the project
+    const existingIssue = await dbClient.issue.findFirst({
+      where: {
+        id,
+        projectId,
+      },
       include: {
         assumptions: true,
       },

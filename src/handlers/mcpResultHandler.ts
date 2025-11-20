@@ -54,8 +54,8 @@ export const mcpResultHandler = {
     return await resultService.getResults(resultParams);
   },
 
-  async getResultById(resultId: string): Promise<ResultWithRelations | null> {
-    return await resultService.getResultById(resultId);
+  async getResultById(resultId: string, projectId: string): Promise<ResultWithRelations | null> {
+    return await resultService.getResultById(resultId, projectId);
   },
 
   async getResultsStats(params?: GetResultsStatsParams): Promise<ResultsStats> {

@@ -14,6 +14,7 @@ const UserSchema = z
     reportPortalEnabled: z.boolean(),
     monitoringPortalUrl: z.string().nullable().optional(),
     monitoringPortalEnabled: z.boolean(),
+    analyzeEnabled: z.boolean(),
   })
   .openapi("User");
 
@@ -31,6 +32,7 @@ const UserIntegrationsUpdateRequestSchema = z
     reportPortalEnabled: z.boolean().optional(),
     monitoringPortalUrl: z.string().nullable().optional(),
     monitoringPortalEnabled: z.boolean().optional(),
+    analyzeEnabled: z.boolean().optional(),
   })
   .openapi("UserIntegrationsUpdateRequest");
 

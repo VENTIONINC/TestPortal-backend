@@ -1,4 +1,5 @@
 import getLogger from "@/lib/logger";
+import { dbClient } from "@/prisma/client";
 import type { CTRFReport, CTRFTest } from "@/types/ctrf";
 import type {
   ReportData,
@@ -6,6 +7,7 @@ import type {
 } from "@/services/jsonReportService";
 import { jsonReportService } from "@/services/jsonReportService";
 import { testAnalysisService } from "@/services/testAnalysisService";
+import type { TestResultAnalysis } from "@/schemas/testAnalysisSchemas";
 
 const logger = getLogger("ctrf-service");
 
@@ -13,39 +15,102 @@ interface CTRFProcessOptions {
   projectId: string;
 }
 
+interface CTRFProcessResult extends ProcessReportResult {
+  analysis: TestResultAnalysis[] | undefined;
+}
+
 export const ctrfService = {
   async processReport(
     ctrfReport: CTRFReport,
     options: CTRFProcessOptions,
-  ): Promise<ProcessReportResult> {
+  ): Promise<CTRFProcessResult> {
     const { projectId } = options;
     const { results } = ctrfReport;
 
     logger.info(`Processing CTRF report with ${results.tests.length} tests`);
 
+    // Step 1: Transform CTRF to report data WITHOUT analysis
     const reportData = this.transformCtrfToReportData(ctrfReport);
 
-    try {
-      reportData.analysis =
-        await testAnalysisService.analyzeCtrfTestResults(ctrfReport);
-
-      logger.info(
-        `CTRF Analysis completed: ${reportData.analysis.length} tests analyzed`,
-      );
-    } catch (analysisError) {
-      logger.warn(
-        "CTRF Analysis failed, proceeding without analysis:",
-        analysisError,
-      );
-    }
-
-    return await jsonReportService.processReport(
+    // Step 2: Persist to database
+    const processResult = await jsonReportService.processReport(
       {
         ...reportData,
         provider: "ctrf",
       },
       projectId.toString(),
     );
+
+    // Step 3: Check if analysis is enabled for project owner
+    const project = await dbClient.project.findUnique({
+      where: { id: projectId },
+      include: { owner: true },
+    });
+
+    const shouldAnalyze = project?.owner.analyzeEnabled ?? false;
+
+    if (!shouldAnalyze) {
+      logger.info("Analysis disabled for user, skipping analysis");
+      return {
+        ...processResult,
+        analysis: undefined,
+      };
+    }
+
+    // Step 4: Fetch just-created results from DB with relations
+    const createdResults = await dbClient.result.findMany({
+      where: { executionId: processResult.executionId },
+      include: {
+        spec: true,
+        execution: true,
+        errors: true,
+      },
+    });
+
+    logger.info(
+      `Fetched ${createdResults.length} results from DB for analysis`,
+    );
+
+    // Step 5: Analyze stored results (POST-PERSIST)
+    let analysisMap: Map<string, TestResultAnalysis> | null = null;
+    try {
+      analysisMap =
+        await testAnalysisService.analyzeStoredResults(createdResults);
+
+      // Step 6: Update results with analysis fields
+      logger.info(`Updating ${analysisMap.size} results with analysis data`);
+
+      await Promise.all(
+        Array.from(analysisMap.entries()).map(([resultId, analysis]) =>
+          dbClient.result.update({
+            where: { id: resultId },
+            data: {
+              analysisStatus: analysis.status,
+              analysisCategory: analysis.category ?? null,
+              analysisConfidence: analysis.confidence,
+              analysisConclusion: analysis.conclusion ?? null,
+              analysisErrorQuality: analysis.errorQuality ?? null,
+              analysisErrorQualityConclusion:
+                analysis.errorQualityConclusion ?? null,
+            },
+          }),
+        ),
+      );
+
+      logger.info(
+        `Successfully updated ${analysisMap.size} results with analysis`,
+      );
+    } catch (analysisError) {
+      logger.warn(
+        "Analysis failed, results saved without analysis:",
+        analysisError,
+      );
+    }
+
+    return {
+      ...processResult,
+      analysis: analysisMap ? Array.from(analysisMap.values()) : undefined,
+    };
   },
 
   transformCtrfToReportData(ctrfReport: CTRFReport): ReportData {

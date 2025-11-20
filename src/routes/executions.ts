@@ -4,6 +4,7 @@ import { authMiddleware } from "@/middleware/authMiddleware";
 
 const router = Router();
 
-router.get("/v1/executions/:executionId", authMiddleware, executionController.getExecutionById);
+router.get("/v2/executions/:executionId", authMiddleware, executionController.getExecutionById);
+router.delete("/v2/executions/:executionId", authMiddleware, executionController.deleteExecution);
 
 export default router;

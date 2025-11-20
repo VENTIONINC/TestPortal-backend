@@ -24,6 +24,7 @@ export const getResultsSchema: MCPToolSchema = {
  */
 export const getResultByIdSchema: MCPToolSchema = {
   resultId: z.string(),
+  projectId: z.string(),
 };
 
 /**

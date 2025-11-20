@@ -12,6 +12,7 @@ import { IssueCategory } from "@/types/enums";
 import { Prisma } from "@prisma/client";
 
 interface GetAllIssuesParams {
+  projectId: string;
   category?: IssueCategory;
   name?: string;
   page?: number;
@@ -88,10 +89,16 @@ export const issueService = {
   async getAllIssues(
     params: GetAllIssuesParams,
   ): Promise<GetAllIssuesResponse> {
-    const { category, name, page = 1, limit = 30 } = params;
+    const { projectId, category, name, page = 1, limit = 30 } = params;
 
-    const issues = await issueModel.findMany(category, name, page, limit);
-    const totalIssues = await issueModel.count(category, name);
+    const issues = await issueModel.findMany(
+      projectId,
+      category,
+      name,
+      page,
+      limit,
+    );
+    const totalIssues = await issueModel.count(projectId, category, name);
 
     return {
       issues,
@@ -105,15 +112,16 @@ export const issueService = {
   async getAllIssuesV2(
     params: GetAllIssuesParams,
   ): Promise<SerializedIssuesResponse> {
-    const { category, name, page = 1, limit = 30 } = params;
+    const { projectId, category, name, page = 1, limit = 30 } = params;
 
     const issues = await issueModel.findManyWithUsers(
+      projectId,
       category,
       name,
       page,
       limit,
     );
-    const totalIssues = await issueModel.count(category, name);
+    const totalIssues = await issueModel.count(projectId, category, name);
 
     return {
       issues: issues.map(serializeIssue),
@@ -123,12 +131,15 @@ export const issueService = {
     };
   },
 
-  async getIssueById(issueId: string): Promise<PrismaIssue> {
+  async getIssueById(
+    issueId: string,
+    projectId: string,
+  ): Promise<PrismaIssue> {
     if (!issueId) {
       throw new Error("Issue ID is required");
     }
 
-    const issueRecords = await issueModel.findById(issueId);
+    const issueRecords = await issueModel.findById(issueId, projectId);
 
     if (!issueRecords) {
       throw new Error(`Issue with ID ${issueId} not found`);
@@ -138,12 +149,15 @@ export const issueService = {
   },
 
   // V2 method with serialized response
-  async getIssueByIdV2(issueId: string): Promise<SerializedIssue> {
+  async getIssueByIdV2(
+    issueId: string,
+    projectId: string,
+  ): Promise<SerializedIssue> {
     if (!issueId) {
       throw new Error("Issue ID is required");
     }
 
-    const issueRecords = await issueModel.findByIdWithUsers(issueId);
+    const issueRecords = await issueModel.findByIdWithUsers(issueId, projectId);
 
     if (!issueRecords) {
       throw new Error(`Issue with ID ${issueId} not found`);
@@ -192,13 +206,13 @@ export const issueService = {
     return updatedIssue;
   },
 
-  async deleteIssue(issueId: string): Promise<PrismaIssue> {
+  async deleteIssue(issueId: string, projectId: string): Promise<PrismaIssue> {
     if (!issueId) {
       throw new Error("Issue ID is required");
     }
 
     try {
-      const deletedIssue = await issueModel.delete(issueId);
+      const deletedIssue = await issueModel.delete(issueId, projectId);
       return deletedIssue;
     } catch (error) {
       const err = error as Error;
@@ -209,10 +223,24 @@ export const issueService = {
   async getAllIssuesWithStats(
     params: GetAllIssuesParams,
   ): Promise<GetAllIssuesWithStatsResponse> {
-    const { category, name, page = 1, limit = 10, statFrom, statTo } = params;
+    const {
+      projectId,
+      category,
+      name,
+      page = 1,
+      limit = 10,
+      statFrom,
+      statTo,
+    } = params;
 
-    const issues = await issueModel.findMany(category, name, page, limit);
-    const totalIssues = await issueModel.count(category, name);
+    const issues = await issueModel.findMany(
+      projectId,
+      category,
+      name,
+      page,
+      limit,
+    );
+    const totalIssues = await issueModel.count(projectId, category, name);
 
     // Get statistics for each issue
     const issuesWithStats = await Promise.all(
@@ -292,15 +320,24 @@ export const issueService = {
   async getAllIssuesWithStatsV2(
     params: GetAllIssuesParams,
   ): Promise<GetAllIssuesWithStatsV2Response> {
-    const { category, name, page = 1, limit = 10, statFrom, statTo } = params;
+    const {
+      projectId,
+      category,
+      name,
+      page = 1,
+      limit = 10,
+      statFrom,
+      statTo,
+    } = params;
 
     const issues = await issueModel.findManyWithUsers(
+      projectId,
       category,
       name,
       page,
       limit,
     );
-    const totalIssues = await issueModel.count(category, name);
+    const totalIssues = await issueModel.count(projectId, category, name);
 
     // Get statistics for each issue
     const issuesWithStats = await Promise.all(

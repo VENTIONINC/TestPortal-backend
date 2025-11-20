@@ -1,4 +1,7 @@
-import { OpenAPIRegistry, OpenApiGeneratorV31 } from "@asteasolutions/zod-to-openapi";
+import {
+  OpenAPIRegistry,
+  OpenApiGeneratorV31,
+} from "@asteasolutions/zod-to-openapi";
 
 import { registerCommonSchemas } from "./common";
 import { registerSecuritySchemes } from "./security";
@@ -12,12 +15,10 @@ import { registerExecutionRoutes } from "./executions";
 import { registerReportRoutes } from "./reports";
 import { registerUserRoutes } from "./users";
 import { registerAuthRoutes } from "./auth";
-import { registerTestAnalysisRoutes } from "./testAnalysis";
 import { registerErrorFormatterRoutes } from "./errorFormatter";
 import { registerPromptRoutes } from "./prompts";
 import { registerProjectRoutes } from "./projects";
 import { registerCtrfRoutes } from "./ctrf";
-import { registerMcpRoutes } from "./mcp";
 import { registerUploadApiKeyRoutes } from "./uploadApiKey";
 import "./zod";
 
@@ -36,12 +37,10 @@ export function generateOpenAPISpec() {
   registerReportRoutes(registry);
   registerUserRoutes(registry);
   registerAuthRoutes(registry);
-  registerTestAnalysisRoutes(registry);
   registerErrorFormatterRoutes(registry);
   registerPromptRoutes(registry);
   registerProjectRoutes(registry);
   registerCtrfRoutes(registry);
-  registerMcpRoutes(registry);
   registerUploadApiKeyRoutes(registry);
 
   const generator = new OpenApiGeneratorV31(registry.definitions);

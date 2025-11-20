@@ -78,9 +78,9 @@ A comprehensive Node.js Express server for managing test results with TypeScript
    - Issues, Executions, Specs, Results, Result Errors, and Assumptions
    - Automatic sequence counter updates for proper ID generation
 
-7. **Verify installation:** 
-   
-   Open `http://localhost:3001/api/v1/results` in your browser
+7. **Verify installation:**
+
+   Open `http://localhost:3001/api/v2/results` in your browser
 
 ## Development Scripts
 
@@ -143,19 +143,19 @@ src/
 ## API Endpoints
 
 ### Core Resources
-- `GET /api/v1/results` - Get test results with filtering
-- `GET /api/v1/executions` - Get test executions
-- `GET /api/v1/specs` - Get test specifications
-- `GET /api/v1/issues` - Get identified issues
-- `GET /api/v1/assumptions` - Get error assumptions
+- `GET /api/v2/results` - Get test results with filtering
+- `GET /api/v2/executions` - Get test executions
+- `GET /api/v2/specs` - Get test specifications
+- `GET /api/v2/issues` - Get identified issues
+- `GET /api/v2/assumptions` - Get error assumptions
 
 ### Analysis & Reports
-- `POST /api/v1/json-report` - Process test report JSON
-- `POST /api/v1/result-errors/:id/review` - Analyze error patterns
-- `PUT /api/v1/result-errors/:id/assign` - Assign issue to error
+- `POST /api/v2/json-report` - Process test report JSON
+- `POST /api/v2/result-errors/:id/review` - Analyze error patterns
+- `PUT /api/v2/result-errors/:id/assign` - Assign issue to error
 
 ### Status & Health
-- `GET /api/v1/status` - System health check
+- `GET /api/v2/status` - System health check
 
 ## Documentation
 

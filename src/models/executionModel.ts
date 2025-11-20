@@ -11,10 +11,11 @@ export interface FindManyParams {
 }
 
 export const executionModel = {
-  findById: async (id: string): Promise<PrismaExecution | null> => {
-    return await dbClient.execution.findUnique({
+  findById: async (id: string, projectId: string): Promise<PrismaExecution | null> => {
+    return await dbClient.execution.findFirst({
       where: {
         id,
+        projectId,
       },
     });
   },
@@ -49,6 +50,60 @@ export const executionModel = {
           },
         },
       },
+    });
+  },
+
+  delete: async (id: string, projectId: string): Promise<void> => {
+    const existingExecution = await dbClient.execution.findFirst({
+      where: {
+        id,
+        projectId,
+      },
+      include: {
+        results: {
+          include: {
+            errors: {
+              include: {
+                assumptions: true,
+              },
+            },
+          },
+        },
+      },
+    });
+
+    if (!existingExecution) {
+      throw new Error(`Execution with ID ${id} not found`);
+    }
+
+    await dbClient.$transaction(async (tx) => {
+      for (const result of existingExecution.results) {
+        for (const error of result.errors) {
+          if (error.assumptions.length > 0) {
+            await tx.assumption.deleteMany({
+              where: {
+                resultErrorId: error.id,
+              },
+            });
+          }
+        }
+
+        await tx.resultError.deleteMany({
+          where: {
+            resultId: result.id,
+          },
+        });
+      }
+
+      await tx.result.deleteMany({
+        where: {
+          executionId: id,
+        },
+      });
+
+      await tx.execution.delete({
+        where: { id },
+      });
     });
   },
 };

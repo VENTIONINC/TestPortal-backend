@@ -115,14 +115,14 @@ Execution (Test Run)
 ## API Architecture
 
 ### RESTful Endpoints
-- **Results API**: `/api/v1/results` - Query and retrieve test results
-- **Issues API**: `/api/v1/issues` - Manage known issues
-- **Analysis API**: `/api/v1/result-errors/:id/review` - Trigger AI analysis
-- **Bulk Operations**: `/api/v1/result-errors/bulk-review` - Process multiple errors
-- **Health Check**: `/api/v1/status` - System monitoring
+- **Results API**: `/api/v2/results` - Query and retrieve test results
+- **Issues API**: `/api/v2/issues` - Manage known issues
+- **Analysis API**: `/api/v2/result-errors/:id/review` - Trigger AI analysis
+- **Bulk Operations**: `/api/v2/result-errors/bulk-review` - Process multiple errors
+- **Health Check**: `/api/v2/status` - System monitoring
 
 ### MCP Protocol Endpoints
-- **Session Management**: `/api/v1/mcp` - Initialize and manage AI sessions
+- **Session Management**: `/api/v2/mcp` - Initialize and manage AI sessions
 - **Tool Invocation**: Structured protocol for AI tool execution
 - **Authentication**: Token-based security for AI access
 

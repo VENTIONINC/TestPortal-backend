@@ -8,7 +8,7 @@ const router = Router();
 
 // POST route for uploading and processing raw JSON report files
 router.post(
-  "/v1/json-report/upload",
+  "/v2/upload-json-report",
   authMiddleware,
   uploadJsonReport,
   jsonReportController.processRawReportFile,
@@ -16,7 +16,7 @@ router.post(
 
 // POST route for uploading and processing raw JSON report files with API key authentication
 router.post(
-  "/v2/json-report/upload",
+  "/v2/upload-json-report-api-key",
   apiKeyMiddleware,
   uploadJsonReport,
   jsonReportController.processRawReportFileWithApiKey,

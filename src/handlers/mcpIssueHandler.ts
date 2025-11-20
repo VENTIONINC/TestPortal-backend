@@ -3,6 +3,7 @@ import type { PrismaIssue } from "@/types";
 import { IssueCategory } from "@/types/enums";
 
 interface IssueFilterParams {
+  projectId: string;
   category?: IssueCategory;
   name?: string;
   page?: number;
@@ -52,13 +53,11 @@ interface UpdateIssueParams {
 }
 
 export const mcpIssueHandler = {
-  async getAllIssues(
-    params?: IssueFilterParams,
-  ): Promise<GetAllIssuesResponse> {
-    const { category, name, page = 1, limit = 30 } = params ?? {};
+  async getAllIssues(params: IssueFilterParams): Promise<GetAllIssuesResponse> {
+    const { projectId, category, name, page = 1, limit = 30 } = params;
 
     // Build parameters object, filtering out undefined values
-    const issueParams: IssueFilterParams = {};
+    const issueParams: IssueFilterParams = { projectId };
     if (category) issueParams.category = category;
     if (name) issueParams.name = name;
     if (page) issueParams.page = page;
@@ -68,12 +67,12 @@ export const mcpIssueHandler = {
   },
 
   async getAllIssuesWithStats(
-    params?: IssueFilterParams,
+    params: IssueFilterParams,
   ): Promise<GetAllIssuesWithStatsResponse> {
-    const { category, name, page = 1, limit = 30 } = params ?? {};
+    const { projectId, category, name, page = 1, limit = 30 } = params;
 
     // Build parameters object, filtering out undefined values
-    const issueParams: IssueFilterParams = {};
+    const issueParams: IssueFilterParams = { projectId };
     if (category) issueParams.category = category;
     if (name) issueParams.name = name;
     if (page) issueParams.page = page;
@@ -82,8 +81,11 @@ export const mcpIssueHandler = {
     return await issueService.getAllIssuesWithStats(issueParams);
   },
 
-  async getIssueById(issueId: string): Promise<PrismaIssue> {
-    return await issueService.getIssueById(issueId);
+  async getIssueById(
+    issueId: string,
+    projectId: string,
+  ): Promise<PrismaIssue> {
+    return await issueService.getIssueById(issueId, projectId);
   },
 
   async createIssue(issueParams: CreateIssueParams): Promise<PrismaIssue> {

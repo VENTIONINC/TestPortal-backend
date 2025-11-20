@@ -7,18 +7,21 @@ interface ProcessedSpec extends Omit<PrismaSpec, "tags" | "annotations"> {
 }
 
 export const specService = {
-  async getSpecById(specId: string): Promise<ProcessedSpec> {
+  async getSpecById(specId: string, projectId: string): Promise<ProcessedSpec> {
     if (!specId) {
       throw new Error("Spec ID is required");
     }
 
-    const spec = await specModel.findById(specId);
+    if (!projectId) {
+      throw new Error("Project ID is required");
+    }
+
+    const spec = await specModel.findById(specId, projectId);
 
     if (!spec) {
       throw new Error(`Spec with ID ${specId} not found`);
     }
 
-    // Business logic - parse JSON fields
     try {
       const processedSpec: ProcessedSpec = {
         ...spec,
@@ -31,5 +34,17 @@ export const specService = {
       const error = parseError as Error;
       throw new Error(`Failed to parse spec data: ${error.message}`);
     }
+  },
+
+  async deleteSpec(specId: string, projectId: string): Promise<void> {
+    if (!specId) {
+      throw new Error("Spec ID is required");
+    }
+
+    if (!projectId) {
+      throw new Error("Project ID is required");
+    }
+
+    await specModel.delete(specId, projectId);
   },
 };

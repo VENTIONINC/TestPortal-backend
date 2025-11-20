@@ -33,6 +33,7 @@ jest.mock("@/models/userModel", () => ({
           passwordHash: data.passwordHash,
           cognitoUserId: null,
           mcpToken: null,
+          analyzeEnabled: false,
           reportPortalUrl: null,
           reportPortalEnabled: false,
           monitoringPortalUrl: null,
@@ -66,8 +67,14 @@ jest.mock("@/models/issueModel", () => ({
       },
     ),
     findManyWithUsers: jest.fn(
-      (category?: string, name?: string, page = 1, limit = 30) => {
-        let filtered = [...issues];
+      (
+        projectId: string,
+        category?: string,
+        name?: string,
+        page = 1,
+        limit = 30,
+      ) => {
+        let filtered = issues.filter((i) => i.projectId === projectId);
         if (category) {
           filtered = filtered.filter((issue) =>
             issue.category.toLowerCase().includes(category.toLowerCase()),
@@ -93,8 +100,8 @@ jest.mock("@/models/issueModel", () => ({
         );
       },
     ),
-    count: jest.fn((category?: string, name?: string) => {
-      let filtered = [...issues];
+    count: jest.fn((projectId: string, category?: string, name?: string) => {
+      let filtered = issues.filter((i) => i.projectId === projectId);
       if (category) {
         filtered = filtered.filter((issue) =>
           issue.category.toLowerCase().includes(category.toLowerCase()),
@@ -111,8 +118,10 @@ jest.mock("@/models/issueModel", () => ({
       const issue = issues.find((i) => i.id === id);
       return Promise.resolve(issue ?? null);
     }),
-    findByIdWithUsers: jest.fn((id: string) => {
-      const issue = issues.find((i) => i.id === id);
+    findByIdWithUsers: jest.fn((id: string, projectId: string) => {
+      const issue = issues.find(
+        (i) => i.id === id && i.projectId === projectId,
+      );
       if (!issue) return Promise.resolve(null);
       return Promise.resolve({
         ...issue,
@@ -175,6 +184,7 @@ const addUser = (name: string, email: string): PrismaUser => {
     updatedAt: new Date(),
     cognitoUserId: null,
     mcpToken: null,
+    analyzeEnabled: false,
     reportPortalUrl: null,
     reportPortalEnabled: false,
     monitoringPortalUrl: null,
@@ -192,7 +202,7 @@ const createIssueRecord = async (
   issueService.createIssue({
     name,
     category,
-    projectId: "test-project",
+    projectId: "test-project-uuid",
     createdById: user.id,
     updatedById: user.id,
   });
@@ -210,7 +220,9 @@ describe("Issue service V2 behaviours", () => {
   it("fetches issues with user relations", async () => {
     await createIssueRecord("Login bug", "bug", primaryUser);
 
-    const result = await issueService.getAllIssuesV2({});
+    const result = await issueService.getAllIssuesV2({
+      projectId: "test-project-uuid",
+    });
 
     expect(result.issues).toHaveLength(1);
     const [firstIssue] = result.issues;
@@ -223,11 +235,15 @@ describe("Issue service V2 behaviours", () => {
     await createIssueRecord("Perf issue", "performance", primaryUser);
 
     const bugResult = await issueService.getAllIssuesV2({
+      projectId: "test-project-uuid",
       category: IssueCategory.Bug,
     });
     expect(bugResult.issues).toHaveLength(2);
 
-    const nameResult = await issueService.getAllIssuesV2({ name: "Login" });
+    const nameResult = await issueService.getAllIssuesV2({
+      projectId: "test-project-uuid",
+      name: "Login",
+    });
     expect(nameResult.issues).toHaveLength(1);
     const [loginIssue] = nameResult.issues;
     expect(loginIssue?.name).toBe("Login bug");
@@ -236,7 +252,10 @@ describe("Issue service V2 behaviours", () => {
   it("supports full CRUD workflow", async () => {
     const created = await createIssueRecord("CRUD Issue", "test", primaryUser);
 
-    const fetched = await issueService.getIssueByIdV2(created.id);
+    const fetched = await issueService.getIssueByIdV2(
+      created.id,
+      "test-project-uuid",
+    );
     expect(fetched.name).toBe("CRUD Issue");
 
     await issueService.updateIssue(created.id, {
@@ -245,7 +264,9 @@ describe("Issue service V2 behaviours", () => {
       updatedById: primaryUser.id,
     });
 
-    const list = await issueService.getAllIssuesV2({});
+    const list = await issueService.getAllIssuesV2({
+      projectId: "test-project-uuid",
+    });
     expect(list.issues[0]?.name).toBe("Updated CRUD Issue");
   });
 
@@ -281,7 +302,9 @@ describe("Issue service V2 behaviours", () => {
       },
     ]);
 
-    const result = await issueService.getAllIssuesWithStatsV2({});
+    const result = await issueService.getAllIssuesWithStatsV2({
+      projectId: "test-project-uuid",
+    });
 
     expect(result.issues[0]?.statistics.occurrenceCount).toBe(2);
   });
