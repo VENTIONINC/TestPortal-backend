@@ -1,5 +1,6 @@
 import getLogger from "@/lib/logger";
 import { dbClient } from "@/prisma/client";
+import { Prisma } from "@prisma/client";
 import { parseStackTrace } from "@/lib/parse-error";
 import {
   generateFallbackIdentifier,
@@ -87,6 +88,7 @@ export const jsonReportService = {
   async processReport(
     reportData: ReportData,
     projectId: string,
+    tx?: Prisma.TransactionClient,
   ): Promise<ProcessReportResult> {
     if (!reportData) {
       throw new Error("Report data is required");
@@ -118,48 +120,72 @@ export const jsonReportService = {
         : `Processing report with generated identifier: ${executionIdentifier}`,
     );
 
-    // Create or find execution record
-    const executionRecord = await this._findOrCreateExecution({
-      runId: executionIdentifier,
-      env: env ?? "unknown",
-      version: version ?? "unknown",
-      provider,
-      ...(stats && { stats }),
-      projectId,
-    });
+    const executeLogic = async (
+      transactionClient: Prisma.TransactionClient,
+    ) => {
+      // Create or find execution record
+      const executionRecord = await this._findOrCreateExecution(
+        {
+          runId: executionIdentifier,
+          env: env ?? "unknown",
+          version: version ?? "unknown",
+          provider,
+          ...(stats && { stats }),
+          projectId,
+        },
+        transactionClient,
+      );
 
-    if (!tests?.length) {
-      throw new Error(`Execution #${executionRecord.id} has no specs`);
+      if (!tests?.length) {
+        throw new Error(`Execution #${executionRecord.id} has no specs`);
+      }
+
+      // Process all test specs
+      await this._processSpecs(
+        tests,
+        executionRecord,
+        projectId,
+        transactionClient,
+      );
+
+      logger.info(
+        `Successfully processed report for execution #${executionRecord.id}`,
+      );
+
+      return {
+        success: true,
+        executionId: executionRecord.id,
+        specsProcessed: tests.length,
+      };
+    };
+
+    if (tx) {
+      return executeLogic(tx);
     }
 
-    // Process all test specs
-    await this._processSpecs(tests, executionRecord, projectId);
-
-    logger.info(
-      `Successfully processed report for execution #${executionRecord.id}`,
-    );
-
-    return {
-      success: true,
-      executionId: executionRecord.id,
-      specsProcessed: tests.length,
-    };
+    return await dbClient.$transaction(executeLogic, {
+      timeout: 20000, // Increase timeout for large reports
+    });
   },
 
   /**
    * Find existing execution or create new one
    */
-  async _findOrCreateExecution(params: {
-    runId: string;
-    env: string;
-    version: string;
-    provider: string;
-    stats?: { startTime?: string | Date };
-    projectId: string;
-  }): Promise<PrismaExecution> {
+  async _findOrCreateExecution(
+    params: {
+      runId: string;
+      env: string;
+      version: string;
+      provider: string;
+      stats?: { startTime?: string | Date };
+      projectId: string;
+    },
+    tx?: Prisma.TransactionClient,
+  ): Promise<PrismaExecution> {
     const { runId, env, version, provider, stats, projectId } = params;
+    const client = tx ?? dbClient;
 
-    let executionRecord = await dbClient.execution.findFirst({
+    let executionRecord = await client.execution.findFirst({
       where: {
         name: runId,
         AND: { projectId },
@@ -167,7 +193,7 @@ export const jsonReportService = {
     });
 
     if (!executionRecord) {
-      executionRecord = await dbClient.execution.create({
+      executionRecord = await client.execution.create({
         data: {
           type: "nightly",
           name: runId,
@@ -192,14 +218,15 @@ export const jsonReportService = {
     specs: TestSpec[],
     executionRecord: PrismaExecution,
     projectId: string,
+    tx?: Prisma.TransactionClient,
   ): Promise<void> {
     for (const spec of specs) {
       if (!spec.title) {
         throw new Error(`Spec data is missing title: ${spec.location?.file}`);
       }
 
-      const specRecord = await this._findOrCreateSpec(spec, projectId);
-      await this._processSpecResults(spec, specRecord, executionRecord);
+      const specRecord = await this._findOrCreateSpec(spec, projectId, tx);
+      await this._processSpecResults(spec, specRecord, executionRecord, tx);
     }
   },
 
@@ -209,7 +236,9 @@ export const jsonReportService = {
   async _findOrCreateSpec(
     specData: TestSpec,
     projectId: string,
+    tx?: Prisma.TransactionClient,
   ): Promise<PrismaSpec> {
+    const client = tx ?? dbClient;
     let specKey = "";
     const titleMatch = specData.title.match(/C\d+/);
 
@@ -221,7 +250,7 @@ export const jsonReportService = {
       specKey = specData.title; // fallback to title
     }
 
-    let specRecord = await dbClient.spec.findFirst({
+    let specRecord = await client.spec.findFirst({
       where: {
         key: specKey,
         AND: { projectId },
@@ -229,7 +258,7 @@ export const jsonReportService = {
     });
 
     if (!specRecord) {
-      specRecord = await dbClient.spec.create({
+      specRecord = await client.spec.create({
         data: {
           key: specKey,
           file: specData.location?.file ?? "",
@@ -253,6 +282,7 @@ export const jsonReportService = {
     spec: TestSpec,
     specRecord: PrismaSpec,
     executionRecord: PrismaExecution,
+    tx?: Prisma.TransactionClient,
   ): Promise<void> {
     if (!spec.results?.length) {
       throw new Error(`Spec (#${specRecord.id}) report has no results data`);
@@ -260,7 +290,7 @@ export const jsonReportService = {
 
     for (const result of spec.results) {
       // Analysis is now always done post-persist for both CTRF and Playwright
-      await this._createResultRecord(result, specRecord, executionRecord);
+      await this._createResultRecord(result, specRecord, executionRecord, tx);
     }
   },
 
@@ -271,9 +301,11 @@ export const jsonReportService = {
     resultData: TestResult,
     specRecord: PrismaSpec,
     executionRecord: PrismaExecution,
+    tx?: Prisma.TransactionClient,
   ): Promise<PrismaResult> {
+    const client = tx ?? dbClient;
     // Check if result already exists
-    let resultRecord = await dbClient.result.findFirst({
+    let resultRecord = await client.result.findFirst({
       where: {
         specId: specRecord.id,
         executionId: executionRecord.id,
@@ -305,7 +337,7 @@ export const jsonReportService = {
 
     // Handle error data if present
     if (resultData.error) {
-      const errorRecord = await this._createErrorRecord(resultData.error);
+      const errorRecord = await this._createErrorRecord(resultData.error, tx);
       recordData.errors = {
         connect: {
           id: errorRecord.id,
@@ -313,7 +345,7 @@ export const jsonReportService = {
       };
     }
 
-    resultRecord = await dbClient.result.create({
+    resultRecord = await client.result.create({
       data: recordData,
     });
 
@@ -324,7 +356,11 @@ export const jsonReportService = {
   /**
    * Create an error record from error data
    */
-  async _createErrorRecord(errorData: ErrorData): Promise<PrismaResultError> {
+  async _createErrorRecord(
+    errorData: ErrorData,
+    tx?: Prisma.TransactionClient,
+  ): Promise<PrismaResultError> {
+    const client = tx ?? dbClient;
     const parsedError = parseStackTrace(errorData);
     const {
       type,
@@ -337,7 +373,7 @@ export const jsonReportService = {
       location,
     } = parsedError;
 
-    const errorRecord = await dbClient.resultError.create({
+    const errorRecord = await client.resultError.create({
       data: {
         type,
         message,

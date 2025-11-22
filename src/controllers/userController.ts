@@ -273,7 +273,10 @@ export const userController = {
     }
   },
 
-  updateUserIntegrations: async (req: Request, res: Response): Promise<void> => {
+  updateUserIntegrations: async (
+    req: Request,
+    res: Response,
+  ): Promise<void> => {
     try {
       const { userId } = req.params;
       const integrationsData: UpdateUserIntegrationsParams = req.body;
@@ -292,7 +295,10 @@ export const userController = {
         return;
       }
 
-      const updatedUser = await userService.updateUserIntegrations(userId, integrationsData);
+      const updatedUser = await userService.updateUserIntegrations(
+        userId,
+        integrationsData,
+      );
       const safeUser = createSafeUserResponse(updatedUser);
       res.status(200).json(safeUser);
     } catch (error) {

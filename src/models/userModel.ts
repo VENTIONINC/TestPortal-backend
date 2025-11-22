@@ -1,5 +1,6 @@
 import { dbClient } from "@/prisma/client";
 import type { PrismaUser } from "@/types";
+import { Prisma } from "@prisma/client";
 
 interface CreateUserData {
   name: string;
@@ -15,32 +16,48 @@ interface CreateUserData {
 }
 
 export const userModel = {
-  findById: async (id: string): Promise<PrismaUser | null> => {
-    return await dbClient.user.findUnique({
+  findById: async (
+    id: string,
+    tx?: Prisma.TransactionClient,
+  ): Promise<PrismaUser | null> => {
+    const client = tx ?? dbClient;
+    return await client.user.findUnique({
       where: {
         id,
       },
     });
   },
 
-  findByEmail: async (email: string): Promise<PrismaUser | null> => {
-    return await dbClient.user.findUnique({
+  findByEmail: async (
+    email: string,
+    tx?: Prisma.TransactionClient,
+  ): Promise<PrismaUser | null> => {
+    const client = tx ?? dbClient;
+    return await client.user.findUnique({
       where: {
         email,
       },
     });
   },
 
-  findByCognitoUserId: async (cognitoUserId: string): Promise<PrismaUser | null> => {
-    return await dbClient.user.findUnique({
+  findByCognitoUserId: async (
+    cognitoUserId: string,
+    tx?: Prisma.TransactionClient,
+  ): Promise<PrismaUser | null> => {
+    const client = tx ?? dbClient;
+    return await client.user.findUnique({
       where: {
         cognitoUserId,
       },
     });
   },
 
-  create: async (data: CreateUserData): Promise<PrismaUser> => {
-    return await dbClient.user.create({
+  create: async (
+    data: CreateUserData,
+    tx?: Prisma.TransactionClient,
+  ): Promise<PrismaUser> => {
+    const client = tx ?? dbClient;
+    return await client.user.create({
       data,
     });
   },
@@ -48,8 +65,10 @@ export const userModel = {
   update: async (
     id: string,
     data: Partial<CreateUserData>,
+    tx?: Prisma.TransactionClient,
   ): Promise<PrismaUser> => {
-    return await dbClient.user.update({
+    const client = tx ?? dbClient;
+    return await client.user.update({
       where: { id },
       data,
     });
