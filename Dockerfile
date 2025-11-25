@@ -1,0 +1,42 @@
+# Stage 1: Build
+FROM node:20-alpine AS builder
+
+WORKDIR /app
+
+# Copy package files
+COPY package.json package-lock.json ./
+
+# Install dependencies (including dev dependencies for build)
+RUN npm ci
+
+# Copy source code
+COPY . .
+
+# Generate Prisma Client
+RUN npx prisma generate
+
+# Build the application
+RUN npm run build
+
+# Stage 2: Production Run
+FROM node:20-alpine
+
+WORKDIR /app
+
+# Copy package files
+COPY package.json package-lock.json ./
+
+# Install ONLY production dependencies
+RUN npm ci --omit=dev
+
+# Copy built assets from builder
+COPY --from=builder /app/dist ./dist
+
+# Copy generated Prisma Client
+COPY --from=builder /app/node_modules/.prisma ./node_modules/.prisma
+
+# Expose the port
+EXPOSE 3001
+
+# Start the application
+CMD ["node", "dist/index.js"]

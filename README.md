@@ -17,7 +17,7 @@ A comprehensive Node.js Express server for managing test results with TypeScript
 
 ### Prerequisites
 
-- Node.js 18+ 
+- Node.js 18+
 - npm 8+
 - Docker and Docker Compose
 
@@ -65,16 +65,19 @@ A comprehensive Node.js Express server for managing test results with TypeScript
 6. **Seed the database** (optional, with server running):
 
    **Option 1: Seed from JSON reports:**
+
    ```sh
    npm run seed
    ```
 
    **Option 2: Migrate data from SQLite database:**
+
    ```sh
    npm run seed:migrate
    ```
-   
+
    This will migrate all data from `prisma/dev.db` SQLite file to PostgreSQL, including:
+
    - Issues, Executions, Specs, Results, Result Errors, and Assumptions
    - Automatic sequence counter updates for proper ID generation
 
@@ -143,6 +146,7 @@ src/
 ## API Endpoints
 
 ### Core Resources
+
 - `GET /api/v2/results` - Get test results with filtering
 - `GET /api/v2/executions` - Get test executions
 - `GET /api/v2/specs` - Get test specifications
@@ -150,11 +154,13 @@ src/
 - `GET /api/v2/assumptions` - Get error assumptions
 
 ### Analysis & Reports
+
 - `POST /api/v2/json-report` - Process test report JSON
 - `POST /api/v2/result-errors/:id/review` - Analyze error patterns
 - `PUT /api/v2/result-errors/:id/assign` - Assign issue to error
 
 ### Status & Health
+
 - `GET /api/v2/status` - System health check
 
 ## Documentation
@@ -163,6 +169,7 @@ src/
 - [API Documentation](docs/API_DOCUMENTATION.md)
 - [How to Inspect the MCP Server](docs/INSPECT_MCP_SERVER.md)
 - [MCP Tools Documentation](docs/MCP_TOOLS.md)
+- [Docker Deployment Guide](docs/DOCKER.md)
 
 ## Contributing
 
