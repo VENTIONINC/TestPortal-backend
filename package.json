@@ -47,10 +47,10 @@
     "pg": "^8.16.0",
     "sqlite3": "^5.1.7",
     "string-similarity": "^4.0.4",
-    "zod": "^3.25.26"
+    "zod": "^3.25.26",
+    "@asteasolutions/zod-to-openapi": "^7.3.2"
   },
   "devDependencies": {
-    "@asteasolutions/zod-to-openapi": "^7.3.2",
     "@eslint/js": "^9.27.0",
     "@types/cookie-parser": "^1.4.8",
     "@types/cors": "^2.8.18",
