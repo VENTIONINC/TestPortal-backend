@@ -1,4 +1,5 @@
 import { userModel } from "@/models/userModel";
+import { dbClient } from "@/prisma/client";
 import type { PrismaUser } from "@/types";
 import argon2 from "argon2";
 import { jwtService, type AuthResponse, type JwtPayload } from "./jwtService";
@@ -80,26 +81,27 @@ export const userService = {
       throw new Error("Registration not allowed");
     }
 
-    const existingUser = await userModel.findByEmail(userParams.email);
-    if (existingUser) {
-      throw new Error("User with this email already exists");
-    }
+    return await dbClient.$transaction(async (tx) => {
+      const existingUser = await userModel.findByEmail(userParams.email, tx);
+      if (existingUser) {
+        throw new Error("User with this email already exists");
+      }
 
-    const passwordHash = await argon2.hash(userParams.password, {
-      type: argon2.argon2id,
-      memoryCost: 2 ** 16,
-      timeCost: 3,
-      parallelism: 1,
+      const passwordHash = await argon2.hash(userParams.password, {
+        type: argon2.argon2id,
+        memoryCost: 2 ** 16,
+        timeCost: 3,
+        parallelism: 1,
+      });
+
+      const userData = {
+        name: userParams.name,
+        email: userParams.email,
+        passwordHash,
+      };
+
+      return await userModel.create(userData, tx);
     });
-
-    const userData = {
-      name: userParams.name,
-      email: userParams.email,
-      passwordHash,
-    };
-
-    const userRecord = await userModel.create(userData);
-    return userRecord;
   },
 
   async updateUser(
@@ -110,53 +112,54 @@ export const userService = {
       throw new Error("User ID is required");
     }
 
-    const { name, email, password } = updateData;
-    const cleanUpdateData: UpdateUserData = {};
+    return await dbClient.$transaction(async (tx) => {
+      const { name, email, password } = updateData;
+      const cleanUpdateData: UpdateUserData = {};
 
-    if (name) {
-      if (name.length < 2) {
-        throw new Error("User name must be at least 2 characters");
-      }
-      cleanUpdateData.name = name;
-    }
-
-    if (email) {
-      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-      if (!emailRegex.test(email)) {
-        throw new Error("Invalid email format");
+      if (name) {
+        if (name.length < 2) {
+          throw new Error("User name must be at least 2 characters");
+        }
+        cleanUpdateData.name = name;
       }
 
-      const existingUser = await userModel.findByEmail(email);
-      if (existingUser && existingUser.id !== userId) {
-        throw new Error("Email is already in use by another user");
+      if (email) {
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(email)) {
+          throw new Error("Invalid email format");
+        }
+
+        const existingUser = await userModel.findByEmail(email, tx);
+        if (existingUser && existingUser.id !== userId) {
+          throw new Error("Email is already in use by another user");
+        }
+
+        cleanUpdateData.email = email;
       }
 
-      cleanUpdateData.email = email;
-    }
+      if (password) {
+        if (password.length < 8) {
+          throw new Error("Password must be at least 8 characters");
+        }
 
-    if (password) {
-      if (password.length < 8) {
-        throw new Error("Password must be at least 8 characters");
+        const passwordHash = await argon2.hash(password, {
+          type: argon2.argon2id,
+          memoryCost: 2 ** 16,
+          timeCost: 3,
+          parallelism: 1,
+        });
+
+        cleanUpdateData.passwordHash = passwordHash;
       }
 
-      const passwordHash = await argon2.hash(password, {
-        type: argon2.argon2id,
-        memoryCost: 2 ** 16,
-        timeCost: 3,
-        parallelism: 1,
-      });
+      Object.keys(cleanUpdateData).forEach(
+        (key) =>
+          cleanUpdateData[key as keyof UpdateUserData] === undefined &&
+          delete cleanUpdateData[key as keyof UpdateUserData],
+      );
 
-      cleanUpdateData.passwordHash = passwordHash;
-    }
-
-    Object.keys(cleanUpdateData).forEach(
-      (key) =>
-        cleanUpdateData[key as keyof UpdateUserData] === undefined &&
-        delete cleanUpdateData[key as keyof UpdateUserData],
-    );
-
-    const updatedUser = await userModel.update(userId, cleanUpdateData);
-    return updatedUser;
+      return await userModel.update(userId, cleanUpdateData, tx);
+    });
   },
 
   async verifyPassword(email: string, password: string): Promise<PrismaUser> {

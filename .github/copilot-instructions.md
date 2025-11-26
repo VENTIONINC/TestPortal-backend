@@ -1,146 +1,98 @@
 # GitHub Copilot Instructions
 
-This is a TypeScript Node.js backend for a test results management platform with Model Context Protocol (MCP) integration, following strict MVC architecture patterns.
+This repository is a **Node.js backend** using **TypeScript**, **Express**, and **Prisma** (PostgreSQL). It serves as both a REST API for test results management and a Model Context Protocol (MCP) server for AI agents.
 
-## Architecture Overview
+## Output style guidelines
 
-### Core Components
+Use absolute minimum words. No explanations unless critical. Direct actions only.
 
-- **MVC Pattern**: Controllers handle HTTP logic, Services contain business logic, Models manage database access
-- **MCP Integration**: Dual-purpose architecture - both REST API and MCP tool server for AI agent integration
-- **Type Safety**: Strict TypeScript with Zod validation for all inputs and comprehensive type definitions
+- No greetings, pleasantries, or filler
+- Code/commands first, brief status after
+- Skip obvious steps
+- Use fragments over sentences
+- Single-line summaries only
+- Assume high technical expertise
+- Only explain if prevents errors
+- Tool outputs without commentary
+- Immediate next action if relevant
+- We are not in a conversation
+- We DO NOT like WASTING TIME
+- IMPORTANT: We're here to FOCUS, BUILD, and SHIP
 
-### Key Directory Structure
+## 🏗 Architecture & Patterns
 
-```
-src/
-├── controllers/     # HTTP request handlers (delegate to services)
-├── services/        # Business logic layer (pure functions, no HTTP)
-├── models/          # Database access (Prisma ORM)
-├── handlers/        # MCP-specific business logic
-├── mcp/             # MCP server integration
-│   ├── tools/       # MCP tool definitions using createMcpTool helper
-│   ├── schemas/     # Zod validation schemas
-│   └── helpers/     # MCP utility functions (mcpHelpers.ts)
-├── routes/          # Express route definitions
-├── types/           # TypeScript definitions
-└── middleware/      # Express middleware
-```
+### Core Structure (MVC + MCP)
 
-## Development Patterns
+- **Controllers** (`src/controllers/`): Handle HTTP requests/responses. Delegate business logic to services.
+  - _Pattern_: `try/catch` blocks, input validation, calling services, returning JSON responses.
+  - _Example_: `src/controllers/userController.ts`
+- **Services** (`src/services/`): Pure business logic. **No HTTP objects** (req/res).
+  - _Pattern_: Typed parameters/return values, throws errors for exceptions.
+  - _Example_: `src/services/userService.ts`
+- **Models** (`src/models/`): Database access layer wrapping Prisma calls.
+- **MCP** (`src/mcp/`): Handlers and tools for the Model Context Protocol.
+  - _Pattern_: Use `createMcpTool` helper for defining tools.
 
-### Path Aliases (Critical)
+### Path Aliases
 
-Always use configured path aliases from `tsconfig.json`:
+**ALWAYS** use the configured path aliases from `tsconfig.json`:
 
-- `@/services/*` for service imports
-- `@/models/*` for model imports
-- `@/types` for type definitions
-- `@/lib/*` for utilities
+- `@/services/*` -> `src/services/*`
+- `@/controllers/*` -> `src/controllers/*`
+- `@/models/*` -> `src/models/*`
+- `@/types/*` -> `src/types/*`
+- `@/lib/*` -> `src/lib/*`
 
-### Service Layer Pattern
+## 🛠 Development Workflow
 
-Services must be pure business logic without HTTP concerns:
+- **Start Dev Server**: `npm run dev` (uses `nodemon` + `tsx`)
+- **Build**: `npm run build` (uses `tsc` + `tsc-alias`)
+- **Test**: `npm test` (uses `jest` + `ts-jest`)
+- **Lint**: `npm run lint` (uses `eslint`)
+- **Type Check**: `npm run type-check`
 
-```typescript
-export const domainService = {
-  async getAll(params: GetAllParams): Promise<GetAllResponse> {
-    // Pure business logic, no req/res
-    const items = await domainModel.findMany(params);
-    return { items, total: items.length };
-  },
-};
-```
+## 💾 Database (Prisma)
 
-### Controller Pattern
+- **Schema**: `prisma/schema.prisma`
+- **Migrations**: `npm run migrate` (creates/applies migrations)
+- **Seed**: `npm run seed`
+- **Generate Client**: `npm run db:generate` (automatically run after install)
 
-Controllers only handle HTTP logic and delegate to services:
+## 📝 Coding Conventions
 
-```typescript
-async getResults(req: Request<{}, GetResultsResponse, {}, GetResultsParams>): Promise<void> {
-  const results = await resultService.getResults(req.query);
-  res.json(results);
-}
-```
+### TypeScript
 
-### MCP Tool Pattern
+- **Strict Mode**: Enabled. Avoid `any`. Use explicit types for function parameters and return values.
+- **Interfaces**: Define interfaces for service parameters and responses (e.g., `CreateUserParams`).
 
-Use standardized `createMcpTool` helper from `@/mcp/helpers/mcpHelpers`:
+### Service Layer
 
-```typescript
-export const myTool = createMcpTool(
-  "tool-name", // kebab-case identifier
-  "Description", // Clear description
-  mySchema, // Zod validation schema
-  async (params: SchemaType) => {
-    // Handler with proper typing
-    const data = await myService.method(params);
-    return createSuccessResponse(data);
-  },
-  "operation description", // For error messages
-);
-```
+- Services should be **agnostic** of the transport layer (HTTP vs MCP).
+- Perform validation within the service (e.g., checking email format, password length).
+- Throw standard `Error` objects that controllers catch and format.
 
-## Key Workflows
+### Controllers
 
-### Database Operations
+- Extract parameters from `req.body`, `req.params`, `req.query`.
+- Call service methods.
+- Handle errors and return appropriate HTTP status codes (400, 404, 500).
+- Sanitize responses (e.g., remove password hashes) before sending.
 
-- Use `npm run migrate` for Prisma migrations
-- Generate types with `npm run db:generate`
-- Seed with `npm run seed`
+### MCP Tools
 
-### Development Commands
+- Located in `src/mcp/`.
+- Use `createMcpTool` from `@/mcp/helpers/mcpHelpers`.
+- Define Zod schemas for tool arguments.
 
-- `npm run dev` - Start development server with nodemon
-- `npm run type-check` - TypeScript compilation check
-- `npm run lint` - ESLint validation
-- `npm run build` - Production build with tsc-alias
+## 🧪 Testing
 
-### MCP Server Testing
+- Write unit tests for services and controllers in `__tests__/`.
+- Use `jest` mocks for dependencies.
 
-- `npm run inspector` - Start MCP inspector on port 6274
-- Connect to `http://localhost:3001/api/mcp` for testing
-- Session management via `mcp-session-id` headers
+## 📦 Key Dependencies
 
-## Critical Conventions
-
-### Import Organization
-
-1. Node.js built-ins
-2. Third-party modules
-3. Internal modules with `@/` aliases
-
-### Type Definitions
-
-- Prisma-generated types prefixed with `Prisma` (e.g., `PrismaUser`)
-- API response types in `@/types/api`
-- MCP types in `@/types/mcp`
-
-### Error Handling
-
-- Services throw typed errors with descriptive messages
-- Controllers catch and convert to HTTP responses
-- MCP tools use `createErrorResponse` helper
-
-### Authentication & Security
-
-- JWT tokens with access/refresh pattern via `jwtService`
-- MCP tokens for AI agent authentication via `generateMcpToken`
-- Argon2 password hashing
-
-## Integration Points
-
-### Prisma Database Layer
-
-- PostgreSQL with comprehensive schema in `prisma/schema.prisma`
-- Models use Prisma Client with generated types
-- Migrations in `prisma/migrations/`
-
-### MCP Server Architecture
-
-- HTTP transport server at `/api/mcp` endpoint
-- Session-based communication with unique session IDs
-- Tools registered dynamically on server initialization
-- Standardized responses via `mcpHelpers.ts`
-
-This codebase emphasizes type safety, clean architecture separation, and dual-purpose design for both web API and AI agent integration.
+- `express`: Web server
+- `@prisma/client`: ORM
+- `zod`: Schema validation (especially for MCP)
+- `argon2`: Password hashing
+- `jsonwebtoken`: Auth
