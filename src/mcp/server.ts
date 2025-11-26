@@ -37,8 +37,13 @@ import * as documentationArchitect from "@/mcp/prompts/documentation-architect";
 const router = Router();
 
 // Type for transport storage
+interface TransportEntry {
+  transport: StreamableHTTPServerTransport;
+  lastActive: number;
+}
+
 interface TransportStorage {
-  [sessionId: string]: StreamableHTTPServerTransport;
+  [sessionId: string]: TransportEntry;
 }
 
 // Extended MCP server interface to handle tool registration
@@ -48,6 +53,18 @@ interface McpServerWithTools extends McpServer {
 }
 
 const transports: TransportStorage = {};
+const SESSION_TIMEOUT = 30 * 60 * 1000; // 30 minutes
+
+// Cleanup interval for stale sessions
+setInterval(() => {
+  const now = Date.now();
+  for (const [sessionId, entry] of Object.entries(transports)) {
+    if (now - entry.lastActive > SESSION_TIMEOUT) {
+      console.log(`Cleaning up stale MCP session: ${sessionId}`);
+      delete transports[sessionId];
+    }
+  }
+}, 60 * 1000); // Check every minute
 
 router.post(
   "/v2/mcp",
@@ -58,7 +75,9 @@ router.post(
       let transport: StreamableHTTPServerTransport;
 
       if (sessionId && transports[sessionId]) {
-        transport = transports[sessionId];
+        const entry = transports[sessionId];
+        entry.lastActive = Date.now();
+        transport = entry.transport;
         await transport.handleRequest(req, res, req.body);
         return;
       }
@@ -67,7 +86,10 @@ router.post(
         transport = new StreamableHTTPServerTransport({
           sessionIdGenerator: () => randomUUID(),
           onsessioninitialized: (sessionId: string) => {
-            transports[sessionId] = transport;
+            transports[sessionId] = {
+              transport,
+              lastActive: Date.now(),
+            };
           },
         });
 
@@ -240,7 +262,9 @@ const handleSessionRequest = async (
     return;
   }
 
-  const transport = transports[sessionId];
+  const entry = transports[sessionId];
+  entry.lastActive = Date.now();
+  const transport = entry.transport;
   await transport.handleRequest(req, res);
 };
 
