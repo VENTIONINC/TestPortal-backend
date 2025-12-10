@@ -7,6 +7,7 @@ import { developerCodeAssistantPrompt } from "@/mcp/prompts/developer-code-assis
 import { testPortalAssistantPrompt } from "@/mcp/prompts/test-portal-assistant";
 import { issueAnalysisAssistantPrompt } from "@/mcp/prompts/issue-analysis-assistant";
 import { environmentPerformanceAssistantPrompt } from "@/mcp/prompts/environment-performance-assistant";
+import { softwareDocumentationAssistantPrompt } from "@/mcp/prompts/documentation-architect";
 
 interface PromptConfig {
   title: string;
@@ -139,6 +140,51 @@ const PROMPTS: Record<string, PromptConfig> = {
       environment_scope: params.environment_scope as string || 'all environments',
       performance_metric: params.performance_metric as string,
       time_range: params.time_range as string
+    })
+  },
+
+  'software-documentation-assistant': {
+    title: 'Software Documentation Architect',
+    description: 'Generates high-quality technical documentation by analyzing source code. Creates API references, Getting Started guides, and architecture docs',
+    category: 'documentation',
+    parameters: {
+      file_paths: {
+        type: 'string',
+        required: false,
+        description: 'Comma-separated file paths to document',
+        example: 'src/controllers/userController.ts,src/services/userService.ts'
+      },
+      documentation_type: {
+        type: 'string',
+        required: false,
+        description: 'Type of documentation to generate (Getting Started, API Reference, Architecture, README, Integration Guide)',
+        example: 'API Reference'
+      },
+      target_audience: {
+        type: 'string',
+        required: false,
+        description: 'Target readers (Internal Team, Public API Consumers, Junior Developers, DevOps Engineers)',
+        example: 'Internal Team'
+      },
+      scope: {
+        type: 'string',
+        required: false,
+        description: 'Documentation scope (entire project, authentication module, database layer, specific feature)',
+        example: 'authentication module'
+      },
+      publish: {
+        type: 'string',
+        required: false,
+        description: 'Whether to publish documentation to available MCP storage (true/yes/false/no)',
+        example: 'false'
+      }
+    },
+    generator: (params: Record<string, unknown>) => softwareDocumentationAssistantPrompt({
+      file_paths: params.file_paths as string,
+      documentation_type: params.documentation_type as string,
+      target_audience: params.target_audience as string,
+      scope: params.scope as string,
+      publish: params.publish as string
     })
   }
 };
