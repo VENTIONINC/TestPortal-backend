@@ -32,85 +32,95 @@ export const ctrfService = {
     // Step 1: Transform CTRF to report data WITHOUT analysis
     const reportData = this.transformCtrfToReportData(ctrfReport);
 
-    // Step 2: Persist to database
-    const processResult = await jsonReportService.processReport(
+    return await dbClient.$transaction(
+      async (tx) => {
+        // Step 2: Persist to database
+        const processResult = await jsonReportService.processReport(
+          {
+            ...reportData,
+            provider: reportData.provider || "ctrf",
+          },
+          projectId.toString(),
+          tx,
+        );
+
+        // Step 3: Check if analysis is enabled for project owner
+        const project = await tx.project.findUnique({
+          where: { id: projectId },
+          include: { owner: true },
+        });
+
+        const shouldAnalyze = project?.owner.analyzeEnabled ?? false;
+
+        if (!shouldAnalyze) {
+          logger.info("Analysis disabled for user, skipping analysis");
+          return {
+            ...processResult,
+            analysis: undefined,
+          };
+        }
+
+        // Step 4: Fetch just-created results from DB with relations
+        const createdResults = await tx.result.findMany({
+          where: { executionId: processResult.executionId },
+          include: {
+            spec: true,
+            execution: true,
+            errors: true,
+          },
+        });
+
+        logger.info(
+          `Fetched ${createdResults.length} results from DB for analysis`,
+        );
+
+        // Step 5: Analyze stored results (POST-PERSIST)
+        let analysisMap: Map<string, TestResultAnalysis> | null = null;
+        try {
+          analysisMap =
+            await testAnalysisService.analyzeStoredResults(createdResults);
+
+          // Step 6: Update results with analysis fields
+          logger.info(
+            `Updating ${analysisMap.size} results with analysis data`,
+          );
+
+          await Promise.all(
+            Array.from(analysisMap.entries()).map(([resultId, analysis]) =>
+              tx.result.update({
+                where: { id: resultId },
+                data: {
+                  analysisStatus: analysis.status,
+                  analysisCategory: analysis.category ?? null,
+                  analysisConfidence: analysis.confidence,
+                  analysisConclusion: analysis.conclusion ?? null,
+                  analysisErrorQuality: analysis.errorQuality ?? null,
+                  analysisErrorQualityConclusion:
+                    analysis.errorQualityConclusion ?? null,
+                },
+              }),
+            ),
+          );
+
+          logger.info(
+            `Successfully updated ${analysisMap.size} results with analysis`,
+          );
+        } catch (analysisError) {
+          logger.warn(
+            "Analysis failed, results saved without analysis:",
+            analysisError,
+          );
+        }
+
+        return {
+          ...processResult,
+          analysis: analysisMap ? Array.from(analysisMap.values()) : undefined,
+        };
+      },
       {
-        ...reportData,
-        provider: reportData.provider || "ctrf",
+        timeout: 30000, // Increase timeout for analysis
       },
-      projectId.toString(),
     );
-
-    // Step 3: Check if analysis is enabled for project owner
-    const project = await dbClient.project.findUnique({
-      where: { id: projectId },
-      include: { owner: true },
-    });
-
-    const shouldAnalyze = project?.owner.analyzeEnabled ?? false;
-
-    if (!shouldAnalyze) {
-      logger.info("Analysis disabled for user, skipping analysis");
-      return {
-        ...processResult,
-        analysis: undefined,
-      };
-    }
-
-    // Step 4: Fetch just-created results from DB with relations
-    const createdResults = await dbClient.result.findMany({
-      where: { executionId: processResult.executionId },
-      include: {
-        spec: true,
-        execution: true,
-        errors: true,
-      },
-    });
-
-    logger.info(
-      `Fetched ${createdResults.length} results from DB for analysis`,
-    );
-
-    // Step 5: Analyze stored results (POST-PERSIST)
-    let analysisMap: Map<string, TestResultAnalysis> | null = null;
-    try {
-      analysisMap =
-        await testAnalysisService.analyzeStoredResults(createdResults);
-
-      // Step 6: Update results with analysis fields
-      logger.info(`Updating ${analysisMap.size} results with analysis data`);
-
-      await Promise.all(
-        Array.from(analysisMap.entries()).map(([resultId, analysis]) =>
-          dbClient.result.update({
-            where: { id: resultId },
-            data: {
-              analysisStatus: analysis.status,
-              analysisCategory: analysis.category ?? null,
-              analysisConfidence: analysis.confidence,
-              analysisConclusion: analysis.conclusion ?? null,
-              analysisErrorQuality: analysis.errorQuality ?? null,
-              analysisErrorQualityConclusion:
-                analysis.errorQualityConclusion ?? null,
-            },
-          }),
-        ),
-      );
-
-      logger.info(
-        `Successfully updated ${analysisMap.size} results with analysis`,
-      );
-    } catch (analysisError) {
-      logger.warn(
-        "Analysis failed, results saved without analysis:",
-        analysisError,
-      );
-    }
-
-    return {
-      ...processResult,
-      analysis: analysisMap ? Array.from(analysisMap.values()) : undefined,
-    };
   },
 
   transformCtrfToReportData(ctrfReport: CTRFReport): ReportData {

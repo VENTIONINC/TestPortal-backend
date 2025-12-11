@@ -1,13 +1,16 @@
-import { PrismaClient, Project, Prisma } from "@prisma/client";
-
-const prisma = new PrismaClient();
+import { Project, Prisma } from "@prisma/client";
+import { dbClient } from "@/prisma/client";
 
 export const projectModel = {
-  async findMany(filters?: {
-    ownerId?: string;
-    isActive?: boolean;
-    name?: string;
-  }): Promise<Project[]> {
+  async findMany(
+    filters?: {
+      ownerId?: string;
+      isActive?: boolean;
+      name?: string;
+    },
+    tx?: Prisma.TransactionClient,
+  ): Promise<Project[]> {
+    const client = tx ?? dbClient;
     const where: Prisma.ProjectWhereInput = {};
 
     if (filters?.ownerId) {
@@ -25,7 +28,7 @@ export const projectModel = {
       };
     }
 
-    return await prisma.project.findMany({
+    return await client.project.findMany({
       where,
       include: {
         owner: {
@@ -49,7 +52,10 @@ export const projectModel = {
     });
   },
 
-  async findById(id: string): Promise<
+  async findById(
+    id: string,
+    tx?: Prisma.TransactionClient,
+  ): Promise<
     | (Project & {
         owner: { id: string; name: string; email: string };
         _count: {
@@ -60,7 +66,8 @@ export const projectModel = {
       })
     | null
   > {
-    return await prisma.project.findUnique({
+    const client = tx ?? dbClient;
+    return await client.project.findUnique({
       where: { id },
       include: {
         owner: {
@@ -81,18 +88,26 @@ export const projectModel = {
     });
   },
 
-  async findByName(name: string): Promise<Project | null> {
-    return await prisma.project.findUnique({
+  async findByName(
+    name: string,
+    tx?: Prisma.TransactionClient,
+  ): Promise<Project | null> {
+    const client = tx ?? dbClient;
+    return await client.project.findUnique({
       where: { name },
     });
   },
 
-  async create(data: {
-    name: string;
-    description?: string;
-    ownerId: string;
-  }): Promise<Project> {
-    return await prisma.project.create({
+  async create(
+    data: {
+      name: string;
+      description?: string;
+      ownerId: string;
+    },
+    tx?: Prisma.TransactionClient,
+  ): Promise<Project> {
+    const client = tx ?? dbClient;
+    return await client.project.create({
       data: {
         name: data.name,
         description: data.description ?? null,
@@ -117,8 +132,10 @@ export const projectModel = {
       description?: string;
       isActive?: boolean;
     },
+    tx?: Prisma.TransactionClient,
   ): Promise<Project> {
-    return await prisma.project.update({
+    const client = tx ?? dbClient;
+    return await client.project.update({
       where: { id },
       data,
       include: {
@@ -133,8 +150,9 @@ export const projectModel = {
     });
   },
 
-  async delete(id: string): Promise<Project> {
-    return await prisma.project.delete({
+  async delete(id: string, tx?: Prisma.TransactionClient): Promise<Project> {
+    const client = tx ?? dbClient;
+    return await client.project.delete({
       where: { id },
     });
   },
@@ -152,7 +170,7 @@ export const projectModel = {
    * 8. Project itself
    */
   async deleteWithCascade(id: string): Promise<Project> {
-    return await prisma.$transaction(async (tx) => {
+    return await dbClient.$transaction(async (tx) => {
       const project = await tx.project.findUnique({
         where: { id },
         select: { id: true },
@@ -259,18 +277,12 @@ export const projectModel = {
     });
   },
 
-  async checkOwnership(projectId: string, userId: string): Promise<boolean> {
-    const project = await prisma.project.findUnique({
-      where: {
-        id: projectId,
-        ownerId: userId,
-      },
-    });
-    return !!project;
-  },
-
-  async findUserProjects(userId: string): Promise<Project[]> {
-    return await prisma.project.findMany({
+  async findUserProjects(
+    userId: string,
+    tx?: Prisma.TransactionClient,
+  ): Promise<Project[]> {
+    const client = tx ?? dbClient;
+    return await client.project.findMany({
       where: {
         ownerId: userId,
         isActive: true,

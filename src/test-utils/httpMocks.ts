@@ -115,16 +115,18 @@ export const executeProtectedController = async <T = any>(
 
   const res = createMockResponse<T>();
 
+  let controllerPromise: Promise<void> | void = undefined;
   let nextCalled = false;
-  const next: NextFunction = async () => {
+
+  const next: NextFunction = () => {
     nextCalled = true;
-    await controller(req as Request, res);
+    controllerPromise = controller(req as Request, res);
   };
 
   await authMiddleware(req, res, next);
 
-  if (!nextCalled) {
-    return res;
+  if (nextCalled && controllerPromise) {
+    await controllerPromise;
   }
 
   return res;

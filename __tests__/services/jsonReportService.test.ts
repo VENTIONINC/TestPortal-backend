@@ -1,8 +1,8 @@
 import { jsonReportService } from "@/services/jsonReportService";
 
 // Mock the database client and logger
-jest.mock("@/prisma/client", () => ({
-  dbClient: {
+jest.mock("@/prisma/client", () => {
+  const mockClient = {
     execution: {
       findFirst: jest.fn(),
       create: jest.fn(),
@@ -18,8 +18,17 @@ jest.mock("@/prisma/client", () => ({
     resultError: {
       create: jest.fn(),
     },
-  },
-}));
+  };
+
+  // Mock $transaction to simply execute the callback with the mockClient
+  (mockClient as any).$transaction = jest.fn(async (callback) => {
+    return await callback(mockClient);
+  });
+
+  return {
+    dbClient: mockClient,
+  };
+});
 
 jest.mock("@/lib/logger", () => ({
   __esModule: true,
