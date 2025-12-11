@@ -1,5 +1,4 @@
 import { projectModel } from "@/models/projectModel";
-import { dbClient } from "@/prisma/client";
 import type { Project } from "@prisma/client";
 
 export interface CreateProjectParams {
@@ -72,26 +71,7 @@ export const projectService = {
   },
 
   async deleteProject(id: string): Promise<Project> {
-    return await dbClient.$transaction(async (tx) => {
-      // Check if project has associated data
-      const project = await projectModel.findById(id, tx);
-      if (
-        project &&
-        (project._count.executions > 0 ||
-          project._count.specs > 0 ||
-          project._count.issues > 0)
-      ) {
-        throw new Error(
-          "Cannot delete project with existing data. Please move or delete associated executions, specs, and issues first.",
-        );
-      }
-
-      return await projectModel.delete(id, tx);
-    });
-  },
-
-  async validateProjectExists(projectId: string): Promise<boolean> {
-    const project = await projectModel.findById(projectId);
-    return !!project && project.isActive;
+    // Use cascading deletion with transaction to ensure atomicity
+    return await projectModel.deleteWithCascade(id);
   },
 };
