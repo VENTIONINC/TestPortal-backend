@@ -140,9 +140,7 @@ export const projectController = {
       res.status(204).send();
     } catch (error) {
       const err = error as Error;
-      if (err.message.includes("existing data")) {
-        res.status(409).json({ error: err.message });
-      } else if (err.message.includes("not found")) {
+      if (err.message.includes("not found")) {
         res.status(404).json({ error: err.message });
       } else {
         res.status(500).json({ error: err.message });

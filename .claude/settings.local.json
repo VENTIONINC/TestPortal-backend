@@ -1,8 +1,8 @@
 {
-  "outputStyle": "Ultra Concise",
   "permissions": {
     "allow": [
       "Bash(git checkout:*)"
     ]
-  }
+  },
+  "outputStyle": "Ultra Concise"
 }
