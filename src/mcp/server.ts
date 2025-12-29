@@ -28,11 +28,11 @@ import {
   getResultErrorById,
 } from "@/mcp/tools/result-errors";
 import { getSpecById } from "@/mcp/tools/specs";
-import * as testPortalAssistant from "@/mcp/prompts/test-portal-assistant";
-import * as issueAnalysisAssistant from "@/mcp/prompts/issue-analysis-assistant";
-import * as environmentPerformanceAssistant from "@/mcp/prompts/environment-performance-assistant";
-import * as developerCodeAssistant from "@/mcp/prompts/developer-code-assistant";
-import * as documentationArchitect from "@/mcp/prompts/documentation-architect";
+import * as testPortalAssistant from "@/mcp/prompts/test-portal-assistant/v1.0.0";
+import * as issueAnalysisAssistant from "@/mcp/prompts/issue-analysis-assistant/v1.0.0";
+import * as environmentPerformanceAssistant from "@/mcp/prompts/environment-performance-assistant/v1.0.0";
+import * as developerCodeAssistant from "@/mcp/prompts/developer-code-assistant/v1.0.0";
+import * as documentationArchitect from "@/mcp/prompts/documentation-architect/v1.0.0";
 
 const router = Router();
 

@@ -2,7 +2,7 @@ import { ChatOpenAI } from "@langchain/openai";
 import { z } from "zod";
 
 import getLogger from "@/lib/logger";
-import { getStoredResultsAnalysisPrompt } from "@/prompts/stored-results-analysis";
+import { getStoredResultsAnalysisPrompt } from "@/prompts/stored-results-analysis/v1.0.0";
 import {
   testAnalysisSchema,
   type TestResultAnalysis,
