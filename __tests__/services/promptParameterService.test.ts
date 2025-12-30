@@ -1,16 +1,16 @@
 import { PromptParameterService } from "@/services/promptParameterService";
-import { developerCodeAssistantPrompt } from "@/mcp/prompts/developer-code-assistant";
-import { testPortalAssistantPrompt } from "@/mcp/prompts/test-portal-assistant";
-import { issueAnalysisAssistantPrompt } from "@/mcp/prompts/issue-analysis-assistant";
-import { environmentPerformanceAssistantPrompt } from "@/mcp/prompts/environment-performance-assistant";
-import { softwareDocumentationAssistantPrompt } from "@/mcp/prompts/documentation-architect";
+import { developerCodeAssistantPrompt } from "@/mcp/prompts/developer-code-assistant/v1.0.0";
+import { testPortalAssistantPrompt } from "@/mcp/prompts/test-portal-assistant/v1.0.0";
+import { issueAnalysisAssistantPrompt } from "@/mcp/prompts/issue-analysis-assistant/v1.0.0";
+import { environmentPerformanceAssistantPrompt } from "@/mcp/prompts/environment-performance-assistant/v1.0.0";
+import { softwareDocumentationAssistantPrompt } from "@/mcp/prompts/documentation-architect/v1.0.0";
 
 // Mock the prompt functions
-jest.mock("@/mcp/prompts/developer-code-assistant");
-jest.mock("@/mcp/prompts/test-portal-assistant");
-jest.mock("@/mcp/prompts/issue-analysis-assistant");
-jest.mock("@/mcp/prompts/environment-performance-assistant");
-jest.mock("@/mcp/prompts/documentation-architect");
+jest.mock("@/mcp/prompts/developer-code-assistant/v1.0.0");
+jest.mock("@/mcp/prompts/test-portal-assistant/v1.0.0");
+jest.mock("@/mcp/prompts/issue-analysis-assistant/v1.0.0");
+jest.mock("@/mcp/prompts/environment-performance-assistant/v1.0.0");
+jest.mock("@/mcp/prompts/documentation-architect/v1.0.0");
 
 const mockDeveloperCodeAssistantPrompt = developerCodeAssistantPrompt as jest.MockedFunction<typeof developerCodeAssistantPrompt>;
 const mockTestPortalAssistantPrompt = testPortalAssistantPrompt as jest.MockedFunction<typeof testPortalAssistantPrompt>;
@@ -28,7 +28,7 @@ describe("PromptParameterService", () => {
       const prompts = PromptParameterService.getAllPrompts();
 
       expect(prompts).toHaveLength(5);
-      
+
       const promptNames = prompts.map(p => p.name);
       expect(promptNames).toContain("developer-code-assistant");
       expect(promptNames).toContain("test-portal-assistant");
