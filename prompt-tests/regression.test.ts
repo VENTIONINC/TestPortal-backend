@@ -9,6 +9,7 @@ import "./testEnv"; // Load environment variables
 import fs from "node:fs";
 import path from "node:path";
 import { runEval } from "./runners/stored-results-analysis";
+import { DEFAULT_VERSION } from "./runners/versions";
 import type { TestCase } from "./templates/types";
 
 const datasetPath = path.join(
@@ -25,8 +26,11 @@ describe("Prompt Evaluation - Regression Tests (v1.1.0)", () => {
       fs.readFileSync(datasetPath, "utf8"),
     ) as TestCase[];
 
-    // Run evaluation
-    const { failures } = await runEval({ cases });
+    // Run evaluation with v1.1.0 prompt (DEFAULT_VERSION)
+    const { failures } = await runEval({
+      cases,
+      version: DEFAULT_VERSION,
+    });
 
     // Log failures for debugging
     if (failures.length > 0) {

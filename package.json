@@ -21,6 +21,7 @@
     "gen:prompt-datasets": "tsx prompt-tests/generate-datasets.ts",
     "test:prompts:smoke": "jest --testPathPattern=prompt-tests/smoke.test.ts",
     "test:prompts:regression": "jest --testPathPattern=prompt-tests/regression.test.ts",
+    "test:prompts:compare": "jest --testPathPattern=prompt-tests/version-comparison.test.ts --verbose",
     "test:prompts": "npm run gen:prompt-datasets && npm run test:prompts:smoke"
   },
   "author": "",

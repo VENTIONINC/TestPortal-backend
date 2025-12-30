@@ -5,16 +5,25 @@
 
 import { ChatOpenAI } from "@langchain/openai";
 import { z } from "zod";
-import { testAnalysisSchema } from "@/schemas/testAnalysisSchemas";
-import { getStoredResultsAnalysisPrompt } from "@/prompts/stored-results-analysis/v1.1.0";
 import type { TestCase } from "../templates/types";
 import type { EvalResult, EvalFailure } from "./types";
+
+/**
+ * Prompt version configuration
+ * Specifies which prompt and schema to use for evaluation
+ */
+export interface PromptVersion {
+  version: "v1.0.0" | "v1.1.0";
+  getPrompt: (testResultsLength: number) => string;
+  schema: z.ZodType<any>;
+}
 
 /**
  * Configuration options for running prompt evaluation
  */
 export interface RunEvalOptions {
   cases: TestCase[];
+  version: PromptVersion;
   model?: string;
   temperature?: number;
 }
@@ -29,15 +38,16 @@ export async function runEval(
 ): Promise<EvalResult> {
   const {
     cases,
+    version,
     model = "gpt-4.1-mini",
     temperature = 0.1,
   } = options;
 
-  // Prepare prompt and input
-  const systemPrompt = getStoredResultsAnalysisPrompt(cases.length);
+  // Prepare prompt and input using version-specific prompt
+  const systemPrompt = version.getPrompt(cases.length);
   const userPrompt = JSON.stringify(cases.map((c) => c.input));
 
-  // Setup LLM with structured output
+  // Setup LLM with structured output using version-specific schema
   const llm = new ChatOpenAI({
     model,
     temperature,
@@ -45,9 +55,9 @@ export async function runEval(
     maxRetries: 2,
   });
 
-  const structuredModel = llm.withStructuredOutput<
-    z.infer<typeof testAnalysisSchema>
-  >(testAnalysisSchema, { name: "test_analysis" });
+  const structuredModel = llm.withStructuredOutput<any>(version.schema, {
+    name: "test_analysis",
+  });
 
   // Invoke LLM
   const response = await structuredModel.invoke([
@@ -58,17 +68,19 @@ export async function runEval(
   // Contract validation: Response length must match input length
   if (response.results.length !== cases.length) {
     throw new Error(
-      `Contract violation: Expected ${cases.length} results, got ${response.results.length}`,
+      `Contract violation (${version.version}): Expected ${cases.length} results, got ${response.results.length}`,
     );
   }
 
   // Build map for quick lookup by ID
-  const byId = new Map(response.results.map((r) => [r.id, r]));
+  const byId = new Map(
+    response.results.map((r: any) => [r.id, r]),
+  );
   const failures: EvalFailure[] = [];
 
   // Validate expectations for each test case
   for (const tc of cases) {
-    const out = byId.get(tc.input.id);
+    const out: any = byId.get(tc.input.id);
 
     // Check if result exists
     if (!out) {
@@ -95,28 +107,51 @@ export async function runEval(
       });
     }
 
-    // Validate: errorQuality rules based on test status
+    // Validate: errorQuality rules based on test status (version-aware)
     if (tc.expect.errorQuality === "required") {
-      // For failed tests, errorQuality fields must be non-null
+      // For failed tests, errorQuality fields must be present/non-null
       if (out.status !== "failed") {
         failures.push({
           testCaseName: tc.name,
           reason: `Expected failed status for required errorQuality`,
         });
       }
-      if (out.errorQuality == null || out.errorQualityConclusion == null) {
-        failures.push({
-          testCaseName: tc.name,
-          reason: `Expected non-null errorQuality fields for failed test, got null`,
-        });
+
+      if (version.version === "v1.0.0") {
+        // v1.0.0: fields should exist (not undefined)
+        if (out.errorQuality === undefined || out.errorQualityConclusion === undefined) {
+          failures.push({
+            testCaseName: tc.name,
+            reason: `Expected errorQuality fields for failed test (v1.0.0), got undefined`,
+          });
+        }
+      } else {
+        // v1.1.0: fields must be explicitly non-null
+        if (out.errorQuality === null || out.errorQualityConclusion === null) {
+          failures.push({
+            testCaseName: tc.name,
+            reason: `Expected non-null errorQuality fields for failed test (v1.1.0), got null`,
+          });
+        }
       }
     } else {
-      // For flaky tests (errorQuality: "null"), fields must be null
-      if (out.errorQuality !== null || out.errorQualityConclusion !== null) {
-        failures.push({
-          testCaseName: tc.name,
-          reason: `Expected null errorQuality fields for flaky test, got non-null values`,
-        });
+      // For flaky tests (errorQuality: "null"), fields must be null/undefined
+      if (version.version === "v1.0.0") {
+        // v1.0.0: fields should be omitted (undefined)
+        if (out.errorQuality !== undefined || out.errorQualityConclusion !== undefined) {
+          failures.push({
+            testCaseName: tc.name,
+            reason: `Expected omitted errorQuality fields for flaky test (v1.0.0), got defined values`,
+          });
+        }
+      } else {
+        // v1.1.0: fields must be explicitly null
+        if (out.errorQuality !== null || out.errorQualityConclusion !== null) {
+          failures.push({
+            testCaseName: tc.name,
+            reason: `Expected null errorQuality fields for flaky test (v1.1.0), got non-null values`,
+          });
+        }
       }
     }
 
@@ -147,7 +182,7 @@ export async function runEval(
     ) {
       failures.push({
         testCaseName: tc.name,
-        reason: `Conclusion too short or empty: length=${out.conclusion?.length || 0}`,
+        reason: `Conclusion too short or empty: length=${out.conclusion?.length ?? 0}`,
       });
     }
   }
