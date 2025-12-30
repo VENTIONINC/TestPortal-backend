@@ -2,7 +2,7 @@ import { ChatOpenAI } from "@langchain/openai";
 import { z } from "zod";
 
 import getLogger from "@/lib/logger";
-import { getStoredResultsAnalysisPrompt } from "@/prompts/stored-results-analysis/v1.0.0";
+import { getStoredResultsAnalysisPrompt } from "@/prompts/stored-results-analysis/v1.1.0";
 import {
   testAnalysisSchema,
   type TestResultAnalysis,
@@ -52,24 +52,25 @@ export const testAnalysisService = {
       logger.info(`Analyzing ${results.length} stored test results`);
 
       // Filter to only failed tests
-      const failedResults = results.filter(
-        (result) => result.status !== "passed",
+      const resultsForAnalysis = results.filter(
+        ({ status }) => status === "failed" || status === "flaky",
       );
+      const resultsForAnalysisCount = resultsForAnalysis.length;
 
       logger.info(
-        `Found ${failedResults.length} failed results out of ${results.length} total`,
+        `Found ${resultsForAnalysisCount} non-passing results (failed/flaky) out of ${results.length} total`,
       );
       logger.debug(
-        `Failed result statuses: ${failedResults.map((r) => r.status).join(", ")}`,
+        `Non-passing statuses: ${resultsForAnalysis.map((r) => r.status).join(", ")}`,
       );
 
-      if (failedResults.length === 0) {
+      if (resultsForAnalysisCount === 0) {
         logger.info("All stored tests passed, skipping analysis");
         return new Map();
       }
 
       // Transform stored results to essential data for AI analysis
-      const essentialData = failedResults.map((result) => {
+      const essentialData = resultsForAnalysis.map((result) => {
         const essentialResult: {
           id: string;
           specKey: string;
@@ -93,11 +94,11 @@ export const testAnalysisService = {
 
         // Add error information if present
         if (result.errors.length > 0) {
-          const firstError = result.errors[0];
-          if (firstError) {
-            essentialResult.errorMessage = firstError.message;
-            essentialResult.errorStack = firstError.callStack;
-            essentialResult.errorLocation = firstError.location;
+          const lastError = result.errors.at(-1);
+          if (lastError) {
+            essentialResult.errorMessage = lastError.message;
+            essentialResult.errorStack = lastError.callStack;
+            essentialResult.errorLocation = lastError.location;
           }
         }
 
@@ -109,7 +110,7 @@ export const testAnalysisService = {
 
       const model = new ChatOpenAI({
         model: "gpt-4.1-mini",
-        temperature: 0.7,
+        temperature: 0,
         maxTokens: 4000,
         maxRetries: 2,
       });
@@ -126,21 +127,13 @@ export const testAnalysisService = {
       ]);
 
       logger.info(
-        `AI returned ${analysisResponse.results.length} analysis results (expected ${failedResults.length})`,
+        `AI returned ${analysisResponse.results.length} analysis results (expected ${resultsForAnalysisCount})`,
       );
 
       // Convert array to Map keyed by result ID
       const analysisMap = new Map<string, TestResultAnalysis>();
       for (const result of analysisResponse.results) {
-        analysisMap.set(result.id, {
-          id: result.id,
-          status: result.status,
-          confidence: result.confidence,
-          category: result.category,
-          conclusion: result.conclusion,
-          errorQuality: result.errorQuality,
-          errorQualityConclusion: result.errorQualityConclusion,
-        });
+        analysisMap.set(result.id, result);
       }
 
       logger.info(

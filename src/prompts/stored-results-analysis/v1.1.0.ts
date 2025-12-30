@@ -7,7 +7,7 @@ export const getStoredResultsAnalysisPrompt = (testResultsLength: number) => `
 
   <!-- ===== PRIMARY OBJECTIVE ===== -->
   <goal>
-    Analyze test results from the database and categorize failed tests into one of the predefined buckets.
+    Analyze test results from the database and categorize non-passing tests (failed or flaky) into one of the predefined buckets.
     For each test result, provide a confidence rating and a concise conclusion explaining your reasoning.
     For failed tests, also evaluate the quality of error messages and provide an error quality rating with explanation.
   </goal>
@@ -15,7 +15,7 @@ export const getStoredResultsAnalysisPrompt = (testResultsLength: number) => `
   <!-- ===== CATEGORIZATION SCHEMA ===== -->
   <categories>
     <description>
-      Categorize each failed test into one of the following buckets based on the root cause:
+      Categorize each non-passing test (failed or flaky) into one of the following buckets based on the root cause:
     </description>
     <category id="bug">App defects, logic errors, assertion failures.</category>
     <category id="infra">Environment, network, deployment, MFA/auth issues.</category>
@@ -31,12 +31,14 @@ export const getStoredResultsAnalysisPrompt = (testResultsLength: number) => `
     <rule>Assertion failures: bug</rule>
     <rule>Selector not found: script</rule>
     <rule>Network errors: infra</rule>
+    <rule>If status is "flaky", categorize based on the failure evidence; set confidence to 2-4 unless the root cause is explicit.</rule>
+    <rule>Network timeouts/errors (ETIMEDOUT, ECONNRESET, DNS, connection refused) => infra. Slow response without network errors => performance.</rule>
   </guidelines>
 
   <!-- ===== CRITICAL / STRICT REQUIREMENTS ===== -->
   <critical>
     You are analyzing <var>${testResultsLength}</var> test results.
-    You <must>return exactly <var>${testResultsLength}</var> analysis objects</must> in the JSON array.
+    You <must>return exactly <var>${testResultsLength}</var> analysis objects</must> in the <field>results</field> array.
   </critical>
 
   <steps>
@@ -71,25 +73,30 @@ export const getStoredResultsAnalysisPrompt = (testResultsLength: number) => `
 
   <strict>
     <rule>Use provided <field>id</field> (database UUID) from the test data.</rule>
-    <rule>Use provided <field>status</field> from the test data.</rule>
-    <rule><field>category</field> one of: bug, infra, performance, script, other.</rule>
-    <rule><field>confidence</field> must be an integer 1-5 (see confidence scale above).</rule>
-    <rule><field>conclusion</field> must be a 2-3 sentence string explaining the analysis.</rule>
-    <rule><field>errorQuality</field> must be an integer 1-5 (see error quality scale above).</rule>
-    <rule><field>errorQualityConclusion</field> must be a brief 1-2 sentence string explaining the error quality rating.</rule>
-    <rule>No markdown outside the JSON structure; respond with pure JSON.</rule>
-    <rule>The results array length <must>match <var>${testResultsLength}</var></must>.</rule>
+    <rule>Use provided <field>status</field> from the test data ("failed" or "flaky").</rule>
+
+    <rule><field>category</field> must be one of: bug, infra, performance, script, other.</rule>
+    <rule><field>confidence</field> must be an integer 1-5.</rule>
+    <rule><field>conclusion</field> must be a 2-3 sentence string explaining the analysis and category assignment.</rule>
+
+    <rule>If <field>status</field> is "failed": <field>errorQuality</field> must be an integer 1-5 and <field>errorQualityConclusion</field> must be a brief 1-2 sentence string.</rule>
+    <rule>If <field>status</field> is "flaky": <field>errorQuality</field> must be null and <field>errorQualityConclusion</field> must be null.</rule>
+
+    <rule>Return an object that matches the required schema exactly. No additional fields.</rule>
+    <rule>Each result object must contain exactly these fields: id, status, category, confidence, conclusion, errorQuality, errorQualityConclusion.</rule>
+    <rule>The results array length must match <var>${testResultsLength}</var>.</rule>
   </strict>
+
 
   <!-- ===== INPUT DATA STRUCTURE ===== -->
   <input_structure>
-    You will receive an array of test result objects with the following structure:
+    You will receive an array of non-passing test result objects (status: failed or flaky) with the following structure:
     <schema>
       {
         "id": "database-uuid",
         "specKey": "test file path or identifier",
         "specTitle": "test name or description",
-        "status": "failed" | "passed" | "skipped" | "flaky",
+        "status": "failed" | "flaky",
         "duration": number (milliseconds),
         "retry": number,
         "executionName": "name of the test execution",
@@ -119,7 +126,7 @@ export const getStoredResultsAnalysisPrompt = (testResultsLength: number) => `
       }
     </schema>
     The <code>results</code> array must contain <var>${testResultsLength}</var> objects.
-    Note: <field>errorQuality</field> and <field>errorQualityConclusion</field> should ONLY be present for failed tests.
+    Note: <field>errorQuality</field> and <field>errorQualityConclusion</field> must always be present; for flaky tests they must be null.
   </output>
 
   <!-- ===== FEW-SHOT EXAMPLES ===== -->
@@ -209,6 +216,35 @@ export const getStoredResultsAnalysisPrompt = (testResultsLength: number) => `
           "conclusion": "The test failed with a generic error message and no stack trace or error location details. Without additional context, it's impossible to determine if this is an application bug, infrastructure issue, performance problem, or script error.",
           "errorQuality": 1,
           "errorQualityConclusion": "Very poor error quality with only a generic 'Test failed' message and no diagnostic information, stack trace, or context."
+        }
+      </output_analysis>
+    </example>
+
+    <example n="4">
+      <name>A flaky test (no error quality evaluation)</name>
+      <input_json>
+        {
+          "id": "880e8400-e29b-41d4-a716-446655440003",
+          "specKey": "e2e/search.spec.ts > Search > should return results",
+          "specTitle": "should return results",
+          "status": "flaky",
+          "duration": 12000,
+          "retry": 1,
+          "executionName": "Chrome - Staging",
+          "errorMessage": "Timeout 12000ms exceeded.",
+          "errorStack": "at SearchPage.waitForResults (e2e/search.spec.ts:42:10)",
+          "errorLocation": "e2e/search.spec.ts:42:10"
+        }
+      </input_json>
+      <output_analysis>
+        {
+          "id": "880e8400-e29b-41d4-a716-446655440003",
+          "status": "flaky",
+          "category": "performance",
+          "confidence": 3,
+          "conclusion": "The test is marked flaky and failed with a timeout while waiting for results. The evidence suggests intermittent slowness or variability rather than a deterministic defect, but the exact cause is not definitive from the available data.",
+          "errorQuality": null,
+          "errorQualityConclusion": null
         }
       </output_analysis>
     </example>
