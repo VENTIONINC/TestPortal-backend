@@ -3,17 +3,20 @@ import { developerCodeAssistantPrompt } from "@/mcp/prompts/developer-code-assis
 import { testPortalAssistantPrompt } from "@/mcp/prompts/test-portal-assistant/v1.0.0";
 import { issueAnalysisAssistantPrompt } from "@/mcp/prompts/issue-analysis-assistant/v1.0.0";
 import { environmentPerformanceAssistantPrompt } from "@/mcp/prompts/environment-performance-assistant/v1.0.0";
+import { softwareDocumentationAssistantPrompt } from "@/mcp/prompts/documentation-architect/v1.0.0";
 
 // Mock the prompt functions
 jest.mock("@/mcp/prompts/developer-code-assistant/v1.0.0");
 jest.mock("@/mcp/prompts/test-portal-assistant/v1.0.0");
 jest.mock("@/mcp/prompts/issue-analysis-assistant/v1.0.0");
 jest.mock("@/mcp/prompts/environment-performance-assistant/v1.0.0");
+jest.mock("@/mcp/prompts/documentation-architect/v1.0.0");
 
 const mockDeveloperCodeAssistantPrompt = developerCodeAssistantPrompt as jest.MockedFunction<typeof developerCodeAssistantPrompt>;
 const mockTestPortalAssistantPrompt = testPortalAssistantPrompt as jest.MockedFunction<typeof testPortalAssistantPrompt>;
 const mockIssueAnalysisAssistantPrompt = issueAnalysisAssistantPrompt as jest.MockedFunction<typeof issueAnalysisAssistantPrompt>;
 const mockEnvironmentPerformanceAssistantPrompt = environmentPerformanceAssistantPrompt as jest.MockedFunction<typeof environmentPerformanceAssistantPrompt>;
+const mockSoftwareDocumentationAssistantPrompt = softwareDocumentationAssistantPrompt as jest.MockedFunction<typeof softwareDocumentationAssistantPrompt>;
 
 describe("PromptParameterService", () => {
   beforeEach(() => {
@@ -56,6 +59,12 @@ describe("PromptParameterService", () => {
       expect(envPerf).toBeDefined();
       expect(envPerf?.category).toBe("performance");
       expect(envPerf?.parameters).toHaveProperty("environment_scope");
+
+      // Check software documentation assistant
+      const documentation = prompts.find(p => p.name === "software-documentation-assistant");
+      expect(documentation).toBeDefined();
+      expect(documentation?.category).toBe("documentation");
+      expect(documentation?.parameters).toHaveProperty("file_paths");
     });
   });
 
@@ -283,6 +292,35 @@ describe("PromptParameterService", () => {
         report_type: "summary",
         project_system: "jira"
       });
+      expect(result).toEqual(mockResult);
+    });
+
+    it("should generate software documentation assistant prompt", () => {
+      const mockResult = {
+        messages: [
+          {
+            role: "assistant" as const,
+            content: {
+              type: "text" as const,
+              text: "Software documentation assistant prompt"
+            }
+          }
+        ]
+      };
+
+      mockSoftwareDocumentationAssistantPrompt.mockReturnValue(mockResult);
+
+      const params = {
+        file_paths: "src/controllers/userController.ts",
+        documentation_type: "API Reference",
+        target_audience: "Internal Team",
+        scope: "authentication module",
+        publish: "false"
+      };
+
+      const result = PromptParameterService.generatePrompt("software-documentation-assistant", params);
+
+      expect(mockSoftwareDocumentationAssistantPrompt).toHaveBeenCalledWith(params);
       expect(result).toEqual(mockResult);
     });
   });
