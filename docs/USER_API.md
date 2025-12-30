@@ -31,6 +31,7 @@ Complete user management API with secure authentication, password handling using
 ### 🔒 Authentication Required
 
 **Protected endpoints require a valid JWT token in the Authorization header:**
+
 ```
 Authorization: Bearer <jwt-token>
 ```
@@ -40,11 +41,13 @@ Authorization: Bearer <jwt-token>
 ---
 
 ### 1. User Signup (PUBLIC)
+
 **`POST /api/users/signup`**
 
 Create a new user account with secure password hashing.
 
 #### Request Body:
+
 ```json
 {
   "name": "John Doe",
@@ -54,6 +57,7 @@ Create a new user account with secure password hashing.
 ```
 
 #### Success Response (201):
+
 ```json
 {
   "id": 1,
@@ -67,28 +71,32 @@ Create a new user account with secure password hashing.
 **Security Note**: Password hashes are never returned in API responses for security reasons.
 
 #### Validation Rules:
+
 - ✅ **Name**: Minimum 2 characters
 - ✅ **Email**: Valid format (name@domain.com)
 - ✅ **Password**: Minimum 8 characters
 - ✅ **Email Uniqueness**: Must not already exist
 
 #### Error Responses (400):
+
 ```json
 { "error": "User name must be at least 2 characters" }
 { "error": "Invalid email format" }
 { "error": "Password must be at least 8 characters" }
-{ "error": "User with this email already exists" }
+{ "error": "An error occurred during registration. Please try again or contact support." }
 { "error": "Unable to create user without required fields" }
 ```
 
 ---
 
 ### 2. User Login (PUBLIC)
+
 **`POST /api/users/login`**
 
 Authenticate user credentials and return user data.
 
 #### Request Body:
+
 ```json
 {
   "email": "john.doe@example.com",
@@ -97,6 +105,7 @@ Authenticate user credentials and return user data.
 ```
 
 #### Success Response (200):
+
 ```json
 {
   "user": {
@@ -113,6 +122,7 @@ Authenticate user credentials and return user data.
 **Note**: Login now returns both user data and a JWT token for authentication. See `docs/JWT_AUTH.md` for detailed JWT usage.
 
 #### Error Responses (401):
+
 ```json
 { "error": "Invalid email or password" }
 { "error": "Email and password are required" }
@@ -122,11 +132,13 @@ Authenticate user credentials and return user data.
 ---
 
 ### 3. Get User by ID (PROTECTED)
+
 **`GET /api/users/:userId`**
 
 Retrieve user information by ID. **Requires authentication.**
 
 #### Success Response (200):
+
 ```json
 {
   "id": 1,
@@ -138,6 +150,7 @@ Retrieve user information by ID. **Requires authentication.**
 ```
 
 #### Error Responses:
+
 - **400**: `{ "error": "User ID is required" }`
 - **401**: `{ "error": "Authorization header is required" }`
 - **401**: `{ "error": "Invalid or expired token" }`
@@ -146,20 +159,23 @@ Retrieve user information by ID. **Requires authentication.**
 ---
 
 ### 4. Update User (PROTECTED)
+
 **`PATCH /api/users/:userId`**
 
 Update user information (name, email, or password). **Requires authentication.**
 
 #### Request Body (any combination):
+
 ```json
 {
   "name": "John Smith",
-  "email": "john.smith@example.com", 
+  "email": "john.smith@example.com",
   "password": "NewSecurePassword456!"
 }
 ```
 
 #### Success Response (200):
+
 ```json
 {
   "id": 1,
@@ -171,16 +187,18 @@ Update user information (name, email, or password). **Requires authentication.**
 ```
 
 #### Validation Rules:
+
 - **Name**: If provided, minimum 2 characters
 - **Email**: If provided, valid format and unique
 - **Password**: If provided, minimum 8 characters
 
 #### Error Responses:
+
 - **400**: `{ "error": "User ID is required" }`
 - **400**: `{ "error": "Update data is required" }`
 - **400**: `{ "error": "Failed to update user. User name must be at least 2 characters" }`
 - **400**: `{ "error": "Failed to update user. Invalid email format" }`
-- **400**: `{ "error": "Failed to update user. Email is already in use by another user" }`
+- **400**: `{ "error": "Failed to update user. An error occurred while updating the profile. Please try again or contact support." }`
 - **400**: `{ "error": "Failed to update user. Password must be at least 8 characters" }`
 - **401**: `{ "error": "Authorization header is required" }`
 - **401**: `{ "error": "Invalid or expired token" }`
@@ -190,6 +208,7 @@ Update user information (name, email, or password). **Requires authentication.**
 ## 🧪 Testing
 
 ### HTTP Files
+
 Use `test-signup.http` for comprehensive testing:
 
 ```http
@@ -214,15 +233,18 @@ Content-Type: application/json
 ```
 
 ### Postman Collection
+
 Import `postman/User_API_with_Passwords.postman_collection.json` for 22+ test cases including:
 
 #### ✅ Success Scenarios:
+
 - Valid user signup
 - Successful login
 - User profile retrieval
 - Profile updates (name, email, password)
 
 #### ❌ Error Scenarios:
+
 - Duplicate email registration
 - Invalid email formats
 - Weak passwords
@@ -235,6 +257,7 @@ Import `postman/User_API_with_Passwords.postman_collection.json` for 22+ test ca
 ## 🔧 Technical Implementation
 
 ### Password Security
+
 - **Algorithm**: Argon2id (most secure variant)
 - **Memory**: 64 MB (protection against GPU attacks)
 - **Iterations**: 3 (time complexity)
@@ -242,6 +265,7 @@ Import `postman/User_API_with_Passwords.postman_collection.json` for 22+ test ca
 - **Performance**: ~200-500ms hashing time
 
 ### Database Schema
+
 ```sql
 CREATE TABLE "User" (
   "id" SERIAL PRIMARY KEY,
@@ -254,6 +278,7 @@ CREATE TABLE "User" (
 ```
 
 ### Architecture
+
 - **Model Layer**: Database operations (`userModel.ts`)
 - **Service Layer**: Business logic and validation (`userService.ts`)
 - **Controller Layer**: HTTP handling (`userController.ts`)
@@ -264,6 +289,7 @@ CREATE TABLE "User" (
 ## 🚨 Error Handling
 
 ### Standard Error Format
+
 ```json
 {
   "error": "Descriptive error message"
@@ -271,6 +297,7 @@ CREATE TABLE "User" (
 ```
 
 ### HTTP Status Codes
+
 - **200**: Success (GET, PATCH)
 - **201**: Created (POST signup)
 - **400**: Bad Request (validation errors)
@@ -282,6 +309,7 @@ CREATE TABLE "User" (
 ## 🔄 Migration Notes
 
 ### From Password-less Version
+
 If upgrading from the previous password-less implementation:
 
 1. **Database**: `passwordHash` field added as optional
@@ -289,6 +317,7 @@ If upgrading from the previous password-less implementation:
 3. **New Features**: Login and password updates require password to be set
 
 ### Future Enhancements
+
 - ✅ **JWT token authentication** (IMPLEMENTED - see `docs/JWT_AUTH.md`)
 - Password reset functionality
 - Account verification
@@ -300,13 +329,15 @@ If upgrading from the previous password-less implementation:
 ## 📊 Performance
 
 ### Benchmarks
+
 - **Signup**: ~300-500ms (includes Argon2 hashing)
 - **Login**: ~200-400ms (includes Argon2 verification)
 - **Get User**: ~5-10ms (database lookup only)
 - **Update**: ~300-500ms (if password changed)
 
 ### Recommendations
+
 - Use connection pooling for high load
 - Consider caching for frequently accessed users
 - Monitor memory usage with Argon2 parameters
-- Implement rate limiting for auth endpoints 
+- Implement rate limiting for auth endpoints

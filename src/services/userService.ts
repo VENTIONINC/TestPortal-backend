@@ -81,18 +81,21 @@ export const userService = {
       throw new Error("Registration not allowed");
     }
 
+    // Hash password before checking user existence to prevent timing attacks
+    const passwordHash = await argon2.hash(userParams.password, {
+      type: argon2.argon2id,
+      memoryCost: 2 ** 16,
+      timeCost: 3,
+      parallelism: 1,
+    });
+
     return await dbClient.$transaction(async (tx) => {
       const existingUser = await userModel.findByEmail(userParams.email, tx);
       if (existingUser) {
-        throw new Error("User with this email already exists");
+        throw new Error(
+          "An error occurred during registration. Please try again or contact support.",
+        );
       }
-
-      const passwordHash = await argon2.hash(userParams.password, {
-        type: argon2.argon2id,
-        memoryCost: 2 ** 16,
-        timeCost: 3,
-        parallelism: 1,
-      });
 
       const userData = {
         name: userParams.name,
@@ -131,7 +134,9 @@ export const userService = {
 
         const existingUser = await userModel.findByEmail(email, tx);
         if (existingUser && existingUser.id !== userId) {
-          throw new Error("Email is already in use by another user");
+          throw new Error(
+            "An error occurred while updating the profile. Please try again or contact support.",
+          );
         }
 
         cleanUpdateData.email = email;
@@ -285,7 +290,9 @@ export const userService = {
     // Check if user already exists in our database
     const existingUser = await userModel.findByEmail(email);
     if (existingUser) {
-      throw new Error("User with this email already exists");
+      throw new Error(
+        "An error occurred during registration. Please try again or contact support.",
+      );
     }
 
     try {
