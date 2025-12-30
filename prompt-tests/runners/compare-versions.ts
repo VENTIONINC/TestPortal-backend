@@ -48,7 +48,7 @@ export interface ComparisonReport {
     }>;
     errorQualityComparison: Array<{
       testCaseName: string;
-      v1_0_0?: number;
+      v1_0_0?: number | null;
       v1_1_0?: number | null;
     }>;
   };
@@ -215,16 +215,15 @@ function analyzeDifferences(
 
     // Error quality comparison (if applicable)
     if (tc.input.status === "failed") {
-      const v1_0_0_eq: number | undefined =
-        "errorQuality" in v1_0_0 && v1_0_0.errorQuality !== null
-          ? v1_0_0.errorQuality
-          : undefined;
+      // Both versions use nullable() now, so handling is consistent
+      const v1_0_0_eq: number | null | undefined =
+        "errorQuality" in v1_0_0 ? v1_0_0.errorQuality : undefined;
       const v1_1_0_eq: number | null | undefined =
         "errorQuality" in v1_1_0 ? v1_1_0.errorQuality : undefined;
 
       const comparison: {
         testCaseName: string;
-        v1_0_0?: number;
+        v1_0_0?: number | null;
         v1_1_0?: number | null;
       } = {
         testCaseName: tc.name,

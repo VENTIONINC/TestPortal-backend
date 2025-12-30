@@ -17,13 +17,13 @@ const base = z.object({
 // =============================================================================
 
 /**
- * v1.0.0: errorQuality fields are optional (omitted for non-failed tests)
- * This preserves the original v1.0.0 contract where errorQuality fields
- * were conditionally included only for failed tests
+ * v1.0.0: errorQuality fields can be null (for non-failed tests)
+ * OpenAI structured output requires nullable() instead of optional()
+ * This preserves the v1.0.0 behavior while being API-compatible
  */
 export const testResultSchemaV1_0_0 = base.extend({
-  errorQuality: z.number().int().min(1).max(5).optional(),
-  errorQualityConclusion: z.string().optional(),
+  errorQuality: z.number().int().min(1).max(5).nullable(),
+  errorQualityConclusion: z.string().nullable(),
 });
 
 export const testAnalysisSchemaV1_0_0 = z.object({

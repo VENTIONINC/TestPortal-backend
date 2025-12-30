@@ -117,41 +117,21 @@ export async function runEval(
         });
       }
 
-      if (version.version === "v1.0.0") {
-        // v1.0.0: fields should exist (not undefined)
-        if (out.errorQuality === undefined || out.errorQualityConclusion === undefined) {
-          failures.push({
-            testCaseName: tc.name,
-            reason: `Expected errorQuality fields for failed test (v1.0.0), got undefined`,
-          });
-        }
-      } else {
-        // v1.1.0: fields must be explicitly non-null
-        if (out.errorQuality === null || out.errorQualityConclusion === null) {
-          failures.push({
-            testCaseName: tc.name,
-            reason: `Expected non-null errorQuality fields for failed test (v1.1.0), got null`,
-          });
-        }
+      // Both v1.0.0 and v1.1.0 use nullable(), so validation is the same
+      if (out.errorQuality === null || out.errorQualityConclusion === null) {
+        failures.push({
+          testCaseName: tc.name,
+          reason: `Expected non-null errorQuality fields for failed test (${version.version}), got null`,
+        });
       }
     } else {
-      // For flaky tests (errorQuality: "null"), fields must be null/undefined
-      if (version.version === "v1.0.0") {
-        // v1.0.0: fields should be omitted (undefined)
-        if (out.errorQuality !== undefined || out.errorQualityConclusion !== undefined) {
-          failures.push({
-            testCaseName: tc.name,
-            reason: `Expected omitted errorQuality fields for flaky test (v1.0.0), got defined values`,
-          });
-        }
-      } else {
-        // v1.1.0: fields must be explicitly null
-        if (out.errorQuality !== null || out.errorQualityConclusion !== null) {
-          failures.push({
-            testCaseName: tc.name,
-            reason: `Expected null errorQuality fields for flaky test (v1.1.0), got non-null values`,
-          });
-        }
+      // For flaky tests (errorQuality: "null"), fields must be null
+      // Both versions now use nullable() for consistency with OpenAI API
+      if (out.errorQuality !== null || out.errorQualityConclusion !== null) {
+        failures.push({
+          testCaseName: tc.name,
+          reason: `Expected null errorQuality fields for flaky test (${version.version}), got non-null values`,
+        });
       }
     }
 
