@@ -1,4 +1,4 @@
-import { Request, Response } from "express";
+import { Response } from "express";
 import {
   jsonReportService,
   type ProcessReportResult,
@@ -6,6 +6,7 @@ import {
 import { testAnalysisService } from "@/services/testAnalysisService";
 import type { TestResultAnalysis } from "@/schemas/testAnalysisSchemas";
 import type { ApiKeyAuthenticatedRequest } from "@/middleware/apiKeyMiddleware";
+import type { AuthenticatedRequest } from "@/middleware/authMiddleware";
 import { dbClient } from "@/prisma/client";
 import getLogger from "@/lib/logger";
 
@@ -23,6 +24,7 @@ export const jsonReportController = {
   _processRawReportFileCore: async (
     file: Express.Multer.File | undefined,
     projectId: string | undefined,
+    userId: string | undefined,
   ): Promise<ProcessReportResponse> => {
     if (!file) {
       throw new Error("JSON report file is required");
@@ -30,6 +32,10 @@ export const jsonReportController = {
 
     if (!projectId) {
       throw new Error("Valid projectId is required");
+    }
+
+    if (!userId) {
+      throw new Error("Valid userId is required");
     }
 
     // Parse the file content as JSON
@@ -57,13 +63,12 @@ export const jsonReportController = {
       projectId,
     );
 
-    // Step 2: Check if analysis is enabled for project owner
-    const project = await dbClient.project.findUnique({
-      where: { id: projectId },
-      include: { owner: true },
+    // Step 2: Check if analysis is enabled for current user
+    const user = await dbClient.user.findUnique({
+      where: { id: userId },
     });
 
-    const shouldAnalyze = project?.owner.analyzeEnabled ?? false;
+    const shouldAnalyze = user?.analyzeEnabled ?? false;
 
     if (!shouldAnalyze) {
       logger.info("Analysis disabled for user, skipping analysis");
@@ -90,7 +95,8 @@ export const jsonReportController = {
     // Step 4: Analyze stored results (POST-PERSIST)
     let analysisMap = null;
     try {
-      analysisMap = await testAnalysisService.analyzeStoredResults(createdResults);
+      analysisMap =
+        await testAnalysisService.analyzeStoredResults(createdResults);
 
       // Step 5: Update results with analysis fields
       logger.info(`Updating ${analysisMap.size} results with analysis data`);
@@ -105,7 +111,8 @@ export const jsonReportController = {
               analysisConfidence: analysis.confidence,
               analysisConclusion: analysis.conclusion ?? null,
               analysisErrorQuality: analysis.errorQuality ?? null,
-              analysisErrorQualityConclusion: analysis.errorQualityConclusion ?? null,
+              analysisErrorQualityConclusion:
+                analysis.errorQualityConclusion ?? null,
             },
           }),
         ),
@@ -130,14 +137,19 @@ export const jsonReportController = {
   /**
    * Handle POST request to process raw JSON report file and transform it
    */
-  processRawReportFile: async (req: Request, res: Response): Promise<void> => {
+  processRawReportFile: async (
+    req: AuthenticatedRequest,
+    res: Response,
+  ): Promise<void> => {
     try {
-      // Extract projectId from form data (multipart form upload)
-      const projectId = req.body.projectId;
+      const projectId = (req.body as { projectId?: string | undefined })
+        .projectId;
+      const userId = req.user?.id;
 
       const response = await jsonReportController._processRawReportFileCore(
         req.file,
         projectId,
+        userId,
       );
 
       res.status(201).json(response);
@@ -157,12 +169,13 @@ export const jsonReportController = {
     res: Response,
   ): Promise<void> => {
     try {
-      // Extract projectId from validated API key
       const projectId = req.apiKey?.projectId;
+      const userId = req.apiKey?.ownerId;
 
       const response = await jsonReportController._processRawReportFileCore(
         req.file,
         projectId,
+        userId,
       );
 
       res.status(201).json(response);
