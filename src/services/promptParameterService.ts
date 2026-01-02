@@ -3,11 +3,11 @@
  */
 
 import type { GetPromptResult } from "@modelcontextprotocol/sdk/types";
-import { developerCodeAssistantPrompt } from "@/mcp/prompts/developer-code-assistant";
-import { testPortalAssistantPrompt } from "@/mcp/prompts/test-portal-assistant";
-import { issueAnalysisAssistantPrompt } from "@/mcp/prompts/issue-analysis-assistant";
-import { environmentPerformanceAssistantPrompt } from "@/mcp/prompts/environment-performance-assistant";
-import { softwareDocumentationAssistantPrompt } from "@/mcp/prompts/documentation-architect";
+import { developerCodeAssistantPrompt } from "@/mcp/prompts/developer-code-assistant/v1.0.0";
+import { testPortalAssistantPrompt } from "@/mcp/prompts/test-portal-assistant/v1.0.0";
+import { issueAnalysisAssistantPrompt } from "@/mcp/prompts/issue-analysis-assistant/v1.0.0";
+import { environmentPerformanceAssistantPrompt } from "@/mcp/prompts/environment-performance-assistant/v1.0.0";
+import { softwareDocumentationAssistantPrompt } from "@/mcp/prompts/documentation-architect/v1.0.0";
 
 interface PromptConfig {
   title: string;

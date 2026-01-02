@@ -2,7 +2,7 @@ import { ChatOpenAI } from "@langchain/openai";
 import { z } from "zod";
 
 import getLogger from "@/lib/logger";
-import { getErrorFormatterPrompt } from "@/prompts/error-formatter";
+import { getErrorFormatterPrompt } from "@/prompts/error-formatter/v1.0.0";
 import {
   errorFormatterSchema,
   type ErrorFormatterInput,
