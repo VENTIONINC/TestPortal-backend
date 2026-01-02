@@ -35,7 +35,7 @@ export interface RunEvalOptions {
  * @returns Evaluation result with LLM response and validation failures
  */
 export async function runEval(options: RunEvalOptions): Promise<EvalResult> {
-  const { cases, version, model = "gpt-4.1-mini", temperature = 0.1 } = options;
+  const { cases, version, model = "gpt-4.1-mini", temperature = 0 } = options;
 
   // Prepare prompt and input using version-specific prompt
   const systemPrompt = version.getPrompt(cases.length);
