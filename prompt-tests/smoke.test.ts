@@ -21,12 +21,12 @@ describe("Prompt Evaluation - Smoke Tests (v1.1.0)", () => {
   jest.setTimeout(120_000); // 2 minutes timeout
 
   it("should satisfy contract and expectations", async () => {
-    // Load smoke dataset (4 test cases)
+    // Load smoke dataset
     const cases = JSON.parse(
       fs.readFileSync(datasetPath, "utf8"),
     ) as TestCase[];
 
-    // Run evaluation with v1.1.0 prompt (DEFAULT_VERSION)
+    // Run evaluation
     const { failures } = await runEval({
       cases,
       version: DEFAULT_VERSION,

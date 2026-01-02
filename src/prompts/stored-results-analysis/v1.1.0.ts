@@ -26,23 +26,59 @@ export const getStoredResultsAnalysisPrompt = (testResultsLength: number) => `
 
   <!-- ===== CATEGORIZATION GUIDELINES ===== -->
   <guidelines>
-    <rule>Timeouts: performance (slow app) or infra (network)</rule>
-    <rule>Auth/MFA errors: infra or script</rule>
-    <rule>Assertion failures: bug</rule>
-    <rule>Selector not found: script</rule>
-    <rule>Network errors: infra</rule>
-    <rule>If status is "flaky", categorize based on the failure evidence; set confidence to 2-4 unless the root cause is explicit.</rule>
-    <rule>Network timeouts/errors (ETIMEDOUT, ECONNRESET, DNS, connection refused) => infra. Slow response without network errors => performance.</rule>
+    <rule>
+      Determine the category using the following priority order.
+      Always apply the first matching rule and stop.
+    </rule>
+
+    <rule>
+      1. infra:
+      Explicit network errors (ETIMEDOUT, ECONNRESET, ECONNREFUSED, DNS),
+      connection failures, SSL/TLS issues,
+      auth/MFA failures caused by environment, credentials, or external systems.
+    </rule>
+
+    <rule>
+      2. performance:
+      Timeouts or waits exceeded WITHOUT network error codes,
+      slow responses, long execution times,
+      flaky timeouts that pass on retry without code changes.
+    </rule>
+
+    <rule>
+      3. script:
+      Test framework errors,
+      selector or locator not found,
+      invalid test setup, test data, or incorrect waits/assertions in test code.
+    </rule>
+
+    <rule>
+      4. bug:
+      Assertion failures with clear expected vs actual mismatch,
+      deterministic failures reproducible without retries,
+      application logic errors indicated by stack traces.
+    </rule>
+
+    <rule>
+      5. other:
+      Insufficient, missing, or generic error information,
+      or conflicting signals that do not clearly match any category.
+    </rule>
   </guidelines>
+
 
   <!-- ===== CRITICAL / STRICT REQUIREMENTS ===== -->
   <critical>
     You are analyzing <var>${testResultsLength}</var> test results.
-    You <must>return exactly <var>${testResultsLength}</var> analysis objects</must> in the <field>results</field> array.
   </critical>
 
   <steps>
-    <step>Write a concise 2-3 sentence conclusion explaining the reasoning for the status and category assignment.</step>
+    <step>
+      Write a concise 2–3 sentence conclusion explaining the reasoning
+      and explicitly mention the key evidence from the input
+      (e.g. error code, timeout, selector, assertion mismatch)
+      that led to the chosen category.
+    </step>
   </steps>
 
   <!-- ===== CONFIDENCE SCALE ===== -->
@@ -82,8 +118,6 @@ export const getStoredResultsAnalysisPrompt = (testResultsLength: number) => `
     <rule>If <field>status</field> is "failed": <field>errorQuality</field> must be an integer 1-5 and <field>errorQualityConclusion</field> must be a brief 1-2 sentence string.</rule>
     <rule>If <field>status</field> is "flaky": <field>errorQuality</field> must be null and <field>errorQualityConclusion</field> must be null.</rule>
 
-    <rule>Return an object that matches the required schema exactly. No additional fields.</rule>
-    <rule>Each result object must contain exactly these fields: id, status, category, confidence, conclusion, errorQuality, errorQualityConclusion.</rule>
     <rule>The results array length must match <var>${testResultsLength}</var>.</rule>
   </strict>
 
@@ -106,28 +140,6 @@ export const getStoredResultsAnalysisPrompt = (testResultsLength: number) => `
       }
     </schema>
   </input_structure>
-
-  <!-- ===== OUTPUT FORMAT ===== -->
-  <output>
-    Return a single JSON object **exactly** like:
-    <schema>
-      {
-        "results": [
-          {
-            "id": "database-uuid (same as input)",
-            "status": "failed",
-            "category": "bug",
-            "confidence": 4,
-            "conclusion": "The test failed due to an assertion error in the response body. This indicates a potential application defect.",
-            "errorQuality": 4,
-            "errorQualityConclusion": "The error message provides clear assertion details with expected and actual values, making it easy to understand the failure."
-          }
-        ]
-      }
-    </schema>
-    The <code>results</code> array must contain <var>${testResultsLength}</var> objects.
-    Note: <field>errorQuality</field> and <field>errorQualityConclusion</field> must always be present; for flaky tests they must be null.
-  </output>
 
   <!-- ===== FEW-SHOT EXAMPLES ===== -->
   <examples>

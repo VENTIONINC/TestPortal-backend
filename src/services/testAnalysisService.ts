@@ -94,7 +94,7 @@ export const testAnalysisService = {
 
         // Add error information if present
         if (result.errors.length > 0) {
-          const lastError = result.errors.at(-1);
+          const lastError = result.errors[0];
           if (lastError) {
             essentialResult.errorMessage = lastError.message;
             essentialResult.errorStack = lastError.callStack;

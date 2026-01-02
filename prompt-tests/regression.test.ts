@@ -21,12 +21,12 @@ describe("Prompt Evaluation - Regression Tests (v1.1.0)", () => {
   jest.setTimeout(300_000); // 5 minutes timeout
 
   it("should satisfy contract and expectations", async () => {
-    // Load regression dataset (40 test cases)
+    // Load regression dataset
     const cases = JSON.parse(
       fs.readFileSync(datasetPath, "utf8"),
     ) as TestCase[];
 
-    // Run evaluation with v1.1.0 prompt (DEFAULT_VERSION)
+    // Run evaluation
     const { failures } = await runEval({
       cases,
       version: DEFAULT_VERSION,

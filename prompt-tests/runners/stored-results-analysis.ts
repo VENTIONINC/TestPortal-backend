@@ -5,6 +5,7 @@
 
 import { ChatOpenAI } from "@langchain/openai";
 import { z } from "zod";
+import type { TestAnalysisResponse } from "@/schemas/testAnalysisSchemas";
 import type { TestCase } from "../templates/types";
 import type { EvalResult, EvalFailure } from "./types";
 
@@ -13,9 +14,9 @@ import type { EvalResult, EvalFailure } from "./types";
  * Specifies which prompt and schema to use for evaluation
  */
 export interface PromptVersion {
-  version: "v1.0.0" | "v1.1.0";
+  version: string;
   getPrompt: (testResultsLength: number) => string;
-  schema: z.ZodType<any>;
+  schema: z.ZodType<TestAnalysisResponse>;
 }
 
 /**
@@ -33,15 +34,8 @@ export interface RunEvalOptions {
  * @param options - Configuration with test cases and optional LLM settings
  * @returns Evaluation result with LLM response and validation failures
  */
-export async function runEval(
-  options: RunEvalOptions,
-): Promise<EvalResult> {
-  const {
-    cases,
-    version,
-    model = "gpt-4.1-mini",
-    temperature = 0.1,
-  } = options;
+export async function runEval(options: RunEvalOptions): Promise<EvalResult> {
+  const { cases, version, model = "gpt-4.1-mini", temperature = 0.1 } = options;
 
   // Prepare prompt and input using version-specific prompt
   const systemPrompt = version.getPrompt(cases.length);
@@ -53,11 +47,15 @@ export async function runEval(
     temperature,
     maxTokens: 4000,
     maxRetries: 2,
+    cache: false,
   });
 
-  const structuredModel = llm.withStructuredOutput<any>(version.schema, {
-    name: "test_analysis",
-  });
+  const structuredModel = llm.withStructuredOutput<TestAnalysisResponse>(
+    version.schema,
+    {
+      name: "test_analysis",
+    },
+  );
 
   // Invoke LLM
   const response = await structuredModel.invoke([
@@ -73,14 +71,12 @@ export async function runEval(
   }
 
   // Build map for quick lookup by ID
-  const byId = new Map(
-    response.results.map((r: any) => [r.id, r]),
-  );
+  const byId = new Map(response.results.map((r) => [r.id, r]));
   const failures: EvalFailure[] = [];
 
   // Validate expectations for each test case
   for (const tc of cases) {
-    const out: any = byId.get(tc.input.id);
+    const out = byId.get(tc.input.id);
 
     // Check if result exists
     if (!out) {
@@ -107,7 +103,7 @@ export async function runEval(
       });
     }
 
-    // Validate: errorQuality rules based on test status (version-aware)
+    // Validate: errorQuality rules based on test status
     if (tc.expect.errorQuality === "required") {
       // For failed tests, errorQuality fields must be present/non-null
       if (out.status !== "failed") {
@@ -117,7 +113,7 @@ export async function runEval(
         });
       }
 
-      // Both v1.0.0 and v1.1.0 use nullable(), so validation is the same
+      // Validation for errorQuality fields
       if (out.errorQuality === null || out.errorQualityConclusion === null) {
         failures.push({
           testCaseName: tc.name,
@@ -126,7 +122,6 @@ export async function runEval(
       }
     } else {
       // For flaky tests (errorQuality: "null"), fields must be null
-      // Both versions now use nullable() for consistency with OpenAI API
       if (out.errorQuality !== null || out.errorQualityConclusion !== null) {
         failures.push({
           testCaseName: tc.name,

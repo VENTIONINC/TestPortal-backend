@@ -7,7 +7,10 @@ import type { StatusForAnalysis, TestInput } from "./types";
  * @returns Selected element using modulo for deterministic rotation
  */
 export function pick<T>(i: number, arr: T[]): T {
-  return arr[i % arr.length];
+  if (arr.length === 0) {
+    throw new Error("Cannot pick from empty array");
+  }
+  return arr[i % arr.length] as T;
 }
 
 /**
