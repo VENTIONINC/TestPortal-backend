@@ -5,9 +5,7 @@ import { ErrorResponseSchema } from "./common";
 const StatusResponseSchema = z
   .object({
     status: z.string(),
-    database: z.string(),
     version: z.string(),
-    timestamp: z.string().optional(),
   })
   .openapi("StatusResponse");
 

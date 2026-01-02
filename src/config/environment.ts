@@ -7,6 +7,8 @@ const DEFAULT_PROJECT_ID =
 const TEST_USER_EMAIL = process.env.TEST_USER_EMAIL ?? "test@example.com";
 const TEST_USER_PASSWORD = process.env.TEST_USER_PASSWORD ?? "testpassword123";
 
+const APP_VERSION = process.env.npm_package_version ?? "0.0.0";
+
 // LangSmith Configuration
 const LANGSMITH_TRACING =
   process.env.LANGSMITH_TRACING?.toLowerCase() === "true";
@@ -58,6 +60,7 @@ export const environment = {
     email: TEST_USER_EMAIL,
     password: TEST_USER_PASSWORD,
   },
+  appVersion: APP_VERSION,
 };
 
 export {
@@ -67,6 +70,7 @@ export {
   DEFAULT_PROJECT_ID,
   TEST_USER_EMAIL,
   TEST_USER_PASSWORD,
+  APP_VERSION,
   LANGSMITH_TRACING,
   LANGSMITH_ENDPOINT,
   LANGSMITH_API_KEY,
