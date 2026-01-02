@@ -128,7 +128,7 @@ export const ctrfService = {
     const { tool, summary, tests, environment } = results;
 
     const transformedTests = tests
-      .filter((test) => test.status !== "skipped" && test.status !== "pending")
+      .filter((test) => test.status !== "pending")
       .map((test) => this.transformCtrfTest(test));
 
     const providerName = tool?.name.toLowerCase() || "ctrf";
