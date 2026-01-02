@@ -37,10 +37,12 @@ const ResultSchema = z
       .int()
       .min(1)
       .max(5)
+      .nullable()
       .optional()
       .describe("Quality rating of error messages (1-5 scale, only for failed tests)"),
     analysisErrorQualityConclusion: z
       .string()
+      .nullable()
       .optional()
       .describe("Explanation for the error quality rating"),
     createdAt: z.string(),

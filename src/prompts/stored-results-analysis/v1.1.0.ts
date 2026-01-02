@@ -115,7 +115,7 @@ export const getStoredResultsAnalysisPrompt = (testResultsLength: number) => `
     <rule><field>confidence</field> must be an integer 1-5.</rule>
     <rule><field>conclusion</field> must be a 2-3 sentence string explaining the analysis and category assignment.</rule>
 
-    <rule>If <field>status</field> is "failed": <field>errorQuality</field> must be an integer 1-5 and <field>errorQualityConclusion</field> must be a brief 1-2 sentence string.</rule>
+    <rule>If <field>status</field> is "failed": <field>errorQuality</field> (integer 1-5) and <field>errorQualityConclusion</field> (string) are optional.</rule>
     <rule>If <field>status</field> is "flaky": <field>errorQuality</field> must be null and <field>errorQualityConclusion</field> must be null.</rule>
 
     <rule>The results array length must match <var>${testResultsLength}</var>.</rule>

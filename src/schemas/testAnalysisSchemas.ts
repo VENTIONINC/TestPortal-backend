@@ -46,8 +46,8 @@ export type TestAnalysisResponseV1_0_0 = z.infer<
 export const testResultSchemaV1_1_0 = z.discriminatedUnion("status", [
   base.extend({
     status: z.literal("failed"),
-    errorQuality: z.number().int().min(1).max(5),
-    errorQualityConclusion: z.string(),
+    errorQuality: z.number().int().min(1).max(5).nullable(),
+    errorQualityConclusion: z.string().nullable(),
   }),
   base.extend({
     status: z.literal("flaky"),
