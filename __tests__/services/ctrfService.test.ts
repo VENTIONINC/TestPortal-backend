@@ -1,6 +1,7 @@
 import { ctrfService } from "@/services/ctrfService";
 import { jsonReportService } from "@/services/jsonReportService";
 import { testAnalysisService } from "@/services/testAnalysisService";
+import type { CTRFReport } from "@/types/ctrf";
 
 // Mock dependencies
 jest.mock("@/services/jsonReportService");
@@ -33,11 +34,12 @@ jest.mock("@/prisma/client", () => ({
 
 describe("ctrfService", () => {
   const mockProjectId = "project-123";
-  const mockReport = {
+  const mockReport: CTRFReport = {
     results: {
       tool: { name: "jest", version: "1.0.0" },
       summary: {
         start: Date.now(),
+        stop: Date.now() + 1000,
         tests: 1,
         passed: 1,
         failed: 0,
@@ -73,7 +75,7 @@ describe("ctrfService", () => {
       owner: { analyzeEnabled: false },
     });
 
-    const result = await ctrfService.processReport(mockReport as any, {
+    const result = await ctrfService.processReport(mockReport, {
       projectId: mockProjectId,
     });
 
@@ -104,7 +106,7 @@ describe("ctrfService", () => {
       mockAnalysis,
     );
 
-    const result = await ctrfService.processReport(mockReport as any, {
+    const result = await ctrfService.processReport(mockReport, {
       projectId: mockProjectId,
     });
 
@@ -125,12 +127,71 @@ describe("ctrfService", () => {
       new Error("Analysis failed"),
     );
 
-    const result = await ctrfService.processReport(mockReport as any, {
+    const result = await ctrfService.processReport(mockReport, {
       projectId: mockProjectId,
     });
 
     expect(testAnalysisService.analyzeStoredResults).toHaveBeenCalled();
     expect(mockTx.result.update).not.toHaveBeenCalled();
     expect(result.analysis).toBeUndefined();
+  });
+
+  it("should include skipped tests in the report data", async () => {
+    const reportWithSkipped: CTRFReport = {
+      results: {
+        tool: { name: "jest", version: "1.0.0" },
+        summary: {
+          start: Date.now(),
+          stop: Date.now() + 1000,
+          tests: 2,
+          passed: 1,
+          failed: 0,
+          pending: 0,
+          skipped: 1,
+          other: 0,
+        },
+        tests: [
+          {
+            name: "test passed",
+            status: "passed",
+            duration: 100,
+          },
+          {
+            name: "test skipped",
+            status: "skipped",
+            duration: 0,
+          },
+        ],
+        environment: {
+          buildNumber: "build-1",
+          testEnvironment: "dev",
+        },
+      },
+    };
+
+    mockTx.project.findUnique.mockResolvedValue({
+      owner: { analyzeEnabled: false },
+    });
+
+    await ctrfService.processReport(reportWithSkipped, {
+      projectId: mockProjectId,
+    });
+
+    expect(jsonReportService.processReport).toHaveBeenCalledWith(
+      expect.objectContaining({
+        tests: expect.arrayContaining([
+          expect.objectContaining({
+            title: "test skipped",
+            results: expect.arrayContaining([
+              expect.objectContaining({
+                status: "skipped",
+              }),
+            ]),
+          }),
+        ]),
+      }),
+      mockProjectId,
+      mockTx,
+    );
   });
 });
