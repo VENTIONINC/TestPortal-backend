@@ -35,8 +35,14 @@ COPY --from=builder /app/dist ./dist
 # Copy generated Prisma Client
 COPY --from=builder /app/node_modules/.prisma ./node_modules/.prisma
 
+# Copy prisma directory (required for migrations)
+COPY prisma ./prisma
+
+# Copy startup script
+COPY start.sh ./start.sh
+
 # Expose the port
 EXPOSE 3001
 
 # Start the application
-CMD ["node", "dist/index.js"]
+CMD ["./start.sh"]
