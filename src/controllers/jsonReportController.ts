@@ -9,6 +9,7 @@ import type { ApiKeyAuthenticatedRequest } from "@/middleware/apiKeyMiddleware";
 import type { AuthenticatedRequest } from "@/middleware/authMiddleware";
 import { dbClient } from "@/prisma/client";
 import getLogger from "@/lib/logger";
+import { dashboardService } from "@/services/dashboardService";
 
 const logger = getLogger("json-report-controller");
 
@@ -72,6 +73,17 @@ export const jsonReportController = {
 
     if (!shouldAnalyze) {
       logger.info("Analysis disabled for user, skipping analysis");
+
+      // Update stats even without analysis
+      try {
+        await dashboardService.updateStats(
+          processResult.executionId,
+          projectId,
+        );
+      } catch (err) {
+        logger.error(`Failed to update dashboard stats: ${err}`);
+      }
+
       return {
         ...processResult,
         analysis: undefined,
@@ -126,6 +138,13 @@ export const jsonReportController = {
         "Analysis failed, results saved without analysis:",
         analysisError,
       );
+    }
+
+    // Update stats after analysis (or failure)
+    try {
+      await dashboardService.updateStats(processResult.executionId, projectId);
+    } catch (err) {
+      logger.error(`Failed to update dashboard stats: ${err}`);
     }
 
     return {

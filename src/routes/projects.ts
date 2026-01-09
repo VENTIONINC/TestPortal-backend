@@ -1,5 +1,6 @@
 import { Router } from "express";
 import { projectController } from "@/controllers/projectController";
+import { dashboardController } from "@/controllers/dashboardController";
 import { authMiddleware } from "@/middleware/authMiddleware";
 
 const router = Router();
@@ -25,6 +26,13 @@ router.delete(
   "/v2/projects/:id",
   authMiddleware,
   projectController.deleteProject,
+);
+
+// Get dashboard data (requires authentication)
+router.get(
+  "/v2/projects/:projectId/dashboard",
+  authMiddleware,
+  dashboardController.getDashboard,
 );
 
 export default router;

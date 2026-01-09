@@ -1,4 +1,5 @@
 import { jsonReportService } from "@/services/jsonReportService";
+import { dashboardService } from "@/services/dashboardService";
 import type { IdentifierStrategy } from "@/lib/executionIdentifiers";
 import { DEFAULT_PROJECT_ID } from "@/config/environment";
 
@@ -50,6 +51,15 @@ export const mcpJsonReportHandler = {
     reportData: ReportData,
     projectId = DEFAULT_PROJECT_ID,
   ): Promise<ProcessReportResult> {
-    return await jsonReportService.processReport(reportData, projectId);
+    const result = await jsonReportService.processReport(reportData, projectId);
+
+    // Update dashboard stats asynchronously
+    try {
+      await dashboardService.updateStats(result.executionId, projectId);
+    } catch (error) {
+      console.error("Failed to update dashboard stats from MCP handler", error);
+    }
+
+    return result;
   },
 };
