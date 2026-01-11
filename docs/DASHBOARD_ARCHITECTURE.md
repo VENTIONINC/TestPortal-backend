@@ -11,41 +11,41 @@ The dashboard requires fast access to historical trends (Pass Rate, Issue Catego
 
 ## 2. Storage Strategy
 
-### A. The `ProjectMeta` Model
+### A. The `DailyExecutionMetric` Model
 
-We use a flexible Key-Value store table in Postgres to hold the aggregated data.
+We use a dedicated relational table to store pre-aggregated metrics. Avoiding large JSON blobs ensures atomic updates and prevents race conditions.
 
-- **Model**: `ProjectMeta`
-- **Scope**: Per Project
-- **Key Format**: `dashboard_stats_{EnvironmentName}`
-- **Value**: JSON Blob containing daily metrics buckets.
+- **Model**: `DailyExecutionMetric`
+- **Scope**: Per Project / Environment / Date / Type
+- **Granularity**: One row per day per execution type.
 
-### B. JSON Data Structure
+### B. Table Structure
 
-The `value` field stores a map indexed by **Date** (YYYY-MM-DD). Inside each date, metrics are broken down by **Execution Type** (e.g., "Nightly", "Release").
+Each row stores the sums for that specific intersection.
 
-```json
-{
-  "2025-12-08": {
-    "Nightly": {
-      "total": 10,
-      "passed": 8,
-      "failed": 2,
-      "skipped": 0,
-      "duration": 1500, // avg or total seconds
-      "issues": {
-        "bug": 1,
-        "environment": 1,
-        "script": 0,
-        "performance": 0
-      }
-    },
-    "OnDemand": {
-      "total": 5,
-      ...
-    }
-  },
-  "2025-12-09": { ... }
+```prisma
+model DailyExecutionMetric {
+  id          String   @id @default(uuid()) @db.Uuid
+  date        DateTime @db.Date // The day this bucket represents
+  projectId   String   @db.Uuid
+  environment String
+  type        String   // e.g. "Smoke", "Regression"
+
+  // Metrics (Atomic Increments)
+  totalTests    Int @default(0)
+  passedTests   Int @default(0)
+  failedTests   Int @default(0)
+  skippedTests  Int @default(0)
+  totalDuration Int @default(0)
+
+  // Issue Categories
+  issuesBug         Int @default(0)
+  issuesEnvironment Int @default(0)
+  issuesScript      Int @default(0)
+  issuesPerformance Int @default(0)
+  issuesOther       Int @default(0)
+
+  @@unique([projectId, environment, type, date]) // Ensures one row per aggregation bucket
 }
 ```
 
@@ -55,16 +55,24 @@ The `value` field stores a map indexed by **Date** (YYYY-MM-DD). Inside each dat
 
 ### A. Write Path (Aggregation)
 
-_Trigger_: Occurs when a Test Execution finishes (or via a background repair job).
+_Trigger_: Occurs when a Test Execution finishes, is deleted, or whenever results are modified (e.g., issue analysis).
 
-1.  **Event**: Execution completes.
-2.  **Calculate**: `DashboardService` computes the metrics for _that specific execution_ (Pass/Fail counts, issue categorization).
-3.  **Fetch**: Retrieve the existing `ProjectMeta` record for the project + environment.
-4.  **Update**:
-    - Locate the bucket for `Date` (created_at of execution).
-    - Locate/Init the sub-bucket for `Execution Type`.
-    - Apply the new numbers (increment counts).
-5.  **Persist**: Save the updated JSON back to the `ProjectMeta` table.
+1.  **Event**: Execution completes OR Execution deleted OR Result analyzed.
+2.  **Identify Bucket**: Determine the `{ projectId, environment, type, date }` for the affected data.
+3.  **Re-Aggregate**:
+    - Query the `Execution` and `Result` tables for **ALL** items matching that bucket.
+    - Sum up `pass/fail` counts and `issue` categories from the raw data.
+4.  **Idempotent Upsert**:
+    - Perform a DB `upsert` on `DailyExecutionMetric`.
+    - `Update`: Overwrite fields with the newly calculated absolute values (e.g., `passedTests: 50`).
+    - **Benefit**: This "self-healing" approach automatically corrects data drift caused by partial uploads, retries, or deletions without needing complex rollback logic.
+
+### C. Transactional Integrity
+
+To ensure the dashboard is always in sync with operation data:
+- Operations like `deleteExecution` or `updateAnalysis` are wrapped in a **Database Transaction**.
+- The deletion/update of the raw data AND the re-aggregation of the statistics occur within the same transaction.
+- If the stats refresh fails, the entire operation rolls back, preventing "phantom" stats for deleted data or outdated stats for updated results.
 
 ### B. Read Path (Client Serving)
 
@@ -72,16 +80,12 @@ _Trigger_: User loads the Dashboard.
 
 1.  **Request**: `GET /api/projects/:id/dashboard?env=Dev&period=30d&type=Nightly`
 2.  **Fetch Aggregates**:
-    - Query `ProjectMeta` for key `dashboard_stats_Dev`.
-    - Load the entire JSON history.
+    - Query `DailyExecutionMetric` table.
+    - `Where`: `date >= cutoff` AND `environment = 'Dev'`.
+    - `GroupBy` or In-Memory Sum: Group results by date to form the history timeline.
 3.  **Fetch Recent**:
-    - Query `Execution` table: `LIMIT 10 ORDER BY createdAt DESC`.
-4.  **Process & Filter (In-Memory)**:
-    - Iterate through the dates in the JSON.
-    - **Filter**: Keep only dates within `period` (e.g., last 30 days).
-    - **Select**: If `type` param is present, select only that key. Else, sum all types for the day.
-    - **Summarize**: Calculate global totals (Total Runs, Pass Rate) for the header tiles.
-5.  **Response**: Return the refined data structure to the frontend.
+    - Query `Execution` table: `LIMIT 20 ORDER BY startedAt DESC`.
+4.  **Response**: Return the refined data structure to the frontend.
 
 ---
 

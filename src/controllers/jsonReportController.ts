@@ -79,6 +79,7 @@ export const jsonReportController = {
         await dashboardService.updateStats(
           processResult.executionId,
           projectId,
+          dbClient,
         );
       } catch (err) {
         logger.error(`Failed to update dashboard stats: ${err}`);
@@ -142,7 +143,11 @@ export const jsonReportController = {
 
     // Update stats after analysis (or failure)
     try {
-      await dashboardService.updateStats(processResult.executionId, projectId);
+      await dashboardService.updateStats(
+        processResult.executionId,
+        projectId,
+        dbClient,
+      );
     } catch (err) {
       logger.error(`Failed to update dashboard stats: ${err}`);
     }

@@ -19,17 +19,6 @@ export interface DailyExecutionMetrics {
   issues: DashboardIssueMetrics;
 }
 
-/**
- * The structure stored in ProjectMeta value.
- * Key: Date (YYYY-MM-DD)
- * Value: Object with Execution Types
- */
-export interface DashboardStorage {
-  [date: string]: {
-    [type: string]: DailyExecutionMetrics;
-  };
-}
-
 export interface ExecutionSummary {
   id: string;
   name: string;

@@ -5,6 +5,11 @@ import type {
   ResultsStats,
   ResultWithRelations,
 } from "@/types";
+import { dashboardService } from "@/services/dashboardService";
+import getLogger from "@/lib/logger";
+import { dbClient } from "@/prisma/client";
+
+const logger = getLogger("result-service");
 
 interface GetResultsResponse {
   results: ResultWithRelations[];
@@ -117,7 +122,7 @@ export const resultService = {
       throw new Error("Project ID is required");
     }
 
-    const resultRecord = await resultModel.findById(resultId, projectId);
+    const resultRecord = await resultModel.findById(resultId, projectId, dbClient);
 
     if (!resultRecord) {
       throw new Error(`Result with ID ${resultId} not found`);
@@ -172,16 +177,39 @@ export const resultService = {
       throw new Error("Confidence must be between 0 and 1");
     }
 
-    const updatedResult = await resultModel.updateAnalysis(
-      resultId,
-      analysisData,
-    );
+    const result = await dbClient.$transaction(async (tx) => {
+      const updatedResult = await resultModel.updateAnalysis(
+        resultId,
+        analysisData,
+        tx,
+      );
 
-    if (!updatedResult) {
-      throw new Error(`Result with ID ${resultId} not found`);
-    }
+      if (!updatedResult) {
+        throw new Error(`Result with ID ${resultId} not found`);
+      }
 
-    return updatedResult;
+      // Refresh dashboard stats because analysis category/status might have changed
+      if (updatedResult.execution) {
+        try {
+          await dashboardService.refreshDailyStats(
+            updatedResult.execution.projectId,
+            updatedResult.execution.createdAt,
+            updatedResult.execution.environment,
+            updatedResult.execution.type,
+            tx,
+          );
+        } catch (error) {
+          logger.error(
+            `Failed to refresh dashboard stats in updateAnalysis: ${error}`,
+          );
+          throw error;
+        }
+      }
+
+      return updatedResult;
+    });
+
+    return result;
   },
 
   async deleteResult(resultId: string, projectId: string): Promise<void> {
@@ -193,6 +221,28 @@ export const resultService = {
       throw new Error("Project ID is required");
     }
 
-    await resultModel.delete(resultId, projectId);
+    await dbClient.$transaction(async (tx) => {
+      // Fetch result with context before deletion
+      const result = await resultModel.findById(resultId, projectId, tx);
+
+      await resultModel.delete(resultId, projectId, tx);
+
+      if (result?.execution) {
+        try {
+          await dashboardService.refreshDailyStats(
+            result.execution.projectId,
+            result.execution.createdAt,
+            result.execution.environment,
+            result.execution.type,
+            tx,
+          );
+        } catch (error) {
+          logger.error(
+            `Failed to refresh dashboard stats in deleteResult: ${error}`,
+          );
+          throw error;
+        }
+      }
+    });
   },
 };

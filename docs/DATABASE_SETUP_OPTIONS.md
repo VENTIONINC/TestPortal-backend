@@ -1,6 +1,6 @@
 # Database Setup Options
 
-For the implementation of the dashboard metrics, we need to add a new `ProjectMeta` table to the database. You have two options for your local development environment.
+For the implementation of the dashboard metrics, we need to add a new `DailyExecutionMetric` table to the database. You have two options for your local development environment.
 
 ## Option 1: Use Existing Development Database (Recommended)
 
@@ -8,7 +8,7 @@ For the implementation of the dashboard metrics, we need to add a new `ProjectMe
 
 - **Immediate Context**: You already have test execution data (`Project`, `Execution`, `Result`). You can test the dashboard aggregation logic against real data immediately.
 - **Speed**: No setup required.
-- **Safety**: The change is **additive**. We are only adding a new table `ProjectMeta`. We are NOT modifying or deleting existing columns. Existing code will run fine.
+- **Safety**: The change is **additive**. We are only adding a new table for metrics. We are NOT modifying or deleting existing columns. Existing code will run fine.
 
 **Cons:**
 
@@ -18,7 +18,7 @@ For the implementation of the dashboard metrics, we need to add a new `ProjectMe
 Simply run the migration command:
 
 ```bash
-npm run migrate
+npm run migrate  # Creates tables (including new metrics table)
 ```
 
 ---

@@ -128,7 +128,11 @@ export const ctrfService = {
     // Awaiting to ensure data consistency in case subsequent calls depend on it,
     // but catching errors so we don't fail the request.
     try {
-      await dashboardService.updateStats(result.executionId, projectId);
+      await dashboardService.updateStats(
+        result.executionId,
+        projectId,
+        dbClient,
+      );
     } catch (error) {
       logger.error(
         `Failed to update dashboard stats for execution ${result.executionId}`,

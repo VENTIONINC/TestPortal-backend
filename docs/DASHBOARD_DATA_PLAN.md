@@ -43,65 +43,63 @@ Based on the dashboard visualization, the client requires the following structur
 
 ### Prisma Schema (`ProjectMeta`)
 
-We will add a flexible Key-Value store to the Project to hold cached dashboard stats and configuration.
+We will add a dedicated table for storing daily aggregated stats. This replaces the previous `ProjectMeta` JSON blob approach to ensure concurrency safety.
 
 ```prisma
-model ProjectMeta {
-  id        String   @id @default(uuid()) @db.Uuid
-  project   Project  @relation(fields: [projectId], references: [id])
-  projectId String   @db.Uuid
-  key       String   // e.g., "dashboard_stats_Dev_Monthly", "quality_goals"
-  value     Json     // Arbitrary JSON structure
-  updatedAt DateTime @updatedAt
+model DailyExecutionMetric {
+  id          String   @id @default(uuid()) @db.Uuid
+  date        DateTime @db.Date
+  projectId   String   @db.Uuid
+  environment String
+  type        String
 
-  @@unique([projectId, key])
-  @@index([projectId])
+  // Stats
+  totalTests    Int @default(0)
+  passedTests   Int @default(0)
+  failedTests   Int @default(0)
+  skippedTests  Int @default(0)
+  totalDuration Int @default(0)
+
+  // Issues
+  issuesBug         Int @default(0)
+  issuesEnvironment Int @default(0)
+  issuesScript      Int @default(0)
+  issuesPerformance Int @default(0)
+  issuesOther       Int @default(0)
+
+  project Project @relation(fields: [projectId], references: [id])
+
+  @@unique([projectId, environment, type, date])
+  @@index([projectId, date])
 }
 ```
 
-### D. Query Strategy: Hybrid Approach
+### D. Query Strategy: Relational Aggregation
 
-We will use a **hybrid strategy** to satisfy the requirements efficiently:
+1.  **Time-Series Data**:
 
-1.  **Time-Series Data (Pass Rate, Issue Categories)**:
-
-    - **Problem**: Querying distinct counts for every day over a year is expensive.
-    - **Solution**: Store **Daily Aggregates** in `ProjectMeta`.
-    - **Structure**: JSON object bucketed by **Date** and **Execution Type**.
-    - **Aggregation**: Client/Server simply sums the daily buckets for the selected period.
+    - **Problem**: Querying raw executions is slow.
+    - **Solution**: Query the `DailyExecutionMetric` table.
+    - **Method**: Standard `dbClient.dailyExecutionMetric.findMany`.
+    - **Efficiency**: Fetching 30-365 rows is instantaneous compared to parsing large JSON blobs.
 
 2.  **Entity Data (Regression History List)**:
-    - **Problem**: "Regression History" chart shows specific individual builds (executions), not averages.
-    - **Solution**: Query the `Execution` table directly with `limit: 10` (or similar). This is cheap and already indexed.
+    - **Problem**: "Regression History" chart shows specific individual builds.
+    - **Solution**: Query the `Execution` table directly with `limit: 20`.
 
 ## 3. Implementation Strategy
 
-### A. Data Structure (`ProjectMeta` Value)
+### A. Data Structure
 
-Key: `dashboard_stats_{EnvironmentName}`
-Value Schema:
-
-```json
-{
-  "2025-12-08": {
-    "Nightly": {
-      "total": 10, "passed": 8, "failed": 2,
-      "issues": { "bug": 1, "script": 1 }
-    },
-    "OnDemand": { ... }
-  },
-  "2025-12-09": { ... }
-}
-```
+- **Table**: `DailyExecutionMetric`
+- **Granularity**: One row per Day + Environment + RunType.
 
 ### B. Aggregation Logic (Write Path)
 
 When an `Execution` finishes:
 
-1.  Calculate stats for that single execution (counts, categories).
-2.  Fetch valid `ProjectMeta` for the environment.
-3.  **Upsert**: Update the specific Date + Type bucket in the JSON.
-4.  Save.
+1.  Calculate metrics for context.
+2.  **Atomic Increment**: Use Prisma `upsert` to increment the counters for the day. This avoids race conditions between parallel test runs.
 
 ### C. Client Delivery (Read Path)
 

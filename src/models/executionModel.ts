@@ -11,8 +11,12 @@ export interface FindManyParams {
 }
 
 export const executionModel = {
-  findById: async (id: string, projectId: string): Promise<PrismaExecution | null> => {
-    return await dbClient.execution.findFirst({
+  findById: async (
+    id: string,
+    projectId: string,
+    client: Prisma.TransactionClient,
+  ): Promise<PrismaExecution | null> => {
+    return await client.execution.findFirst({
       where: {
         id,
         projectId,
@@ -53,8 +57,12 @@ export const executionModel = {
     });
   },
 
-  delete: async (id: string, projectId: string): Promise<void> => {
-    const existingExecution = await dbClient.execution.findFirst({
+  delete: async (
+    id: string,
+    projectId: string,
+    client: Prisma.TransactionClient,
+  ): Promise<void> => {
+    const existingExecution = await client.execution.findFirst({
       where: {
         id,
         projectId,
@@ -76,34 +84,32 @@ export const executionModel = {
       throw new Error(`Execution with ID ${id} not found`);
     }
 
-    await dbClient.$transaction(async (tx) => {
-      for (const result of existingExecution.results) {
-        for (const error of result.errors) {
-          if (error.assumptions.length > 0) {
-            await tx.assumption.deleteMany({
-              where: {
-                resultErrorId: error.id,
-              },
-            });
-          }
+    for (const result of existingExecution.results) {
+      for (const error of result.errors) {
+        if (error.assumptions.length > 0) {
+          await client.assumption.deleteMany({
+            where: {
+              resultErrorId: error.id,
+            },
+          });
         }
-
-        await tx.resultError.deleteMany({
-          where: {
-            resultId: result.id,
-          },
-        });
       }
 
-      await tx.result.deleteMany({
+      await client.resultError.deleteMany({
         where: {
-          executionId: id,
+          resultId: result.id,
         },
       });
+    }
 
-      await tx.execution.delete({
-        where: { id },
-      });
+    await client.result.deleteMany({
+      where: {
+        executionId: id,
+      },
+    });
+
+    await client.execution.delete({
+      where: { id },
     });
   },
 };

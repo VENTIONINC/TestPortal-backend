@@ -27,7 +27,7 @@ model Project {
   specs         Spec[]
   issues        Issue[]
   uploadApiKeys UploadApiKey[]
-  meta          ProjectMeta[]
+  dailyMetrics  DailyExecutionMetric[]
 
   @@index([name])
   @@index([ownerId])
@@ -199,17 +199,29 @@ model UploadApiKey {
   @@index([apiKey])
 }
 
-model ProjectMeta {
-  id        String   @id @default(uuid()) @db.Uuid
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  
-  project   Project  @relation(fields: [projectId], references: [id])
-  projectId String   @db.Uuid
+model DailyExecutionMetric {
+  id          String   @id @default(uuid()) @db.Uuid
+  date        DateTime @db.Date
+  projectId   String   @db.Uuid
+  environment String
+  type        String
 
-  key       String   // e.g., "dashboard_stats_Dev"
-  value     Json     // Aggregated stats
+  // Stats
+  totalTests    Int @default(0)
+  passedTests   Int @default(0)
+  failedTests   Int @default(0)
+  skippedTests  Int @default(0)
+  totalDuration Int @default(0)
 
-  @@unique([projectId, key])
-  @@index([projectId])
+  // Issues
+  issuesBug         Int @default(0)
+  issuesEnvironment Int @default(0)
+  issuesScript      Int @default(0)
+  issuesPerformance Int @default(0)
+  issuesOther       Int @default(0)
+
+  project Project @relation(fields: [projectId], references: [id])
+
+  @@unique([projectId, environment, type, date])
+  @@index([projectId, date])
 }

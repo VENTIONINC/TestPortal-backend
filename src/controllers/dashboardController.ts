@@ -12,7 +12,7 @@ export const dashboardController = {
   async getDashboard(req: Request, res: Response): Promise<void> {
     try {
       const { projectId } = req.params;
-      const { environment, period, type } = req.query;
+      const { environment, period = "30", type } = req.query;
 
       if (!projectId) {
         res.status(400).json({ error: "Project ID is required" });
@@ -26,15 +26,7 @@ export const dashboardController = {
         return;
       }
 
-      // Default period to 30 days if not provided
-      let periodDays = 30;
-      if (period) {
-        const parsedPeriod = parseInt(period as string, 10);
-        if (!isNaN(parsedPeriod) && parsedPeriod > 0) {
-          periodDays = parsedPeriod;
-        }
-      }
-
+      const periodDays = parseInt(String(period), 10) || 30;
       const executionType = typeof type === "string" ? type : undefined;
 
       const dashboardData = await dashboardService.getDashboard(

@@ -3,7 +3,6 @@ import { Prisma, type Result } from "@prisma/client";
 import type {
   DailyExecutionMetrics,
   DashboardIssueMetrics,
-  DashboardStorage,
   DashboardResponse,
   ExecutionSummary,
 } from "@/types/dashboard";
@@ -24,10 +23,14 @@ export const dashboardService = {
   /**
    * Updates the aggregated dashboard stats for a completed execution.
    */
-  async updateStats(executionId: string, projectId: string): Promise<void> {
+  async updateStats(
+    executionId: string,
+    projectId: string,
+    client: Prisma.TransactionClient,
+  ): Promise<void> {
     logger.info(`Updating dashboard stats for execution ${executionId}`);
 
-    const execution = await dbClient.execution.findUnique({
+    const execution = await client.execution.findUnique({
       where: { id: executionId },
       include: {
         results: true,
@@ -45,104 +48,129 @@ export const dashboardService = {
       );
     }
 
-    // 1. Calculate stats for this execution
-    const stats = this.calculateExecutionStats(execution.results, 0);
-
-    // 2. Determine key and date
+    // 1. Determine Scope (Date, Env, Type)
     const environment = execution.environment || "Default";
-    const date = execution.createdAt.toISOString().split("T")[0]; // YYYY-MM-DD
+    const type = execution.type || "Other";
+    const dateStr = execution.createdAt.toISOString().split("T")[0];
 
-    if (!date) {
+    // Check dateStr before usage to satisfy TypeScript
+    if (!dateStr) {
       logger.error(`Could not determine date for execution ${executionId}`);
       return;
     }
 
-    const type = execution.type || "Other";
-    const projectMetaKey = `dashboard_stats_${environment}`;
+    const date = new Date(dateStr);
 
-    // 3. Fetch existing meta
-    const existingMeta = await dbClient.projectMeta.findUnique({
+    await this.refreshDailyStats(projectId, date, environment, type, client);
+  },
+
+  /**
+   * Recalculates and overwrites the daily stats for a specific bucket.
+   * This is idempotent and self-healing.
+   */
+  async refreshDailyStats(
+    projectId: string,
+    date: Date,
+    environment: string,
+    type: string,
+    client: Prisma.TransactionClient,
+  ): Promise<void> {
+    const dateStr = date.toISOString().split("T")[0] ?? "";
+    const startDate = new Date(dateStr);
+    const endDate = new Date(dateStr);
+    endDate.setDate(endDate.getDate() + 1);
+
+    // 2. Fetch ALL executions for this day/env/type and their results
+    // We aggregate in memory for now
+    const allExecutionsForTheDay = await client.execution.findMany({
       where: {
-        projectId_key: {
-          projectId,
-          key: projectMetaKey,
+        projectId,
+        environment,
+        type,
+        createdAt: {
+          gte: startDate,
+          lt: endDate,
+        },
+      },
+      include: {
+        results: {
+          select: {
+            status: true,
+            duration: true,
+            analysisCategory: true,
+          },
         },
       },
     });
 
-    let storage: DashboardStorage = {};
-    if (
-      existingMeta &&
-      existingMeta.value &&
-      typeof existingMeta.value === "object"
-    ) {
-      storage = existingMeta.value as unknown as DashboardStorage;
+    // 3. Aggregate Totals (Idempotent Recalculation)
+    const dailyTotal = {
+      totalTests: 0,
+      passedTests: 0,
+      failedTests: 0,
+      skippedTests: 0,
+      totalDuration: 0,
+      issuesBug: 0,
+      issuesEnvironment: 0,
+      issuesScript: 0,
+      issuesPerformance: 0,
+      issuesOther: 0,
+    };
+
+    for (const exec of allExecutionsForTheDay) {
+      for (const res of exec.results) {
+        dailyTotal.totalTests++;
+        dailyTotal.totalDuration += res.duration || 0;
+
+        if (res.status === "passed") {
+          dailyTotal.passedTests++;
+        } else if (res.status === "failed") {
+          dailyTotal.failedTests++;
+          const category = res.analysisCategory?.toLowerCase() ?? "other";
+          if (category === "bug") dailyTotal.issuesBug++;
+          else if (category === "environment") dailyTotal.issuesEnvironment++;
+          else if (category === "script") dailyTotal.issuesScript++;
+          else if (category === "performance") dailyTotal.issuesPerformance++;
+          else dailyTotal.issuesOther++;
+        } else if (res.status === "skipped") {
+          dailyTotal.skippedTests++;
+        }
+      }
     }
 
-    // 4. Update the bucket
-    storage[date] ??= {};
-
-    // Initialize or Aggregate?
-    // Since this is triggered ONCE per execution, we should ADD to the day's bucket.
-    // But wait, if we re-run this logic, we might double count.
-    // Simple ADD is risky if we don't have idempotency.
-    // However, given the architecture, we assume "Append Only" for now.
-    // A better approach for "Daily Bucket" where many executions happen:
-    // We fetch the bucket, add current execution stats to it.
-
-    const currentBucket = storage[date][type] ?? {
-      total: 0,
-      passed: 0,
-      failed: 0,
-      skipped: 0,
-      duration: 0,
-      issues: { bug: 0, environment: 0, script: 0, performance: 0, other: 0 },
-    };
-
-    const newBucket: DailyExecutionMetrics = {
-      total: currentBucket.total + stats.total,
-      passed: currentBucket.passed + stats.passed,
-      failed: currentBucket.failed + stats.failed,
-      skipped: currentBucket.skipped + stats.skipped,
-      duration: currentBucket.duration + stats.duration,
-      issues: {
-        bug: currentBucket.issues.bug + stats.issues.bug,
-        environment:
-          currentBucket.issues.environment + stats.issues.environment,
-        script: currentBucket.issues.script + stats.issues.script,
-        performance:
-          currentBucket.issues.performance + stats.issues.performance,
-        other: currentBucket.issues.other + stats.issues.other,
-      },
-    };
-
-    storage[date][type] = newBucket;
-
-    // 5. Save back
-    await dbClient.projectMeta.upsert({
+    // 4. Upsert Daily Execution Metric (Overwrite with Absolute Values)
+    await client.dailyExecutionMetric.upsert({
       where: {
-        projectId_key: {
+        projectId_environment_type_date: {
           projectId,
-          key: projectMetaKey,
+          environment,
+          type,
+          date: startDate,
         },
       },
       create: {
         projectId,
-        key: projectMetaKey,
-        value: storage as unknown as Prisma.InputJsonValue,
+        environment,
+        type,
+        date: startDate,
+        ...dailyTotal,
       },
       update: {
-        value: storage as unknown as Prisma.InputJsonValue,
+        ...dailyTotal, // This OVERWRITES the row with fresh aggregates
       },
     });
 
-    logger.info(`Updated stats for ${date} / ${type}`);
+    logger.info(
+      `Refreshed daily stats for ${dateStr} / ${type}: ${dailyTotal.totalTests} tests`,
+    );
   },
 
   calculateExecutionStats(
     results: Result[],
     _execDuration: number,
   ): AggregationResult {
+    // This helper function is actually no longer used by updateStats
+    // but we can keep it for unit testing logic if needed.
     const metrics: AggregationResult = {
       total: results.length,
       passed: 0,
@@ -180,85 +208,77 @@ export const dashboardService = {
     periodDays: number,
     filterType?: string,
   ): Promise<DashboardResponse> {
-    const projectMetaKey = `dashboard_stats_${environment}`;
-
-    // 1. Fetch Aggregates
-    const meta = await dbClient.projectMeta.findUnique({
-      where: { projectId_key: { projectId, key: projectMetaKey } },
-    });
-
-    const storage = (meta?.value as unknown as DashboardStorage) || {};
-
     // Calculate date range
     const cutoffDate = new Date();
     cutoffDate.setDate(cutoffDate.getDate() - periodDays);
-    const cutoffStr = cutoffDate.toISOString().split("T")[0] ?? "";
+    // Reset time to ensure we catch everything from that date onwards
+    cutoffDate.setHours(0, 0, 0, 0);
 
-    // 2. Process History & Summary
-    const history = [];
-    const summary = { totalRuns: 0, passRate: 0, failures: 0 };
-
-    // Iterate all dates in storage
-    const sortedDates = Object.keys(storage).sort();
-
-    for (const date of sortedDates) {
-      if (date < cutoffStr) continue;
-
-      const dailyTypes = storage[date];
-      if (!dailyTypes) continue;
-
-      const dailyTotal: DailyExecutionMetrics = {
-        total: 0,
-        passed: 0,
-        failed: 0,
-        skipped: 0,
-        duration: 0,
-        issues: { bug: 0, environment: 0, script: 0, performance: 0, other: 0 },
-      };
-
-      let hasData = false;
-
-      // Sum relevant types
-      for (const [type, metrics] of Object.entries(dailyTypes)) {
-        if (filterType && type !== filterType) continue;
-
-        hasData = true;
-        dailyTotal.total += metrics.total;
-        dailyTotal.passed += metrics.passed;
-        dailyTotal.failed += metrics.failed;
-        dailyTotal.skipped += metrics.skipped;
-        dailyTotal.duration += metrics.duration;
-        dailyTotal.issues.bug += metrics.issues.bug;
-        dailyTotal.issues.environment += metrics.issues.environment;
-        dailyTotal.issues.script += metrics.issues.script;
-        dailyTotal.issues.performance += metrics.issues.performance;
-        dailyTotal.issues.other += metrics.issues.other;
-      }
-
-      if (hasData) {
-        history.push({ date, metrics: dailyTotal });
-
-        // Add to global summary
-        // Note: For "Total Runs", the screenshot implies distinct Executions,
-        // but current storage counts TESTS (stats.total).
-        // Wait, "Total Test Runs" in the screenshot usually means Total EXECUTIONS.
-        // But my storage aggregates counts of TESTS (passed/failed tests).
-        // Ah, `newBucket.total` accumulates `stats.total` which is TESTS count.
-        // We are missing explicit EXECUTION count in the `DailyExecutionMetrics`.
-        // Let's assume `total` here means TESTS.
-        // If the tiles need "Executions", we need to track that count separately.
-        // Let's rely on `summary.totalRuns` being Sum of tests for now or fetch count of executions.
-
-        // Actually, looking at the screenshot "Test runs: 68", "Test passed: 50".
-        // It likely refers to Executions if 68 is small, or Tests if it's per-suite.
-        // Given the graph "Pass rate", usually it's "Executions passed vs failed" OR "Tests passed vs failed".
-        // Let's assume TESTS count for now.
-
-        summary.totalRuns += dailyTotal.total;
-        summary.failures += dailyTotal.failed;
-      }
+    // 1. Fetch Daily Metrics (Atomic Rows)
+    const metricsWhere: Prisma.DailyExecutionMetricWhereInput = {
+      projectId,
+      environment,
+      date: { gte: cutoffDate },
+    };
+    if (filterType) {
+      metricsWhere.type = filterType;
     }
 
+    const dailyRows = await dbClient.dailyExecutionMetric.findMany({
+      where: metricsWhere,
+      orderBy: { date: "asc" },
+    });
+
+    // 2. Aggregate into History & Summary
+    const historyMap = new Map<string, DailyExecutionMetrics>();
+    const summary = { totalRuns: 0, passRate: 0, failures: 0 };
+
+    for (const row of dailyRows) {
+      const dateKey = row.date.toISOString().split("T")[0];
+
+      if (!dateKey) continue;
+
+      let bucket = historyMap.get(dateKey);
+      if (!bucket) {
+        bucket = {
+          total: 0,
+          passed: 0,
+          failed: 0,
+          skipped: 0,
+          duration: 0,
+          issues: {
+            bug: 0,
+            environment: 0,
+            script: 0,
+            performance: 0,
+            other: 0,
+          },
+        };
+        historyMap.set(dateKey, bucket);
+      }
+
+      // Aggregate
+      bucket.total += row.totalTests;
+      bucket.passed += row.passedTests;
+      bucket.failed += row.failedTests;
+      bucket.skipped += row.skippedTests;
+      bucket.duration += row.totalDuration;
+      bucket.issues.bug += row.issuesBug;
+      bucket.issues.environment += row.issuesEnvironment;
+      bucket.issues.script += row.issuesScript;
+      bucket.issues.performance += row.issuesPerformance;
+      bucket.issues.other += row.issuesOther;
+
+      // Global Summary
+      summary.totalRuns += row.totalTests;
+      summary.failures += row.failedTests;
+    }
+
+    const history = Array.from(historyMap.entries())
+      .map(([date, metrics]) => ({ date, metrics }))
+      .sort((a, b) => a.date.localeCompare(b.date));
+
+    // Calculate Pass Rate
     if (summary.totalRuns > 0) {
       summary.passRate = Math.round(
         ((summary.totalRuns - summary.failures) / summary.totalRuns) * 100,
@@ -267,17 +287,17 @@ export const dashboardService = {
 
     // 3. Fetch Recent Executions
     // We fetch actual recent entries from DB execution table
-    const where: Prisma.ExecutionWhereInput = {
+    const executionWhere: Prisma.ExecutionWhereInput = {
       projectId,
       environment, // Filter by env
       startedAt: { gte: cutoffDate },
     };
     if (filterType) {
-      where.type = filterType;
+      executionWhere.type = filterType;
     }
 
     const recentExecs = await dbClient.execution.findMany({
-      where,
+      where: executionWhere,
       orderBy: { startedAt: "desc" },
       take: 20,
       include: {
