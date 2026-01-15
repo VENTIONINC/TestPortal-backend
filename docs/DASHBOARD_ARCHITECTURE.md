@@ -6,7 +6,7 @@ This document describes the architectural flow for collecting, storing, and serv
 
 The dashboard requires fast access to historical trends (Pass Rate, Issue Categories) and recent execution details. To ensure performance without scanning millions of rows on every page load, we use a **Write-Optimized Hybrid Approach**:
 
-1.  **Historical Trends**: Aggregated asynchronously and stored in a cached JSON structure.
+1.  **Historical Trends**: Aggregated into `DailyExecutionMetric` rows.
 2.  **Recent Activity**: Queried directly from the operational database.
 
 ## 2. Storage Strategy
@@ -70,6 +70,7 @@ _Trigger_: Occurs when a Test Execution finishes, is deleted, or whenever result
 ### C. Transactional Integrity
 
 To ensure the dashboard is always in sync with operation data:
+
 - Operations like `deleteExecution` or `updateAnalysis` are wrapped in a **Database Transaction**.
 - The deletion/update of the raw data AND the re-aggregation of the statistics occur within the same transaction.
 - If the stats refresh fails, the entire operation rolls back, preventing "phantom" stats for deleted data or outdated stats for updated results.
@@ -92,6 +93,13 @@ _Trigger_: User loads the Dashboard.
 ## 4. API Interface
 
 **Endpoint**: `GET /api/projects/:projectId/dashboard`
+
+**Query Params**:
+
+- `period` (required)
+- `environment` (required)
+- `type` (optional)
+- `granularity` (optional, currently ignored; returns daily data)
 
 **Response**:
 

@@ -66,7 +66,9 @@ const ExecutionSummarySchema = z
       .describe("Overall execution status"),
     startedAt: z.string().describe("ISO 8601 timestamp when execution started"),
     duration: z.number().describe("Total duration in milliseconds"),
-    type: z.string().describe("Execution type (e.g., Nightly, Release, OnDemand)"),
+    type: z
+      .string()
+      .describe("Execution type (e.g., Nightly, Release, OnDemand)"),
     environment: z.string().describe("Environment where execution ran"),
     metrics: z
       .object({
@@ -93,7 +95,7 @@ const DashboardResponseSchema = z
       z.object({
         date: z.string().describe("Date in YYYY-MM-DD format"),
         metrics: DailyExecutionMetricsSchema,
-      })
+      }),
     ),
     recentExecutions: z.array(ExecutionSummarySchema),
   })
@@ -341,31 +343,35 @@ export function registerProjectRoutes(registry: OpenAPIRegistry) {
     method: "get",
     path: "/api/v2/projects/{projectId}/dashboard",
     description:
-      "Retrieves dashboard metrics and analytics for a project (requires authentication). Returns aggregated test execution statistics, daily metrics history, and recent execution summaries.",
+      "Retrieves aggregated dashboard metrics, execution history, and recent execution list for a project.",
     request: {
       params: z.object({
-        projectId: z.string().uuid().describe("The unique identifier of the project"),
+        projectId: z
+          .string()
+          .uuid()
+          .describe("The unique identifier of the project"),
       }),
       query: z.object({
         environment: z
           .string()
-          .describe("Environment filter (e.g., staging, production, development)"),
+          .describe("Target environment to filter results"),
         period: z
-          .number()
-          .optional()
-          .default(30)
-          .describe("Number of days to include in the history (default: 30)"),
-        type: z
           .string()
           .optional()
-          .describe("Execution type filter (e.g., Nightly, Release, OnDemand)"),
+          .describe("Number of days to include in history (default 30)"),
+        type: z.string().optional().describe("Filter by execution type"),
+        granularity: z
+          .enum(["daily", "weekly", "monthly"])
+          .optional()
+          .describe(
+            "Aggregation level for history data (daily, weekly, monthly). Defaults to daily for short periods, weekly for long periods.",
+          ),
       }),
     },
     security: [{ BearerAuth: [] }],
     responses: {
       200: {
-        description:
-          "Dashboard data with summary statistics, daily metrics history, and recent executions",
+        description: "Dashboard data retrieved successfully",
         content: {
           "application/json": {
             schema: DashboardResponseSchema,
@@ -373,8 +379,7 @@ export function registerProjectRoutes(registry: OpenAPIRegistry) {
         },
       },
       400: {
-        description:
-          "Bad request - missing environment parameter or invalid project ID",
+        description: "Bad Request - Missing or invalid parameters",
         content: {
           "application/json": {
             schema: ErrorResponseSchema,
@@ -398,7 +403,7 @@ export function registerProjectRoutes(registry: OpenAPIRegistry) {
         },
       },
       500: {
-        description: "Internal server error - failed to fetch dashboard data",
+        description: "Internal Server Error",
         content: {
           "application/json": {
             schema: ErrorResponseSchema,

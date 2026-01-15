@@ -2,6 +2,8 @@
 
 export type ExecutionType = "Nightly" | "Release" | "OnDemand" | "Other";
 
+export type DashboardGranularity = "daily" | "weekly" | "monthly";
+
 export interface DashboardIssueMetrics {
   bug: number;
   environment: number;
