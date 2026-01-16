@@ -26,24 +26,30 @@ npm run studio                 # Open Prisma Studio
 npm run inspector              # MCP inspector on port 6274
 ```
 
-## Architecture Overview
+## Codebase Overview
 
-This is a TypeScript Node.js backend for test results management with dual-purpose architecture:
-1. **REST API Server** - Express.js with MVC pattern
+TypeScript Node.js backend for test results management with **dual-purpose architecture**:
+1. **REST API Server** - Express.js with MVC pattern for web/mobile clients
 2. **MCP Tool Server** - Model Context Protocol integration for AI agents
+
+**Tech Stack:** TypeScript 5.8+, Node.js 18+, Express 5.x, Prisma + PostgreSQL, Zod validation, JWT/Argon2 auth
+
+**Key Stats:** 255 files, 204k tokens, comprehensive OpenAPI 3.1.0 spec
 
 ### Core Architecture Patterns
 
 **MVC Structure:**
 - Controllers: HTTP request handlers that delegate to services
-- Services: Pure business logic without HTTP concerns  
+- Services: Pure business logic without HTTP concerns
 - Models: Database access layer using Prisma ORM
 - Handlers: MCP-specific business logic
 
 **Dual-Purpose Design:**
 - Same business logic serves both REST endpoints and MCP tools
-- MCP server runs at `/api/mcp` endpoint with session management
+- MCP server runs at `/api/v1/mcp` endpoint with session management
 - Standardized responses via `mcpHelpers.ts`
+
+**Detailed Architecture:** See [docs/CODEBASE_MAP.md](docs/CODEBASE_MAP.md) for complete system diagrams, data flows, and navigation guide.
 
 ## Path Aliases (Critical)
 
