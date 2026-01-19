@@ -1,7 +1,11 @@
 # Stage 1: Build
-FROM node:20-alpine AS builder
+FROM node:20-slim AS builder
 
 WORKDIR /app
+
+# Prisma engine dependencies
+RUN apt-get update && apt-get install -y --no-install-recommends openssl \
+	&& rm -rf /var/lib/apt/lists/*
 
 # Copy package files
 COPY package.json package-lock.json ./
@@ -23,7 +27,7 @@ RUN npx prisma generate
 RUN npm run build
 
 # Stage 2: Production Run
-FROM node:20-alpine
+FROM node:20-slim
 
 WORKDIR /app
 
