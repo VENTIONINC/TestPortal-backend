@@ -86,6 +86,7 @@ We need to implement the following test suites to verify logic and integrity.
 
 - **Trends**: Add `WeeklyExecutionMetric` or `MonthlyExecutionMetric` materialized views if on-the-fly summing of daily rows becomes slow.
 - **Comparisons**: Add API support for "Period over Period" growth (e.g., "Pass rate up 5% vs last week").
+- **Granularity Param**: Optional and currently ignored; API always returns daily data until long-range rollups are implemented.
 
 ### C. Database
 

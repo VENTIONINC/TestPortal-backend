@@ -140,19 +140,44 @@ We will return raw aggregated data, leaving visualization formatting to the fron
 
 **Algorithm**:
 
-1.  **Fetch History**: `SELECT value FROM ProjectMeta WHERE key = ...`
+1.  **Fetch History**: Query `DailyExecutionMetric` rows within the requested `period`.
 2.  **Filter & Aggregate**:
-    - Parse JSON.
-    - Iterate days within the requested `period`.
-    - If `type` filter is active, only include that key.
-    - Compute period totals for the `summary` object.
-    - Return the relevant daily objects in the `history` array.
+
+- Filter by `environment` and optional `type`.
+- Compute period totals for the `summary` object.
+- Return the relevant daily objects in the `history` array.
+
 3.  **Fetch Recent Executions**:
-    - Query `Execution` table for most recent runs.
+
+- Query `Execution` table for most recent runs.
+
 4.  **Combine & Return**.
 
-## 4. Next Steps
+## 4. Proposed Enhancements: Long-Range Reporting (Deferred)
 
-1.  Add `ProjectMeta` to `schema.prisma` and run migration.
-2.  Create `DashboardService` to handle the aggregation logic.
-3.  Implement the API endpoint.
+This is optional and not implemented yet. The current API ignores `granularity` and always returns **daily** data. This keeps the behavior stable while we validate the dashboard.
+
+### A. Future API Shape
+
+Optional params on the existing dashboard endpoint:
+
+- `granularity`: `daily` | `weekly` | `monthly` (ignored for now)
+- `period`: number of days (existing)
+
+### B. Future Aggregation Strategy
+
+- **Daily**: current behavior using `dailyExecutionMetric` rows.
+- **Weekly**: group by ISO week (e.g., year + week number) and sum metrics.
+- **Monthly**: group by year + month and sum metrics.
+
+### C. Future Implementation Notes
+
+- Use `dailyExecutionMetric` as the base source and aggregate in memory.
+- Return `history` entries with a `label` field for weekly/monthly buckets, e.g. `2025-W03`, `2025-01`.
+- Keep `recentExecutions` unchanged (still capped at 20).
+
+## 5. Next Steps
+
+1.  Add `granularity` to the dashboard endpoint.
+2.  Implement weekly/monthly aggregation in `dashboardService.getDashboard`.
+3.  Update API docs to describe `granularity`.

@@ -5,6 +5,7 @@ import type {
   DashboardIssueMetrics,
   DashboardResponse,
   ExecutionSummary,
+  DashboardGranularity,
 } from "@/types/dashboard";
 import getLogger from "@/lib/logger";
 
@@ -18,6 +19,29 @@ type AggregationResult = {
   duration: number;
   issues: DashboardIssueMetrics;
 };
+
+function getISOWeekLabel(date: Date): string {
+  const d = new Date(
+    Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()),
+  );
+  const dayNum = d.getUTCDay() || 7;
+  d.setUTCDate(d.getUTCDate() + 4 - dayNum);
+  const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
+  const weekNo = Math.ceil(
+    ((d.getTime() - yearStart.getTime()) / 86400000 + 1) / 7,
+  );
+  return `${d.getUTCFullYear()}-W${String(weekNo).padStart(2, "0")}`;
+}
+
+function getDateKey(date: Date, granularity: DashboardGranularity): string {
+  if (granularity === "weekly") {
+    return getISOWeekLabel(date);
+  } else if (granularity === "monthly") {
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    return `${date.getFullYear()}-${month}`;
+  }
+  return date.toISOString().split("T")[0] ?? "";
+}
 
 export const dashboardService = {
   /**
@@ -207,6 +231,7 @@ export const dashboardService = {
     environment: string,
     periodDays: number,
     filterType?: string,
+    granularity: DashboardGranularity = "daily",
   ): Promise<DashboardResponse> {
     // Calculate date range
     const cutoffDate = new Date();
@@ -234,7 +259,8 @@ export const dashboardService = {
     const summary = { totalRuns: 0, passRate: 0, failures: 0 };
 
     for (const row of dailyRows) {
-      const dateKey = row.date.toISOString().split("T")[0];
+      const dateObj = row.date;
+      const dateKey = getDateKey(dateObj, granularity);
 
       if (!dateKey) continue;
 
