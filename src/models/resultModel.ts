@@ -22,8 +22,9 @@ export const resultModel = {
   findById: async (
     id: number | string,
     projectId: string,
+    client: Prisma.TransactionClient,
   ): Promise<ResultWithRelations | null> => {
-    return (await dbClient.result.findFirst({
+    return (await client.result.findFirst({
       where: {
         id: String(id),
         spec: {
@@ -546,8 +547,9 @@ export const resultModel = {
       analysisConfidence?: number;
       analysisConclusion?: string;
     },
+    client: Prisma.TransactionClient,
   ): Promise<ResultWithRelations> => {
-    const updatedResult = await dbClient.result.update({
+    const updatedResult = await client.result.update({
       where: {
         id: String(resultId),
       },
@@ -571,8 +573,12 @@ export const resultModel = {
     return updatedResult;
   },
 
-  delete: async (id: string, projectId: string): Promise<void> => {
-    const existingResult = await dbClient.result.findFirst({
+  delete: async (
+    id: string,
+    projectId: string,
+    client: Prisma.TransactionClient,
+  ): Promise<void> => {
+    const existingResult = await client.result.findFirst({
       where: {
         id,
         spec: {
@@ -595,26 +601,24 @@ export const resultModel = {
       throw new Error(`Result with ID ${id} not found`);
     }
 
-    await dbClient.$transaction(async (tx) => {
-      for (const error of existingResult.errors) {
-        if (error.assumptions.length > 0) {
-          await tx.assumption.deleteMany({
-            where: {
-              resultErrorId: error.id,
-            },
-          });
-        }
+    for (const error of existingResult.errors) {
+      if (error.assumptions.length > 0) {
+        await client.assumption.deleteMany({
+          where: {
+            resultErrorId: error.id,
+          },
+        });
       }
+    }
 
-      await tx.resultError.deleteMany({
-        where: {
-          resultId: id,
-        },
-      });
+    await client.resultError.deleteMany({
+      where: {
+        resultId: id,
+      },
+    });
 
-      await tx.result.delete({
-        where: { id },
-      });
+    await client.result.delete({
+      where: { id },
     });
   },
 };

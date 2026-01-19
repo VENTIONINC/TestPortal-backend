@@ -19,6 +19,8 @@ interface CTRFProcessResult extends ProcessReportResult {
   analysis: TestResultAnalysis[] | undefined;
 }
 
+import { dashboardService } from "@/services/dashboardService";
+
 export const ctrfService = {
   async processReport(
     ctrfReport: CTRFReport,
@@ -32,7 +34,7 @@ export const ctrfService = {
     // Step 1: Transform CTRF to report data WITHOUT analysis
     const reportData = this.transformCtrfToReportData(ctrfReport);
 
-    return await dbClient.$transaction(
+    const result = await dbClient.$transaction(
       async (tx) => {
         // Step 2: Persist to database
         const processResult = await jsonReportService.processReport(
@@ -121,6 +123,24 @@ export const ctrfService = {
         timeout: 30000, // Increase timeout for analysis
       },
     );
+
+    // Update dashboard metrics asynchronously (fire and forget or await?)
+    // Awaiting to ensure data consistency in case subsequent calls depend on it,
+    // but catching errors so we don't fail the request.
+    try {
+      await dashboardService.updateStats(
+        result.executionId,
+        projectId,
+        dbClient,
+      );
+    } catch (error) {
+      logger.error(
+        `Failed to update dashboard stats for execution ${result.executionId}`,
+        error,
+      );
+    }
+
+    return result;
   },
 
   transformCtrfToReportData(ctrfReport: CTRFReport): ReportData {

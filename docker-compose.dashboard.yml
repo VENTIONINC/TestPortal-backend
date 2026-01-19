@@ -1,0 +1,25 @@
+version: "3.8"
+
+services:
+  postgres-dashboard:
+    image: postgres:15
+    container_name: test-portal-postgres-dashboard
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: test_portal_dashboard
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_HOST_AUTH_METHOD: "trust"
+    ports:
+      - "5435:5432"
+    volumes:
+      - postgres_data_dashboard:/var/lib/postgresql/data
+      - ./init-scripts:/docker-entrypoint-initdb.d
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  postgres_data_dashboard:
