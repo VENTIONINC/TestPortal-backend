@@ -83,7 +83,7 @@ describe("userService", () => {
       } as unknown as PrismaUser);
 
       await expect(userService.signup(validUserParams)).rejects.toThrow(
-        "User with this email already exists",
+        "An error occurred during registration. Please try again or contact support.",
       );
       expect(mockUserModel.findByEmail).toHaveBeenCalledWith(
         validUserParams.email,
@@ -128,7 +128,9 @@ describe("userService", () => {
 
       await expect(
         userService.updateUser(userId, updateParams),
-      ).rejects.toThrow("Email is already in use by another user");
+      ).rejects.toThrow(
+        "An error occurred while updating the profile. Please try again or contact support.",
+      );
       expect(mockUserModel.findByEmail).toHaveBeenCalledWith(
         updateParams.email,
         mockTx,
