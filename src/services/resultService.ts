@@ -122,7 +122,11 @@ export const resultService = {
       throw new Error("Project ID is required");
     }
 
-    const resultRecord = await resultModel.findById(resultId, projectId, dbClient);
+    const resultRecord = await resultModel.findById(
+      resultId,
+      projectId,
+      dbClient,
+    );
 
     if (!resultRecord) {
       throw new Error(`Result with ID ${resultId} not found`);
@@ -204,6 +208,74 @@ export const resultService = {
           );
           throw error;
         }
+      }
+
+      return updatedResult;
+    });
+
+    return result;
+  },
+
+  async updateAnalysisFeedback(
+    resultId: number | string,
+    feedbackData: {
+      analysisFeedbackCategory?: string;
+      analysisFeedbackConfidence?: number;
+      analysisFeedbackConclusion?: string;
+    },
+    reviewedById: string,
+  ): Promise<ResultWithRelations> {
+    if (!resultId) {
+      throw new Error("Result ID is required");
+    }
+
+    if (!reviewedById) {
+      throw new Error("Reviewer ID is required");
+    }
+
+    if (
+      feedbackData.analysisFeedbackCategory &&
+      !["bug", "infra", "performance", "script", "other"].includes(
+        feedbackData.analysisFeedbackCategory,
+      )
+    ) {
+      throw new Error(
+        "Invalid analysis feedback category. Must be one of: bug, infra, performance, script, other",
+      );
+    }
+
+    if (
+      feedbackData.analysisFeedbackConfidence !== undefined &&
+      (feedbackData.analysisFeedbackConfidence < 0 ||
+        feedbackData.analysisFeedbackConfidence > 1)
+    ) {
+      throw new Error("Feedback confidence must be between 0 and 1");
+    }
+
+    const hasFeedbackFields =
+      feedbackData.analysisFeedbackCategory !== undefined ||
+      feedbackData.analysisFeedbackConfidence !== undefined ||
+      feedbackData.analysisFeedbackConclusion !== undefined;
+
+    if (!hasFeedbackFields) {
+      throw new Error(
+        "At least one feedback field must be provided (analysisFeedbackCategory, analysisFeedbackConfidence, analysisFeedbackConclusion)",
+      );
+    }
+
+    const result = await dbClient.$transaction(async (tx) => {
+      const updatedResult = await resultModel.updateAnalysisFeedback(
+        resultId,
+        {
+          ...feedbackData,
+          analysisReviewedAt: new Date(),
+          analysisReviewedById: reviewedById,
+        },
+        tx,
+      );
+
+      if (!updatedResult) {
+        throw new Error(`Result with ID ${resultId} not found`);
       }
 
       return updatedResult;

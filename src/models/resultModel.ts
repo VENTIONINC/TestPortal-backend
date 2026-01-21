@@ -573,6 +573,41 @@ export const resultModel = {
     return updatedResult;
   },
 
+  updateAnalysisFeedback: async (
+    resultId: number | string,
+    feedbackData: {
+      analysisReviewedAt?: Date;
+      analysisReviewedById?: string;
+      analysisFeedbackCategory?: string;
+      analysisFeedbackConfidence?: number;
+      analysisFeedbackConclusion?: string;
+    },
+    client: Prisma.TransactionClient,
+  ): Promise<ResultWithRelations> => {
+    const updatedResult = await client.result.update({
+      where: {
+        id: String(resultId),
+      },
+      data: feedbackData as Prisma.ResultUpdateInput,
+      include: {
+        spec: true,
+        execution: true,
+        errors: {
+          include: {
+            result: true,
+            assumptions: {
+              include: {
+                issue: true,
+              },
+            },
+          },
+        },
+      },
+    });
+
+    return updatedResult as ResultWithRelations;
+  },
+
   delete: async (
     id: string,
     projectId: string,

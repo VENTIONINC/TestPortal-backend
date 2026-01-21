@@ -2,6 +2,65 @@ import { Request, Response } from "express";
 import { resultService } from "@/services/resultService";
 import type { GetResultsStatsParams } from "@/types";
 import { buildResultParams } from "@/lib/params-builder";
+import type { AuthenticatedRequest } from "@/middleware/authMiddleware";
+
+type AnalysisFeedbackData = {
+  analysisFeedbackCategory?: string;
+  analysisFeedbackConfidence?: number;
+  analysisFeedbackConclusion?: string;
+};
+
+type AnalysisFeedbackPreparation = {
+  status: number;
+  error?: string;
+  resultId?: string;
+  reviewerId?: string;
+  data?: AnalysisFeedbackData;
+};
+
+const prepareAnalysisFeedback = (
+  req: AuthenticatedRequest,
+): AnalysisFeedbackPreparation => {
+  const { resultId } = req.params;
+
+  if (!resultId) {
+    return { status: 400, error: "Result ID is required" };
+  }
+
+  if (!req.user?.id) {
+    return { status: 401, error: "User is not authenticated" };
+  }
+
+  const {
+    analysisFeedbackCategory,
+    analysisFeedbackConfidence,
+    analysisFeedbackConclusion,
+  } = req.body as AnalysisFeedbackData;
+
+  const data: AnalysisFeedbackData = {};
+
+  if (analysisFeedbackCategory !== undefined)
+    data.analysisFeedbackCategory = analysisFeedbackCategory;
+  if (analysisFeedbackConfidence !== undefined)
+    data.analysisFeedbackConfidence = analysisFeedbackConfidence;
+  if (analysisFeedbackConclusion !== undefined)
+    data.analysisFeedbackConclusion = analysisFeedbackConclusion;
+
+  if (Object.keys(data).length === 0) {
+    return {
+      status: 400,
+      error:
+        "At least one feedback field must be provided (analysisFeedbackCategory, analysisFeedbackConfidence, analysisFeedbackConclusion)",
+    };
+  }
+
+  return {
+    status: 200,
+    resultId,
+    reviewerId: req.user.id,
+    data,
+  };
+};
 
 export const resultController = {
   getResults: async (req: Request, res: Response): Promise<void> => {
@@ -46,7 +105,10 @@ export const resultController = {
         return;
       }
 
-      const resultRecord = await resultService.getResultById(resultId, projectId);
+      const resultRecord = await resultService.getResultById(
+        resultId,
+        projectId,
+      );
       res.status(200).json(resultRecord);
     } catch (error) {
       const err = error as Error;
@@ -146,6 +208,35 @@ export const resultController = {
       const err = error as Error;
       res.status(400).json({
         error: `Failed to update result analysis. ${err.message}`,
+      });
+    }
+  },
+
+  updateAnalysisFeedback: async (
+    req: AuthenticatedRequest,
+    res: Response,
+  ): Promise<void> => {
+    try {
+      const prepared = prepareAnalysisFeedback(req);
+
+      if (prepared.error) {
+        res.status(prepared.status).json({
+          error: prepared.error,
+        });
+        return;
+      }
+
+      const updatedResult = await resultService.updateAnalysisFeedback(
+        prepared.resultId as string,
+        prepared.data as AnalysisFeedbackData,
+        prepared.reviewerId as string,
+      );
+
+      res.status(200).json(updatedResult);
+    } catch (error) {
+      const err = error as Error;
+      res.status(400).json({
+        error: `Failed to update result analysis feedback. ${err.message}`,
       });
     }
   },

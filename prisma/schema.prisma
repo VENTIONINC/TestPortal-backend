@@ -99,6 +99,11 @@ model Result {
   analysisConclusion              String? // Brief explanation for the categorization decision
   analysisErrorQuality            Int? // 1 to 5 (only for failed tests)
   analysisErrorQualityConclusion  String? // Brief explanation for error quality rating (only for failed tests)
+  analysisReviewedAt              DateTime?
+  analysisReviewedById            String? @db.Uuid
+  analysisFeedbackCategory        String?
+  analysisFeedbackConfidence      Int?
+  analysisFeedbackConclusion      String?
 }
 
 model ResultError {
