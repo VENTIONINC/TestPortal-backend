@@ -15,11 +15,6 @@ router.get(
   authMiddleware,
   resultController.getResultsStats,
 );
-router.get(
-  "/v2/results/analysis-export",
-  authMiddleware,
-  resultController.exportAnalysisJsonl,
-);
 router.patch(
   "/v2/results/:resultId/analysis",
   authMiddleware,
