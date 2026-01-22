@@ -62,6 +62,19 @@ const prepareAnalysisFeedback = (
   };
 };
 
+const buildExportFileName = (
+  projectId: string,
+  dateFrom: string,
+  dateTo: string,
+): string => {
+  const safeToken = (value: string): string =>
+    value.replace(/[^a-zA-Z0-9-_]/g, "_");
+
+  return `analysis-export-${safeToken(projectId)}-${safeToken(
+    dateFrom,
+  )}-${safeToken(dateTo)}.jsonl`;
+};
+
 export const resultController = {
   getResults: async (req: Request, res: Response): Promise<void> => {
     try {
@@ -273,6 +286,48 @@ export const resultController = {
           error: `Failed to delete result. ${err.message}`,
         });
       }
+    }
+  },
+
+  exportAnalysisJsonl: async (req: Request, res: Response): Promise<void> => {
+    try {
+      const { projectId, dateFrom, dateTo } =
+        req.query as Record<string, string>;
+
+      if (!projectId) {
+        res.status(400).json({
+          error: "Project ID is required",
+        });
+        return;
+      }
+
+      if (!dateFrom || !dateTo) {
+        res.status(400).json({
+          error: "dateFrom and dateTo are required",
+        });
+        return;
+      }
+
+      const { content } = await resultService.exportAnalysisJsonl({
+        projectId,
+        dateFrom,
+        dateTo,
+      });
+
+      const filename = buildExportFileName(projectId, dateFrom, dateTo);
+
+      res.set("Content-Type", "application/jsonl; charset=utf-8");
+      res.set(
+        "Content-Disposition",
+        `attachment; filename="${filename}"`,
+      );
+
+      res.status(200).send(content);
+    } catch (error) {
+      const err = error as Error;
+      res.status(400).json({
+        error: `Failed to export analysis. ${err.message}`,
+      });
     }
   },
 };

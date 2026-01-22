@@ -241,6 +241,47 @@ export function registerResultRoutes(registry: OpenAPIRegistry) {
   });
 
   registry.registerPath({
+    method: "get",
+    path: "/api/v2/results/analysis-export",
+    description:
+      "Exports AI analysis and human feedback data as JSONL for a project and date range",
+    request: {
+      query: z.object({
+        projectId: z.string().uuid(),
+        dateFrom: z.string().describe("Start date/time (ISO)"),
+        dateTo: z.string().describe("End date/time (ISO)"),
+      }),
+    },
+    responses: {
+      200: {
+        description: "JSONL export file",
+        content: {
+          "application/jsonl": {
+            schema: z.string(),
+          },
+        },
+      },
+      400: {
+        description: "Bad request",
+        content: {
+          "application/json": {
+            schema: ErrorResponseSchema,
+          },
+        },
+      },
+      500: {
+        description: "Internal server error",
+        content: {
+          "application/json": {
+            schema: ErrorResponseSchema,
+          },
+        },
+      },
+    },
+    tags: ["Results"],
+  });
+
+  registry.registerPath({
     method: "patch",
     path: "/api/v2/results/{resultId}/analysis",
     description: "Updates the analysis fields of a specific result",

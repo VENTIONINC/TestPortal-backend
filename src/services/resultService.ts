@@ -1,5 +1,13 @@
-import { resultModel, type ResultFilters } from "@/models/resultModel";
+import {
+  resultModel,
+  type ResultFilters,
+  type AnalysisExportFilters,
+  type AnalysisExportRow,
+} from "@/models/resultModel";
 import type {
+  AnalysisExportMetadata,
+  AnalysisExportParams,
+  AnalysisExportRecord,
   GetResultsParams,
   GetResultsStatsParams,
   ResultsStats,
@@ -316,5 +324,126 @@ export const resultService = {
         }
       }
     });
+  },
+
+  async exportAnalysisJsonl(
+    params: AnalysisExportParams,
+  ): Promise<{ content: string }> {
+    const { projectId, dateFrom, dateTo } = params;
+
+    if (!projectId) {
+      throw new Error("Project ID is required");
+    }
+
+    const parseDate = (value: string, label: string): Date => {
+      const parsed = new Date(value);
+      if (Number.isNaN(parsed.getTime())) {
+        throw new Error(`${label} is invalid`);
+      }
+      return parsed;
+    };
+
+    const isDateOnly = (value: string): boolean =>
+      /^\d{4}-\d{2}-\d{2}$/.test(value);
+
+    const parsedFrom = parseDate(dateFrom, "dateFrom");
+    const baseTo = parseDate(dateTo, "dateTo");
+    const parsedTo = isDateOnly(dateTo)
+      ? new Date(baseTo.getFullYear(), baseTo.getMonth(), baseTo.getDate() + 1)
+      : baseTo;
+
+    const filters: AnalysisExportFilters = {
+      projectId,
+      dateFrom: parsedFrom,
+      dateTo: parsedTo,
+    };
+
+    const rows = await resultModel.findForAnalysisExport(filters);
+
+    const metadata: AnalysisExportMetadata = {
+      type: "metadata",
+      schemaVersion: "1.0",
+      projectId,
+      dateFrom: parsedFrom.toISOString(),
+      dateTo: parsedTo.toISOString(),
+      generatedAt: new Date().toISOString(),
+    };
+
+    const parseTags = (tags: string): string | string[] => {
+      try {
+        const parsed = JSON.parse(tags);
+        return Array.isArray(parsed) ? parsed : tags;
+      } catch {
+        return tags;
+      }
+    };
+
+    const records: AnalysisExportRecord[] = rows.map(
+      (row: AnalysisExportRow): AnalysisExportRecord => {
+        const finalCategory =
+          row.analysisFeedbackCategory ?? row.analysisCategory ?? null;
+        const finalConfidence =
+          row.analysisFeedbackConfidence ?? row.analysisConfidence ?? null;
+        const finalConclusion =
+          row.analysisFeedbackConclusion ?? row.analysisConclusion ?? null;
+
+        return {
+          type: "result",
+          resultId: row.id,
+          startTime: row.startTime.toISOString(),
+          status: row.status,
+          duration: row.duration,
+          retry: row.retry,
+          reportPortalLink: row.reportPortalLink,
+          spec: {
+            id: row.spec.id,
+            key: row.spec.key,
+            file: row.spec.file,
+            title: row.spec.title,
+            tags: parseTags(row.spec.tags),
+          },
+          execution: {
+            id: row.execution.id,
+            environment: row.execution.environment,
+            type: row.execution.type,
+            name: row.execution.name,
+            version: row.execution.version,
+            startedAt: row.execution.startedAt.toISOString(),
+            createdAt: row.execution.createdAt.toISOString(),
+          },
+          ai: {
+            status: row.analysisStatus,
+            category: row.analysisCategory,
+            confidence: row.analysisConfidence,
+            conclusion: row.analysisConclusion,
+            errorQuality: row.analysisErrorQuality,
+            errorQualityConclusion: row.analysisErrorQualityConclusion,
+          },
+          feedback: {
+            category: row.analysisFeedbackCategory ?? null,
+            confidence: row.analysisFeedbackConfidence ?? null,
+            conclusion: row.analysisFeedbackConclusion ?? null,
+            reviewedAt: row.analysisReviewedAt
+              ? row.analysisReviewedAt.toISOString()
+              : null,
+            reviewedById: row.analysisReviewedById ?? null,
+          },
+          final: {
+            category: finalCategory,
+            confidence: finalConfidence,
+            conclusion: finalConclusion,
+          },
+        };
+      },
+    );
+
+    const lines = [
+      JSON.stringify(metadata),
+      ...records.map((record) => JSON.stringify(record)),
+    ];
+
+    return {
+      content: `${lines.join("\n")}\n`,
+    };
   },
 };
