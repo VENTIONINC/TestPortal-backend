@@ -1,11 +1,13 @@
-# Stage 1: Build
-FROM node:20-slim AS builder
+# Base image with OpenSSL
+FROM node:20-slim AS base
 
-WORKDIR /app
-
-# Prisma engine dependencies
 RUN apt-get update && apt-get install -y --no-install-recommends openssl \
 	&& rm -rf /var/lib/apt/lists/*
+
+# Stage 1: Build
+FROM base AS builder
+
+WORKDIR /app
 
 # Copy package files
 COPY package.json package-lock.json ./
@@ -27,7 +29,7 @@ RUN npx prisma generate
 RUN npm run build
 
 # Stage 2: Production Run
-FROM node:20-slim
+FROM base
 
 WORKDIR /app
 
