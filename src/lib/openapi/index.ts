@@ -20,6 +20,7 @@ import { registerPromptRoutes } from "./prompts";
 import { registerProjectRoutes } from "./projects";
 import { registerCtrfRoutes } from "./ctrf";
 import { registerUploadApiKeyRoutes } from "./uploadApiKey";
+import { registerAnalysisExportRoutes } from "./analysisExport";
 import "./zod";
 
 export function generateOpenAPISpec() {
@@ -42,6 +43,7 @@ export function generateOpenAPISpec() {
   registerProjectRoutes(registry);
   registerCtrfRoutes(registry);
   registerUploadApiKeyRoutes(registry);
+  registerAnalysisExportRoutes(registry);
 
   const generator = new OpenApiGeneratorV31(registry.definitions);
 
@@ -138,6 +140,11 @@ export function generateOpenAPISpec() {
         name: "Upload",
         description:
           "File upload endpoints for test reports and results with API key authentication",
+      },
+      {
+        name: "Exports",
+        description:
+          "Export endpoints for offline analysis of AI results and feedback",
       },
     ],
   });

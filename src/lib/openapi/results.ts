@@ -16,7 +16,10 @@ const ResultSchema = z
     retry: z.number().optional(),
     duration: z.number().optional(),
     startTime: z.string().optional(),
-    analysisStatus: z.enum(["passed", "failed"]).optional().describe("Test analysis status"),
+    analysisStatus: z
+      .enum(["passed", "failed"])
+      .optional()
+      .describe("Test analysis status"),
     analysisCategory: z
       .enum(["bug", "infra", "performance", "script", "other"])
       .optional()
@@ -39,7 +42,9 @@ const ResultSchema = z
       .max(5)
       .nullable()
       .optional()
-      .describe("Quality rating of error messages (1-5 scale, only for failed tests)"),
+      .describe(
+        "Quality rating of error messages (1-5 scale, only for failed tests)",
+      ),
     analysisErrorQualityConclusion: z
       .string()
       .nullable()
@@ -84,7 +89,10 @@ const ResultsStatsSchema = z
 
 const UpdateResultAnalysisRequestSchema = z
   .object({
-    analysisStatus: z.enum(["passed", "failed"]).optional().describe("Test analysis status"),
+    analysisStatus: z
+      .enum(["passed", "failed"])
+      .optional()
+      .describe("Test analysis status"),
     analysisCategory: z
       .enum(["bug", "infra", "performance", "script", "other"])
       .optional()
@@ -173,7 +181,10 @@ export function registerResultRoutes(registry: OpenAPIRegistry) {
         resultId: z.string().uuid(),
       }),
       query: z.object({
-        projectId: z.string().uuid().describe("Project ID to verify ownership of the result"),
+        projectId: z
+          .string()
+          .uuid()
+          .describe("Project ID to verify ownership of the result"),
       }),
     },
     responses: {
@@ -291,7 +302,8 @@ export function registerResultRoutes(registry: OpenAPIRegistry) {
   registry.registerPath({
     method: "delete",
     path: "/api/v2/results/{resultId}",
-    description: "Delete a specific result by its ID (requires projectId and authentication)",
+    description:
+      "Delete a specific result by its ID (requires projectId and authentication)",
     security: [{ BearerAuth: [] }],
     request: {
       params: z.object({
@@ -300,7 +312,10 @@ export function registerResultRoutes(registry: OpenAPIRegistry) {
         }),
       }),
       query: z.object({
-        projectId: z.string().uuid().describe("Project ID to verify ownership of the result"),
+        projectId: z
+          .string()
+          .uuid()
+          .describe("Project ID to verify ownership of the result"),
       }),
     },
     responses: {

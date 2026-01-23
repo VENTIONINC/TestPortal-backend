@@ -2,6 +2,78 @@ import { Request, Response } from "express";
 import { resultService } from "@/services/resultService";
 import type { GetResultsStatsParams } from "@/types";
 import { buildResultParams } from "@/lib/params-builder";
+import type { AuthenticatedRequest } from "@/middleware/authMiddleware";
+
+type AnalysisFeedbackData = {
+  analysisFeedbackCategory?: string;
+  analysisFeedbackConfidence?: number;
+  analysisFeedbackConclusion?: string;
+};
+
+type AnalysisFeedbackPreparation = {
+  status: number;
+  error?: string;
+  resultId?: string;
+  reviewerId?: string;
+  data?: AnalysisFeedbackData;
+};
+
+const prepareAnalysisFeedback = (
+  req: AuthenticatedRequest,
+): AnalysisFeedbackPreparation => {
+  const { resultId } = req.params;
+
+  if (!resultId) {
+    return { status: 400, error: "Result ID is required" };
+  }
+
+  if (!req.user?.id) {
+    return { status: 401, error: "User is not authenticated" };
+  }
+
+  const {
+    analysisFeedbackCategory,
+    analysisFeedbackConfidence,
+    analysisFeedbackConclusion,
+  } = req.body as AnalysisFeedbackData;
+
+  const data: AnalysisFeedbackData = {};
+
+  if (analysisFeedbackCategory !== undefined)
+    data.analysisFeedbackCategory = analysisFeedbackCategory;
+  if (analysisFeedbackConfidence !== undefined)
+    data.analysisFeedbackConfidence = analysisFeedbackConfidence;
+  if (analysisFeedbackConclusion !== undefined)
+    data.analysisFeedbackConclusion = analysisFeedbackConclusion;
+
+  if (Object.keys(data).length === 0) {
+    return {
+      status: 400,
+      error:
+        "At least one feedback field must be provided (analysisFeedbackCategory, analysisFeedbackConfidence, analysisFeedbackConclusion)",
+    };
+  }
+
+  return {
+    status: 200,
+    resultId,
+    reviewerId: req.user.id,
+    data,
+  };
+};
+
+const buildExportFileName = (
+  projectId: string,
+  dateFrom: string,
+  dateTo: string,
+): string => {
+  const safeToken = (value: string): string =>
+    value.replace(/[^a-zA-Z0-9-_]/g, "_");
+
+  return `analysis-export-${safeToken(projectId)}-${safeToken(
+    dateFrom,
+  )}-${safeToken(dateTo)}.jsonl`;
+};
 
 export const resultController = {
   getResults: async (req: Request, res: Response): Promise<void> => {
@@ -46,7 +118,10 @@ export const resultController = {
         return;
       }
 
-      const resultRecord = await resultService.getResultById(resultId, projectId);
+      const resultRecord = await resultService.getResultById(
+        resultId,
+        projectId,
+      );
       res.status(200).json(resultRecord);
     } catch (error) {
       const err = error as Error;
@@ -150,6 +225,35 @@ export const resultController = {
     }
   },
 
+  updateAnalysisFeedback: async (
+    req: AuthenticatedRequest,
+    res: Response,
+  ): Promise<void> => {
+    try {
+      const prepared = prepareAnalysisFeedback(req);
+
+      if (prepared.error) {
+        res.status(prepared.status).json({
+          error: prepared.error,
+        });
+        return;
+      }
+
+      const updatedResult = await resultService.updateAnalysisFeedback(
+        prepared.resultId as string,
+        prepared.data as AnalysisFeedbackData,
+        prepared.reviewerId as string,
+      );
+
+      res.status(200).json(updatedResult);
+    } catch (error) {
+      const err = error as Error;
+      res.status(400).json({
+        error: `Failed to update result analysis feedback. ${err.message}`,
+      });
+    }
+  },
+
   deleteResult: async (req: Request, res: Response): Promise<void> => {
     try {
       const { resultId } = req.params;
@@ -182,6 +286,48 @@ export const resultController = {
           error: `Failed to delete result. ${err.message}`,
         });
       }
+    }
+  },
+
+  exportAnalysisJsonl: async (req: Request, res: Response): Promise<void> => {
+    try {
+      const { projectId, dateFrom, dateTo } =
+        req.query as Record<string, string>;
+
+      if (!projectId) {
+        res.status(400).json({
+          error: "Project ID is required",
+        });
+        return;
+      }
+
+      if (!dateFrom || !dateTo) {
+        res.status(400).json({
+          error: "dateFrom and dateTo are required",
+        });
+        return;
+      }
+
+      const { content } = await resultService.exportAnalysisJsonl({
+        projectId,
+        dateFrom,
+        dateTo,
+      });
+
+      const filename = buildExportFileName(projectId, dateFrom, dateTo);
+
+      res.set("Content-Type", "application/jsonl; charset=utf-8");
+      res.set(
+        "Content-Disposition",
+        `attachment; filename="${filename}"`,
+      );
+
+      res.status(200).send(content);
+    } catch (error) {
+      const err = error as Error;
+      res.status(400).json({
+        error: `Failed to export analysis. ${err.message}`,
+      });
     }
   },
 };
