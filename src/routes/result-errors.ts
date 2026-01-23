@@ -14,7 +14,16 @@ router.patch(
   authMiddleware,
   resultErrorController.reviewError,
 );
-router.patch("/v2/result-errors/bulk-review", authMiddleware, resultErrorController.bulkReview);
+router.patch(
+  "/v2/result-errors/bulk-review",
+  authMiddleware,
+  resultErrorController.bulkReview,
+);
+router.post(
+  "/v2/result-errors/analyze",
+  authMiddleware,
+  resultErrorController.analyzeErrors,
+);
 router.get(
   "/v2/result-errors/:resultErrorId",
   authMiddleware,

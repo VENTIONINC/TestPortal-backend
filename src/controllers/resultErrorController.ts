@@ -6,8 +6,29 @@ interface AssignIssueRequest {
 }
 
 interface BulkReviewRequest {
-  errorIds: (number | string)[];
+  errorIds: string[];
 }
+
+interface AnalyzeErrorsRequest {
+  projectId: string;
+  errorIds: string[];
+}
+
+const validateAnalyzeErrorsRequest = (
+  payload: AnalyzeErrorsRequest,
+): { projectId: string; errorIds: string[] } => {
+  const { projectId, errorIds } = payload;
+
+  if (!projectId) {
+    throw new Error("Project ID is required");
+  }
+
+  if (!errorIds || !Array.isArray(errorIds) || errorIds.length === 0) {
+    throw new Error("Error IDs array is required and must not be empty");
+  }
+
+  return { projectId, errorIds };
+};
 
 export const resultErrorController = {
   assignIssue: async (req: Request, res: Response): Promise<void> => {
@@ -85,6 +106,26 @@ export const resultErrorController = {
     }
   },
 
+  analyzeErrors: async (req: Request, res: Response): Promise<void> => {
+    try {
+      const { projectId, errorIds } = validateAnalyzeErrorsRequest(
+        req.body as AnalyzeErrorsRequest,
+      );
+
+      const analysisResult = await resultErrorService.analyzeErrors(
+        projectId,
+        errorIds,
+      );
+
+      res.status(200).json(analysisResult);
+    } catch (error) {
+      const err = error as Error;
+      res.status(400).json({
+        error: `Failed to analyze result errors. ${err.message}`,
+      });
+    }
+  },
+
   getResultErrorById: async (req: Request, res: Response): Promise<void> => {
     try {
       const { resultErrorId } = req.params;
@@ -104,8 +145,10 @@ export const resultErrorController = {
         return;
       }
 
-      const resultError =
-        await resultErrorService.getResultErrorById(resultErrorId, projectId as string);
+      const resultError = await resultErrorService.getResultErrorById(
+        resultErrorId,
+        projectId as string,
+      );
       res.status(200).json(resultError);
     } catch (error) {
       const err = error as Error;
