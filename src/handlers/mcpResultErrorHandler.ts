@@ -23,7 +23,7 @@ export const mcpResultErrorHandler = {
     return await resultErrorService.reviewError(resultErrorId);
   },
 
-  async bulkReview(errorIds: (number | string)[]): Promise<BulkReviewResult> {
+  async bulkReview(errorIds: string[]): Promise<BulkReviewResult> {
     return await resultErrorService.bulkReview(errorIds);
   },
 

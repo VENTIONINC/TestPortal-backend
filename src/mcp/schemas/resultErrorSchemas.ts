@@ -20,7 +20,7 @@ export const reviewErrorSchema: MCPToolSchema = {
  * Schema for bulk reviewing multiple result errors
  */
 export const bulkReviewSchema: MCPToolSchema = {
-  errorIds: z.array(z.number()),
+  errorIds: z.array(z.string().uuid()),
 };
 
 /**
