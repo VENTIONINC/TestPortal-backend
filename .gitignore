@@ -76,3 +76,6 @@ example-reports/
 
 # IDEs and editors
 .vscode/
+
+# Prompt testing datasets (generated files)
+prompt-tests/datasets/

@@ -52,6 +52,67 @@ export interface GetResultsStatsParams {
   dates?: string[];
 }
 
+export interface AnalysisExportParams {
+  projectId: string;
+  dateFrom: string;
+  dateTo: string;
+}
+
+export interface AnalysisExportMetadata {
+  type: "metadata";
+  schemaVersion: string;
+  projectId: string;
+  dateFrom: string;
+  dateTo: string;
+  generatedAt: string;
+}
+
+export interface AnalysisExportRecord {
+  type: "result";
+  resultId: string;
+  startTime: string;
+  status: string;
+  duration: number;
+  retry: number;
+  reportPortalLink?: string | null;
+  spec: {
+    id: string;
+    key: string;
+    file: string;
+    title: string;
+    tags: string | string[];
+  };
+  execution: {
+    id: string;
+    environment: string;
+    type: string;
+    name: string;
+    version: string;
+    startedAt: string;
+    createdAt: string;
+  };
+  ai: {
+    status?: string | null;
+    category?: string | null;
+    confidence?: number | null;
+    conclusion?: string | null;
+    errorQuality?: number | null;
+    errorQualityConclusion?: string | null;
+  };
+  feedback: {
+    category?: string | null;
+    confidence?: number | null;
+    conclusion?: string | null;
+    reviewedAt?: string | null;
+    reviewedById?: string | null;
+  };
+  final: {
+    category?: string | null;
+    confidence?: number | null;
+    conclusion?: string | null;
+  };
+}
+
 export interface ResultsStats {
   byStatus: {
     passed: number;

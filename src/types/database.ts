@@ -43,6 +43,11 @@ export interface PrismaResult {
   analysisConclusion?: string | null;
   analysisErrorQuality?: number | null;
   analysisErrorQualityConclusion?: string | null;
+  analysisReviewedAt?: Date | null;
+  analysisReviewedById?: string | null;
+  analysisFeedbackCategory?: string | null;
+  analysisFeedbackConfidence?: number | null;
+  analysisFeedbackConclusion?: string | null;
 }
 
 export interface PrismaResultError {

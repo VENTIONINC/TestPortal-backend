@@ -61,7 +61,8 @@
     "path.config.ts",
     "prisma/**/*",
     "scripts/**/*",
-    "__tests__/**/*"
+    "__tests__/**/*",
+    "prompt-tests/**/*"
   ],
   "exclude": ["node_modules", "dist", "**/*.js"],
   "ts-node": {
