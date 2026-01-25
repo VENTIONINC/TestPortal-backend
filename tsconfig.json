@@ -62,7 +62,7 @@
     "prisma/**/*",
     "scripts/**/*",
     "__tests__/**/*",
-    "prompt-tests/**/*"
+    "__prompts-tests__/**/*"
   ],
   "exclude": ["node_modules", "dist", "**/*.js"],
   "ts-node": {

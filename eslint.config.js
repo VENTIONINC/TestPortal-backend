@@ -70,7 +70,7 @@ export default [
 
   // Override for configuration files that aren't part of the TS project
   {
-    files: ["jest.config.ts"],
+    files: ["jest.config.ts", "jest.prompts.config.ts"],
     languageOptions: {
       parserOptions: {
         project: null,

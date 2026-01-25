@@ -78,4 +78,4 @@ example-reports/
 .vscode/
 
 # Prompt testing datasets (generated files)
-prompt-tests/datasets/
+__prompts-tests__/**/datasets/

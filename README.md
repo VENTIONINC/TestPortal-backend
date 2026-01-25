@@ -116,6 +116,24 @@ docker-compose down               # Stop all services
 docker-compose logs postgres      # View PostgreSQL logs
 ```
 
+## Prompt Tests
+
+Datasets must be generated first.
+
+```sh
+# Generate datasets
+tsx __prompts-tests__/stored-results-analysis/generate-datasets.ts
+
+# Run prompt tests
+npm run test:prompts
+npm run test:prompts:smoke
+npm run test:prompts:regression
+npm run test:prompts:compare
+
+# Select prompt project
+npm run test:prompts:smoke -- --selectProjects=stored-results-analysis
+```
+
 ## TypeScript Features
 
 - **Strict type checking** with comprehensive type definitions

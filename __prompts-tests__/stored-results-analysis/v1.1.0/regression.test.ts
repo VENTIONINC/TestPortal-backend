@@ -1,8 +1,8 @@
 /**
- * Smoke tests for stored results analysis prompt
- * Quick validation with minimal test cases (1 per template)
+ * Regression tests for stored results analysis prompt
+ * Comprehensive validation with multiple variations per template
  *
- * Usage: npm run test:prompts:smoke
+ * Usage: npm run test:prompts:regression
  */
 
 import "./testEnv"; // Load environment variables
@@ -14,14 +14,14 @@ import type { TestCase } from "./templates/types";
 
 const datasetPath = path.join(
   process.cwd(),
-  "prompt-tests/datasets/stored-results-analysis/smoke.json",
+  "__prompts-tests__/stored-results-analysis/datasets/stored-results-analysis/regression.json",
 );
 
-describe("Prompt Evaluation - Smoke Tests (v1.1.0)", () => {
-  jest.setTimeout(120_000); // 2 minutes timeout
+describe("Prompt Evaluation - Regression Tests (v1.1.0)", () => {
+  jest.setTimeout(300_000); // 5 minutes timeout
 
   it("should satisfy contract and expectations", async () => {
-    // Load smoke dataset
+    // Load regression dataset
     const cases = JSON.parse(
       fs.readFileSync(datasetPath, "utf8"),
     ) as TestCase[];
