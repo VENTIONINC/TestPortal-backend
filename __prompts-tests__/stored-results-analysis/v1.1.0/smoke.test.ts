@@ -5,11 +5,11 @@
  * Usage: npm run test:prompts:smoke
  */
 
-import "./testEnv"; // Load environment variables
+import "../../testEnv"; // Load environment variables
 import fs from "node:fs";
 import path from "node:path";
-import { runEval } from "./runners/stored-results-analysis";
-import { DEFAULT_VERSION } from "./runners/versions";
+import { runEval } from "../runners/stored-results-analysis";
+import { DEFAULT_VERSION } from "../runners/versions";
 import type { TestCase } from "./templates/types";
 
 const datasetPath = path.join(

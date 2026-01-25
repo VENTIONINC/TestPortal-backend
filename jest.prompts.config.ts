@@ -11,6 +11,12 @@ const config: JestConfigWithTsJest = {
         "<rootDir>/__prompts-tests__/stored-results-analysis/**/?(*.)test.ts",
       ],
     },
+    {
+      ...baseConfig,
+      testPathIgnorePatterns: ["/dist/"],
+      displayName: "error-solution",
+      testMatch: ["<rootDir>/__prompts-tests__/error-solution/**/?(*.)test.ts"],
+    },
   ],
 };
 

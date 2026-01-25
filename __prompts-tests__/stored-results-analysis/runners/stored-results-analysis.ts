@@ -6,7 +6,7 @@
 import { ChatOpenAI } from "@langchain/openai";
 import { z } from "zod";
 import type { TestAnalysisResponse } from "@/schemas/testAnalysisSchemas";
-import type { TestCase } from "../templates/types";
+import type { TestCase } from "../v1.1.0/templates/types";
 import type { EvalResult, EvalFailure } from "./types";
 
 /**
