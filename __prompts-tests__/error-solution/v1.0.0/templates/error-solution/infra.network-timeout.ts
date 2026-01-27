@@ -16,11 +16,6 @@ export function infraNetworkTimeout(i: number): TestCase {
       "api/auth.spec.ts:28:12",
     ]),
     analysisCategory: "infra",
-    analysisConfidence: 3,
-    analysisConclusion:
-      "Network timeouts indicate infrastructure or connectivity instability during the run.",
-    errorQuality: "(none)",
-    errorQualityConclusion: "(none)",
   });
 
   return {

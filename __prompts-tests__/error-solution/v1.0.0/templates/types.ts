@@ -7,10 +7,6 @@ export interface ErrorSolutionInput {
   errorStack: string;
   errorLocation: string;
   analysisCategory: string;
-  analysisConfidence: number | string;
-  analysisConclusion: string;
-  errorQuality: number | string;
-  errorQualityConclusion: string;
 }
 
 export interface Expectations {

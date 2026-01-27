@@ -107,10 +107,6 @@ Category: ${input.category}`;
           errorStack: normalizeErrorStack(primaryError.callStack) ?? "(none)",
           errorLocation: primaryError.location ?? "(none)",
           analysisCategory: analysis.category,
-          analysisConfidence: analysis.confidence ?? "(none)",
-          analysisConclusion: analysis.conclusion ?? "(none)",
-          errorQuality: analysis.errorQuality ?? "(none)",
-          errorQualityConclusion: analysis.errorQualityConclusion ?? "(none)",
         }),
       );
 

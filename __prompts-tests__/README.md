@@ -54,22 +54,22 @@ Pass the project name to Jest via `--selectProjects`:
 **Smoke tests**:
 
 ```bash
-npm run test:prompts:smoke -- --selectProjects stored-results-analysis
-npm run test:prompts:smoke -- --selectProjects error-solution
+npx jest --config jest.prompts.config.ts --testPathPattern=smoke\.test\.ts$ --selectProjects stored-results-analysis
+npx jest --config jest.prompts.config.ts --testPathPattern=smoke\.test\.ts$ --selectProjects error-solution
 ```
 
 **Regression tests**:
 
 ```bash
-npm run test:prompts:regression -- --selectProjects stored-results-analysis
-npm run test:prompts:regression -- --selectProjects error-solution
+npx jest --config jest.prompts.config.ts --testPathPattern=regression\.test\.ts$ --selectProjects stored-results-analysis
+npx jest --config jest.prompts.config.ts --testPathPattern=regression\.test\.ts$ --selectProjects error-solution
 ```
 
 **All tests in a suite**:
 
 ```bash
-npm run test:prompts -- --selectProjects stored-results-analysis
-npm run test:prompts -- --selectProjects error-solution
+npx jest --config jest.prompts.config.ts --selectProjects stored-results-analysis
+npx jest --config jest.prompts.config.ts --selectProjects error-solution
 ```
 
 ## Adding New Templates

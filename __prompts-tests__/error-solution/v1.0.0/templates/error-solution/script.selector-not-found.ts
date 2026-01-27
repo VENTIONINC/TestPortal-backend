@@ -20,12 +20,6 @@ export function scriptSelectorNotFound(i: number): TestCase {
       "e2e/auth.spec.ts:33:5",
     ]),
     analysisCategory: "script",
-    analysisConfidence: 4,
-    analysisConclusion:
-      "Selector failures indicate UI changes or timing issues in test scripts.",
-    errorQuality: 3,
-    errorQualityConclusion:
-      "Error identifies the missing selector and execution location.",
   });
 
   return {

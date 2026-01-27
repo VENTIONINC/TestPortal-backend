@@ -20,12 +20,6 @@ export function bugAssertion(i: number): TestCase {
       "e2e/dashboard.spec.ts:48:8",
     ]),
     analysisCategory: "bug",
-    analysisConfidence: 5,
-    analysisConclusion:
-      "Clear assertion mismatch indicates a defect in application logic or API response handling.",
-    errorQuality: 4,
-    errorQualityConclusion:
-      "Good error quality with expected vs actual values and precise location.",
   });
 
   return {

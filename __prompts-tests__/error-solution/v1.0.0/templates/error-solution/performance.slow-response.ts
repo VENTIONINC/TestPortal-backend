@@ -20,12 +20,6 @@ export function performanceSlowResponse(i: number): TestCase {
       "e2e/perf.spec.ts:34:7",
     ]),
     analysisCategory: "performance",
-    analysisConfidence: 3,
-    analysisConclusion:
-      "Timeouts and budget violations point to potential performance regressions or slow dependencies.",
-    errorQuality: 3,
-    errorQualityConclusion:
-      "Error contains timing details and a clear location for investigation.",
   });
 
   return {

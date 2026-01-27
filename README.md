@@ -120,19 +120,7 @@ docker-compose logs postgres      # View PostgreSQL logs
 
 Datasets must be generated first.
 
-```sh
-# Generate datasets
-tsx __prompts-tests__/stored-results-analysis/generate-datasets.ts
-
-# Run prompt tests
-npm run test:prompts
-npm run test:prompts:smoke
-npm run test:prompts:regression
-npm run test:prompts:compare
-
-# Select prompt project
-npm run test:prompts:smoke -- --selectProjects=stored-results-analysis
-```
+See __prompts-tests__/README.md for prompt test commands.
 
 ## TypeScript Features
 

@@ -15,10 +15,6 @@ export function makeCaseBase(
     errorStack: string;
     errorLocation: string;
     analysisCategory: string;
-    analysisConfidence: number | string;
-    analysisConclusion: string;
-    errorQuality: number | string;
-    errorQualityConclusion: string;
   },
 ): { name: string; input: ErrorSolutionInput } {
   const input: ErrorSolutionInput = {
@@ -26,10 +22,6 @@ export function makeCaseBase(
     errorStack: cfg.errorStack,
     errorLocation: cfg.errorLocation,
     analysisCategory: cfg.analysisCategory,
-    analysisConfidence: cfg.analysisConfidence,
-    analysisConclusion: cfg.analysisConclusion,
-    errorQuality: cfg.errorQuality,
-    errorQualityConclusion: cfg.errorQualityConclusion,
   };
 
   return { name: cfg.name, input };
