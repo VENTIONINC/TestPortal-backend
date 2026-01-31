@@ -6,6 +6,7 @@ import parseCookie from "cookie-parser";
 import helmet from "helmet";
 
 import getLogger from "@/lib/logger";
+import { getBuildInfo } from "@/lib/buildInfo";
 import { errorHandler } from "@/middleware/error-handler";
 import routes from "@/routes/index";
 
@@ -49,6 +50,9 @@ app.use(errorHandler);
 const PORT: number = parseInt(process.env.PORT ?? "3001", 10);
 
 app.listen(PORT, () => {
+  const buildInfo = getBuildInfo();
+  logger.info(
+    `${buildInfo.name} backend started version=${buildInfo.version} build=${buildInfo.buildHash} time=${buildInfo.buildTime} env=${buildInfo.env}`,
+  );
   console.log(`Running on Port ${PORT}`);
 });
-

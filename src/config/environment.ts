@@ -7,7 +7,8 @@ const DEFAULT_PROJECT_ID =
 const TEST_USER_EMAIL = process.env.TEST_USER_EMAIL ?? "test@example.com";
 const TEST_USER_PASSWORD = process.env.TEST_USER_PASSWORD ?? "testpassword123";
 
-const APP_VERSION = process.env.npm_package_version ?? "0.0.0";
+const APP_VERSION =
+  process.env.APP_VERSION ?? process.env.npm_package_version ?? "0.0.0";
 
 // LangSmith Configuration
 const LANGSMITH_TRACING =

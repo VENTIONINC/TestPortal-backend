@@ -74,6 +74,36 @@ docker run -p 3001:3001 \
 
 The application will be available at `http://localhost:3001`.
 
+## 2.1 Build Metadata & Support Endpoint (Internal)
+
+These variables are required to expose build metadata:
+
+- `APP_NAME` (default: `TestPortal`)
+- `APP_VERSION`
+- `BUILD_HASH`
+- `BUILD_TIME` (ISO-8601 UTC)
+- `APP_ENV` (`prod|stage|dev`, default: `prod`)
+Optional:
+
+- `IMAGE_TAG`
+
+Endpoint:
+
+- `GET /api/v2/meta`
+- Header: `Authorization: Bearer <access-token>`
+
+Example:
+
+```bash
+curl -H "Authorization: Bearer $ACCESS_TOKEN" \
+  http://localhost:3001/api/v2/meta
+```
+
+Security notes:
+
+- Use standard JWT access tokens
+- Never log tokens
+
 ## 3. Docker Compose Example
 
 You can use the following `docker-compose.yml` to run the application:

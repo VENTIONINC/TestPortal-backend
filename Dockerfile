@@ -31,6 +31,16 @@ RUN npm run build
 # Stage 2: Production Run
 FROM base
 
+ARG APP_NAME="TestPortal"
+ARG APP_VERSION="0.0.0"
+ARG BUILD_HASH="unknown"
+ARG BUILD_TIME="1970-01-01T00:00:00Z"
+
+LABEL org.opencontainers.image.title=$APP_NAME \
+	org.opencontainers.image.version=$APP_VERSION \
+	org.opencontainers.image.revision=$BUILD_HASH \
+	org.opencontainers.image.created=$BUILD_TIME
+
 WORKDIR /app
 
 # Copy package files

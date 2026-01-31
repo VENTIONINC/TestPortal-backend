@@ -16,6 +16,7 @@ import ctrf from "@/routes/ctrf";
 import upload from "@/routes/upload";
 import analysisExport from "@/routes/analysis-export";
 import mcp from "@/mcp/server";
+import meta from "@/routes/meta";
 
 const router = Router();
 
@@ -39,6 +40,7 @@ router.use(prompts);
 router.use(projects);
 router.use(ctrf);
 router.use(upload);
+router.use(meta);
 router.use(mcp);
 
 export default router;
