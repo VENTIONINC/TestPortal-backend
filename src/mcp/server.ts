@@ -1,4 +1,4 @@
-import { Router, Request, Response } from "express";
+import { Router, Request, Response, NextFunction } from "express";
 import { randomUUID } from "node:crypto";
 import {
   McpServer,
@@ -255,17 +255,22 @@ router.post(
 const handleSessionRequest = async (
   req: Request,
   res: Response,
+  next: NextFunction,
 ): Promise<void> => {
-  const sessionId = req.headers["mcp-session-id"] as string | undefined;
-  if (!sessionId || !transports[sessionId]) {
-    res.status(400).send("Invalid or missing session ID");
-    return;
-  }
+  try {
+    const sessionId = req.headers["mcp-session-id"] as string | undefined;
+    if (!sessionId || !transports[sessionId]) {
+      res.status(400).send("Invalid or missing session ID");
+      return;
+    }
 
-  const entry = transports[sessionId];
-  entry.lastActive = Date.now();
-  const transport = entry.transport;
-  await transport.handleRequest(req, res);
+    const entry = transports[sessionId];
+    entry.lastActive = Date.now();
+    const transport = entry.transport;
+    await transport.handleRequest(req, res);
+  } catch (error) {
+    next(error);
+  }
 };
 
 router.get("/v2/mcp", authenticateMcpToken, handleSessionRequest);

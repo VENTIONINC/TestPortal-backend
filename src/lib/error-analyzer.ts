@@ -15,6 +15,18 @@ interface TargetResultError extends PrismaResultError {
   type: string;
 }
 
+const parseStringArray = (value?: string | null): string[] => {
+  if (!value) return [];
+  try {
+    const parsed = JSON.parse(value) as unknown;
+    return Array.isArray(parsed)
+      ? parsed.filter((item): item is string => typeof item === "string")
+      : [];
+  } catch {
+    return [];
+  }
+};
+
 export async function runReview(
   targetResultError: TargetResultError,
 ): Promise<ResultErrorWithRelations | null> {
@@ -40,12 +52,8 @@ export async function runReview(
       take: 100,
     });
 
-  const targetCallLog = JSON.parse(
-    targetResultError.callLog ?? "[]",
-  ) as string[];
-  const targetCallStack = JSON.parse(
-    targetResultError.callStack ?? "[]",
-  ) as string[];
+  const targetCallLog = parseStringArray(targetResultError.callLog);
+  const targetCallStack = parseStringArray(targetResultError.callStack);
 
   for (const resultError of resultErrors) {
     const messageLengthDiff = Math.abs(
@@ -60,8 +68,8 @@ export async function runReview(
       resultError.message,
     );
 
-    const callLog = JSON.parse(resultError.callLog ?? "[]") as string[];
-    const callStack = JSON.parse(resultError.callStack ?? "[]") as string[];
+    const callLog = parseStringArray(resultError.callLog);
+    const callStack = parseStringArray(resultError.callStack);
 
     const callLogSimilarity = compareStackTraces(targetCallLog, callLog);
     const stackSimilarity = compareStackTraces(targetCallStack, callStack);
