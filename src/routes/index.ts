@@ -14,6 +14,7 @@ import prompts from "@/routes/promptRoutes";
 import projects from "@/routes/projects";
 import ctrf from "@/routes/ctrf";
 import upload from "@/routes/upload";
+import analysisExport from "@/routes/analysis-export";
 import mcp from "@/mcp/server";
 
 const router = Router();
@@ -33,6 +34,7 @@ router.use(status);
 router.use(users);
 router.use(openapi);
 router.use(errorFormatter);
+router.use(analysisExport);
 router.use(prompts);
 router.use(projects);
 router.use(ctrf);

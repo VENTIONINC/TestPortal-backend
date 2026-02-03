@@ -18,7 +18,7 @@ interface ReviewErrorParams {
 }
 
 interface BulkReviewParams {
-  errorIds: number[];
+  errorIds: string[];
 }
 
 interface GetResultErrorByIdParams {

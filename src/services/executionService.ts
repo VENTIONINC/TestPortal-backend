@@ -1,5 +1,10 @@
 import { executionModel } from "@/models/executionModel";
 import type { PrismaExecution } from "@/types";
+import { dashboardService } from "@/services/dashboardService";
+import getLogger from "@/lib/logger";
+import { dbClient } from "@/prisma/client";
+
+const logger = getLogger("execution-service");
 
 export interface GetExecutionsParams {
   projectId?: string;
@@ -19,7 +24,7 @@ export const executionService = {
       throw new Error("Project ID is required");
     }
 
-    const execution = await executionModel.findById(executionId, projectId);
+    const execution = await executionModel.findById(executionId, projectId, dbClient);
 
     if (!execution) {
       throw new Error(`Execution with ID ${executionId} not found`);
@@ -45,6 +50,33 @@ export const executionService = {
       throw new Error("Project ID is required");
     }
 
-    await executionModel.delete(executionId, projectId);
+    await dbClient.$transaction(async (tx) => {
+      // Fetch execution details before deletion to know which stats bucket to refresh
+      const execution = await executionModel.findById(
+        executionId,
+        projectId,
+        tx,
+      );
+
+      await executionModel.delete(executionId, projectId, tx);
+
+      if (execution) {
+        // Refresh dashboard stats for the affected day
+        try {
+          await dashboardService.refreshDailyStats(
+            projectId,
+            execution.createdAt,
+            execution.environment,
+            execution.type,
+            tx,
+          );
+        } catch (error) {
+          logger.error(
+            `Failed to refresh dashboard stats after execution deletion: ${error}`,
+          );
+          throw error;
+        }
+      }
+    });
   },
 };

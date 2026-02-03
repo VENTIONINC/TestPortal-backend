@@ -19,7 +19,8 @@ services:
       test: ["CMD-SHELL", "pg_isready -U postgres"]
       interval: 10s
       timeout: 5s
-      retries: 5
+      retries: 10
+      start_period: 10s
 
   pgadmin:
     image: dpage/pgadmin4:8 # stick with v8 until pgAdmin 9 is GA
@@ -34,8 +35,7 @@ services:
     ports:
       - "5050:80" # browse http://localhost:5050
     depends_on:
-      postgres:
-        condition: service_healthy # waits for the DB to be ready
+      - postgres
 
 volumes:
   postgres_data:

@@ -18,12 +18,55 @@ export interface ResultFilters {
   to?: string;
 }
 
+export interface AnalysisExportFilters {
+  projectId: string;
+  dateFrom: Date;
+  dateTo: Date;
+}
+
+export interface AnalysisExportRow {
+  id: string;
+  status: string;
+  duration: number;
+  retry: number;
+  reportPortalLink: string | null;
+  startTime: Date;
+  analysisStatus: string | null;
+  analysisCategory: string | null;
+  analysisConfidence: number | null;
+  analysisConclusion: string | null;
+  analysisErrorQuality: number | null;
+  analysisErrorQualityConclusion: string | null;
+  analysisReviewedAt: Date | null;
+  analysisReviewedById: string | null;
+  analysisFeedbackCategory: string | null;
+  analysisFeedbackConfidence: number | null;
+  analysisFeedbackConclusion: string | null;
+  spec: {
+    id: string;
+    key: string;
+    file: string;
+    title: string;
+    tags: string;
+  };
+  execution: {
+    id: string;
+    environment: string;
+    type: string;
+    name: string;
+    version: string;
+    startedAt: Date;
+    createdAt: Date;
+  };
+}
+
 export const resultModel = {
   findById: async (
     id: number | string,
     projectId: string,
+    client: Prisma.TransactionClient,
   ): Promise<ResultWithRelations | null> => {
-    return (await dbClient.result.findFirst({
+    return (await client.result.findFirst({
       where: {
         id: String(id),
         spec: {
@@ -368,6 +411,74 @@ export const resultModel = {
     });
   },
 
+  findForAnalysisExport: async (
+    filters: AnalysisExportFilters,
+  ): Promise<AnalysisExportRow[]> => {
+    const { projectId, dateFrom, dateTo } = filters;
+
+    const whereClause: Prisma.ResultWhereInput = {
+      spec: { projectId },
+      execution: { projectId },
+    } as Prisma.ResultWhereInput;
+
+    (whereClause as Record<string, unknown>).analysisReviewedById = {
+      not: null,
+    };
+
+    whereClause.startTime = {
+      gte: dateFrom,
+      lte: dateTo,
+    };
+
+    const selectFields = {
+      id: true,
+      status: true,
+      duration: true,
+      retry: true,
+      reportPortalLink: true,
+      startTime: true,
+      analysisStatus: true,
+      analysisCategory: true,
+      analysisConfidence: true,
+      analysisConclusion: true,
+      analysisErrorQuality: true,
+      analysisErrorQualityConclusion: true,
+      analysisReviewedAt: true,
+      analysisReviewedById: true,
+      analysisFeedbackCategory: true,
+      analysisFeedbackConfidence: true,
+      analysisFeedbackConclusion: true,
+      spec: {
+        select: {
+          id: true,
+          key: true,
+          file: true,
+          title: true,
+          tags: true,
+        },
+      },
+      execution: {
+        select: {
+          id: true,
+          environment: true,
+          type: true,
+          name: true,
+          version: true,
+          startedAt: true,
+          createdAt: true,
+        },
+      },
+    } as unknown as Prisma.ResultSelect;
+
+    return (await dbClient.result.findMany({
+      where: whereClause,
+      orderBy: {
+        startTime: "asc",
+      },
+      select: selectFields,
+    })) as unknown as AnalysisExportRow[];
+  },
+
   getStats: async (filters: {
     projectId: string;
     dates?: string[] | undefined;
@@ -546,8 +657,9 @@ export const resultModel = {
       analysisConfidence?: number;
       analysisConclusion?: string;
     },
+    client: Prisma.TransactionClient,
   ): Promise<ResultWithRelations> => {
-    const updatedResult = await dbClient.result.update({
+    const updatedResult = await client.result.update({
       where: {
         id: String(resultId),
       },
@@ -571,8 +683,47 @@ export const resultModel = {
     return updatedResult;
   },
 
-  delete: async (id: string, projectId: string): Promise<void> => {
-    const existingResult = await dbClient.result.findFirst({
+  updateAnalysisFeedback: async (
+    resultId: number | string,
+    feedbackData: {
+      analysisReviewedAt?: Date;
+      analysisReviewedById?: string;
+      analysisFeedbackCategory?: string;
+      analysisFeedbackConfidence?: number;
+      analysisFeedbackConclusion?: string;
+    },
+    client: Prisma.TransactionClient,
+  ): Promise<ResultWithRelations> => {
+    const updatedResult = await client.result.update({
+      where: {
+        id: String(resultId),
+      },
+      data: feedbackData as Prisma.ResultUpdateInput,
+      include: {
+        spec: true,
+        execution: true,
+        errors: {
+          include: {
+            result: true,
+            assumptions: {
+              include: {
+                issue: true,
+              },
+            },
+          },
+        },
+      },
+    });
+
+    return updatedResult as ResultWithRelations;
+  },
+
+  delete: async (
+    id: string,
+    projectId: string,
+    client: Prisma.TransactionClient,
+  ): Promise<void> => {
+    const existingResult = await client.result.findFirst({
       where: {
         id,
         spec: {
@@ -595,26 +746,24 @@ export const resultModel = {
       throw new Error(`Result with ID ${id} not found`);
     }
 
-    await dbClient.$transaction(async (tx) => {
-      for (const error of existingResult.errors) {
-        if (error.assumptions.length > 0) {
-          await tx.assumption.deleteMany({
-            where: {
-              resultErrorId: error.id,
-            },
-          });
-        }
+    for (const error of existingResult.errors) {
+      if (error.assumptions.length > 0) {
+        await client.assumption.deleteMany({
+          where: {
+            resultErrorId: error.id,
+          },
+        });
       }
+    }
 
-      await tx.resultError.deleteMany({
-        where: {
-          resultId: id,
-        },
-      });
+    await client.resultError.deleteMany({
+      where: {
+        resultId: id,
+      },
+    });
 
-      await tx.result.delete({
-        where: { id },
-      });
+    await client.result.delete({
+      where: { id },
     });
   },
 };
