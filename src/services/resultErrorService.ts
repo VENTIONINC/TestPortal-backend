@@ -1,6 +1,12 @@
 import { resultErrorModel } from "@/models/resultErrorModel";
 import { runReview } from "@/lib/error-analyzer";
+import getLogger from "@/lib/logger";
+import { dbClient } from "@/prisma/client";
+import { dashboardService } from "@/services/dashboardService";
+import { testAnalysisService } from "@/services/testAnalysisService";
 import type { PrismaResultError, ResultErrorWithRelations } from "@/types";
+
+const logger = getLogger("result-error-service");
 
 type ResultErrorWithAssumptions = Omit<ResultErrorWithRelations, "result">;
 
@@ -11,6 +17,32 @@ interface BulkReviewResult {
   successCount: number;
   failureCount: number;
 }
+
+interface AnalyzeErrorsResult {
+  analyzedResults: number;
+  updatedResultIds: string[];
+  skippedErrorIds: string[];
+  totalErrors: number;
+}
+
+const validateAnalyzeErrorsParams = (
+  projectId: string,
+  errorIds: string[],
+): { projectId: string; errorIds: string[] } => {
+  if (!projectId) {
+    throw new Error("Project ID is required");
+  }
+
+  if (!errorIds || !Array.isArray(errorIds) || errorIds.length === 0) {
+    throw new Error("Error IDs array is required and must not be empty");
+  }
+
+  if (errorIds.some((id) => typeof id !== "string" || id.length === 0)) {
+    throw new Error("Error IDs must be non-empty strings");
+  }
+
+  return { projectId, errorIds };
+};
 
 export const resultErrorService = {
   async assignIssue(
@@ -49,7 +81,8 @@ export const resultErrorService = {
 
     // Business logic - get the error and run review
     try {
-      const resultError = await resultErrorModel.findByIdInternal(resultErrorId);
+      const resultError =
+        await resultErrorModel.findByIdInternal(resultErrorId);
 
       if (!resultError) {
         throw new Error(`Result error with ID ${resultErrorId} not found`);
@@ -71,7 +104,7 @@ export const resultErrorService = {
     }
   },
 
-  async bulkReview(errorIds: (number | string)[]): Promise<BulkReviewResult> {
+  async bulkReview(errorIds: string[]): Promise<BulkReviewResult> {
     // Input validation
     if (!errorIds || !Array.isArray(errorIds)) {
       throw new Error("Error IDs array is required");
@@ -79,6 +112,10 @@ export const resultErrorService = {
 
     if (errorIds.length === 0) {
       throw new Error("At least one error ID must be provided");
+    }
+
+    if (errorIds.some((id) => typeof id !== "string" || id.length === 0)) {
+      throw new Error("Error IDs must be non-empty strings");
     }
 
     // Convert all IDs to strings (UUID format)
@@ -137,12 +174,159 @@ export const resultErrorService = {
       throw new Error("Project ID is required");
     }
 
-    const resultError = await resultErrorModel.findById(resultErrorId, projectId);
+    const resultError = await resultErrorModel.findById(
+      resultErrorId,
+      projectId,
+    );
 
     if (!resultError) {
       throw new Error(`Result error with ID ${resultErrorId} not found`);
     }
 
     return resultError;
+  },
+
+  async analyzeErrors(
+    projectId: string,
+    errorIds: string[],
+  ): Promise<AnalyzeErrorsResult> {
+    const validatedParams = validateAnalyzeErrorsParams(projectId, errorIds);
+
+    const validatedIds = validatedParams.errorIds.map((id) => String(id));
+
+    const resultErrors = await resultErrorModel.findManyForAnalysis(
+      validatedIds,
+      validatedParams.projectId,
+    );
+
+    const foundIds = new Set(resultErrors.map((error) => error.id));
+    const skippedErrorIds = validatedIds.filter((id) => !foundIds.has(id));
+
+    const resultMap = new Map<
+      string,
+      {
+        result: {
+          id: string;
+          status: string;
+          duration: number;
+          startTime: Date;
+          retry: number;
+          executionId: string;
+          spec: { key: string; title: string; file: string };
+          execution: { name: string; environment: string };
+        };
+        error: {
+          id: string;
+          message: string;
+          callStack: string;
+          location: string;
+        };
+      }
+    >();
+
+    for (const error of resultErrors) {
+      if (!error.result) {
+        skippedErrorIds.push(error.id);
+        continue;
+      }
+
+      if (!resultMap.has(error.result.id)) {
+        resultMap.set(error.result.id, {
+          result: error.result,
+          error: {
+            id: error.id,
+            message: error.message,
+            callStack: error.callStack,
+            location: error.location,
+          },
+        });
+      }
+    }
+
+    const resultsForAnalysis = Array.from(resultMap.values()).map(
+      ({ result, error }) => ({
+        id: result.id,
+        status: result.status,
+        duration: result.duration,
+        startTime: result.startTime,
+        retry: result.retry,
+        spec: {
+          key: result.spec.key,
+          title: result.spec.title,
+          file: result.spec.file,
+        },
+        execution: {
+          name: result.execution.name,
+          environment: result.execution.environment,
+        },
+        errors: [
+          {
+            message: error.message,
+            callStack: error.callStack,
+            location: error.location,
+          },
+        ],
+      }),
+    );
+
+    if (resultsForAnalysis.length === 0) {
+      return {
+        analyzedResults: 0,
+        updatedResultIds: [],
+        skippedErrorIds,
+        totalErrors: validatedIds.length,
+      };
+    }
+
+    logger.info(
+      `Analyzing ${resultsForAnalysis.length} results from ${validatedIds.length} errors`,
+    );
+
+    const analysisMap =
+      await testAnalysisService.analyzeStoredResults(resultsForAnalysis);
+
+    await Promise.all(
+      Array.from(analysisMap.entries()).map(([resultId, analysis]) =>
+        dbClient.result.update({
+          where: { id: resultId },
+          data: {
+            analysisStatus: analysis.status,
+            analysisCategory: analysis.category ?? null,
+            analysisConfidence: analysis.confidence,
+            analysisConclusion: analysis.conclusion ?? null,
+            analysisErrorQuality: analysis.errorQuality ?? null,
+            analysisErrorQualityConclusion:
+              analysis.errorQualityConclusion ?? null,
+          },
+        }),
+      ),
+    );
+
+    const updatedResultIds = Array.from(analysisMap.keys());
+    const executionIds = new Set<string>();
+    for (const resultId of updatedResultIds) {
+      const resultEntry = resultMap.get(resultId);
+      if (resultEntry) {
+        executionIds.add(resultEntry.result.executionId);
+      }
+    }
+
+    for (const executionId of executionIds) {
+      try {
+        await dashboardService.updateStats(executionId, projectId, dbClient);
+      } catch (error) {
+        const err = error as Error;
+        logger.error(
+          `Failed to refresh dashboard stats for execution ${executionId}: ${err.message}`,
+        );
+      }
+    }
+
+    return {
+      analyzedResults: analysisMap.size,
+      updatedResultIds,
+      skippedErrorIds,
+      totalErrors: validatedIds.length,
+    };
   },
 };

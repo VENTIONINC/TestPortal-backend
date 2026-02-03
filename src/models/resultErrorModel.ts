@@ -4,13 +4,55 @@ import type { PrismaResultError, ResultErrorWithRelations } from "@/types";
 type ResultErrorWithAssumptions = Omit<ResultErrorWithRelations, "result">;
 
 export const resultErrorModel = {
-  findById: async (id: string, projectId: string): Promise<PrismaResultError | null> => {
+  findById: async (
+    id: string,
+    projectId: string,
+  ): Promise<PrismaResultError | null> => {
     return await dbClient.resultError.findFirst({
       where: {
         id,
         result: {
           execution: {
             projectId,
+          },
+        },
+      },
+    });
+  },
+
+  findManyForAnalysis: async (
+    ids: string[],
+    projectId: string,
+  ): Promise<
+    Array<
+      PrismaResultError & {
+        result: {
+          id: string;
+          status: string;
+          duration: number;
+          startTime: Date;
+          retry: number;
+          executionId: string;
+          spec: { key: string; title: string; file: string };
+          execution: { name: string; environment: string };
+        } | null;
+      }
+    >
+  > => {
+    return await dbClient.resultError.findMany({
+      where: {
+        id: { in: ids },
+        result: {
+          execution: {
+            projectId,
+          },
+        },
+      },
+      include: {
+        result: {
+          include: {
+            spec: true,
+            execution: true,
           },
         },
       },

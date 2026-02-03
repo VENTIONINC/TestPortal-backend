@@ -26,10 +26,34 @@ const BulkReviewRequestSchema = z
   })
   .openapi("BulkReviewRequest");
 
+const AnalyzeResultErrorsRequestSchema = z
+  .object({
+    projectId: z.string().uuid(),
+    errorIds: z.array(z.string().uuid()),
+  })
+  .openapi("AnalyzeResultErrorsRequest");
+
+const AnalyzeResultErrorsResponseSchema = z
+  .object({
+    analyzedResults: z.number(),
+    updatedResultIds: z.array(z.string().uuid()),
+    skippedErrorIds: z.array(z.string().uuid()),
+    totalErrors: z.number(),
+  })
+  .openapi("AnalyzeResultErrorsResponse");
+
 export function registerResultErrorRoutes(registry: OpenAPIRegistry) {
   registry.register("ResultError", ResultErrorSchema);
   registry.register("AssignIssueRequest", AssignIssueRequestSchema);
   registry.register("BulkReviewRequest", BulkReviewRequestSchema);
+  registry.register(
+    "AnalyzeResultErrorsRequest",
+    AnalyzeResultErrorsRequestSchema,
+  );
+  registry.register(
+    "AnalyzeResultErrorsResponse",
+    AnalyzeResultErrorsResponseSchema,
+  );
 
   registry.registerPath({
     method: "patch",
@@ -152,6 +176,42 @@ export function registerResultErrorRoutes(registry: OpenAPIRegistry) {
   });
 
   registry.registerPath({
+    method: "post",
+    path: "/api/v2/result-errors/analyze",
+    description:
+      "Runs AI analysis for specific result errors and updates related results",
+    request: {
+      body: {
+        content: {
+          "application/json": {
+            schema: AnalyzeResultErrorsRequestSchema,
+          },
+        },
+      },
+    },
+    responses: {
+      200: {
+        description: "Analysis completed successfully",
+        content: {
+          "application/json": {
+            schema: AnalyzeResultErrorsResponseSchema,
+          },
+        },
+      },
+      400: {
+        description: "Bad request",
+        content: {
+          "application/json": {
+            schema: ErrorResponseSchema,
+          },
+        },
+      },
+    },
+    tags: ["Result Errors"],
+    security: [{ BearerAuth: [] }],
+  });
+
+  registry.registerPath({
     method: "get",
     path: "/api/v2/result-errors/{resultErrorId}",
     description: "Retrieves a specific result error by ID (requires projectId)",
@@ -160,7 +220,10 @@ export function registerResultErrorRoutes(registry: OpenAPIRegistry) {
         resultErrorId: z.string().uuid(),
       }),
       query: z.object({
-        projectId: z.string().uuid().describe("Project ID to verify ownership of the result error"),
+        projectId: z
+          .string()
+          .uuid()
+          .describe("Project ID to verify ownership of the result error"),
       }),
     },
     responses: {
@@ -200,4 +263,6 @@ export {
   ResultErrorSchema,
   AssignIssueRequestSchema,
   BulkReviewRequestSchema,
+  AnalyzeResultErrorsRequestSchema,
+  AnalyzeResultErrorsResponseSchema,
 };
