@@ -1,0 +1,3155 @@
+{
+  "@asteasolutions/zod-to-openapi@7.3.2": {
+    "licenses": "MIT",
+    "repository": "https://github.com/asteasolutions/zod-to-openapi",
+    "publisher": "Astea Solutions",
+    "email": "info@asteasolutions.com",
+    "path": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/@asteasolutions/zod-to-openapi",
+    "licenseFile": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/@asteasolutions/zod-to-openapi/LICENSE"
+  },
+  "@aws-crypto/sha256-js@1.2.2": {
+    "licenses": "Apache-2.0",
+    "repository": "https://github.com/aws/aws-sdk-js-crypto-helpers",
+    "publisher": "AWS Crypto Tools Team",
+    "email": "aws-cryptools@amazon.com",
+    "url": "https://docs.aws.amazon.com/aws-crypto-tools/index.html?id=docs_gateway#lang/en_us",
+    "path": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/@aws-crypto/sha256-js",
+    "licenseFile": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/@aws-crypto/sha256-js/LICENSE"
+  },
+  "@aws-crypto/util@1.2.2": {
+    "licenses": "Apache-2.0",
+    "repository": "https://github.com/aws/aws-sdk-js-crypto-helpers",
+    "publisher": "AWS Crypto Tools Team",
+    "email": "aws-cryptools@amazon.com",
+    "url": "https://docs.aws.amazon.com/aws-crypto-tools/index.html?id=docs_gateway#lang/en_us",
+    "path": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/@aws-crypto/util",
+    "licenseFile": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/@aws-crypto/util/LICENSE"
+  },
+  "@aws-sdk/types@3.862.0": {
+    "licenses": "Apache-2.0",
+    "repository": "https://github.com/aws/aws-sdk-js-v3",
+    "publisher": "AWS SDK for JavaScript Team",
+    "url": "https://aws.amazon.com/javascript/",
+    "path": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/@aws-sdk/types",
+    "licenseFile": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/@aws-sdk/types/LICENSE"
+  },
+  "@aws-sdk/util-utf8-browser@3.259.0": {
+    "licenses": "Apache-2.0",
+    "repository": "https://github.com/aws/aws-sdk-js-v3",
+    "publisher": "AWS SDK for JavaScript Team",
+    "url": "https://aws.amazon.com/javascript/",
+    "path": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/@aws-sdk/util-utf8-browser",
+    "licenseFile": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/@aws-sdk/util-utf8-browser/LICENSE"
+  },
+  "@cfworker/json-schema@4.1.1": {
+    "licenses": "MIT",
+    "repository": "https://github.com/cfworker/cfworker",
+    "publisher": "Jeremy Danyow",
+    "email": "jdanyow@gmail.com",
+    "path": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/@cfworker/json-schema",
+    "licenseFile": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/@cfworker/json-schema/README.md"
+  },
+  "@gar/promisify@1.1.3": {
+    "licenses": "MIT",
+    "repository": "https://github.com/wraithgar/gar-promisify",
+    "publisher": "Gar",
+    "email": "gar+npm@danger.computer",
+    "path": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/@gar/promisify",
+    "licenseFile": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/@gar/promisify/LICENSE.md"
+  },
+  "@langchain/core@0.3.78": {
+    "licenses": "MIT",
+    "repository": "https://github.com/langchain-ai/langchainjs",
+    "publisher": "LangChain",
+    "path": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/@langchain/core",
+    "licenseFile": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/@langchain/core/LICENSE"
+  },
+  "@langchain/openai@0.6.14": {
+    "licenses": "MIT",
+    "repository": "https://github.com/langchain-ai/langchainjs",
+    "publisher": "LangChain",
+    "path": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/@langchain/openai",
+    "licenseFile": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/@langchain/openai/LICENSE"
+  },
+  "@langchain/textsplitters@0.1.0": {
+    "licenses": "MIT",
+    "repository": "https://github.com/langchain-ai/langchainjs",
+    "publisher": "LangChain",
+    "path": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/@langchain/textsplitters",
+    "licenseFile": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/@langchain/textsplitters/LICENSE"
+  },
+  "@modelcontextprotocol/sdk@1.17.1": {
+    "licenses": "MIT",
+    "repository": "https://github.com/modelcontextprotocol/typescript-sdk",
+    "publisher": "Anthropic, PBC",
+    "url": "https://anthropic.com",
+    "path": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/@modelcontextprotocol/sdk",
+    "licenseFile": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/@modelcontextprotocol/sdk/LICENSE"
+  },
+  "@noble/hashes@1.7.1": {
+    "licenses": "MIT",
+    "repository": "https://github.com/paulmillr/noble-hashes",
+    "publisher": "Paul Miller",
+    "url": "https://paulmillr.com",
+    "path": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/@noble/hashes",
+    "licenseFile": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/@noble/hashes/LICENSE"
+  },
+  "@npmcli/fs@1.1.1": {
+    "licenses": "ISC",
+    "publisher": "GitHub Inc.",
+    "path": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/@npmcli/fs",
+    "licenseFile": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/@npmcli/fs/LICENSE.md"
+  },
+  "@npmcli/move-file@1.1.2": {
+    "licenses": "MIT",
+    "repository": "https://github.com/npm/move-file",
+    "path": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/@npmcli/move-file",
+    "licenseFile": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/@npmcli/move-file/LICENSE.md"
+  },
+  "@paralleldrive/cuid2@2.2.2": {
+    "licenses": "MIT",
+    "repository": "https://github.com/ericelliott/cuid2",
+    "publisher": "Eric Elliott",
+    "path": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/@paralleldrive/cuid2",
+    "licenseFile": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/@paralleldrive/cuid2/LICENSE"
+  },
+  "@phc/format@1.0.0": {
+    "licenses": "MIT",
+    "repository": "https://github.com/simonepri/phc-format",
+    "publisher": "Simone Primarosa",
+    "email": "simonepri@outlook.com",
+    "url": "https://simoneprimarosa.com",
+    "path": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/@phc/format",
+    "licenseFile": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/@phc/format/license"
+  },
+  "@prisma/client@6.19.2": {
+    "licenses": "Apache-2.0",
+    "repository": "https://github.com/prisma/prisma",
+    "publisher": "Tim Suchanek",
+    "email": "suchanek@prisma.io",
+    "path": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/@prisma/client",
+    "licenseFile": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/@prisma/client/LICENSE"
+  },
+  "@prisma/config@6.19.2": {
+    "licenses": "Apache-2.0",
+    "repository": "https://github.com/prisma/prisma",
+    "publisher": "Alberto Schiabel",
+    "email": "schiabel@prisma.io",
+    "path": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/@prisma/config",
+    "licenseFile": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/@prisma/config/LICENSE"
+  },
+  "@prisma/debug@6.19.2": {
+    "licenses": "Apache-2.0",
+    "repository": "https://github.com/prisma/prisma",
+    "publisher": "Tim Suchanek",
+    "email": "suchanek@prisma.io",
+    "path": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/@prisma/debug",
+    "licenseFile": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/@prisma/debug/LICENSE"
+  },
+  "@prisma/engines-version@7.1.1-3.c2990dca591cba766e3b7ef5d9e8a84796e47ab7": {
+    "licenses": "Apache-2.0",
+    "repository": "https://github.com/prisma/engines-wrapper",
+    "publisher": "Tim Suchanek",
+    "email": "suchanek@prisma.io",
+    "path": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/@prisma/engines-version",
+    "licenseFile": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/@prisma/engines-version/LICENSE"
+  },
+  "@prisma/engines@6.19.2": {
+    "licenses": "Apache-2.0",
+    "repository": "https://github.com/prisma/prisma",
+    "publisher": "Tim Suchanek",
+    "email": "suchanek@prisma.io",
+    "path": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/@prisma/engines",
+    "licenseFile": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/@prisma/engines/LICENSE"
+  },
+  "@prisma/fetch-engine@6.19.2": {
+    "licenses": "Apache-2.0",
+    "repository": "https://github.com/prisma/prisma",
+    "publisher": "Tim Suchanek",
+    "email": "suchanek@prisma.io",
+    "path": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/@prisma/fetch-engine",
+    "licenseFile": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/@prisma/fetch-engine/LICENSE"
+  },
+  "@prisma/get-platform@6.19.2": {
+    "licenses": "Apache-2.0",
+    "repository": "https://github.com/prisma/prisma",
+    "publisher": "Tim Suchanek",
+    "email": "suchanek@prisma.io",
+    "path": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/@prisma/get-platform",
+    "licenseFile": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/@prisma/get-platform/LICENSE"
+  },
+  "@quixo3/prisma-session-store@3.1.13": {
+    "licenses": "MIT",
+    "repository": "https://github.com/kleydon/prisma-session-store",
+    "publisher": "Krispin Leydon",
+    "path": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/@quixo3/prisma-session-store",
+    "licenseFile": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/@quixo3/prisma-session-store/LICENSE"
+  },
+  "@smithy/types@4.3.2": {
+    "licenses": "Apache-2.0",
+    "repository": "https://github.com/smithy-lang/smithy-typescript",
+    "publisher": "AWS Smithy Team",
+    "url": "https://smithy.io",
+    "path": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/@smithy/types",
+    "licenseFile": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/@smithy/types/LICENSE"
+  },
+  "@standard-schema/spec@1.1.0": {
+    "licenses": "MIT",
+    "repository": "https://github.com/standard-schema/standard-schema",
+    "publisher": "Colin McDonnell",
+    "path": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/@standard-schema/spec",
+    "licenseFile": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/@standard-schema/spec/LICENSE"
+  },
+  "@tootallnate/once@1.1.2": {
+    "licenses": "MIT",
+    "repository": "https://github.com/TooTallNate/once",
+    "publisher": "Nathan Rajlich",
+    "email": "nathan@tootallnate.net",
+    "url": "http://n8.io/",
+    "path": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/@tootallnate/once"
+  },
+  "@types/body-parser@1.19.5": {
+    "licenses": "MIT",
+    "repository": "https://github.com/DefinitelyTyped/DefinitelyTyped",
+    "path": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/@types/body-parser",
+    "licenseFile": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/@types/body-parser/LICENSE"
+  },
+  "@types/connect@3.4.38": {
+    "licenses": "MIT",
+    "repository": "https://github.com/DefinitelyTyped/DefinitelyTyped",
+    "path": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/@types/connect",
+    "licenseFile": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/@types/connect/LICENSE"
+  },
+  "@types/express-serve-static-core@5.0.6": {
+    "licenses": "MIT",
+    "repository": "https://github.com/DefinitelyTyped/DefinitelyTyped",
+    "path": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/@types/express-serve-static-core",
+    "licenseFile": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/@types/express-serve-static-core/LICENSE"
+  },
+  "@types/express@5.0.2": {
+    "licenses": "MIT",
+    "repository": "https://github.com/DefinitelyTyped/DefinitelyTyped",
+    "path": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/@types/express",
+    "licenseFile": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/@types/express/LICENSE"
+  },
+  "@types/http-errors@2.0.4": {
+    "licenses": "MIT",
+    "repository": "https://github.com/DefinitelyTyped/DefinitelyTyped",
+    "path": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/@types/http-errors",
+    "licenseFile": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/@types/http-errors/LICENSE"
+  },
+  "@types/jsonwebtoken@9.0.9": {
+    "licenses": "MIT",
+    "repository": "https://github.com/DefinitelyTyped/DefinitelyTyped",
+    "path": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/@types/jsonwebtoken",
+    "licenseFile": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/@types/jsonwebtoken/LICENSE"
+  },
+  "@types/mime@1.3.5": {
+    "licenses": "MIT",
+    "repository": "https://github.com/DefinitelyTyped/DefinitelyTyped",
+    "path": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/@types/mime",
+    "licenseFile": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/@types/mime/LICENSE"
+  },
+  "@types/ms@2.1.0": {
+    "licenses": "MIT",
+    "repository": "https://github.com/DefinitelyTyped/DefinitelyTyped",
+    "path": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/@types/ms",
+    "licenseFile": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/@types/ms/LICENSE"
+  },
+  "@types/multer@1.4.13": {
+    "licenses": "MIT",
+    "repository": "https://github.com/DefinitelyTyped/DefinitelyTyped",
+    "path": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/@types/multer",
+    "licenseFile": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/@types/multer/LICENSE"
+  },
+  "@types/node@22.15.21": {
+    "licenses": "MIT",
+    "repository": "https://github.com/DefinitelyTyped/DefinitelyTyped",
+    "path": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/@types/node",
+    "licenseFile": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/@types/node/LICENSE"
+  },
+  "@types/qs@6.14.0": {
+    "licenses": "MIT",
+    "repository": "https://github.com/DefinitelyTyped/DefinitelyTyped",
+    "path": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/@types/qs",
+    "licenseFile": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/@types/qs/LICENSE"
+  },
+  "@types/range-parser@1.2.7": {
+    "licenses": "MIT",
+    "repository": "https://github.com/DefinitelyTyped/DefinitelyTyped",
+    "path": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/@types/range-parser",
+    "licenseFile": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/@types/range-parser/LICENSE"
+  },
+  "@types/retry@0.12.0": {
+    "licenses": "MIT",
+    "repository": "https://github.com/DefinitelyTyped/DefinitelyTyped",
+    "path": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/@types/retry",
+    "licenseFile": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/@types/retry/LICENSE"
+  },
+  "@types/send@0.17.4": {
+    "licenses": "MIT",
+    "repository": "https://github.com/DefinitelyTyped/DefinitelyTyped",
+    "path": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/@types/send",
+    "licenseFile": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/@types/send/LICENSE"
+  },
+  "@types/serve-static@1.15.7": {
+    "licenses": "MIT",
+    "repository": "https://github.com/DefinitelyTyped/DefinitelyTyped",
+    "path": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/@types/serve-static",
+    "licenseFile": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/@types/serve-static/LICENSE"
+  },
+  "@types/uuid@10.0.0": {
+    "licenses": "MIT",
+    "repository": "https://github.com/DefinitelyTyped/DefinitelyTyped",
+    "path": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/@types/uuid",
+    "licenseFile": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/@types/uuid/LICENSE"
+  },
+  "abbrev@1.1.1": {
+    "licenses": "ISC",
+    "repository": "https://github.com/isaacs/abbrev-js",
+    "publisher": "Isaac Z. Schlueter",
+    "email": "i@izs.me",
+    "path": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/abbrev",
+    "licenseFile": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/abbrev/LICENSE"
+  },
+  "accepts@2.0.0": {
+    "licenses": "MIT",
+    "repository": "https://github.com/jshttp/accepts",
+    "path": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/accepts",
+    "licenseFile": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/accepts/LICENSE"
+  },
+  "agent-base@6.0.2": {
+    "licenses": "MIT",
+    "repository": "https://github.com/TooTallNate/node-agent-base",
+    "publisher": "Nathan Rajlich",
+    "email": "nathan@tootallnate.net",
+    "url": "http://n8.io/",
+    "path": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/agent-base",
+    "licenseFile": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/agent-base/README.md"
+  },
+  "agentkeepalive@4.6.0": {
+    "licenses": "MIT",
+    "repository": "https://github.com/node-modules/agentkeepalive",
+    "publisher": "fengmk2",
+    "email": "fengmk2@gmail.com",
+    "url": "https://github.com/fengmk2",
+    "path": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/agentkeepalive",
+    "licenseFile": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/agentkeepalive/LICENSE"
+  },
+  "aggregate-error@3.1.0": {
+    "licenses": "MIT",
+    "repository": "https://github.com/sindresorhus/aggregate-error",
+    "publisher": "Sindre Sorhus",
+    "email": "sindresorhus@gmail.com",
+    "url": "sindresorhus.com",
+    "path": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/aggregate-error",
+    "licenseFile": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/aggregate-error/license"
+  },
+  "ajv@6.12.6": {
+    "licenses": "MIT",
+    "repository": "https://github.com/ajv-validator/ajv",
+    "publisher": "Evgeny Poberezkin",
+    "path": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/ajv",
+    "licenseFile": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/ajv/LICENSE"
+  },
+  "amazon-cognito-identity-js@6.3.15": {
+    "licenses": "Apache-2.0",
+    "repository": "https://github.com/aws-amplify/amplify-js",
+    "publisher": "Amazon Web Services",
+    "email": "aws@amazon.com",
+    "url": "http://aws.amazon.com",
+    "path": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/amazon-cognito-identity-js",
+    "licenseFile": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/amazon-cognito-identity-js/LICENSE.txt",
+    "noticeFile": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/amazon-cognito-identity-js/NOTICE.txt"
+  },
+  "ansi-regex@5.0.1": {
+    "licenses": "MIT",
+    "repository": "https://github.com/chalk/ansi-regex",
+    "publisher": "Sindre Sorhus",
+    "email": "sindresorhus@gmail.com",
+    "url": "sindresorhus.com",
+    "path": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/ansi-regex",
+    "licenseFile": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/ansi-regex/license"
+  },
+  "ansi-styles@4.3.0": {
+    "licenses": "MIT",
+    "repository": "https://github.com/chalk/ansi-styles",
+    "publisher": "Sindre Sorhus",
+    "email": "sindresorhus@gmail.com",
+    "url": "sindresorhus.com",
+    "path": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/ansi-styles",
+    "licenseFile": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/ansi-styles/license"
+  },
+  "ansi-styles@5.2.0": {
+    "licenses": "MIT",
+    "repository": "https://github.com/chalk/ansi-styles",
+    "publisher": "Sindre Sorhus",
+    "email": "sindresorhus@gmail.com",
+    "url": "https://sindresorhus.com",
+    "path": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/@langchain/core/node_modules/ansi-styles",
+    "licenseFile": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/@langchain/core/node_modules/ansi-styles/license"
+  },
+  "anymatch@3.1.3": {
+    "licenses": "ISC",
+    "repository": "https://github.com/micromatch/anymatch",
+    "publisher": "Elan Shanker",
+    "url": "https://github.com/es128",
+    "path": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/anymatch",
+    "licenseFile": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/anymatch/LICENSE"
+  },
+  "append-field@1.0.0": {
+    "licenses": "MIT",
+    "repository": "https://github.com/LinusU/node-append-field",
+    "publisher": "Linus Unnebäck",
+    "email": "linus@folkdatorn.se",
+    "path": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/append-field",
+    "licenseFile": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/append-field/LICENSE"
+  },
+  "aproba@2.0.0": {
+    "licenses": "ISC",
+    "repository": "https://github.com/iarna/aproba",
+    "publisher": "Rebecca Turner",
+    "email": "me@re-becca.org",
+    "path": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/aproba",
+    "licenseFile": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/aproba/LICENSE"
+  },
+  "are-we-there-yet@3.0.1": {
+    "licenses": "ISC",
+    "repository": "https://github.com/npm/are-we-there-yet",
+    "publisher": "GitHub Inc.",
+    "path": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/are-we-there-yet",
+    "licenseFile": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/are-we-there-yet/LICENSE.md"
+  },
+  "argon2@0.43.0": {
+    "licenses": "MIT",
+    "repository": "https://github.com/ranisalt/node-argon2",
+    "publisher": "Ranieri Althoff",
+    "email": "ranisalt+argon2@gmail.com",
+    "path": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/argon2",
+    "licenseFile": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/argon2/LICENSE"
+  },
+  "argparse@2.0.1": {
+    "licenses": "Python-2.0",
+    "repository": "https://github.com/nodeca/argparse",
+    "path": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/argparse",
+    "licenseFile": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/argparse/LICENSE"
+  },
+  "array-flatten@3.0.0": {
+    "licenses": "MIT",
+    "repository": "https://github.com/blakeembrey/array-flatten",
+    "publisher": "Blake Embrey",
+    "email": "hello@blakeembrey.com",
+    "url": "http://blakeembrey.me",
+    "path": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/array-flatten",
+    "licenseFile": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/array-flatten/LICENSE"
+  },
+  "balanced-match@1.0.2": {
+    "licenses": "MIT",
+    "repository": "https://github.com/juliangruber/balanced-match",
+    "publisher": "Julian Gruber",
+    "email": "mail@juliangruber.com",
+    "url": "http://juliangruber.com",
+    "path": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/balanced-match",
+    "licenseFile": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/balanced-match/LICENSE.md"
+  },
+  "base64-js@1.5.1": {
+    "licenses": "MIT",
+    "repository": "https://github.com/beatgammit/base64-js",
+    "publisher": "T. Jameson Little",
+    "email": "t.jameson.little@gmail.com",
+    "path": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/base64-js",
+    "licenseFile": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/base64-js/LICENSE"
+  },
+  "binary-extensions@2.3.0": {
+    "licenses": "MIT",
+    "repository": "https://github.com/sindresorhus/binary-extensions",
+    "publisher": "Sindre Sorhus",
+    "email": "sindresorhus@gmail.com",
+    "url": "https://sindresorhus.com",
+    "path": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/binary-extensions",
+    "licenseFile": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/binary-extensions/license"
+  },
+  "bindings@1.5.0": {
+    "licenses": "MIT",
+    "repository": "https://github.com/TooTallNate/node-bindings",
+    "publisher": "Nathan Rajlich",
+    "email": "nathan@tootallnate.net",
+    "url": "http://tootallnate.net",
+    "path": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/bindings",
+    "licenseFile": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/bindings/LICENSE.md"
+  },
+  "bl@4.1.0": {
+    "licenses": "MIT",
+    "repository": "https://github.com/rvagg/bl",
+    "path": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/bl",
+    "licenseFile": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/bl/LICENSE.md"
+  },
+  "body-parser@2.0.2": {
+    "licenses": "MIT",
+    "repository": "https://github.com/expressjs/body-parser",
+    "path": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/body-parser",
+    "licenseFile": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/body-parser/LICENSE"
+  },
+  "brace-expansion@1.1.12": {
+    "licenses": "MIT",
+    "repository": "https://github.com/juliangruber/brace-expansion",
+    "publisher": "Julian Gruber",
+    "email": "mail@juliangruber.com",
+    "url": "http://juliangruber.com",
+    "path": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/brace-expansion",
+    "licenseFile": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/brace-expansion/LICENSE"
+  },
+  "braces@3.0.3": {
+    "licenses": "MIT",
+    "repository": "https://github.com/micromatch/braces",
+    "publisher": "Jon Schlinkert",
+    "url": "https://github.com/jonschlinkert",
+    "path": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/braces",
+    "licenseFile": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/braces/LICENSE"
+  },
+  "buffer-equal-constant-time@1.0.1": {
+    "licenses": "BSD-3-Clause",
+    "repository": "https://github.com/goinstant/buffer-equal-constant-time",
+    "publisher": "GoInstant Inc., a salesforce.com company",
+    "path": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/buffer-equal-constant-time",
+    "licenseFile": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/buffer-equal-constant-time/LICENSE.txt"
+  },
+  "buffer-from@1.1.2": {
+    "licenses": "MIT",
+    "repository": "https://github.com/LinusU/buffer-from",
+    "path": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/buffer-from",
+    "licenseFile": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/buffer-from/LICENSE"
+  },
+  "buffer@4.9.2": {
+    "licenses": "MIT",
+    "repository": "https://github.com/feross/buffer",
+    "publisher": "Feross Aboukhadijeh",
+    "email": "feross@feross.org",
+    "url": "http://feross.org",
+    "path": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/amazon-cognito-identity-js/node_modules/buffer",
+    "licenseFile": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/amazon-cognito-identity-js/node_modules/buffer/LICENSE"
+  },
+  "buffer@5.7.1": {
+    "licenses": "MIT",
+    "repository": "https://github.com/feross/buffer",
+    "publisher": "Feross Aboukhadijeh",
+    "email": "feross@feross.org",
+    "url": "https://feross.org",
+    "path": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/buffer",
+    "licenseFile": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/buffer/LICENSE"
+  },
+  "busboy@1.6.0": {
+    "licenses": "MIT",
+    "repository": "https://github.com/mscdex/busboy",
+    "publisher": "Brian White",
+    "email": "mscdex@mscdex.net",
+    "path": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/busboy",
+    "licenseFile": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/busboy/LICENSE"
+  },
+  "bytes@3.1.2": {
+    "licenses": "MIT",
+    "repository": "https://github.com/visionmedia/bytes.js",
+    "publisher": "TJ Holowaychuk",
+    "email": "tj@vision-media.ca",
+    "url": "http://tjholowaychuk.com",
+    "path": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/bytes",
+    "licenseFile": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/bytes/LICENSE"
+  },
+  "c12@3.1.0": {
+    "licenses": "MIT",
+    "repository": "https://github.com/unjs/c12",
+    "path": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/c12",
+    "licenseFile": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/c12/LICENSE"
+  },
+  "cacache@15.3.0": {
+    "licenses": "ISC",
+    "repository": "https://github.com/npm/cacache",
+    "path": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/cacache",
+    "licenseFile": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/cacache/LICENSE.md"
+  },
+  "call-bind-apply-helpers@1.0.2": {
+    "licenses": "MIT",
+    "repository": "https://github.com/ljharb/call-bind-apply-helpers",
+    "publisher": "Jordan Harband",
+    "email": "ljharb@gmail.com",
+    "path": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/call-bind-apply-helpers",
+    "licenseFile": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/call-bind-apply-helpers/LICENSE"
+  },
+  "call-bound@1.0.4": {
+    "licenses": "MIT",
+    "repository": "https://github.com/ljharb/call-bound",
+    "publisher": "Jordan Harband",
+    "email": "ljharb@gmail.com",
+    "path": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/call-bound",
+    "licenseFile": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/call-bound/LICENSE"
+  },
+  "camelcase@6.3.0": {
+    "licenses": "MIT",
+    "repository": "https://github.com/sindresorhus/camelcase",
+    "publisher": "Sindre Sorhus",
+    "email": "sindresorhus@gmail.com",
+    "url": "https://sindresorhus.com",
+    "path": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/@langchain/core/node_modules/camelcase",
+    "licenseFile": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/@langchain/core/node_modules/camelcase/license"
+  },
+  "chalk@4.1.2": {
+    "licenses": "MIT",
+    "repository": "https://github.com/chalk/chalk",
+    "path": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/chalk",
+    "licenseFile": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/chalk/license"
+  },
+  "chokidar@3.6.0": {
+    "licenses": "MIT",
+    "repository": "https://github.com/paulmillr/chokidar",
+    "publisher": "Paul Miller",
+    "url": "https://paulmillr.com",
+    "path": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/chokidar",
+    "licenseFile": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/chokidar/LICENSE"
+  },
+  "chokidar@4.0.3": {
+    "licenses": "MIT",
+    "repository": "https://github.com/paulmillr/chokidar",
+    "publisher": "Paul Miller",
+    "url": "https://paulmillr.com",
+    "path": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/c12/node_modules/chokidar",
+    "licenseFile": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/c12/node_modules/chokidar/LICENSE"
+  },
+  "chownr@1.1.4": {
+    "licenses": "ISC",
+    "repository": "https://github.com/isaacs/chownr",
+    "publisher": "Isaac Z. Schlueter",
+    "email": "i@izs.me",
+    "url": "http://blog.izs.me/",
+    "path": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/tar-fs/node_modules/chownr",
+    "licenseFile": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/tar-fs/node_modules/chownr/LICENSE"
+  },
+  "chownr@2.0.0": {
+    "licenses": "ISC",
+    "repository": "https://github.com/isaacs/chownr",
+    "publisher": "Isaac Z. Schlueter",
+    "email": "i@izs.me",
+    "url": "http://blog.izs.me/",
+    "path": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/chownr",
+    "licenseFile": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/chownr/LICENSE"
+  },
+  "citty@0.1.6": {
+    "licenses": "MIT",
+    "repository": "https://github.com/unjs/citty",
+    "path": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/citty",
+    "licenseFile": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/citty/LICENSE"
+  },
+  "clean-stack@2.2.0": {
+    "licenses": "MIT",
+    "repository": "https://github.com/sindresorhus/clean-stack",
+    "publisher": "Sindre Sorhus",
+    "email": "sindresorhus@gmail.com",
+    "url": "sindresorhus.com",
+    "path": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/clean-stack",
+    "licenseFile": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/clean-stack/license"
+  },
+  "color-convert@2.0.1": {
+    "licenses": "MIT",
+    "repository": "https://github.com/Qix-/color-convert",
+    "publisher": "Heather Arthur",
+    "email": "fayearthur@gmail.com",
+    "path": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/color-convert",
+    "licenseFile": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/color-convert/LICENSE"
+  },
+  "color-name@1.1.4": {
+    "licenses": "MIT",
+    "repository": "https://github.com/colorjs/color-name",
+    "publisher": "DY",
+    "email": "dfcreative@gmail.com",
+    "path": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/color-name",
+    "licenseFile": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/color-name/LICENSE"
+  },
+  "color-support@1.1.3": {
+    "licenses": "ISC",
+    "repository": "https://github.com/isaacs/color-support",
+    "publisher": "Isaac Z. Schlueter",
+    "email": "i@izs.me",
+    "url": "http://blog.izs.me/",
+    "path": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/color-support",
+    "licenseFile": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/color-support/LICENSE"
+  },
+  "concat-map@0.0.1": {
+    "licenses": "MIT",
+    "repository": "https://github.com/substack/node-concat-map",
+    "publisher": "James Halliday",
+    "email": "mail@substack.net",
+    "url": "http://substack.net",
+    "path": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/concat-map",
+    "licenseFile": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/concat-map/LICENSE"
+  },
+  "concat-stream@2.0.0": {
+    "licenses": "MIT",
+    "repository": "https://github.com/maxogden/concat-stream",
+    "publisher": "Max Ogden",
+    "email": "max@maxogden.com",
+    "path": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/concat-stream",
+    "licenseFile": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/concat-stream/LICENSE"
+  },
+  "confbox@0.2.2": {
+    "licenses": "MIT",
+    "repository": "https://github.com/unjs/confbox",
+    "path": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/confbox",
+    "licenseFile": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/confbox/LICENSE"
+  },
+  "consola@3.4.2": {
+    "licenses": "MIT",
+    "repository": "https://github.com/unjs/consola",
+    "path": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/consola",
+    "licenseFile": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/consola/LICENSE"
+  },
+  "console-control-strings@1.1.0": {
+    "licenses": "ISC",
+    "repository": "https://github.com/iarna/console-control-strings",
+    "publisher": "Rebecca Turner",
+    "email": "me@re-becca.org",
+    "url": "http://re-becca.org/",
+    "path": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/console-control-strings",
+    "licenseFile": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/console-control-strings/LICENSE"
+  },
+  "console-table-printer@2.14.6": {
+    "licenses": "MIT",
+    "repository": "https://github.com/console-table-printer/console-table-printer",
+    "publisher": "Nahiyan Kamal",
+    "path": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/console-table-printer",
+    "licenseFile": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/console-table-printer/LICENSE"
+  },
+  "content-disposition@1.0.0": {
+    "licenses": "MIT",
+    "repository": "https://github.com/jshttp/content-disposition",
+    "publisher": "Douglas Christopher Wilson",
+    "email": "doug@somethingdoug.com",
+    "path": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/content-disposition",
+    "licenseFile": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/content-disposition/LICENSE"
+  },
+  "content-type@1.0.5": {
+    "licenses": "MIT",
+    "repository": "https://github.com/jshttp/content-type",
+    "publisher": "Douglas Christopher Wilson",
+    "email": "doug@somethingdoug.com",
+    "path": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/content-type",
+    "licenseFile": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/content-type/LICENSE"
+  },
+  "cookie-parser@1.4.7": {
+    "licenses": "MIT",
+    "repository": "https://github.com/expressjs/cookie-parser",
+    "publisher": "TJ Holowaychuk",
+    "email": "tj@vision-media.ca",
+    "url": "http://tjholowaychuk.com",
+    "path": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/cookie-parser",
+    "licenseFile": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/cookie-parser/LICENSE"
+  },
+  "cookie-signature@1.0.6": {
+    "licenses": "MIT",
+    "repository": "https://github.com/visionmedia/node-cookie-signature",
+    "publisher": "TJ Holowaychuk",
+    "email": "tj@learnboost.com",
+    "path": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/cookie-signature",
+    "licenseFile": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/cookie-signature/Readme.md"
+  },
+  "cookie-signature@1.0.7": {
+    "licenses": "MIT",
+    "repository": "https://github.com/visionmedia/node-cookie-signature",
+    "publisher": "TJ Holowaychuk",
+    "email": "tj@learnboost.com",
+    "path": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/express-session/node_modules/cookie-signature",
+    "licenseFile": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/express-session/node_modules/cookie-signature/Readme.md"
+  },
+  "cookie-signature@1.2.2": {
+    "licenses": "MIT",
+    "repository": "https://github.com/visionmedia/node-cookie-signature",
+    "publisher": "TJ Holowaychuk",
+    "email": "tj@learnboost.com",
+    "path": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/express/node_modules/cookie-signature",
+    "licenseFile": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/express/node_modules/cookie-signature/LICENSE"
+  },
+  "cookie@0.7.1": {
+    "licenses": "MIT",
+    "repository": "https://github.com/jshttp/cookie",
+    "publisher": "Roman Shtylman",
+    "email": "shtylman@gmail.com",
+    "path": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/express/node_modules/cookie",
+    "licenseFile": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/express/node_modules/cookie/LICENSE"
+  },
+  "cookie@0.7.2": {
+    "licenses": "MIT",
+    "repository": "https://github.com/jshttp/cookie",
+    "publisher": "Roman Shtylman",
+    "email": "shtylman@gmail.com",
+    "path": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/cookie",
+    "licenseFile": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/cookie/LICENSE"
+  },
+  "cors@2.8.5": {
+    "licenses": "MIT",
+    "repository": "https://github.com/expressjs/cors",
+    "publisher": "Troy Goode",
+    "email": "troygoode@gmail.com",
+    "url": "https://github.com/troygoode/",
+    "path": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/cors",
+    "licenseFile": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/cors/LICENSE"
+  },
+  "cross-spawn@7.0.6": {
+    "licenses": "MIT",
+    "repository": "https://github.com/moxystudio/node-cross-spawn",
+    "publisher": "André Cruz",
+    "email": "andre@moxy.studio",
+    "path": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/cross-spawn",
+    "licenseFile": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/cross-spawn/LICENSE"
+  },
+  "date-format@4.0.14": {
+    "licenses": "MIT",
+    "repository": "https://github.com/nomiddlename/date-format",
+    "publisher": "Gareth Jones",
+    "email": "gareth.nomiddlename@gmail.com",
+    "path": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/date-format",
+    "licenseFile": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/date-format/LICENSE"
+  },
+  "debug@2.6.9": {
+    "licenses": "MIT",
+    "repository": "https://github.com/visionmedia/debug",
+    "publisher": "TJ Holowaychuk",
+    "email": "tj@vision-media.ca",
+    "path": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/finalhandler/node_modules/debug",
+    "licenseFile": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/finalhandler/node_modules/debug/LICENSE"
+  },
+  "debug@3.1.0": {
+    "licenses": "MIT",
+    "repository": "https://github.com/visionmedia/debug",
+    "publisher": "TJ Holowaychuk",
+    "email": "tj@vision-media.ca",
+    "path": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/body-parser/node_modules/debug",
+    "licenseFile": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/body-parser/node_modules/debug/LICENSE"
+  },
+  "debug@4.3.6": {
+    "licenses": "MIT",
+    "repository": "https://github.com/debug-js/debug",
+    "publisher": "Josh Junon",
+    "url": "https://github.com/qix-",
+    "path": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/debug",
+    "licenseFile": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/debug/LICENSE"
+  },
+  "decamelize@1.2.0": {
+    "licenses": "MIT",
+    "repository": "https://github.com/sindresorhus/decamelize",
+    "publisher": "Sindre Sorhus",
+    "email": "sindresorhus@gmail.com",
+    "url": "sindresorhus.com",
+    "path": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/decamelize",
+    "licenseFile": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/decamelize/license"
+  },
+  "decompress-response@6.0.0": {
+    "licenses": "MIT",
+    "repository": "https://github.com/sindresorhus/decompress-response",
+    "publisher": "Sindre Sorhus",
+    "email": "sindresorhus@gmail.com",
+    "url": "https://sindresorhus.com",
+    "path": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/decompress-response",
+    "licenseFile": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/decompress-response/license"
+  },
+  "deep-extend@0.6.0": {
+    "licenses": "MIT",
+    "repository": "https://github.com/unclechu/node-deep-extend",
+    "publisher": "Viacheslav Lotsmanov",
+    "email": "lotsmanov89@gmail.com",
+    "path": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/deep-extend",
+    "licenseFile": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/deep-extend/LICENSE"
+  },
+  "deepmerge-ts@7.1.5": {
+    "licenses": "BSD-3-Clause",
+    "repository": "https://github.com/RebeccaStevens/deepmerge-ts",
+    "publisher": "Rebecca Stevens",
+    "email": "rebecca.stevens@outlook.co.nz",
+    "path": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/deepmerge-ts",
+    "licenseFile": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/deepmerge-ts/LICENSE"
+  },
+  "defu@6.1.4": {
+    "licenses": "MIT",
+    "repository": "https://github.com/unjs/defu",
+    "path": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/defu",
+    "licenseFile": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/defu/LICENSE"
+  },
+  "delegates@1.0.0": {
+    "licenses": "MIT",
+    "repository": "https://github.com/visionmedia/node-delegates",
+    "path": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/delegates",
+    "licenseFile": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/delegates/License"
+  },
+  "depd@2.0.0": {
+    "licenses": "MIT",
+    "repository": "https://github.com/dougwilson/nodejs-depd",
+    "publisher": "Douglas Christopher Wilson",
+    "email": "doug@somethingdoug.com",
+    "path": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/depd",
+    "licenseFile": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/depd/LICENSE"
+  },
+  "destr@2.0.5": {
+    "licenses": "MIT",
+    "repository": "https://github.com/unjs/destr",
+    "path": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/destr",
+    "licenseFile": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/destr/LICENSE"
+  },
+  "destroy@1.2.0": {
+    "licenses": "MIT",
+    "repository": "https://github.com/stream-utils/destroy",
+    "publisher": "Jonathan Ong",
+    "email": "me@jongleberry.com",
+    "url": "http://jongleberry.com",
+    "path": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/destroy",
+    "licenseFile": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/destroy/LICENSE"
+  },
+  "detect-libc@2.0.4": {
+    "licenses": "Apache-2.0",
+    "repository": "https://github.com/lovell/detect-libc",
+    "publisher": "Lovell Fuller",
+    "email": "npm@lovell.info",
+    "path": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/detect-libc",
+    "licenseFile": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/detect-libc/LICENSE"
+  },
+  "dotenv@16.6.1": {
+    "licenses": "BSD-2-Clause",
+    "repository": "https://github.com/motdotla/dotenv",
+    "path": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/dotenv",
+    "licenseFile": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/dotenv/LICENSE"
+  },
+  "dunder-proto@1.0.1": {
+    "licenses": "MIT",
+    "repository": "https://github.com/es-shims/dunder-proto",
+    "publisher": "Jordan Harband",
+    "email": "ljharb@gmail.com",
+    "path": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/dunder-proto",
+    "licenseFile": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/dunder-proto/LICENSE"
+  },
+  "ecdsa-sig-formatter@1.0.11": {
+    "licenses": "Apache-2.0",
+    "repository": "https://github.com/Brightspace/node-ecdsa-sig-formatter",
+    "publisher": "D2L Corporation",
+    "path": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/ecdsa-sig-formatter",
+    "licenseFile": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/ecdsa-sig-formatter/LICENSE"
+  },
+  "ee-first@1.1.1": {
+    "licenses": "MIT",
+    "repository": "https://github.com/jonathanong/ee-first",
+    "publisher": "Jonathan Ong",
+    "email": "me@jongleberry.com",
+    "url": "http://jongleberry.com",
+    "path": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/ee-first",
+    "licenseFile": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/ee-first/LICENSE"
+  },
+  "effect@3.18.4": {
+    "licenses": "MIT",
+    "repository": "https://github.com/Effect-TS/effect",
+    "path": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/effect",
+    "licenseFile": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/effect/LICENSE"
+  },
+  "emoji-regex@8.0.0": {
+    "licenses": "MIT",
+    "repository": "https://github.com/mathiasbynens/emoji-regex",
+    "publisher": "Mathias Bynens",
+    "url": "https://mathiasbynens.be/",
+    "path": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/emoji-regex",
+    "licenseFile": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/emoji-regex/LICENSE-MIT.txt"
+  },
+  "empathic@2.0.0": {
+    "licenses": "MIT",
+    "repository": "https://github.com/lukeed/empathic",
+    "publisher": "Luke Edwards",
+    "email": "luke.edwards05@gmail.com",
+    "url": "https://lukeed.com",
+    "path": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/empathic",
+    "licenseFile": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/empathic/license"
+  },
+  "encodeurl@1.0.2": {
+    "licenses": "MIT",
+    "repository": "https://github.com/pillarjs/encodeurl",
+    "path": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/finalhandler/node_modules/encodeurl",
+    "licenseFile": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/finalhandler/node_modules/encodeurl/LICENSE"
+  },
+  "encodeurl@2.0.0": {
+    "licenses": "MIT",
+    "repository": "https://github.com/pillarjs/encodeurl",
+    "path": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/encodeurl",
+    "licenseFile": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/encodeurl/LICENSE"
+  },
+  "encoding@0.1.13": {
+    "licenses": "MIT",
+    "repository": "https://github.com/andris9/encoding",
+    "publisher": "Andris Reinman",
+    "path": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/encoding",
+    "licenseFile": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/encoding/LICENSE"
+  },
+  "end-of-stream@1.4.4": {
+    "licenses": "MIT",
+    "repository": "https://github.com/mafintosh/end-of-stream",
+    "publisher": "Mathias Buus",
+    "email": "mathiasbuus@gmail.com",
+    "path": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/end-of-stream",
+    "licenseFile": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/end-of-stream/LICENSE"
+  },
+  "env-paths@2.2.1": {
+    "licenses": "MIT",
+    "repository": "https://github.com/sindresorhus/env-paths",
+    "publisher": "Sindre Sorhus",
+    "email": "sindresorhus@gmail.com",
+    "url": "sindresorhus.com",
+    "path": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/env-paths",
+    "licenseFile": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/env-paths/license"
+  },
+  "err-code@2.0.3": {
+    "licenses": "MIT",
+    "repository": "https://github.com/IndigoUnited/js-err-code",
+    "publisher": "IndigoUnited",
+    "email": "hello@indigounited.com",
+    "url": "http://indigounited.com",
+    "path": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/err-code",
+    "licenseFile": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/err-code/README.md"
+  },
+  "es-define-property@1.0.1": {
+    "licenses": "MIT",
+    "repository": "https://github.com/ljharb/es-define-property",
+    "publisher": "Jordan Harband",
+    "email": "ljharb@gmail.com",
+    "path": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/es-define-property",
+    "licenseFile": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/es-define-property/LICENSE"
+  },
+  "es-errors@1.3.0": {
+    "licenses": "MIT",
+    "repository": "https://github.com/ljharb/es-errors",
+    "publisher": "Jordan Harband",
+    "email": "ljharb@gmail.com",
+    "path": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/es-errors",
+    "licenseFile": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/es-errors/LICENSE"
+  },
+  "es-object-atoms@1.1.1": {
+    "licenses": "MIT",
+    "repository": "https://github.com/ljharb/es-object-atoms",
+    "publisher": "Jordan Harband",
+    "email": "ljharb@gmail.com",
+    "path": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/es-object-atoms",
+    "licenseFile": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/es-object-atoms/LICENSE"
+  },
+  "escape-html@1.0.3": {
+    "licenses": "MIT",
+    "repository": "https://github.com/component/escape-html",
+    "path": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/escape-html",
+    "licenseFile": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/escape-html/LICENSE"
+  },
+  "etag@1.8.1": {
+    "licenses": "MIT",
+    "repository": "https://github.com/jshttp/etag",
+    "path": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/etag",
+    "licenseFile": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/etag/LICENSE"
+  },
+  "eventemitter3@4.0.7": {
+    "licenses": "MIT",
+    "repository": "https://github.com/primus/eventemitter3",
+    "publisher": "Arnout Kazemier",
+    "path": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/eventemitter3",
+    "licenseFile": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/eventemitter3/LICENSE"
+  },
+  "eventsource-parser@3.0.2": {
+    "licenses": "MIT",
+    "repository": "https://github.com/rexxars/eventsource-parser",
+    "publisher": "Espen Hovlandsdal",
+    "email": "espen@hovlandsdal.com",
+    "path": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/eventsource-parser",
+    "licenseFile": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/eventsource-parser/LICENSE"
+  },
+  "eventsource@3.0.7": {
+    "licenses": "MIT",
+    "repository": "git://git@github.com/EventSource/eventsource",
+    "publisher": "Espen Hovlandsdal",
+    "email": "espen@hovlandsdal.com",
+    "path": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/eventsource",
+    "licenseFile": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/eventsource/LICENSE"
+  },
+  "expand-template@2.0.3": {
+    "licenses": "(MIT OR WTFPL)",
+    "repository": "https://github.com/ralphtheninja/expand-template",
+    "publisher": "LM",
+    "email": "ralphtheninja@riseup.net",
+    "path": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/expand-template",
+    "licenseFile": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/expand-template/LICENSE"
+  },
+  "express-rate-limit@7.5.0": {
+    "licenses": "MIT",
+    "repository": "https://github.com/express-rate-limit/express-rate-limit",
+    "publisher": "Nathan Friedly",
+    "url": "http://nfriedly.com/",
+    "path": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/express-rate-limit",
+    "licenseFile": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/express-rate-limit/license.md"
+  },
+  "express-session@1.18.2": {
+    "licenses": "MIT",
+    "repository": "https://github.com/expressjs/session",
+    "publisher": "TJ Holowaychuk",
+    "email": "tj@vision-media.ca",
+    "url": "http://tjholowaychuk.com",
+    "path": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/express-session",
+    "licenseFile": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/express-session/LICENSE"
+  },
+  "express@5.0.1": {
+    "licenses": "MIT",
+    "repository": "https://github.com/expressjs/express",
+    "publisher": "TJ Holowaychuk",
+    "email": "tj@vision-media.ca",
+    "path": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/express",
+    "licenseFile": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/express/LICENSE"
+  },
+  "exsolve@1.0.8": {
+    "licenses": "MIT",
+    "repository": "https://github.com/unjs/exsolve",
+    "path": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/exsolve",
+    "licenseFile": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/exsolve/LICENSE"
+  },
+  "fast-base64-decode@1.0.0": {
+    "licenses": "MIT",
+    "repository": "https://github.com/LinusU/fast-base64-decode",
+    "path": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/fast-base64-decode",
+    "licenseFile": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/fast-base64-decode/readme.md"
+  },
+  "fast-check@3.23.2": {
+    "licenses": "MIT",
+    "repository": "https://github.com/dubzzz/fast-check",
+    "publisher": "Nicolas DUBIEN",
+    "email": "github@dubien.org",
+    "path": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/fast-check",
+    "licenseFile": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/fast-check/LICENSE"
+  },
+  "fast-deep-equal@3.1.3": {
+    "licenses": "MIT",
+    "repository": "https://github.com/epoberezkin/fast-deep-equal",
+    "publisher": "Evgeny Poberezkin",
+    "path": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/fast-deep-equal",
+    "licenseFile": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/fast-deep-equal/LICENSE"
+  },
+  "fast-json-stable-stringify@2.1.0": {
+    "licenses": "MIT",
+    "repository": "https://github.com/epoberezkin/fast-json-stable-stringify",
+    "publisher": "James Halliday",
+    "email": "mail@substack.net",
+    "url": "http://substack.net",
+    "path": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/fast-json-stable-stringify",
+    "licenseFile": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/fast-json-stable-stringify/LICENSE"
+  },
+  "fast-levenshtein@3.0.0": {
+    "licenses": "MIT",
+    "repository": "https://github.com/hiddentao/fast-levenshtein",
+    "publisher": "Ramesh Nair",
+    "email": "ram@hiddentao.com",
+    "url": "http://www.hiddentao.com/",
+    "path": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/fast-levenshtein",
+    "licenseFile": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/fast-levenshtein/LICENSE.md"
+  },
+  "fastest-levenshtein@1.0.16": {
+    "licenses": "MIT",
+    "repository": "https://github.com/ka-weihe/fastest-levenshtein",
+    "publisher": "Kasper U. Weihe",
+    "path": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/fastest-levenshtein",
+    "licenseFile": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/fastest-levenshtein/LICENSE.md"
+  },
+  "file-uri-to-path@1.0.0": {
+    "licenses": "MIT",
+    "repository": "https://github.com/TooTallNate/file-uri-to-path",
+    "publisher": "Nathan Rajlich",
+    "email": "nathan@tootallnate.net",
+    "url": "http://n8.io/",
+    "path": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/file-uri-to-path",
+    "licenseFile": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/file-uri-to-path/LICENSE"
+  },
+  "fill-range@7.1.1": {
+    "licenses": "MIT",
+    "repository": "https://github.com/jonschlinkert/fill-range",
+    "publisher": "Jon Schlinkert",
+    "url": "https://github.com/jonschlinkert",
+    "path": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/fill-range",
+    "licenseFile": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/fill-range/LICENSE"
+  },
+  "finalhandler@2.0.0": {
+    "licenses": "MIT",
+    "repository": "https://github.com/pillarjs/finalhandler",
+    "publisher": "Douglas Christopher Wilson",
+    "email": "doug@somethingdoug.com",
+    "path": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/finalhandler",
+    "licenseFile": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/finalhandler/LICENSE"
+  },
+  "flatted@3.3.2": {
+    "licenses": "ISC",
+    "repository": "https://github.com/WebReflection/flatted",
+    "publisher": "Andrea Giammarchi",
+    "path": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/flatted",
+    "licenseFile": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/flatted/LICENSE"
+  },
+  "forwarded@0.2.0": {
+    "licenses": "MIT",
+    "repository": "https://github.com/jshttp/forwarded",
+    "path": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/forwarded",
+    "licenseFile": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/forwarded/LICENSE"
+  },
+  "fresh@0.5.2": {
+    "licenses": "MIT",
+    "repository": "https://github.com/jshttp/fresh",
+    "publisher": "TJ Holowaychuk",
+    "email": "tj@vision-media.ca",
+    "url": "http://tjholowaychuk.com",
+    "path": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/send/node_modules/fresh",
+    "licenseFile": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/send/node_modules/fresh/LICENSE"
+  },
+  "fresh@2.0.0": {
+    "licenses": "MIT",
+    "repository": "https://github.com/jshttp/fresh",
+    "publisher": "TJ Holowaychuk",
+    "email": "tj@vision-media.ca",
+    "url": "http://tjholowaychuk.com",
+    "path": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/fresh",
+    "licenseFile": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/fresh/LICENSE"
+  },
+  "fs-constants@1.0.0": {
+    "licenses": "MIT",
+    "repository": "https://github.com/mafintosh/fs-constants",
+    "publisher": "Mathias Buus",
+    "url": "@mafintosh",
+    "path": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/fs-constants",
+    "licenseFile": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/fs-constants/LICENSE"
+  },
+  "fs-extra@8.1.0": {
+    "licenses": "MIT",
+    "repository": "https://github.com/jprichardson/node-fs-extra",
+    "publisher": "JP Richardson",
+    "email": "jprichardson@gmail.com",
+    "path": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/fs-extra",
+    "licenseFile": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/fs-extra/LICENSE"
+  },
+  "fs-minipass@2.1.0": {
+    "licenses": "ISC",
+    "repository": "https://github.com/npm/fs-minipass",
+    "publisher": "Isaac Z. Schlueter",
+    "email": "i@izs.me",
+    "url": "http://blog.izs.me/",
+    "path": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/fs-minipass",
+    "licenseFile": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/fs-minipass/LICENSE"
+  },
+  "fs.realpath@1.0.0": {
+    "licenses": "ISC",
+    "repository": "https://github.com/isaacs/fs.realpath",
+    "publisher": "Isaac Z. Schlueter",
+    "email": "i@izs.me",
+    "url": "http://blog.izs.me/",
+    "path": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/fs.realpath",
+    "licenseFile": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/fs.realpath/LICENSE"
+  },
+  "fsevents@2.3.3": {
+    "licenses": "MIT",
+    "repository": "https://github.com/fsevents/fsevents",
+    "path": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/fsevents",
+    "licenseFile": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/fsevents/LICENSE"
+  },
+  "function-bind@1.1.2": {
+    "licenses": "MIT",
+    "repository": "https://github.com/Raynos/function-bind",
+    "publisher": "Raynos",
+    "email": "raynos2@gmail.com",
+    "path": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/function-bind",
+    "licenseFile": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/function-bind/LICENSE"
+  },
+  "gauge@4.0.4": {
+    "licenses": "ISC",
+    "repository": "https://github.com/npm/gauge",
+    "publisher": "GitHub Inc.",
+    "path": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/gauge",
+    "licenseFile": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/gauge/LICENSE.md"
+  },
+  "get-intrinsic@1.3.0": {
+    "licenses": "MIT",
+    "repository": "https://github.com/ljharb/get-intrinsic",
+    "publisher": "Jordan Harband",
+    "email": "ljharb@gmail.com",
+    "path": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/get-intrinsic",
+    "licenseFile": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/get-intrinsic/LICENSE"
+  },
+  "get-proto@1.0.1": {
+    "licenses": "MIT",
+    "repository": "https://github.com/ljharb/get-proto",
+    "publisher": "Jordan Harband",
+    "email": "ljharb@gmail.com",
+    "path": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/get-proto",
+    "licenseFile": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/get-proto/LICENSE"
+  },
+  "giget@2.0.0": {
+    "licenses": "MIT",
+    "repository": "https://github.com/unjs/giget",
+    "path": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/giget",
+    "licenseFile": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/giget/LICENSE"
+  },
+  "github-from-package@0.0.0": {
+    "licenses": "MIT",
+    "repository": "https://github.com/substack/github-from-package",
+    "publisher": "James Halliday",
+    "email": "mail@substack.net",
+    "url": "http://substack.net",
+    "path": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/github-from-package",
+    "licenseFile": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/github-from-package/LICENSE"
+  },
+  "glob-parent@5.1.2": {
+    "licenses": "ISC",
+    "repository": "https://github.com/gulpjs/glob-parent",
+    "publisher": "Gulp Team",
+    "email": "team@gulpjs.com",
+    "url": "https://gulpjs.com/",
+    "path": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/glob-parent",
+    "licenseFile": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/glob-parent/LICENSE"
+  },
+  "glob@7.2.3": {
+    "licenses": "ISC",
+    "repository": "https://github.com/isaacs/node-glob",
+    "publisher": "Isaac Z. Schlueter",
+    "email": "i@izs.me",
+    "url": "http://blog.izs.me/",
+    "path": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/glob",
+    "licenseFile": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/glob/LICENSE"
+  },
+  "gopd@1.2.0": {
+    "licenses": "MIT",
+    "repository": "https://github.com/ljharb/gopd",
+    "publisher": "Jordan Harband",
+    "email": "ljharb@gmail.com",
+    "path": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/gopd",
+    "licenseFile": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/gopd/LICENSE"
+  },
+  "graceful-fs@4.2.11": {
+    "licenses": "ISC",
+    "repository": "https://github.com/isaacs/node-graceful-fs",
+    "path": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/graceful-fs",
+    "licenseFile": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/graceful-fs/LICENSE"
+  },
+  "has-flag@3.0.0": {
+    "licenses": "MIT",
+    "repository": "https://github.com/sindresorhus/has-flag",
+    "publisher": "Sindre Sorhus",
+    "email": "sindresorhus@gmail.com",
+    "url": "sindresorhus.com",
+    "path": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/has-flag",
+    "licenseFile": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/has-flag/license"
+  },
+  "has-flag@4.0.0": {
+    "licenses": "MIT",
+    "repository": "https://github.com/sindresorhus/has-flag",
+    "publisher": "Sindre Sorhus",
+    "email": "sindresorhus@gmail.com",
+    "url": "sindresorhus.com",
+    "path": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/chalk/node_modules/has-flag",
+    "licenseFile": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/chalk/node_modules/has-flag/license"
+  },
+  "has-symbols@1.1.0": {
+    "licenses": "MIT",
+    "repository": "https://github.com/inspect-js/has-symbols",
+    "publisher": "Jordan Harband",
+    "email": "ljharb@gmail.com",
+    "url": "http://ljharb.codes",
+    "path": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/has-symbols",
+    "licenseFile": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/has-symbols/LICENSE"
+  },
+  "has-unicode@2.0.1": {
+    "licenses": "ISC",
+    "repository": "https://github.com/iarna/has-unicode",
+    "publisher": "Rebecca Turner",
+    "email": "me@re-becca.org",
+    "path": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/has-unicode",
+    "licenseFile": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/has-unicode/LICENSE"
+  },
+  "hasown@2.0.2": {
+    "licenses": "MIT",
+    "repository": "https://github.com/inspect-js/hasOwn",
+    "publisher": "Jordan Harband",
+    "email": "ljharb@gmail.com",
+    "path": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/hasown",
+    "licenseFile": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/hasown/LICENSE"
+  },
+  "helmet@8.1.0": {
+    "licenses": "MIT",
+    "repository": "https://github.com/helmetjs/helmet",
+    "publisher": "Adam Baldwin",
+    "email": "adam@npmjs.com",
+    "url": "https://evilpacket.net",
+    "path": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/helmet",
+    "licenseFile": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/helmet/LICENSE"
+  },
+  "http-cache-semantics@4.2.0": {
+    "licenses": "BSD-2-Clause",
+    "repository": "https://github.com/kornelski/http-cache-semantics",
+    "publisher": "Kornel Lesiński",
+    "email": "npms2@geekhood.net",
+    "url": "https://kornel.ski/",
+    "path": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/http-cache-semantics",
+    "licenseFile": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/http-cache-semantics/LICENSE"
+  },
+  "http-errors@2.0.0": {
+    "licenses": "MIT",
+    "repository": "https://github.com/jshttp/http-errors",
+    "publisher": "Jonathan Ong",
+    "email": "me@jongleberry.com",
+    "url": "http://jongleberry.com",
+    "path": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/http-errors",
+    "licenseFile": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/http-errors/LICENSE"
+  },
+  "http-proxy-agent@4.0.1": {
+    "licenses": "MIT",
+    "repository": "https://github.com/TooTallNate/node-http-proxy-agent",
+    "publisher": "Nathan Rajlich",
+    "email": "nathan@tootallnate.net",
+    "url": "http://n8.io/",
+    "path": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/http-proxy-agent",
+    "licenseFile": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/http-proxy-agent/README.md"
+  },
+  "https-proxy-agent@5.0.1": {
+    "licenses": "MIT",
+    "repository": "https://github.com/TooTallNate/node-https-proxy-agent",
+    "publisher": "Nathan Rajlich",
+    "email": "nathan@tootallnate.net",
+    "url": "http://n8.io/",
+    "path": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/https-proxy-agent",
+    "licenseFile": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/https-proxy-agent/README.md"
+  },
+  "humanize-ms@1.2.1": {
+    "licenses": "MIT",
+    "repository": "https://github.com/node-modules/humanize-ms",
+    "publisher": "dead-horse",
+    "email": "dead_horse@qq.com",
+    "url": "http://deadhorse.me",
+    "path": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/humanize-ms",
+    "licenseFile": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/humanize-ms/LICENSE"
+  },
+  "iconv-lite@0.5.2": {
+    "licenses": "MIT",
+    "repository": "https://github.com/ashtuchkin/iconv-lite",
+    "publisher": "Alexander Shtuchkin",
+    "email": "ashtuchkin@gmail.com",
+    "path": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/iconv-lite",
+    "licenseFile": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/iconv-lite/LICENSE"
+  },
+  "iconv-lite@0.6.3": {
+    "licenses": "MIT",
+    "repository": "https://github.com/ashtuchkin/iconv-lite",
+    "publisher": "Alexander Shtuchkin",
+    "email": "ashtuchkin@gmail.com",
+    "path": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/raw-body/node_modules/iconv-lite",
+    "licenseFile": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/raw-body/node_modules/iconv-lite/LICENSE"
+  },
+  "ieee754@1.2.1": {
+    "licenses": "BSD-3-Clause",
+    "repository": "https://github.com/feross/ieee754",
+    "publisher": "Feross Aboukhadijeh",
+    "email": "feross@feross.org",
+    "url": "https://feross.org",
+    "path": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/ieee754",
+    "licenseFile": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/ieee754/LICENSE"
+  },
+  "ignore-by-default@1.0.1": {
+    "licenses": "ISC",
+    "repository": "https://github.com/novemberborn/ignore-by-default",
+    "publisher": "Mark Wubben",
+    "url": "https://novemberborn.net/",
+    "path": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/ignore-by-default",
+    "licenseFile": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/ignore-by-default/LICENSE"
+  },
+  "imurmurhash@0.1.4": {
+    "licenses": "MIT",
+    "repository": "https://github.com/jensyt/imurmurhash-js",
+    "publisher": "Jens Taylor",
+    "email": "jensyt@gmail.com",
+    "url": "https://github.com/homebrewing",
+    "path": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/imurmurhash",
+    "licenseFile": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/imurmurhash/README.md"
+  },
+  "indent-string@4.0.0": {
+    "licenses": "MIT",
+    "repository": "https://github.com/sindresorhus/indent-string",
+    "publisher": "Sindre Sorhus",
+    "email": "sindresorhus@gmail.com",
+    "url": "sindresorhus.com",
+    "path": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/indent-string",
+    "licenseFile": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/indent-string/license"
+  },
+  "infer-owner@1.0.4": {
+    "licenses": "ISC",
+    "repository": "https://github.com/npm/infer-owner",
+    "publisher": "Isaac Z. Schlueter",
+    "email": "i@izs.me",
+    "url": "https://izs.me",
+    "path": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/infer-owner",
+    "licenseFile": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/infer-owner/LICENSE"
+  },
+  "inflight@1.0.6": {
+    "licenses": "ISC",
+    "repository": "https://github.com/npm/inflight",
+    "publisher": "Isaac Z. Schlueter",
+    "email": "i@izs.me",
+    "url": "http://blog.izs.me/",
+    "path": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/inflight",
+    "licenseFile": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/inflight/LICENSE"
+  },
+  "inherits@2.0.4": {
+    "licenses": "ISC",
+    "repository": "https://github.com/isaacs/inherits",
+    "path": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/inherits",
+    "licenseFile": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/inherits/LICENSE"
+  },
+  "ini@1.3.8": {
+    "licenses": "ISC",
+    "repository": "https://github.com/isaacs/ini",
+    "publisher": "Isaac Z. Schlueter",
+    "email": "i@izs.me",
+    "url": "http://blog.izs.me/",
+    "path": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/ini",
+    "licenseFile": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/ini/LICENSE"
+  },
+  "ip-address@9.0.5": {
+    "licenses": "MIT",
+    "repository": "https://github.com/beaugunderson/ip-address",
+    "publisher": "Beau Gunderson",
+    "email": "beau@beaugunderson.com",
+    "url": "https://beaugunderson.com/",
+    "path": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/ip-address",
+    "licenseFile": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/ip-address/LICENSE"
+  },
+  "ipaddr.js@1.9.1": {
+    "licenses": "MIT",
+    "repository": "https://github.com/whitequark/ipaddr.js",
+    "publisher": "whitequark",
+    "email": "whitequark@whitequark.org",
+    "path": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/ipaddr.js",
+    "licenseFile": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/ipaddr.js/LICENSE"
+  },
+  "is-binary-path@2.1.0": {
+    "licenses": "MIT",
+    "repository": "https://github.com/sindresorhus/is-binary-path",
+    "publisher": "Sindre Sorhus",
+    "email": "sindresorhus@gmail.com",
+    "url": "sindresorhus.com",
+    "path": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/is-binary-path",
+    "licenseFile": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/is-binary-path/license"
+  },
+  "is-extglob@2.1.1": {
+    "licenses": "MIT",
+    "repository": "https://github.com/jonschlinkert/is-extglob",
+    "publisher": "Jon Schlinkert",
+    "url": "https://github.com/jonschlinkert",
+    "path": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/is-extglob",
+    "licenseFile": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/is-extglob/LICENSE"
+  },
+  "is-fullwidth-code-point@3.0.0": {
+    "licenses": "MIT",
+    "repository": "https://github.com/sindresorhus/is-fullwidth-code-point",
+    "publisher": "Sindre Sorhus",
+    "email": "sindresorhus@gmail.com",
+    "url": "sindresorhus.com",
+    "path": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/is-fullwidth-code-point",
+    "licenseFile": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/is-fullwidth-code-point/license"
+  },
+  "is-glob@4.0.3": {
+    "licenses": "MIT",
+    "repository": "https://github.com/micromatch/is-glob",
+    "publisher": "Jon Schlinkert",
+    "url": "https://github.com/jonschlinkert",
+    "path": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/is-glob",
+    "licenseFile": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/is-glob/LICENSE"
+  },
+  "is-lambda@1.0.1": {
+    "licenses": "MIT",
+    "repository": "https://github.com/watson/is-lambda",
+    "publisher": "Thomas Watson Steen",
+    "email": "w@tson.dk",
+    "url": "https://twitter.com/wa7son",
+    "path": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/is-lambda",
+    "licenseFile": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/is-lambda/LICENSE"
+  },
+  "is-number@7.0.0": {
+    "licenses": "MIT",
+    "repository": "https://github.com/jonschlinkert/is-number",
+    "publisher": "Jon Schlinkert",
+    "url": "https://github.com/jonschlinkert",
+    "path": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/is-number",
+    "licenseFile": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/is-number/LICENSE"
+  },
+  "is-promise@4.0.0": {
+    "licenses": "MIT",
+    "repository": "https://github.com/then/is-promise",
+    "publisher": "ForbesLindesay",
+    "path": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/is-promise",
+    "licenseFile": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/is-promise/LICENSE"
+  },
+  "isarray@1.0.0": {
+    "licenses": "MIT",
+    "repository": "https://github.com/juliangruber/isarray",
+    "publisher": "Julian Gruber",
+    "email": "mail@juliangruber.com",
+    "url": "http://juliangruber.com",
+    "path": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/amazon-cognito-identity-js/node_modules/isarray",
+    "licenseFile": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/amazon-cognito-identity-js/node_modules/isarray/README.md"
+  },
+  "isexe@2.0.0": {
+    "licenses": "ISC",
+    "repository": "https://github.com/isaacs/isexe",
+    "publisher": "Isaac Z. Schlueter",
+    "email": "i@izs.me",
+    "url": "http://blog.izs.me/",
+    "path": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/isexe",
+    "licenseFile": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/isexe/LICENSE"
+  },
+  "isomorphic-unfetch@3.1.0": {
+    "licenses": "MIT",
+    "repository": "https://github.com/developit/unfetch",
+    "path": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/isomorphic-unfetch",
+    "licenseFile": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/isomorphic-unfetch/readme.md"
+  },
+  "jiti@2.6.1": {
+    "licenses": "MIT",
+    "repository": "https://github.com/unjs/jiti",
+    "path": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/jiti",
+    "licenseFile": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/jiti/LICENSE"
+  },
+  "js-cookie@2.2.1": {
+    "licenses": "MIT",
+    "repository": "https://github.com/js-cookie/js-cookie",
+    "publisher": "Klaus Hartl",
+    "path": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/js-cookie",
+    "licenseFile": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/js-cookie/LICENSE"
+  },
+  "js-tiktoken@1.0.21": {
+    "licenses": "MIT",
+    "repository": "https://github.com/dqbd/tiktoken",
+    "path": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/js-tiktoken",
+    "licenseFile": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/js-tiktoken/README.md"
+  },
+  "js-yaml@4.1.0": {
+    "licenses": "MIT",
+    "repository": "https://github.com/nodeca/js-yaml",
+    "publisher": "Vladimir Zapparov",
+    "email": "dervus.grim@gmail.com",
+    "path": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/js-yaml",
+    "licenseFile": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/js-yaml/LICENSE"
+  },
+  "jsbn@1.1.0": {
+    "licenses": "MIT",
+    "repository": "https://github.com/andyperlitch/jsbn",
+    "publisher": "Tom Wu",
+    "path": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/jsbn",
+    "licenseFile": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/jsbn/LICENSE"
+  },
+  "json-schema-traverse@0.4.1": {
+    "licenses": "MIT",
+    "repository": "https://github.com/epoberezkin/json-schema-traverse",
+    "publisher": "Evgeny Poberezkin",
+    "path": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/json-schema-traverse",
+    "licenseFile": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/json-schema-traverse/LICENSE"
+  },
+  "jsonfile@4.0.0": {
+    "licenses": "MIT",
+    "repository": "https://github.com/jprichardson/node-jsonfile",
+    "publisher": "JP Richardson",
+    "email": "jprichardson@gmail.com",
+    "path": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/jsonfile",
+    "licenseFile": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/jsonfile/LICENSE"
+  },
+  "jsonpointer@5.0.1": {
+    "licenses": "MIT",
+    "repository": "https://github.com/janl/node-jsonpointer",
+    "publisher": "Jan Lehnardt",
+    "email": "jan@apache.org",
+    "path": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/jsonpointer",
+    "licenseFile": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/jsonpointer/LICENSE.md"
+  },
+  "jsonwebtoken@9.0.2": {
+    "licenses": "MIT",
+    "repository": "https://github.com/auth0/node-jsonwebtoken",
+    "publisher": "auth0",
+    "path": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/jsonwebtoken",
+    "licenseFile": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/jsonwebtoken/LICENSE"
+  },
+  "jwa@1.4.2": {
+    "licenses": "MIT",
+    "repository": "https://github.com/brianloveswords/node-jwa",
+    "publisher": "Brian J. Brennan",
+    "email": "brianloveswords@gmail.com",
+    "path": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/jwa",
+    "licenseFile": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/jwa/LICENSE"
+  },
+  "jws@3.2.2": {
+    "licenses": "MIT",
+    "repository": "https://github.com/brianloveswords/node-jws",
+    "publisher": "Brian J Brennan",
+    "path": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/jws",
+    "licenseFile": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/jws/LICENSE"
+  },
+  "langchain@0.3.35": {
+    "licenses": "MIT",
+    "repository": "https://github.com/langchain-ai/langchainjs",
+    "publisher": "LangChain",
+    "path": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/langchain",
+    "licenseFile": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/langchain/LICENSE"
+  },
+  "langsmith@0.3.72": {
+    "licenses": "MIT",
+    "repository": "https://github.com/langchain-ai/langsmith-sdk",
+    "publisher": "LangChain",
+    "path": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/langsmith",
+    "licenseFile": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/langsmith/README.md"
+  },
+  "lodash.includes@4.3.0": {
+    "licenses": "MIT",
+    "repository": "https://github.com/lodash/lodash",
+    "publisher": "John-David Dalton",
+    "email": "john.david.dalton@gmail.com",
+    "url": "http://allyoucanleet.com/",
+    "path": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/lodash.includes",
+    "licenseFile": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/lodash.includes/LICENSE"
+  },
+  "lodash.isboolean@3.0.3": {
+    "licenses": "MIT",
+    "repository": "https://github.com/lodash/lodash",
+    "publisher": "John-David Dalton",
+    "email": "john.david.dalton@gmail.com",
+    "url": "http://allyoucanleet.com/",
+    "path": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/lodash.isboolean",
+    "licenseFile": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/lodash.isboolean/LICENSE"
+  },
+  "lodash.isinteger@4.0.4": {
+    "licenses": "MIT",
+    "repository": "https://github.com/lodash/lodash",
+    "publisher": "John-David Dalton",
+    "email": "john.david.dalton@gmail.com",
+    "url": "http://allyoucanleet.com/",
+    "path": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/lodash.isinteger",
+    "licenseFile": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/lodash.isinteger/LICENSE"
+  },
+  "lodash.isnumber@3.0.3": {
+    "licenses": "MIT",
+    "repository": "https://github.com/lodash/lodash",
+    "publisher": "John-David Dalton",
+    "email": "john.david.dalton@gmail.com",
+    "url": "http://allyoucanleet.com/",
+    "path": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/lodash.isnumber",
+    "licenseFile": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/lodash.isnumber/LICENSE"
+  },
+  "lodash.isplainobject@4.0.6": {
+    "licenses": "MIT",
+    "repository": "https://github.com/lodash/lodash",
+    "publisher": "John-David Dalton",
+    "email": "john.david.dalton@gmail.com",
+    "url": "http://allyoucanleet.com/",
+    "path": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/lodash.isplainobject",
+    "licenseFile": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/lodash.isplainobject/LICENSE"
+  },
+  "lodash.isstring@4.0.1": {
+    "licenses": "MIT",
+    "repository": "https://github.com/lodash/lodash",
+    "publisher": "John-David Dalton",
+    "email": "john.david.dalton@gmail.com",
+    "url": "http://allyoucanleet.com/",
+    "path": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/lodash.isstring",
+    "licenseFile": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/lodash.isstring/LICENSE"
+  },
+  "lodash.once@4.1.1": {
+    "licenses": "MIT",
+    "repository": "https://github.com/lodash/lodash",
+    "publisher": "John-David Dalton",
+    "email": "john.david.dalton@gmail.com",
+    "url": "http://allyoucanleet.com/",
+    "path": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/lodash.once",
+    "licenseFile": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/lodash.once/LICENSE"
+  },
+  "log4js@6.9.1": {
+    "licenses": "Apache-2.0",
+    "repository": "https://github.com/log4js-node/log4js-node",
+    "path": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/log4js",
+    "licenseFile": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/log4js/LICENSE"
+  },
+  "lru-cache@6.0.0": {
+    "licenses": "ISC",
+    "repository": "https://github.com/isaacs/node-lru-cache",
+    "publisher": "Isaac Z. Schlueter",
+    "email": "i@izs.me",
+    "path": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/cacache/node_modules/lru-cache",
+    "licenseFile": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/cacache/node_modules/lru-cache/LICENSE"
+  },
+  "make-fetch-happen@9.1.0": {
+    "licenses": "ISC",
+    "repository": "https://github.com/npm/make-fetch-happen",
+    "publisher": "Kat Marchán",
+    "email": "kzm@zkat.tech",
+    "path": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/make-fetch-happen",
+    "licenseFile": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/make-fetch-happen/LICENSE"
+  },
+  "math-intrinsics@1.1.0": {
+    "licenses": "MIT",
+    "repository": "https://github.com/es-shims/math-intrinsics",
+    "publisher": "Jordan Harband",
+    "email": "ljharb@gmail.com",
+    "path": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/math-intrinsics",
+    "licenseFile": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/math-intrinsics/LICENSE"
+  },
+  "media-typer@0.3.0": {
+    "licenses": "MIT",
+    "repository": "https://github.com/jshttp/media-typer",
+    "publisher": "Douglas Christopher Wilson",
+    "email": "doug@somethingdoug.com",
+    "path": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/body-parser/node_modules/media-typer",
+    "licenseFile": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/body-parser/node_modules/media-typer/LICENSE"
+  },
+  "media-typer@1.1.0": {
+    "licenses": "MIT",
+    "repository": "https://github.com/jshttp/media-typer",
+    "publisher": "Douglas Christopher Wilson",
+    "email": "doug@somethingdoug.com",
+    "path": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/media-typer",
+    "licenseFile": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/media-typer/LICENSE"
+  },
+  "merge-descriptors@2.0.0": {
+    "licenses": "MIT",
+    "repository": "https://github.com/sindresorhus/merge-descriptors",
+    "path": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/merge-descriptors",
+    "licenseFile": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/merge-descriptors/license"
+  },
+  "methods@1.1.2": {
+    "licenses": "MIT",
+    "repository": "https://github.com/jshttp/methods",
+    "path": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/methods",
+    "licenseFile": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/methods/LICENSE"
+  },
+  "mime-db@1.52.0": {
+    "licenses": "MIT",
+    "repository": "https://github.com/jshttp/mime-db",
+    "path": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/body-parser/node_modules/mime-db",
+    "licenseFile": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/body-parser/node_modules/mime-db/LICENSE"
+  },
+  "mime-db@1.53.0": {
+    "licenses": "MIT",
+    "repository": "https://github.com/jshttp/mime-db",
+    "path": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/mime-db",
+    "licenseFile": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/mime-db/LICENSE"
+  },
+  "mime-types@2.1.35": {
+    "licenses": "MIT",
+    "repository": "https://github.com/jshttp/mime-types",
+    "path": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/body-parser/node_modules/mime-types",
+    "licenseFile": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/body-parser/node_modules/mime-types/LICENSE"
+  },
+  "mime-types@3.0.0": {
+    "licenses": "MIT",
+    "repository": "https://github.com/jshttp/mime-types",
+    "path": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/mime-types",
+    "licenseFile": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/mime-types/LICENSE"
+  },
+  "mimic-response@3.1.0": {
+    "licenses": "MIT",
+    "repository": "https://github.com/sindresorhus/mimic-response",
+    "publisher": "Sindre Sorhus",
+    "email": "sindresorhus@gmail.com",
+    "url": "https://sindresorhus.com",
+    "path": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/mimic-response",
+    "licenseFile": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/mimic-response/license"
+  },
+  "minimatch@3.1.2": {
+    "licenses": "ISC",
+    "repository": "https://github.com/isaacs/minimatch",
+    "publisher": "Isaac Z. Schlueter",
+    "email": "i@izs.me",
+    "url": "http://blog.izs.me",
+    "path": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/minimatch",
+    "licenseFile": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/minimatch/LICENSE"
+  },
+  "minimist@1.2.8": {
+    "licenses": "MIT",
+    "repository": "https://github.com/minimistjs/minimist",
+    "publisher": "James Halliday",
+    "email": "mail@substack.net",
+    "url": "http://substack.net",
+    "path": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/minimist",
+    "licenseFile": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/minimist/LICENSE"
+  },
+  "minipass-collect@1.0.2": {
+    "licenses": "ISC",
+    "publisher": "Isaac Z. Schlueter",
+    "email": "i@izs.me",
+    "url": "https://izs.me",
+    "path": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/minipass-collect",
+    "licenseFile": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/minipass-collect/LICENSE"
+  },
+  "minipass-fetch@1.4.1": {
+    "licenses": "MIT",
+    "repository": "https://github.com/npm/minipass-fetch",
+    "path": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/minipass-fetch",
+    "licenseFile": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/minipass-fetch/LICENSE"
+  },
+  "minipass-flush@1.0.5": {
+    "licenses": "ISC",
+    "repository": "https://github.com/isaacs/minipass-flush",
+    "publisher": "Isaac Z. Schlueter",
+    "email": "i@izs.me",
+    "url": "https://izs.me",
+    "path": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/minipass-flush",
+    "licenseFile": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/minipass-flush/LICENSE"
+  },
+  "minipass-pipeline@1.2.4": {
+    "licenses": "ISC",
+    "publisher": "Isaac Z. Schlueter",
+    "email": "i@izs.me",
+    "url": "https://izs.me",
+    "path": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/minipass-pipeline",
+    "licenseFile": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/minipass-pipeline/LICENSE"
+  },
+  "minipass-sized@1.0.3": {
+    "licenses": "ISC",
+    "repository": "https://github.com/isaacs/minipass-sized",
+    "publisher": "Isaac Z. Schlueter",
+    "email": "i@izs.me",
+    "url": "https://izs.me",
+    "path": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/minipass-sized",
+    "licenseFile": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/minipass-sized/LICENSE"
+  },
+  "minipass@3.3.6": {
+    "licenses": "ISC",
+    "repository": "https://github.com/isaacs/minipass",
+    "publisher": "Isaac Z. Schlueter",
+    "email": "i@izs.me",
+    "url": "http://blog.izs.me/",
+    "path": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/minipass",
+    "licenseFile": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/minipass/LICENSE"
+  },
+  "minipass@5.0.0": {
+    "licenses": "ISC",
+    "repository": "https://github.com/isaacs/minipass",
+    "publisher": "Isaac Z. Schlueter",
+    "email": "i@izs.me",
+    "url": "http://blog.izs.me/",
+    "path": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/tar/node_modules/minipass",
+    "licenseFile": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/tar/node_modules/minipass/LICENSE"
+  },
+  "minizlib@2.1.2": {
+    "licenses": "MIT",
+    "repository": "https://github.com/isaacs/minizlib",
+    "publisher": "Isaac Z. Schlueter",
+    "email": "i@izs.me",
+    "url": "http://blog.izs.me/",
+    "path": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/minizlib",
+    "licenseFile": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/minizlib/LICENSE"
+  },
+  "mkdirp-classic@0.5.3": {
+    "licenses": "MIT",
+    "repository": "https://github.com/mafintosh/mkdirp-classic",
+    "publisher": "Mathias Buus",
+    "url": "@mafintosh",
+    "path": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/mkdirp-classic",
+    "licenseFile": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/mkdirp-classic/LICENSE"
+  },
+  "mkdirp@0.5.6": {
+    "licenses": "MIT",
+    "repository": "https://github.com/substack/node-mkdirp",
+    "publisher": "James Halliday",
+    "email": "mail@substack.net",
+    "url": "http://substack.net",
+    "path": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/multer/node_modules/mkdirp",
+    "licenseFile": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/multer/node_modules/mkdirp/LICENSE"
+  },
+  "mkdirp@1.0.4": {
+    "licenses": "MIT",
+    "repository": "https://github.com/isaacs/node-mkdirp",
+    "path": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/mkdirp",
+    "licenseFile": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/mkdirp/LICENSE"
+  },
+  "ms@2.0.0": {
+    "licenses": "MIT",
+    "repository": "https://github.com/zeit/ms",
+    "path": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/body-parser/node_modules/ms",
+    "licenseFile": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/body-parser/node_modules/ms/license.md"
+  },
+  "ms@2.1.2": {
+    "licenses": "MIT",
+    "repository": "https://github.com/zeit/ms",
+    "path": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/ms",
+    "licenseFile": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/ms/license.md"
+  },
+  "ms@2.1.3": {
+    "licenses": "MIT",
+    "repository": "https://github.com/vercel/ms",
+    "path": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/send/node_modules/ms",
+    "licenseFile": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/send/node_modules/ms/license.md"
+  },
+  "multer@2.0.2": {
+    "licenses": "MIT",
+    "repository": "https://github.com/expressjs/multer",
+    "path": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/multer",
+    "licenseFile": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/multer/LICENSE"
+  },
+  "mustache@4.2.0": {
+    "licenses": "MIT",
+    "repository": "https://github.com/janl/mustache.js",
+    "publisher": "mustache.js Authors",
+    "email": "http://github.com/janl/mustache.js",
+    "path": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/mustache",
+    "licenseFile": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/mustache/LICENSE"
+  },
+  "napi-build-utils@2.0.0": {
+    "licenses": "MIT",
+    "repository": "https://github.com/inspiredware/napi-build-utils",
+    "publisher": "Jim Schlight",
+    "path": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/napi-build-utils",
+    "licenseFile": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/napi-build-utils/LICENSE"
+  },
+  "negotiator@0.6.4": {
+    "licenses": "MIT",
+    "repository": "https://github.com/jshttp/negotiator",
+    "path": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/make-fetch-happen/node_modules/negotiator",
+    "licenseFile": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/make-fetch-happen/node_modules/negotiator/LICENSE"
+  },
+  "negotiator@1.0.0": {
+    "licenses": "MIT",
+    "repository": "https://github.com/jshttp/negotiator",
+    "path": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/negotiator",
+    "licenseFile": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/negotiator/LICENSE"
+  },
+  "node-abi@3.75.0": {
+    "licenses": "MIT",
+    "repository": "https://github.com/electron/node-abi",
+    "publisher": "Lukas Geiger",
+    "path": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/node-abi",
+    "licenseFile": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/node-abi/LICENSE"
+  },
+  "node-addon-api@7.1.1": {
+    "licenses": "MIT",
+    "repository": "https://github.com/nodejs/node-addon-api",
+    "path": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/sqlite3/node_modules/node-addon-api",
+    "licenseFile": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/sqlite3/node_modules/node-addon-api/LICENSE.md"
+  },
+  "node-addon-api@8.3.1": {
+    "licenses": "MIT",
+    "repository": "https://github.com/nodejs/node-addon-api",
+    "path": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/node-addon-api",
+    "licenseFile": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/node-addon-api/LICENSE.md"
+  },
+  "node-fetch-native@1.6.7": {
+    "licenses": "MIT",
+    "repository": "https://github.com/unjs/node-fetch-native",
+    "path": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/node-fetch-native",
+    "licenseFile": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/node-fetch-native/LICENSE"
+  },
+  "node-fetch@2.7.0": {
+    "licenses": "MIT",
+    "repository": "https://github.com/bitinn/node-fetch",
+    "publisher": "David Frank",
+    "path": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/node-fetch",
+    "licenseFile": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/node-fetch/LICENSE.md"
+  },
+  "node-gyp-build@4.8.4": {
+    "licenses": "MIT",
+    "repository": "https://github.com/prebuild/node-gyp-build",
+    "publisher": "Mathias Buus",
+    "url": "@mafintosh",
+    "path": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/node-gyp-build",
+    "licenseFile": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/node-gyp-build/LICENSE"
+  },
+  "node-gyp@8.4.1": {
+    "licenses": "MIT",
+    "repository": "https://github.com/nodejs/node-gyp",
+    "publisher": "Nathan Rajlich",
+    "email": "nathan@tootallnate.net",
+    "url": "http://tootallnate.net",
+    "path": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/node-gyp",
+    "licenseFile": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/node-gyp/LICENSE"
+  },
+  "nodemon@3.1.9": {
+    "licenses": "MIT",
+    "repository": "https://github.com/remy/nodemon",
+    "publisher": "Remy Sharp",
+    "url": "https://github.com/remy",
+    "path": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/nodemon",
+    "licenseFile": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/nodemon/LICENSE"
+  },
+  "nopt@5.0.0": {
+    "licenses": "ISC",
+    "repository": "https://github.com/npm/nopt",
+    "publisher": "Isaac Z. Schlueter",
+    "email": "i@izs.me",
+    "url": "http://blog.izs.me/",
+    "path": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/nopt",
+    "licenseFile": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/nopt/LICENSE"
+  },
+  "normalize-path@3.0.0": {
+    "licenses": "MIT",
+    "repository": "https://github.com/jonschlinkert/normalize-path",
+    "publisher": "Jon Schlinkert",
+    "url": "https://github.com/jonschlinkert",
+    "path": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/normalize-path",
+    "licenseFile": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/normalize-path/LICENSE"
+  },
+  "npmlog@6.0.2": {
+    "licenses": "ISC",
+    "repository": "https://github.com/npm/npmlog",
+    "publisher": "GitHub Inc.",
+    "path": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/npmlog",
+    "licenseFile": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/npmlog/LICENSE.md"
+  },
+  "nypm@0.6.2": {
+    "licenses": "MIT",
+    "repository": "https://github.com/unjs/nypm",
+    "path": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/nypm",
+    "licenseFile": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/nypm/LICENSE"
+  },
+  "object-assign@4.1.1": {
+    "licenses": "MIT",
+    "repository": "https://github.com/sindresorhus/object-assign",
+    "publisher": "Sindre Sorhus",
+    "email": "sindresorhus@gmail.com",
+    "url": "sindresorhus.com",
+    "path": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/object-assign",
+    "licenseFile": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/object-assign/license"
+  },
+  "object-inspect@1.13.4": {
+    "licenses": "MIT",
+    "repository": "https://github.com/inspect-js/object-inspect",
+    "publisher": "James Halliday",
+    "email": "mail@substack.net",
+    "url": "http://substack.net",
+    "path": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/object-inspect",
+    "licenseFile": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/object-inspect/LICENSE"
+  },
+  "ohash@2.0.11": {
+    "licenses": "MIT",
+    "repository": "https://github.com/unjs/ohash",
+    "path": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/ohash",
+    "licenseFile": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/ohash/LICENSE"
+  },
+  "on-finished@2.4.1": {
+    "licenses": "MIT",
+    "repository": "https://github.com/jshttp/on-finished",
+    "path": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/on-finished",
+    "licenseFile": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/on-finished/LICENSE"
+  },
+  "on-headers@1.1.0": {
+    "licenses": "MIT",
+    "repository": "https://github.com/jshttp/on-headers",
+    "publisher": "Douglas Christopher Wilson",
+    "email": "doug@somethingdoug.com",
+    "path": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/on-headers",
+    "licenseFile": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/on-headers/LICENSE"
+  },
+  "once@1.4.0": {
+    "licenses": "ISC",
+    "repository": "https://github.com/isaacs/once",
+    "publisher": "Isaac Z. Schlueter",
+    "email": "i@izs.me",
+    "url": "http://blog.izs.me/",
+    "path": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/once",
+    "licenseFile": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/once/LICENSE"
+  },
+  "openai@5.12.2": {
+    "licenses": "Apache-2.0",
+    "repository": "https://github.com/openai/openai-node",
+    "publisher": "OpenAI",
+    "email": "support@openai.com",
+    "path": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/openai",
+    "licenseFile": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/openai/LICENSE"
+  },
+  "openapi-types@12.1.3": {
+    "licenses": "MIT",
+    "repository": "https://github.com/kogosoftwarellc/open-api/tree/master/packages/openapi-types",
+    "publisher": "Joseph Spencer",
+    "path": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/openapi-types",
+    "licenseFile": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/openapi-types/LICENSE"
+  },
+  "openapi3-ts@4.4.0": {
+    "licenses": "MIT",
+    "repository": "https://github.com/metadevpro/openapi3-ts",
+    "publisher": "Pedro J. Molina / Metadev",
+    "path": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/openapi3-ts",
+    "licenseFile": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/openapi3-ts/LICENSE"
+  },
+  "p-finally@1.0.0": {
+    "licenses": "MIT",
+    "repository": "https://github.com/sindresorhus/p-finally",
+    "publisher": "Sindre Sorhus",
+    "email": "sindresorhus@gmail.com",
+    "url": "sindresorhus.com",
+    "path": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/p-finally",
+    "licenseFile": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/p-finally/license"
+  },
+  "p-map@4.0.0": {
+    "licenses": "MIT",
+    "repository": "https://github.com/sindresorhus/p-map",
+    "publisher": "Sindre Sorhus",
+    "email": "sindresorhus@gmail.com",
+    "url": "https://sindresorhus.com",
+    "path": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/p-map",
+    "licenseFile": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/p-map/license"
+  },
+  "p-queue@6.6.2": {
+    "licenses": "MIT",
+    "repository": "https://github.com/sindresorhus/p-queue",
+    "path": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/p-queue",
+    "licenseFile": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/p-queue/license"
+  },
+  "p-retry@4.6.2": {
+    "licenses": "MIT",
+    "repository": "https://github.com/sindresorhus/p-retry",
+    "publisher": "Sindre Sorhus",
+    "email": "sindresorhus@gmail.com",
+    "url": "sindresorhus.com",
+    "path": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/p-retry",
+    "licenseFile": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/p-retry/license"
+  },
+  "p-timeout@3.2.0": {
+    "licenses": "MIT",
+    "repository": "https://github.com/sindresorhus/p-timeout",
+    "publisher": "Sindre Sorhus",
+    "email": "sindresorhus@gmail.com",
+    "url": "sindresorhus.com",
+    "path": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/p-timeout",
+    "licenseFile": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/p-timeout/license"
+  },
+  "parseurl@1.3.3": {
+    "licenses": "MIT",
+    "repository": "https://github.com/pillarjs/parseurl",
+    "path": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/parseurl",
+    "licenseFile": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/parseurl/LICENSE"
+  },
+  "path-is-absolute@1.0.1": {
+    "licenses": "MIT",
+    "repository": "https://github.com/sindresorhus/path-is-absolute",
+    "publisher": "Sindre Sorhus",
+    "email": "sindresorhus@gmail.com",
+    "url": "sindresorhus.com",
+    "path": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/path-is-absolute",
+    "licenseFile": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/path-is-absolute/license"
+  },
+  "path-key@3.1.1": {
+    "licenses": "MIT",
+    "repository": "https://github.com/sindresorhus/path-key",
+    "publisher": "Sindre Sorhus",
+    "email": "sindresorhus@gmail.com",
+    "url": "sindresorhus.com",
+    "path": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/path-key",
+    "licenseFile": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/path-key/license"
+  },
+  "path-to-regexp@8.2.0": {
+    "licenses": "MIT",
+    "repository": "https://github.com/pillarjs/path-to-regexp",
+    "path": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/path-to-regexp",
+    "licenseFile": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/path-to-regexp/LICENSE"
+  },
+  "pathe@2.0.3": {
+    "licenses": "MIT",
+    "repository": "https://github.com/unjs/pathe",
+    "path": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/pathe",
+    "licenseFile": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/pathe/LICENSE"
+  },
+  "perfect-debounce@1.0.0": {
+    "licenses": "MIT",
+    "repository": "https://github.com/unjs/perfect-debounce",
+    "path": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/perfect-debounce",
+    "licenseFile": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/perfect-debounce/LICENSE"
+  },
+  "pg-cloudflare@1.2.5": {
+    "licenses": "MIT",
+    "repository": "https://github.com/brianc/node-postgres",
+    "path": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/pg-cloudflare",
+    "licenseFile": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/pg-cloudflare/LICENSE"
+  },
+  "pg-connection-string@2.9.0": {
+    "licenses": "MIT",
+    "repository": "https://github.com/brianc/node-postgres",
+    "publisher": "Blaine Bublitz",
+    "email": "blaine@iceddev.com",
+    "url": "http://iceddev.com/",
+    "path": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/pg-connection-string",
+    "licenseFile": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/pg-connection-string/LICENSE"
+  },
+  "pg-int8@1.0.1": {
+    "licenses": "ISC",
+    "repository": "https://github.com/charmander/pg-int8",
+    "path": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/pg-int8",
+    "licenseFile": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/pg-int8/LICENSE"
+  },
+  "pg-pool@3.10.0": {
+    "licenses": "MIT",
+    "repository": "https://github.com/brianc/node-postgres",
+    "publisher": "Brian M. Carlson",
+    "path": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/pg-pool",
+    "licenseFile": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/pg-pool/LICENSE"
+  },
+  "pg-protocol@1.10.0": {
+    "licenses": "MIT",
+    "repository": "https://github.com/brianc/node-postgres",
+    "path": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/pg-protocol",
+    "licenseFile": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/pg-protocol/LICENSE"
+  },
+  "pg-types@2.2.0": {
+    "licenses": "MIT",
+    "repository": "https://github.com/brianc/node-pg-types",
+    "publisher": "Brian M. Carlson",
+    "path": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/pg-types",
+    "licenseFile": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/pg-types/README.md"
+  },
+  "pg@8.16.0": {
+    "licenses": "MIT",
+    "repository": "https://github.com/brianc/node-postgres",
+    "publisher": "Brian Carlson",
+    "email": "brian.m.carlson@gmail.com",
+    "path": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/pg",
+    "licenseFile": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/pg/LICENSE"
+  },
+  "pgpass@1.0.5": {
+    "licenses": "MIT",
+    "repository": "https://github.com/hoegaarden/pgpass",
+    "publisher": "Hannes Hörl",
+    "email": "hannes.hoerl+pgpass@snowreporter.com",
+    "path": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/pgpass",
+    "licenseFile": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/pgpass/README.md"
+  },
+  "picomatch@2.3.1": {
+    "licenses": "MIT",
+    "repository": "https://github.com/micromatch/picomatch",
+    "publisher": "Jon Schlinkert",
+    "url": "https://github.com/jonschlinkert",
+    "path": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/picomatch",
+    "licenseFile": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/picomatch/LICENSE"
+  },
+  "pkce-challenge@5.0.0": {
+    "licenses": "MIT",
+    "repository": "https://github.com/crouchcd/pkce-challenge",
+    "publisher": "crouchcd",
+    "path": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/pkce-challenge",
+    "licenseFile": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/pkce-challenge/LICENSE"
+  },
+  "pkg-types@2.3.0": {
+    "licenses": "MIT",
+    "repository": "https://github.com/unjs/pkg-types",
+    "path": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/pkg-types",
+    "licenseFile": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/pkg-types/LICENSE"
+  },
+  "postgres-array@2.0.0": {
+    "licenses": "MIT",
+    "repository": "https://github.com/bendrucker/postgres-array",
+    "publisher": "Ben Drucker",
+    "email": "bvdrucker@gmail.com",
+    "url": "bendrucker.me",
+    "path": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/postgres-array",
+    "licenseFile": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/postgres-array/license"
+  },
+  "postgres-bytea@1.0.0": {
+    "licenses": "MIT",
+    "repository": "https://github.com/bendrucker/postgres-bytea",
+    "publisher": "Ben Drucker",
+    "email": "bvdrucker@gmail.com",
+    "url": "bendrucker.me",
+    "path": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/postgres-bytea",
+    "licenseFile": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/postgres-bytea/license"
+  },
+  "postgres-date@1.0.7": {
+    "licenses": "MIT",
+    "repository": "https://github.com/bendrucker/postgres-date",
+    "publisher": "Ben Drucker",
+    "email": "bvdrucker@gmail.com",
+    "url": "bendrucker.me",
+    "path": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/postgres-date",
+    "licenseFile": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/postgres-date/license"
+  },
+  "postgres-interval@1.2.0": {
+    "licenses": "MIT",
+    "repository": "https://github.com/bendrucker/postgres-interval",
+    "publisher": "Ben Drucker",
+    "email": "bvdrucker@gmail.com",
+    "url": "bendrucker.me",
+    "path": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/postgres-interval",
+    "licenseFile": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/postgres-interval/license"
+  },
+  "prebuild-install@7.1.3": {
+    "licenses": "MIT",
+    "repository": "https://github.com/prebuild/prebuild-install",
+    "publisher": "Mathias Buus",
+    "url": "@mafintosh",
+    "path": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/prebuild-install",
+    "licenseFile": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/prebuild-install/LICENSE"
+  },
+  "prisma@6.19.2": {
+    "licenses": "Apache-2.0",
+    "repository": "https://github.com/prisma/prisma",
+    "publisher": "Tim Suchanek",
+    "email": "suchanek@prisma.io",
+    "path": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/prisma",
+    "licenseFile": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/prisma/LICENSE"
+  },
+  "promise-inflight@1.0.1": {
+    "licenses": "ISC",
+    "repository": "https://github.com/iarna/promise-inflight",
+    "publisher": "Rebecca Turner",
+    "email": "me@re-becca.org",
+    "url": "http://re-becca.org/",
+    "path": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/promise-inflight",
+    "licenseFile": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/promise-inflight/LICENSE"
+  },
+  "promise-retry@2.0.1": {
+    "licenses": "MIT",
+    "repository": "https://github.com/IndigoUnited/node-promise-retry",
+    "publisher": "IndigoUnited",
+    "email": "hello@indigounited.com",
+    "url": "http://indigounited.com",
+    "path": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/promise-retry",
+    "licenseFile": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/promise-retry/LICENSE"
+  },
+  "proxy-addr@2.0.7": {
+    "licenses": "MIT",
+    "repository": "https://github.com/jshttp/proxy-addr",
+    "publisher": "Douglas Christopher Wilson",
+    "email": "doug@somethingdoug.com",
+    "path": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/proxy-addr",
+    "licenseFile": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/proxy-addr/LICENSE"
+  },
+  "pstree.remy@1.1.8": {
+    "licenses": "MIT",
+    "repository": "https://github.com/remy/pstree",
+    "publisher": "Remy Sharp",
+    "path": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/pstree.remy",
+    "licenseFile": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/pstree.remy/LICENSE"
+  },
+  "pump@3.0.2": {
+    "licenses": "MIT",
+    "repository": "https://github.com/mafintosh/pump",
+    "publisher": "Mathias Buus Madsen",
+    "email": "mathiasbuus@gmail.com",
+    "path": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/pump",
+    "licenseFile": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/pump/LICENSE"
+  },
+  "punycode@2.3.1": {
+    "licenses": "MIT",
+    "repository": "https://github.com/mathiasbynens/punycode.js",
+    "publisher": "Mathias Bynens",
+    "url": "https://mathiasbynens.be/",
+    "path": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/punycode",
+    "licenseFile": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/punycode/LICENSE-MIT.txt"
+  },
+  "pure-rand@6.1.0": {
+    "licenses": "MIT",
+    "repository": "https://github.com/dubzzz/pure-rand",
+    "publisher": "Nicolas DUBIEN",
+    "email": "github@dubien.org",
+    "path": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/pure-rand",
+    "licenseFile": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/pure-rand/LICENSE"
+  },
+  "qs@6.13.0": {
+    "licenses": "BSD-3-Clause",
+    "repository": "https://github.com/ljharb/qs",
+    "path": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/qs",
+    "licenseFile": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/qs/LICENSE.md"
+  },
+  "random-bytes@1.0.0": {
+    "licenses": "MIT",
+    "repository": "https://github.com/crypto-utils/random-bytes",
+    "path": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/random-bytes",
+    "licenseFile": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/random-bytes/LICENSE"
+  },
+  "range-parser@1.2.1": {
+    "licenses": "MIT",
+    "repository": "https://github.com/jshttp/range-parser",
+    "publisher": "TJ Holowaychuk",
+    "email": "tj@vision-media.ca",
+    "url": "http://tjholowaychuk.com",
+    "path": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/range-parser",
+    "licenseFile": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/range-parser/LICENSE"
+  },
+  "raw-body@3.0.0": {
+    "licenses": "MIT",
+    "repository": "https://github.com/stream-utils/raw-body",
+    "publisher": "Jonathan Ong",
+    "email": "me@jongleberry.com",
+    "url": "http://jongleberry.com",
+    "path": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/raw-body",
+    "licenseFile": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/raw-body/LICENSE"
+  },
+  "rc9@2.1.2": {
+    "licenses": "MIT",
+    "repository": "https://github.com/unjs/rc9",
+    "path": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/rc9",
+    "licenseFile": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/rc9/LICENSE"
+  },
+  "rc@1.2.8": {
+    "licenses": "(BSD-2-Clause OR MIT OR Apache-2.0)",
+    "repository": "https://github.com/dominictarr/rc",
+    "publisher": "Dominic Tarr",
+    "email": "dominic.tarr@gmail.com",
+    "url": "dominictarr.com",
+    "path": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/rc",
+    "licenseFile": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/rc/LICENSE.APACHE2"
+  },
+  "readable-stream@3.6.2": {
+    "licenses": "MIT",
+    "repository": "https://github.com/nodejs/readable-stream",
+    "path": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/readable-stream",
+    "licenseFile": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/readable-stream/LICENSE"
+  },
+  "readdirp@3.6.0": {
+    "licenses": "MIT",
+    "repository": "https://github.com/paulmillr/readdirp",
+    "publisher": "Thorsten Lorenz",
+    "email": "thlorenz@gmx.de",
+    "url": "thlorenz.com",
+    "path": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/readdirp",
+    "licenseFile": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/readdirp/LICENSE"
+  },
+  "readdirp@4.1.2": {
+    "licenses": "MIT",
+    "repository": "https://github.com/paulmillr/readdirp",
+    "publisher": "Thorsten Lorenz",
+    "email": "thlorenz@gmx.de",
+    "url": "thlorenz.com",
+    "path": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/c12/node_modules/readdirp",
+    "licenseFile": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/c12/node_modules/readdirp/LICENSE"
+  },
+  "result-manager-server@0.8.0": {
+    "licenses": "ISC",
+    "path": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be",
+    "licenseFile": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/README.md"
+  },
+  "retry@0.12.0": {
+    "licenses": "MIT",
+    "repository": "https://github.com/tim-kos/node-retry",
+    "publisher": "Tim Koschützki",
+    "email": "tim@debuggable.com",
+    "url": "http://debuggable.com/",
+    "path": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/retry",
+    "licenseFile": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/retry/License"
+  },
+  "retry@0.13.1": {
+    "licenses": "MIT",
+    "repository": "https://github.com/tim-kos/node-retry",
+    "publisher": "Tim Koschützki",
+    "email": "tim@debuggable.com",
+    "url": "http://debuggable.com/",
+    "path": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/p-retry/node_modules/retry",
+    "licenseFile": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/p-retry/node_modules/retry/License"
+  },
+  "rfdc@1.4.1": {
+    "licenses": "MIT",
+    "repository": "https://github.com/davidmarkclements/rfdc",
+    "publisher": "David Mark Clements",
+    "email": "david.clements@nearform.com",
+    "path": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/rfdc",
+    "licenseFile": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/rfdc/LICENSE"
+  },
+  "rimraf@3.0.2": {
+    "licenses": "ISC",
+    "repository": "https://github.com/isaacs/rimraf",
+    "publisher": "Isaac Z. Schlueter",
+    "email": "i@izs.me",
+    "url": "http://blog.izs.me/",
+    "path": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/rimraf",
+    "licenseFile": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/rimraf/LICENSE"
+  },
+  "router@2.0.0": {
+    "licenses": "MIT",
+    "repository": "https://github.com/pillarjs/router",
+    "publisher": "Douglas Christopher Wilson",
+    "email": "doug@somethingdoug.com",
+    "path": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/router",
+    "licenseFile": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/router/LICENSE"
+  },
+  "safe-buffer@5.2.1": {
+    "licenses": "MIT",
+    "repository": "https://github.com/feross/safe-buffer",
+    "publisher": "Feross Aboukhadijeh",
+    "email": "feross@feross.org",
+    "url": "https://feross.org",
+    "path": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/safe-buffer",
+    "licenseFile": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/safe-buffer/LICENSE"
+  },
+  "safer-buffer@2.1.2": {
+    "licenses": "MIT",
+    "repository": "https://github.com/ChALkeR/safer-buffer",
+    "publisher": "Nikita Skovoroda",
+    "email": "chalkerx@gmail.com",
+    "url": "https://github.com/ChALkeR",
+    "path": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/safer-buffer",
+    "licenseFile": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/safer-buffer/LICENSE"
+  },
+  "semver@7.6.3": {
+    "licenses": "ISC",
+    "repository": "https://github.com/npm/node-semver",
+    "publisher": "GitHub Inc.",
+    "path": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/semver",
+    "licenseFile": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/semver/LICENSE"
+  },
+  "send@1.1.0": {
+    "licenses": "MIT",
+    "repository": "https://github.com/pillarjs/send",
+    "publisher": "TJ Holowaychuk",
+    "email": "tj@vision-media.ca",
+    "path": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/send",
+    "licenseFile": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/send/LICENSE"
+  },
+  "serve-static@2.1.0": {
+    "licenses": "MIT",
+    "repository": "https://github.com/expressjs/serve-static",
+    "publisher": "Douglas Christopher Wilson",
+    "email": "doug@somethingdoug.com",
+    "path": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/serve-static",
+    "licenseFile": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/serve-static/LICENSE"
+  },
+  "set-blocking@2.0.0": {
+    "licenses": "ISC",
+    "repository": "https://github.com/yargs/set-blocking",
+    "publisher": "Ben Coe",
+    "email": "ben@npmjs.com",
+    "path": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/set-blocking",
+    "licenseFile": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/set-blocking/LICENSE.txt"
+  },
+  "setprototypeof@1.2.0": {
+    "licenses": "ISC",
+    "repository": "https://github.com/wesleytodd/setprototypeof",
+    "publisher": "Wes Todd",
+    "path": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/setprototypeof",
+    "licenseFile": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/setprototypeof/LICENSE"
+  },
+  "shebang-command@2.0.0": {
+    "licenses": "MIT",
+    "repository": "https://github.com/kevva/shebang-command",
+    "publisher": "Kevin Mårtensson",
+    "email": "kevinmartensson@gmail.com",
+    "url": "github.com/kevva",
+    "path": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/shebang-command",
+    "licenseFile": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/shebang-command/license"
+  },
+  "shebang-regex@3.0.0": {
+    "licenses": "MIT",
+    "repository": "https://github.com/sindresorhus/shebang-regex",
+    "publisher": "Sindre Sorhus",
+    "email": "sindresorhus@gmail.com",
+    "url": "sindresorhus.com",
+    "path": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/shebang-regex",
+    "licenseFile": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/shebang-regex/license"
+  },
+  "side-channel-list@1.0.0": {
+    "licenses": "MIT",
+    "repository": "https://github.com/ljharb/side-channel-list",
+    "publisher": "Jordan Harband",
+    "email": "ljharb@gmail.com",
+    "path": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/side-channel-list",
+    "licenseFile": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/side-channel-list/LICENSE"
+  },
+  "side-channel-map@1.0.1": {
+    "licenses": "MIT",
+    "repository": "https://github.com/ljharb/side-channel-map",
+    "publisher": "Jordan Harband",
+    "email": "ljharb@gmail.com",
+    "path": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/side-channel-map",
+    "licenseFile": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/side-channel-map/LICENSE"
+  },
+  "side-channel-weakmap@1.0.2": {
+    "licenses": "MIT",
+    "repository": "https://github.com/ljharb/side-channel-weakmap",
+    "publisher": "Jordan Harband",
+    "email": "ljharb@gmail.com",
+    "path": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/side-channel-weakmap",
+    "licenseFile": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/side-channel-weakmap/LICENSE"
+  },
+  "side-channel@1.1.0": {
+    "licenses": "MIT",
+    "repository": "https://github.com/ljharb/side-channel",
+    "publisher": "Jordan Harband",
+    "email": "ljharb@gmail.com",
+    "path": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/side-channel",
+    "licenseFile": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/side-channel/LICENSE"
+  },
+  "signal-exit@3.0.7": {
+    "licenses": "ISC",
+    "repository": "https://github.com/tapjs/signal-exit",
+    "publisher": "Ben Coe",
+    "email": "ben@npmjs.com",
+    "path": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/signal-exit",
+    "licenseFile": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/signal-exit/LICENSE.txt"
+  },
+  "simple-concat@1.0.1": {
+    "licenses": "MIT",
+    "repository": "https://github.com/feross/simple-concat",
+    "publisher": "Feross Aboukhadijeh",
+    "email": "feross@feross.org",
+    "url": "https://feross.org",
+    "path": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/simple-concat",
+    "licenseFile": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/simple-concat/LICENSE"
+  },
+  "simple-get@4.0.1": {
+    "licenses": "MIT",
+    "repository": "https://github.com/feross/simple-get",
+    "publisher": "Feross Aboukhadijeh",
+    "email": "feross@feross.org",
+    "url": "https://feross.org",
+    "path": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/simple-get",
+    "licenseFile": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/simple-get/LICENSE"
+  },
+  "simple-update-notifier@2.0.0": {
+    "licenses": "MIT",
+    "repository": "https://github.com/alexbrazier/simple-update-notifier",
+    "publisher": "alexbrazier",
+    "path": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/simple-update-notifier",
+    "licenseFile": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/simple-update-notifier/LICENSE"
+  },
+  "simple-wcswidth@1.1.2": {
+    "licenses": "MIT",
+    "repository": "https://github.com/console-table-printer/simple-wcswidth",
+    "publisher": "Nahiyan Kamal",
+    "email": "noyanayihan@gmail.com",
+    "path": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/simple-wcswidth",
+    "licenseFile": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/simple-wcswidth/LICENSE"
+  },
+  "smart-buffer@4.2.0": {
+    "licenses": "MIT",
+    "repository": "https://github.com/JoshGlazebrook/smart-buffer",
+    "publisher": "Josh Glazebrook",
+    "path": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/smart-buffer",
+    "licenseFile": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/smart-buffer/LICENSE"
+  },
+  "socks-proxy-agent@6.2.1": {
+    "licenses": "MIT",
+    "repository": "https://github.com/TooTallNate/node-socks-proxy-agent",
+    "publisher": "Nathan Rajlich",
+    "email": "nathan@tootallnate.net",
+    "url": "http://n8.io/",
+    "path": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/socks-proxy-agent",
+    "licenseFile": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/socks-proxy-agent/README.md"
+  },
+  "socks@2.8.4": {
+    "licenses": "MIT",
+    "repository": "https://github.com/JoshGlazebrook/socks",
+    "publisher": "Josh Glazebrook",
+    "path": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/socks",
+    "licenseFile": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/socks/LICENSE"
+  },
+  "split2@4.2.0": {
+    "licenses": "ISC",
+    "repository": "https://github.com/mcollina/split2",
+    "publisher": "Matteo Collina",
+    "email": "hello@matteocollina.com",
+    "path": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/split2",
+    "licenseFile": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/split2/LICENSE"
+  },
+  "sprintf-js@1.1.3": {
+    "licenses": "BSD-3-Clause",
+    "repository": "https://github.com/alexei/sprintf.js",
+    "publisher": "Alexandru Mărășteanu",
+    "email": "hello@alexei.ro",
+    "path": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/ip-address/node_modules/sprintf-js",
+    "licenseFile": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/ip-address/node_modules/sprintf-js/LICENSE"
+  },
+  "sqlite3@5.1.7": {
+    "licenses": "BSD-3-Clause",
+    "repository": "https://github.com/TryGhost/node-sqlite3",
+    "publisher": "Mapbox",
+    "url": "https://mapbox.com/",
+    "path": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/sqlite3",
+    "licenseFile": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/sqlite3/LICENSE"
+  },
+  "ssri@8.0.1": {
+    "licenses": "ISC",
+    "repository": "https://github.com/npm/ssri",
+    "publisher": "Kat Marchán",
+    "email": "kzm@sykosomatic.org",
+    "path": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/ssri",
+    "licenseFile": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/ssri/LICENSE.md"
+  },
+  "statuses@2.0.1": {
+    "licenses": "MIT",
+    "repository": "https://github.com/jshttp/statuses",
+    "path": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/statuses",
+    "licenseFile": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/statuses/LICENSE"
+  },
+  "streamroller@3.1.5": {
+    "licenses": "MIT",
+    "repository": "https://github.com/log4js-node/streamroller",
+    "publisher": "Gareth Jones",
+    "email": "gareth.nomiddlename@gmail.com",
+    "path": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/streamroller",
+    "licenseFile": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/streamroller/LICENSE"
+  },
+  "streamsearch@1.1.0": {
+    "licenses": "MIT",
+    "repository": "https://github.com/mscdex/streamsearch",
+    "publisher": "Brian White",
+    "email": "mscdex@mscdex.net",
+    "path": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/streamsearch",
+    "licenseFile": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/streamsearch/LICENSE"
+  },
+  "string-similarity@4.0.4": {
+    "licenses": "ISC",
+    "repository": "https://github.com/aceakash/string-similarity",
+    "publisher": "Akash Kurdekar",
+    "email": "npm@kurdekar.com",
+    "url": "http://untilfalse.com/",
+    "path": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/string-similarity",
+    "licenseFile": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/string-similarity/LICENSE"
+  },
+  "string-width@4.2.3": {
+    "licenses": "MIT",
+    "repository": "https://github.com/sindresorhus/string-width",
+    "publisher": "Sindre Sorhus",
+    "email": "sindresorhus@gmail.com",
+    "url": "sindresorhus.com",
+    "path": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/string-width",
+    "licenseFile": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/string-width/license"
+  },
+  "string_decoder@1.3.0": {
+    "licenses": "MIT",
+    "repository": "https://github.com/nodejs/string_decoder",
+    "path": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/string_decoder",
+    "licenseFile": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/string_decoder/LICENSE"
+  },
+  "strip-ansi@6.0.1": {
+    "licenses": "MIT",
+    "repository": "https://github.com/chalk/strip-ansi",
+    "publisher": "Sindre Sorhus",
+    "email": "sindresorhus@gmail.com",
+    "url": "sindresorhus.com",
+    "path": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/strip-ansi",
+    "licenseFile": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/strip-ansi/license"
+  },
+  "strip-json-comments@2.0.1": {
+    "licenses": "MIT",
+    "repository": "https://github.com/sindresorhus/strip-json-comments",
+    "publisher": "Sindre Sorhus",
+    "email": "sindresorhus@gmail.com",
+    "url": "sindresorhus.com",
+    "path": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/rc/node_modules/strip-json-comments",
+    "licenseFile": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/rc/node_modules/strip-json-comments/license"
+  },
+  "supports-color@5.5.0": {
+    "licenses": "MIT",
+    "repository": "https://github.com/chalk/supports-color",
+    "publisher": "Sindre Sorhus",
+    "email": "sindresorhus@gmail.com",
+    "url": "sindresorhus.com",
+    "path": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/supports-color",
+    "licenseFile": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/supports-color/license"
+  },
+  "supports-color@7.2.0": {
+    "licenses": "MIT",
+    "repository": "https://github.com/chalk/supports-color",
+    "publisher": "Sindre Sorhus",
+    "email": "sindresorhus@gmail.com",
+    "url": "sindresorhus.com",
+    "path": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/chalk/node_modules/supports-color",
+    "licenseFile": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/chalk/node_modules/supports-color/license"
+  },
+  "tar-fs@2.1.3": {
+    "licenses": "MIT",
+    "repository": "https://github.com/mafintosh/tar-fs",
+    "publisher": "Mathias Buus",
+    "path": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/tar-fs",
+    "licenseFile": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/tar-fs/LICENSE"
+  },
+  "tar-stream@2.2.0": {
+    "licenses": "MIT",
+    "repository": "https://github.com/mafintosh/tar-stream",
+    "publisher": "Mathias Buus",
+    "email": "mathiasbuus@gmail.com",
+    "path": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/tar-stream",
+    "licenseFile": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/tar-stream/LICENSE"
+  },
+  "tar@6.2.1": {
+    "licenses": "ISC",
+    "repository": "https://github.com/isaacs/node-tar",
+    "publisher": "GitHub Inc.",
+    "path": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/tar",
+    "licenseFile": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/tar/LICENSE"
+  },
+  "tinyexec@1.0.2": {
+    "licenses": "MIT",
+    "repository": "https://github.com/tinylibs/tinyexec",
+    "publisher": "James Garbutt",
+    "url": "https://github.com/43081j",
+    "path": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/tinyexec",
+    "licenseFile": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/tinyexec/LICENSE"
+  },
+  "to-regex-range@5.0.1": {
+    "licenses": "MIT",
+    "repository": "https://github.com/micromatch/to-regex-range",
+    "publisher": "Jon Schlinkert",
+    "url": "https://github.com/jonschlinkert",
+    "path": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/to-regex-range",
+    "licenseFile": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/to-regex-range/LICENSE"
+  },
+  "toidentifier@1.0.1": {
+    "licenses": "MIT",
+    "repository": "https://github.com/component/toidentifier",
+    "publisher": "Douglas Christopher Wilson",
+    "email": "doug@somethingdoug.com",
+    "path": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/toidentifier",
+    "licenseFile": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/toidentifier/LICENSE"
+  },
+  "touch@3.1.1": {
+    "licenses": "ISC",
+    "repository": "https://github.com/isaacs/node-touch",
+    "publisher": "Isaac Z. Schlueter",
+    "email": "i@izs.me",
+    "url": "http://blog.izs.me/",
+    "path": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/touch",
+    "licenseFile": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/touch/LICENSE"
+  },
+  "tr46@0.0.3": {
+    "licenses": "MIT",
+    "repository": "https://github.com/Sebmaster/tr46.js",
+    "publisher": "Sebastian Mayr",
+    "email": "npm@smayr.name",
+    "path": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/tr46"
+  },
+  "ts-dedent@2.2.0": {
+    "licenses": "MIT",
+    "repository": "https://github.com/tamino-martinius/node-ts-dedent",
+    "publisher": "Tamino Martinius",
+    "email": "dev@zaku.eu",
+    "path": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/ts-dedent",
+    "licenseFile": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/ts-dedent/LICENSE"
+  },
+  "tslib@1.14.1": {
+    "licenses": "0BSD",
+    "repository": "https://github.com/Microsoft/tslib",
+    "publisher": "Microsoft Corp.",
+    "path": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/tslib",
+    "licenseFile": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/tslib/LICENSE.txt"
+  },
+  "tslib@2.8.1": {
+    "licenses": "0BSD",
+    "repository": "https://github.com/Microsoft/tslib",
+    "publisher": "Microsoft Corp.",
+    "path": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/@smithy/types/node_modules/tslib",
+    "licenseFile": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/@smithy/types/node_modules/tslib/LICENSE.txt"
+  },
+  "tunnel-agent@0.6.0": {
+    "licenses": "Apache-2.0",
+    "repository": "https://github.com/mikeal/tunnel-agent",
+    "publisher": "Mikeal Rogers",
+    "email": "mikeal.rogers@gmail.com",
+    "url": "http://www.futurealoof.com",
+    "path": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/tunnel-agent",
+    "licenseFile": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/tunnel-agent/LICENSE"
+  },
+  "type-fest@2.19.0": {
+    "licenses": "(MIT OR CC0-1.0)",
+    "repository": "https://github.com/sindresorhus/type-fest",
+    "publisher": "Sindre Sorhus",
+    "email": "sindresorhus@gmail.com",
+    "url": "https://sindresorhus.com",
+    "path": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/type-fest",
+    "licenseFile": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/type-fest/readme.md"
+  },
+  "type-is@1.6.18": {
+    "licenses": "MIT",
+    "repository": "https://github.com/jshttp/type-is",
+    "path": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/body-parser/node_modules/type-is",
+    "licenseFile": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/body-parser/node_modules/type-is/LICENSE"
+  },
+  "type-is@2.0.0": {
+    "licenses": "MIT",
+    "repository": "https://github.com/jshttp/type-is",
+    "path": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/type-is",
+    "licenseFile": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/type-is/LICENSE"
+  },
+  "typedarray@0.0.6": {
+    "licenses": "MIT",
+    "repository": "https://github.com/substack/typedarray",
+    "publisher": "James Halliday",
+    "email": "mail@substack.net",
+    "url": "http://substack.net",
+    "path": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/typedarray",
+    "licenseFile": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/typedarray/LICENSE"
+  },
+  "typescript@5.8.3": {
+    "licenses": "Apache-2.0",
+    "repository": "https://github.com/microsoft/TypeScript",
+    "publisher": "Microsoft Corp.",
+    "path": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/typescript",
+    "licenseFile": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/typescript/LICENSE.txt"
+  },
+  "uid-safe@2.1.5": {
+    "licenses": "MIT",
+    "repository": "https://github.com/crypto-utils/uid-safe",
+    "path": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/uid-safe",
+    "licenseFile": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/uid-safe/LICENSE"
+  },
+  "undefsafe@2.0.5": {
+    "licenses": "MIT",
+    "repository": "https://github.com/remy/undefsafe",
+    "publisher": "Remy Sharp",
+    "path": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/undefsafe",
+    "licenseFile": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/undefsafe/LICENSE"
+  },
+  "undici-types@6.21.0": {
+    "licenses": "MIT",
+    "repository": "https://github.com/nodejs/undici",
+    "path": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/undici-types",
+    "licenseFile": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/undici-types/LICENSE"
+  },
+  "unfetch@4.2.0": {
+    "licenses": "MIT",
+    "repository": "https://github.com/developit/unfetch",
+    "path": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/unfetch",
+    "licenseFile": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/unfetch/LICENSE.md"
+  },
+  "unique-filename@1.1.1": {
+    "licenses": "ISC",
+    "repository": "https://github.com/iarna/unique-filename",
+    "publisher": "Rebecca Turner",
+    "email": "me@re-becca.org",
+    "url": "http://re-becca.org/",
+    "path": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/unique-filename",
+    "licenseFile": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/unique-filename/LICENSE"
+  },
+  "unique-slug@2.0.2": {
+    "licenses": "ISC",
+    "repository": "https://github.com/iarna/unique-slug",
+    "publisher": "Rebecca Turner",
+    "email": "me@re-becca.org",
+    "url": "http://re-becca.org",
+    "path": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/unique-slug",
+    "licenseFile": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/unique-slug/LICENSE"
+  },
+  "universalify@0.1.2": {
+    "licenses": "MIT",
+    "repository": "https://github.com/RyanZim/universalify",
+    "publisher": "Ryan Zimmerman",
+    "email": "opensrc@ryanzim.com",
+    "path": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/universalify",
+    "licenseFile": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/universalify/LICENSE"
+  },
+  "unpipe@1.0.0": {
+    "licenses": "MIT",
+    "repository": "https://github.com/stream-utils/unpipe",
+    "publisher": "Douglas Christopher Wilson",
+    "email": "doug@somethingdoug.com",
+    "path": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/unpipe",
+    "licenseFile": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/unpipe/LICENSE"
+  },
+  "uri-js@4.4.1": {
+    "licenses": "BSD-2-Clause",
+    "repository": "https://github.com/garycourt/uri-js",
+    "publisher": "Gary Court",
+    "email": "gary.court@gmail.com",
+    "path": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/uri-js",
+    "licenseFile": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/uri-js/LICENSE"
+  },
+  "util-deprecate@1.0.2": {
+    "licenses": "MIT",
+    "repository": "https://github.com/TooTallNate/util-deprecate",
+    "publisher": "Nathan Rajlich",
+    "email": "nathan@tootallnate.net",
+    "url": "http://n8.io/",
+    "path": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/util-deprecate",
+    "licenseFile": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/util-deprecate/LICENSE"
+  },
+  "utils-merge@1.0.1": {
+    "licenses": "MIT",
+    "repository": "https://github.com/jaredhanson/utils-merge",
+    "publisher": "Jared Hanson",
+    "email": "jaredhanson@gmail.com",
+    "url": "http://www.jaredhanson.net/",
+    "path": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/utils-merge",
+    "licenseFile": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/utils-merge/LICENSE"
+  },
+  "uuid@10.0.0": {
+    "licenses": "MIT",
+    "repository": "https://github.com/uuidjs/uuid",
+    "path": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/uuid",
+    "licenseFile": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/uuid/LICENSE.md"
+  },
+  "vary@1.1.2": {
+    "licenses": "MIT",
+    "repository": "https://github.com/jshttp/vary",
+    "publisher": "Douglas Christopher Wilson",
+    "email": "doug@somethingdoug.com",
+    "path": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/vary",
+    "licenseFile": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/vary/LICENSE"
+  },
+  "webidl-conversions@3.0.1": {
+    "licenses": "BSD-2-Clause",
+    "repository": "https://github.com/jsdom/webidl-conversions",
+    "publisher": "Domenic Denicola",
+    "email": "d@domenic.me",
+    "url": "https://domenic.me/",
+    "path": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/webidl-conversions",
+    "licenseFile": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/webidl-conversions/LICENSE.md"
+  },
+  "whatwg-url@5.0.0": {
+    "licenses": "MIT",
+    "repository": "https://github.com/jsdom/whatwg-url",
+    "publisher": "Sebastian Mayr",
+    "email": "github@smayr.name",
+    "path": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/whatwg-url",
+    "licenseFile": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/whatwg-url/LICENSE.txt"
+  },
+  "which@2.0.2": {
+    "licenses": "ISC",
+    "repository": "https://github.com/isaacs/node-which",
+    "publisher": "Isaac Z. Schlueter",
+    "email": "i@izs.me",
+    "url": "http://blog.izs.me",
+    "path": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/which",
+    "licenseFile": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/which/LICENSE"
+  },
+  "wide-align@1.1.5": {
+    "licenses": "ISC",
+    "repository": "https://github.com/iarna/wide-align",
+    "publisher": "Rebecca Turner",
+    "email": "me@re-becca.org",
+    "url": "http://re-becca.org/",
+    "path": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/wide-align",
+    "licenseFile": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/wide-align/LICENSE"
+  },
+  "wrappy@1.0.2": {
+    "licenses": "ISC",
+    "repository": "https://github.com/npm/wrappy",
+    "publisher": "Isaac Z. Schlueter",
+    "email": "i@izs.me",
+    "url": "http://blog.izs.me/",
+    "path": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/wrappy",
+    "licenseFile": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/wrappy/LICENSE"
+  },
+  "xtend@4.0.2": {
+    "licenses": "MIT",
+    "repository": "https://github.com/Raynos/xtend",
+    "publisher": "Raynos",
+    "email": "raynos2@gmail.com",
+    "path": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/xtend",
+    "licenseFile": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/xtend/LICENSE"
+  },
+  "yallist@4.0.0": {
+    "licenses": "ISC",
+    "repository": "https://github.com/isaacs/yallist",
+    "publisher": "Isaac Z. Schlueter",
+    "email": "i@izs.me",
+    "url": "http://blog.izs.me/",
+    "path": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/minipass/node_modules/yallist",
+    "licenseFile": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/minipass/node_modules/yallist/LICENSE"
+  },
+  "yaml@2.8.0": {
+    "licenses": "ISC",
+    "repository": "https://github.com/eemeli/yaml",
+    "publisher": "Eemeli Aro",
+    "email": "eemeli@gmail.com",
+    "path": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/yaml",
+    "licenseFile": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/yaml/LICENSE"
+  },
+  "zod-to-json-schema@3.24.5": {
+    "licenses": "ISC",
+    "repository": "https://github.com/StefanTerdell/zod-to-json-schema",
+    "publisher": "Stefan Terdell",
+    "path": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/zod-to-json-schema",
+    "licenseFile": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/zod-to-json-schema/LICENSE"
+  },
+  "zod@3.25.76": {
+    "licenses": "MIT",
+    "repository": "https://github.com/colinhacks/zod",
+    "publisher": "Colin McDonnell",
+    "email": "zod@colinhacks.com",
+    "path": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/zod",
+    "licenseFile": "/Users/ihar.mikailau/Workspace/test-portal/test-portal-be/node_modules/zod/LICENSE"
+  }
+}
+
