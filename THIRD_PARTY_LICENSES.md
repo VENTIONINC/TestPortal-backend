@@ -3,8 +3,8 @@
 This document contains the licenses and copyright notices for all third-party software packages used in the **test-portal-be** application.
 
 **Project Version:** 0.8.0
-**Last Updated:** 2026-02-05
-**Total Dependencies:** 406
+**Last Updated:** 2026-02-06
+**Total Dependencies:** 308
 
 ---
 
@@ -15,15 +15,15 @@ This application uses third-party open source software. All dependencies have be
 ### License Distribution
 
 | License Type | Count | Commercial Use |
-|--------------|-------|----------------|
-| MIT          | ~285  | ✓ Permitted    |
-| ISC          | ~45   | ✓ Permitted    |
-| Apache-2.0   | ~25   | ✓ Permitted    |
-| BSD-3-Clause | ~6    | ✓ Permitted    |
-| BSD-2-Clause | ~3    | ✓ Permitted    |
+| ------------ | ----- | -------------- |
+| MIT          | 258   | ✓ Permitted    |
+| ISC          | 19    | ✓ Permitted    |
+| Apache-2.0   | 18    | ✓ Permitted    |
+| BSD-3-Clause | 4     | ✓ Permitted    |
+| BSD-2-Clause | 4     | ✓ Permitted    |
 | 0BSD         | 2     | ✓ Permitted    |
 | Python-2.0   | 1     | ✓ Permitted    |
-| Other/Dual   | ~2    | ✓ Permitted    |
+| MIT OR CC0   | 1     | ✓ Permitted    |
 
 **All licenses are commercially compatible and approved for use.**
 
@@ -316,7 +316,6 @@ The following third-party packages are used in production:
 [socks@2.8.3](https://github.com/JoshGlazebrook/socks) - MIT
 [source-map@0.6.1](https://github.com/mozilla/source-map) - BSD-3-Clause
 [sprintf-js@1.1.3](https://github.com/alexei/sprintf.js) - BSD-3-Clause
-[sqlite3@5.1.7](https://github.com/TryGhost/node-sqlite3) - BSD-3-Clause
 [ssri@8.0.1](https://github.com/npm/ssri) - ISC
 [statuses@2.0.1](https://github.com/jshttp/statuses) - MIT
 [streamroller@3.1.5](https://github.com/log4js-node/streamroller) - MIT
@@ -595,5 +594,5 @@ For questions about license compliance or to request additional information, ple
 
 ---
 
-**Generated:** 2026-02-05
+**Generated:** 2026-02-06
 **For:** test-portal-be v0.8.0

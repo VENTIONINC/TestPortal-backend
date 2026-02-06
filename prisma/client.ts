@@ -4,7 +4,7 @@ import getLogger from "@/lib/logger";
 function runClient(): PrismaClient {
   const logger = getLogger();
   const client = new PrismaClient();
-  logger.debug("sqlite STARTED");
+  logger.debug("PostgreSQL client STARTED");
   return client;
 }
 

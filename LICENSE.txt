@@ -1,0 +1,130 @@
+PROPRIETARY SOFTWARE LICENSE AGREEMENT
+
+Copyright (c) 2026 [YOUR COMPANY NAME]
+All Rights Reserved.
+
+================================================================================
+
+NOTICE: This software and associated documentation files (the "Software") are
+proprietary and confidential. The Software is licensed, not sold.
+
+================================================================================
+
+GRANT OF LICENSE
+
+Subject to the terms and conditions of this Agreement, [YOUR COMPANY NAME]
+grants you a limited, non-exclusive, non-transferable, revocable license to
+use the Software solely for [SPECIFY PERMITTED USE: internal business purposes,
+evaluation purposes, etc.].
+
+================================================================================
+
+RESTRICTIONS
+
+You may NOT:
+
+1. Copy, modify, adapt, translate, or create derivative works of the Software
+2. Reverse engineer, decompile, disassemble, or attempt to derive source code
+3. Distribute, sublicense, lease, rent, loan, or transfer the Software
+4. Remove or modify any proprietary notices, labels, or marks
+5. Use the Software for any commercial purpose without explicit permission
+6. Share access credentials or licenses with unauthorized parties
+7. Use the Software to develop competing products or services
+
+================================================================================
+
+OWNERSHIP
+
+The Software is the exclusive property of [YOUR COMPANY NAME] and is protected
+by copyright laws, international treaty provisions, and other intellectual
+property laws. All title, ownership rights, and intellectual property rights
+in and to the Software remain with [YOUR COMPANY NAME].
+
+================================================================================
+
+THIRD-PARTY COMPONENTS
+
+This Software includes third-party open source components. See the file
+THIRD_PARTY_LICENSES.md for details on third-party licenses and attributions.
+These third-party components are governed by their respective licenses.
+
+================================================================================
+
+CONFIDENTIALITY
+
+The Software contains trade secrets and proprietary information of
+[YOUR COMPANY NAME]. You agree to maintain the confidentiality of the Software
+and not disclose it to any third party without prior written consent.
+
+================================================================================
+
+WARRANTY DISCLAIMER
+
+THE SOFTWARE IS PROVIDED "AS IS" WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO WARRANTIES OF MERCHANTABILITY, FITNESS
+FOR A PARTICULAR PURPOSE, AND NON-INFRINGEMENT.
+
+[YOUR COMPANY NAME] DOES NOT WARRANT THAT THE SOFTWARE WILL MEET YOUR
+REQUIREMENTS OR THAT OPERATION WILL BE UNINTERRUPTED OR ERROR-FREE.
+
+================================================================================
+
+LIMITATION OF LIABILITY
+
+IN NO EVENT SHALL [YOUR COMPANY NAME] BE LIABLE FOR ANY SPECIAL, INCIDENTAL,
+INDIRECT, OR CONSEQUENTIAL DAMAGES WHATSOEVER (INCLUDING, WITHOUT LIMITATION,
+DAMAGES FOR LOSS OF BUSINESS PROFITS, BUSINESS INTERRUPTION, LOSS OF BUSINESS
+INFORMATION, OR ANY OTHER PECUNIARY LOSS) ARISING OUT OF THE USE OF OR
+INABILITY TO USE THE SOFTWARE.
+
+================================================================================
+
+TERMINATION
+
+This license is effective until terminated. Your rights under this license
+will terminate automatically without notice if you fail to comply with any
+term of this Agreement. Upon termination, you must cease all use of the
+Software and destroy all copies.
+
+================================================================================
+
+GOVERNING LAW
+
+This Agreement shall be governed by and construed in accordance with the laws
+of [YOUR JURISDICTION], without regard to its conflict of law provisions.
+
+================================================================================
+
+ENTIRE AGREEMENT
+
+This Agreement constitutes the entire agreement between you and
+[YOUR COMPANY NAME] concerning the Software and supersedes all prior
+agreements and understandings.
+
+================================================================================
+
+CONTACT INFORMATION
+
+For licensing inquiries, contact:
+[YOUR COMPANY NAME]
+[EMAIL ADDRESS]
+[WEBSITE]
+
+================================================================================
+
+INSTRUCTIONS FOR UPDATING THIS LICENSE:
+
+1. Replace [YOUR COMPANY NAME] with your actual company/organization name
+2. Replace [SPECIFY PERMITTED USE] with specific usage terms
+3. Replace [YOUR JURISDICTION] with applicable legal jurisdiction (e.g., "the State of Delaware, USA")
+4. Add contact information at the bottom
+5. Update copyright year as needed
+6. Review with legal counsel before production use
+7. Consider adding specific terms for:
+   - Payment/subscription terms (if applicable)
+   - Support and maintenance obligations
+   - Data privacy and security requirements
+   - Export control compliance
+   - Audit rights
+
+Last Updated: 2026-02-05
