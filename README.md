@@ -168,7 +168,9 @@ src/
 - **[Development Guide](docs/DEVELOPMENT_GUIDE.md)** - Complete setup and development guide
 - [API Documentation](docs/API_DOCUMENTATION.md)
 - [How to Inspect the MCP Server](docs/INSPECT_MCP_SERVER.md)
-- [MCP Tools Documentation](docs/MCP_TOOLS.md)
+- [MCP Tools Documentation](docs/mcp/mcp-tools.md)
+- [MCP Assessment](docs/mcp/mcp-assesment.md)
+- [MCP Testing Plan](docs/mcp/testing-plan.md)
 - [Docker Deployment Guide](docs/DOCKER.md)
 
 ## Contributing

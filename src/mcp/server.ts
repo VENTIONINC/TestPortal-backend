@@ -160,7 +160,7 @@ router.post(
 
         const server = new McpServer({
           name: "test-portal-server",
-          version: "0.0.1",
+          version: process.env.npm_package_version ?? "N/A",
         }) as McpServerWithTools;
 
         const context: MCPToolContext = { mcpUserId };
