@@ -13,6 +13,9 @@ export const getResultsSchema: MCPToolSchema = {
   environment: z.string().optional(),
   type: z.string().optional(),
   status: z.string().optional(),
+  reviewStatus: z.string().optional(),
+  errorMessage: z.string().optional(),
+  issueName: z.string().optional(),
   from: z.string().optional(),
   to: z.string().optional(),
   page: z.number().default(1).optional(),
@@ -33,5 +36,39 @@ export const getResultByIdSchema: MCPToolSchema = {
 export const getResultsStatsSchema: MCPToolSchema = {
   projectId: z.string(),
   dates: z.array(z.string()).optional(),
+};
+
+/**
+ * Schema for updating result analysis
+ */
+export const updateResultAnalysisSchema: MCPToolSchema = {
+  resultId: z.string(),
+  analysisStatus: z.string().optional(),
+  analysisCategory: z
+    .enum(["bug", "infra", "performance", "script", "other"])
+    .optional(),
+  analysisConfidence: z.number().min(0).max(1).optional(),
+  analysisConclusion: z.string().optional(),
+};
+
+/**
+ * Schema for updating result analysis feedback
+ */
+export const updateResultAnalysisFeedbackSchema: MCPToolSchema = {
+  resultId: z.string(),
+  reviewerId: z.string(),
+  analysisFeedbackCategory: z
+    .enum(["bug", "infra", "performance", "script", "other"])
+    .optional(),
+  analysisFeedbackConfidence: z.number().min(0).max(1).optional(),
+  analysisFeedbackConclusion: z.string().optional(),
+};
+
+/**
+ * Schema for deleting a result
+ */
+export const deleteResultSchema: MCPToolSchema = {
+  resultId: z.string(),
+  projectId: z.string(),
 };
 

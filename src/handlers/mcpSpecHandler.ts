@@ -10,4 +10,8 @@ export const mcpSpecHandler = {
   async getSpecById(specId: string, projectId: string): Promise<ProcessedSpec> {
     return await specService.getSpecById(specId, projectId);
   },
+
+  async deleteSpec(specId: string, projectId: string): Promise<void> {
+    await specService.deleteSpec(specId, projectId);
+  },
 };

@@ -9,6 +9,13 @@ interface BulkReviewResult {
   failureCount: number;
 }
 
+interface AnalyzeErrorsResult {
+  analyzedResults: number;
+  updatedResultIds: string[];
+  skippedErrorIds: string[];
+  totalErrors: number;
+}
+
 export const mcpResultErrorHandler = {
   async assignIssue(
     resultErrorId: string,
@@ -29,5 +36,12 @@ export const mcpResultErrorHandler = {
 
   async getResultErrorById(resultErrorId: string, projectId: string): Promise<PrismaResultError> {
     return await resultErrorService.getResultErrorById(resultErrorId, projectId);
+  },
+
+  async analyzeErrors(
+    projectId: string,
+    errorIds: string[],
+  ): Promise<AnalyzeErrorsResult> {
+    return await resultErrorService.analyzeErrors(projectId, errorIds);
   },
 };

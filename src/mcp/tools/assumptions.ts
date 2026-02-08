@@ -4,6 +4,7 @@ import {
   createAssumptionSchema,
   updateAssumptionSchema,
   getAssumptionByIdSchema,
+  deleteAssumptionSchema,
 } from "@/mcp/schemas/assumptionSchemas";
 import type {
   CreateAssumptionRequest,
@@ -16,6 +17,11 @@ interface UpdateAssumptionParams extends UpdateAssumptionRequest {
 }
 
 interface GetAssumptionByIdParams {
+  assumptionId: string;
+  projectId: string;
+}
+
+interface DeleteAssumptionParams {
   assumptionId: string;
   projectId: string;
 }
@@ -71,4 +77,19 @@ export const getAssumptionById = createMcpTool(
     return createSuccessResponse(assumption);
   },
   "fetching assumption",
+);
+
+export const deleteAssumption = createMcpTool(
+  "delete-assumption",
+  "Delete an assumption by ID",
+  deleteAssumptionSchema,
+  async (params: DeleteAssumptionParams): Promise<MCPToolResponse> => {
+    const { assumptionId, projectId } = params;
+    await mcpAssumptionHandler.deleteAssumption(assumptionId, projectId);
+    return createSuccessResponse(
+      { assumptionId, projectId },
+      "Assumption deleted successfully:",
+    );
+  },
+  "deleting assumption",
 );

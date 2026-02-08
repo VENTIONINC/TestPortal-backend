@@ -5,6 +5,7 @@ import {
   reviewErrorSchema,
   bulkReviewSchema,
   getResultErrorByIdSchema,
+  analyzeErrorsSchema,
 } from "@/mcp/schemas/resultErrorSchemas";
 import type { MCPToolResponse } from "@/types";
 
@@ -24,6 +25,11 @@ interface BulkReviewParams {
 interface GetResultErrorByIdParams {
   resultErrorId: string;
   projectId: string;
+}
+
+interface AnalyzeErrorsParams {
+  projectId: string;
+  errorIds: string[];
 }
 
 export const assignIssue = createMcpTool(
@@ -85,4 +91,19 @@ export const getResultErrorById = createMcpTool(
     return createSuccessResponse(resultError);
   },
   "fetching result error",
+);
+
+export const analyzeResultErrors = createMcpTool(
+  "analyze-result-errors",
+  "Analyze result errors and update stored results with AI-generated insights",
+  analyzeErrorsSchema,
+  async (params: AnalyzeErrorsParams): Promise<MCPToolResponse> => {
+    const { projectId, errorIds } = params;
+    const result = await mcpResultErrorHandler.analyzeErrors(
+      projectId,
+      errorIds,
+    );
+    return createSuccessResponse(result, "Result errors analyzed successfully:");
+  },
+  "analyzing result errors",
 );

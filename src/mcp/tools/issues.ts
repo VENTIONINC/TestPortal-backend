@@ -4,6 +4,8 @@ import {
   getIssuesSchema,
   getIssueByIdSchema,
   createIssueSchema,
+  updateIssueSchema,
+  deleteIssueSchema,
 } from "@/mcp/schemas/issueSchemas";
 import type { MCPToolResponse } from "@/types";
 import { IssueCategory } from "@/types/enums";
@@ -28,6 +30,22 @@ interface CreateIssueParams {
   portal?: string;
   service?: string;
   ticket?: string;
+  projectId: string;
+}
+
+interface UpdateIssueParams {
+  issueId: string;
+  name?: string;
+  category?: string;
+  description?: string;
+  portal?: string;
+  service?: string;
+  ticket?: string;
+  updatedById?: string;
+}
+
+interface DeleteIssueParams {
+  issueId: string;
   projectId: string;
 }
 
@@ -74,4 +92,28 @@ export const createIssue = createMcpTool(
     return createSuccessResponse(issue, "Issue created successfully:");
   },
   "creating issue",
+);
+
+export const updateIssue = createMcpTool(
+  "update-issue",
+  "Update an existing issue by ID with optional fields like name, category, description, portal, service, and ticket",
+  updateIssueSchema,
+  async (params: UpdateIssueParams): Promise<MCPToolResponse> => {
+    const { issueId, ...updateData } = params;
+    const issue = await mcpIssueHandler.updateIssue(issueId, updateData);
+    return createSuccessResponse(issue, "Issue updated successfully:");
+  },
+  "updating issue",
+);
+
+export const deleteIssue = createMcpTool(
+  "delete-issue",
+  "Delete an issue by ID and remove all associated assumptions",
+  deleteIssueSchema,
+  async (params: DeleteIssueParams): Promise<MCPToolResponse> => {
+    const { issueId, projectId } = params;
+    const issue = await mcpIssueHandler.deleteIssue(issueId, projectId);
+    return createSuccessResponse(issue, "Issue deleted successfully:");
+  },
+  "deleting issue",
 );

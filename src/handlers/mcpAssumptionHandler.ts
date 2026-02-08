@@ -29,4 +29,8 @@ export const mcpAssumptionHandler = {
   async getAssumptionById(assumptionId: string, projectId: string): Promise<PrismaAssumption> {
     return await assumptionService.getAssumptionById(assumptionId, projectId);
   },
+
+  async deleteAssumption(assumptionId: string, projectId: string): Promise<void> {
+    await assumptionService.deleteAssumption(assumptionId, projectId);
+  },
 };

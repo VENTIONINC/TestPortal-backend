@@ -30,3 +30,11 @@ export const getResultErrorByIdSchema: MCPToolSchema = {
   resultErrorId: z.string(),
   projectId: z.string(),
 };
+
+/**
+ * Schema for analyzing result errors
+ */
+export const analyzeErrorsSchema: MCPToolSchema = {
+  projectId: z.string(),
+  errorIds: z.array(z.string()).min(1),
+};

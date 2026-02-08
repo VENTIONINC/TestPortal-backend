@@ -8,3 +8,11 @@ export const getSpecByIdSchema: MCPToolSchema = {
   specId: z.string(),
   projectId: z.string(),
 };
+
+/**
+ * Schema for deleting a spec
+ */
+export const deleteSpecSchema: MCPToolSchema = {
+  specId: z.string(),
+  projectId: z.string(),
+};

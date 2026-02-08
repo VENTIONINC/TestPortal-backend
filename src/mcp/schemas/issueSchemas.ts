@@ -39,3 +39,27 @@ export const createIssueSchema: MCPToolSchema = {
   ticket: z.string().optional(),
   projectId: z.string().describe("The UUID of the project this issue belongs to"),
 };
+
+/**
+ * Schema for updating an issue
+ */
+export const updateIssueSchema: MCPToolSchema = {
+  issueId: z.string().describe("The UUID of the issue to update"),
+  name: z.string().optional(),
+  category: z.string().optional(),
+  description: z.string().optional(),
+  portal: z.string().optional(),
+  service: z.string().optional(),
+  ticket: z.string().optional(),
+  updatedById: z.string().optional(),
+};
+
+/**
+ * Schema for deleting an issue
+ */
+export const deleteIssueSchema: MCPToolSchema = {
+  issueId: z.string().describe("The UUID of the issue to delete"),
+  projectId: z
+    .string()
+    .describe("The UUID of the project this issue belongs to (required)"),
+};

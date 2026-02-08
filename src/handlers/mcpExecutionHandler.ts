@@ -5,4 +5,8 @@ export const mcpExecutionHandler = {
   async getExecutionById(executionId: string, projectId: string): Promise<PrismaExecution> {
     return await executionService.getExecutionById(executionId, projectId);
   },
+
+  async deleteExecution(executionId: string, projectId: string): Promise<void> {
+    await executionService.deleteExecution(executionId, projectId);
+  },
 };

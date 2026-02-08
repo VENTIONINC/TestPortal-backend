@@ -50,6 +50,7 @@ interface UpdateIssueParams {
   portal?: string;
   service?: string;
   ticket?: string;
+  updatedById?: string;
 }
 
 export const mcpIssueHandler = {
@@ -97,5 +98,9 @@ export const mcpIssueHandler = {
     updateData: UpdateIssueParams,
   ): Promise<PrismaIssue> {
     return await issueService.updateIssue(issueId, updateData);
+  },
+
+  async deleteIssue(issueId: string, projectId: string): Promise<PrismaIssue> {
+    return await issueService.deleteIssue(issueId, projectId);
   },
 };

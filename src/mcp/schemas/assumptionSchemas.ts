@@ -33,3 +33,11 @@ export const getAssumptionByIdSchema: MCPToolSchema = {
   assumptionId: z.string().describe("UUID of the assumption"),
   projectId: z.string().describe("UUID of the project"),
 };
+
+/**
+ * Schema for deleting an assumption
+ */
+export const deleteAssumptionSchema: MCPToolSchema = {
+  assumptionId: z.string().describe("UUID of the assumption"),
+  projectId: z.string().describe("UUID of the project"),
+};

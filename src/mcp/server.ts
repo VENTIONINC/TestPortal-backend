@@ -8,26 +8,46 @@ import { StreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/
 import { isInitializeRequest } from "@modelcontextprotocol/sdk/types.js";
 import { authenticateMcpToken } from "@/mcp/middleware/auth";
 import { statusCheck } from "@/mcp/tools/status-check";
-import { currentTime } from "@/mcp/tools/current-time";
-import { getIssues, getIssueById, createIssue } from "@/mcp/tools/issues";
+import {
+  getIssues,
+  getIssuesWithStats,
+  getIssueById,
+  createIssue,
+  updateIssue,
+  deleteIssue,
+} from "@/mcp/tools/issues";
 import {
   getResults,
   getResultById,
   getResultsStats,
+  updateResultAnalysis,
+  updateResultAnalysisFeedback,
+  deleteResult,
 } from "@/mcp/tools/results";
 import {
   createAssumption,
   updateAssumption,
   getAssumptionById,
+  deleteAssumption,
 } from "@/mcp/tools/assumptions";
-import { getExecutionById } from "@/mcp/tools/executions";
+import { getExecutionById, deleteExecution } from "@/mcp/tools/executions";
 import {
   assignIssue,
   reviewError,
   bulkReview,
   getResultErrorById,
+  analyzeResultErrors,
 } from "@/mcp/tools/result-errors";
-import { getSpecById } from "@/mcp/tools/specs";
+import { getSpecById, deleteSpec } from "@/mcp/tools/specs";
+import {
+  getProjects,
+  getProjectById,
+  createProject,
+  updateProject,
+  deleteProject,
+  getProjectDashboard,
+} from "@/mcp/tools/projects";
+import { currentTime } from "@/mcp/tools/current-time";
 import * as testPortalAssistant from "@/mcp/prompts/test-portal-assistant/v1.0.0";
 import * as issueAnalysisAssistant from "@/mcp/prompts/issue-analysis-assistant/v1.0.0";
 import * as environmentPerformanceAssistant from "@/mcp/prompts/environment-performance-assistant/v1.0.0";
@@ -113,30 +133,48 @@ router.post(
 
         // Issue tools
         server.tool(...getIssues);
+        server.tool(...getIssuesWithStats);
         server.tool(...getIssueById);
         server.tool(...createIssue);
+        server.tool(...updateIssue);
+        server.tool(...deleteIssue);
 
         // Result tools
         server.tool(...getResults);
         server.tool(...getResultById);
         server.tool(...getResultsStats);
+        server.tool(...updateResultAnalysis);
+        server.tool(...updateResultAnalysisFeedback);
+        server.tool(...deleteResult);
 
         // Assumption tools
         server.tool(...createAssumption);
         server.tool(...updateAssumption);
         server.tool(...getAssumptionById);
+        server.tool(...deleteAssumption);
 
         // Execution tools
         server.tool(...getExecutionById);
+        server.tool(...deleteExecution);
 
         // Result Error tools
         server.tool(...assignIssue);
         server.tool(...reviewError);
         server.tool(...bulkReview);
         server.tool(...getResultErrorById);
+        server.tool(...analyzeResultErrors);
 
         // Spec tools
         server.tool(...getSpecById);
+        server.tool(...deleteSpec);
+
+        // Project tools
+        server.tool(...getProjects);
+        server.tool(...getProjectById);
+        server.tool(...createProject);
+        server.tool(...updateProject);
+        server.tool(...deleteProject);
+        server.tool(...getProjectDashboard);
 
         // Test Portal Assistant
         server.registerPrompt(

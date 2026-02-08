@@ -1,9 +1,14 @@
 import { mcpSpecHandler } from "@/handlers/mcpSpecHandler";
 import { createSuccessResponse, createMcpTool } from "@/mcp/helpers/mcpHelpers";
-import { getSpecByIdSchema } from "@/mcp/schemas/specSchemas";
+import { getSpecByIdSchema, deleteSpecSchema } from "@/mcp/schemas/specSchemas";
 import type { MCPToolResponse } from "@/types";
 
 interface GetSpecByIdParams {
+  specId: string;
+  projectId: string;
+}
+
+interface DeleteSpecParams {
   specId: string;
   projectId: string;
 }
@@ -18,4 +23,16 @@ export const getSpecById = createMcpTool(
     return createSuccessResponse(spec);
   },
   "fetching spec",
+);
+
+export const deleteSpec = createMcpTool(
+  "delete-spec",
+  "Delete a spec by ID",
+  deleteSpecSchema,
+  async (params: DeleteSpecParams): Promise<MCPToolResponse> => {
+    const { specId, projectId } = params;
+    await mcpSpecHandler.deleteSpec(specId, projectId);
+    return createSuccessResponse({ specId, projectId }, "Spec deleted successfully:");
+  },
+  "deleting spec",
 );

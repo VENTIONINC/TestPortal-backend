@@ -13,6 +13,19 @@ interface GetResultsResponse {
   totalPages: number;
 }
 
+interface UpdateAnalysisData {
+  analysisStatus?: string;
+  analysisCategory?: string;
+  analysisConfidence?: number;
+  analysisConclusion?: string;
+}
+
+interface UpdateAnalysisFeedbackData {
+  analysisFeedbackCategory?: string;
+  analysisFeedbackConfidence?: number;
+  analysisFeedbackConclusion?: string;
+}
+
 export const mcpResultHandler = {
   async getResults(params?: GetResultsParams): Promise<GetResultsResponse> {
     const {
@@ -24,6 +37,9 @@ export const mcpResultHandler = {
       environment,
       type,
       status,
+      reviewStatus,
+      errorMessage,
+      issueName,
       from,
       to,
       page = 1,
@@ -46,6 +62,9 @@ export const mcpResultHandler = {
     if (environment) resultParams.environment = environment;
     if (type) resultParams.type = type;
     if (status) resultParams.status = status;
+    if (reviewStatus) resultParams.reviewStatus = reviewStatus;
+    if (errorMessage) resultParams.errorMessage = errorMessage;
+    if (issueName) resultParams.issueName = issueName;
     if (from) resultParams.from = from;
     if (to) resultParams.to = to;
     if (page) resultParams.page = page;
@@ -72,5 +91,28 @@ export const mcpResultHandler = {
       projectId,
       ...(dates && { dates }),
     });
+  },
+
+  async updateAnalysis(
+    resultId: string,
+    analysisData: UpdateAnalysisData,
+  ): Promise<ResultWithRelations> {
+    return await resultService.updateAnalysis(resultId, analysisData);
+  },
+
+  async updateAnalysisFeedback(
+    resultId: string,
+    feedbackData: UpdateAnalysisFeedbackData,
+    reviewerId: string,
+  ): Promise<ResultWithRelations> {
+    return await resultService.updateAnalysisFeedback(
+      resultId,
+      feedbackData,
+      reviewerId,
+    );
+  },
+
+  async deleteResult(resultId: string, projectId: string): Promise<void> {
+    await resultService.deleteResult(resultId, projectId);
   },
 };
