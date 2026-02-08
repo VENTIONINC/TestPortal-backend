@@ -6,7 +6,10 @@ import {
 } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/streamableHttp.js";
 import { isInitializeRequest } from "@modelcontextprotocol/sdk/types.js";
-import { authenticateMcpToken } from "@/mcp/middleware/auth";
+import {
+  authenticateMcpToken,
+  type RequestWithMcpUser,
+} from "@/mcp/middleware/auth";
 import { statusCheck } from "@/mcp/tools/status-check";
 import {
   getIssues,
@@ -53,6 +56,7 @@ import * as issueAnalysisAssistant from "@/mcp/prompts/issue-analysis-assistant/
 import * as environmentPerformanceAssistant from "@/mcp/prompts/environment-performance-assistant/v1.0.0";
 import * as developerCodeAssistant from "@/mcp/prompts/developer-code-assistant/v1.0.0";
 import * as documentationArchitect from "@/mcp/prompts/documentation-architect/v1.0.0";
+import type { MCPToolContext, MCPToolHandler, MCPToolSchema } from "@/types";
 
 const router = Router();
 
@@ -72,6 +76,24 @@ interface McpServerWithTools extends McpServer {
   connect: (transport: unknown) => Promise<void>;
 }
 
+type ToolTuple<TInput = unknown> = [
+  string,
+  string,
+  MCPToolSchema,
+  MCPToolHandler<TInput, MCPToolContext>,
+];
+
+const registerToolWithContext = <TInput>(
+  server: McpServerWithTools,
+  tool: ToolTuple<TInput>,
+  context: MCPToolContext,
+): void => {
+  const [name, description, schema, handler] = tool;
+  server.tool(name, description, schema, (params: TInput) =>
+    handler(params, context),
+  );
+};
+
 const transports: TransportStorage = {};
 const SESSION_TIMEOUT = 30 * 60 * 1000; // 30 minutes
 
@@ -89,8 +111,22 @@ setInterval(() => {
 router.post(
   "/v2/mcp",
   authenticateMcpToken,
-  async (req: Request, res: Response): Promise<void> => {
+  async (req: RequestWithMcpUser, res: Response): Promise<void> => {
     try {
+      const mcpUserId = req.mcpUserId;
+
+      if (!mcpUserId) {
+        res.status(401).json({
+          jsonrpc: "2.0",
+          error: {
+            code: -32002,
+            message: "Invalid or expired MCP token",
+          },
+          id: null,
+        });
+        return;
+      }
+
       const sessionId = req.headers["mcp-session-id"] as string | undefined;
       let transport: StreamableHTTPServerTransport;
 
@@ -127,54 +163,56 @@ router.post(
           version: "0.0.1",
         }) as McpServerWithTools;
 
+        const context: MCPToolContext = { mcpUserId };
+
         // Register all tools
-        server.tool(...statusCheck);
-        server.tool(...currentTime);
+        registerToolWithContext(server, statusCheck, context);
+        registerToolWithContext(server, currentTime, context);
 
         // Issue tools
-        server.tool(...getIssues);
-        server.tool(...getIssuesWithStats);
-        server.tool(...getIssueById);
-        server.tool(...createIssue);
-        server.tool(...updateIssue);
-        server.tool(...deleteIssue);
+        registerToolWithContext(server, getIssues, context);
+        registerToolWithContext(server, getIssuesWithStats, context);
+        registerToolWithContext(server, getIssueById, context);
+        registerToolWithContext(server, createIssue, context);
+        registerToolWithContext(server, updateIssue, context);
+        registerToolWithContext(server, deleteIssue, context);
 
         // Result tools
-        server.tool(...getResults);
-        server.tool(...getResultById);
-        server.tool(...getResultsStats);
-        server.tool(...updateResultAnalysis);
-        server.tool(...updateResultAnalysisFeedback);
-        server.tool(...deleteResult);
+        registerToolWithContext(server, getResults, context);
+        registerToolWithContext(server, getResultById, context);
+        registerToolWithContext(server, getResultsStats, context);
+        registerToolWithContext(server, updateResultAnalysis, context);
+        registerToolWithContext(server, updateResultAnalysisFeedback, context);
+        registerToolWithContext(server, deleteResult, context);
 
         // Assumption tools
-        server.tool(...createAssumption);
-        server.tool(...updateAssumption);
-        server.tool(...getAssumptionById);
-        server.tool(...deleteAssumption);
+        registerToolWithContext(server, createAssumption, context);
+        registerToolWithContext(server, updateAssumption, context);
+        registerToolWithContext(server, getAssumptionById, context);
+        registerToolWithContext(server, deleteAssumption, context);
 
         // Execution tools
-        server.tool(...getExecutionById);
-        server.tool(...deleteExecution);
+        registerToolWithContext(server, getExecutionById, context);
+        registerToolWithContext(server, deleteExecution, context);
 
         // Result Error tools
-        server.tool(...assignIssue);
-        server.tool(...reviewError);
-        server.tool(...bulkReview);
-        server.tool(...getResultErrorById);
-        server.tool(...analyzeResultErrors);
+        registerToolWithContext(server, assignIssue, context);
+        registerToolWithContext(server, reviewError, context);
+        registerToolWithContext(server, bulkReview, context);
+        registerToolWithContext(server, getResultErrorById, context);
+        registerToolWithContext(server, analyzeResultErrors, context);
 
         // Spec tools
-        server.tool(...getSpecById);
-        server.tool(...deleteSpec);
+        registerToolWithContext(server, getSpecById, context);
+        registerToolWithContext(server, deleteSpec, context);
 
         // Project tools
-        server.tool(...getProjects);
-        server.tool(...getProjectById);
-        server.tool(...createProject);
-        server.tool(...updateProject);
-        server.tool(...deleteProject);
-        server.tool(...getProjectDashboard);
+        registerToolWithContext(server, getProjects, context);
+        registerToolWithContext(server, getProjectById, context);
+        registerToolWithContext(server, createProject, context);
+        registerToolWithContext(server, updateProject, context);
+        registerToolWithContext(server, deleteProject, context);
+        registerToolWithContext(server, getProjectDashboard, context);
 
         // Test Portal Assistant
         server.registerPrompt(

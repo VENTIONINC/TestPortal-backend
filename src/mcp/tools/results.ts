@@ -29,7 +29,6 @@ interface UpdateResultAnalysisParams {
 
 interface UpdateResultAnalysisFeedbackParams {
   resultId: string;
-  reviewerId: string;
   analysisFeedbackCategory?: string;
   analysisFeedbackConfidence?: number;
   analysisFeedbackConclusion?: string;
@@ -93,12 +92,19 @@ export const updateResultAnalysisFeedback = createMcpTool(
   "update-result-analysis-feedback",
   "Update analysis feedback fields on a result with reviewer context",
   updateResultAnalysisFeedbackSchema,
-  async (params: UpdateResultAnalysisFeedbackParams): Promise<MCPToolResponse> => {
-    const { resultId, reviewerId, ...feedbackData } = params;
+  async (
+    params: UpdateResultAnalysisFeedbackParams,
+    context,
+  ): Promise<MCPToolResponse> => {
+    if (!context?.mcpUserId) {
+      throw new Error("MCP user ID is required");
+    }
+
+    const { resultId, ...feedbackData } = params;
     const updated = await mcpResultHandler.updateAnalysisFeedback(
       resultId,
       feedbackData,
-      reviewerId,
+      context.mcpUserId,
     );
     return createSuccessResponse(
       updated,

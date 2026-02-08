@@ -12,7 +12,6 @@ import type { MCPToolResponse } from "@/types";
 import type { DashboardGranularity } from "@/types/dashboard";
 
 interface GetProjectsParams {
-  ownerId?: string;
   isActive?: boolean;
   name?: string;
 }
@@ -24,7 +23,6 @@ interface GetProjectByIdParams {
 interface CreateProjectParams {
   name: string;
   description?: string;
-  ownerId: string;
 }
 
 interface UpdateProjectParams {
@@ -50,8 +48,15 @@ export const getProjects = createMcpTool(
   "get-projects",
   "Retrieve all projects with optional filters",
   getProjectsSchema,
-  async (params: GetProjectsParams): Promise<MCPToolResponse> => {
-    const projects = await mcpProjectHandler.getProjects(params);
+  async (params: GetProjectsParams, context): Promise<MCPToolResponse> => {
+    if (!context?.mcpUserId) {
+      throw new Error("MCP user ID is required");
+    }
+
+    const projects = await mcpProjectHandler.getProjects({
+      ...params,
+      ownerId: context.mcpUserId,
+    });
     return createSuccessResponse(projects);
   },
   "fetching projects",
@@ -70,10 +75,17 @@ export const getProjectById = createMcpTool(
 
 export const createProject = createMcpTool(
   "create-project",
-  "Create a new project with a required owner ID",
+  "Create a new project for the authenticated user",
   createProjectSchema,
-  async (params: CreateProjectParams): Promise<MCPToolResponse> => {
-    const project = await mcpProjectHandler.createProject(params);
+  async (params: CreateProjectParams, context): Promise<MCPToolResponse> => {
+    if (!context?.mcpUserId) {
+      throw new Error("MCP user ID is required");
+    }
+
+    const project = await mcpProjectHandler.createProject({
+      ...params,
+      ownerId: context.mcpUserId,
+    });
     return createSuccessResponse(project, "Project created successfully:");
   },
   "creating project",

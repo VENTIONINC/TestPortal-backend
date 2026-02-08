@@ -56,7 +56,6 @@ export const updateResultAnalysisSchema: MCPToolSchema = {
  */
 export const updateResultAnalysisFeedbackSchema: MCPToolSchema = {
   resultId: z.string(),
-  reviewerId: z.string(),
   analysisFeedbackCategory: z
     .enum(["bug", "infra", "performance", "script", "other"])
     .optional(),

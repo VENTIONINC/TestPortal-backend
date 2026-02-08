@@ -13,8 +13,13 @@ export interface MCPToolDefinition {
   inputSchema: MCPToolSchema;
 }
 
-export type MCPToolHandler<TInput = unknown> = (
+export interface MCPToolContext {
+  mcpUserId: string;
+}
+
+export type MCPToolHandler<TInput = unknown, TContext = MCPToolContext> = (
   input: TInput,
+  context?: TContext,
 ) => Promise<unknown>;
 
 // MCP Server Types

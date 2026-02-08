@@ -41,7 +41,6 @@ interface UpdateIssueParams {
   portal?: string;
   service?: string;
   ticket?: string;
-  updatedById?: string;
 }
 
 interface DeleteIssueParams {
@@ -87,8 +86,16 @@ export const createIssue = createMcpTool(
   "create-issue",
   "Create a new issue with name (required) and optional category, description, portal, service, and ticket information",
   createIssueSchema,
-  async (params: CreateIssueParams): Promise<MCPToolResponse> => {
-    const issue = await mcpIssueHandler.createIssue(params);
+  async (params: CreateIssueParams, context): Promise<MCPToolResponse> => {
+    if (!context?.mcpUserId) {
+      throw new Error("MCP user ID is required");
+    }
+
+    const issue = await mcpIssueHandler.createIssue({
+      ...params,
+      createdById: context.mcpUserId,
+      updatedById: context.mcpUserId,
+    });
     return createSuccessResponse(issue, "Issue created successfully:");
   },
   "creating issue",
@@ -98,9 +105,16 @@ export const updateIssue = createMcpTool(
   "update-issue",
   "Update an existing issue by ID with optional fields like name, category, description, portal, service, and ticket",
   updateIssueSchema,
-  async (params: UpdateIssueParams): Promise<MCPToolResponse> => {
+  async (params: UpdateIssueParams, context): Promise<MCPToolResponse> => {
+    if (!context?.mcpUserId) {
+      throw new Error("MCP user ID is required");
+    }
+
     const { issueId, ...updateData } = params;
-    const issue = await mcpIssueHandler.updateIssue(issueId, updateData);
+    const issue = await mcpIssueHandler.updateIssue(issueId, {
+      ...updateData,
+      updatedById: context.mcpUserId,
+    });
     return createSuccessResponse(issue, "Issue updated successfully:");
   },
   "updating issue",

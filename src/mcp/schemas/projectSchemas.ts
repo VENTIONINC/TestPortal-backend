@@ -5,7 +5,6 @@ import type { MCPToolSchema } from "@/types";
  * Schema for listing projects
  */
 export const getProjectsSchema: MCPToolSchema = {
-  ownerId: z.string().optional(),
   isActive: z.boolean().optional(),
   name: z.string().optional(),
 };
@@ -23,7 +22,6 @@ export const getProjectByIdSchema: MCPToolSchema = {
 export const createProjectSchema: MCPToolSchema = {
   name: z.string(),
   description: z.string().optional(),
-  ownerId: z.string(),
 };
 
 /**

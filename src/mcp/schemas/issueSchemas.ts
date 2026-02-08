@@ -51,7 +51,6 @@ export const updateIssueSchema: MCPToolSchema = {
   portal: z.string().optional(),
   service: z.string().optional(),
   ticket: z.string().optional(),
-  updatedById: z.string().optional(),
 };
 
 /**

@@ -14,7 +14,7 @@ const McpSessionHeaderParam = z.string().openapi({
 export function registerMcpRoutes(registry: OpenAPIRegistry) {
   registry.registerPath({
     method: "post",
-    path: "/api/v1/mcp",
+    path: "/api/v2/mcp",
     description:
       "MCP server endpoint for tool execution (requires MCP Bearer token)",
     request: {
@@ -73,7 +73,7 @@ export function registerMcpRoutes(registry: OpenAPIRegistry) {
 
   registry.registerPath({
     method: "get",
-    path: "/api/v1/mcp",
+    path: "/api/v2/mcp",
     description: "MCP session management endpoint (requires MCP Bearer token)",
     request: {
       headers: [McpSessionHeaderParam],
@@ -110,7 +110,7 @@ export function registerMcpRoutes(registry: OpenAPIRegistry) {
 
   registry.registerPath({
     method: "delete",
-    path: "/api/v1/mcp",
+    path: "/api/v2/mcp",
     description: "MCP session cleanup endpoint (requires MCP Bearer token)",
     request: {
       headers: [McpSessionHeaderParam],

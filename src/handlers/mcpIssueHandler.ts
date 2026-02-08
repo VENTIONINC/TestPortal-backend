@@ -41,6 +41,8 @@ interface CreateIssueParams {
   service?: string;
   ticket?: string;
   projectId: string;
+  createdById?: string;
+  updatedById?: string;
 }
 
 interface UpdateIssueParams {

@@ -2,7 +2,12 @@
  * Helper functions for MCP tools to standardize responses and error handling
  */
 
-import type { MCPToolResponse, MCPToolHandler, MCPToolSchema } from "@/types";
+import type {
+  MCPToolResponse,
+  MCPToolHandler,
+  MCPToolSchema,
+  MCPToolContext,
+} from "@/types";
 
 /**
  * Creates a successful MCP response with JSON content
@@ -48,13 +53,13 @@ export const createErrorResponse = (
 /**
  * Wraps an async MCP tool handler with standard error handling
  */
-export const withErrorHandling = <TInput = unknown>(
-  handler: (params: TInput) => Promise<MCPToolResponse>,
+export const withErrorHandling = <TInput = unknown, TContext = MCPToolContext>(
+  handler: (params: TInput, context?: TContext) => Promise<MCPToolResponse>,
   operation: string,
-): MCPToolHandler<TInput> => {
-  return async (params: TInput): Promise<MCPToolResponse> => {
+): MCPToolHandler<TInput, TContext> => {
+  return async (params: TInput, context?: TContext): Promise<MCPToolResponse> => {
     try {
-      return await handler(params);
+      return await handler(params, context);
     } catch (error) {
       return createErrorResponse(operation, error as Error);
     }
@@ -64,12 +69,17 @@ export const withErrorHandling = <TInput = unknown>(
 /**
  * Creates a standard MCP tool definition with error handling
  */
-export const createMcpTool = <TInput = unknown>(
+export const createMcpTool = <TInput = unknown, TContext = MCPToolContext>(
   name: string,
   description: string,
   schema: MCPToolSchema,
-  handler: (params: TInput) => Promise<MCPToolResponse>,
+  handler: (params: TInput, context?: TContext) => Promise<MCPToolResponse>,
   operation: string,
-): [string, string, MCPToolSchema, MCPToolHandler<TInput>] => {
-  return [name, description, schema, withErrorHandling(handler, operation)];
+): [string, string, MCPToolSchema, MCPToolHandler<TInput, TContext>] => {
+  return [
+    name,
+    description,
+    schema,
+    withErrorHandling<TInput, TContext>(handler, operation),
+  ];
 };
