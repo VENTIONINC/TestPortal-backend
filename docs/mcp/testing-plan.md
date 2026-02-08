@@ -100,6 +100,26 @@ Legend:
 - **S** = Side effects / cascade verification
 - **L** = Limits / resilience
 
+### Current Coverage Status (2026-02-08)
+
+P0 tools only. Status uses Done/Pending.
+
+| Tool                              | C    | E    | S       | L       |
+| --------------------------------- | ---- | ---- | ------- | ------- |
+| `get-results`                     | Done | Done | Pending | Pending |
+| `get-result-by-id`                | Done | Done | Pending | Pending |
+| `review-result-error`             | Done | Done | Pending | Pending |
+| `bulk-review-result-errors`       | Done | Done | Pending | Pending |
+| `analyze-result-errors`           | Done | Done | Pending | Pending |
+| `update-result-analysis`          | Done | Done | Pending | Pending |
+| `update-result-analysis-feedback` | Done | Done | Pending | Pending |
+| `get-issues`                      | Done | Done | Pending | Pending |
+| `get-issue-by-id`                 | Done | Done | Pending | Pending |
+| `create-assumption`               | Done | Done | Pending | Pending |
+| `update-assumption`               | Done | Done | Pending | Pending |
+| `delete-issue`                    | Done | Done | Pending | Pending |
+| `delete-project`                  | Done | Done | Pending | Pending |
+
 ### Priority Tier P0 — Must Have (Start Here)
 
 These tools are either core workflow, high-risk, or high-impact.

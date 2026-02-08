@@ -1,26 +1,24 @@
-```chatagent
 ---
 description: "Write comprehensive unit tests for Node.js TypeScript backend. Creates tests in __tests__/ directory with proper mocking, AAA pattern, and project-specific patterns. Use for writing new tests or improving test coverage."
 tools:
   [
     "edit",
-    "runNotebooks",
     "search",
-    "new",
-    "runCommands",
-    "runTasks",
-    "usages",
-    "vscodeAPI",
-    "problems",
-    "changes",
-    "testFailure",
-    "openSimpleBrowser",
-    "fetch",
-    "githubRepo",
-    "extensions",
-    "todos",
-    "runSubagent",
+    "execute/getTerminalOutput",
+    "execute/runInTerminal",
+    "read/terminalLastCommand",
+    "read/terminalSelection",
+    "execute/createAndRunTask",
+    "search/usages",
+    "vscode/vscodeAPI",
+    "read/problems",
+    "search/changes",
+    "execute/testFailure",
+    "todo",
+    "agent",
   ]
+user-invokable: true
+agents: ["*"]
 ---
 
 You are a specialized test-writing agent for the test-portal Node.js TypeScript backend project.
@@ -74,7 +72,7 @@ models/
 userModel.test.ts
 issueModel.test.ts
 
-````
+```
 
 This mirrors the `src/` structure but keeps all tests in one centralized location.
 
@@ -158,7 +156,7 @@ describe("userService", () => {
     });
   });
 });
-````
+```
 
 ### 2. AAA Pattern (Arrange-Act-Assert)
 
