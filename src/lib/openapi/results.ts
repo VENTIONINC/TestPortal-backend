@@ -368,7 +368,8 @@ export function registerResultRoutes(registry: OpenAPIRegistry) {
   registry.registerPath({
     method: "patch",
     path: "/api/v2/results/{resultId}/analysis-feedback",
-    description: "Updates manual feedback fields for a specific result analysis",
+    description:
+      "Updates manual feedback fields for a specific result analysis",
     security: [{ BearerAuth: [] }],
     request: {
       params: z.object({
@@ -401,6 +402,52 @@ export function registerResultRoutes(registry: OpenAPIRegistry) {
       },
       401: {
         description: "Unauthorized access",
+        content: {
+          "application/json": {
+            schema: ErrorResponseSchema,
+          },
+        },
+      },
+    },
+    tags: ["Results"],
+  });
+
+  registry.registerPath({
+    method: "patch",
+    path: "/api/v2/results/{resultId}/analysis-feedback",
+    description: "Updates the analysis feedback fields of a specific result",
+    security: [{ BearerAuth: [] }],
+    request: {
+      params: z.object({
+        resultId: z.string().uuid(),
+      }),
+      body: {
+        content: {
+          "application/json": {
+            schema: UpdateResultAnalysisFeedbackRequestSchema,
+          },
+        },
+      },
+    },
+    responses: {
+      200: {
+        description: "Result analysis feedback updated successfully",
+        content: {
+          "application/json": {
+            schema: ResultSchema,
+          },
+        },
+      },
+      400: {
+        description: "Bad request - Invalid input data",
+        content: {
+          "application/json": {
+            schema: ErrorResponseSchema,
+          },
+        },
+      },
+      404: {
+        description: "Result not found",
         content: {
           "application/json": {
             schema: ErrorResponseSchema,
@@ -472,4 +519,9 @@ export function registerResultRoutes(registry: OpenAPIRegistry) {
   });
 }
 
-export { ResultSchema, ResultsStatsSchema, UpdateResultAnalysisRequestSchema };
+export {
+  ResultSchema,
+  ResultsStatsSchema,
+  UpdateResultAnalysisRequestSchema,
+  UpdateResultAnalysisFeedbackRequestSchema,
+};
