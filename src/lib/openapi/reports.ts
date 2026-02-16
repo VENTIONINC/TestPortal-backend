@@ -100,6 +100,7 @@ export function registerReportRoutes(registry: OpenAPIRegistry) {
     path: "/api/v2/upload-json-report",
     description:
       "Accepts JSON test report files for processing. Supports large files that exceed POST body size limits.",
+    security: [{ BearerAuth: [] }],
     request: {
       body: {
         content: {
@@ -132,6 +133,14 @@ export function registerReportRoutes(registry: OpenAPIRegistry) {
       },
       400: {
         description: "Invalid file format, missing file, or processing error",
+        content: {
+          "application/json": {
+            schema: ErrorResponseSchema,
+          },
+        },
+      },
+      401: {
+        description: "Unauthorized - invalid or missing JWT token",
         content: {
           "application/json": {
             schema: ErrorResponseSchema,
