@@ -18,12 +18,7 @@
     "studio": "npx prisma studio",
     "migrate": "npx prisma migrate dev --name commit",
     "inspector": "npx @modelcontextprotocol/inspector node build/index.js",
-    "test": "jest",
-    "gen:prompt-datasets": "tsx prompt-tests/generate-datasets.ts",
-    "test:prompts:smoke": "jest --config jest.prompts.config.ts --testPathPattern=prompt-tests/smoke.test.ts",
-    "test:prompts:regression": "jest --config jest.prompts.config.ts --testPathPattern=prompt-tests/regression.test.ts",
-    "test:prompts:compare": "jest --config jest.prompts.config.ts --testPathPattern=prompt-tests/version-comparison.test.ts --verbose",
-    "test:prompts": "npm run gen:prompt-datasets && npm run test:prompts:smoke"
+    "test": "jest --config jest.config.ts"
   },
   "author": "",
   "license": "ISC",
