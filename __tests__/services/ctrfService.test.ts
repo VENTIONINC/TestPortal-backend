@@ -1,3 +1,5 @@
+import "@/test-utils/testEnv";
+
 import { ctrfService } from "@/services/ctrfService";
 import { jsonReportService } from "@/services/jsonReportService";
 import { testAnalysisService } from "@/services/testAnalysisService";
@@ -132,6 +134,26 @@ describe("ctrfService", () => {
     });
 
     expect(testAnalysisService.analyzeStoredResults).toHaveBeenCalled();
+    expect(mockTx.result.update).not.toHaveBeenCalled();
+    expect(result.analysis).toBeUndefined();
+  });
+
+  it("should skip analysis when non-passing exceeds 50%", async () => {
+    mockTx.project.findUnique.mockResolvedValue({
+      owner: { analyzeEnabled: true },
+    });
+    mockTx.result.findMany.mockResolvedValue([
+      { id: "res-1", status: "failed" },
+      { id: "res-2", status: "failed" },
+      { id: "res-3", status: "flaky" },
+      { id: "res-4", status: "passed" },
+    ]);
+
+    const result = await ctrfService.processReport(mockReport, {
+      projectId: mockProjectId,
+    });
+
+    expect(testAnalysisService.analyzeStoredResults).not.toHaveBeenCalled();
     expect(mockTx.result.update).not.toHaveBeenCalled();
     expect(result.analysis).toBeUndefined();
   });

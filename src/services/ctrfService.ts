@@ -10,6 +10,7 @@ import { testAnalysisService } from "@/services/testAnalysisService";
 import type { TestResultAnalysis } from "@/schemas/testAnalysisSchemas";
 
 const logger = getLogger("ctrf-service");
+const ANALYSIS_MAX_NON_PASSING_RATIO = 0.5;
 
 interface CTRFProcessOptions {
   projectId: string;
@@ -75,6 +76,13 @@ export const ctrfService = {
         logger.info(
           `Fetched ${createdResults.length} results from DB for analysis`,
         );
+
+        if (this.shouldSkipAnalysis(createdResults)) {
+          return {
+            ...processResult,
+            analysis: undefined,
+          };
+        }
 
         // Step 5: Analyze stored results (POST-PERSIST)
         let analysisMap: Map<string, TestResultAnalysis> | null = null;
@@ -222,5 +230,25 @@ export const ctrfService = {
       return { file: "unknown", line: 1 };
     }
     return { file: filePath, line: 1 };
+  },
+
+  shouldSkipAnalysis(results: Array<{ status: string }>): boolean {
+    if (results.length === 0) {
+      return false;
+    }
+
+    const nonPassingCount = results.filter(
+      ({ status }) => status === "failed" || status === "flaky",
+    ).length;
+
+    const ratio = nonPassingCount / results.length;
+    if (ratio <= ANALYSIS_MAX_NON_PASSING_RATIO) {
+      return false;
+    }
+
+    logger.info(
+      `Analysis skipped: ${nonPassingCount}/${results.length} non-passing results exceed ${ANALYSIS_MAX_NON_PASSING_RATIO * 100}% threshold`,
+    );
+    return true;
   },
 };
