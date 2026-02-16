@@ -1,6 +1,9 @@
 import { Router } from "express";
 import { jsonReportController } from "@/controllers/jsonReportController";
-import { uploadJsonReport } from "@/middleware/fileUploadMiddleware";
+import {
+  uploadJsonReport,
+  uploadErrorHandler,
+} from "@/middleware/fileUploadMiddleware";
 import { authMiddleware } from "@/middleware/authMiddleware";
 import { apiKeyMiddleware } from "@/middleware/apiKeyMiddleware";
 
@@ -11,6 +14,7 @@ router.post(
   "/v2/upload-json-report",
   authMiddleware,
   uploadJsonReport,
+  uploadErrorHandler,
   jsonReportController.processRawReportFile,
 );
 
@@ -19,6 +23,7 @@ router.post(
   "/v2/upload-json-report-api-key",
   apiKeyMiddleware,
   uploadJsonReport,
+  uploadErrorHandler,
   jsonReportController.processRawReportFileWithApiKey,
 );
 
