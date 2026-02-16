@@ -3,4 +3,5 @@ export enum IssueCategory {
   Script = 'Script',
   Infra = 'Infra',
   Performance = 'Performance',
+  Other = 'Other',
 } 
