@@ -111,12 +111,24 @@ const UpdateResultAnalysisRequestSchema = z
   })
   .openapi("UpdateResultAnalysisRequest");
 
+const UpdateResultAnalysisFeedbackRequestSchema = z
+  .object({
+    analysisFeedbackCategory: z.string().optional(),
+    analysisFeedbackConfidence: z.number().int().min(1).max(5).optional(),
+    analysisFeedbackConclusion: z.string().optional(),
+  })
+  .openapi("UpdateResultAnalysisFeedbackRequest");
+
 export function registerResultRoutes(registry: OpenAPIRegistry) {
   registry.register("Result", ResultSchema);
   registry.register("ResultsStats", ResultsStatsSchema);
   registry.register(
     "UpdateResultAnalysisRequest",
     UpdateResultAnalysisRequestSchema,
+  );
+  registry.register(
+    "UpdateResultAnalysisFeedbackRequest",
+    UpdateResultAnalysisFeedbackRequestSchema,
   );
 
   registry.registerPath({
@@ -298,6 +310,51 @@ export function registerResultRoutes(registry: OpenAPIRegistry) {
     tags: ["Results"],
   });
 
+  registry.registerPath({
+    method: "patch",
+    path: "/api/v2/results/{resultId}/analysis-feedback",
+    description: "Updates the analysis feedback fields of a specific result",
+    request: {
+      params: z.object({
+        resultId: z.string().uuid(),
+      }),
+      body: {
+        content: {
+          "application/json": {
+            schema: UpdateResultAnalysisFeedbackRequestSchema,
+          },
+        },
+      },
+    },
+    responses: {
+      200: {
+        description: "Result analysis feedback updated successfully",
+        content: {
+          "application/json": {
+            schema: ResultSchema,
+          },
+        },
+      },
+      400: {
+        description: "Bad request - Invalid input data",
+        content: {
+          "application/json": {
+            schema: ErrorResponseSchema,
+          },
+        },
+      },
+      404: {
+        description: "Result not found",
+        content: {
+          "application/json": {
+            schema: ErrorResponseSchema,
+          },
+        },
+      },
+    },
+    tags: ["Results"],
+  });
+
   // V2 Delete Result Route
   registry.registerPath({
     method: "delete",
@@ -359,4 +416,9 @@ export function registerResultRoutes(registry: OpenAPIRegistry) {
   });
 }
 
-export { ResultSchema, ResultsStatsSchema, UpdateResultAnalysisRequestSchema };
+export {
+  ResultSchema,
+  ResultsStatsSchema,
+  UpdateResultAnalysisRequestSchema,
+  UpdateResultAnalysisFeedbackRequestSchema,
+};
