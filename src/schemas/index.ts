@@ -10,6 +10,12 @@ export {
   type ErrorFormatterOutput,
 } from "./errorFormatterSchemas";
 
+// Error suggestion schemas and types
+export {
+  errorSuggestionSchema,
+  type ErrorSuggestionOutput,
+} from "./errorSuggestionSchemas";
+
 // Test Analysis schemas and types
 export {
   testResultSchema,

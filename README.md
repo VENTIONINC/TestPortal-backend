@@ -116,6 +116,12 @@ docker-compose down               # Stop all services
 docker-compose logs postgres      # View PostgreSQL logs
 ```
 
+## Prompt Tests
+
+Datasets must be generated first.
+
+See __prompts-tests__/README.md for prompt test commands.
+
 ## TypeScript Features
 
 - **Strict type checking** with comprehensive type definitions

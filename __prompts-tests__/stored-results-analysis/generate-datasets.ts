@@ -8,8 +8,8 @@
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { templateFactories } from "./templates/stored-results-analysis/index.js";
-import type { TestCase } from "./templates/types";
+import { templateFactories } from "./v1.1.0/templates/stored-results-analysis/index.js";
+import type { TestCase } from "./v1.1.0/templates/types.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -25,7 +25,7 @@ function ensureDir(p: string): void {
  * Write data to JSON file with pretty formatting
  */
 function writeJson(filePath: string, data: unknown): void {
-  fs.writeFileSync(filePath, JSON.stringify(data, null, 2) + "\n", "utf8");
+  fs.writeFileSync(filePath, `${JSON.stringify(data, null, 2)}\n`, "utf8");
 }
 
 /**
@@ -44,7 +44,7 @@ function generate(countPerTemplate: number): TestCase[] {
 }
 
 // Setup output directory
-const outDir = path.join(__dirname, "datasets", "stored-results-analysis");
+const outDir = path.resolve(__dirname, "datasets", "stored-results-analysis");
 ensureDir(outDir);
 
 // Generate smoke dataset: 1 variant per template (4 total)
@@ -59,6 +59,10 @@ writeJson(path.join(outDir, "regression.json"), regression);
 
 // Output summary
 console.log(`✅ Generated prompt test datasets:`);
-console.log(`   📄 Smoke: ${smoke.length} cases (${templateFactories.length} templates × 1 variant)`);
-console.log(`   📄 Regression: ${regression.length} cases (${templateFactories.length} templates × 10 variants)`);
+console.log(
+  `   📄 Smoke: ${smoke.length} cases (${templateFactories.length} templates × 1 variant)`,
+);
+console.log(
+  `   📄 Regression: ${regression.length} cases (${templateFactories.length} templates × 10 variants)`,
+);
 console.log(`   📁 Location: ${outDir}`);

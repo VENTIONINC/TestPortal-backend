@@ -31,7 +31,7 @@ export function scriptSelectorNotFound(i: number): TestCase {
     errorMessage: pick(i, [
       "Error: locator('#user-card') not found",
       "Error: No node found for selector: [data-testid='user-card']",
-      "Error: Timeout 30000ms exceeded waiting for selector '.profile-avatar'",
+      "Error: selector '.profile-avatar' not found in DOM",
       "Error: Element [data-cy='settings-form'] not found in DOM",
     ]),
     errorStack: pick(i, [

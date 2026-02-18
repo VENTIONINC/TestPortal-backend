@@ -26,7 +26,6 @@ const ResultSchema = z
       .describe("Failure category from AI analysis"),
     analysisConfidence: z
       .number()
-      .int()
       .min(1)
       .max(5)
       .optional()
@@ -54,6 +53,15 @@ const ResultSchema = z
     updatedAt: z.string(),
   })
   .openapi("Result");
+
+const ResultsListResponseSchema = z
+  .object({
+    results: z.array(ResultSchema),
+    total: z.number().int().nonnegative(),
+    page: z.number().int().positive(),
+    totalPages: z.number().int().nonnegative(),
+  })
+  .openapi("ResultsListResponse");
 
 const ResultsStatsSchema = z
   .object({
@@ -99,7 +107,6 @@ const UpdateResultAnalysisRequestSchema = z
       .describe("Failure category from AI analysis"),
     analysisConfidence: z
       .number()
-      .int()
       .min(1)
       .max(5)
       .optional()
@@ -111,12 +118,36 @@ const UpdateResultAnalysisRequestSchema = z
   })
   .openapi("UpdateResultAnalysisRequest");
 
+const UpdateResultAnalysisFeedbackRequestSchema = z
+  .object({
+    analysisFeedbackCategory: z
+      .enum(["bug", "infra", "performance", "script", "other"])
+      .optional()
+      .describe("Manual reviewer category"),
+    analysisFeedbackConfidence: z
+      .number()
+      .min(1)
+      .max(5)
+      .optional()
+      .describe("Manual reviewer confidence (1-5 scale)"),
+    analysisFeedbackConclusion: z
+      .string()
+      .optional()
+      .describe("Manual reviewer conclusion"),
+  })
+  .openapi("UpdateResultAnalysisFeedbackRequest");
+
 export function registerResultRoutes(registry: OpenAPIRegistry) {
   registry.register("Result", ResultSchema);
   registry.register("ResultsStats", ResultsStatsSchema);
+  registry.register("ResultsListResponse", ResultsListResponseSchema);
   registry.register(
     "UpdateResultAnalysisRequest",
     UpdateResultAnalysisRequestSchema,
+  );
+  registry.register(
+    "UpdateResultAnalysisFeedbackRequest",
+    UpdateResultAnalysisFeedbackRequestSchema,
   );
 
   registry.registerPath({
@@ -124,6 +155,7 @@ export function registerResultRoutes(registry: OpenAPIRegistry) {
     path: "/api/v2/results",
     description:
       "Retrieves results with optional filtering (requires projectId)",
+    security: [{ BearerAuth: [] }],
     request: {
       query: z.object({
         projectId: z.string().uuid(),
@@ -148,7 +180,7 @@ export function registerResultRoutes(registry: OpenAPIRegistry) {
         description: "List of results",
         content: {
           "application/json": {
-            schema: z.array(ResultSchema),
+            schema: ResultsListResponseSchema,
           },
         },
       },
@@ -168,6 +200,14 @@ export function registerResultRoutes(registry: OpenAPIRegistry) {
           },
         },
       },
+      401: {
+        description: "Unauthorized access",
+        content: {
+          "application/json": {
+            schema: ErrorResponseSchema,
+          },
+        },
+      },
     },
     tags: ["Results"],
   });
@@ -176,6 +216,7 @@ export function registerResultRoutes(registry: OpenAPIRegistry) {
     method: "get",
     path: "/api/v2/results/{resultId}",
     description: "Retrieves a specific result by its ID (requires projectId)",
+    security: [{ BearerAuth: [] }],
     request: {
       params: z.object({
         resultId: z.string().uuid(),
@@ -212,6 +253,14 @@ export function registerResultRoutes(registry: OpenAPIRegistry) {
           },
         },
       },
+      401: {
+        description: "Unauthorized access",
+        content: {
+          "application/json": {
+            schema: ErrorResponseSchema,
+          },
+        },
+      },
     },
     tags: ["Results"],
   });
@@ -221,6 +270,7 @@ export function registerResultRoutes(registry: OpenAPIRegistry) {
     path: "/api/v2/results-stats",
     description:
       "Retrieves statistical analysis of test results including status counts, entity counts, and top errors/issues for specified dates",
+    security: [{ BearerAuth: [] }],
     request: {
       query: z.object({
         projectId: z.string().uuid(),
@@ -241,6 +291,22 @@ export function registerResultRoutes(registry: OpenAPIRegistry) {
           },
         },
       },
+      400: {
+        description: "Bad request - projectId is required or invalid",
+        content: {
+          "application/json": {
+            schema: ErrorResponseSchema,
+          },
+        },
+      },
+      401: {
+        description: "Unauthorized access",
+        content: {
+          "application/json": {
+            schema: ErrorResponseSchema,
+          },
+        },
+      },
       500: {
         description: "Internal server error",
         content: {
@@ -257,6 +323,7 @@ export function registerResultRoutes(registry: OpenAPIRegistry) {
     method: "patch",
     path: "/api/v2/results/{resultId}/analysis",
     description: "Updates the analysis fields of a specific result",
+    security: [{ BearerAuth: [] }],
     request: {
       params: z.object({
         resultId: z.string().uuid(),
@@ -272,6 +339,99 @@ export function registerResultRoutes(registry: OpenAPIRegistry) {
     responses: {
       200: {
         description: "Result analysis updated successfully",
+        content: {
+          "application/json": {
+            schema: ResultSchema,
+          },
+        },
+      },
+      400: {
+        description: "Bad request - Invalid input data",
+        content: {
+          "application/json": {
+            schema: ErrorResponseSchema,
+          },
+        },
+      },
+      401: {
+        description: "Unauthorized access",
+        content: {
+          "application/json": {
+            schema: ErrorResponseSchema,
+          },
+        },
+      },
+    },
+    tags: ["Results"],
+  });
+
+  registry.registerPath({
+    method: "patch",
+    path: "/api/v2/results/{resultId}/analysis-feedback",
+    description:
+      "Updates manual feedback fields for a specific result analysis",
+    security: [{ BearerAuth: [] }],
+    request: {
+      params: z.object({
+        resultId: z.string().uuid(),
+      }),
+      body: {
+        content: {
+          "application/json": {
+            schema: UpdateResultAnalysisFeedbackRequestSchema,
+          },
+        },
+      },
+    },
+    responses: {
+      200: {
+        description: "Result analysis feedback updated successfully",
+        content: {
+          "application/json": {
+            schema: ResultSchema,
+          },
+        },
+      },
+      400: {
+        description: "Bad request - Invalid input data",
+        content: {
+          "application/json": {
+            schema: ErrorResponseSchema,
+          },
+        },
+      },
+      401: {
+        description: "Unauthorized access",
+        content: {
+          "application/json": {
+            schema: ErrorResponseSchema,
+          },
+        },
+      },
+    },
+    tags: ["Results"],
+  });
+
+  registry.registerPath({
+    method: "patch",
+    path: "/api/v2/results/{resultId}/analysis-feedback",
+    description: "Updates the analysis feedback fields of a specific result",
+    security: [{ BearerAuth: [] }],
+    request: {
+      params: z.object({
+        resultId: z.string().uuid(),
+      }),
+      body: {
+        content: {
+          "application/json": {
+            schema: UpdateResultAnalysisFeedbackRequestSchema,
+          },
+        },
+      },
+    },
+    responses: {
+      200: {
+        description: "Result analysis feedback updated successfully",
         content: {
           "application/json": {
             schema: ResultSchema,
@@ -359,4 +519,9 @@ export function registerResultRoutes(registry: OpenAPIRegistry) {
   });
 }
 
-export { ResultSchema, ResultsStatsSchema, UpdateResultAnalysisRequestSchema };
+export {
+  ResultSchema,
+  ResultsStatsSchema,
+  UpdateResultAnalysisRequestSchema,
+  UpdateResultAnalysisFeedbackRequestSchema,
+};

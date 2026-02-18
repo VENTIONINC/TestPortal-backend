@@ -59,10 +59,10 @@ describe("resultService.updateAnalysisFeedback", () => {
     await expect(
       resultService.updateAnalysisFeedback(
         resultId,
-        { analysisFeedbackConfidence: 2 },
+        { analysisFeedbackConfidence: 0 },
         reviewerId,
       ),
-    ).rejects.toThrow("Feedback confidence must be between 0 and 1");
+    ).rejects.toThrow("Feedback confidence must be an integer between 1 and 5");
   });
 
   it("should throw when no feedback fields are provided", async () => {
@@ -78,7 +78,7 @@ describe("resultService.updateAnalysisFeedback", () => {
       resultId,
       {
         analysisFeedbackCategory: "bug",
-        analysisFeedbackConfidence: 0.5,
+        analysisFeedbackConfidence: 4,
         analysisFeedbackConclusion: "Human label",
       },
       reviewerId,
@@ -90,7 +90,7 @@ describe("resultService.updateAnalysisFeedback", () => {
         analysisReviewedAt: expect.any(Date),
         analysisReviewedById: reviewerId,
         analysisFeedbackCategory: "bug",
-        analysisFeedbackConfidence: 0.5,
+        analysisFeedbackConfidence: 4,
         analysisFeedbackConclusion: "Human label",
       }),
       mockTx,

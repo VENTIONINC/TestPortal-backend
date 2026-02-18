@@ -3,7 +3,7 @@
  * Runs multiple prompt versions in parallel and generates comparison reports
  */
 
-import type { TestCase } from "../templates/types";
+import type { TestCase } from "../v1.1.0/templates/types";
 import type { EvalResult } from "./types";
 import { runEval, type PromptVersion } from "./stored-results-analysis";
 

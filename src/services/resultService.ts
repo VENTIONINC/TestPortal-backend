@@ -183,10 +183,10 @@ export const resultService = {
 
     if (
       analysisData.analysisConfidence !== undefined &&
-      (analysisData.analysisConfidence < 0 ||
-        analysisData.analysisConfidence > 1)
+      (analysisData.analysisConfidence < 1 ||
+        analysisData.analysisConfidence > 5)
     ) {
-      throw new Error("Confidence must be between 0 and 1");
+      throw new Error("Confidence must be between 1 and 5");
     }
 
     const result = await dbClient.$transaction(async (tx) => {
@@ -254,10 +254,10 @@ export const resultService = {
 
     if (
       feedbackData.analysisFeedbackConfidence !== undefined &&
-      (feedbackData.analysisFeedbackConfidence < 0 ||
-        feedbackData.analysisFeedbackConfidence > 1)
+      (feedbackData.analysisFeedbackConfidence < 1 ||
+        feedbackData.analysisFeedbackConfidence > 5)
     ) {
-      throw new Error("Feedback confidence must be between 0 and 1");
+      throw new Error("Feedback confidence must be between 1 and 5");
     }
 
     const hasFeedbackFields =

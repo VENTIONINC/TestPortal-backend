@@ -189,13 +189,12 @@ export function registerCtrfRoutes(registry: OpenAPIRegistry) {
                   type: "string",
                   format: "binary",
                 }),
-              projectId: z.string().describe("Project ID to associate the report with"),
             }),
           },
         },
       },
     },
-    security: [{ BearerAuth: [] }],
+    security: [{ ApiKeyAuth: [] }],
     responses: {
       200: {
         description: "CTRF report file processed successfully",
@@ -214,7 +213,7 @@ export function registerCtrfRoutes(registry: OpenAPIRegistry) {
         },
       },
       401: {
-        description: "Unauthorized - invalid or missing token",
+        description: "Unauthorized - invalid or missing API key",
         content: {
           "application/json": {
             schema: ErrorResponseSchema,
