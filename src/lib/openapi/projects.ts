@@ -85,6 +85,9 @@ const DashboardResponseSchema = z
   .object({
     summary: z.object({
       totalRuns: z.number().describe("Total number of test runs in the period"),
+      failures: z
+        .number()
+        .describe("Total number of failed test runs in the period"),
       passRate: z.number().describe("Pass rate percentage (0-100)"),
       passRateTrend: z
         .number()
