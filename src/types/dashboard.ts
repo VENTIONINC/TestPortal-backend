@@ -39,6 +39,7 @@ export interface ExecutionSummary {
 export interface DashboardResponse {
   summary: {
     totalRuns: number;
+    failures: number;
     passRate: number;
     passRateTrend?: number;
   };
