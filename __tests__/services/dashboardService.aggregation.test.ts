@@ -90,6 +90,10 @@ describe("dashboardService Aggregation", () => {
       "weekly",
     );
 
+    expect(result.summary.totalRuns).toBe(40);
+    expect(result.summary.failures).toBe(8);
+    expect(result.summary.passRate).toBe(80);
+
     // Should have 2 entries: 2025-W01 and 2025-W02
     expect(result.history).toHaveLength(2);
 
@@ -125,6 +129,10 @@ describe("dashboardService Aggregation", () => {
       undefined,
       "monthly",
     );
+
+    expect(result.summary.totalRuns).toBe(40);
+    expect(result.summary.failures).toBe(8);
+    expect(result.summary.passRate).toBe(80);
 
     // Should have 1 entry: 2025-01
     expect(result.history).toHaveLength(1);
