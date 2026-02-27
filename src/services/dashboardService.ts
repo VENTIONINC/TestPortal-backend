@@ -363,6 +363,7 @@ export const dashboardService = {
     return {
       summary: {
         totalRuns: summary.totalRuns,
+        failures: summary.failures,
         passRate: summary.passRate,
       },
       history,
