@@ -51,13 +51,6 @@ export interface PdfKpiBlock {
   passRate: number;
 }
 
-export interface PdfChartData {
-  buckets: Array<{
-    date: string;
-    metrics: DailyExecutionMetrics;
-  }>;
-}
-
 export interface DashboardResponse {
   summary: {
     totalRuns: number;
