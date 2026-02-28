@@ -5,8 +5,16 @@ import type { PdfExportFilters } from "@/types/dashboard";
 
 const logger = getLogger("report-controller");
 
+function safeToken(value: string | null | undefined): string {
+  return (value ?? "").replace(/[^a-zA-Z0-9-_]/g, "");
+}
+
 function buildFilename(params: PdfExportFilters): string {
-  return `${params.project}-${params.environment}-${params.executionType}-${params.periodStart}_${params.periodEnd}.pdf`;
+  const project = safeToken(params.project as unknown as string);
+  const environment = safeToken(params.environment as unknown as string);
+  const executionType = safeToken(params.executionType as unknown as string);
+
+  return `${project}-${environment}-${executionType}-${params.periodStart}_${params.periodEnd}.pdf`;
 }
 
 export const reportController = {
