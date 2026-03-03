@@ -46,7 +46,6 @@ const PdfExportServerErrorSchema = z
       "DATA_FETCH_FAILED",
       "CHART_RENDER_FAILED",
       "PDF_BUILD_FAILED",
-      "EXPORT_TIMEOUT",
     ]),
   })
   .openapi("PdfExportServerErrorResponse");
