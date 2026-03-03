@@ -36,6 +36,21 @@ export interface ExecutionSummary {
   };
 }
 
+export interface PdfExportFilters {
+  project: string;
+  environment: string;
+  executionType: string;
+  periodStart: string;
+  periodEnd: string;
+  granularity: DashboardGranularity;
+}
+
+export interface PdfKpiBlock {
+  totalRuns: number;
+  failedRuns: number;
+  passRate: number;
+}
+
 export interface DashboardResponse {
   summary: {
     totalRuns: number;

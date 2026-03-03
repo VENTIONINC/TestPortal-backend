@@ -1,0 +1,237 @@
+import fs from "node:fs";
+import path from "node:path";
+import PDFDocument from "pdfkit";
+import type {
+  DashboardIssueMetrics,
+  PdfExportFilters,
+  PdfKpiBlock,
+} from "@/types/dashboard";
+
+interface BuildPdfParams {
+  regressionRunsChartBuffer: Buffer;
+  issuesCategoriesChartBuffer: Buffer;
+  passRateChartBuffer: Buffer;
+  testRunsDonutBuffer: Buffer;
+  kpis: PdfKpiBlock;
+  failureCauses: DashboardIssueMetrics;
+  filters: PdfExportFilters;
+}
+
+function formatDisplayDate(value: string): string {
+  const asDateOnly = /^\d{4}-\d{2}-\d{2}$/.test(value)
+    ? `${value}T00:00:00.000Z`
+    : value;
+  const date = new Date(asDateOnly);
+
+  if (Number.isNaN(date.getTime())) {
+    return value;
+  }
+
+  return new Intl.DateTimeFormat("en-US", {
+    year: "numeric",
+    month: "short",
+    day: "2-digit",
+    timeZone: "UTC",
+  }).format(date);
+}
+
+function formatGeneratedAt(value: Date): string {
+  return `${new Intl.DateTimeFormat("en-US", {
+    year: "numeric",
+    month: "short",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+    hour12: false,
+    timeZone: "UTC",
+  }).format(value)} UTC`;
+}
+
+function formatPercent(value: number, total: number): string {
+  if (total <= 0) {
+    return "0.00%";
+  }
+
+  return `${((value / total) * 100).toFixed(2)}%`;
+}
+
+function drawCoverLogo(doc: PDFKit.PDFDocument, logoPath: string): void {
+  const hasLogo = fs.existsSync(logoPath);
+
+  if (!hasLogo) {
+    return;
+  }
+
+  const logoWidth = 180;
+  const logoHeight = 180;
+  const posX = doc.page.width - doc.page.margins.right - logoWidth;
+  const posY = doc.page.margins.top;
+
+  doc.image(logoPath, posX, posY, {
+    fit: [logoWidth, logoHeight],
+    align: "right",
+  });
+}
+
+export const pdfBuilderService = {
+  buildPdf(params: BuildPdfParams): PDFKit.PDFDocument {
+    const doc = new PDFDocument({
+      size: "A4",
+      margin: 50,
+      bufferPages: true,
+    });
+
+    const generatedAt = formatGeneratedAt(new Date());
+    const watermarkPath = path.resolve(
+      process.cwd(),
+      "src/assets/pdf/watermark.png",
+    );
+    const contentWidth =
+      doc.page.width - doc.page.margins.left - doc.page.margins.right;
+    const chartHeight = 260;
+    const chartTitleOffset = 28;
+    const chartSectionGap = 24;
+
+    drawCoverLogo(doc, watermarkPath);
+
+    doc.fontSize(16).text("Dashboard Export", { align: "left" });
+    doc.moveDown(0.5);
+
+    doc
+      .fontSize(11)
+      .text(`• Project: ${params.filters.project}`)
+      .text(`• Environment: ${params.filters.environment}`)
+      .text(`• Execution Type: ${params.filters.executionType}`)
+      .text(
+        `• Period: ${formatDisplayDate(params.filters.periodStart)} to ${formatDisplayDate(params.filters.periodEnd)}`,
+      )
+      .text(`• Granularity: ${params.filters.granularity}`);
+
+    doc.moveDown(1);
+    doc.fontSize(14).text("Summary KPIs", { underline: true });
+    doc.moveDown(0.4);
+
+    doc.fontSize(22).text(`Total Runs: ${params.kpis.totalRuns}`);
+    doc.fontSize(22).text(`Failed Runs: ${params.kpis.failedRuns}`);
+    doc.fontSize(22).text(`Pass Rate: ${params.kpis.passRate.toFixed(2)}%`);
+
+    doc.moveDown(0.8);
+
+    doc.fontSize(14).text("Failure Root-Cause Breakdown", { underline: true });
+    doc.moveDown(0.5);
+
+    const totalFailures =
+      params.failureCauses.bug +
+      params.failureCauses.environment +
+      params.failureCauses.script +
+      params.failureCauses.performance +
+      params.failureCauses.other;
+
+    const rows: Array<{ label: string; count: number }> = [
+      { label: "Bug", count: params.failureCauses.bug },
+      { label: "Environment", count: params.failureCauses.environment },
+      { label: "Script", count: params.failureCauses.script },
+      { label: "Performance", count: params.failureCauses.performance },
+      { label: "Other", count: params.failureCauses.other },
+    ];
+
+    const tableLeft = doc.page.margins.left;
+    const tableCategoryX = tableLeft;
+    const tableCountX = tableLeft + 300;
+    const tablePercentX = tableLeft + 420;
+    const tableRight = doc.page.width - doc.page.margins.right;
+    const rowHeight = 40;
+
+    let currentY = doc.y;
+
+    doc.fontSize(11).text("Category", tableCategoryX, currentY, { width: 260 });
+    doc.text("Count", tableCountX, currentY, { width: 100 });
+    doc.text("Percent", tablePercentX, currentY, { width: 120 });
+
+    currentY += 24;
+    doc.moveTo(tableLeft, currentY).lineTo(tableRight, currentY).stroke();
+    currentY += 8;
+
+    for (const row of rows) {
+      doc.text(row.label, tableCategoryX, currentY, { width: 260 });
+      doc.text(String(row.count), tableCountX, currentY, { width: 100 });
+      doc.text(
+        formatPercent(row.count, totalFailures),
+        tablePercentX,
+        currentY,
+        {
+          width: 120,
+        },
+      );
+      currentY += rowHeight;
+    }
+
+    doc.y = currentY;
+
+    const chartRenderOrder = [
+      { title: "Test runs", buffer: params.testRunsDonutBuffer },
+      {
+        title: "Issues categories",
+        buffer: params.issuesCategoriesChartBuffer,
+      },
+      { title: "Pass rate", buffer: params.passRateChartBuffer },
+      {
+        title: "History regression runs",
+        buffer: params.regressionRunsChartBuffer,
+      },
+    ];
+
+    for (
+      let chartIndex = 0;
+      chartIndex < chartRenderOrder.length;
+      chartIndex += 2
+    ) {
+      doc.addPage();
+      let pageChartY = doc.page.margins.top;
+
+      for (const chart of chartRenderOrder.slice(chartIndex, chartIndex + 2)) {
+        const chartTitleY = pageChartY;
+        const chartY = chartTitleY + chartTitleOffset;
+
+        doc.fontSize(14).text(chart.title, doc.page.margins.left, chartTitleY, {
+          underline: true,
+        });
+        doc.image(chart.buffer, doc.page.margins.left, chartY, {
+          fit: [contentWidth, chartHeight],
+          align: "center",
+        });
+
+        pageChartY += chartTitleOffset + chartHeight + chartSectionGap;
+      }
+    }
+
+    const pageRange = doc.bufferedPageRange();
+    const startPage = pageRange.start;
+    const totalPages = pageRange.count;
+
+    for (let offset = 0; offset < totalPages; offset += 1) {
+      const pageIndex = startPage + offset;
+      doc.switchToPage(pageIndex);
+      const pageNumber = offset + 1;
+      const footerY = doc.page.height - 28;
+      const footerLeftX = doc.page.margins.left;
+      const pageLabel = `Page ${pageNumber} of ${totalPages}`;
+      doc.fontSize(9);
+      const pageLabelWidth = doc.widthOfString(pageLabel);
+      const pageLabelX =
+        doc.page.width - doc.page.margins.right - pageLabelWidth;
+
+      doc
+        .fontSize(9)
+        .text(`Generated on ${generatedAt}`, footerLeftX, footerY, {
+          lineBreak: false,
+        });
+      doc.fontSize(9).text(pageLabel, pageLabelX, footerY, {
+        lineBreak: false,
+      });
+    }
+
+    return doc;
+  },
+};

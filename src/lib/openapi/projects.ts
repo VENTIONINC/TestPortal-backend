@@ -87,7 +87,7 @@ const DashboardResponseSchema = z
       totalRuns: z.number().describe("Total number of test runs in the period"),
       failures: z
         .number()
-        .describe("Total number of failed test runs in the period"),
+        .describe("Total number of failed test results in the period"),
       passRate: z.number().describe("Pass rate percentage (0-100)"),
       passRateTrend: z
         .number()
