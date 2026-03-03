@@ -39,6 +39,36 @@ describe("chartRendererService", () => {
     );
   });
 
+  it("renders runs donut chart with zero passed when failed exceeds total", async () => {
+    await chartRendererService.renderRunsDonut(3, 5);
+
+    expect(mockRenderToBuffer).toHaveBeenCalledWith(
+      expect.objectContaining({
+        type: "doughnut",
+        data: expect.objectContaining({
+          labels: ["Passed", "Failed"],
+          datasets: expect.arrayContaining([
+            expect.objectContaining({
+              data: [0, 5],
+              backgroundColor: ["#22c55e", "#f97316"],
+              borderWidth: 0,
+            }),
+          ]),
+        }),
+        options: expect.objectContaining({
+          responsive: false,
+          cutout: "70%",
+          plugins: expect.objectContaining({
+            legend: expect.objectContaining({
+              display: true,
+              position: "bottom",
+            }),
+          }),
+        }),
+      }),
+    );
+  });
+
   it("renders regression runs bar chart", async () => {
     const data: Array<{ date: string; metrics: DailyExecutionMetrics }> = [
       {

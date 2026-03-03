@@ -96,6 +96,8 @@ export const reportService = {
         periodDays,
         executionTypeFilter,
         filters.granularity,
+        filters.periodStart,
+        filters.periodEnd,
       );
     } catch (error) {
       throw new ReportGenerationError(

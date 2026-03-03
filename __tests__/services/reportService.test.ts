@@ -81,6 +81,8 @@ describe("reportService.generatePdf", () => {
       31,
       "Nightly",
       "daily",
+      "2026-01-01",
+      "2026-01-31",
     );
     expect(chartRendererService.renderRegressionRunsChart).toHaveBeenCalledWith(
       dashboardResponse.history,
@@ -148,6 +150,8 @@ describe("reportService.generatePdf", () => {
       31,
       undefined,
       "daily",
+      "2026-01-01",
+      "2026-01-31",
     );
   });
 
