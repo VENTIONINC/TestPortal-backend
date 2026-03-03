@@ -146,4 +146,45 @@ describe("dashboardService Aggregation", () => {
       expect(result.history[0].metrics.failed).toBe(8);
     }
   });
+
+  it("should use explicit UTC date range when startDate and endDate are provided", async () => {
+    (dbClient.dailyExecutionMetric.findMany as any).mockResolvedValue([]);
+    (dbClient.execution.findMany as any).mockResolvedValue([]);
+
+    await dashboardService.getDashboard(
+      projectId,
+      environment,
+      999,
+      undefined,
+      "daily",
+      "2025-01-10",
+      "2025-01-12",
+    );
+
+    expect(dbClient.dailyExecutionMetric.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: expect.objectContaining({
+          projectId,
+          environment,
+          date: {
+            gte: new Date("2025-01-10T00:00:00.000Z"),
+            lt: new Date("2025-01-13T00:00:00.000Z"),
+          },
+        }),
+      }),
+    );
+
+    expect(dbClient.execution.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: expect.objectContaining({
+          projectId,
+          environment,
+          startedAt: {
+            gte: new Date("2025-01-10T00:00:00.000Z"),
+            lt: new Date("2025-01-13T00:00:00.000Z"),
+          },
+        }),
+      }),
+    );
+  });
 });

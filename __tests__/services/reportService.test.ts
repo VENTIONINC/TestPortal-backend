@@ -164,6 +164,20 @@ describe("reportService.generatePdf", () => {
     } satisfies Partial<ReportGenerationError>);
   });
 
+  it("throws DATA_FETCH_FAILED when dashboard service fails", async () => {
+    jest.spyOn(projectModel, "findByName").mockResolvedValue({
+      id: "project-1",
+      name: "ProjectA",
+    } as never);
+    jest
+      .spyOn(dashboardService, "getDashboard")
+      .mockRejectedValue(new Error("dashboard fail"));
+
+    await expect(reportService.generatePdf(filters)).rejects.toMatchObject({
+      code: "DATA_FETCH_FAILED",
+    } satisfies Partial<ReportGenerationError>);
+  });
+
   it("throws CHART_RENDER_FAILED when chart service fails", async () => {
     jest.spyOn(projectModel, "findByName").mockResolvedValue({
       id: "project-1",
@@ -178,6 +192,35 @@ describe("reportService.generatePdf", () => {
 
     await expect(reportService.generatePdf(filters)).rejects.toMatchObject({
       code: "CHART_RENDER_FAILED",
+    } satisfies Partial<ReportGenerationError>);
+  });
+
+  it("throws PDF_BUILD_FAILED when pdf builder fails", async () => {
+    jest.spyOn(projectModel, "findByName").mockResolvedValue({
+      id: "project-1",
+      name: "ProjectA",
+    } as never);
+    jest
+      .spyOn(dashboardService, "getDashboard")
+      .mockResolvedValue(dashboardResponse);
+    jest
+      .spyOn(chartRendererService, "renderRegressionRunsChart")
+      .mockResolvedValue(Buffer.from("chart"));
+    jest
+      .spyOn(chartRendererService, "renderIssuesCategoriesChart")
+      .mockResolvedValue(Buffer.from("donut"));
+    jest
+      .spyOn(chartRendererService, "renderPassRateChart")
+      .mockResolvedValue(Buffer.from("pass-rate"));
+    jest
+      .spyOn(chartRendererService, "renderRunsDonut")
+      .mockResolvedValue(Buffer.from("runs-donut"));
+    jest.spyOn(pdfBuilderService, "buildPdf").mockImplementation(() => {
+      throw new Error("pdf build fail");
+    });
+
+    await expect(reportService.generatePdf(filters)).rejects.toMatchObject({
+      code: "PDF_BUILD_FAILED",
     } satisfies Partial<ReportGenerationError>);
   });
 });

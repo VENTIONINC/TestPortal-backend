@@ -1,5 +1,18 @@
 import type { NextFunction, Request, Response } from "express";
-import { pdfExportSchema } from "@/schemas/reportExportSchemas";
+import { z } from "zod";
+import {
+  pdfExportSchema,
+  PDF_EXPORT_VALIDATION_ERROR_CODE,
+} from "@/schemas/reportExportSchemas";
+
+function hasErrorCode(issue: z.ZodIssue, errorCode: string): boolean {
+  if (issue.code !== z.ZodIssueCode.custom) {
+    return false;
+  }
+
+  const customIssue = issue as z.ZodCustomIssue;
+  return customIssue.params?.errorCode === errorCode;
+}
 
 export const validatePdfExport = (
   req: Request,
@@ -9,8 +22,8 @@ export const validatePdfExport = (
   const result = pdfExportSchema.safeParse(req.body);
 
   if (!result.success) {
-    const hasPeriodTooLarge = result.error.issues.some(
-      (issue) => issue.message === "PERIOD_TOO_LARGE",
+    const hasPeriodTooLarge = result.error.issues.some((issue) =>
+      hasErrorCode(issue, PDF_EXPORT_VALIDATION_ERROR_CODE.PERIOD_TOO_LARGE),
     );
 
     if (hasPeriodTooLarge) {
