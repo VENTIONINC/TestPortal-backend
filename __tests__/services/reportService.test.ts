@@ -151,12 +151,12 @@ describe("reportService.generatePdf", () => {
     );
   });
 
-  it("throws DATA_FETCH_FAILED when project does not exist", async () => {
+  it("throws NOT_FOUND when project does not exist", async () => {
     jest.spyOn(projectModel, "findByName").mockResolvedValue(null);
     jest.spyOn(projectModel, "findById").mockResolvedValue(null as never);
 
     await expect(reportService.generatePdf(filters)).rejects.toMatchObject({
-      code: "DATA_FETCH_FAILED",
+      code: "NOT_FOUND",
     } satisfies Partial<ReportGenerationError>);
   });
 

@@ -19,29 +19,6 @@ describe("chartRendererService.renderTrendChart", () => {
   });
 
   it("returns PNG buffer and maps datasets correctly", async () => {
-    const data: Array<{ date: string; metrics: DailyExecutionMetrics }> = [
-      {
-        date: "2026-01-01",
-        metrics: {
-          total: 12,
-          passed: 10,
-          failed: 1,
-          skipped: 1,
-          duration: 100,
-          issues: {
-            bug: 1,
-            environment: 0,
-            script: 0,
-            performance: 0,
-            other: 0,
-          },
-        },
-      },
-    ];
-
-    const result = await chartRendererService.renderTrendChart(data, "daily");
-
-    expect(result).toEqual(Buffer.from("png-buffer"));
     expect(mockRenderToBuffer).toHaveBeenCalledWith(
       expect.objectContaining({
         type: "line",

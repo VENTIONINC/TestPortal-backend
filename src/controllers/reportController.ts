@@ -50,6 +50,7 @@ export const reportController = {
       );
 
       pdf.pipe(res);
+      pdf.end();
     } catch (error) {
       logger.error("Failed to export PDF report", error);
 
@@ -58,6 +59,10 @@ export const reportController = {
       }
 
       if (error instanceof ReportGenerationError) {
+        if (error.code === "NOT_FOUND") {
+          res.status(404).json({ error: "NOT_FOUND" });
+          return;
+        }
         if (error.code === "DATA_FETCH_FAILED") {
           res.status(500).json({ error: "DATA_FETCH_FAILED" });
           return;

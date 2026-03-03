@@ -1,8 +1,5 @@
 import { ChartJSNodeCanvas } from "chartjs-node-canvas";
-import type {
-  DailyExecutionMetrics,
-  DashboardGranularity,
-} from "@/types/dashboard";
+import type { DailyExecutionMetrics } from "@/types/dashboard";
 
 const chartCanvas = new ChartJSNodeCanvas({
   width: 1000,
@@ -149,84 +146,6 @@ export const chartRendererService = {
         scales: {
           y: {
             beginAtZero: true,
-          },
-        },
-      },
-    };
-
-    return chartCanvas.renderToBuffer(configuration);
-  },
-
-  async renderTrendChart(
-    data: Array<{ date: string; metrics: DailyExecutionMetrics }>,
-    _granularity: DashboardGranularity,
-  ): Promise<Buffer> {
-    const labels = data.map((bucket) => bucket.date);
-
-    // CHART CONFIG
-    // Total: #6366f1 (blue)
-    // Passed: #22c55e (green)
-    // Failed: #ef4444 (red)
-    // Skipped: #f59e0b (amber)
-    const configuration = {
-      type: "line" as const,
-      data: {
-        labels,
-        datasets: [
-          {
-            label: "Total",
-            data: data.map((bucket) => bucket.metrics.total),
-            borderColor: "#6366f1",
-            backgroundColor: "#6366f1",
-            tension: 0.25,
-          },
-          {
-            label: "Passed",
-            data: data.map((bucket) => bucket.metrics.passed),
-            borderColor: "#22c55e",
-            backgroundColor: "#22c55e",
-            tension: 0.25,
-          },
-          {
-            label: "Failed",
-            data: data.map((bucket) => bucket.metrics.failed),
-            borderColor: "#ef4444",
-            backgroundColor: "#ef4444",
-            tension: 0.25,
-          },
-          {
-            label: "Skipped",
-            data: data.map((bucket) => bucket.metrics.skipped),
-            borderColor: "#f59e0b",
-            backgroundColor: "#f59e0b",
-            tension: 0.25,
-          },
-        ],
-      },
-      options: {
-        responsive: false,
-        plugins: {
-          legend: {
-            display: true,
-            position: "bottom" as const,
-          },
-          title: {
-            display: false,
-          },
-        },
-        scales: {
-          x: {
-            title: {
-              display: true,
-              text: "Date",
-            },
-          },
-          y: {
-            beginAtZero: true,
-            title: {
-              display: true,
-              text: "Test Count",
-            },
           },
         },
       },

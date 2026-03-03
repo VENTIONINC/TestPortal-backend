@@ -63,8 +63,10 @@ describe("reportController.exportPdf", () => {
 
   it("sets PDF headers and pipes stream on success", async () => {
     const pipe = jest.fn();
+    const end = jest.fn();
     jest.spyOn(reportService, "generatePdf").mockResolvedValue({
       pipe,
+      end,
     } as unknown as PDFKit.PDFDocument);
 
     const { req, res, headers } = createReqRes();
@@ -75,6 +77,7 @@ describe("reportController.exportPdf", () => {
       'attachment; filename="ProjectA-staging-Nightly-2026-01-01_2026-01-31.pdf"',
     );
     expect(pipe).toHaveBeenCalledWith(res);
+    expect(end).toHaveBeenCalledTimes(1);
   });
 
   it("returns DATA_FETCH_FAILED on data fetch error", async () => {
@@ -89,6 +92,18 @@ describe("reportController.exportPdf", () => {
 
     expect(res.status).toHaveBeenCalledWith(500);
     expect(res.json).toHaveBeenCalledWith({ error: "DATA_FETCH_FAILED" });
+  });
+
+  it("returns 404 NOT_FOUND when project is missing", async () => {
+    jest
+      .spyOn(reportService, "generatePdf")
+      .mockRejectedValue(new ReportGenerationError("NOT_FOUND", "missing"));
+
+    const { req, res } = createReqRes();
+    await reportController.exportPdf(req, res);
+
+    expect(res.status).toHaveBeenCalledWith(404);
+    expect(res.json).toHaveBeenCalledWith({ error: "NOT_FOUND" });
   });
 
   it("returns 400 INVALID_PARAMS when middleware data missing", async () => {

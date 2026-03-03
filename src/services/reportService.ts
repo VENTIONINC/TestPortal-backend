@@ -11,6 +11,7 @@ import type {
 export class ReportGenerationError extends Error {
   constructor(
     public readonly code:
+      | "NOT_FOUND"
       | "DATA_FETCH_FAILED"
       | "CHART_RENDER_FAILED"
       | "PDF_BUILD_FAILED",
@@ -76,7 +77,7 @@ export const reportService = {
 
     if (!project) {
       throw new ReportGenerationError(
-        "DATA_FETCH_FAILED",
+        "NOT_FOUND",
         `Project '${filters.project}' not found`,
       );
     }

@@ -232,7 +232,6 @@ export const pdfBuilderService = {
       });
     }
 
-    doc.end();
     return doc;
   },
 };

@@ -128,7 +128,7 @@ describe("pdfBuilderService.buildPdf", () => {
     writeStreamSpy.mockRestore();
   });
 
-  it("renders required sections and finalizes PDF", () => {
+  it("renders required sections without finalizing stream", () => {
     pdfBuilderService.buildPdf({
       regressionRunsChartBuffer: Buffer.from("regression"),
       issuesCategoriesChartBuffer: Buffer.from("issues"),
@@ -209,7 +209,7 @@ describe("pdfBuilderService.buildPdf", () => {
         (call) => typeof call[0] === "string" && call[0] === "Page 1 of 1",
       ),
     ).toBe(true);
-    expect(mockDoc.end).toHaveBeenCalledTimes(1);
+    expect(mockDoc.end).not.toHaveBeenCalled();
   });
 
   it("renders footer for buffered range with non-zero start", () => {

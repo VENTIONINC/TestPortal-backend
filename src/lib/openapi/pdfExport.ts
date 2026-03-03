@@ -51,6 +51,12 @@ const PdfExportServerErrorSchema = z
   })
   .openapi("PdfExportServerErrorResponse");
 
+const PdfExportNotFoundResponseSchema = z
+  .object({
+    error: z.literal("NOT_FOUND"),
+  })
+  .openapi("PdfExportNotFoundResponse");
+
 export function registerPdfExportRoutes(registry: OpenAPIRegistry) {
   registry.register("PdfExportRequest", PdfExportRequestSchema);
   registry.register(
@@ -60,6 +66,10 @@ export function registerPdfExportRoutes(registry: OpenAPIRegistry) {
   registry.register(
     "PdfExportPeriodTooLargeResponse",
     PeriodTooLargeResponseSchema,
+  );
+  registry.register(
+    "PdfExportNotFoundResponse",
+    PdfExportNotFoundResponseSchema,
   );
   registry.register("PdfExportServerErrorResponse", PdfExportServerErrorSchema);
 
@@ -105,6 +115,14 @@ export function registerPdfExportRoutes(registry: OpenAPIRegistry) {
         content: {
           "application/json": {
             schema: z.object({ error: z.string() }),
+          },
+        },
+      },
+      404: {
+        description: "Project not found",
+        content: {
+          "application/json": {
+            schema: PdfExportNotFoundResponseSchema,
           },
         },
       },
