@@ -12,38 +12,26 @@ jest.mock("chartjs-node-canvas", () => ({
 
 import { chartRendererService } from "@/services/chartRendererService";
 
-describe("chartRendererService.renderTrendChart", () => {
+describe("chartRendererService", () => {
   beforeEach(() => {
     jest.clearAllMocks();
     mockRenderToBuffer.mockResolvedValue(Buffer.from("png-buffer"));
   });
 
-  it("returns PNG buffer and maps datasets correctly", async () => {
+  it("renders runs donut chart and returns PNG buffer", async () => {
+    const result = await chartRendererService.renderRunsDonut(12, 2);
+
+    expect(result).toEqual(Buffer.from("png-buffer"));
     expect(mockRenderToBuffer).toHaveBeenCalledWith(
       expect.objectContaining({
-        type: "line",
+        type: "doughnut",
         data: expect.objectContaining({
-          labels: ["2026-01-01"],
+          labels: ["Passed", "Failed"],
           datasets: expect.arrayContaining([
             expect.objectContaining({
-              label: "Total",
-              data: [12],
-              borderColor: "#6366f1",
-            }),
-            expect.objectContaining({
-              label: "Passed",
-              data: [10],
-              borderColor: "#22c55e",
-            }),
-            expect.objectContaining({
-              label: "Failed",
-              data: [1],
-              borderColor: "#ef4444",
-            }),
-            expect.objectContaining({
-              label: "Skipped",
-              data: [1],
-              borderColor: "#f59e0b",
+              data: [10, 2],
+              backgroundColor: ["#22c55e", "#f97316"],
+              borderWidth: 0,
             }),
           ]),
         }),
