@@ -3,9 +3,18 @@ import { z } from "./zod";
 
 const PdfExportRequestSchema = z
   .object({
-    project: z.string().min(1),
-    environment: z.string().min(1),
-    executionType: z.string().min(1),
+    project: z.string().min(1).openapi({
+      description: "Project UUID or project name",
+      example: "web-app-qa",
+    }),
+    environment: z.string().min(1).openapi({
+      description: "Execution environment filter",
+      example: "staging",
+    }),
+    executionType: z.string().min(1).openapi({
+      description: "Execution type filter, use 'all' to include all types",
+      example: "Nightly",
+    }),
     periodStart: z
       .string()
       .regex(/^(\d{4}-\d{2}-\d{2})(?:T.*)?$/)
@@ -22,7 +31,11 @@ const PdfExportRequestSchema = z
         description:
           "Accepts YYYY-MM-DD or ISO datetime; backend normalizes to YYYY-MM-DD",
       }),
-    granularity: z.enum(["daily", "weekly", "monthly"]),
+    granularity: z.enum(["daily", "weekly", "monthly"]).openapi({
+      description:
+        "Time-bucket aggregation level: daily = by day, weekly = ISO week, monthly = year-month",
+      example: "daily",
+    }),
   })
   .openapi("PdfExportRequest");
 
@@ -42,13 +55,24 @@ const PeriodTooLargeResponseSchema = z
 
 const PdfExportServerErrorSchema = z
   .object({
-    error: z.enum([
-      "DATA_FETCH_FAILED",
-      "CHART_RENDER_FAILED",
-      "PDF_BUILD_FAILED",
-    ]),
+    error: z
+      .enum(["DATA_FETCH_FAILED", "CHART_RENDER_FAILED", "PDF_BUILD_FAILED"])
+      .openapi({
+        description:
+          "Internal export failure code: DATA_FETCH_FAILED | CHART_RENDER_FAILED | PDF_BUILD_FAILED",
+        example: "PDF_BUILD_FAILED",
+      }),
   })
   .openapi("PdfExportServerErrorResponse");
+
+const PdfExportTimeoutResponseSchema = z
+  .object({
+    error: z.literal("EXPORT_TIMEOUT").openapi({
+      description: "PDF export exceeded server timeout window",
+      example: "EXPORT_TIMEOUT",
+    }),
+  })
+  .openapi("PdfExportTimeoutResponse");
 
 const PdfExportNotFoundResponseSchema = z
   .object({
@@ -71,6 +95,7 @@ export function registerPdfExportRoutes(registry: OpenAPIRegistry) {
     PdfExportNotFoundResponseSchema,
   );
   registry.register("PdfExportServerErrorResponse", PdfExportServerErrorSchema);
+  registry.register("PdfExportTimeoutResponse", PdfExportTimeoutResponseSchema);
 
   registry.registerPath({
     method: "post",
@@ -137,7 +162,7 @@ export function registerPdfExportRoutes(registry: OpenAPIRegistry) {
         description: "Export timeout",
         content: {
           "application/json": {
-            schema: PdfExportServerErrorSchema,
+            schema: PdfExportTimeoutResponseSchema,
           },
         },
       },
