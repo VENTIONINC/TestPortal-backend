@@ -4,6 +4,10 @@ const DATE_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
 const DATE_OR_DATETIME_PATTERN = /^(\d{4}-\d{2}-\d{2})(?:T.*)?$/;
 const MAX_PERIOD_DAYS = 365;
 
+export const PDF_EXPORT_VALIDATION_ERROR_CODE = {
+  PERIOD_TOO_LARGE: "PERIOD_TOO_LARGE",
+} as const;
+
 function isValidIsoDate(value: string): boolean {
   if (!DATE_PATTERN.test(value)) {
     return false;
@@ -68,8 +72,11 @@ export const pdfExportSchema = z
     if (diffDays > MAX_PERIOD_DAYS) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
-        message: "PERIOD_TOO_LARGE",
+        message: "Export period cannot exceed 365 days",
         path: ["periodEnd"],
+        params: {
+          errorCode: PDF_EXPORT_VALIDATION_ERROR_CODE.PERIOD_TOO_LARGE,
+        },
       });
     }
   })

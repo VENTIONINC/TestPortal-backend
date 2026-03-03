@@ -106,6 +106,46 @@ describe("reportController.exportPdf", () => {
     expect(res.json).toHaveBeenCalledWith({ error: "NOT_FOUND" });
   });
 
+  it("returns CHART_RENDER_FAILED on chart render error", async () => {
+    jest
+      .spyOn(reportService, "generatePdf")
+      .mockRejectedValue(
+        new ReportGenerationError("CHART_RENDER_FAILED", "chart failed"),
+      );
+
+    const { req, res } = createReqRes();
+    await reportController.exportPdf(req, res);
+
+    expect(res.status).toHaveBeenCalledWith(500);
+    expect(res.json).toHaveBeenCalledWith({ error: "CHART_RENDER_FAILED" });
+  });
+
+  it("returns PDF_BUILD_FAILED on report generation pdf build error", async () => {
+    jest
+      .spyOn(reportService, "generatePdf")
+      .mockRejectedValue(
+        new ReportGenerationError("PDF_BUILD_FAILED", "pdf failed"),
+      );
+
+    const { req, res } = createReqRes();
+    await reportController.exportPdf(req, res);
+
+    expect(res.status).toHaveBeenCalledWith(500);
+    expect(res.json).toHaveBeenCalledWith({ error: "PDF_BUILD_FAILED" });
+  });
+
+  it("returns fallback PDF_BUILD_FAILED on unexpected error", async () => {
+    jest
+      .spyOn(reportService, "generatePdf")
+      .mockRejectedValue(new Error("unexpected"));
+
+    const { req, res } = createReqRes();
+    await reportController.exportPdf(req, res);
+
+    expect(res.status).toHaveBeenCalledWith(500);
+    expect(res.json).toHaveBeenCalledWith({ error: "PDF_BUILD_FAILED" });
+  });
+
   it("returns 400 INVALID_PARAMS when middleware data missing", async () => {
     const { req, res } = createReqRes();
     res.locals = {};
