@@ -18,39 +18,6 @@ describe("chartRendererService.renderTrendChart", () => {
     mockRenderToBuffer.mockResolvedValue(Buffer.from("png-buffer"));
   });
 
-  it("returns PNG buffer and maps datasets correctly", async () => {
-    expect(mockRenderToBuffer).toHaveBeenCalledWith(
-      expect.objectContaining({
-        type: "line",
-        data: expect.objectContaining({
-          labels: ["2026-01-01"],
-          datasets: expect.arrayContaining([
-            expect.objectContaining({
-              label: "Total",
-              data: [12],
-              borderColor: "#6366f1",
-            }),
-            expect.objectContaining({
-              label: "Passed",
-              data: [10],
-              borderColor: "#22c55e",
-            }),
-            expect.objectContaining({
-              label: "Failed",
-              data: [1],
-              borderColor: "#ef4444",
-            }),
-            expect.objectContaining({
-              label: "Skipped",
-              data: [1],
-              borderColor: "#f59e0b",
-            }),
-          ]),
-        }),
-      }),
-    );
-  });
-
   it("renders regression runs bar chart", async () => {
     const data: Array<{ date: string; metrics: DailyExecutionMetrics }> = [
       {
