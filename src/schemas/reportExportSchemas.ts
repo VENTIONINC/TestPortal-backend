@@ -84,4 +84,4 @@ export const pdfExportSchema = z
     };
   });
 
-export type PdfExportInput = z.infer<typeof pdfExportSchema>;
+export type PdfExportInput = z.input<typeof pdfExportSchema>;
