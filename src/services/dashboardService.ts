@@ -256,7 +256,7 @@ export const dashboardService = {
 
     // 2. Aggregate into History & Summary
     const historyMap = new Map<string, DailyExecutionMetrics>();
-    const summary = { totalRuns: 0, passRate: 0, failures: 0 };
+    const summary = { totalRuns: 0, failures: 0, passRate: 0 };
 
     for (const row of dailyRows) {
       const dateObj = row.date;
