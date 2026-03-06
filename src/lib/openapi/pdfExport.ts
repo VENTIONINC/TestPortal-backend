@@ -36,6 +36,12 @@ const PdfExportRequestSchema = z
         "Time-bucket aggregation level: daily = by day, weekly = ISO week, monthly = year-month",
       example: "daily",
     }),
+    includeAiInsights: z.boolean().optional().openapi({
+      description:
+        "When true, the export includes an AI-generated insights section in the PDF. Defaults to false when omitted.",
+      example: true,
+      default: false,
+    }),
   })
   .openapi("PdfExportRequest");
 
@@ -100,20 +106,31 @@ export function registerPdfExportRoutes(registry: OpenAPIRegistry) {
   registry.registerPath({
     method: "post",
     path: "/api/v2/reports/pdf-export",
-    description: "Exports dashboard KPIs, trends, and failure breakdown as PDF",
+    description:
+      "Exports dashboard KPIs, trends, and failure breakdown as PDF. Optionally includes an AI-generated insights section when includeAiInsights is true.",
     security: [{ BearerAuth: [] }],
     request: {
       body: {
         content: {
           "application/json": {
             schema: PdfExportRequestSchema,
+            example: {
+              project: "web-app-qa",
+              environment: "staging",
+              executionType: "Nightly",
+              periodStart: "2026-01-01",
+              periodEnd: "2026-01-31",
+              granularity: "daily",
+              includeAiInsights: true,
+            },
           },
         },
       },
     },
     responses: {
       200: {
-        description: "PDF export",
+        description:
+          "PDF export stream. When includeAiInsights is true, the PDF may include an AI Insights section embedded in the document.",
         content: {
           "application/pdf": {
             schema: z.string().openapi({

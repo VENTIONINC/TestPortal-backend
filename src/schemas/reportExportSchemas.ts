@@ -46,6 +46,7 @@ export const pdfExportSchema = z
       message: "Invalid periodEnd date",
     }),
     granularity: z.enum(["daily", "weekly", "monthly"]),
+    includeAiInsights: z.boolean().optional().default(false),
   })
   .superRefine((input, ctx) => {
     const startDatePart = extractDatePart(input.periodStart);
@@ -86,6 +87,7 @@ export const pdfExportSchema = z
 
     return {
       ...input,
+      includeAiInsights: input.includeAiInsights ?? false,
       periodStart,
       periodEnd,
     };

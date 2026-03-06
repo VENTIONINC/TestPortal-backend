@@ -22,6 +22,7 @@ describe("reportController.exportPdf", () => {
     periodStart: "2026-01-01",
     periodEnd: "2026-01-31",
     granularity: "daily" as const,
+    includeAiInsights: false,
   };
 
   const createReqRes = () => {
@@ -78,6 +79,26 @@ describe("reportController.exportPdf", () => {
     );
     expect(pipe).toHaveBeenCalledWith(res);
     expect(end).toHaveBeenCalledTimes(1);
+    expect(req.setTimeout).toHaveBeenCalledWith(10_000, expect.any(Function));
+  });
+
+  it("extends timeout for AI-enabled exports", async () => {
+    const pipe = jest.fn();
+    const end = jest.fn();
+    jest.spyOn(reportService, "generatePdf").mockResolvedValue({
+      pipe,
+      end,
+    } as unknown as PDFKit.PDFDocument);
+
+    const { req, res } = createReqRes();
+    res.locals.exportParams = {
+      ...validParams,
+      includeAiInsights: true,
+    };
+
+    await reportController.exportPdf(req, res);
+
+    expect(req.setTimeout).toHaveBeenCalledWith(15_000, expect.any(Function));
   });
 
   it("returns DATA_FETCH_FAILED on data fetch error", async () => {

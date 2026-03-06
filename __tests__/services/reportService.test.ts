@@ -4,6 +4,7 @@ import { reportService, ReportGenerationError } from "@/services/reportService";
 import { projectModel } from "@/models/projectModel";
 import { dashboardService } from "@/services/dashboardService";
 import { chartRendererService } from "@/services/chartRendererService";
+import { insightsService } from "@/services/insightsService";
 import { pdfBuilderService } from "@/services/pdfBuilderService";
 
 describe("reportService.generatePdf", () => {
@@ -14,6 +15,7 @@ describe("reportService.generatePdf", () => {
     periodStart: "2026-01-01",
     periodEnd: "2026-01-31",
     granularity: "daily" as const,
+    includeAiInsights: false,
   };
 
   const dashboardResponse = {
@@ -97,6 +99,7 @@ describe("reportService.generatePdf", () => {
     expect(pdfBuilderService.buildPdf).toHaveBeenCalledWith(
       expect.objectContaining({
         kpis: { totalRuns: 100, failedRuns: 9, passRate: 91 },
+        insightsText: null,
         regressionRunsChartBuffer: Buffer.from("chart"),
         issuesCategoriesChartBuffer: Buffer.from("donut"),
         passRateChartBuffer: Buffer.from("pass-rate"),
@@ -152,6 +155,103 @@ describe("reportService.generatePdf", () => {
       "daily",
       "2026-01-01",
       "2026-01-31",
+    );
+  });
+
+  it("does not call insightsService when includeAiInsights is false", async () => {
+    const pdfDoc = { pipe: jest.fn() } as unknown as PDFKit.PDFDocument;
+
+    jest.spyOn(projectModel, "findByName").mockResolvedValue({
+      id: "project-1",
+      name: "ProjectA",
+    } as never);
+    jest
+      .spyOn(dashboardService, "getDashboard")
+      .mockResolvedValue(dashboardResponse);
+    jest
+      .spyOn(chartRendererService, "renderRegressionRunsChart")
+      .mockResolvedValue(Buffer.from("chart"));
+    jest
+      .spyOn(chartRendererService, "renderIssuesCategoriesChart")
+      .mockResolvedValue(Buffer.from("donut"));
+    jest
+      .spyOn(chartRendererService, "renderPassRateChart")
+      .mockResolvedValue(Buffer.from("pass-rate"));
+    jest
+      .spyOn(chartRendererService, "renderRunsDonut")
+      .mockResolvedValue(Buffer.from("runs-donut"));
+    jest.spyOn(pdfBuilderService, "buildPdf").mockReturnValue(pdfDoc);
+    const generateInsightsSpy = jest.spyOn(insightsService, "generateInsights");
+
+    await reportService.generatePdf(filters);
+
+    expect(generateInsightsSpy).not.toHaveBeenCalled();
+  });
+
+  it("starts insights generation when includeAiInsights is true", async () => {
+    const pdfDoc = { pipe: jest.fn() } as unknown as PDFKit.PDFDocument;
+
+    jest.spyOn(projectModel, "findByName").mockResolvedValue({
+      id: "project-1",
+      name: "ProjectA",
+    } as never);
+    jest
+      .spyOn(dashboardService, "getDashboard")
+      .mockResolvedValue(dashboardResponse);
+
+    let resolveRegressionChart: ((value: Buffer) => void) | undefined;
+    const regressionChartPromise = new Promise<Buffer>((resolve) => {
+      resolveRegressionChart = resolve;
+    });
+
+    jest
+      .spyOn(chartRendererService, "renderRegressionRunsChart")
+      .mockReturnValue(regressionChartPromise);
+    jest
+      .spyOn(chartRendererService, "renderIssuesCategoriesChart")
+      .mockResolvedValue(Buffer.from("donut"));
+    jest
+      .spyOn(chartRendererService, "renderPassRateChart")
+      .mockResolvedValue(Buffer.from("pass-rate"));
+    jest
+      .spyOn(chartRendererService, "renderRunsDonut")
+      .mockResolvedValue(Buffer.from("runs-donut"));
+    jest.spyOn(pdfBuilderService, "buildPdf").mockReturnValue(pdfDoc);
+    const generateInsightsSpy = jest
+      .spyOn(insightsService, "generateInsights")
+      .mockResolvedValue("AI summary");
+
+    const generatePdfPromise = reportService.generatePdf({
+      ...filters,
+      includeAiInsights: true,
+    });
+
+    await new Promise((resolve) => setImmediate(resolve));
+
+    expect(chartRendererService.renderRegressionRunsChart).toHaveBeenCalled();
+    expect(generateInsightsSpy).toHaveBeenCalledWith({
+      filters: {
+        ...filters,
+        includeAiInsights: true,
+      },
+      dashboard: dashboardResponse,
+      kpis: { totalRuns: 100, failedRuns: 9, passRate: 91 },
+      failureCauses: {
+        bug: 1,
+        environment: 0,
+        script: 0,
+        performance: 0,
+        other: 0,
+      },
+    });
+
+    resolveRegressionChart?.(Buffer.from("chart"));
+
+    await expect(generatePdfPromise).resolves.toBe(pdfDoc);
+    expect(pdfBuilderService.buildPdf).toHaveBeenCalledWith(
+      expect.objectContaining({
+        insightsText: "AI summary",
+      }),
     );
   });
 
