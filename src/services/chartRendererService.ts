@@ -1,11 +1,62 @@
+import fs from "node:fs";
 import { ChartJSNodeCanvas } from "chartjs-node-canvas";
 import type { DailyExecutionMetrics } from "@/types/dashboard";
+
+const CHART_FONT_FAMILY = "PDF Export Sans";
+const CHART_FONT_STACK = `"${CHART_FONT_FAMILY}", "DejaVu Sans", Arial, Helvetica, sans-serif`;
+const CHART_FONT_PATHS = [
+  process.env.PDF_EXPORT_CHART_FONT_PATH,
+  "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf",
+  "/usr/share/fonts/truetype/liberation2/LiberationSans-Regular.ttf",
+  "/System/Library/Fonts/Supplemental/Arial.ttf",
+  "/Library/Fonts/Arial.ttf",
+].filter((fontPath): fontPath is string => Boolean(fontPath));
+
+function resolveChartFontPath(): string | null {
+  return CHART_FONT_PATHS.find((fontPath) => fs.existsSync(fontPath)) ?? null;
+}
 
 const chartCanvas = new ChartJSNodeCanvas({
   width: 1000,
   height: 500,
   backgroundColour: "white",
+  chartCallback: (ChartJS) => {
+    ChartJS.defaults.color = "#111827";
+    ChartJS.defaults.font.family = CHART_FONT_STACK;
+    ChartJS.defaults.font.size = 12;
+  },
 });
+
+const chartFontPath = resolveChartFontPath();
+
+if (chartFontPath) {
+  chartCanvas.registerFont(chartFontPath, {
+    family: CHART_FONT_FAMILY,
+  });
+}
+
+function getAxisOptions() {
+  return {
+    beginAtZero: true,
+    ticks: {
+      font: {
+        family: CHART_FONT_STACK,
+      },
+    },
+  };
+}
+
+function getLegendOptions(position: "top" | "bottom") {
+  return {
+    display: true,
+    position,
+    labels: {
+      font: {
+        family: CHART_FONT_STACK,
+      },
+    },
+  };
+}
 
 export const chartRendererService = {
   async renderPassRateChart(
@@ -34,15 +85,13 @@ export const chartRendererService = {
         responsive: false,
         plugins: {
           legend: {
-            display: true,
-            position: "top" as const,
+            ...getLegendOptions("top"),
             align: "end" as const,
           },
         },
         scales: {
-          y: {
-            beginAtZero: true,
-          },
+          x: getAxisOptions(),
+          y: getAxisOptions(),
         },
       },
     };
@@ -81,15 +130,13 @@ export const chartRendererService = {
         responsive: false,
         plugins: {
           legend: {
-            display: true,
-            position: "top" as const,
+            ...getLegendOptions("top"),
             align: "end" as const,
           },
         },
         scales: {
-          y: {
-            beginAtZero: true,
-          },
+          x: getAxisOptions(),
+          y: getAxisOptions(),
         },
       },
     };
@@ -138,15 +185,13 @@ export const chartRendererService = {
         responsive: false,
         plugins: {
           legend: {
-            display: true,
-            position: "top" as const,
+            ...getLegendOptions("top"),
             align: "end" as const,
           },
         },
         scales: {
-          y: {
-            beginAtZero: true,
-          },
+          x: getAxisOptions(),
+          y: getAxisOptions(),
         },
       },
     };
@@ -176,10 +221,7 @@ export const chartRendererService = {
         responsive: false,
         cutout: "70%",
         plugins: {
-          legend: {
-            display: true,
-            position: "bottom" as const,
-          },
+          legend: getLegendOptions("bottom"),
           title: {
             display: false,
           },

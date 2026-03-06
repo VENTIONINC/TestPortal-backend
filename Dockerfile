@@ -1,7 +1,7 @@
 # Base image with OpenSSL
 FROM node:20-slim AS base
 
-RUN apt-get update && apt-get install -y --no-install-recommends openssl \
+RUN apt-get update && apt-get install -y --no-install-recommends openssl fontconfig fonts-dejavu-core \
 	&& rm -rf /var/lib/apt/lists/*
 
 # Stage 1: Build
@@ -41,6 +41,9 @@ RUN npm ci --omit=dev
 
 # Copy built assets from builder
 COPY --from=builder /app/dist ./dist
+
+# Copy PDF branding assets used at runtime
+COPY --from=builder /app/src/assets/pdf ./src/assets/pdf
 
 # Copy generated Prisma Client
 COPY --from=builder /app/node_modules/.prisma ./node_modules/.prisma
