@@ -76,6 +76,22 @@ function drawCoverLogo(doc: PDFKit.PDFDocument, logoPath: string): void {
   });
 }
 
+function getBottomMargin(doc: PDFKit.PDFDocument): number {
+  return doc.page.margins.bottom ?? doc.page.margins.top ?? 50;
+}
+
+function ensureVerticalSpace(
+  doc: PDFKit.PDFDocument,
+  requiredHeight: number,
+): void {
+  const availableHeight =
+    doc.page.height - getBottomMargin(doc) - doc.y;
+
+  if (availableHeight < requiredHeight) {
+    doc.addPage();
+  }
+}
+
 export const pdfBuilderService = {
   buildPdf(params: BuildPdfParams): PDFKit.PDFDocument {
     const doc = new PDFDocument({
@@ -162,6 +178,9 @@ export const pdfBuilderService = {
     const tablePercentX = tableLeft + 420;
     const tableRight = doc.page.width - doc.page.margins.right;
     const rowHeight = 40;
+    const failureTableHeight = 280;
+
+    ensureVerticalSpace(doc, failureTableHeight);
 
     let currentY = doc.y;
 

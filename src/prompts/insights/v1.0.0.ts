@@ -12,14 +12,16 @@ interface BuildInsightsPromptParams {
   kpis: PdfKpiBlock;
   failureCauses: DashboardIssueMetrics;
   anomalyFlags: PdfInsightAnomalyFlag[];
+  passRateTrend: "improving" | "declining" | "stable" | "volatile";
 }
 
 const SYSTEM_PROMPT = `You are a QA analytics assistant. Analyze the provided test execution data and write a concise plain-language summary in no more than 300 words.
 
 Rules:
-- Describe the overall pass rate trend as improving, declining, stable, or volatile.
-- Mention each anomaly flag explicitly with its date and direction when anomalies are present.
+- Use the provided computed pass rate trend signal exactly as given. Do not infer a different trend.
+- Mention each anomaly flag explicitly with its date, metric, direction, and that the percentage is relative to the period average.
 - If one failure category accounts for more than 50% of failures, call it out by name and percentage.
+- If the dominant category is Other, describe it as uncategorized or other failures rather than implying a concrete root cause.
 - Do not speculate beyond the data provided.
 - Do not use markdown formatting.`;
 
@@ -31,7 +33,10 @@ Summary KPIs:
   Failed Runs: {failedRuns}
   Pass Rate: {passRate}%
 
-Anomalies detected:
+Computed pass rate trend signal:
+  {passRateTrend}
+
+Anomalies detected (percentages are deviations from the period average, not absolute percentages):
 {anomalyFlags}
 
 Failure root-cause breakdown:
@@ -39,7 +44,7 @@ Failure root-cause breakdown:
   Environment: {environmentCount} ({environmentPct}%)
   Script: {scriptCount} ({scriptPct}%)
   Performance: {performanceCount} ({performancePct}%)
-  Other: {otherCount} ({otherPct}%)`;
+  Other / Uncategorized: {otherCount} ({otherPct}%)`;
 
 const insightsPromptTemplate = ChatPromptTemplate.fromMessages([
   ["system", SYSTEM_PROMPT],
@@ -62,7 +67,7 @@ function formatAnomalyFlags(anomalyFlags: PdfInsightAnomalyFlag[]): string {
   return anomalyFlags
     .map(
       (flag) =>
-        `${flag.date}: ${flag.metric} ${flag.direction} (${flag.deviationPct.toFixed(2)}%)`,
+        `${flag.date}: ${flag.metric === "total_runs" ? "total runs" : "pass rate"} ${flag.direction}, ${flag.deviationPct.toFixed(2)}% ${flag.direction === "spike" ? "above" : "below"} the period average`,
     )
     .join("\n");
 }
@@ -87,6 +92,7 @@ export function buildInsightsPrompt(
     totalRuns: String(params.kpis.totalRuns),
     failedRuns: String(params.kpis.failedRuns),
     passRate: params.kpis.passRate.toFixed(2),
+    passRateTrend: params.passRateTrend,
     anomalyFlags: formatAnomalyFlags(params.anomalyFlags),
     bugCount: String(params.failureCauses.bug),
     bugPct: formatPercent(params.failureCauses.bug, totalFailures),

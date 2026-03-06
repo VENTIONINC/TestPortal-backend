@@ -24,6 +24,8 @@ interface GenerateInsightsParams {
   failureCauses: DashboardIssueMetrics;
 }
 
+type PassRateTrend = "improving" | "declining" | "stable" | "volatile";
+
 function getAnomalyFlags(
   history: DashboardResponse["history"],
 ): PdfInsightAnomalyFlag[] {
@@ -73,6 +75,50 @@ function extractTextContent(content: unknown): string {
     .trim();
 }
 
+function calculateBucketPassRate(bucket: DashboardResponse["history"][number]): number {
+  if (bucket.metrics.total <= 0) {
+    return 0;
+  }
+
+  return (bucket.metrics.passed / bucket.metrics.total) * 100;
+}
+
+function getPassRateTrend(history: DashboardResponse["history"]): PassRateTrend {
+  const passRates = history
+    .filter((bucket) => bucket.metrics.total > 0)
+    .map((bucket) => calculateBucketPassRate(bucket));
+
+  if (passRates.length < 2) {
+    return "stable";
+  }
+
+  const firstPassRate = passRates[0];
+  const lastPassRate = passRates[passRates.length - 1];
+
+  if (firstPassRate === undefined || lastPassRate === undefined) {
+    return "stable";
+  }
+
+  const minPassRate = Math.min(...passRates);
+  const maxPassRate = Math.max(...passRates);
+  const netChange = lastPassRate - firstPassRate;
+  const range = maxPassRate - minPassRate;
+
+  if (range >= 20) {
+    return "volatile";
+  }
+
+  if (netChange >= 5) {
+    return "improving";
+  }
+
+  if (netChange <= -5) {
+    return "declining";
+  }
+
+  return "stable";
+}
+
 async function withTimeout<T>(
   promise: Promise<T>,
   timeoutMs: number,
@@ -103,6 +149,7 @@ export const insightsService = {
   }: GenerateInsightsParams): Promise<string> {
     const startedAt = Date.now();
     const anomalyFlags = getAnomalyFlags(dashboard.history);
+    const passRateTrend = getPassRateTrend(dashboard.history);
 
     try {
       const model = new ChatOpenAI({
@@ -117,6 +164,7 @@ export const insightsService = {
         kpis,
         failureCauses,
         anomalyFlags,
+        passRateTrend,
       });
 
       const response = await withTimeout(

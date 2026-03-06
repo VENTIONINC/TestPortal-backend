@@ -289,6 +289,46 @@ describe("pdfBuilderService.buildPdf", () => {
     ).toBe(true);
   });
 
+  it("adds a new page before the failure table when AI insights consume too much space", () => {
+    mockDoc.y = 760;
+    mockDoc.addPage.mockImplementation(() => {
+      mockDoc.y = 50;
+      return mockDoc;
+    });
+
+    pdfBuilderService.buildPdf({
+      regressionRunsChartBuffer: Buffer.from("regression"),
+      issuesCategoriesChartBuffer: Buffer.from("issues"),
+      passRateChartBuffer: Buffer.from("pass-rate"),
+      testRunsDonutBuffer: Buffer.from("runs-donut"),
+      kpis: { totalRuns: 35, failedRuns: 4, passRate: 88 },
+      failureCauses: {
+        bug: 4,
+        environment: 2,
+        script: 1,
+        performance: 1,
+        other: 0,
+      },
+      insightsText: "A very long AI summary",
+      filters: {
+        project: "ProjectA",
+        environment: "prod",
+        executionType: "Release",
+        periodStart: "2026-02-01",
+        periodEnd: "2026-02-10",
+        granularity: "daily",
+        includeAiInsights: true,
+      },
+    });
+
+    expect(mockDoc.addPage).toHaveBeenCalled();
+    expect(
+      mockDoc.text.mock.calls.some(
+        (call) => call[0] === "Failure Root-Cause Breakdown",
+      ),
+    ).toBe(true);
+  });
+
   it("renders footer for buffered range with non-zero start", () => {
     mockDoc.bufferedPageRange.mockReturnValue({ start: 2, count: 2 });
 
