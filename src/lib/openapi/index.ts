@@ -21,6 +21,7 @@ import { registerProjectRoutes } from "./projects";
 import { registerCtrfRoutes } from "./ctrf";
 import { registerUploadApiKeyRoutes } from "./uploadApiKey";
 import { registerAnalysisExportRoutes } from "./analysisExport";
+import { registerPdfExportRoutes } from "./pdfExport";
 import "./zod";
 
 export function generateOpenAPISpec() {
@@ -44,6 +45,7 @@ export function generateOpenAPISpec() {
   registerCtrfRoutes(registry);
   registerUploadApiKeyRoutes(registry);
   registerAnalysisExportRoutes(registry);
+  registerPdfExportRoutes(registry);
 
   const generator = new OpenApiGeneratorV31(registry.definitions);
 

@@ -43,6 +43,16 @@ function getDateKey(date: Date, granularity: DashboardGranularity): string {
   return date.toISOString().split("T")[0] ?? "";
 }
 
+function toUtcStartOfDay(value: string): Date {
+  return new Date(`${value}T00:00:00.000Z`);
+}
+
+function toUtcEndExclusive(value: string): Date {
+  const endExclusive = toUtcStartOfDay(value);
+  endExclusive.setUTCDate(endExclusive.getUTCDate() + 1);
+  return endExclusive;
+}
+
 export const dashboardService = {
   /**
    * Updates the aggregated dashboard stats for a completed execution.
@@ -232,18 +242,28 @@ export const dashboardService = {
     periodDays: number,
     filterType?: string,
     granularity: DashboardGranularity = "daily",
+    startDate?: string,
+    endDate?: string,
   ): Promise<DashboardResponse> {
-    // Calculate date range
-    const cutoffDate = new Date();
-    cutoffDate.setDate(cutoffDate.getDate() - periodDays);
-    // Reset time to ensure we catch everything from that date onwards
-    cutoffDate.setHours(0, 0, 0, 0);
+    let rangeStartDate: Date;
+    let rangeEndExclusive: Date | undefined;
+
+    if (startDate && endDate) {
+      rangeStartDate = toUtcStartOfDay(startDate);
+      rangeEndExclusive = toUtcEndExclusive(endDate);
+    } else {
+      rangeStartDate = new Date();
+      rangeStartDate.setDate(rangeStartDate.getDate() - periodDays);
+      rangeStartDate.setHours(0, 0, 0, 0);
+    }
 
     // 1. Fetch Daily Metrics (Atomic Rows)
     const metricsWhere: Prisma.DailyExecutionMetricWhereInput = {
       projectId,
       environment,
-      date: { gte: cutoffDate },
+      date: rangeEndExclusive
+        ? { gte: rangeStartDate, lt: rangeEndExclusive }
+        : { gte: rangeStartDate },
     };
     if (filterType) {
       metricsWhere.type = filterType;
@@ -256,7 +276,7 @@ export const dashboardService = {
 
     // 2. Aggregate into History & Summary
     const historyMap = new Map<string, DailyExecutionMetrics>();
-    const summary = { totalRuns: 0, passRate: 0, failures: 0 };
+    const summary = { totalRuns: 0, failures: 0, passRate: 0 };
 
     for (const row of dailyRows) {
       const dateObj = row.date;
@@ -316,7 +336,9 @@ export const dashboardService = {
     const executionWhere: Prisma.ExecutionWhereInput = {
       projectId,
       environment, // Filter by env
-      startedAt: { gte: cutoffDate },
+      startedAt: rangeEndExclusive
+        ? { gte: rangeStartDate, lt: rangeEndExclusive }
+        : { gte: rangeStartDate },
     };
     if (filterType) {
       executionWhere.type = filterType;
@@ -363,6 +385,7 @@ export const dashboardService = {
     return {
       summary: {
         totalRuns: summary.totalRuns,
+        failures: summary.failures,
         passRate: summary.passRate,
       },
       history,

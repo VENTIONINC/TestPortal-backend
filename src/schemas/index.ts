@@ -23,3 +23,5 @@ export {
   type TestResultAnalysis,
   type TestAnalysisResponse,
 } from "./testAnalysisSchemas";
+
+export { pdfExportSchema, type PdfExportInput } from "./reportExportSchemas";
