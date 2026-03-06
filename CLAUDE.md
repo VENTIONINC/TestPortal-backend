@@ -150,3 +150,14 @@ export const myTool = createMcpTool(
 - Environment variables in `.env` file
 - Database URL: `postgresql://postgres:postgres@localhost:5433/test_portal`
 - Default port: 3001
+
+## Codebase Overview
+
+TypeScript Node.js backend for test results management with dual-purpose architecture: REST API + MCP Tool Server for AI agents.
+
+**Stack:** Express.js 5, PostgreSQL/Prisma, Zod, OpenAI/LangChain, MCP SDK, Jest/ts-jest
+**Structure:** MVC — controllers delegate to services, services use Prisma models; same services power both REST and MCP tools
+
+Key domain entities: Project → Execution → Spec → Result → ResultError → Assumption ↔ Issue
+
+For detailed architecture, see [docs/CODEBASE_MAP.md](docs/CODEBASE_MAP.md).
