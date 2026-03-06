@@ -2,20 +2,82 @@ import "@/test-utils/testEnv";
 import { jest } from "@jest/globals";
 import type { DailyExecutionMetrics } from "@/types/dashboard";
 
-const mockRenderToBuffer = jest.fn<() => Promise<Buffer>>();
+type MockChartDefaults = {
+  defaults: {
+    color?: string;
+    font: {
+      family?: string;
+      size?: number;
+    };
+  };
+};
 
-jest.mock("chartjs-node-canvas", () => ({
-  ChartJSNodeCanvas: jest.fn().mockImplementation(() => ({
-    renderToBuffer: mockRenderToBuffer,
-  })),
+const mockRenderToBuffer = jest.fn<() => Promise<Buffer>>();
+const mockRegisterFont = jest.fn();
+const mockExistsSync = jest.fn(
+  (fontPath: string) =>
+    fontPath === "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf",
+);
+let chartCanvasOptions:
+  | {
+      chartCallback?: (chartJs: MockChartDefaults) => void;
+    }
+  | undefined;
+
+jest.mock("node:fs", () => ({
+  __esModule: true,
+  default: {
+    existsSync: mockExistsSync,
+  },
 }));
 
+jest.mock("chartjs-node-canvas", () => ({
+  ChartJSNodeCanvas: jest.fn().mockImplementation((options) => {
+    chartCanvasOptions = options as typeof chartCanvasOptions;
+
+    return {
+      renderToBuffer: mockRenderToBuffer,
+      registerFont: mockRegisterFont,
+    };
+  }),
+}));
+
+import { ChartJSNodeCanvas } from "chartjs-node-canvas";
 import { chartRendererService } from "@/services/chartRendererService";
 
 describe("chartRendererService", () => {
   beforeEach(() => {
-    jest.clearAllMocks();
+    mockRenderToBuffer.mockReset();
     mockRenderToBuffer.mockResolvedValue(Buffer.from("png-buffer"));
+  });
+
+  it("configures Chart.js defaults and registers a runtime font", () => {
+    expect(ChartJSNodeCanvas as unknown as jest.Mock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        width: 1000,
+        height: 500,
+        backgroundColour: "white",
+        chartCallback: expect.any(Function),
+      }),
+    );
+    expect(mockRegisterFont).toHaveBeenCalledWith(
+      "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf",
+      { family: "PDF Export Sans" },
+    );
+
+    expect(chartCanvasOptions?.chartCallback).toBeDefined();
+
+    const chartJs: MockChartDefaults = {
+      defaults: {
+        font: {},
+      },
+    };
+
+    chartCanvasOptions?.chartCallback?.(chartJs);
+
+    expect(chartJs.defaults.color).toBe("#111827");
+    expect(chartJs.defaults.font.family).toContain("PDF Export Sans");
+    expect(chartJs.defaults.font.size).toBe(12);
   });
 
   it("renders runs donut chart and returns PNG buffer", async () => {
@@ -62,6 +124,11 @@ describe("chartRendererService", () => {
             legend: expect.objectContaining({
               display: true,
               position: "bottom",
+              labels: expect.objectContaining({
+                font: expect.objectContaining({
+                  family: expect.stringContaining("PDF Export Sans"),
+                }),
+              }),
             }),
           }),
         }),
@@ -95,6 +162,24 @@ describe("chartRendererService", () => {
     expect(mockRenderToBuffer).toHaveBeenCalledWith(
       expect.objectContaining({
         type: "bar",
+        options: expect.objectContaining({
+          scales: expect.objectContaining({
+            x: expect.objectContaining({
+              ticks: expect.objectContaining({
+                font: expect.objectContaining({
+                  family: expect.stringContaining("PDF Export Sans"),
+                }),
+              }),
+            }),
+            y: expect.objectContaining({
+              ticks: expect.objectContaining({
+                font: expect.objectContaining({
+                  family: expect.stringContaining("PDF Export Sans"),
+                }),
+              }),
+            }),
+          }),
+        }),
         data: expect.objectContaining({
           labels: ["2026-02-12"],
           datasets: expect.arrayContaining([
@@ -133,6 +218,17 @@ describe("chartRendererService", () => {
     expect(mockRenderToBuffer).toHaveBeenCalledWith(
       expect.objectContaining({
         type: "bar",
+        options: expect.objectContaining({
+          plugins: expect.objectContaining({
+            legend: expect.objectContaining({
+              labels: expect.objectContaining({
+                font: expect.objectContaining({
+                  family: expect.stringContaining("PDF Export Sans"),
+                }),
+              }),
+            }),
+          }),
+        }),
         data: expect.objectContaining({
           labels: ["2026-02-12"],
           datasets: expect.arrayContaining([
@@ -170,6 +266,17 @@ describe("chartRendererService", () => {
     expect(mockRenderToBuffer).toHaveBeenCalledWith(
       expect.objectContaining({
         type: "bar",
+        options: expect.objectContaining({
+          plugins: expect.objectContaining({
+            legend: expect.objectContaining({
+              labels: expect.objectContaining({
+                font: expect.objectContaining({
+                  family: expect.stringContaining("PDF Export Sans"),
+                }),
+              }),
+            }),
+          }),
+        }),
         data: expect.objectContaining({
           labels: ["2026-02-12"],
           datasets: expect.arrayContaining([
