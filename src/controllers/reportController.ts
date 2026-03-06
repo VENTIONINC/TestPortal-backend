@@ -29,7 +29,9 @@ export const reportController = {
     }
 
     let timedOut = false;
-    req.setTimeout(10_000, () => {
+    const exportTimeoutMs = params.includeAiInsights ? 15_000 : 10_000;
+
+    req.setTimeout(exportTimeoutMs, () => {
       timedOut = true;
       logger.error("PDF export timed out");
 

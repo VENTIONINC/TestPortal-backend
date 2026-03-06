@@ -118,7 +118,10 @@ describe("validatePdfExport", () => {
     validatePdfExport(req, res, next);
 
     expect(next).toHaveBeenCalledTimes(1);
-    expect(res.locals.exportParams).toEqual(req.body);
+    expect(res.locals.exportParams).toEqual({
+      ...req.body,
+      includeAiInsights: false,
+    });
   });
 
   it("accepts ISO datetime input and normalizes dates", () => {
@@ -140,9 +143,31 @@ describe("validatePdfExport", () => {
     expect(next).toHaveBeenCalledTimes(1);
     expect(res.locals.exportParams).toEqual({
       ...req.body,
+      includeAiInsights: false,
       periodStart: "2026-01-29",
       periodEnd: "2026-02-27",
     });
+  });
+
+  it("accepts includeAiInsights when explicitly provided", () => {
+    const req = {
+      body: {
+        project: "Project A",
+        environment: "staging",
+        executionType: "Nightly",
+        periodStart: "2026-01-01",
+        periodEnd: "2026-01-31",
+        granularity: "daily",
+        includeAiInsights: true,
+      },
+    } as Request;
+    const res = createResMock();
+    const next = jest.fn() as NextFunction;
+
+    validatePdfExport(req, res, next);
+
+    expect(next).toHaveBeenCalledTimes(1);
+    expect(res.locals.exportParams).toEqual(req.body);
   });
 
   it("returns INVALID_PARAMS for malformed date instead of PERIOD_TOO_LARGE", () => {

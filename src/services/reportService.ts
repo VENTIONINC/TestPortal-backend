@@ -1,5 +1,6 @@
 import { chartRendererService } from "@/services/chartRendererService";
 import { dashboardService } from "@/services/dashboardService";
+import { insightsService } from "@/services/insightsService";
 import { pdfBuilderService } from "@/services/pdfBuilderService";
 import { projectModel } from "@/models/projectModel";
 import type {
@@ -120,12 +121,14 @@ export const reportService = {
     let issuesCategoriesChartBuffer: Buffer;
     let passRateChartBuffer: Buffer;
     let testRunsDonutBuffer: Buffer;
+    let insightsText: string | null;
     try {
       [
         regressionRunsChartBuffer,
         issuesCategoriesChartBuffer,
         passRateChartBuffer,
         testRunsDonutBuffer,
+        insightsText,
       ] = await Promise.all([
         chartRendererService.renderRegressionRunsChart(dashboard.history),
         chartRendererService.renderIssuesCategoriesChart(dashboard.history),
@@ -134,6 +137,14 @@ export const reportService = {
           dashboard.summary.totalRuns,
           dashboard.summary.failures,
         ),
+        filters.includeAiInsights
+          ? insightsService.generateInsights({
+              filters,
+              dashboard,
+              kpis,
+              failureCauses,
+            })
+          : Promise.resolve(null),
       ]);
     } catch (error) {
       throw new ReportGenerationError(
@@ -150,6 +161,7 @@ export const reportService = {
         testRunsDonutBuffer,
         kpis,
         failureCauses,
+        insightsText,
         filters: {
           ...filters,
           project: project.name,

@@ -43,6 +43,18 @@ export interface PdfExportFilters {
   periodStart: string;
   periodEnd: string;
   granularity: DashboardGranularity;
+  includeAiInsights: boolean;
+}
+
+export type PdfInsightMetric = "total_runs" | "pass_rate";
+
+export type PdfInsightDirection = "spike" | "drop";
+
+export interface PdfInsightAnomalyFlag {
+  date: string;
+  metric: PdfInsightMetric;
+  direction: PdfInsightDirection;
+  deviationPct: number;
 }
 
 export interface PdfKpiBlock {
