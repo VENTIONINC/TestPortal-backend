@@ -130,7 +130,7 @@ export interface ResultsStats {
     assumptions: number;
   };
   topErrors: { title: string; count: number }[];
-  topIssues: { title: string; count: number }[];
+  topIssues: { title: string; count: number; category: string }[];
 }
 
 // Assumption API Types
