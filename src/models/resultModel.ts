@@ -561,7 +561,7 @@ export const resultModel = {
 
     // Local tracking for errors and issues (not stored in final stats)
     const errorCounts = new Map<string, number>();
-    const issueCounts = new Map<string, number>();
+    const issueCounts = new Map<string, { count: number; category: string }>();
 
     // Initialize stats object
     const stats: ResultsStats = {
@@ -607,7 +607,6 @@ export const resultModel = {
           const assumptionKey = assumption.id;
           if (!assumptionMap.has(assumptionKey))
             assumptionMap.set(assumptionKey, assumption);
-
           // Process issues
           if (assumption.issue) {
             const issue = assumption.issue;
@@ -615,7 +614,14 @@ export const resultModel = {
 
             // Count issue names
             const issueName = issue.name ?? "Unknown Issue Name";
-            issueCounts.set(issueName, (issueCounts.get(issueName) ?? 0) + 1);
+            const current = issueCounts.get(issueName) || {
+              count: 0,
+              category: issue.category ?? "Other",
+            };
+            issueCounts.set(issueName, {
+              ...current,
+              count: current.count + 1,
+            });
           }
         });
       });
@@ -642,9 +648,13 @@ export const resultModel = {
       .map(([title, count]) => ({ title, count }));
 
     stats.topIssues = Array.from(issueCounts.entries())
-      .sort((a, b) => b[1] - a[1])
+      .sort((a, b) => b[1].count - a[1].count)
       .slice(0, 10)
-      .map(([title, count]) => ({ title, count }));
+      .map(([title, data]) => ({
+        title,
+        count: data.count,
+        category: data.category,
+      }));
 
     return stats;
   },
@@ -767,3 +777,4 @@ export const resultModel = {
     });
   },
 };
+
