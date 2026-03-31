@@ -1,6 +1,7 @@
 import "@/test-utils/testEnv";
 import { jest } from "@jest/globals";
 import fs from "node:fs";
+import path from "node:path";
 import { AI_INSIGHTS_FALLBACK_TEXT } from "@/services/insightsService";
 
 type MockPdfDoc = {
@@ -93,6 +94,53 @@ describe("pdfBuilderService.buildPdf", () => {
   beforeEach(() => {
     jest.clearAllMocks();
     mockDoc = createMockDoc();
+  });
+
+  it("uses a runtime fallback logo path when the source asset path is missing", () => {
+    const existsSyncSpy = jest
+      .spyOn(fs, "existsSync")
+      .mockImplementation((filePath) => {
+        const normalizedPath = String(filePath);
+
+        return normalizedPath === path.resolve(process.cwd(), "dist/src/assets/pdf/watermark.png");
+      });
+
+    pdfBuilderService.buildPdf({
+      regressionRunsChartBuffer: Buffer.from("regression"),
+      issuesCategoriesChartBuffer: Buffer.from("issues"),
+      passRateChartBuffer: Buffer.from("pass-rate"),
+      testRunsDonutBuffer: Buffer.from("runs-donut"),
+      kpis: { totalRuns: 20, failedRuns: 5, passRate: 95 },
+      failureCauses: {
+        bug: 1,
+        environment: 1,
+        script: 0,
+        performance: 0,
+        other: 0,
+      },
+      insightsText: null,
+      filters: {
+        project: "ProjectA",
+        environment: "staging",
+        executionType: "Nightly",
+        periodStart: "2026-01-01",
+        periodEnd: "2026-01-31",
+        granularity: "daily",
+        includeAiInsights: false,
+      },
+    });
+
+    expect(mockDoc.image).toHaveBeenCalledWith(
+      path.resolve(process.cwd(), "dist/src/assets/pdf/watermark.png"),
+      365,
+      50,
+      expect.objectContaining({
+        fit: [180, 180],
+        align: "right",
+      }),
+    );
+
+    existsSyncSpy.mockRestore();
   });
 
   it("returns a PDF document stream object and does not write to disk", () => {
