@@ -1,3 +1,5 @@
+import type { PrismaAssumption } from "@/types/database";
+
 // API Request Types
 export interface PaginationParams {
   page?: number;
@@ -153,6 +155,47 @@ export interface UpdateAssumptionRequest {
   description?: string;
   hypothesis?: string;
   evidence?: string;
+}
+
+export type FailureGroupingCategory =
+  | "bug"
+  | "infra"
+  | "performance"
+  | "script"
+  | "other";
+
+export type FailureGroupingSource = "llm" | "algorithmic" | "none";
+
+export type FailureGroupingReason =
+  | "insufficient_failures"
+  | "analysis_not_complete"
+  | "too_many_failures";
+
+export interface FailureGroup {
+  groupDescription: string;
+  confidence: number;
+  resultErrorIds: string[];
+  suggestedIssueQuery?: string;
+}
+
+export interface GroupFailuresRequest {
+  category: FailureGroupingCategory;
+}
+
+export interface GroupFailuresResponse {
+  groups: FailureGroup[];
+  source: FailureGroupingSource;
+  reason?: FailureGroupingReason;
+}
+
+export interface AcceptFailureGroupRequest {
+  issueId: string;
+  groupResultErrorIds: string[];
+}
+
+export interface AcceptFailureGroupResponse {
+  createdAssumptions: PrismaAssumption[];
+  skippedResultErrorIds: string[];
 }
 
 export interface GetAssumptionByIdParams {

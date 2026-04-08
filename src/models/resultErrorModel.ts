@@ -59,6 +59,58 @@ export const resultErrorModel = {
     });
   },
 
+  findManyForExecutionContext: async (
+    executionId: string,
+    projectId: string,
+    options?: {
+      category?: string;
+      ids?: string[];
+    },
+  ): Promise<
+    Array<
+      PrismaResultError & {
+        result: {
+          id: string;
+          status: string;
+          retry: number;
+          analysisCategory: string | null;
+          analysisConclusion: string | null;
+          executionId: string;
+        } | null;
+      }
+    >
+  > => {
+    return await dbClient.resultError.findMany({
+      where: {
+        ...(options?.ids ? { id: { in: options.ids } } : {}),
+        result: {
+          executionId,
+          execution: {
+            projectId,
+          },
+          ...(options?.category
+            ? { analysisCategory: options.category }
+            : {}),
+        },
+      },
+      include: {
+        result: {
+          select: {
+            id: true,
+            status: true,
+            retry: true,
+            analysisCategory: true,
+            analysisConclusion: true,
+            executionId: true,
+          },
+        },
+      },
+      orderBy: {
+        createdAt: "asc",
+      },
+    });
+  },
+
   findByIdInternal: async (id: string): Promise<PrismaResultError | null> => {
     return await dbClient.resultError.findUnique({
       where: {

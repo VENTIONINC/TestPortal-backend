@@ -29,7 +29,10 @@ export const assumptionModel = {
     });
   },
 
-  findById: async (id: string, projectId: string): Promise<PrismaAssumption | null> => {
+  findById: async (
+    id: string,
+    projectId: string,
+  ): Promise<PrismaAssumption | null> => {
     return await dbClient.assumption.findFirst({
       where: {
         id,
@@ -43,6 +46,24 @@ export const assumptionModel = {
   findByIdSimple: async (id: string): Promise<PrismaAssumption | null> => {
     return await dbClient.assumption.findUnique({
       where: { id },
+    });
+  },
+
+  findManyByIssueAndResultErrorIds: async (
+    issueId: string,
+    resultErrorIds: string[],
+  ): Promise<PrismaAssumption[]> => {
+    if (resultErrorIds.length === 0) {
+      return [];
+    }
+
+    return await dbClient.assumption.findMany({
+      where: {
+        issueId,
+        resultErrorId: {
+          in: resultErrorIds,
+        },
+      },
     });
   },
 
