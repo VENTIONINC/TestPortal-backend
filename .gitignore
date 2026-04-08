@@ -79,3 +79,7 @@ example-reports/
 
 # Prompt testing datasets (generated files)
 __prompts-tests__/**/datasets/
+
+# Local MemPalace bootstrap/config files
+entities.json
+mempalace.yaml
