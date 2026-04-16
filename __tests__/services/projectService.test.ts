@@ -126,6 +126,56 @@ describe("projectService", () => {
     });
   });
 
+  describe("createProject", () => {
+    it("passes required category weights to the model and normalizes the response", async () => {
+      (projectModel.findByName as jest.Mock).mockResolvedValue(null);
+      (projectModel.create as jest.Mock).mockResolvedValue({
+        id: "project-1",
+        name: "Project 1",
+        description: null,
+        isActive: true,
+        ownerId: "owner-1",
+        createdAt: new Date("2026-01-01T00:00:00.000Z"),
+        updatedAt: new Date("2026-01-01T00:00:00.000Z"),
+        categoryWeights: {
+          bug: 12.5,
+          infra: 25,
+          performance: 37.5,
+          script: 50,
+          other: 62.5,
+        },
+        owner: {
+          id: "owner-1",
+          name: "Owner",
+          email: "owner@example.com",
+        },
+      });
+
+      const categoryWeights = {
+        bug: 12.5,
+        infra: 25,
+        performance: 37.5,
+        script: 50,
+        other: 62.5,
+      };
+
+      const project = await projectService.createProject({
+        name: "Project 1",
+        description: "desc",
+        ownerId: "owner-1",
+        categoryWeights,
+      });
+
+      expect(projectModel.create).toHaveBeenCalledWith({
+        name: "Project 1",
+        description: "desc",
+        ownerId: "owner-1",
+        categoryWeights,
+      });
+      expect(project.categoryWeights).toEqual(categoryWeights);
+    });
+  });
+
   describe("deleteProject", () => {
     it("should delete project with cascade", async () => {
       const projectId = "project-1";

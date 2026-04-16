@@ -9,6 +9,7 @@ export interface CreateProjectParams {
   name: string;
   description?: string;
   ownerId: string;
+  categoryWeights: ProjectCategoryWeights;
 }
 
 export interface UpdateProjectParams {

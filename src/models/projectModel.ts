@@ -110,7 +110,7 @@ export const projectModel = {
       name: string;
       description?: string;
       ownerId: string;
-      categoryWeights?: ProjectCategoryWeights;
+      categoryWeights: ProjectCategoryWeights;
     },
     tx?: Prisma.TransactionClient,
   ): Promise<Project> {
@@ -119,11 +119,7 @@ export const projectModel = {
       name: data.name,
       description: data.description ?? null,
       ownerId: data.ownerId,
-      ...(data.categoryWeights !== undefined
-        ? {
-            categoryWeights: toProjectCategoryWeightsJson(data.categoryWeights),
-          }
-        : {}),
+      categoryWeights: toProjectCategoryWeightsJson(data.categoryWeights),
     };
 
     return await client.project.create({

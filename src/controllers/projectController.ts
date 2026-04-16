@@ -48,7 +48,7 @@ export const projectController = {
         return;
       }
 
-      const { name, description } = req.body;
+      const { name, description, categoryWeights } = req.body;
 
       if (!name || typeof name !== "string" || name.trim().length === 0) {
         res.status(400).json({ error: "Project name is required" });
@@ -59,10 +59,20 @@ export const projectController = {
         return;
       }
 
+      let parsedCategoryWeights: ProjectCategoryWeights;
+      try {
+        parsedCategoryWeights = parseProjectCategoryWeights(categoryWeights);
+      } catch (error) {
+        const err = error as Error;
+        res.status(400).json({ error: err.message });
+        return;
+      }
+
       const project = await projectService.createProject({
         name: name.trim(),
         description: description?.trim() ?? "",
         ownerId: req.user.id,
+        categoryWeights: parsedCategoryWeights,
       });
 
       res.status(201).json(project);
