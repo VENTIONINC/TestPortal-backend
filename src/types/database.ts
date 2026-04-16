@@ -99,6 +99,13 @@ export interface PrismaProject {
   description?: string | null;
   isActive: boolean;
   ownerId: string;
+  categoryWeights?: {
+    bug: number;
+    infra: number;
+    performance: number;
+    script: number;
+    other: number;
+  } | null;
 }
 
 export interface PrismaUser {

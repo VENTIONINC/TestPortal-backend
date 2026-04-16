@@ -1,6 +1,10 @@
 import { Request, Response } from "express";
 import { projectService } from "@/services/projectService";
 import type { AuthenticatedRequest } from "@/middleware/authMiddleware";
+import {
+  parseProjectCategoryWeights,
+  type ProjectCategoryWeights,
+} from "@/lib/projectCategoryWeights";
 
 export const projectController = {
   async getProjects(_req: Request, res: Response): Promise<void> {
@@ -82,11 +86,12 @@ export const projectController = {
         return;
       }
 
-      const { name, description, isActive } = req.body;
+      const { name, description, isActive, categoryWeights } = req.body;
       const updateData: {
         name?: string;
         description?: string;
         isActive?: boolean;
+        categoryWeights?: ProjectCategoryWeights;
       } = {};
 
       if (name !== undefined) {
@@ -110,6 +115,17 @@ export const projectController = {
           return;
         }
         updateData.isActive = isActive;
+      }
+
+      if (categoryWeights !== undefined) {
+        try {
+          updateData.categoryWeights =
+            parseProjectCategoryWeights(categoryWeights);
+        } catch (error) {
+          const err = error as Error;
+          res.status(400).json({ error: err.message });
+          return;
+        }
       }
 
       const project = await projectService.updateProject(id, updateData);

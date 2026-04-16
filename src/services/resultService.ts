@@ -257,7 +257,7 @@ export const resultService = {
       (feedbackData.analysisFeedbackConfidence < 1 ||
         feedbackData.analysisFeedbackConfidence > 5)
     ) {
-      throw new Error("Feedback confidence must be between 1 and 5");
+      throw new Error("Feedback confidence must be an integer between 1 and 5");
     }
 
     const hasFeedbackFields =
