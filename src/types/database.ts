@@ -11,6 +11,7 @@ export interface PrismaExecution {
   environment: string;
   version: string;
   startedAt: Date;
+  provider: string;
   projectId: string; // UUID reference to Project
 }
 

@@ -123,6 +123,7 @@ describe("resultService.exportAnalysisJsonl", () => {
         version: "1.0.0",
         startedAt: new Date("2025-01-05T09:00:00Z"),
         createdAt: new Date("2025-01-05T09:30:00Z"),
+        provider: "Playwright",
       },
     };
 

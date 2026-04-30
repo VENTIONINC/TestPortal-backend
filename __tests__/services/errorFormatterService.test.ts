@@ -129,6 +129,7 @@ describe("errorFormatterService.suggestFromResult", () => {
       environment: "staging",
       version: "1.0.0",
       startedAt: now,
+      provider: "Playwright",
       projectId: "project-1",
     },
     errors: [

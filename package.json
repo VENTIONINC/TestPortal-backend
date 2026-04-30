@@ -14,6 +14,7 @@
     "format": "prettier --write .",
     "seed": "node prisma/seed/index.js",
     "seed:migrate": "node prisma/seed/migrate-from-sqlite.js",
+    "seed:preview": "tsx prisma/seed/preview-seed.ts",
     "db:generate": "prisma generate",
     "studio": "npx prisma studio",
     "migrate": "npx prisma migrate dev --name commit",

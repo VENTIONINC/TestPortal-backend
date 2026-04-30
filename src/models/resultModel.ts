@@ -57,6 +57,7 @@ export interface AnalysisExportRow {
     version: string;
     startedAt: Date;
     createdAt: Date;
+    provider: string;
   };
 }
 
@@ -777,4 +778,3 @@ export const resultModel = {
     });
   },
 };
-

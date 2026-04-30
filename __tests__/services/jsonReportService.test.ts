@@ -67,6 +67,7 @@ describe("jsonReportService with optional runId", () => {
       environment: "test",
       version: "1.0.0",
       startedAt: new Date(),
+      provider: "Playwright",
     });
 
     // Mock spec creation
