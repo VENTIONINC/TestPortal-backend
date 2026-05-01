@@ -176,6 +176,7 @@ src/
 - [How to Inspect the MCP Server](docs/INSPECT_MCP_SERVER.md)
 - [MCP Tools Documentation](docs/MCP_TOOLS.md)
 - [Docker Deployment Guide](docs/DOCKER.md)
+- [Release Guide](docs/RELEASE.md)
 
 ## Contributing
 
