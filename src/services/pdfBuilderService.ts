@@ -58,10 +58,21 @@ function formatPercent(value: number, total: number): string {
   return `${((value / total) * 100).toFixed(2)}%`;
 }
 
-function drawCoverLogo(doc: PDFKit.PDFDocument, logoPath: string): void {
-  const hasLogo = fs.existsSync(logoPath);
+function resolveCoverLogoPath(): string | null {
+  const candidatePaths = [
+    process.env.PDF_EXPORT_LOGO_PATH,
+    path.resolve(process.cwd(), "src/assets/pdf/watermark.png"),
+    path.resolve(process.cwd(), "dist/src/assets/pdf/watermark.png"),
+  ].filter((candidatePath): candidatePath is string => Boolean(candidatePath));
 
-  if (!hasLogo) {
+  return candidatePaths.find((candidatePath) => fs.existsSync(candidatePath)) ?? null;
+}
+
+function drawCoverLogo(
+  doc: PDFKit.PDFDocument,
+  logoPath: string | null,
+): void {
+  if (!logoPath) {
     return;
   }
 
@@ -101,10 +112,7 @@ export const pdfBuilderService = {
     });
 
     const generatedAt = formatGeneratedAt(new Date());
-    const watermarkPath = path.resolve(
-      process.cwd(),
-      "src/assets/pdf/watermark.png",
-    );
+    const watermarkPath = resolveCoverLogoPath();
     const contentWidth =
       doc.page.width - doc.page.margins.left - doc.page.margins.right;
     const chartHeight = 260;

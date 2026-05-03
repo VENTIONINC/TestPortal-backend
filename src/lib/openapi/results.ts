@@ -90,6 +90,7 @@ const ResultsStatsSchema = z
       z.object({
         title: z.string(),
         count: z.number(),
+        category: z.string().describe("Failure category (bug, infra, script, performance, other)"),
       }),
     ),
   })
