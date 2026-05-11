@@ -1,3 +1,6 @@
+// Copyright 2026 Vention
+// SPDX-License-Identifier: Apache-2.0
+
 import { statusHandler } from "@/routes/status";
 import { executeController } from "@/test-utils/httpMocks";
 import { environment } from "@/config/environment";

@@ -1,3 +1,6 @@
+// Copyright 2026 Vention
+// SPDX-License-Identifier: Apache-2.0
+
 /**
  * Version registry for prompt testing
  * Maps version IDs to prompt functions and validation schemas

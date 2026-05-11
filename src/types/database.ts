@@ -1,3 +1,6 @@
+// Copyright 2026 Vention
+// SPDX-License-Identifier: Apache-2.0
+
 // Minimal Prisma model type definitions to allow compilation without the
 // generated client types. These mirror the fields defined in the Prisma
 // schema and are sufficient for type checking within this repository.

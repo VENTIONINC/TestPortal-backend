@@ -1,3 +1,6 @@
+// Copyright 2026 Vention
+// SPDX-License-Identifier: Apache-2.0
+
 /**
  * Utilities for generating execution identifiers with date-based granularity
  * to remove vendor lock on runId parameter

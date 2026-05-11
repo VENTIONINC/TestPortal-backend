@@ -1,3 +1,6 @@
+// Copyright 2026 Vention
+// SPDX-License-Identifier: Apache-2.0
+
 /**
  * Version comparison utility for prompt testing
  * Runs multiple prompt versions in parallel and generates comparison reports

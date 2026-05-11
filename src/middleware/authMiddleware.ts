@@ -1,3 +1,6 @@
+// Copyright 2026 Vention
+// SPDX-License-Identifier: Apache-2.0
+
 import { Request, Response, NextFunction } from "express";
 import { jwtService, type JwtPayload } from "@/services/jwtService";
 import { userService } from "@/services/userService";

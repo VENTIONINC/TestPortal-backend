@@ -9,6 +9,8 @@ import {
   normalizeHeader,
 } from "./license-header-utils.js";
 
+const TARGET_DIRECTORIES = ["src", "__tests__", "__prompts-tests__"];
+
 function walkDirectory(directoryPath, collectedPaths) {
   const entries = fs.readdirSync(directoryPath, { withFileTypes: true });
 
@@ -32,7 +34,15 @@ function walkDirectory(directoryPath, collectedPaths) {
 const rootDirectory = process.cwd();
 const targetFiles = [];
 
-walkDirectory(rootDirectory, targetFiles);
+TARGET_DIRECTORIES.forEach((relativeDirectory) => {
+  const absoluteDirectory = path.join(rootDirectory, relativeDirectory);
+
+  if (!fs.existsSync(absoluteDirectory)) {
+    return;
+  }
+
+  walkDirectory(absoluteDirectory, targetFiles);
+});
 
 let updatedCount = 0;
 let skippedCount = 0;
@@ -61,3 +71,4 @@ console.log(
   `Processed ${targetFiles.length} supported files. Added headers to ${updatedCount}; skipped ${skippedCount}.`,
 );
 console.log(`Supported extensions: ${getSupportedExtensions().join(", ")}`);
+console.log(`Scoped directories: ${TARGET_DIRECTORIES.join(", ")}`);
