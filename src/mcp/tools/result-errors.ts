@@ -1,3 +1,6 @@
+// Copyright 2026 Vention
+// SPDX-License-Identifier: Apache-2.0
+
 import { mcpResultErrorHandler } from "@/handlers/mcpResultErrorHandler";
 import { createSuccessResponse, createMcpTool } from "@/mcp/helpers/mcpHelpers";
 import {

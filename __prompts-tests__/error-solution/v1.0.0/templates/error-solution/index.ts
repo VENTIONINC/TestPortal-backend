@@ -1,3 +1,6 @@
+// Copyright 2026 Vention
+// SPDX-License-Identifier: Apache-2.0
+
 import { bugAssertion } from "./bug.assertion";
 import { infraNetworkTimeout } from "./infra.network-timeout";
 import { performanceSlowResponse } from "./performance.slow-response";

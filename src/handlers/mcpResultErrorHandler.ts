@@ -1,3 +1,6 @@
+// Copyright 2026 Vention
+// SPDX-License-Identifier: Apache-2.0
+
 import { resultErrorService } from "@/services/resultErrorService";
 import type { PrismaResultError, ResultErrorWithRelations } from "@/types";
 

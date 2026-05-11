@@ -1,3 +1,6 @@
+// Copyright 2026 Vention
+// SPDX-License-Identifier: Apache-2.0
+
 import { Router } from "express";
 import { projectController } from "@/controllers/projectController";
 import { dashboardController } from "@/controllers/dashboardController";

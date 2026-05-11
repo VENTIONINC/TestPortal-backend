@@ -1,3 +1,6 @@
+// Copyright 2026 Vention
+// SPDX-License-Identifier: Apache-2.0
+
 /**
  * Smoke tests for stored results analysis prompt
  * Quick validation with minimal test cases (1 per template)

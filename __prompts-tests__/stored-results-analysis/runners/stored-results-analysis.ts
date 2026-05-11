@@ -1,3 +1,6 @@
+// Copyright 2026 Vention
+// SPDX-License-Identifier: Apache-2.0
+
 /**
  * Prompt evaluation runner for stored results analysis
  * Invokes LLM with structured output and validates expectations
