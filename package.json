@@ -46,6 +46,7 @@
     "fast-levenshtein": "^3.0.0",
     "helmet": "^8.1.0",
     "jsonwebtoken": "^9.0.2",
+    "jszip": "^3.10.1",
     "langchain": "^0.3.35",
     "langsmith": "^0.3.72",
     "log4js": "^6.9.1",
