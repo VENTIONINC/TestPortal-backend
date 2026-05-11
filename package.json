@@ -8,6 +8,7 @@
     "build": "tsc -p tsconfig.build.json && tsc-alias -p tsconfig.build.json",
     "build:watch": "tsc -p tsconfig.build.json --watch",
     "dev": "nodemon --exec tsx index.ts",
+    "headers:add": "node scripts/add-license-headers.js",
     "new:file": "node scripts/new-file.js",
     "server": "node dist/index.js",
     "type-check": "tsc --noEmit",

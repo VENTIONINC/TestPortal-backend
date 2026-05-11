@@ -10,6 +10,7 @@
 - [x] 2.2 Implement the file-creation utility to require a target path, create missing parent directories, and refuse to overwrite existing files
 - [x] 2.3 Implement supported extension handling so TypeScript and JavaScript-family files receive the required copyright and SPDX header
 - [x] 2.4 Define and document how unsupported file extensions are handled by the command
+- [x] 2.5 Add a bulk header backfill command for existing supported source files in the repository
 
 ## 3. Contribution Guidance
 
@@ -21,4 +22,5 @@
 
 - [x] 4.1 Manually verify `npm run new:file -- <path>` succeeds for at least one supported file type
 - [x] 4.2 Manually verify `npm run new:file` fails cleanly when the path is missing or already exists
-- [ ] 4.3 Run the repository validation commands required by the project before merging
+- [x] 4.3 Manually verify the bulk header command updates supported files and skips already-headered or unsupported files
+- [ ] 4.4 Run the repository validation commands required by the project before merging

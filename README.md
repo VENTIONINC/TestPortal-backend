@@ -183,6 +183,8 @@ src/
 
 See [CONTRIBUTING.md](CONTRIBUTING.md) for the contributor workflow, including the `npm run new:file -- <path>` command for supported new source files.
 
+To backfill the standard Apache 2.0 header across existing supported source files, run `npm run headers:add`.
+
 This project uses TypeScript with strict type checking. Please ensure:
 
 1. All code passes TypeScript compilation (`npm run type-check`)

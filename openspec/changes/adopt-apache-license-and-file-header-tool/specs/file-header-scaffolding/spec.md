@@ -32,3 +32,12 @@ The repository SHALL document which file extensions are supported by `npm run ne
 - **WHEN** a contributor reviews the documented workflow for creating files
 - **THEN** the documentation SHALL explain how to invoke `npm run new:file`
 - **AND** the documentation SHALL identify the supported file types or extension rules
+
+### Requirement: Repository SHALL provide a bulk header backfill command
+The repository SHALL provide a command that scans the project for supported source files and prepends the standard Apache 2.0 header when it is missing.
+
+#### Scenario: Bulk backfill is run
+- **WHEN** a developer runs the repository bulk header command
+- **THEN** the command SHALL scan supported source files in the project
+- **AND** the command SHALL add the standard header only to supported files that do not already contain it
+- **AND** the command SHALL leave already-headered supported files unchanged
