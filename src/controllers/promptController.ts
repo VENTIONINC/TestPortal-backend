@@ -58,10 +58,13 @@ export class PromptController {
         return;
       }
 
+      const content = promptResult.messages[0]?.content;
+      const generatedPrompt = content?.type === "text" ? content.text : "";
+
       res.json({
         name,
         parameters: params,
-        generated_prompt: promptResult.messages[0]?.content.text,
+        generated_prompt: generatedPrompt,
       });
     } catch (error) {
       console.error("Error generating prompt:", error);

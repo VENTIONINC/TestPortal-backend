@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { GetPromptResult } from "@modelcontextprotocol/sdk/types";
-import z from "zod";
+import z from "zod/v3";
 
 export const softwareDocumentationAssistantPrompt = ({
   file_paths,

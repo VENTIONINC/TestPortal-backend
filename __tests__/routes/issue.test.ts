@@ -16,6 +16,15 @@ const issues: PrismaIssue[] = [];
 
 const generateUserId = () => crypto.randomUUID();
 const generateIssueId = () => crypto.randomUUID();
+const mockTx = {};
+
+jest.mock("@/prisma/client", () => ({
+  dbClient: {
+    $transaction: jest.fn((callback: (tx: unknown) => unknown) =>
+      callback(mockTx),
+    ),
+  },
+}));
 
 jest.mock("@/models/userModel", () => ({
   userModel: {

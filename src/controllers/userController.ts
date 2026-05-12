@@ -9,6 +9,7 @@ import {
   type UpdateUserIntegrationsParams,
   type LoginParams,
 } from "@/services/userService";
+import type { AuthenticatedRequest } from "@/middleware/authMiddleware";
 import type { PrismaUser } from "@/types";
 
 const createSafeUserResponse = (user: PrismaUser) => {
@@ -16,17 +17,28 @@ const createSafeUserResponse = (user: PrismaUser) => {
   return safeUser;
 };
 
-export const userController = {
-  getUserById: async (req: Request, res: Response): Promise<void> => {
-    try {
-      const { userId } = req.params;
+const getAuthenticatedUserId = (
+  req: AuthenticatedRequest,
+  res: Response,
+): string | null => {
+  if (!req.user) {
+    res.status(401).json({
+      error: "User is not authenticated",
+    });
+    return null;
+  }
 
-      if (!userId) {
-        res.status(400).json({
-          error: "User ID is required",
-        });
-        return;
-      }
+  return req.user.id;
+};
+
+export const userController = {
+  getUserById: async (
+    req: AuthenticatedRequest,
+    res: Response,
+  ): Promise<void> => {
+    try {
+      const userId = getAuthenticatedUserId(req, res);
+      if (!userId) return;
 
       const user = await userService.getUserById(userId);
       const safeUser = createSafeUserResponse(user);
@@ -61,16 +73,13 @@ export const userController = {
     }
   },
 
-  updateUser: async (req: Request, res: Response): Promise<void> => {
+  updateUser: async (
+    req: AuthenticatedRequest,
+    res: Response,
+  ): Promise<void> => {
     try {
-      const { userId } = req.params;
-
-      if (!userId) {
-        res.status(400).json({
-          error: "User ID is required",
-        });
-        return;
-      }
+      const userId = getAuthenticatedUserId(req, res);
+      if (!userId) return;
 
       if (!req.body || Object.keys(req.body).length === 0) {
         res.status(400).json({
@@ -139,16 +148,13 @@ export const userController = {
     }
   },
 
-  generateMcpToken: async (req: Request, res: Response): Promise<void> => {
+  generateMcpToken: async (
+    req: AuthenticatedRequest,
+    res: Response,
+  ): Promise<void> => {
     try {
-      const { userId } = req.params;
-
-      if (!userId) {
-        res.status(400).json({
-          error: "User ID is required",
-        });
-        return;
-      }
+      const userId = getAuthenticatedUserId(req, res);
+      if (!userId) return;
 
       const mcpToken = await userService.generateMcpToken(userId);
 
@@ -164,16 +170,13 @@ export const userController = {
     }
   },
 
-  revokeMcpToken: async (req: Request, res: Response): Promise<void> => {
+  revokeMcpToken: async (
+    req: AuthenticatedRequest,
+    res: Response,
+  ): Promise<void> => {
     try {
-      const { userId } = req.params;
-
-      if (!userId) {
-        res.status(400).json({
-          error: "User ID is required",
-        });
-        return;
-      }
+      const userId = getAuthenticatedUserId(req, res);
+      if (!userId) return;
 
       await userService.revokeMcpToken(userId);
 
@@ -277,19 +280,14 @@ export const userController = {
   },
 
   updateUserIntegrations: async (
-    req: Request,
+    req: AuthenticatedRequest,
     res: Response,
   ): Promise<void> => {
     try {
-      const { userId } = req.params;
-      const integrationsData: UpdateUserIntegrationsParams = req.body;
+      const userId = getAuthenticatedUserId(req, res);
+      if (!userId) return;
 
-      if (!userId) {
-        res.status(400).json({
-          error: "User ID is required",
-        });
-        return;
-      }
+      const integrationsData: UpdateUserIntegrationsParams = req.body;
 
       if (!integrationsData || Object.keys(integrationsData).length === 0) {
         res.status(400).json({

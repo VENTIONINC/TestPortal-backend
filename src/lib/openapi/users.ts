@@ -248,14 +248,6 @@ export function registerUserRoutes(registry: OpenAPIRegistry) {
           },
         },
       },
-      403: {
-        description: "Forbidden - user can only generate tokens for themselves",
-        content: {
-          "application/json": {
-            schema: ErrorResponseSchema,
-          },
-        },
-      },
       404: {
         description: "User not found",
         content: {
@@ -297,14 +289,6 @@ export function registerUserRoutes(registry: OpenAPIRegistry) {
       },
       401: {
         description: "Unauthorized - invalid or missing token",
-        content: {
-          "application/json": {
-            schema: ErrorResponseSchema,
-          },
-        },
-      },
-      403: {
-        description: "Forbidden - user can only revoke their own tokens",
         content: {
           "application/json": {
             schema: ErrorResponseSchema,

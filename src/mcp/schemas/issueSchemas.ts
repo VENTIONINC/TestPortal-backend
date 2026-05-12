@@ -1,7 +1,7 @@
 // Copyright 2026 Vention
 // SPDX-License-Identifier: Apache-2.0
 
-import { z } from "zod";
+import { z } from "zod/v3";
 import type { MCPToolSchema } from "@/types";
 import { IssueCategory } from "@/types/enums";
 
