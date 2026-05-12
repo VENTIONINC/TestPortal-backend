@@ -5,7 +5,7 @@
  * CTRF (Common Test Result Format) MCP tool schemas
  */
 
-import { z } from "zod";
+import { z } from "zod/v3";
 import type { MCPToolSchema } from "@/types";
 
 /**
