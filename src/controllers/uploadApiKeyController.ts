@@ -8,6 +8,10 @@ import getLogger from "@/lib/logger";
 
 const logger = getLogger("upload-api-key-controller");
 
+type UploadApiKeyIdParams = {
+  id: string;
+};
+
 export const uploadApiKeyController = {
   /**
    * Generate a new API key for a project
@@ -99,7 +103,10 @@ export const uploadApiKeyController = {
    * Revoke an API key
    * DELETE /api/v2/upload/keys/:id
    */
-  async revokeKey(req: AuthenticatedRequest, res: Response): Promise<void> {
+  async revokeKey(
+    req: AuthenticatedRequest<UploadApiKeyIdParams>,
+    res: Response,
+  ): Promise<void> {
     try {
       const { id } = req.params;
       const userId = req.user?.id;

@@ -8,6 +8,10 @@ import { buildIssueParams } from "@/lib/params-builder";
 
 import type { CreateIssueParams, UpdateIssueParams } from "@/types";
 
+type IssueIdParams = {
+  issueId: string;
+};
+
 export const issueController = {
   getAllIssues: async (req: Request, res: Response): Promise<void> => {
     try {
@@ -159,7 +163,10 @@ export const issueController = {
     }
   },
 
-  getIssueById: async (req: Request, res: Response): Promise<void> => {
+  getIssueById: async (
+    req: Request<IssueIdParams>,
+    res: Response,
+  ): Promise<void> => {
     try {
       const { issueId } = req.params;
       const { projectId } = req.query as Record<string, string>;
@@ -190,7 +197,10 @@ export const issueController = {
   },
 
   // V2 method with serialized response including user information
-  getIssueByIdV2: async (req: Request, res: Response): Promise<void> => {
+  getIssueByIdV2: async (
+    req: Request<IssueIdParams>,
+    res: Response,
+  ): Promise<void> => {
     try {
       const { issueId } = req.params;
       const { projectId } = req.query as Record<string, string>;
@@ -256,7 +266,10 @@ export const issueController = {
     }
   },
 
-  updateIssue: async (req: Request, res: Response): Promise<void> => {
+  updateIssue: async (
+    req: Request<IssueIdParams>,
+    res: Response,
+  ): Promise<void> => {
     try {
       const { issueId } = req.params;
       const updateData: UpdateIssueParams = req.body;
@@ -289,7 +302,10 @@ export const issueController = {
     }
   },
 
-  deleteIssue: async (req: Request, res: Response): Promise<void> => {
+  deleteIssue: async (
+    req: Request<IssueIdParams>,
+    res: Response,
+  ): Promise<void> => {
     try {
       const { issueId } = req.params;
       const { projectId } = req.query as Record<string, string>;

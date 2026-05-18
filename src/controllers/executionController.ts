@@ -4,8 +4,15 @@
 import { Request, Response } from "express";
 import { executionService } from "@/services/executionService";
 
+type ExecutionIdParams = {
+  executionId: string;
+};
+
 export const executionController = {
-  getExecutionById: async (req: Request, res: Response): Promise<void> => {
+  getExecutionById: async (
+    req: Request<ExecutionIdParams>,
+    res: Response,
+  ): Promise<void> => {
     try {
       const { executionId } = req.params;
       const { projectId } = req.query as Record<string, string>;
@@ -34,7 +41,10 @@ export const executionController = {
     }
   },
 
-  deleteExecution: async (req: Request, res: Response): Promise<void> => {
+  deleteExecution: async (
+    req: Request<ExecutionIdParams>,
+    res: Response,
+  ): Promise<void> => {
     try {
       const { executionId } = req.params;
       const { projectId } = req.query as Record<string, string>;

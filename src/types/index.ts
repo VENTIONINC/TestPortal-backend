@@ -7,6 +7,7 @@ export * from "@/types/api";
 export * from "@/types/mcp";
 export * from "@/types/tests";
 export * from "@/types/ctrf";
+export * from "@/types/skills";
 
 // Express types extensions
 import type { Request } from "express";
@@ -95,4 +96,3 @@ export interface UserIntegrations {
   monitoringPortalEnabled?: boolean;
   analyzeEnabled?: boolean;
 }
-

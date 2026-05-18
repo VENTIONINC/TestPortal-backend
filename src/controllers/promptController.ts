@@ -4,6 +4,10 @@
 import type { Request, Response } from "express";
 import { PromptParameterService } from "@/services/promptParameterService";
 
+type PromptNameParams = {
+  name: string;
+};
+
 export class PromptController {
   static async listPrompts(_req: Request, res: Response): Promise<void> {
     try {
@@ -15,15 +19,18 @@ export class PromptController {
     }
   }
 
-  static async getPrompt(req: Request, res: Response): Promise<void> {
+  static async getPrompt(
+    req: Request<PromptNameParams>,
+    res: Response,
+  ): Promise<void> {
     try {
       const { name } = req.params;
-      
+
       if (!name) {
         res.status(400).json({ error: "Prompt name is required" });
         return;
       }
-      
+
       const prompt = PromptParameterService.getPrompt(name);
 
       if (!prompt) {
@@ -41,15 +48,18 @@ export class PromptController {
     }
   }
 
-  static async generatePrompt(req: Request, res: Response): Promise<void> {
+  static async generatePrompt(
+    req: Request<PromptNameParams>,
+    res: Response,
+  ): Promise<void> {
     try {
       const { name } = req.params;
-      
+
       if (!name) {
         res.status(400).json({ error: "Prompt name is required" });
         return;
       }
-      
+
       const params = req.body ?? {};
       const promptResult = PromptParameterService.generatePrompt(name, params);
 
@@ -71,4 +81,5 @@ export class PromptController {
       res.status(500).json({ error: "Internal server error" });
     }
   }
+
 }

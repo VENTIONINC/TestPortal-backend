@@ -5,6 +5,10 @@ import { Request, Response } from "express";
 import { projectService } from "@/services/projectService";
 import type { AuthenticatedRequest } from "@/middleware/authMiddleware";
 
+type ProjectIdParams = {
+  id: string;
+};
+
 export const projectController = {
   async getProjects(_req: Request, res: Response): Promise<void> {
     try {
@@ -16,7 +20,10 @@ export const projectController = {
     }
   },
 
-  async getProjectById(req: Request, res: Response): Promise<void> {
+  async getProjectById(
+    req: Request<ProjectIdParams>,
+    res: Response,
+  ): Promise<void> {
     try {
       const { id } = req.params;
       const projectId = id;
@@ -75,7 +82,10 @@ export const projectController = {
     }
   },
 
-  async updateProject(req: Request, res: Response): Promise<void> {
+  async updateProject(
+    req: Request<ProjectIdParams>,
+    res: Response,
+  ): Promise<void> {
     try {
       const { id } = req.params;
       const projectId = id;
@@ -129,7 +139,10 @@ export const projectController = {
     }
   },
 
-  async deleteProject(req: Request, res: Response): Promise<void> {
+  async deleteProject(
+    req: Request<ProjectIdParams>,
+    res: Response,
+  ): Promise<void> {
     try {
       const { id } = req.params;
       const projectId = id;
