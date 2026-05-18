@@ -8,6 +8,11 @@ const TEST_USER_EMAIL = process.env.TEST_USER_EMAIL ?? "test@example.com";
 const TEST_USER_PASSWORD = process.env.TEST_USER_PASSWORD ?? "testpassword123";
 
 const APP_VERSION = process.env.npm_package_version ?? "0.0.0";
+const AWS_REGION = process.env.AWS_REGION ?? "";
+const AWS_S3_ARTIFACT_BUCKET = process.env.AWS_S3_ARTIFACT_BUCKET ?? "";
+const S3_SIGNED_URL_TTL_SECONDS = Number(
+  process.env.S3_SIGNED_URL_TTL_SECONDS ?? "300",
+);
 
 // LangSmith Configuration
 const LANGSMITH_TRACING =
@@ -61,6 +66,13 @@ export const environment = {
     password: TEST_USER_PASSWORD,
   },
   appVersion: APP_VERSION,
+  s3Artifacts: {
+    region: AWS_REGION,
+    bucket: AWS_S3_ARTIFACT_BUCKET,
+    signedUrlTtlSeconds: Number.isFinite(S3_SIGNED_URL_TTL_SECONDS)
+      ? S3_SIGNED_URL_TTL_SECONDS
+      : 300,
+  },
 };
 
 export {
@@ -71,6 +83,9 @@ export {
   TEST_USER_EMAIL,
   TEST_USER_PASSWORD,
   APP_VERSION,
+  AWS_REGION,
+  AWS_S3_ARTIFACT_BUCKET,
+  S3_SIGNED_URL_TTL_SECONDS,
   LANGSMITH_TRACING,
   LANGSMITH_ENDPOINT,
   LANGSMITH_API_KEY,

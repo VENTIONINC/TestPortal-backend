@@ -14,6 +14,10 @@ import type {
   ResultWithRelations,
 } from "@/types";
 import { dashboardService } from "@/services/dashboardService";
+import {
+  S3ArtifactConfigurationError,
+  s3ArtifactService,
+} from "@/services/s3ArtifactService";
 import getLogger from "@/lib/logger";
 import { dbClient } from "@/prisma/client";
 
@@ -25,6 +29,37 @@ interface GetResultsResponse {
   page: number;
   totalPages: number;
 }
+
+interface SignedArtifactResponse {
+  provider: "s3";
+  url: string;
+  expiresAt: string;
+}
+
+export class ResultArtifactNotFoundError extends Error {
+  constructor(message = "Result artifact not found") {
+    super(message);
+    this.name = "ResultArtifactNotFoundError";
+  }
+}
+
+const shapeResultArtifactSummary = (
+  result: ResultWithRelations,
+): ResultWithRelations => {
+  const shaped = { ...result };
+
+  if (result.artifactProvider === "s3" && result.artifactObjectKey) {
+    shaped.artifact = {
+      provider: "s3",
+      available: true,
+    };
+  }
+
+  delete shaped.artifactProvider;
+  delete shaped.artifactObjectKey;
+
+  return shaped;
+};
 
 export const resultService = {
   async getResults(params: GetResultsParams): Promise<GetResultsResponse> {
@@ -111,7 +146,7 @@ export const resultService = {
     }
 
     return {
-      results,
+      results: results.map(shapeResultArtifactSummary),
       total: totalResults,
       page: Number(page),
       totalPages: Math.ceil(totalResults / limit),
@@ -140,7 +175,56 @@ export const resultService = {
       throw new Error(`Result with ID ${resultId} not found`);
     }
 
-    return resultRecord;
+    return shapeResultArtifactSummary(resultRecord);
+  },
+
+  async getSignedArtifactUrl(
+    resultId: number | string,
+    projectId: string,
+  ): Promise<SignedArtifactResponse> {
+    if (!resultId) {
+      throw new Error("Result ID is required");
+    }
+
+    if (!projectId) {
+      throw new Error("Project ID is required");
+    }
+
+    const artifact = await resultModel.findArtifactById(
+      resultId,
+      projectId,
+      dbClient,
+    );
+
+    if (!artifact) {
+      const resultExists = await resultModel.existsById(resultId, dbClient);
+
+      if (resultExists) {
+        throw new Error("Result artifact access denied");
+      }
+
+      throw new ResultArtifactNotFoundError();
+    }
+
+    if (
+      artifact.artifactProvider !== "s3" ||
+      !artifact.artifactObjectKey
+    ) {
+      throw new ResultArtifactNotFoundError();
+    }
+
+    const signedUrl = await s3ArtifactService.createSignedArtifactUrl(
+      artifact.artifactObjectKey,
+    );
+
+    return {
+      provider: "s3",
+      ...signedUrl,
+    };
+  },
+
+  isArtifactConfigurationError(error: unknown): boolean {
+    return error instanceof S3ArtifactConfigurationError;
   },
 
   async getResultsStats(params: GetResultsStatsParams): Promise<ResultsStats> {
@@ -254,10 +338,11 @@ export const resultService = {
 
     if (
       feedbackData.analysisFeedbackConfidence !== undefined &&
-      (feedbackData.analysisFeedbackConfidence < 1 ||
+      (!Number.isInteger(feedbackData.analysisFeedbackConfidence) ||
+        feedbackData.analysisFeedbackConfidence < 1 ||
         feedbackData.analysisFeedbackConfidence > 5)
     ) {
-      throw new Error("Feedback confidence must be between 1 and 5");
+      throw new Error("Feedback confidence must be an integer between 1 and 5");
     }
 
     const hasFeedbackFields =

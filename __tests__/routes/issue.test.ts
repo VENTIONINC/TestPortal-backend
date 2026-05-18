@@ -14,6 +14,30 @@ const issues: PrismaIssue[] = [];
 const generateUserId = () => crypto.randomUUID();
 const generateIssueId = () => crypto.randomUUID();
 
+jest.mock("@/prisma/client", () => ({
+  dbClient: {
+    $transaction: jest.fn((callback: (tx: unknown) => unknown) =>
+      callback({}),
+    ),
+  },
+}));
+
+jest.mock("@/services/authService", () => ({
+  signUpUser: jest.fn(() =>
+    Promise.resolve({ user: { Username: "test-cognito-user" } }),
+  ),
+  signInUser: jest.fn(() =>
+    Promise.resolve({
+      status: "SUCCESS",
+      session: {
+        getAccessToken: () => ({ getJwtToken: () => "mock-token" }),
+        getIdToken: () => ({ getJwtToken: () => "mock-id-token" }),
+      },
+    }),
+  ),
+  signOutUser: jest.fn(() => Promise.resolve("User signed out successfully")),
+}));
+
 jest.mock("@/models/userModel", () => ({
   userModel: {
     findById: jest.fn((id: string) => {

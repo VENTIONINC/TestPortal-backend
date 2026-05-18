@@ -76,6 +76,11 @@ export default [
         project: null,
       },
     },
+    rules: {
+      "@typescript-eslint/no-unnecessary-type-assertion": "off",
+      "@typescript-eslint/prefer-nullish-coalescing": "off",
+      "@typescript-eslint/prefer-optional-chain": "off",
+    },
   },
 
   // Global ignores

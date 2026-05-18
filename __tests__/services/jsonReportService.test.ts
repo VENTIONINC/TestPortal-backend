@@ -1,4 +1,7 @@
-import { jsonReportService } from "@/services/jsonReportService";
+import {
+  jsonReportService,
+  type ReportData,
+} from "@/services/jsonReportService";
 
 // Mock the database client and logger
 jest.mock("@/prisma/client", () => {
@@ -211,6 +214,60 @@ describe("jsonReportService with optional runId", () => {
         name: expect.stringMatching(
           /^UNKNOWN_UNKNOWN_\d{4}-\d{2}-\d{2}_(NIGHT|MORNING|AFTERNOON|EVENING)$/,
         ),
+      }),
+    });
+  });
+
+  it("should persist extracted Playwright artifact metadata", async () => {
+    const [testSpec] = mockTestData.tests;
+    if (!testSpec) throw new Error("Expected mock test spec");
+    const [testResult] = testSpec.results;
+    if (!testResult) throw new Error("Expected mock test result");
+    const reportData: ReportData = {
+      ...mockTestData,
+      tests: [
+        {
+          ...testSpec,
+          results: [
+            {
+              ...testResult,
+              attachments: [
+                {
+                  name: "s3-artifact",
+                  contentType: "application/x-s3-artifact",
+                  path: "test-results/test-artifact.zip",
+                },
+              ],
+            },
+          ],
+        },
+      ],
+    };
+
+    await jsonReportService.processReport(
+      reportData,
+      "b4225bdf-9e2b-43f9-8f13-5bb6f5079176",
+    );
+
+    expect(dbClient.result.create).toHaveBeenCalledWith({
+      data: expect.objectContaining({
+        artifactProvider: "s3",
+        artifactObjectKey:
+          "playwright-artifacts/test.spec.js/TEST_SPEC-Test-Case/1747218600000-0-test-artifact.zip",
+      }),
+    });
+  });
+
+  it("should not require artifact metadata when none is extracted", async () => {
+    await jsonReportService.processReport(
+      mockTestData,
+      "b4225bdf-9e2b-43f9-8f13-5bb6f5079176",
+    );
+
+    expect(dbClient.result.create).toHaveBeenCalledWith({
+      data: expect.not.objectContaining({
+        artifactProvider: expect.any(String),
+        artifactObjectKey: expect.any(String),
       }),
     });
   });

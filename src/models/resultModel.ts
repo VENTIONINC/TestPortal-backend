@@ -411,6 +411,49 @@ export const resultModel = {
     });
   },
 
+  findArtifactById: async (
+    id: number | string,
+    projectId: string,
+    client: Prisma.TransactionClient,
+  ): Promise<{
+    id: string;
+    artifactProvider: string | null;
+    artifactObjectKey: string | null;
+  } | null> => {
+    return await client.result.findFirst({
+      where: {
+        id: String(id),
+        spec: {
+          projectId,
+        },
+        execution: {
+          projectId,
+        },
+      },
+      select: {
+        id: true,
+        artifactProvider: true,
+        artifactObjectKey: true,
+      },
+    });
+  },
+
+  existsById: async (
+    id: number | string,
+    client: Prisma.TransactionClient,
+  ): Promise<boolean> => {
+    const result = await client.result.findUnique({
+      where: {
+        id: String(id),
+      },
+      select: {
+        id: true,
+      },
+    });
+
+    return Boolean(result);
+  },
+
   findForAnalysisExport: async (
     filters: AnalysisExportFilters,
   ): Promise<AnalysisExportRow[]> => {
@@ -614,7 +657,7 @@ export const resultModel = {
 
             // Count issue names
             const issueName = issue.name ?? "Unknown Issue Name";
-            const current = issueCounts.get(issueName) || {
+            const current = issueCounts.get(issueName) ?? {
               count: 0,
               category: issue.category ?? "Other",
             };
@@ -777,4 +820,3 @@ export const resultModel = {
     });
   },
 };
-

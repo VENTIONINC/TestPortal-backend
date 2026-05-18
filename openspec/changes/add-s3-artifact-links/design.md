@@ -26,6 +26,10 @@ AWS access is a runtime deployment concern. The application build must not requi
 
 ## Decisions
 
+0. Store the initial S3 artifact reference on `Result`.
+
+   The current Playwright JSON transform flattens Playwright suites into backend test specs and preserves each Playwright result independently. Playwright attachments are attached to those individual result objects, and the supported mock extraction therefore maps most directly to a single `Result` row. The execution remains the run container, while artifact availability is exposed on result responses and signed URL retrieval is result-scoped.
+
 1. Store private artifact references server-side and expose only availability summaries.
 
    Normal read responses will return an artifact summary such as `{ provider: "s3", available: true }`. They will not return the S3 bucket, object key, or signed URL. This keeps storage details private and lets the client render artifact affordances without holding long-lived access data.

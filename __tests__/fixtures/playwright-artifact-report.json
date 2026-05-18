@@ -1,0 +1,60 @@
+{
+  "runId": "RUN_WITH_ARTIFACT",
+  "config": {
+    "env": "staging",
+    "version": "1.52.0"
+  },
+  "stats": {
+    "startTime": "2026-05-18T10:00:00.000Z"
+  },
+  "suites": [
+    {
+      "title": "checkout",
+      "file": "tests/checkout.spec.ts",
+      "line": 1,
+      "column": 1,
+      "specs": [
+        {
+          "title": "C123 checkout creates an order",
+          "ok": true,
+          "tags": ["@smoke"],
+          "id": "C123",
+          "file": "tests/checkout.spec.ts",
+          "line": 10,
+          "column": 3,
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "chromium",
+              "projectName": "chromium",
+              "status": "passed",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "status": "passed",
+                  "duration": 1200,
+                  "retry": 0,
+                  "startTime": "2026-05-18T10:00:01.000Z",
+                  "attachments": [
+                    {
+                      "name": "s3-artifact",
+                      "contentType": "application/x-s3-artifact",
+                      "path": "test-results/checkout/order-trace.zip"
+                    }
+                  ],
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": []
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "hash": "artifact-fixture"
+}
