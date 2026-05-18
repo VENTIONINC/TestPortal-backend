@@ -9,9 +9,9 @@ import {
   type AuthenticatedRequest,
 } from "@/middleware/authMiddleware";
 
-export interface MockRequestOptions {
+export interface MockRequestOptions<P extends Record<string, string>> {
   method?: string;
-  params?: Record<string, string>;
+  params?: P;
   query?: Record<string, string | string[]>;
   body?: unknown;
   headers?: Record<string, string | undefined>;
@@ -27,9 +27,11 @@ export interface MockResponse<T = any> {
 
 export type ControllerResponse<T = any> = Response & MockResponse<T>;
 
-export const createMockRequest = (
-  options: MockRequestOptions = {},
-): Request => {
+export const createMockRequest = <
+  P extends Record<string, string> = Record<string, string>,
+>(
+  options: MockRequestOptions<P> = {},
+): Request<P> => {
   const {
     method = "GET",
     params = {},
@@ -51,13 +53,13 @@ export const createMockRequest = (
     body,
     headers: headerStore,
     get: (name: string) => headerStore[name.toLowerCase()],
-  } as unknown as AuthenticatedRequest;
+  } as unknown as AuthenticatedRequest<P>;
 
   if (user) {
     req.user = user;
   }
 
-  return req as Request;
+  return req as Request<P>;
 };
 
 export const createMockResponse = <T = any>(): ControllerResponse<T> => {
@@ -93,9 +95,12 @@ export const createMockResponse = <T = any>(): ControllerResponse<T> => {
   return res as ControllerResponse<T>;
 };
 
-export const executeController = async <T = any>(
-  controller: (req: Request, res: Response) => Promise<void> | void,
-  options: MockRequestOptions = {},
+export const executeController = async <
+  T = any,
+  P extends Record<string, string> = Record<string, string>,
+>(
+  controller: (req: Request<P>, res: Response) => Promise<void> | void,
+  options: MockRequestOptions<P> = {},
 ): Promise<ControllerResponse<T>> => {
   const req = createMockRequest(options);
   const res = createMockResponse<T>();
@@ -103,9 +108,12 @@ export const executeController = async <T = any>(
   return res;
 };
 
-export const executeProtectedController = async <T = any>(
-  controller: (req: Request, res: Response) => Promise<void> | void,
-  options: MockRequestOptions & { token?: string } = {},
+export const executeProtectedController = async <
+  T = any,
+  P extends Record<string, string> = Record<string, string>,
+>(
+  controller: (req: Request<P>, res: Response) => Promise<void> | void,
+  options: MockRequestOptions<P> & { token?: string } = {},
 ): Promise<ControllerResponse<T>> => {
   const { token, headers = {}, ...rest } = options;
   const req = createMockRequest({
@@ -114,7 +122,7 @@ export const executeProtectedController = async <T = any>(
       ...headers,
       authorization: token ? `Bearer ${token}` : headers.authorization,
     },
-  }) as AuthenticatedRequest;
+  }) as AuthenticatedRequest<P>;
 
   const res = createMockResponse<T>();
 
@@ -123,7 +131,7 @@ export const executeProtectedController = async <T = any>(
 
   const next: NextFunction = () => {
     nextCalled = true;
-    controllerPromise = controller(req as Request, res);
+    controllerPromise = controller(req, res);
   };
 
   await authMiddleware(req, res, next);

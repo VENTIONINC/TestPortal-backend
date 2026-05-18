@@ -17,6 +17,10 @@ interface AnalyzeErrorsRequest {
   errorIds: string[];
 }
 
+type ResultErrorIdParams = {
+  resultErrorId: string;
+};
+
 const validateAnalyzeErrorsRequest = (
   payload: AnalyzeErrorsRequest,
 ): { projectId: string; errorIds: string[] } => {
@@ -34,7 +38,10 @@ const validateAnalyzeErrorsRequest = (
 };
 
 export const resultErrorController = {
-  assignIssue: async (req: Request, res: Response): Promise<void> => {
+  assignIssue: async (
+    req: Request<ResultErrorIdParams>,
+    res: Response,
+  ): Promise<void> => {
     try {
       const { resultErrorId } = req.params;
       const { assumptionId }: AssignIssueRequest = req.body;
@@ -66,7 +73,10 @@ export const resultErrorController = {
     }
   },
 
-  reviewError: async (req: Request, res: Response): Promise<void> => {
+  reviewError: async (
+    req: Request<ResultErrorIdParams>,
+    res: Response,
+  ): Promise<void> => {
     try {
       const { resultErrorId } = req.params;
 
@@ -129,7 +139,10 @@ export const resultErrorController = {
     }
   },
 
-  getResultErrorById: async (req: Request, res: Response): Promise<void> => {
+  getResultErrorById: async (
+    req: Request<ResultErrorIdParams>,
+    res: Response,
+  ): Promise<void> => {
     try {
       const { resultErrorId } = req.params;
       const { projectId } = req.query;

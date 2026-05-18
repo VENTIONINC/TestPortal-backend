@@ -3,7 +3,7 @@
 
 import { GetPromptResult } from "@modelcontextprotocol/sdk/types";
 
-import z from "zod";
+import z from "zod/v3";
 
 export const developerCodeAssistantPrompt = ({
   result_id,

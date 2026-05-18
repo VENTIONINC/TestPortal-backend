@@ -3,7 +3,7 @@
 
 import { GetPromptResult } from "@modelcontextprotocol/sdk/types";
 
-import z from "zod";
+import z from "zod/v3";
 
 export const testPortalAssistantPrompt = ({
   time_period,
