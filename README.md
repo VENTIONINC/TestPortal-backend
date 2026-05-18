@@ -176,8 +176,14 @@ src/
 - [How to Inspect the MCP Server](docs/INSPECT_MCP_SERVER.md)
 - [MCP Tools Documentation](docs/MCP_TOOLS.md)
 - [Docker Deployment Guide](docs/DOCKER.md)
+- [Release Guide](docs/RELEASE.md)
+- [Contributing Guide](CONTRIBUTING.md)
 
 ## Contributing
+
+See [CONTRIBUTING.md](CONTRIBUTING.md) for the contributor workflow, including the `npm run new:file -- <path>` command for supported new source files.
+
+To backfill the standard Apache 2.0 header across existing supported files in `src`, `__tests__`, and `__prompts-tests__`, run `npm run headers:add`.
 
 This project uses TypeScript with strict type checking. Please ensure:
 
@@ -188,4 +194,4 @@ This project uses TypeScript with strict type checking. Please ensure:
 
 ## License
 
-[Add your license information here]
+This project is licensed under the Apache License 2.0. See [LICENSE](LICENSE) for the full text.

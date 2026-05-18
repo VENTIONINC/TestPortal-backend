@@ -1,3 +1,6 @@
+// Copyright 2026 Vention
+// SPDX-License-Identifier: Apache-2.0
+
 import fs from "node:fs";
 import { ChartJSNodeCanvas } from "chartjs-node-canvas";
 import type { DailyExecutionMetrics } from "@/types/dashboard";

@@ -1,3 +1,6 @@
+// Copyright 2026 Vention
+// SPDX-License-Identifier: Apache-2.0
+
 import { Project, Prisma } from "@prisma/client";
 import { dbClient } from "@/prisma/client";
 import type { ProjectCategoryWeights } from "@/lib/projectCategoryWeights";

@@ -1,3 +1,6 @@
+// Copyright 2026 Vention
+// SPDX-License-Identifier: Apache-2.0
+
 // Re-export all types from different modules
 export * from "@/types/database";
 export * from "@/types/api";

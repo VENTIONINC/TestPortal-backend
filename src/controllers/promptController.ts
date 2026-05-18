@@ -1,3 +1,6 @@
+// Copyright 2026 Vention
+// SPDX-License-Identifier: Apache-2.0
+
 import type { Request, Response } from "express";
 import { PromptParameterService } from "@/services/promptParameterService";
 

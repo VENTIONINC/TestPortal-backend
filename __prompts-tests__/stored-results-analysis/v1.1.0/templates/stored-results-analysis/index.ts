@@ -1,3 +1,6 @@
+// Copyright 2026 Vention
+// SPDX-License-Identifier: Apache-2.0
+
 /**
  * Template factory registry for stored results analysis prompt tests
  * Exports all template functions for dataset generation

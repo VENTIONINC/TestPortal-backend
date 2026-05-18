@@ -1,3 +1,6 @@
+// Copyright 2026 Vention
+// SPDX-License-Identifier: Apache-2.0
+
 import { issueService } from "@/services/issueService";
 import type { PrismaIssue } from "@/types";
 import { IssueCategory } from "@/types/enums";

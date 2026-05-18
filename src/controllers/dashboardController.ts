@@ -1,3 +1,6 @@
+// Copyright 2026 Vention
+// SPDX-License-Identifier: Apache-2.0
+
 import type { Response, Request } from "express";
 import { dashboardService } from "@/services/dashboardService";
 import type { DashboardGranularity } from "@/types/dashboard";
