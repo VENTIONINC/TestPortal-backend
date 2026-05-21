@@ -1,4 +1,7 @@
-import type { z } from "zod";
+// Copyright 2026 Vention
+// SPDX-License-Identifier: Apache-2.0
+
+import type { z } from "zod/v3";
 
 // MCP Tool Definition Types
 export interface MCPToolSchema {

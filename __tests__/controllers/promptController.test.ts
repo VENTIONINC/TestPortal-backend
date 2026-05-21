@@ -1,3 +1,6 @@
+// Copyright 2026 Vention
+// SPDX-License-Identifier: Apache-2.0
+
 import { Request, Response } from "express";
 import { PromptController } from "@/controllers/promptController";
 import { PromptParameterService } from "@/services/promptParameterService";
@@ -5,6 +8,8 @@ import { PromptParameterService } from "@/services/promptParameterService";
 // Mock the service
 jest.mock("@/services/promptParameterService");
 const mockPromptParameterService = PromptParameterService as jest.Mocked<typeof PromptParameterService>;
+
+type PromptNameRequest = Request<{ name: string }>;
 
 describe("PromptController", () => {
   let mockReq: Partial<Request>;
@@ -84,7 +89,7 @@ describe("PromptController", () => {
       mockReq.params = { name: "developer-code-assistant" };
       mockPromptParameterService.getPrompt.mockReturnValue(mockPrompt);
 
-      await PromptController.getPrompt(mockReq as Request, mockRes as Response);
+      await PromptController.getPrompt(mockReq as PromptNameRequest, mockRes as Response);
 
       expect(mockPromptParameterService.getPrompt).toHaveBeenCalledWith("developer-code-assistant");
       expect(mockJson).toHaveBeenCalledWith({
@@ -96,7 +101,7 @@ describe("PromptController", () => {
     it("should return 400 when name is missing", async () => {
       mockReq.params = {};
 
-      await PromptController.getPrompt(mockReq as Request, mockRes as Response);
+      await PromptController.getPrompt(mockReq as unknown as PromptNameRequest, mockRes as Response);
 
       expect(mockStatus).toHaveBeenCalledWith(400);
       expect(mockJson).toHaveBeenCalledWith({ error: "Prompt name is required" });
@@ -107,7 +112,7 @@ describe("PromptController", () => {
       mockReq.params = { name: "nonexistent-prompt" };
       mockPromptParameterService.getPrompt.mockReturnValue(null);
 
-      await PromptController.getPrompt(mockReq as Request, mockRes as Response);
+      await PromptController.getPrompt(mockReq as PromptNameRequest, mockRes as Response);
 
       expect(mockStatus).toHaveBeenCalledWith(404);
       expect(mockJson).toHaveBeenCalledWith({ error: "Prompt not found" });
@@ -121,7 +126,7 @@ describe("PromptController", () => {
 
       const consoleSpy = jest.spyOn(console, "error").mockImplementation();
 
-      await PromptController.getPrompt(mockReq as Request, mockRes as Response);
+      await PromptController.getPrompt(mockReq as PromptNameRequest, mockRes as Response);
 
       expect(mockStatus).toHaveBeenCalledWith(500);
       expect(mockJson).toHaveBeenCalledWith({ error: "Internal server error" });
@@ -154,7 +159,7 @@ describe("PromptController", () => {
       mockReq.body = inputParams;
       mockPromptParameterService.generatePrompt.mockReturnValue(mockPromptResult);
 
-      await PromptController.generatePrompt(mockReq as Request, mockRes as Response);
+      await PromptController.generatePrompt(mockReq as PromptNameRequest, mockRes as Response);
 
       expect(mockPromptParameterService.generatePrompt).toHaveBeenCalledWith(
         "developer-code-assistant", 
@@ -184,7 +189,7 @@ describe("PromptController", () => {
       mockReq.body = undefined;
       mockPromptParameterService.generatePrompt.mockReturnValue(mockPromptResult);
 
-      await PromptController.generatePrompt(mockReq as Request, mockRes as Response);
+      await PromptController.generatePrompt(mockReq as PromptNameRequest, mockRes as Response);
 
       expect(mockPromptParameterService.generatePrompt).toHaveBeenCalledWith(
         "developer-code-assistant", 
@@ -201,7 +206,7 @@ describe("PromptController", () => {
       mockReq.params = {};
       mockReq.body = {};
 
-      await PromptController.generatePrompt(mockReq as Request, mockRes as Response);
+      await PromptController.generatePrompt(mockReq as unknown as PromptNameRequest, mockRes as Response);
 
       expect(mockStatus).toHaveBeenCalledWith(400);
       expect(mockJson).toHaveBeenCalledWith({ error: "Prompt name is required" });
@@ -213,7 +218,7 @@ describe("PromptController", () => {
       mockReq.body = {};
       mockPromptParameterService.generatePrompt.mockReturnValue(null);
 
-      await PromptController.generatePrompt(mockReq as Request, mockRes as Response);
+      await PromptController.generatePrompt(mockReq as PromptNameRequest, mockRes as Response);
 
       expect(mockStatus).toHaveBeenCalledWith(404);
       expect(mockJson).toHaveBeenCalledWith({ error: "Prompt not found" });
@@ -236,7 +241,7 @@ describe("PromptController", () => {
       mockReq.body = {};
       mockPromptParameterService.generatePrompt.mockReturnValue(mockPromptResult);
 
-      await PromptController.generatePrompt(mockReq as Request, mockRes as Response);
+      await PromptController.generatePrompt(mockReq as PromptNameRequest, mockRes as Response);
 
       expect(mockJson).toHaveBeenCalledWith({
         name: "developer-code-assistant",
@@ -254,7 +259,7 @@ describe("PromptController", () => {
 
       const consoleSpy = jest.spyOn(console, "error").mockImplementation();
 
-      await PromptController.generatePrompt(mockReq as Request, mockRes as Response);
+      await PromptController.generatePrompt(mockReq as PromptNameRequest, mockRes as Response);
 
       expect(mockStatus).toHaveBeenCalledWith(500);
       expect(mockJson).toHaveBeenCalledWith({ error: "Internal server error" });

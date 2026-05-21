@@ -1,3 +1,6 @@
+// Copyright 2026 Vention
+// SPDX-License-Identifier: Apache-2.0
+
 const COGNITO_USER_POOL_ID = process.env.COGNITO_USER_POOL_ID ?? "";
 const COGNITO_CLIENT_ID = process.env.COGNITO_CLIENT_ID ?? "";
 const COGNITO_POOL_REGION = process.env.COGNITO_POOL_REGION ?? "";

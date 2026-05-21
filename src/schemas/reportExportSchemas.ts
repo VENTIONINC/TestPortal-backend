@@ -1,3 +1,6 @@
+// Copyright 2026 Vention
+// SPDX-License-Identifier: Apache-2.0
+
 import { z } from "zod";
 
 const DATE_PATTERN = /^\d{4}-\d{2}-\d{2}$/;

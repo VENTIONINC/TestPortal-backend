@@ -1,3 +1,6 @@
+// Copyright 2026 Vention
+// SPDX-License-Identifier: Apache-2.0
+
 import "@/test-utils/testEnv";
 import { jest } from "@jest/globals";
 import { reportService, ReportGenerationError } from "@/services/reportService";

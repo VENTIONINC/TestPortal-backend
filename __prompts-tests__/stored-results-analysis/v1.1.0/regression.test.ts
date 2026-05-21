@@ -1,3 +1,6 @@
+// Copyright 2026 Vention
+// SPDX-License-Identifier: Apache-2.0
+
 /**
  * Regression tests for stored results analysis prompt
  * Comprehensive validation with multiple variations per template

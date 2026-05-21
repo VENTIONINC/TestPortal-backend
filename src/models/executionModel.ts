@@ -1,3 +1,6 @@
+// Copyright 2026 Vention
+// SPDX-License-Identifier: Apache-2.0
+
 import { dbClient } from "@/prisma/client";
 import type { PrismaExecution } from "@/types";
 import type { Prisma } from "@prisma/client";

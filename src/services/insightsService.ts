@@ -1,3 +1,6 @@
+// Copyright 2026 Vention
+// SPDX-License-Identifier: Apache-2.0
+
 import { ChatOpenAI } from "@langchain/openai";
 import getLogger from "@/lib/logger";
 import { buildInsightsPrompt } from "@/prompts/insights/v1.0.0";

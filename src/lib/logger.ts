@@ -1,3 +1,6 @@
+// Copyright 2026 Vention
+// SPDX-License-Identifier: Apache-2.0
+
 import log4js from "log4js";
 import path from "path";
 import { LOGS_DIR } from "@/root/path.config.js";

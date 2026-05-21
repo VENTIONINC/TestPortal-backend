@@ -1,3 +1,6 @@
+// Copyright 2026 Vention
+// SPDX-License-Identifier: Apache-2.0
+
 import { OpenAPIRegistry } from "@asteasolutions/zod-to-openapi";
 import { IssueCategory } from "@/types/enums";
 import { z } from "./zod";

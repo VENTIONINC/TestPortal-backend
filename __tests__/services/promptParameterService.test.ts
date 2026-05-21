@@ -1,3 +1,6 @@
+// Copyright 2026 Vention
+// SPDX-License-Identifier: Apache-2.0
+
 import { PromptParameterService } from "@/services/promptParameterService";
 import { developerCodeAssistantPrompt } from "@/mcp/prompts/developer-code-assistant/v1.0.0";
 import { testPortalAssistantPrompt } from "@/mcp/prompts/test-portal-assistant/v1.0.0";
