@@ -14,6 +14,11 @@ router.get(
   resultController.getResultById,
 );
 router.get(
+  "/v2/results/:resultId/artifact-url",
+  authMiddleware,
+  resultController.getSignedArtifactUrl,
+);
+router.get(
   "/v2/results-stats",
   authMiddleware,
   resultController.getResultsStats,

@@ -51,6 +51,13 @@ export interface PrismaResult {
   analysisFeedbackCategory?: string | null;
   analysisFeedbackConfidence?: number | null;
   analysisFeedbackConclusion?: string | null;
+  artifactProvider?: string | null;
+  artifactObjectKey?: string | null;
+}
+
+export interface ArtifactSummary {
+  provider: "s3";
+  available: true;
 }
 
 export interface PrismaResultError {
@@ -142,6 +149,7 @@ export interface ResultWithRelations extends PrismaResult {
   errors: ResultErrorWithRelations[];
   spec: PrismaSpec;
   execution: PrismaExecution;
+  artifact?: ArtifactSummary;
 }
 
 export interface ResultErrorWithRelations extends PrismaResultError {

@@ -9,6 +9,7 @@ import {
   generateFallbackIdentifier,
   type IdentifierStrategy,
 } from "@/lib/executionIdentifiers";
+import { playwrightArtifactService } from "@/services/playwrightArtifactService";
 import type {
   PrismaExecution,
   PrismaSpec,
@@ -30,6 +31,8 @@ interface ResultCreateInput {
   analysisConclusion?: string;
   analysisErrorQuality?: number;
   analysisErrorQualityConclusion?: string;
+  artifactProvider?: string | null;
+  artifactObjectKey?: string | null;
   spec: { connect: { id: string } }; // UUID reference to Spec
   execution: { connect: { id: string } }; // UUID reference to Execution
   errors?: { connect: { id: string } }; // UUID reference to ResultError
@@ -70,6 +73,11 @@ interface TestResult {
   startTime: string | Date;
   error?: ErrorData;
   workerIndex: number;
+  attachments?: Array<{
+    name?: string;
+    contentType?: string;
+    path?: string;
+  }>;
 }
 
 interface ErrorData {
@@ -293,7 +301,13 @@ export const jsonReportService = {
 
     for (const result of spec.results) {
       // Analysis is now always done post-persist for both CTRF and Playwright
-      await this._createResultRecord(result, specRecord, executionRecord, tx);
+      await this._createResultRecord(
+        result,
+        spec,
+        specRecord,
+        executionRecord,
+        tx,
+      );
     }
   },
 
@@ -302,6 +316,7 @@ export const jsonReportService = {
    */
   async _createResultRecord(
     resultData: TestResult,
+    specData: TestSpec,
     specRecord: PrismaSpec,
     executionRecord: PrismaExecution,
     tx?: Prisma.TransactionClient,
@@ -337,6 +352,16 @@ export const jsonReportService = {
         },
       },
     };
+
+    const artifactReference = playwrightArtifactService.extractS3ArtifactReference(
+      specData,
+      resultData,
+    );
+
+    if (artifactReference) {
+      recordData.artifactProvider = artifactReference.provider;
+      recordData.artifactObjectKey = artifactReference.objectKey;
+    }
 
     // Handle error data if present
     if (resultData.error) {

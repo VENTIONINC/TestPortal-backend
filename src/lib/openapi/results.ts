@@ -52,10 +52,27 @@ const ResultSchema = z
       .nullable()
       .optional()
       .describe("Explanation for the error quality rating"),
+    artifact: z
+      .object({
+        provider: z.literal("s3"),
+        available: z.literal(true),
+      })
+      .optional()
+      .describe(
+        "Private artifact availability summary. Does not expose bucket, object key, credentials, or signed URL.",
+      ),
     createdAt: z.string(),
     updatedAt: z.string(),
   })
   .openapi("Result");
+
+const SignedArtifactUrlResponseSchema = z
+  .object({
+    provider: z.literal("s3"),
+    url: z.string().url(),
+    expiresAt: z.string().datetime(),
+  })
+  .openapi("SignedArtifactUrlResponse");
 
 const ResultsListResponseSchema = z
   .object({
@@ -143,6 +160,7 @@ const UpdateResultAnalysisFeedbackRequestSchema = z
 
 export function registerResultRoutes(registry: OpenAPIRegistry) {
   registry.register("Result", ResultSchema);
+  registry.register("SignedArtifactUrlResponse", SignedArtifactUrlResponseSchema);
   registry.register("ResultsStats", ResultsStatsSchema);
   registry.register("ResultsListResponse", ResultsListResponseSchema);
   registry.register(
@@ -259,6 +277,76 @@ export function registerResultRoutes(registry: OpenAPIRegistry) {
       },
       401: {
         description: "Unauthorized access",
+        content: {
+          "application/json": {
+            schema: ErrorResponseSchema,
+          },
+        },
+      },
+    },
+    tags: ["Results"],
+  });
+
+  registry.registerPath({
+    method: "get",
+    path: "/api/v2/results/{resultId}/artifact-url",
+    description:
+      "Returns a temporary signed S3 URL for a private result artifact after project-scoped authorization",
+    security: [{ BearerAuth: [] }],
+    request: {
+      params: z.object({
+        resultId: z.string().uuid(),
+      }),
+      query: z.object({
+        projectId: z
+          .string()
+          .uuid()
+          .describe("Project ID to verify ownership of the result artifact"),
+      }),
+    },
+    responses: {
+      200: {
+        description: "Temporary signed artifact URL",
+        content: {
+          "application/json": {
+            schema: SignedArtifactUrlResponseSchema,
+          },
+        },
+      },
+      400: {
+        description: "Bad request - missing required parameters",
+        content: {
+          "application/json": {
+            schema: ErrorResponseSchema,
+          },
+        },
+      },
+      401: {
+        description: "Unauthorized access",
+        content: {
+          "application/json": {
+            schema: ErrorResponseSchema,
+          },
+        },
+      },
+      403: {
+        description: "Project scope does not allow access to this artifact",
+        content: {
+          "application/json": {
+            schema: ErrorResponseSchema,
+          },
+        },
+      },
+      404: {
+        description: "Result artifact not found",
+        content: {
+          "application/json": {
+            schema: ErrorResponseSchema,
+          },
+        },
+      },
+      500: {
+        description: "S3 artifact signing configuration error",
         content: {
           "application/json": {
             schema: ErrorResponseSchema,

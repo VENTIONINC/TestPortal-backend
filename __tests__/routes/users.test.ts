@@ -22,6 +22,14 @@ let shouldThrowDatabaseError = false;
 let databaseErrorMessage = "Database error";
 const mockTx = {};
 
+jest.mock("@/prisma/client", () => ({
+  dbClient: {
+    $transaction: jest.fn((callback: (tx: unknown) => unknown) =>
+      callback({}),
+    ),
+  },
+}));
+
 jest.mock("@/services/authService", () => ({
   signUpUser: jest.fn(() =>
     Promise.resolve({ user: { Username: "test-cognito-user" } }),

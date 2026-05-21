@@ -2,7 +2,10 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { Request, Response } from "express";
-import { resultService } from "@/services/resultService";
+import {
+  ResultArtifactNotFoundError,
+  resultService,
+} from "@/services/resultService";
 import type { GetResultsStatsParams } from "@/types";
 import { buildResultParams } from "@/lib/params-builder";
 import type { AuthenticatedRequest } from "@/middleware/authMiddleware";
@@ -136,6 +139,54 @@ export const resultController = {
     } catch (error) {
       const err = error as Error;
       res.status(404).json({
+        error: err.message,
+      });
+    }
+  },
+
+  getSignedArtifactUrl: async (req: Request, res: Response): Promise<void> => {
+    try {
+      const { resultId } = req.params;
+      const { projectId } = req.query as Record<string, string>;
+
+      if (!resultId) {
+        res.status(400).json({
+          error: "Result ID is required",
+        });
+        return;
+      }
+
+      if (!projectId) {
+        res.status(400).json({
+          error: "Project ID is required",
+        });
+        return;
+      }
+
+      const artifactUrl = await resultService.getSignedArtifactUrl(
+        resultId,
+        projectId,
+      );
+
+      res.status(200).json(artifactUrl);
+    } catch (error) {
+      const err = error as Error;
+
+      if (error instanceof ResultArtifactNotFoundError) {
+        res.status(404).json({
+          error: err.message,
+        });
+        return;
+      }
+
+      if (resultService.isArtifactConfigurationError(error)) {
+        res.status(500).json({
+          error: err.message,
+        });
+        return;
+      }
+
+      res.status(403).json({
         error: err.message,
       });
     }

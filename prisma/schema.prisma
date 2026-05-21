@@ -104,6 +104,10 @@ model Result {
   analysisFeedbackCategory        String?
   analysisFeedbackConfidence      Int?
   analysisFeedbackConclusion      String?
+  artifactProvider                String?
+  artifactObjectKey               String?
+
+  @@index([artifactProvider])
 }
 
 model ResultError {
