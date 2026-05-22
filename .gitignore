@@ -66,6 +66,7 @@ prisma/prisma
 dev.db
 
 .tmp
+mocks/
 
 # TypeScript build output
 dist/
