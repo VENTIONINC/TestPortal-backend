@@ -76,6 +76,9 @@ export default [
         project: null,
       },
     },
+    rules: {
+      "@typescript-eslint/no-unnecessary-type-assertion": "off",
+    },
   },
 
   // Global ignores
@@ -87,6 +90,7 @@ export default [
       "__mocks__/**",
       "*.d.ts",
       "jest.config.ts",
+      "jest.prompts.config.ts",
     ],
   },
 ];

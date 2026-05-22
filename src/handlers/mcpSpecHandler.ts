@@ -1,13 +1,8 @@
 import { specService } from "@/services/specService";
-import type { PrismaSpec } from "@/types";
-
-interface ProcessedSpec extends Omit<PrismaSpec, "tags" | "annotations"> {
-  tags: string[];
-  annotations: Record<string, unknown>;
-}
+import type { StructuredSpec } from "@/types";
 
 export const mcpSpecHandler = {
-  async getSpecById(specId: string, projectId: string): Promise<ProcessedSpec> {
+  async getSpecById(specId: string, projectId: string): Promise<StructuredSpec> {
     return await specService.getSpecById(specId, projectId);
   },
 };

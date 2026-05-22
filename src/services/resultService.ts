@@ -4,6 +4,10 @@ import {
   type AnalysisExportFilters,
   type AnalysisExportRow,
 } from "@/models/resultModel";
+import {
+  normalizeJsonStringArray,
+  normalizeResultPayload,
+} from "@/lib/jsonPayloads";
 import type {
   AnalysisExportMetadata,
   AnalysisExportParams,
@@ -11,7 +15,7 @@ import type {
   GetResultsParams,
   GetResultsStatsParams,
   ResultsStats,
-  ResultWithRelations,
+  StructuredResultWithRelations,
 } from "@/types";
 import { dashboardService } from "@/services/dashboardService";
 import getLogger from "@/lib/logger";
@@ -20,7 +24,7 @@ import { dbClient } from "@/prisma/client";
 const logger = getLogger("result-service");
 
 interface GetResultsResponse {
-  results: ResultWithRelations[];
+  results: StructuredResultWithRelations[];
   total: number;
   page: number;
   totalPages: number;
@@ -71,47 +75,8 @@ export const resultService = {
     const results = await resultModel.findMany(filters, page, limit);
     const totalResults = await resultModel.count(filters);
 
-    // Process results for response
-    for (const result of results) {
-      // de-serialize stacks
-      if (result.errors?.length) {
-        for (const error of result.errors) {
-          try {
-            if (typeof error.callLog === "string") {
-              error.callLog = JSON.parse(error.callLog);
-            }
-            if (typeof error.callStack === "string") {
-              error.callStack = JSON.parse(error.callStack);
-            }
-          } catch (e) {
-            // Handle malformed JSON gracefully
-            console.warn(
-              `Failed to parse error data for result ${result.id}:`,
-              e,
-            );
-          }
-        }
-      }
-
-      // de-serialize string arrays
-      try {
-        if (typeof result.spec.tags === "string") {
-          result.spec.tags = JSON.parse(result.spec.tags);
-        }
-        if (
-          typeof result.spec.annotations === "string" &&
-          result.spec.annotations
-        ) {
-          result.spec.annotations = JSON.parse(result.spec.annotations);
-        }
-      } catch (e) {
-        // Handle malformed JSON gracefully
-        console.warn(`Failed to parse spec data for result ${result.id}:`, e);
-      }
-    }
-
     return {
-      results,
+      results: results.map(normalizeResultPayload),
       total: totalResults,
       page: Number(page),
       totalPages: Math.ceil(totalResults / limit),
@@ -121,7 +86,7 @@ export const resultService = {
   async getResultById(
     resultId: number | string,
     projectId: string,
-  ): Promise<ResultWithRelations> {
+  ): Promise<StructuredResultWithRelations> {
     if (!resultId) {
       throw new Error("Result ID is required");
     }
@@ -140,7 +105,7 @@ export const resultService = {
       throw new Error(`Result with ID ${resultId} not found`);
     }
 
-    return resultRecord;
+    return normalizeResultPayload(resultRecord);
   },
 
   async getResultsStats(params: GetResultsStatsParams): Promise<ResultsStats> {
@@ -164,7 +129,7 @@ export const resultService = {
       analysisConfidence?: number;
       analysisConclusion?: string;
     },
-  ): Promise<ResultWithRelations> {
+  ): Promise<StructuredResultWithRelations> {
     if (!resultId) {
       throw new Error("Result ID is required");
     }
@@ -221,7 +186,7 @@ export const resultService = {
       return updatedResult;
     });
 
-    return result;
+    return normalizeResultPayload(result);
   },
 
   async updateAnalysisFeedback(
@@ -232,7 +197,7 @@ export const resultService = {
       analysisFeedbackConclusion?: string;
     },
     reviewedById: string,
-  ): Promise<ResultWithRelations> {
+  ): Promise<StructuredResultWithRelations> {
     if (!resultId) {
       throw new Error("Result ID is required");
     }
@@ -289,7 +254,7 @@ export const resultService = {
       return updatedResult;
     });
 
-    return result;
+    return normalizeResultPayload(result);
   },
 
   async deleteResult(resultId: string, projectId: string): Promise<void> {
@@ -369,15 +334,6 @@ export const resultService = {
       generatedAt: new Date().toISOString(),
     };
 
-    const parseTags = (tags: string): string | string[] => {
-      try {
-        const parsed = JSON.parse(tags);
-        return Array.isArray(parsed) ? parsed : tags;
-      } catch {
-        return tags;
-      }
-    };
-
     const records: AnalysisExportRecord[] = rows.map(
       (row: AnalysisExportRow): AnalysisExportRecord => {
         const finalCategory =
@@ -400,7 +356,7 @@ export const resultService = {
             key: row.spec.key,
             file: row.spec.file,
             title: row.spec.title,
-            tags: parseTags(row.spec.tags),
+            tags: normalizeJsonStringArray(row.spec.tags),
           },
           execution: {
             id: row.execution.id,

@@ -80,7 +80,7 @@ export interface AnalysisExportRecord {
     key: string;
     file: string;
     title: string;
-    tags: string | string[];
+    tags: string[];
   };
   execution: {
     id: string;

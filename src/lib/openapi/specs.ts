@@ -5,11 +5,10 @@ import { ErrorResponseSchema } from "./common";
 const SpecSchema = z
   .object({
     id: z.string().uuid(),
+    key: z.string(),
     title: z.string(),
-    custom_id: z.string().optional(),
-    file: z.string().optional(),
-    tags: z.array(z.string()).optional(),
-    annotations: z.array(z.string()).optional(),
+    file: z.string(),
+    tags: z.array(z.string()),
     createdAt: z.string(),
     updatedAt: z.string(),
   })

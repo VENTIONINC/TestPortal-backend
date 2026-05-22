@@ -8,6 +8,14 @@ import {
   executeProtectedController,
 } from "@/test-utils/httpMocks";
 
+jest.mock("@/prisma/client", () => ({
+  dbClient: {
+    $transaction: jest.fn(
+      async (callback: (tx: object) => Promise<unknown>) => await callback({}),
+    ),
+  },
+}));
+
 const users: PrismaUser[] = [];
 const issues: PrismaIssue[] = [];
 

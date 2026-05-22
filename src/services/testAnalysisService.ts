@@ -1,6 +1,7 @@
 import { ChatOpenAI } from "@langchain/openai";
 import { z } from "zod";
 
+import { normalizeJsonArrayForText } from "@/lib/jsonPayloads";
 import getLogger from "@/lib/logger";
 import { getStoredResultsAnalysisPrompt } from "@/prompts/stored-results-analysis/v1.1.0";
 import {
@@ -45,7 +46,7 @@ export const testAnalysisService = {
       retry: number;
       spec: { key: string; title: string; file: string };
       execution: { name: string; environment: string };
-      errors: Array<{ message: string; callStack: string; location: string }>;
+      errors: Array<{ message: string; callStack: unknown; location: string }>;
     }>,
   ): Promise<Map<string, TestResultAnalysis>> {
     try {
@@ -97,7 +98,9 @@ export const testAnalysisService = {
           const lastError = result.errors[0];
           if (lastError) {
             essentialResult.errorMessage = lastError.message;
-            essentialResult.errorStack = lastError.callStack;
+            essentialResult.errorStack = normalizeJsonArrayForText(
+              lastError.callStack,
+            );
             essentialResult.errorLocation = lastError.location;
           }
         }

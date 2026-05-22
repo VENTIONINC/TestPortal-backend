@@ -5,10 +5,15 @@ import { ErrorResponseSchema, SuccessResponseSchema } from "./common";
 const ResultErrorSchema = z
   .object({
     id: z.string().uuid(),
-    resultId: z.string().uuid(),
-    errorMessage: z.string(),
-    stackTrace: z.string().optional(),
-    assertionInfo: z.string().optional(),
+    resultId: z.string().uuid().nullable().optional(),
+    type: z.string(),
+    message: z.string(),
+    callLog: z.array(z.string()),
+    callStack: z.array(z.string()),
+    testAssertion: z.string().nullable().optional(),
+    expectedPattern: z.string().nullable().optional(),
+    receivedString: z.string().nullable().optional(),
+    location: z.string(),
     createdAt: z.string(),
     updatedAt: z.string(),
   })

@@ -113,7 +113,7 @@ describe("resultService.exportAnalysisJsonl", () => {
         key: "SPEC-1",
         file: "spec.ts",
         title: "Spec Title",
-        tags: '["smoke","ui"]',
+        tags: ["smoke", "ui"],
       },
       execution: {
         id: "exec-1",

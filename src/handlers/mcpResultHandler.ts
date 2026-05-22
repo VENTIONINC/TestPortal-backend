@@ -3,11 +3,11 @@ import type {
   GetResultsParams,
   GetResultsStatsParams,
   ResultsStats,
-  ResultWithRelations,
+  StructuredResultWithRelations,
 } from "@/types";
 
 interface GetResultsResponse {
-  results: ResultWithRelations[];
+  results: StructuredResultWithRelations[];
   total: number;
   page: number;
   totalPages: number;
@@ -54,7 +54,10 @@ export const mcpResultHandler = {
     return await resultService.getResults(resultParams);
   },
 
-  async getResultById(resultId: string, projectId: string): Promise<ResultWithRelations | null> {
+  async getResultById(
+    resultId: string,
+    projectId: string,
+  ): Promise<StructuredResultWithRelations | null> {
     return await resultService.getResultById(resultId, projectId);
   },
 

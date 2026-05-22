@@ -1,6 +1,6 @@
 import "@/test-utils/testEnv";
 import { jest } from "@jest/globals";
-import type { ResultWithRelations } from "@/types";
+import type { StructuredResultWithRelations } from "@/types";
 import { errorFormatterService } from "@/services/errorFormatterService";
 import { resultService } from "@/services/resultService";
 import { testAnalysisService } from "@/services/testAnalysisService";
@@ -87,7 +87,7 @@ describe("errorFormatterService.suggestFromResult", () => {
     openAiMocks.__mocks__.withStructuredOutputMock;
 
   const now = new Date("2025-01-01T10:00:00Z");
-  const baseResult: ResultWithRelations = {
+  const baseResult: StructuredResultWithRelations = {
     id: "result-1",
     createdAt: now,
     updatedAt: now,
@@ -116,8 +116,8 @@ describe("errorFormatterService.suggestFromResult", () => {
       key: "spec-1",
       file: "spec.ts",
       title: "Spec",
-      tags: "[]",
-      annotations: null,
+      tags: [],
+      annotations: [],
       projectId: "project-1",
     },
     execution: {
@@ -138,22 +138,20 @@ describe("errorFormatterService.suggestFromResult", () => {
         updatedAt: now,
         type: "assertion",
         message: "Error",
-        callLog: null,
-        callStack: "stack",
+        callLog: [],
+        callStack: ["stack"],
         testAssertion: null,
         expectedPattern: null,
         receivedString: null,
         location: "loc",
         resultId: "result-1",
-        result: null,
-        assumptions: [],
       },
     ],
   };
 
   const makeResult = (
-    overrides: Partial<ResultWithRelations>,
-  ): ResultWithRelations => ({
+    overrides: Partial<StructuredResultWithRelations>,
+  ): StructuredResultWithRelations => ({
     ...baseResult,
     ...overrides,
     spec: {

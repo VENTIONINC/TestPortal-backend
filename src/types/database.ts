@@ -1,3 +1,5 @@
+import type { Prisma } from "@prisma/client";
+
 // Minimal Prisma model type definitions to allow compilation without the
 // generated client types. These mirror the fields defined in the Prisma
 // schema and are sufficient for type checking within this repository.
@@ -21,8 +23,8 @@ export interface PrismaSpec {
   key: string;
   file: string;
   title: string;
-  tags: string;
-  annotations?: string | null;
+  tags: Prisma.JsonValue;
+  annotations?: Prisma.JsonValue | null;
   projectId: string; // UUID reference to Project
 }
 
@@ -56,8 +58,8 @@ export interface PrismaResultError {
   updatedAt: Date;
   type: string;
   message: string;
-  callLog?: string | null;
-  callStack: string;
+  callLog?: Prisma.JsonValue | null;
+  callStack: Prisma.JsonValue;
   testAssertion?: string | null;
   expectedPattern?: string | null;
   receivedString?: string | null;
@@ -151,6 +153,23 @@ export interface AssumptionWithRelations extends PrismaAssumption {
   resultError?: PrismaResultError;
 }
 
+export interface StructuredSpec extends Omit<PrismaSpec, "tags" | "annotations"> {
+  tags: string[];
+  annotations: unknown[];
+}
+
+export interface StructuredResultError
+  extends Omit<PrismaResultError, "callLog" | "callStack"> {
+  callLog: string[];
+  callStack: string[];
+}
+
+export interface StructuredResultWithRelations extends PrismaResult {
+  errors: StructuredResultError[];
+  spec: StructuredSpec;
+  execution: PrismaExecution;
+}
+
 export interface IssueWithAssumptions extends PrismaIssue {
   assumptions: AssumptionWithRelations[];
 }
@@ -182,7 +201,7 @@ export interface SpecSummary {
   key: string;
   file: string;
   title: string;
-  tags: string;
+  tags: string[];
   resultsCount: number;
   projectId: string;
 }

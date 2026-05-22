@@ -21,9 +21,53 @@ const mockResultModel = resultModel as jest.Mocked<typeof resultModel>;
 describe("resultService.updateAnalysisFeedback", () => {
   const resultId = "result-1";
   const reviewerId = "user-1";
+  const now = new Date("2025-01-01T10:00:00Z");
 
   const mockResult = {
     id: resultId,
+    createdAt: now,
+    updatedAt: now,
+    reportPortalLink: null,
+    retry: 0,
+    status: "failed",
+    duration: 1000,
+    startTime: now,
+    specId: "spec-1",
+    executionId: "exec-1",
+    analysisStatus: null,
+    analysisCategory: null,
+    analysisConfidence: null,
+    analysisConclusion: null,
+    analysisErrorQuality: null,
+    analysisErrorQualityConclusion: null,
+    analysisReviewedAt: null,
+    analysisReviewedById: null,
+    analysisFeedbackCategory: null,
+    analysisFeedbackConfidence: null,
+    analysisFeedbackConclusion: null,
+    spec: {
+      id: "spec-1",
+      createdAt: now,
+      updatedAt: now,
+      key: "SPEC-1",
+      file: "spec.ts",
+      title: "Spec",
+      tags: ["smoke"],
+      annotations: [],
+      projectId: "project-1",
+    },
+    execution: {
+      id: "exec-1",
+      createdAt: now,
+      updatedAt: now,
+      type: "e2e",
+      name: "Run 1",
+      environment: "staging",
+      version: "1.0.0",
+      startedAt: now,
+      projectId: "project-1",
+    },
+    errors: [],
   } as unknown as ResultWithRelations;
 
   beforeEach(() => {
@@ -62,7 +106,7 @@ describe("resultService.updateAnalysisFeedback", () => {
         { analysisFeedbackConfidence: 0 },
         reviewerId,
       ),
-    ).rejects.toThrow("Feedback confidence must be an integer between 1 and 5");
+    ).rejects.toThrow("Feedback confidence must be between 1 and 5");
   });
 
   it("should throw when no feedback fields are provided", async () => {
@@ -95,6 +139,11 @@ describe("resultService.updateAnalysisFeedback", () => {
       }),
       mockTx,
     );
-    expect(response).toBe(mockResult);
+    expect(response).toMatchObject({
+      id: resultId,
+      spec: expect.objectContaining({
+        tags: ["smoke"],
+      }),
+    });
   });
 });
