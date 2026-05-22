@@ -47,8 +47,8 @@ export interface ErrorAnalysisInput {
     id: string;
     type: string;
     message: string;
-    callLog: string;
-    callStack: string;
+    callLog: string[];
+    callStack: string[];
   };
 }
 

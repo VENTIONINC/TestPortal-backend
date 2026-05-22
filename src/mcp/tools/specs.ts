@@ -13,7 +13,7 @@ interface GetSpecByIdParams {
 
 export const getSpecById = createMcpTool(
   "get-spec-by-id",
-  "Retrieve detailed information about a specific spec by its unique ID, including parsed tags and annotations",
+  "Retrieve detailed information about a specific spec by its unique ID, including normalized tags",
   getSpecByIdSchema,
   async (params: GetSpecByIdParams): Promise<MCPToolResponse> => {
     const { specId, projectId } = params;

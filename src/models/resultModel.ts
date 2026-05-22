@@ -50,7 +50,7 @@ export interface AnalysisExportRow {
     key: string;
     file: string;
     title: string;
-    tags: string;
+    tags: Prisma.JsonValue;
   };
   execution: {
     id: string;
@@ -130,7 +130,7 @@ export const resultModel = {
     if (specId) whereClause.spec.key = specId;
     if (specFile) whereClause.spec.file = { contains: specFile };
     if (specName) whereClause.spec.title = { contains: specName };
-    if (tag) whereClause.spec.tags = { contains: tag };
+    if (tag) whereClause.spec.tags = { array_contains: [tag] };
 
     // Build execution filter (always include projectId)
     whereClause.execution = {};
@@ -296,7 +296,7 @@ export const resultModel = {
     if (specId) whereClause.spec.key = specId;
     if (specFile) whereClause.spec.file = { contains: specFile };
     if (specName) whereClause.spec.title = { contains: specName };
-    if (tag) whereClause.spec.tags = { contains: tag };
+    if (tag) whereClause.spec.tags = { array_contains: [tag] };
 
     // Build execution filter (always include projectId)
     whereClause.execution = {};
@@ -542,7 +542,13 @@ export const resultModel = {
     // Initialize tracking maps (same approach as frontend)
     const specMap = new Map<
       string,
-      { id: string; key: string; title: string; file: string; tags: string }
+      {
+        id: string;
+        key: string;
+        title: string;
+        file: string;
+        tags: Prisma.JsonValue;
+      }
     >();
     const executionMap = new Map<
       string,
@@ -617,7 +623,7 @@ export const resultModel = {
 
             // Count issue names
             const issueName = issue.name ?? "Unknown Issue Name";
-            const current = issueCounts.get(issueName) || {
+            const current = issueCounts.get(issueName) ?? {
               count: 0,
               category: issue.category ?? "Other",
             };
@@ -780,4 +786,3 @@ export const resultModel = {
     });
   },
 };
-

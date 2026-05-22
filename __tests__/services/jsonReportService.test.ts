@@ -79,8 +79,8 @@ describe("jsonReportService with optional runId", () => {
       key: "TEST_SPEC",
       file: "test.spec.js",
       title: "Test Spec",
-      tags: "[]",
-      annotations: "[]",
+      tags: [],
+      annotations: [],
     });
 
     // Mock result creation
@@ -142,6 +142,12 @@ describe("jsonReportService with optional runId", () => {
     expect(dbClient.execution.create).toHaveBeenCalledWith({
       data: expect.objectContaining({
         name: "PROVIDED_RUN_ID",
+      }),
+    });
+    expect(dbClient.spec.create).toHaveBeenCalledWith({
+      data: expect.objectContaining({
+        tags: [],
+        annotations: [],
       }),
     });
   });

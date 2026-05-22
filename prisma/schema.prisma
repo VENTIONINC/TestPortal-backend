@@ -63,8 +63,8 @@ model Spec {
   key         String // e.g. TestRail Id
   file        String
   title       String
-  tags        String
-  annotations String?
+  tags        Json     @default("[]")
+  annotations Json     @default("[]")
 
   // Project relationship
   project   Project @relation(fields: [projectId], references: [id])
@@ -112,8 +112,8 @@ model ResultError {
   updatedAt       DateTime     @updatedAt
   type            String
   message         String
-  callLog         String?
-  callStack       String
+  callLog         Json?
+  callStack       Json
   testAssertion   String?
   expectedPattern String?
   receivedString  String?

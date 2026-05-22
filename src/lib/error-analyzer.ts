@@ -4,6 +4,7 @@
 import levenshtein from "fast-levenshtein";
 import stringSimilarity from "string-similarity";
 import { dbClient } from "@/prisma/client";
+import { normalizeJsonStringArray } from "@/lib/jsonPayloads";
 import type {
   PrismaResultError,
   PrismaAssumption,
@@ -12,23 +13,9 @@ import type {
 
 interface TargetResultError extends PrismaResultError {
   message: string;
-  callLog: string;
-  callStack: string;
   id: string; // UUID
   type: string;
 }
-
-const parseStringArray = (value?: string | null): string[] => {
-  if (!value) return [];
-  try {
-    const parsed = JSON.parse(value) as unknown;
-    return Array.isArray(parsed)
-      ? parsed.filter((item): item is string => typeof item === "string")
-      : [];
-  } catch {
-    return [];
-  }
-};
 
 export async function runReview(
   targetResultError: TargetResultError,
@@ -55,8 +42,8 @@ export async function runReview(
       take: 100,
     });
 
-  const targetCallLog = parseStringArray(targetResultError.callLog);
-  const targetCallStack = parseStringArray(targetResultError.callStack);
+  const targetCallLog = normalizeJsonStringArray(targetResultError.callLog);
+  const targetCallStack = normalizeJsonStringArray(targetResultError.callStack);
 
   for (const resultError of resultErrors) {
     const messageLengthDiff = Math.abs(
@@ -71,8 +58,8 @@ export async function runReview(
       resultError.message,
     );
 
-    const callLog = parseStringArray(resultError.callLog);
-    const callStack = parseStringArray(resultError.callStack);
+    const callLog = normalizeJsonStringArray(resultError.callLog);
+    const callStack = normalizeJsonStringArray(resultError.callStack);
 
     const callLogSimilarity = compareStackTraces(targetCallLog, callLog);
     const stackSimilarity = compareStackTraces(targetCallStack, callStack);

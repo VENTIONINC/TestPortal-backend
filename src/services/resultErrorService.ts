@@ -3,11 +3,15 @@
 
 import { resultErrorModel } from "@/models/resultErrorModel";
 import { runReview } from "@/lib/error-analyzer";
+import { normalizeJsonArrayForText, normalizeResultErrorPayload } from "@/lib/jsonPayloads";
 import getLogger from "@/lib/logger";
 import { dbClient } from "@/prisma/client";
 import { dashboardService } from "@/services/dashboardService";
 import { testAnalysisService } from "@/services/testAnalysisService";
-import type { PrismaResultError, ResultErrorWithRelations } from "@/types";
+import type {
+  ResultErrorWithRelations,
+  StructuredResultError,
+} from "@/types";
 
 const logger = getLogger("result-error-service");
 
@@ -92,12 +96,7 @@ export const resultErrorService = {
       }
 
       // Adapt PrismaResultError to TargetResultError format expected by runReview
-      const targetResultError = {
-        ...resultError,
-        callLog: resultError.callLog ?? "[]",
-      };
-
-      const reviewedRecord = await runReview(targetResultError);
+      const reviewedRecord = await runReview(resultError);
       return reviewedRecord;
     } catch (error) {
       const err = error as Error;
@@ -138,13 +137,7 @@ export const resultErrorService = {
             continue;
           }
 
-          // Adapt PrismaResultError to TargetResultError format expected by runReview
-          const targetResultError = {
-            ...resultError,
-            callLog: resultError.callLog ?? "[]",
-          };
-
-          const reviewedRecord = await runReview(targetResultError);
+          const reviewedRecord = await runReview(resultError);
           reviewResults.push(reviewedRecord);
         } catch (error) {
           const err = error as Error;
@@ -168,7 +161,7 @@ export const resultErrorService = {
   async getResultErrorById(
     resultErrorId: string,
     projectId: string,
-  ): Promise<PrismaResultError> {
+  ): Promise<StructuredResultError> {
     if (!resultErrorId) {
       throw new Error("Result error ID is required");
     }
@@ -186,7 +179,7 @@ export const resultErrorService = {
       throw new Error(`Result error with ID ${resultErrorId} not found`);
     }
 
-    return resultError;
+    return normalizeResultErrorPayload(resultError);
   },
 
   async analyzeErrors(
@@ -221,7 +214,7 @@ export const resultErrorService = {
         error: {
           id: string;
           message: string;
-          callStack: string;
+          callStack: unknown;
           location: string;
         };
       }
@@ -239,7 +232,7 @@ export const resultErrorService = {
           error: {
             id: error.id,
             message: error.message,
-            callStack: error.callStack,
+            callStack: normalizeJsonArrayForText(error.callStack),
             location: error.location,
           },
         });

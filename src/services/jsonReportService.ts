@@ -9,6 +9,7 @@ import {
   generateFallbackIdentifier,
   type IdentifierStrategy,
 } from "@/lib/executionIdentifiers";
+import { normalizeJsonStringArray } from "@/lib/jsonPayloads";
 import type {
   PrismaExecution,
   PrismaSpec,
@@ -266,8 +267,10 @@ export const jsonReportService = {
           key: specKey,
           file: specData.location?.file ?? "",
           title: specData.title,
-          tags: JSON.stringify(specData.tags ?? []),
-          annotations: JSON.stringify(specData.annotations ?? []),
+          tags: normalizeJsonStringArray(specData.tags),
+          annotations: (Array.isArray(specData.annotations)
+            ? specData.annotations
+            : []) as Prisma.InputJsonValue,
           projectId: projectId ?? DEFAULT_PROJECT_ID,
         },
       });
@@ -380,8 +383,8 @@ export const jsonReportService = {
       data: {
         type,
         message,
-        callLog: JSON.stringify(callLog),
-        callStack: JSON.stringify(callStack),
+        callLog,
+        callStack,
         testAssertion,
         expectedPattern,
         receivedString,

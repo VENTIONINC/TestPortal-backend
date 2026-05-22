@@ -3,7 +3,7 @@
 
 export interface PlaywrightSpecTest {
   timeout: number;
-  annotations: Array<any>;
+  annotations: unknown[];
   expectedStatus: string;
   projectId: string;
   projectName: string;
@@ -88,7 +88,7 @@ export interface PlaywrightTestResults {
     globalSetup: string | null;
     globalTeardown: string | null;
     globalTimeout: number;
-    grep: Record<string, any>;
+    grep: Record<string, unknown>;
     grepInvert: string | null;
     maxFailures: number;
     metadata: {
@@ -105,23 +105,23 @@ export interface PlaywrightTestResults {
       outputDir: string;
       repeatEach: number;
       retries: number;
-      metadata: Record<string, any>;
+      metadata: Record<string, unknown>;
       id: string;
       name: string;
       testDir: string;
-      testIgnore: Array<any>;
+      testIgnore: unknown[];
       testMatch: Array<string>;
       timeout: number;
     }>;
-    shard: any;
+    shard: unknown;
     updateSnapshots: string;
     version: string;
     workers: number;
-    webServer: any;
+    webServer: unknown;
   };
   // Use the recursive PlaywrightSuite interface
   suites: Array<PlaywrightSuite>;
-  errors: Array<any>;
+  errors: unknown[];
   stats: {
     startTime: string;
     duration: number;
@@ -138,4 +138,3 @@ export interface PlaywrightTestResults {
   runId?: string;
   hash: string;
 }
-

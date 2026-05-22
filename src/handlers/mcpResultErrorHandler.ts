@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { resultErrorService } from "@/services/resultErrorService";
-import type { PrismaResultError, ResultErrorWithRelations } from "@/types";
+import type { ResultErrorWithRelations, StructuredResultError } from "@/types";
 
 interface BulkReviewResult {
   successful: (ResultErrorWithRelations | null)[];
@@ -30,7 +30,10 @@ export const mcpResultErrorHandler = {
     return await resultErrorService.bulkReview(errorIds);
   },
 
-  async getResultErrorById(resultErrorId: string, projectId: string): Promise<PrismaResultError> {
+  async getResultErrorById(
+    resultErrorId: string,
+    projectId: string,
+  ): Promise<StructuredResultError> {
     return await resultErrorService.getResultErrorById(resultErrorId, projectId);
   },
 };
