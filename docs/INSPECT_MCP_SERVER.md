@@ -1,6 +1,6 @@
 # How to Inspect the MCP Server
 
-This document outlines the steps to inspect the MCP server and connect to it from various clients.
+This document outlines the steps to inspect the MCP server with the local MCP inspector or another MCP-compatible client.
 
 ## Prerequisites
 
@@ -13,7 +13,7 @@ Ensure you have the project set up and all dependencies installed.
     Open your terminal and run the following command in the root directory of the project to start the inspector client:
 
     ```bash
-    npm run inspect
+    npm run inspector
     ```
 
     This command will start a local server or tool that allows you to connect to the MCP server.
@@ -29,22 +29,15 @@ Ensure you have the project set up and all dependencies installed.
 
     After successful connection, you should be able to see the MCP server's tools, ongoing sessions, and other relevant information, allowing you to inspect its behavior.
 
-## Connecting from Claude Desktop App
+## Connecting from an MCP Client
 
-To connect to the MCP server from Claude Desktop app, you need to configure the MCP client in your Claude Desktop configuration.
+To connect from another MCP-compatible client, configure an HTTP remote server that points at the backend MCP endpoint.
 
 ### Configuration Steps
 
-1.  **Locate the Claude Desktop Configuration File:**
+1.  **Add MCP Server Configuration:**
 
-    The configuration file is typically located at:
-    - **Windows:** `%APPDATA%\Claude\claude_desktop_config.json`
-    - **macOS:** `~/Library/Application Support/Claude/claude_desktop_config.json`
-    - **Linux:** `~/.config/Claude/claude_desktop_config.json`
-
-2.  **Add MCP Server Configuration:**
-
-    Open the `claude_desktop_config.json` file and add the following configuration under the `mcpServers` section:
+    Add a remote MCP server entry using your client's supported configuration format:
 
     ```json
     {
@@ -60,16 +53,16 @@ To connect to the MCP server from Claude Desktop app, you need to configure the 
     }
     ```
 
-3.  **Restart Claude Desktop:**
+2.  **Restart or Reload the Client:**
 
-    After saving the configuration file, restart the Claude Desktop application for the changes to take effect.
+    After saving the configuration, restart or reload the MCP client so it discovers the server.
 
-4.  **Verify Connection:**
+3.  **Verify Connection:**
 
-    Once Claude Desktop is restarted, the MCP server should be available. You can verify the connection by checking if the `test-portal` MCP server appears in Claude's available tools or by attempting to use MCP tools like `check-status`.
+    Verify the `test-portal` MCP server appears in the client's available tools or by attempting to use an MCP tool like `check-status`.
 
 ### Notes
 
-- Ensure the test-portal backend server is running on `http://localhost:3001` before attempting to connect from Claude Desktop.
+- Ensure the test-portal backend server is running on `http://localhost:3001` before attempting to connect from a client.
 - The `mcp-remote` package must be available globally via npm or the configuration may fail.
-- If you encounter connection issues, check the Claude Desktop logs for error messages.
+- If you encounter connection issues, check the MCP client logs for error messages.
