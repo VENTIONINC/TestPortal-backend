@@ -1,3 +1,6 @@
+// Copyright 2026 Vention
+// SPDX-License-Identifier: Apache-2.0
+
 import { resultErrorModel } from "@/models/resultErrorModel";
 import { runReview } from "@/lib/error-analyzer";
 import { normalizeJsonArrayForText, normalizeResultErrorPayload } from "@/lib/jsonPayloads";

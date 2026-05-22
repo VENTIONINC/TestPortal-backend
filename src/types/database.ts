@@ -1,3 +1,6 @@
+// Copyright 2026 Vention
+// SPDX-License-Identifier: Apache-2.0
+
 import type { Prisma } from "@prisma/client";
 
 // Minimal Prisma model type definitions to allow compilation without the

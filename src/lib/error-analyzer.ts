@@ -1,3 +1,6 @@
+// Copyright 2026 Vention
+// SPDX-License-Identifier: Apache-2.0
+
 import levenshtein from "fast-levenshtein";
 import stringSimilarity from "string-similarity";
 import { dbClient } from "@/prisma/client";

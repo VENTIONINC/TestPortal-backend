@@ -1,3 +1,6 @@
+// Copyright 2026 Vention
+// SPDX-License-Identifier: Apache-2.0
+
 import { Router, Request, Response } from "express";
 import issue from "@/routes/issue";
 import results from "@/routes/results";

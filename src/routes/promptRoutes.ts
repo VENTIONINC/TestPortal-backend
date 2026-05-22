@@ -1,3 +1,6 @@
+// Copyright 2026 Vention
+// SPDX-License-Identifier: Apache-2.0
+
 import { Router } from "express";
 import { PromptController } from "@/controllers/promptController";
 import { authMiddleware } from "@/middleware/authMiddleware";

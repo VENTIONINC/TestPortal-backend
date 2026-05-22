@@ -1,3 +1,6 @@
+// Copyright 2026 Vention
+// SPDX-License-Identifier: Apache-2.0
+
 import { specModel } from "@/models/specModel";
 import { normalizeJsonStringArray, normalizeJsonUnknownArray } from "@/lib/jsonPayloads";
 import type { StructuredSpec } from "@/types";
