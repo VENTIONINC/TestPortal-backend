@@ -23,6 +23,12 @@ This repository contains a Node.js backend written in **TypeScript** using an MV
 - Organise imports: Node built‑ins, third‑party modules, then internal aliases.
 - Preserve ES module syntax and the existing TypeScript style.
 
+## Codex workspace conventions
+
+- Keep repo-specific automation in `.codex`; do not add parallel Claude or Copilot instruction/config trees.
+- Prefer Codex skills for reusable review checklists, runbooks, and workflows.
+- Keep custom Codex agents rare and only for bounded specialist work with a clear ownership area. The OpenAPI/schema agent is the canonical example because it owns contract drift across implementation, Zod schemas, MCP schemas, and OpenAPI docs.
+
 ## Pre‑commit checklist
 
 Before committing any changes run:
