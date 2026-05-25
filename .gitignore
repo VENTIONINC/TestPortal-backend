@@ -76,6 +76,9 @@ dist/
 example-reports/
 mocks/
 
+# Generated mock payloads
+mocks/
+
 # IDEs and editors
 .vscode/
 

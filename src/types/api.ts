@@ -11,12 +11,22 @@ export interface PaginationParams {
 export interface CreateProjectRequest {
   name: string;
   description?: string;
+  categoryWeights?: ProjectCategoryWeights;
+}
+
+export interface ProjectCategoryWeights {
+  bug: number;
+  infra: number;
+  performance: number;
+  script: number;
+  other: number;
 }
 
 export interface UpdateProjectRequest {
   name?: string;
   description?: string;
   isActive?: boolean;
+  categoryWeights?: ProjectCategoryWeights;
 }
 
 export interface GetProjectsParams {

@@ -17,6 +17,7 @@ model Project {
   name        String   @unique
   description String?
   isActive    Boolean  @default(true)
+  categoryWeights Json?
 
   // Simple ownership
   owner   User   @relation(fields: [ownerId], references: [id])
