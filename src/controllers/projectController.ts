@@ -5,6 +5,7 @@ import { Request, Response } from "express";
 import { projectService } from "@/services/projectService";
 import type { AuthenticatedRequest } from "@/middleware/authMiddleware";
 import {
+  DEFAULT_PROJECT_CATEGORY_WEIGHTS,
   parseProjectCategoryWeights,
   type ProjectCategoryWeights,
 } from "@/lib/projectCategoryWeights";
@@ -69,9 +70,12 @@ export const projectController = {
         return;
       }
 
-      let parsedCategoryWeights: ProjectCategoryWeights;
+      let parsedCategoryWeights: ProjectCategoryWeights | undefined;
       try {
-        parsedCategoryWeights = parseProjectCategoryWeights(categoryWeights);
+        parsedCategoryWeights =
+          categoryWeights === undefined
+            ? undefined
+            : parseProjectCategoryWeights(categoryWeights);
       } catch (error) {
         const err = error as Error;
         res.status(400).json({ error: err.message });
@@ -82,7 +86,8 @@ export const projectController = {
         name: name.trim(),
         description: description?.trim() ?? "",
         ownerId: req.user.id,
-        categoryWeights: parsedCategoryWeights,
+        categoryWeights:
+          parsedCategoryWeights ?? DEFAULT_PROJECT_CATEGORY_WEIGHTS,
       });
 
       res.status(201).json(project);

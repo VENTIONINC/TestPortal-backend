@@ -11,7 +11,7 @@ export interface PaginationParams {
 export interface CreateProjectRequest {
   name: string;
   description?: string;
-  categoryWeights: ProjectCategoryWeights;
+  categoryWeights?: ProjectCategoryWeights;
 }
 
 export interface ProjectCategoryWeights {

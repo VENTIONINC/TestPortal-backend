@@ -4,6 +4,7 @@
 import { projectModel } from "@/models/projectModel";
 import type { Project } from "@prisma/client";
 import {
+  DEFAULT_PROJECT_CATEGORY_WEIGHTS,
   normalizeProjectCategoryWeights,
   type ProjectCategoryWeights,
 } from "@/lib/projectCategoryWeights";
@@ -12,7 +13,7 @@ export interface CreateProjectParams {
   name: string;
   description?: string;
   ownerId: string;
-  categoryWeights: ProjectCategoryWeights;
+  categoryWeights?: ProjectCategoryWeights;
 }
 
 export interface UpdateProjectParams {
@@ -82,7 +83,11 @@ export const projectService = {
       throw new Error(`Project with name '${params.name}' already exists`);
     }
 
-    const project = await projectModel.create(params);
+    const project = await projectModel.create({
+      ...params,
+      categoryWeights:
+        params.categoryWeights ?? DEFAULT_PROJECT_CATEGORY_WEIGHTS,
+    });
     return normalizeProject(project) as ProjectWithDetails;
   },
 

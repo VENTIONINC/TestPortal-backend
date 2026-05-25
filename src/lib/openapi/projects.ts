@@ -40,7 +40,7 @@ const CreateProjectRequestSchema = z
   .object({
     name: z.string(),
     description: z.string().optional(),
-    categoryWeights: ProjectCategoryWeightsSchema,
+    categoryWeights: ProjectCategoryWeightsSchema.optional(),
   })
   .openapi("CreateProjectRequest");
 

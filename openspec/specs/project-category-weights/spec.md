@@ -24,7 +24,7 @@ The system SHALL represent project category weights as an object with exactly th
 - **THEN** the system rejects the request as invalid.
 
 ### Requirement: Project creation category weights
-The system SHALL require clients to provide category weights when creating a project.
+The system SHALL allow clients to omit category weights when creating a project and apply the default category weights.
 
 #### Scenario: Create project with category weights
 - **WHEN** an authenticated user creates a project with a name and valid category weights
@@ -33,7 +33,8 @@ The system SHALL require clients to provide category weights when creating a pro
 
 #### Scenario: Create project without category weights
 - **WHEN** an authenticated user creates a project without category weights
-- **THEN** the system rejects the request as invalid instead of silently applying defaults.
+- **THEN** the system applies default weights of 100 for `bug`, `infra`, `performance`, `script`, and `other`.
+- **AND** the created project response includes those default category weights.
 
 ### Requirement: Project update category weights
 The system SHALL allow clients to replace a project's category weights during project update.
@@ -64,5 +65,5 @@ The system SHALL document project category weights in the generated OpenAPI cont
 #### Scenario: OpenAPI describes project category weights
 - **WHEN** the OpenAPI specification is generated
 - **THEN** project schemas include the `ProjectCategoryWeights` object with all supported categories and 0 to 100 numeric bounds.
-- **AND** project creation documents `categoryWeights` as required.
+- **AND** project creation documents `categoryWeights` as optional.
 - **AND** project update documents `categoryWeights` as optional.

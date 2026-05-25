@@ -130,7 +130,40 @@ describe("projectService", () => {
   });
 
   describe("createProject", () => {
-    it("passes required category weights to the model and normalizes the response", async () => {
+    it("uses default category weights when omitted", async () => {
+      (projectModel.findByName as jest.Mock).mockResolvedValue(null);
+      (projectModel.create as jest.Mock).mockResolvedValue({
+        id: "project-1",
+        name: "Project 1",
+        description: null,
+        isActive: true,
+        ownerId: "owner-1",
+        createdAt: new Date("2026-01-01T00:00:00.000Z"),
+        updatedAt: new Date("2026-01-01T00:00:00.000Z"),
+        categoryWeights: DEFAULT_PROJECT_CATEGORY_WEIGHTS,
+        owner: {
+          id: "owner-1",
+          name: "Owner",
+          email: "owner@example.com",
+        },
+      });
+
+      const project = await projectService.createProject({
+        name: "Project 1",
+        description: "desc",
+        ownerId: "owner-1",
+      });
+
+      expect(projectModel.create).toHaveBeenCalledWith({
+        name: "Project 1",
+        description: "desc",
+        ownerId: "owner-1",
+        categoryWeights: DEFAULT_PROJECT_CATEGORY_WEIGHTS,
+      });
+      expect(project.categoryWeights).toEqual(DEFAULT_PROJECT_CATEGORY_WEIGHTS);
+    });
+
+    it("passes provided category weights to the model and normalizes the response", async () => {
       (projectModel.findByName as jest.Mock).mockResolvedValue(null);
       (projectModel.create as jest.Mock).mockResolvedValue({
         id: "project-1",
