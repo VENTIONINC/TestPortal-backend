@@ -13,6 +13,7 @@ const ProjectCategoryWeightsSchema = z
     script: z.number().min(0).max(100),
     other: z.number().min(0).max(100),
   })
+  .strict()
   .openapi("ProjectCategoryWeights");
 
 const ProjectSchema = z
