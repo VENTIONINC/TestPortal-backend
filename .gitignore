@@ -74,6 +74,7 @@ dist/
 
 # exmaple files
 example-reports/
+mocks/
 
 # IDEs and editors
 .vscode/
