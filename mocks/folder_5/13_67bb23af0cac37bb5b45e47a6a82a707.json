@@ -1,0 +1,562 @@
+{
+  "config": {
+    "configFile": "/function/playwright.config.ts",
+    "rootDir": "/function/tests",
+    "forbidOnly": false,
+    "fullyParallel": false,
+    "globalSetup": "/function/global-setup.ts",
+    "globalTeardown": null,
+    "globalTimeout": 810000,
+    "grep": {},
+    "grepInvert": null,
+    "maxFailures": 0,
+    "metadata": {
+      "actualWorkers": 1
+    },
+    "preserveOutput": "always",
+    "reporter": [
+      [
+        "line"
+      ],
+      [
+        "/function/node_modules/allure-playwright/dist/index.js"
+      ],
+      [
+        "json"
+      ]
+    ],
+    "reportSlowTests": {
+      "max": 5,
+      "threshold": 15000
+    },
+    "quiet": false,
+    "projects": [
+      {
+        "outputDir": "/tmp/lolz",
+        "repeatEach": 1,
+        "retries": 1,
+        "metadata": {},
+        "id": "",
+        "name": "",
+        "testDir": "/function/tests",
+        "testIgnore": [],
+        "testMatch": [
+          "**/*.@(spec|test).?(c|m)[jt]s?(x)"
+        ],
+        "timeout": 420000
+      }
+    ],
+    "shard": null,
+    "updateSnapshots": "missing",
+    "version": "1.49.1",
+    "workers": 1,
+    "webServer": null
+  },
+  "suites": [
+    {
+      "title": "rn-msa/ui/moved-from-ml-folder/wa.monthly.eligibility.spec.ts",
+      "file": "rn-msa/ui/moved-from-ml-folder/wa.monthly.eligibility.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [],
+      "suites": [
+        {
+          "title": "Monthly eligibility functionality",
+          "file": "rn-msa/ui/moved-from-ml-folder/wa.monthly.eligibility.spec.ts",
+          "line": 26,
+          "column": 6,
+          "specs": [],
+          "suites": [
+            {
+              "title": "Rnter intiated flow v2",
+              "file": "rn-msa/ui/moved-from-ml-folder/wa.monthly.eligibility.spec.ts",
+              "line": 138,
+              "column": 8,
+              "specs": [
+                {
+                  "title": "<REN-10418> WA state Monthly eligibility functionality for uninvited renter based on the monthly_billing_penal_sum_limit_coefficient factor",
+                  "ok": false,
+                  "tags": [
+                    "msa-nightly-all",
+                    "msa-nightly-group-5",
+                    "WA",
+                    "monthlyEligibility",
+                    "L3"
+                  ],
+                  "tests": [
+                    {
+                      "timeout": 420000,
+                      "annotations": [],
+                      "expectedStatus": "passed",
+                      "projectId": "",
+                      "projectName": "",
+                      "results": [
+                        {
+                          "workerIndex": 0,
+                          "status": "failed",
+                          "duration": 68407,
+                          "error": {
+                            "message": "TypeError: Cannot read properties of undefined (reading 'data')",
+                            "stack": "TypeError: Cannot read properties of undefined (reading 'data')\n    at /function/tests/rn-msa/ui/moved-from-ml-folder/wa.monthly.eligibility.spec.ts:179:59\n    at /function/tests/rn-msa/ui/moved-from-ml-folder/wa.monthly.eligibility.spec.ts:175:9",
+                            "location": {
+                              "file": "/function/tests/rn-msa/ui/moved-from-ml-folder/wa.monthly.eligibility.spec.ts",
+                              "column": 59,
+                              "line": 179
+                            },
+                            "snippet": "\u001b[0m \u001b[90m 177 |\u001b[39m             applicationId\u001b[33m:\u001b[39m \u001b[33mNumber\u001b[39m(applicationIds[\u001b[35m0\u001b[39m])\u001b[33m,\u001b[39m\n \u001b[90m 178 |\u001b[39m           })\u001b[33m;\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 179 |\u001b[39m           expect\u001b[33m.\u001b[39msoft(applicationSettings\u001b[33m.\u001b[39mresponseBody[\u001b[35m0\u001b[39m]\u001b[33m.\u001b[39mdata\u001b[33m.\u001b[39misMonthlyEligible)\u001b[33m.\u001b[39mtoBe(\u001b[36mtrue\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m     |\u001b[39m                                                           \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 180 |\u001b[39m           expect\u001b[33m.\u001b[39msoft(applicationSettings\u001b[33m.\u001b[39mresponseBody[\u001b[35m0\u001b[39m]\u001b[33m.\u001b[39mdata\u001b[33m.\u001b[39misMonthlyPayment)\u001b[33m.\u001b[39mtoBe(\u001b[36mfalse\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m 181 |\u001b[39m           expect\u001b[33m.\u001b[39msoft(applicationSettings\u001b[33m.\u001b[39mresponseBody[\u001b[35m0\u001b[39m]\u001b[33m.\u001b[39mdata)\u001b[33m.\u001b[39mnot\u001b[33m.\u001b[39mtoHaveProperty(\u001b[32m'isMonthlyEligibilityLocked'\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m 182 |\u001b[39m         })\u001b[33m;\u001b[39m\u001b[0m"
+                          },
+                          "errors": [
+                            {
+                              "location": {
+                                "file": "/function/tests/rn-msa/ui/moved-from-ml-folder/wa.monthly.eligibility.spec.ts",
+                                "column": 59,
+                                "line": 179
+                              },
+                              "message": "TypeError: Cannot read properties of undefined (reading 'data')\n\n\u001b[0m \u001b[90m 177 |\u001b[39m             applicationId\u001b[33m:\u001b[39m \u001b[33mNumber\u001b[39m(applicationIds[\u001b[35m0\u001b[39m])\u001b[33m,\u001b[39m\n \u001b[90m 178 |\u001b[39m           })\u001b[33m;\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 179 |\u001b[39m           expect\u001b[33m.\u001b[39msoft(applicationSettings\u001b[33m.\u001b[39mresponseBody[\u001b[35m0\u001b[39m]\u001b[33m.\u001b[39mdata\u001b[33m.\u001b[39misMonthlyEligible)\u001b[33m.\u001b[39mtoBe(\u001b[36mtrue\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m     |\u001b[39m                                                           \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 180 |\u001b[39m           expect\u001b[33m.\u001b[39msoft(applicationSettings\u001b[33m.\u001b[39mresponseBody[\u001b[35m0\u001b[39m]\u001b[33m.\u001b[39mdata\u001b[33m.\u001b[39misMonthlyPayment)\u001b[33m.\u001b[39mtoBe(\u001b[36mfalse\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m 181 |\u001b[39m           expect\u001b[33m.\u001b[39msoft(applicationSettings\u001b[33m.\u001b[39mresponseBody[\u001b[35m0\u001b[39m]\u001b[33m.\u001b[39mdata)\u001b[33m.\u001b[39mnot\u001b[33m.\u001b[39mtoHaveProperty(\u001b[32m'isMonthlyEligibilityLocked'\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m 182 |\u001b[39m         })\u001b[33m;\u001b[39m\u001b[0m\n    at /function/tests/rn-msa/ui/moved-from-ml-folder/wa.monthly.eligibility.spec.ts:179:59\n    at /function/tests/rn-msa/ui/moved-from-ml-folder/wa.monthly.eligibility.spec.ts:175:9"
+                            }
+                          ],
+                          "stdout": [
+                            {
+                              "text": "Renter profile:\n"
+                            },
+                            {
+                              "text": "\t- email: qa.autotest.renter+1762415574828@securiti.io\n"
+                            },
+                            {
+                              "text": "\t- ssn: {\"value\":\"666003962\"}\n"
+                            },
+                            {
+                              "text": "\t- contact: undefined\n"
+                            },
+                            {
+                              "text": "\t- creditScore: {\"value\":700}\n"
+                            },
+                            {
+                              "text": "Building:\n"
+                            },
+                            {
+                              "text": "\t- id: 124299\n"
+                            },
+                            {
+                              "text": "\t- state: {\"name\":\"Washington\",\"code\":\"WA\",\"ratesVersion\":\"4_cap\",\"isRateBased\":false,\"isRiskBased\":true,\"isDynamicPricing\":true}\n"
+                            },
+                            {
+                              "text": "\t- name: Tg_Engine_124299_WA\n"
+                            },
+                            {
+                              "text": "\t- address: null\n"
+                            },
+                            {
+                              "text": "Starting registration of uninvited renter -  qa.autotest.renter+1762415574828@securiti.io\n"
+                            },
+                            {
+                              "text": "Getting building ID from building name Tg_Engine_124299_WA\n"
+                            },
+                            {
+                              "text": "Link to set password for renter -  https://login.staging.theguarantors.com/set-password?redirect_uri=https%3A%2F%2Flogin.staging.theguarantors.com%2Ffinished&terms=true&user_id=10dbbae6-c51e-49db-8356-04fcf3c72b8e&Expires=1762501981&KeyName=set-password&SingleUse=1&Signature=_OBD8hB1lo4ipfU5Liyn5JBWrT8=\n"
+                            },
+                            {
+                              "text": "Setting password\n"
+                            },
+                            {
+                              "text": "Trying authorize without MFA\n"
+                            },
+                            {
+                              "text": "Creating ML cookie\n"
+                            },
+                            {
+                              "text": "Fetching connect.sid from cookie\n"
+                            },
+                            {
+                              "text": "Required Headers: [object Object]\n"
+                            },
+                            {
+                              "text": "Accessing home page for ml to create blank application\n"
+                            },
+                            {
+                              "text": "Invoking GET /application\n"
+                            },
+                            {
+                              "text": "Invoking GET /api/v1/renter/auth\n"
+                            },
+                            {
+                              "text": "\u001b[33m200\u001b[39m\n"
+                            },
+                            {
+                              "text": "Application ID:  \u001b[33m686055\u001b[39m\n"
+                            },
+                            {
+                              "text": "Invoking POST -  /api/v1/renter/start\n"
+                            },
+                            {
+                              "text": "Submitting application\n"
+                            },
+                            {
+                              "text": "Setting up browser options for docker : headless\n"
+                            },
+                            {
+                              "text": "Launching Browser, context and page...\n"
+                            },
+                            {
+                              "text": "User-Agent: Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/131.0.6778.33 Safari/537.36\n"
+                            },
+                            {
+                              "text": "Browser executable path: /ms-playwright/chromium-1148/chrome-linux/chrome\nBrowser name: chromium\n"
+                            },
+                            {
+                              "text": "Filling credentials\n"
+                            },
+                            {
+                              "text": "Entering username\n"
+                            },
+                            {
+                              "text": "Entering password\n"
+                            },
+                            {
+                              "text": "Clicking submit button\n"
+                            },
+                            {
+                              "text": "Setting up browser options for docker : headless\n"
+                            },
+                            {
+                              "text": "Launching Browser, context and page...\n"
+                            },
+                            {
+                              "text": "User-Agent: Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/131.0.6778.33 Safari/537.36\n"
+                            },
+                            {
+                              "text": "Browser executable path: /ms-playwright/chromium-1148/chrome-linux/chrome\nBrowser name: chromium\n"
+                            },
+                            {
+                              "text": "Clicking on first application Id link in the list of applications\n"
+                            },
+                            {
+                              "text": "No test case Id found, returning test title as is\n"
+                            },
+                            {
+                              "text": "File renamed from /tmp/videos/f25e5b4cbd42952054a544c20cc7f461.webm to /tmp/videos/video_<REN-10418> WA state Monthly eligibility functionality for uninvited renter based on the monthly_billing_penal_sum_limit_coefficient factor_msaAdmin_0.webm\n"
+                            },
+                            {
+                              "text": "No test case Id found, returning test title as is\n"
+                            },
+                            {
+                              "text": "File renamed from /tmp/videos/1752624c275b1ddf2dc4214135a3b4f1.webm to /tmp/videos/video_<REN-10418> WA state Monthly eligibility functionality for uninvited renter based on the monthly_billing_penal_sum_limit_coefficient factor_renter_0.webm\n"
+                            }
+                          ],
+                          "stderr": [
+                            {
+                              "text": "(node:61) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.\n(Use `node --trace-deprecation ...` to show where the warning was created)\n"
+                            }
+                          ],
+                          "retry": 0,
+                          "steps": [
+                            {
+                              "title": "Search and get application id in Atlas",
+                              "duration": 4501,
+                              "steps": [
+                                {
+                                  "title": "type renter email into search box and wait for result",
+                                  "duration": 2290,
+                                  "steps": [
+                                    {
+                                      "title": "select search by applicant email and click search button",
+                                      "duration": 1829
+                                    }
+                                  ]
+                                },
+                                {
+                                  "title": "click on the first displayed application",
+                                  "duration": 2140
+                                }
+                              ]
+                            },
+                            {
+                              "title": "Get application settings and check monthly eligibility should be locked in Atlas when deal is in quote ready status",
+                              "duration": 109,
+                              "error": {
+                                "message": "TypeError: Cannot read properties of undefined (reading 'data')",
+                                "stack": "TypeError: Cannot read properties of undefined (reading 'data')\n    at /function/tests/rn-msa/ui/moved-from-ml-folder/wa.monthly.eligibility.spec.ts:179:59\n    at /function/tests/rn-msa/ui/moved-from-ml-folder/wa.monthly.eligibility.spec.ts:175:9",
+                                "location": {
+                                  "file": "/function/tests/rn-msa/ui/moved-from-ml-folder/wa.monthly.eligibility.spec.ts",
+                                  "column": 59,
+                                  "line": 179
+                                },
+                                "snippet": "\u001b[0m \u001b[90m 177 |\u001b[39m             applicationId\u001b[33m:\u001b[39m \u001b[33mNumber\u001b[39m(applicationIds[\u001b[35m0\u001b[39m])\u001b[33m,\u001b[39m\n \u001b[90m 178 |\u001b[39m           })\u001b[33m;\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 179 |\u001b[39m           expect\u001b[33m.\u001b[39msoft(applicationSettings\u001b[33m.\u001b[39mresponseBody[\u001b[35m0\u001b[39m]\u001b[33m.\u001b[39mdata\u001b[33m.\u001b[39misMonthlyEligible)\u001b[33m.\u001b[39mtoBe(\u001b[36mtrue\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m     |\u001b[39m                                                           \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 180 |\u001b[39m           expect\u001b[33m.\u001b[39msoft(applicationSettings\u001b[33m.\u001b[39mresponseBody[\u001b[35m0\u001b[39m]\u001b[33m.\u001b[39mdata\u001b[33m.\u001b[39misMonthlyPayment)\u001b[33m.\u001b[39mtoBe(\u001b[36mfalse\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m 181 |\u001b[39m           expect\u001b[33m.\u001b[39msoft(applicationSettings\u001b[33m.\u001b[39mresponseBody[\u001b[35m0\u001b[39m]\u001b[33m.\u001b[39mdata)\u001b[33m.\u001b[39mnot\u001b[33m.\u001b[39mtoHaveProperty(\u001b[32m'isMonthlyEligibilityLocked'\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m 182 |\u001b[39m         })\u001b[33m;\u001b[39m\u001b[0m"
+                              }
+                            }
+                          ],
+                          "startTime": "2025-11-06T07:52:54.787Z",
+                          "attachments": [
+                            {
+                              "name": "/tmp/videos/video_<REN-10418> WA state Monthly eligibility functionality for uninvited renter based on the monthly_billing_penal_sum_limit_coefficient factor_msaAdmin_0.webm",
+                              "contentType": "video/webm",
+                              "path": "/tmp/lolz/rn-msa-ui-moved-from-ml-fo-d8a92-um-limit-coefficient-factor/attachments/-tmp-videos-video-REN-10418-WA-state-Monthly-eligibility-functionality-for-uninvited-renter-based-on-the-monthly-billing-penal-sum-limit-coefficient-factor-msaAdmin-0-webm-b2d7becd1441af8787ea99ed9d29c2f8260e7d11.webm"
+                            },
+                            {
+                              "name": "/tmp/videos/video_<REN-10418> WA state Monthly eligibility functionality for uninvited renter based on the monthly_billing_penal_sum_limit_coefficient factor_renter_0.webm",
+                              "contentType": "video/webm",
+                              "path": "/tmp/lolz/rn-msa-ui-moved-from-ml-fo-d8a92-um-limit-coefficient-factor/attachments/-tmp-videos-video-REN-10418-WA-state-Monthly-eligibility-functionality-for-uninvited-renter-based-on-the-monthly-billing-penal-sum-limit-coefficient-factor-renter-0-webm-cf9e5a3f34ae17a8403fa9a7cdf414096f78cde4.webm"
+                            },
+                            {
+                              "name": "trace",
+                              "contentType": "application/zip",
+                              "path": "/tmp/lolz/rn-msa-ui-moved-from-ml-fo-d8a92-um-limit-coefficient-factor/trace.zip"
+                            }
+                          ],
+                          "errorLocation": {
+                            "file": "/function/tests/rn-msa/ui/moved-from-ml-folder/wa.monthly.eligibility.spec.ts",
+                            "column": 59,
+                            "line": 179
+                          }
+                        },
+                        {
+                          "workerIndex": 1,
+                          "status": "failed",
+                          "duration": 67557,
+                          "error": {
+                            "message": "TypeError: Cannot read properties of undefined (reading 'data')",
+                            "stack": "TypeError: Cannot read properties of undefined (reading 'data')\n    at /function/tests/rn-msa/ui/moved-from-ml-folder/wa.monthly.eligibility.spec.ts:179:59\n    at /function/tests/rn-msa/ui/moved-from-ml-folder/wa.monthly.eligibility.spec.ts:175:9",
+                            "location": {
+                              "file": "/function/tests/rn-msa/ui/moved-from-ml-folder/wa.monthly.eligibility.spec.ts",
+                              "column": 59,
+                              "line": 179
+                            },
+                            "snippet": "\u001b[0m \u001b[90m 177 |\u001b[39m             applicationId\u001b[33m:\u001b[39m \u001b[33mNumber\u001b[39m(applicationIds[\u001b[35m0\u001b[39m])\u001b[33m,\u001b[39m\n \u001b[90m 178 |\u001b[39m           })\u001b[33m;\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 179 |\u001b[39m           expect\u001b[33m.\u001b[39msoft(applicationSettings\u001b[33m.\u001b[39mresponseBody[\u001b[35m0\u001b[39m]\u001b[33m.\u001b[39mdata\u001b[33m.\u001b[39misMonthlyEligible)\u001b[33m.\u001b[39mtoBe(\u001b[36mtrue\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m     |\u001b[39m                                                           \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 180 |\u001b[39m           expect\u001b[33m.\u001b[39msoft(applicationSettings\u001b[33m.\u001b[39mresponseBody[\u001b[35m0\u001b[39m]\u001b[33m.\u001b[39mdata\u001b[33m.\u001b[39misMonthlyPayment)\u001b[33m.\u001b[39mtoBe(\u001b[36mfalse\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m 181 |\u001b[39m           expect\u001b[33m.\u001b[39msoft(applicationSettings\u001b[33m.\u001b[39mresponseBody[\u001b[35m0\u001b[39m]\u001b[33m.\u001b[39mdata)\u001b[33m.\u001b[39mnot\u001b[33m.\u001b[39mtoHaveProperty(\u001b[32m'isMonthlyEligibilityLocked'\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m 182 |\u001b[39m         })\u001b[33m;\u001b[39m\u001b[0m"
+                          },
+                          "errors": [
+                            {
+                              "location": {
+                                "file": "/function/tests/rn-msa/ui/moved-from-ml-folder/wa.monthly.eligibility.spec.ts",
+                                "column": 59,
+                                "line": 179
+                              },
+                              "message": "TypeError: Cannot read properties of undefined (reading 'data')\n\n\u001b[0m \u001b[90m 177 |\u001b[39m             applicationId\u001b[33m:\u001b[39m \u001b[33mNumber\u001b[39m(applicationIds[\u001b[35m0\u001b[39m])\u001b[33m,\u001b[39m\n \u001b[90m 178 |\u001b[39m           })\u001b[33m;\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 179 |\u001b[39m           expect\u001b[33m.\u001b[39msoft(applicationSettings\u001b[33m.\u001b[39mresponseBody[\u001b[35m0\u001b[39m]\u001b[33m.\u001b[39mdata\u001b[33m.\u001b[39misMonthlyEligible)\u001b[33m.\u001b[39mtoBe(\u001b[36mtrue\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m     |\u001b[39m                                                           \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 180 |\u001b[39m           expect\u001b[33m.\u001b[39msoft(applicationSettings\u001b[33m.\u001b[39mresponseBody[\u001b[35m0\u001b[39m]\u001b[33m.\u001b[39mdata\u001b[33m.\u001b[39misMonthlyPayment)\u001b[33m.\u001b[39mtoBe(\u001b[36mfalse\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m 181 |\u001b[39m           expect\u001b[33m.\u001b[39msoft(applicationSettings\u001b[33m.\u001b[39mresponseBody[\u001b[35m0\u001b[39m]\u001b[33m.\u001b[39mdata)\u001b[33m.\u001b[39mnot\u001b[33m.\u001b[39mtoHaveProperty(\u001b[32m'isMonthlyEligibilityLocked'\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m 182 |\u001b[39m         })\u001b[33m;\u001b[39m\u001b[0m\n    at /function/tests/rn-msa/ui/moved-from-ml-folder/wa.monthly.eligibility.spec.ts:179:59\n    at /function/tests/rn-msa/ui/moved-from-ml-folder/wa.monthly.eligibility.spec.ts:175:9"
+                            }
+                          ],
+                          "stdout": [
+                            {
+                              "text": "Renter profile:\n"
+                            },
+                            {
+                              "text": "\t- email: qa.autotest.renter+1762415650471@securiti.io\n"
+                            },
+                            {
+                              "text": "\t- ssn: {\"value\":\"666003962\"}\n"
+                            },
+                            {
+                              "text": "\t- contact: undefined\n"
+                            },
+                            {
+                              "text": "\t- creditScore: {\"value\":700}\n"
+                            },
+                            {
+                              "text": "Building:\n"
+                            },
+                            {
+                              "text": "\t- id: 124299\n"
+                            },
+                            {
+                              "text": "\t- state: {\"name\":\"Washington\",\"code\":\"WA\",\"ratesVersion\":\"4_cap\",\"isRateBased\":false,\"isRiskBased\":true,\"isDynamicPricing\":true}\n"
+                            },
+                            {
+                              "text": "\t- name: Tg_Engine_124299_WA\n"
+                            },
+                            {
+                              "text": "\t- address: null\n"
+                            },
+                            {
+                              "text": "Starting registration of uninvited renter -  qa.autotest.renter+1762415650471@securiti.io\n"
+                            },
+                            {
+                              "text": "Getting building ID from building name Tg_Engine_124299_WA\n"
+                            },
+                            {
+                              "text": "Link to set password for renter -  https://login.staging.theguarantors.com/set-password?redirect_uri=https%3A%2F%2Flogin.staging.theguarantors.com%2Ffinished&terms=true&user_id=4ff288b2-10d8-4aa1-bc29-2aa8bbfb8367&Expires=1762502057&KeyName=set-password&SingleUse=1&Signature=Ku66MSenOeJEBWF-ZXKT14vwP-Q=\n"
+                            },
+                            {
+                              "text": "Setting password\n"
+                            },
+                            {
+                              "text": "Trying authorize without MFA\n"
+                            },
+                            {
+                              "text": "Creating ML cookie\n"
+                            },
+                            {
+                              "text": "Fetching connect.sid from cookie\n"
+                            },
+                            {
+                              "text": "Required Headers: [object Object]\n"
+                            },
+                            {
+                              "text": "Accessing home page for ml to create blank application\n"
+                            },
+                            {
+                              "text": "Invoking GET /application\n"
+                            },
+                            {
+                              "text": "Invoking GET /api/v1/renter/auth\n"
+                            },
+                            {
+                              "text": "\u001b[33m200\u001b[39m\n"
+                            },
+                            {
+                              "text": "Application ID:  \u001b[33m686066\u001b[39m\n"
+                            },
+                            {
+                              "text": "Invoking POST -  /api/v1/renter/start\n"
+                            },
+                            {
+                              "text": "Submitting application\n"
+                            },
+                            {
+                              "text": "Setting up browser options for docker : headless\n"
+                            },
+                            {
+                              "text": "Launching Browser, context and page...\n"
+                            },
+                            {
+                              "text": "User-Agent: Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/131.0.6778.33 Safari/537.36\n"
+                            },
+                            {
+                              "text": "Browser executable path: /ms-playwright/chromium-1148/chrome-linux/chrome\nBrowser name: chromium\n"
+                            },
+                            {
+                              "text": "Filling credentials\n"
+                            },
+                            {
+                              "text": "Entering username\n"
+                            },
+                            {
+                              "text": "Entering password\n"
+                            },
+                            {
+                              "text": "Clicking submit button\n"
+                            },
+                            {
+                              "text": "Setting up browser options for docker : headless\n"
+                            },
+                            {
+                              "text": "Launching Browser, context and page...\n"
+                            },
+                            {
+                              "text": "User-Agent: Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/131.0.6778.33 Safari/537.36\n"
+                            },
+                            {
+                              "text": "Browser executable path: /ms-playwright/chromium-1148/chrome-linux/chrome\nBrowser name: chromium\n"
+                            },
+                            {
+                              "text": "Clicking on first application Id link in the list of applications\n"
+                            },
+                            {
+                              "text": "No test case Id found, returning test title as is\n"
+                            },
+                            {
+                              "text": "File renamed from /tmp/videos/b705b079fdf5b6ae7be3dbe017b1754e.webm to /tmp/videos/video_<REN-10418> WA state Monthly eligibility functionality for uninvited renter based on the monthly_billing_penal_sum_limit_coefficient factor_msaAdmin_1.webm\n"
+                            },
+                            {
+                              "text": "No test case Id found, returning test title as is\n"
+                            },
+                            {
+                              "text": "File renamed from /tmp/videos/976412e74e79827ece02594444498c50.webm to /tmp/videos/video_<REN-10418> WA state Monthly eligibility functionality for uninvited renter based on the monthly_billing_penal_sum_limit_coefficient factor_renter_1.webm\n"
+                            }
+                          ],
+                          "stderr": [
+                            {
+                              "text": "(node:172) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.\n(Use `node --trace-deprecation ...` to show where the warning was created)\n"
+                            }
+                          ],
+                          "retry": 1,
+                          "steps": [
+                            {
+                              "title": "Search and get application id in Atlas",
+                              "duration": 3469,
+                              "steps": [
+                                {
+                                  "title": "type renter email into search box and wait for result",
+                                  "duration": 1127,
+                                  "steps": [
+                                    {
+                                      "title": "select search by applicant email and click search button",
+                                      "duration": 963
+                                    }
+                                  ]
+                                },
+                                {
+                                  "title": "click on the first displayed application",
+                                  "duration": 2320
+                                }
+                              ]
+                            },
+                            {
+                              "title": "Get application settings and check monthly eligibility should be locked in Atlas when deal is in quote ready status",
+                              "duration": 59,
+                              "error": {
+                                "message": "TypeError: Cannot read properties of undefined (reading 'data')",
+                                "stack": "TypeError: Cannot read properties of undefined (reading 'data')\n    at /function/tests/rn-msa/ui/moved-from-ml-folder/wa.monthly.eligibility.spec.ts:179:59\n    at /function/tests/rn-msa/ui/moved-from-ml-folder/wa.monthly.eligibility.spec.ts:175:9",
+                                "location": {
+                                  "file": "/function/tests/rn-msa/ui/moved-from-ml-folder/wa.monthly.eligibility.spec.ts",
+                                  "column": 59,
+                                  "line": 179
+                                },
+                                "snippet": "\u001b[0m \u001b[90m 177 |\u001b[39m             applicationId\u001b[33m:\u001b[39m \u001b[33mNumber\u001b[39m(applicationIds[\u001b[35m0\u001b[39m])\u001b[33m,\u001b[39m\n \u001b[90m 178 |\u001b[39m           })\u001b[33m;\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 179 |\u001b[39m           expect\u001b[33m.\u001b[39msoft(applicationSettings\u001b[33m.\u001b[39mresponseBody[\u001b[35m0\u001b[39m]\u001b[33m.\u001b[39mdata\u001b[33m.\u001b[39misMonthlyEligible)\u001b[33m.\u001b[39mtoBe(\u001b[36mtrue\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m     |\u001b[39m                                                           \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 180 |\u001b[39m           expect\u001b[33m.\u001b[39msoft(applicationSettings\u001b[33m.\u001b[39mresponseBody[\u001b[35m0\u001b[39m]\u001b[33m.\u001b[39mdata\u001b[33m.\u001b[39misMonthlyPayment)\u001b[33m.\u001b[39mtoBe(\u001b[36mfalse\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m 181 |\u001b[39m           expect\u001b[33m.\u001b[39msoft(applicationSettings\u001b[33m.\u001b[39mresponseBody[\u001b[35m0\u001b[39m]\u001b[33m.\u001b[39mdata)\u001b[33m.\u001b[39mnot\u001b[33m.\u001b[39mtoHaveProperty(\u001b[32m'isMonthlyEligibilityLocked'\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m 182 |\u001b[39m         })\u001b[33m;\u001b[39m\u001b[0m"
+                              }
+                            }
+                          ],
+                          "startTime": "2025-11-06T07:54:10.430Z",
+                          "attachments": [
+                            {
+                              "name": "/tmp/videos/video_<REN-10418> WA state Monthly eligibility functionality for uninvited renter based on the monthly_billing_penal_sum_limit_coefficient factor_msaAdmin_1.webm",
+                              "contentType": "video/webm",
+                              "path": "/tmp/lolz/rn-msa-ui-moved-from-ml-fo-d8a92-um-limit-coefficient-factor-retry1/attachments/-tmp-videos-video-REN-10418-WA-state-Monthly-eligibility-functionality-for-uninvited-renter-based-on-the-monthly-billing-penal-sum-limit-coefficient-factor-msaAdmin-1-webm-da60806cc4d170be4f3defc9a495d8a512af1172.webm"
+                            },
+                            {
+                              "name": "/tmp/videos/video_<REN-10418> WA state Monthly eligibility functionality for uninvited renter based on the monthly_billing_penal_sum_limit_coefficient factor_renter_1.webm",
+                              "contentType": "video/webm",
+                              "path": "/tmp/lolz/rn-msa-ui-moved-from-ml-fo-d8a92-um-limit-coefficient-factor-retry1/attachments/-tmp-videos-video-REN-10418-WA-state-Monthly-eligibility-functionality-for-uninvited-renter-based-on-the-monthly-billing-penal-sum-limit-coefficient-factor-renter-1-webm-3236f81440f41bf338330076efee32be3eede890.webm"
+                            },
+                            {
+                              "name": "trace",
+                              "contentType": "application/zip",
+                              "path": "/tmp/lolz/rn-msa-ui-moved-from-ml-fo-d8a92-um-limit-coefficient-factor-retry1/trace.zip"
+                            }
+                          ],
+                          "errorLocation": {
+                            "file": "/function/tests/rn-msa/ui/moved-from-ml-folder/wa.monthly.eligibility.spec.ts",
+                            "column": 59,
+                            "line": 179
+                          }
+                        }
+                      ],
+                      "status": "unexpected"
+                    }
+                  ],
+                  "id": "86999ae449dd694795e1-27a3323aa09303a7ec9313",
+                  "file": "rn-msa/ui/moved-from-ml-folder/wa.monthly.eligibility.spec.ts",
+                  "line": 160,
+                  "column": 9
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "stats": {
+    "startTime": "2025-11-06T07:52:14.115Z",
+    "duration": 185007.527,
+    "expected": 0,
+    "skipped": 0,
+    "unexpected": 1,
+    "flaky": 0
+  },
+  "customReport": {
+    "testName": "<REN-10418> WA state Monthly eligibility functionality for uninvited renter based on the monthly_billing_penal_sum_limit_coefficient factor",
+    "testNameHash": "67bb23af0cac37bb5b45e47a6a82a707",
+    "status": "failed",
+    "duration": 186762,
+    "retryCount": 1
+  }
+}

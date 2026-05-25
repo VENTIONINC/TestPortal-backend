@@ -1,0 +1,232 @@
+{
+  "config": {
+    "configFile": "/function/playwright.config.ts",
+    "rootDir": "/function/tests",
+    "forbidOnly": false,
+    "fullyParallel": false,
+    "globalSetup": "/function/global-setup.ts",
+    "globalTeardown": null,
+    "globalTimeout": 810000,
+    "grep": {},
+    "grepInvert": null,
+    "maxFailures": 0,
+    "metadata": {
+      "actualWorkers": 1
+    },
+    "preserveOutput": "always",
+    "reporter": [
+      [
+        "line"
+      ],
+      [
+        "/function/node_modules/allure-playwright/dist/index.js"
+      ],
+      [
+        "json"
+      ]
+    ],
+    "reportSlowTests": {
+      "max": 5,
+      "threshold": 15000
+    },
+    "quiet": false,
+    "projects": [
+      {
+        "outputDir": "/tmp/lolz",
+        "repeatEach": 1,
+        "retries": 1,
+        "metadata": {},
+        "id": "",
+        "name": "",
+        "testDir": "/function/tests",
+        "testIgnore": [],
+        "testMatch": [
+          "**/*.@(spec|test).?(c|m)[jt]s?(x)"
+        ],
+        "timeout": 420000
+      }
+    ],
+    "shard": null,
+    "updateSnapshots": "missing",
+    "version": "1.49.1",
+    "workers": 1,
+    "webServer": null
+  },
+  "suites": [
+    {
+      "title": "rn-msa/ui/existing-tests/preview.unknown.screening.spec.ts",
+      "file": "rn-msa/ui/existing-tests/preview.unknown.screening.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "<REN-11058> evaluate deal with Unknown screening status",
+          "ok": true,
+          "tags": [
+            "auto-uw-v2",
+            "preview-modal",
+            "msa-nightly-group-5"
+          ],
+          "tests": [
+            {
+              "timeout": 420000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "status": "passed",
+                  "duration": 36413,
+                  "errors": [],
+                  "stdout": [
+                    {
+                      "text": "Renter profile:\n"
+                    },
+                    {
+                      "text": "\t- email: qa.autotest.renter+1762415546188@securiti.io\n"
+                    },
+                    {
+                      "text": "\t- ssn: {\"value\":\"666003962\"}\n"
+                    },
+                    {
+                      "text": "\t- contact: undefined\n"
+                    },
+                    {
+                      "text": "\t- creditScore: {\"value\":709}\n"
+                    },
+                    {
+                      "text": "Building:\n"
+                    },
+                    {
+                      "text": "\t- id: 24931\n"
+                    },
+                    {
+                      "text": "\t- state: {\"name\":\"Virginia\",\"code\":\"VA\",\"ratesVersion\":\"4_cap\",\"isRateBased\":false,\"isRiskBased\":true,\"isDynamicPricing\":true}\n"
+                    },
+                    {
+                      "text": "\t- name: Autotest Building C4584\n"
+                    },
+                    {
+                      "text": "\t- address: null\n"
+                    },
+                    {
+                      "text": "Creating Dataverse V2 application with application: [object Object]\n"
+                    },
+                    {
+                      "text": "Setting up browser options for docker : headless\n"
+                    },
+                    {
+                      "text": "Launching Browser, context and page...\n"
+                    },
+                    {
+                      "text": "User-Agent: Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/131.0.6778.33 Safari/537.36\n"
+                    },
+                    {
+                      "text": "Browser executable path: /ms-playwright/chromium-1148/chrome-linux/chrome\nBrowser name: chromium\n"
+                    },
+                    {
+                      "text": "Clicking on first application Id link in the list of applications\n"
+                    },
+                    {
+                      "text": "No test case Id found, returning test title as is\n"
+                    },
+                    {
+                      "text": "File renamed from /tmp/videos/3e48524754c173475adb85dbcac8cf78.webm to /tmp/videos/video_<REN-11058> evaluate deal with Unknown screening status_msaAdmin_0.webm\n"
+                    }
+                  ],
+                  "stderr": [
+                    {
+                      "text": "(node:510) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.\n(Use `node --trace-deprecation ...` to show where the warning was created)\n"
+                    }
+                  ],
+                  "retry": 0,
+                  "steps": [
+                    {
+                      "title": "type renter email into search box and wait for result",
+                      "duration": 1849,
+                      "steps": [
+                        {
+                          "title": "select search by applicant email and click search button",
+                          "duration": 1352
+                        }
+                      ]
+                    },
+                    {
+                      "title": "click on the first displayed application",
+                      "duration": 2196
+                    },
+                    {
+                      "title": "edit Coverage section",
+                      "duration": 2704,
+                      "steps": [
+                        {
+                          "title": "update unit to \"123456\"",
+                          "duration": 965
+                        },
+                        {
+                          "title": "update monthly rent to \"3599\"",
+                          "duration": 343
+                        },
+                        {
+                          "title": "update Lease Start date to \"2025/11/07\"",
+                          "duration": 619
+                        },
+                        {
+                          "title": "update Lease End date to \"2026/11/06\"",
+                          "duration": 769
+                        }
+                      ]
+                    },
+                    {
+                      "title": "click \"Preview changes\" and wait for changes to be loaded",
+                      "duration": 6527
+                    },
+                    {
+                      "title": "click \"Apply changes\" and wait for changes to be applied",
+                      "duration": 1364
+                    },
+                    {
+                      "title": "close \"Success\" dialog",
+                      "duration": 1013
+                    }
+                  ],
+                  "startTime": "2025-11-06T07:52:26.155Z",
+                  "attachments": [
+                    {
+                      "name": "/tmp/videos/video_<REN-11058> evaluate deal with Unknown screening status_msaAdmin_0.webm",
+                      "contentType": "video/webm",
+                      "path": "/tmp/lolz/rn-msa-ui-existing-tests-p-1b3a5-th-Unknown-screening-status/attachments/-tmp-videos-video-REN-11058-evaluate-deal-with-Unknown-screening-status-msaAdmin-0-webm-7dff546268a6373b736b5b65baa3ab52e1851749.webm"
+                    }
+                  ]
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "f4916c57c5c1ad664e26-52e1204a54a327471c2990",
+          "file": "rn-msa/ui/existing-tests/preview.unknown.screening.spec.ts",
+          "line": 15,
+          "column": 5
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "stats": {
+    "startTime": "2025-11-06T07:52:11.118Z",
+    "duration": 51632.62,
+    "expected": 1,
+    "skipped": 0,
+    "unexpected": 0,
+    "flaky": 0
+  },
+  "customReport": {
+    "testName": "<REN-11058> evaluate deal with Unknown screening status",
+    "testNameHash": "5ab3d8542cee12659aaa79a0c5c6d17e",
+    "status": "passed",
+    "duration": 52964,
+    "retryCount": 1
+  }
+}

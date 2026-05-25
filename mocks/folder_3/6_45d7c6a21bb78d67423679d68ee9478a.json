@@ -1,0 +1,408 @@
+{
+  "config": {
+    "configFile": "/function/playwright.config.ts",
+    "rootDir": "/function/tests",
+    "forbidOnly": false,
+    "fullyParallel": false,
+    "globalSetup": "/function/global-setup.ts",
+    "globalTeardown": null,
+    "globalTimeout": 810000,
+    "grep": {},
+    "grepInvert": null,
+    "maxFailures": 0,
+    "metadata": {
+      "actualWorkers": 1
+    },
+    "preserveOutput": "always",
+    "reporter": [
+      [
+        "line"
+      ],
+      [
+        "/function/node_modules/allure-playwright/dist/index.js"
+      ],
+      [
+        "json"
+      ]
+    ],
+    "reportSlowTests": {
+      "max": 5,
+      "threshold": 15000
+    },
+    "quiet": false,
+    "projects": [
+      {
+        "outputDir": "/tmp/lolz",
+        "repeatEach": 1,
+        "retries": 1,
+        "metadata": {},
+        "id": "",
+        "name": "",
+        "testDir": "/function/tests",
+        "testIgnore": [],
+        "testMatch": [
+          "**/*.@(spec|test).?(c|m)[jt]s?(x)"
+        ],
+        "timeout": 420000
+      }
+    ],
+    "shard": null,
+    "updateSnapshots": "missing",
+    "version": "1.49.1",
+    "workers": 1,
+    "webServer": null
+  },
+  "suites": [
+    {
+      "title": "rn-msa/ui/existing-tests/change.building.spec.ts",
+      "file": "rn-msa/ui/existing-tests/change.building.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [],
+      "suites": [
+        {
+          "title": "",
+          "file": "rn-msa/ui/existing-tests/change.building.spec.ts",
+          "line": 79,
+          "column": 8,
+          "specs": [
+            {
+              "title": "<REN-10702> Auto invite, Single renter can pay successfully on change building from AZ to TX #26",
+              "ok": true,
+              "tags": [
+                "preview-modal",
+                "change-building",
+                "checkout-v2",
+                "msa-nightly-group-3"
+              ],
+              "tests": [
+                {
+                  "timeout": 420000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "",
+                  "projectName": "",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "status": "failed",
+                      "duration": 56136,
+                      "error": {
+                        "message": "Error: page.goto: Navigation to \"https://qualify.staging.theguarantors.com/get-started\" is interrupted by another navigation to \"https://qualify.staging.theguarantors.com/?access_token=eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6IjdUVjV5OEpLVERzN0xHeElvLW13NSJ9.eyJ1c2VyX3JvbGUiOiJyZW50ZXIiLCJpc3MiOiJodHRwczovL2F1dGguc3RhZ2luZy50aGVndWFyYW50b3JzLmNvbS8iLCJzdWIiOiJhdXRoMHw2OTBjNTAwMTA5YTI1YTcwZmRiMzMyMjYiLCJhdWQiOlsidGctYXV0aC1hcGkiLCJodHRwczovL3RnLWF1dGgtc3RhZ2luZy51cy5hdXRoMC5jb20vdXNlcmluZm8iXSwiaWF0IjoxNzYyNDE0NjI2LCJleHAiOjE3NjMwMTk0MjYsInNjb3BlIjoib3BlbmlkIG9mZmxpbmVfYWNjZXNzIiwiYXpwIjoiaXR1MGRSQ1o4YVlVMVNYeDZwNzhOTEt6S21IdjNHZ0sifQ.TpbIevE15uP9Nd_dKPV3FYVQI5B52v6vqMNsx82Z-qt694vzlw05DSaSP1Amcopo8VCDP4hHViziXYu_RmdjeyVRMUQu64BqQEESDqo9-3j2d81I-SeFjY_HTHUROfqHTXyPJWzGnU5ZJURnmyX6mkTltwThmn-E8C82h6dh8RY_Zo64rxFlUPCA4wbO1db_0tGsn0-aAsvhMYqrrzvMHgCwN4uxWamlQ7iWEII-9W3T5jBOr9IiK6lqz_2_8bSfta7Gs8aNdEvJ5TNwmzfBzKXtXx4VPswaON0UCo1inXWmGzv-Qx-tP9YVhLhauq23lXqWSLXLj_hfSLY7ZXKz2w&refresh_token=v1.Mf7fYDjgs7cPNIBXixqwpmlbq_LEvCTtQqjRIZo3GWpOmpVYWqPo9XfLW-XkkYiXRIOWUfLQV75Hy9Anlykvr_s\"\nCall log:\n\u001b[2m  - navigating to \"https://qualify.staging.theguarantors.com/get-started\", waiting until \"load\"\u001b[22m\n",
+                        "stack": "Error: page.goto: Navigation to \"https://qualify.staging.theguarantors.com/get-started\" is interrupted by another navigation to \"https://qualify.staging.theguarantors.com/?access_token=eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6IjdUVjV5OEpLVERzN0xHeElvLW13NSJ9.eyJ1c2VyX3JvbGUiOiJyZW50ZXIiLCJpc3MiOiJodHRwczovL2F1dGguc3RhZ2luZy50aGVndWFyYW50b3JzLmNvbS8iLCJzdWIiOiJhdXRoMHw2OTBjNTAwMTA5YTI1YTcwZmRiMzMyMjYiLCJhdWQiOlsidGctYXV0aC1hcGkiLCJodHRwczovL3RnLWF1dGgtc3RhZ2luZy51cy5hdXRoMC5jb20vdXNlcmluZm8iXSwiaWF0IjoxNzYyNDE0NjI2LCJleHAiOjE3NjMwMTk0MjYsInNjb3BlIjoib3BlbmlkIG9mZmxpbmVfYWNjZXNzIiwiYXpwIjoiaXR1MGRSQ1o4YVlVMVNYeDZwNzhOTEt6S21IdjNHZ0sifQ.TpbIevE15uP9Nd_dKPV3FYVQI5B52v6vqMNsx82Z-qt694vzlw05DSaSP1Amcopo8VCDP4hHViziXYu_RmdjeyVRMUQu64BqQEESDqo9-3j2d81I-SeFjY_HTHUROfqHTXyPJWzGnU5ZJURnmyX6mkTltwThmn-E8C82h6dh8RY_Zo64rxFlUPCA4wbO1db_0tGsn0-aAsvhMYqrrzvMHgCwN4uxWamlQ7iWEII-9W3T5jBOr9IiK6lqz_2_8bSfta7Gs8aNdEvJ5TNwmzfBzKXtXx4VPswaON0UCo1inXWmGzv-Qx-tP9YVhLhauq23lXqWSLXLj_hfSLY7ZXKz2w&refresh_token=v1.Mf7fYDjgs7cPNIBXixqwpmlbq_LEvCTtQqjRIZo3GWpOmpVYWqPo9XfLW-XkkYiXRIOWUfLQV75Hy9Anlykvr_s\"\nCall log:\n\u001b[2m  - navigating to \"https://qualify.staging.theguarantors.com/get-started\", waiting until \"load\"\u001b[22m\n\n    at /function/fixtures/helpers/portal.access.collection.ts:264:16\n    at loginAndGoToCheckout (/function/fixtures/helpers/portal.access.collection.ts:262:3)\n    at Object.renterPortal (/function/fixtures/helpers/portal.access.collection.ts:102:5)",
+                        "location": {
+                          "file": "/function/fixtures/helpers/portal.access.collection.ts",
+                          "column": 16,
+                          "line": 264
+                        },
+                        "snippet": "   at ../fixtures/helpers/portal.access.collection.ts:264\n\n\u001b[0m \u001b[90m 262 |\u001b[39m   \u001b[36mawait\u001b[39m test\u001b[33m.\u001b[39mstep(\u001b[32m`Login as Renter`\u001b[39m\u001b[33m,\u001b[39m \u001b[36masync\u001b[39m () \u001b[33m=>\u001b[39m {\n \u001b[90m 263 |\u001b[39m     \u001b[36mawait\u001b[39m renter\u001b[33m.\u001b[39msteps\u001b[33m.\u001b[39msuretySteps\u001b[33m.\u001b[39mloginToPortal(account)\u001b[33m;\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 264 |\u001b[39m     \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39mgoto(\u001b[32m`https://qualify.${process.env.ENVIRONMENT}.theguarantors.com/get-started`\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m     |\u001b[39m                \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 265 |\u001b[39m     \u001b[36mawait\u001b[39m expect(\n \u001b[90m 266 |\u001b[39m       page\u001b[33m,\u001b[39m\n \u001b[90m 267 |\u001b[39m       \u001b[32m'should be redirected to one of the atlas checkout v2 pages (depending on the application status)'\u001b[39m\u001b[33m,\u001b[39m\u001b[0m"
+                      },
+                      "errors": [
+                        {
+                          "location": {
+                            "file": "/function/fixtures/helpers/portal.access.collection.ts",
+                            "column": 16,
+                            "line": 264
+                          },
+                          "message": "Error: page.goto: Navigation to \"https://qualify.staging.theguarantors.com/get-started\" is interrupted by another navigation to \"https://qualify.staging.theguarantors.com/?access_token=eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6IjdUVjV5OEpLVERzN0xHeElvLW13NSJ9.eyJ1c2VyX3JvbGUiOiJyZW50ZXIiLCJpc3MiOiJodHRwczovL2F1dGguc3RhZ2luZy50aGVndWFyYW50b3JzLmNvbS8iLCJzdWIiOiJhdXRoMHw2OTBjNTAwMTA5YTI1YTcwZmRiMzMyMjYiLCJhdWQiOlsidGctYXV0aC1hcGkiLCJodHRwczovL3RnLWF1dGgtc3RhZ2luZy51cy5hdXRoMC5jb20vdXNlcmluZm8iXSwiaWF0IjoxNzYyNDE0NjI2LCJleHAiOjE3NjMwMTk0MjYsInNjb3BlIjoib3BlbmlkIG9mZmxpbmVfYWNjZXNzIiwiYXpwIjoiaXR1MGRSQ1o4YVlVMVNYeDZwNzhOTEt6S21IdjNHZ0sifQ.TpbIevE15uP9Nd_dKPV3FYVQI5B52v6vqMNsx82Z-qt694vzlw05DSaSP1Amcopo8VCDP4hHViziXYu_RmdjeyVRMUQu64BqQEESDqo9-3j2d81I-SeFjY_HTHUROfqHTXyPJWzGnU5ZJURnmyX6mkTltwThmn-E8C82h6dh8RY_Zo64rxFlUPCA4wbO1db_0tGsn0-aAsvhMYqrrzvMHgCwN4uxWamlQ7iWEII-9W3T5jBOr9IiK6lqz_2_8bSfta7Gs8aNdEvJ5TNwmzfBzKXtXx4VPswaON0UCo1inXWmGzv-Qx-tP9YVhLhauq23lXqWSLXLj_hfSLY7ZXKz2w&refresh_token=v1.Mf7fYDjgs7cPNIBXixqwpmlbq_LEvCTtQqjRIZo3GWpOmpVYWqPo9XfLW-XkkYiXRIOWUfLQV75Hy9Anlykvr_s\"\nCall log:\n\u001b[2m  - navigating to \"https://qualify.staging.theguarantors.com/get-started\", waiting until \"load\"\u001b[22m\n\n\n   at ../fixtures/helpers/portal.access.collection.ts:264\n\n\u001b[0m \u001b[90m 262 |\u001b[39m   \u001b[36mawait\u001b[39m test\u001b[33m.\u001b[39mstep(\u001b[32m`Login as Renter`\u001b[39m\u001b[33m,\u001b[39m \u001b[36masync\u001b[39m () \u001b[33m=>\u001b[39m {\n \u001b[90m 263 |\u001b[39m     \u001b[36mawait\u001b[39m renter\u001b[33m.\u001b[39msteps\u001b[33m.\u001b[39msuretySteps\u001b[33m.\u001b[39mloginToPortal(account)\u001b[33m;\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 264 |\u001b[39m     \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39mgoto(\u001b[32m`https://qualify.${process.env.ENVIRONMENT}.theguarantors.com/get-started`\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m     |\u001b[39m                \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 265 |\u001b[39m     \u001b[36mawait\u001b[39m expect(\n \u001b[90m 266 |\u001b[39m       page\u001b[33m,\u001b[39m\n \u001b[90m 267 |\u001b[39m       \u001b[32m'should be redirected to one of the atlas checkout v2 pages (depending on the application status)'\u001b[39m\u001b[33m,\u001b[39m\u001b[0m\n    at /function/fixtures/helpers/portal.access.collection.ts:264:16\n    at loginAndGoToCheckout (/function/fixtures/helpers/portal.access.collection.ts:262:3)\n    at Object.renterPortal (/function/fixtures/helpers/portal.access.collection.ts:102:5)"
+                        }
+                      ],
+                      "stdout": [
+                        {
+                          "text": "Renter profile:\n"
+                        },
+                        {
+                          "text": "\t- email: qa.autotest.renter+1762414580669@securiti.io\n"
+                        },
+                        {
+                          "text": "\t- ssn: {\"value\":\"666003962\"}\n"
+                        },
+                        {
+                          "text": "\t- contact: undefined\n"
+                        },
+                        {
+                          "text": "\t- creditScore: {\"value\":709}\n"
+                        },
+                        {
+                          "text": "Building:\n"
+                        },
+                        {
+                          "text": "\t- id: 130128\n"
+                        },
+                        {
+                          "text": "\t- state: {\"name\":\"Arizona\",\"code\":\"AZ\",\"ratesVersion\":\"4_cap\",\"isRateBased\":false,\"isRiskBased\":true,\"isDynamicPricing\":true}\n"
+                        },
+                        {
+                          "text": "\t- name: AZ, Multi renter deal, REN-5835\n"
+                        },
+                        {
+                          "text": "\t- address: null\n"
+                        },
+                        {
+                          "text": "Setting up browser options for docker : headless\n"
+                        },
+                        {
+                          "text": "Launching Browser, context and page...\n"
+                        },
+                        {
+                          "text": "User-Agent: Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/131.0.6778.33 Safari/537.36\n"
+                        },
+                        {
+                          "text": "Browser executable path: /ms-playwright/chromium-1148/chrome-linux/chrome\nBrowser name: chromium\n"
+                        },
+                        {
+                          "text": "Filling credentials\n"
+                        },
+                        {
+                          "text": "Entering username\n"
+                        },
+                        {
+                          "text": "Entering password\n"
+                        },
+                        {
+                          "text": "Clicking submit button\n"
+                        },
+                        {
+                          "text": "No test case Id found, returning test title as is\n"
+                        },
+                        {
+                          "text": "File renamed from /tmp/videos/461345623667a924a1ac85b52b947d60.webm to /tmp/videos/video_<REN-10702> Auto invite, Single renter can pay successfully on change building from AZ to TX #26_renter_0.webm\n"
+                        }
+                      ],
+                      "stderr": [
+                        {
+                          "text": "(node:217) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.\n(Use `node --trace-deprecation ...` to show where the warning was created)\n"
+                        }
+                      ],
+                      "retry": 0,
+                      "startTime": "2025-11-06T07:36:20.559Z",
+                      "attachments": [
+                        {
+                          "name": "/tmp/videos/video_<REN-10702> Auto invite, Single renter can pay successfully on change building from AZ to TX #26_renter_0.webm",
+                          "contentType": "video/webm",
+                          "path": "/tmp/lolz/rn-msa-ui-existing-tests-c-d8d7b-e-building-from-AZ-to-TX-26/attachments/-tmp-videos-video-REN-10702-Auto-invite-Single-renter-can-pay-successfully-on-change-building-from-AZ-to-TX-26-renter-0-webm-6ae7fba662e4b32831698eb2d8d99122a7420a19.webm"
+                        },
+                        {
+                          "name": "trace",
+                          "contentType": "application/zip",
+                          "path": "/tmp/lolz/rn-msa-ui-existing-tests-c-d8d7b-e-building-from-AZ-to-TX-26/trace.zip"
+                        }
+                      ],
+                      "errorLocation": {
+                        "file": "/function/fixtures/helpers/portal.access.collection.ts",
+                        "column": 16,
+                        "line": 264
+                      }
+                    },
+                    {
+                      "workerIndex": 1,
+                      "status": "passed",
+                      "duration": 87544,
+                      "errors": [],
+                      "stdout": [
+                        {
+                          "text": "Renter profile:\n"
+                        },
+                        {
+                          "text": "\t- email: qa.autotest.renter+1762414643524@securiti.io\n"
+                        },
+                        {
+                          "text": "\t- ssn: {\"value\":\"666003962\"}\n"
+                        },
+                        {
+                          "text": "\t- contact: undefined\n"
+                        },
+                        {
+                          "text": "\t- creditScore: {\"value\":709}\n"
+                        },
+                        {
+                          "text": "Building:\n"
+                        },
+                        {
+                          "text": "\t- id: 130128\n"
+                        },
+                        {
+                          "text": "\t- state: {\"name\":\"Arizona\",\"code\":\"AZ\",\"ratesVersion\":\"4_cap\",\"isRateBased\":false,\"isRiskBased\":true,\"isDynamicPricing\":true}\n"
+                        },
+                        {
+                          "text": "\t- name: AZ, Multi renter deal, REN-5835\n"
+                        },
+                        {
+                          "text": "\t- address: null\n"
+                        },
+                        {
+                          "text": "Setting up browser options for docker : headless\n"
+                        },
+                        {
+                          "text": "Launching Browser, context and page...\n"
+                        },
+                        {
+                          "text": "User-Agent: Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/131.0.6778.33 Safari/537.36\n"
+                        },
+                        {
+                          "text": "Browser executable path: /ms-playwright/chromium-1148/chrome-linux/chrome\nBrowser name: chromium\n"
+                        },
+                        {
+                          "text": "Filling credentials\n"
+                        },
+                        {
+                          "text": "Entering username\n"
+                        },
+                        {
+                          "text": "Entering password\n"
+                        },
+                        {
+                          "text": "Clicking submit button\n"
+                        },
+                        {
+                          "text": "Clicking agreement checkboxes\n"
+                        },
+                        {
+                          "text": "Clicking Pay Now button\n"
+                        },
+                        {
+                          "text": "Not able to close Payment Protection modal. Possible reasons:\n          - modal not shown (e.g. disabled by FF)\n          - modal elements have changed\n          Error: locator.waitFor: Timeout 3000ms exceeded.\nCall log:\n\u001b[2m  - waiting for getByText('continue with checkoutlet\\'s') to be visible\u001b[22m\n\n"
+                        },
+                        {
+                          "text": "No test case Id found, returning test title as is\n"
+                        },
+                        {
+                          "text": "File renamed from /tmp/videos/42e471c7a6a72bda7d0bbbb30047faca.webm to /tmp/videos/video_<REN-10702> Auto invite, Single renter can pay successfully on change building from AZ to TX #26_renter_1.webm\n"
+                        }
+                      ],
+                      "stderr": [
+                        {
+                          "text": "(node:275) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.\n(Use `node --trace-deprecation ...` to show where the warning was created)\n"
+                        }
+                      ],
+                      "retry": 1,
+                      "steps": [
+                        {
+                          "title": "get lease start and end dates",
+                          "duration": 197
+                        },
+                        {
+                          "title": "click Continue button",
+                          "duration": 579
+                        },
+                        {
+                          "title": "sign agreement and continue",
+                          "duration": 3637,
+                          "steps": [
+                            {
+                              "title": "click agreement checkboxes",
+                              "duration": 679
+                            },
+                            {
+                              "title": "click Continue button",
+                              "duration": 2953
+                            }
+                          ]
+                        },
+                        {
+                          "title": "Clicking full payment radio",
+                          "duration": 2555
+                        },
+                        {
+                          "title": "Selecting credit card payment",
+                          "duration": 1953
+                        },
+                        {
+                          "title": "fill out credit card form",
+                          "duration": 10109,
+                          "steps": [
+                            {
+                              "title": "Entering name on card",
+                              "duration": 308
+                            },
+                            {
+                              "title": "Entering credit card number",
+                              "duration": 470
+                            },
+                            {
+                              "title": "Entering credit card expiry date",
+                              "duration": 486
+                            },
+                            {
+                              "title": "Entering credit card cvv",
+                              "duration": 307
+                            },
+                            {
+                              "title": "fill out billing address",
+                              "duration": 8530,
+                              "steps": [
+                                {
+                                  "title": "fill in address line1",
+                                  "duration": 299
+                                },
+                                {
+                                  "title": "fill in address city",
+                                  "duration": 347
+                                },
+                                {
+                                  "title": "Selecting address country",
+                                  "duration": 2381
+                                },
+                                {
+                                  "title": "fill in address state",
+                                  "duration": 5088
+                                },
+                                {
+                                  "title": "Entering zip code",
+                                  "duration": 408
+                                }
+                              ]
+                            }
+                          ]
+                        },
+                        {
+                          "title": "click Pay Now button",
+                          "duration": 8822,
+                          "steps": [
+                            {
+                              "title": "check if payment protection modal is shown and close it",
+                              "duration": 3116
+                            }
+                          ]
+                        }
+                      ],
+                      "startTime": "2025-11-06T07:37:23.285Z",
+                      "attachments": [
+                        {
+                          "name": "/tmp/videos/video_<REN-10702> Auto invite, Single renter can pay successfully on change building from AZ to TX #26_renter_1.webm",
+                          "contentType": "video/webm",
+                          "path": "/tmp/lolz/rn-msa-ui-existing-tests-c-d8d7b-e-building-from-AZ-to-TX-26-retry1/attachments/-tmp-videos-video-REN-10702-Auto-invite-Single-renter-can-pay-successfully-on-change-building-from-AZ-to-TX-26-renter-1-webm-db1112eec99dbf89943314bed0cf7b94bba96436.webm"
+                        }
+                      ]
+                    }
+                  ],
+                  "status": "flaky"
+                }
+              ],
+              "id": "57c78de5a1c0433d277c-5ab316d25928d8d336bd6",
+              "file": "rn-msa/ui/existing-tests/change.building.spec.ts",
+              "line": 97,
+              "column": 9
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "stats": {
+    "startTime": "2025-11-06T07:36:05.237Z",
+    "duration": 166008.316,
+    "expected": 0,
+    "skipped": 0,
+    "unexpected": 0,
+    "flaky": 1
+  },
+  "customReport": {
+    "testName": "<REN-10702> Auto invite, Single renter can pay successfully on change building from AZ to TX #26",
+    "testNameHash": "45d7c6a21bb78d67423679d68ee9478a",
+    "status": "flaky",
+    "duration": 167352,
+    "retryCount": 1
+  }
+}

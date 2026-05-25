@@ -1,0 +1,869 @@
+{
+  "config": {
+    "configFile": "/function/playwright.config.ts",
+    "rootDir": "/function/tests",
+    "forbidOnly": false,
+    "fullyParallel": false,
+    "globalSetup": "/function/global-setup.ts",
+    "globalTeardown": null,
+    "globalTimeout": 810000,
+    "grep": {},
+    "grepInvert": null,
+    "maxFailures": 0,
+    "metadata": {
+      "actualWorkers": 1
+    },
+    "preserveOutput": "always",
+    "reporter": [
+      [
+        "line"
+      ],
+      [
+        "/function/node_modules/allure-playwright/dist/index.js"
+      ],
+      [
+        "json"
+      ]
+    ],
+    "reportSlowTests": {
+      "max": 5,
+      "threshold": 15000
+    },
+    "quiet": false,
+    "projects": [
+      {
+        "outputDir": "/tmp/lolz",
+        "repeatEach": 1,
+        "retries": 1,
+        "metadata": {},
+        "id": "",
+        "name": "",
+        "testDir": "/function/tests",
+        "testIgnore": [],
+        "testMatch": [
+          "**/*.@(spec|test).?(c|m)[jt]s?(x)"
+        ],
+        "timeout": 420000
+      }
+    ],
+    "shard": null,
+    "updateSnapshots": "missing",
+    "version": "1.49.1",
+    "workers": 1,
+    "webServer": null
+  },
+  "suites": [
+    {
+      "title": "rn-msa/ui/moved-from-ml-folder/advance.lgMonths.calculation.spec.ts",
+      "file": "rn-msa/ui/moved-from-ml-folder/advance.lgMonths.calculation.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [],
+      "suites": [
+        {
+          "title": "Advance Calculation functionality",
+          "file": "rn-msa/ui/moved-from-ml-folder/advance.lgMonths.calculation.spec.ts",
+          "line": 38,
+          "column": 6,
+          "specs": [],
+          "suites": [
+            {
+              "title": "Renter initiated flow v2",
+              "file": "rn-msa/ui/moved-from-ml-folder/advance.lgMonths.calculation.spec.ts",
+              "line": 53,
+              "column": 8,
+              "specs": [
+                {
+                  "title": "<REN-7175> Advance LG Months Calculation functionality - Multiple scenarios",
+                  "ok": true,
+                  "tags": [
+                    "msa-nightly-all",
+                    "msa-nightly-group-1",
+                    "IN",
+                    "advanceCalculation",
+                    "L3"
+                  ],
+                  "tests": [
+                    {
+                      "timeout": 420000,
+                      "annotations": [],
+                      "expectedStatus": "passed",
+                      "projectId": "",
+                      "projectName": "",
+                      "results": [
+                        {
+                          "workerIndex": 0,
+                          "status": "passed",
+                          "duration": 155689,
+                          "errors": [],
+                          "stdout": [
+                            {
+                              "text": "Renter profile:\n"
+                            },
+                            {
+                              "text": "\t- email: qa.autotest.renter+1762413535010@securiti.io\n"
+                            },
+                            {
+                              "text": "\t- ssn: {\"value\":\"666003962\"}\n"
+                            },
+                            {
+                              "text": "\t- contact: undefined\n"
+                            },
+                            {
+                              "text": "\t- creditScore: {\"value\":700}\n"
+                            },
+                            {
+                              "text": "Building:\n"
+                            },
+                            {
+                              "text": "\t- id: 130376\n"
+                            },
+                            {
+                              "text": "\t- state: {\"name\":\"Colorado\",\"code\":\"CO\",\"ratesVersion\":\"4_cap\",\"isRateBased\":false,\"isRiskBased\":true,\"isDynamicPricing\":true}\n"
+                            },
+                            {
+                              "text": "\t- name: CO State Building\n"
+                            },
+                            {
+                              "text": "\t- address: null\n"
+                            },
+                            {
+                              "text": "Starting registration of uninvited renter -  qa.autotest.renter+1762413535010@securiti.io\n"
+                            },
+                            {
+                              "text": "Getting building ID from building name CO State Building\n"
+                            },
+                            {
+                              "text": "Link to set password for renter -  https://login.staging.theguarantors.com/set-password?redirect_uri=https%3A%2F%2Flogin.staging.theguarantors.com%2Ffinished&terms=true&user_id=d2f52670-43d8-406d-b16e-117347801507&Expires=1762499942&KeyName=set-password&SingleUse=1&Signature=Fy6A7PqOhzvSR2okXPkCloaJCmM=\n"
+                            },
+                            {
+                              "text": "Setting password\n"
+                            },
+                            {
+                              "text": "Trying authorize without MFA\n"
+                            },
+                            {
+                              "text": "Creating ML cookie\n"
+                            },
+                            {
+                              "text": "Fetching connect.sid from cookie\n"
+                            },
+                            {
+                              "text": "Required Headers: [object Object]\n"
+                            },
+                            {
+                              "text": "Accessing home page for ml to create blank application\n"
+                            },
+                            {
+                              "text": "Invoking GET /application\n"
+                            },
+                            {
+                              "text": "Invoking GET /api/v1/renter/auth\n"
+                            },
+                            {
+                              "text": "\u001b[33m200\u001b[39m\n"
+                            },
+                            {
+                              "text": "Application ID:  \u001b[33m686012\u001b[39m\n"
+                            },
+                            {
+                              "text": "Invoking POST -  /api/v1/renter/start\n"
+                            },
+                            {
+                              "text": "Submitting application\n"
+                            },
+                            {
+                              "text": "Setting up browser options for docker : headless\n"
+                            },
+                            {
+                              "text": "Launching Browser, context and page...\n"
+                            },
+                            {
+                              "text": "User-Agent: Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/131.0.6778.33 Safari/537.36\n"
+                            },
+                            {
+                              "text": "Browser executable path: /ms-playwright/chromium-1148/chrome-linux/chrome\nBrowser name: chromium\n"
+                            },
+                            {
+                              "text": "Clicking on first application Id link in the list of applications\n"
+                            },
+                            {
+                              "text": "\n=== Starting Test Case: testData1 (Configuration 1) ===\n"
+                            },
+                            {
+                              "text": "Test Data: {\n  freeRent: \u001b[33m1000\u001b[39m,\n  prepaidRent: \u001b[33m1000\u001b[39m,\n  monthlyRent: \u001b[33m3000\u001b[39m,\n  screeningStatus: \u001b[32m'Unknown'\u001b[39m,\n  leaseStartDateOffset: \u001b[33m0\u001b[39m,\n  leaseEndDateOffset: { years: \u001b[33m1\u001b[39m, days: \u001b[33m2\u001b[39m }\n}\n"
+                            },
+                            {
+                              "text": "Calculated Dates: { leaseStartDate: \u001b[32m'2025/11/06'\u001b[39m, leaseEndDate: \u001b[32m'2026/11/08'\u001b[39m }\n"
+                            },
+                            {
+                              "text": "Updating application with: {\n  monthlyRent: \u001b[33m3000\u001b[39m,\n  unit: \u001b[33m1\u001b[39m,\n  startDate: \u001b[35m2025-11-06T00:00:00.000Z\u001b[39m,\n  endDate: \u001b[35m2026-11-08T00:00:00.000Z\u001b[39m,\n  freeRent: \u001b[33m1000\u001b[39m,\n  prepaidRent: \u001b[33m1000\u001b[39m\n}\n"
+                            },
+                            {
+                              "text": "Default coverage: undefined, Calculated months: 11.4333, Expected: 11.4333\n"
+                            },
+                            {
+                              "text": "\n=== Starting Test Case: testData2 (Configuration 1) ===\n"
+                            },
+                            {
+                              "text": "Test Data: {\n  freeRent: \u001b[33m2000\u001b[39m,\n  prepaidRent: \u001b[33m1000\u001b[39m,\n  monthlyRent: \u001b[33m3000\u001b[39m,\n  screeningStatus: \u001b[32m'Denied'\u001b[39m,\n  leaseStartDateOffset: \u001b[33m0\u001b[39m,\n  leaseEndDateOffset: { years: \u001b[33m1\u001b[39m, days: \u001b[33m5\u001b[39m }\n}\n"
+                            },
+                            {
+                              "text": "Calculated Dates: { leaseStartDate: \u001b[32m'2025/11/06'\u001b[39m, leaseEndDate: \u001b[32m'2026/11/11'\u001b[39m }\n"
+                            },
+                            {
+                              "text": "Updating application with: {\n  monthlyRent: \u001b[33m3000\u001b[39m,\n  unit: \u001b[33m1\u001b[39m,\n  startDate: \u001b[35m2025-11-06T00:00:00.000Z\u001b[39m,\n  endDate: \u001b[35m2026-11-11T00:00:00.000Z\u001b[39m,\n  freeRent: \u001b[33m2000\u001b[39m,\n  prepaidRent: \u001b[33m1000\u001b[39m,\n  screeningStatus: \u001b[32m'Denied'\u001b[39m\n}\n"
+                            },
+                            {
+                              "text": "Default coverage is 100%, using calculated months: 11.2\n"
+                            },
+                            {
+                              "text": "\n=== Starting Test Case: testData3 (Configuration 1) ===\n"
+                            },
+                            {
+                              "text": "Test Data: {\n  freeRent: \u001b[33m0\u001b[39m,\n  prepaidRent: \u001b[33m1000\u001b[39m,\n  monthlyRent: \u001b[33m2000\u001b[39m,\n  screeningStatus: \u001b[32m'Approved'\u001b[39m,\n  leaseStartDateOffset: \u001b[33m0\u001b[39m,\n  leaseEndDateOffset: { years: \u001b[33m1\u001b[39m, days: \u001b[33m8\u001b[39m }\n}\n"
+                            },
+                            {
+                              "text": "Calculated Dates: { leaseStartDate: \u001b[32m'2025/11/06'\u001b[39m, leaseEndDate: \u001b[32m'2026/11/14'\u001b[39m }\n"
+                            },
+                            {
+                              "text": "Updating application with: {\n  monthlyRent: \u001b[33m2000\u001b[39m,\n  unit: \u001b[33m1\u001b[39m,\n  startDate: \u001b[35m2025-11-06T00:00:00.000Z\u001b[39m,\n  endDate: \u001b[35m2026-11-14T00:00:00.000Z\u001b[39m,\n  freeRent: \u001b[33m0\u001b[39m,\n  prepaidRent: \u001b[33m1000\u001b[39m,\n  screeningStatus: \u001b[32m'Approved'\u001b[39m\n}\n"
+                            },
+                            {
+                              "text": "Default coverage is 100%, using calculated months: 11.8\n"
+                            },
+                            {
+                              "text": "\n=== Starting Test Case: testData4 (Configuration 1) ===\n"
+                            },
+                            {
+                              "text": "Test Data: {\n  freeRent: \u001b[33m1000\u001b[39m,\n  prepaidRent: \u001b[33m0\u001b[39m,\n  monthlyRent: \u001b[33m3000\u001b[39m,\n  screeningStatus: \u001b[32m'Conditional'\u001b[39m,\n  leaseStartDateOffset: \u001b[33m0\u001b[39m,\n  leaseEndDateOffset: { years: \u001b[33m1\u001b[39m, days: \u001b[33m1\u001b[39m }\n}\n"
+                            },
+                            {
+                              "text": "Calculated Dates: { leaseStartDate: \u001b[32m'2025/11/06'\u001b[39m, leaseEndDate: \u001b[32m'2026/11/07'\u001b[39m }\n"
+                            },
+                            {
+                              "text": "Updating application with: {\n  monthlyRent: \u001b[33m3000\u001b[39m,\n  unit: \u001b[33m1\u001b[39m,\n  startDate: \u001b[35m2025-11-06T00:00:00.000Z\u001b[39m,\n  endDate: \u001b[35m2026-11-07T00:00:00.000Z\u001b[39m,\n  freeRent: \u001b[33m1000\u001b[39m,\n  prepaidRent: \u001b[33m0\u001b[39m,\n  screeningStatus: \u001b[32m'Conditional'\u001b[39m\n}\n"
+                            },
+                            {
+                              "text": "Default coverage is 100%, using calculated months: 11.7333\n"
+                            },
+                            {
+                              "text": "\n🔄 SWITCHING TO CONFIGURATION 2 SETTINGS\n"
+                            },
+                            {
+                              "text": "\n=== Starting Test Case: testData1 (Configuration 2) ===\n"
+                            },
+                            {
+                              "text": "Test Data: {\n  freeRent: \u001b[33m500\u001b[39m,\n  prepaidRent: \u001b[33m500\u001b[39m,\n  monthlyRent: \u001b[33m5000\u001b[39m,\n  screeningStatus: \u001b[32m'Denied'\u001b[39m,\n  leaseStartDateOffset: \u001b[33m0\u001b[39m,\n  leaseEndDateOffset: { years: \u001b[33m1\u001b[39m, days: \u001b[33m10\u001b[39m }\n}\n"
+                            },
+                            {
+                              "text": "Updating application with: {\n  monthlyRent: \u001b[33m5000\u001b[39m,\n  unit: \u001b[33m1\u001b[39m,\n  startDate: \u001b[35m2025-11-06T00:00:00.000Z\u001b[39m,\n  endDate: \u001b[35m2026-11-16T00:00:00.000Z\u001b[39m,\n  freeRent: \u001b[33m500\u001b[39m,\n  prepaidRent: \u001b[33m500\u001b[39m,\n  screeningStatus: \u001b[32m'Denied'\u001b[39m\n}\n"
+                            },
+                            {
+                              "text": "Default coverage: 12, Calculated months: 12.1667, Expected: 12\n"
+                            },
+                            {
+                              "text": "\n=== Starting Test Case: testData2 (Configuration 2) ===\n"
+                            },
+                            {
+                              "text": "Test Data: {\n  freeRent: \u001b[33m0\u001b[39m,\n  prepaidRent: \u001b[33m1000\u001b[39m,\n  monthlyRent: \u001b[33m2000\u001b[39m,\n  screeningStatus: \u001b[32m'Approved'\u001b[39m,\n  leaseStartDateOffset: \u001b[33m0\u001b[39m,\n  leaseEndDateOffset: { years: \u001b[33m1\u001b[39m, days: \u001b[33m8\u001b[39m }\n}\n"
+                            },
+                            {
+                              "text": "Updating application with: {\n  monthlyRent: \u001b[33m2000\u001b[39m,\n  unit: \u001b[33m1\u001b[39m,\n  startDate: \u001b[35m2025-11-06T00:00:00.000Z\u001b[39m,\n  endDate: \u001b[35m2026-11-14T00:00:00.000Z\u001b[39m,\n  freeRent: \u001b[33m0\u001b[39m,\n  prepaidRent: \u001b[33m1000\u001b[39m,\n  screeningStatus: \u001b[32m'Approved'\u001b[39m\n}\n"
+                            },
+                            {
+                              "text": "Default coverage is 100%, using calculated months: 11.8\n"
+                            },
+                            {
+                              "text": "\n=== Starting Test Case: testData3 (Configuration 2) ===\n"
+                            },
+                            {
+                              "text": "Test Data: {\n  freeRent: \u001b[33m3000\u001b[39m,\n  prepaidRent: \u001b[33m4000\u001b[39m,\n  monthlyRent: \u001b[33m1000\u001b[39m,\n  screeningStatus: \u001b[32m'Conditional'\u001b[39m,\n  leaseStartDateOffset: \u001b[33m0\u001b[39m,\n  leaseEndDateOffset: { years: \u001b[33m1\u001b[39m, days: \u001b[33m1\u001b[39m }\n}\n"
+                            },
+                            {
+                              "text": "Updating application with: {\n  monthlyRent: \u001b[33m1000\u001b[39m,\n  unit: \u001b[33m1\u001b[39m,\n  startDate: \u001b[35m2025-11-06T00:00:00.000Z\u001b[39m,\n  endDate: \u001b[35m2026-11-07T00:00:00.000Z\u001b[39m,\n  freeRent: \u001b[33m3000\u001b[39m,\n  prepaidRent: \u001b[33m4000\u001b[39m,\n  screeningStatus: \u001b[32m'Conditional'\u001b[39m\n}\n"
+                            },
+                            {
+                              "text": "Default coverage: 6, Calculated months: 5.0667, Expected: 5.0667\n"
+                            },
+                            {
+                              "text": "No test case Id found, returning test title as is\n"
+                            },
+                            {
+                              "text": "File renamed from /tmp/videos/6e5709ae16306277ffa115d65324eb39.webm to /tmp/videos/video_<REN-7175> Advance LG Months Calculation functionality - Multiple scenarios_msaAdmin_0.webm\n"
+                            }
+                          ],
+                          "stderr": [
+                            {
+                              "text": "(node:61) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.\n(Use `node --trace-deprecation ...` to show where the warning was created)\n"
+                            }
+                          ],
+                          "retry": 0,
+                          "steps": [
+                            {
+                              "title": "Search and get application id in Atlas",
+                              "duration": 3979,
+                              "steps": [
+                                {
+                                  "title": "type renter email into search box and wait for result",
+                                  "duration": 1555,
+                                  "steps": [
+                                    {
+                                      "title": "select search by applicant email and click search button",
+                                      "duration": 1226
+                                    }
+                                  ]
+                                },
+                                {
+                                  "title": "click on the first displayed application",
+                                  "duration": 2402
+                                }
+                              ]
+                            },
+                            {
+                              "title": "Test scenario: testData1 (Config 1)",
+                              "duration": 13515,
+                              "steps": [
+                                {
+                                  "title": "update Coverage section and save",
+                                  "duration": 12885,
+                                  "steps": [
+                                    {
+                                      "title": "edit Coverage section",
+                                      "duration": 3446,
+                                      "steps": [
+                                        {
+                                          "title": "update unit to \"1\"",
+                                          "duration": 435
+                                        },
+                                        {
+                                          "title": "update monthly rent to \"3000\"",
+                                          "duration": 423
+                                        },
+                                        {
+                                          "title": "update free rent to \"1000\"",
+                                          "duration": 702
+                                        },
+                                        {
+                                          "title": "update prepaid rent to \"1000\"",
+                                          "duration": 392
+                                        },
+                                        {
+                                          "title": "update Lease Start date to \"2025/11/06\"",
+                                          "duration": 571
+                                        },
+                                        {
+                                          "title": "update Lease End date to \"2026/11/08\"",
+                                          "duration": 908
+                                        }
+                                      ]
+                                    },
+                                    {
+                                      "title": "click \"Preview changes\" and wait for changes to be loaded",
+                                      "duration": 6479
+                                    },
+                                    {
+                                      "title": "click \"Apply changes\" and wait for changes to be applied",
+                                      "duration": 1669
+                                    },
+                                    {
+                                      "title": "close \"Success\" dialog",
+                                      "duration": 1258
+                                    }
+                                  ]
+                                },
+                                {
+                                  "title": "Validate LG month calculation for testData1 (Config 1)",
+                                  "duration": 625,
+                                  "steps": [
+                                    {
+                                      "title": "read coverage section",
+                                      "duration": 406
+                                    },
+                                    {
+                                      "title": "read coverage section",
+                                      "duration": 214
+                                    }
+                                  ]
+                                }
+                              ]
+                            },
+                            {
+                              "title": "Test scenario: testData2 (Config 1)",
+                              "duration": 13427,
+                              "steps": [
+                                {
+                                  "title": "update Coverage section and save",
+                                  "duration": 12664,
+                                  "steps": [
+                                    {
+                                      "title": "edit Coverage section",
+                                      "duration": 3929,
+                                      "steps": [
+                                        {
+                                          "title": "update unit to \"1\"",
+                                          "duration": 236
+                                        },
+                                        {
+                                          "title": "update LL Screening Status to \"Denied\"",
+                                          "duration": 725
+                                        },
+                                        {
+                                          "title": "update monthly rent to \"3000\"",
+                                          "duration": 483
+                                        },
+                                        {
+                                          "title": "update free rent to \"2000\"",
+                                          "duration": 492
+                                        },
+                                        {
+                                          "title": "update prepaid rent to \"1000\"",
+                                          "duration": 619
+                                        },
+                                        {
+                                          "title": "update Lease Start date to \"2025/11/06\"",
+                                          "duration": 527
+                                        },
+                                        {
+                                          "title": "update Lease End date to \"2026/11/11\"",
+                                          "duration": 835
+                                        }
+                                      ]
+                                    },
+                                    {
+                                      "title": "click \"Preview changes\" and wait for changes to be loaded",
+                                      "duration": 6057
+                                    },
+                                    {
+                                      "title": "click \"Apply changes\" and wait for changes to be applied",
+                                      "duration": 1490
+                                    },
+                                    {
+                                      "title": "close \"Success\" dialog",
+                                      "duration": 1153
+                                    }
+                                  ]
+                                },
+                                {
+                                  "title": "Validate LG month calculation for testData2 (Config 1)",
+                                  "duration": 761,
+                                  "steps": [
+                                    {
+                                      "title": "read coverage section",
+                                      "duration": 507
+                                    },
+                                    {
+                                      "title": "read coverage section",
+                                      "duration": 244
+                                    }
+                                  ]
+                                }
+                              ]
+                            },
+                            {
+                              "title": "Test scenario: testData3 (Config 1)",
+                              "duration": 12996,
+                              "steps": [
+                                {
+                                  "title": "update Coverage section and save",
+                                  "duration": 12496,
+                                  "steps": [
+                                    {
+                                      "title": "edit Coverage section",
+                                      "duration": 3983,
+                                      "steps": [
+                                        {
+                                          "title": "update unit to \"1\"",
+                                          "duration": 211
+                                        },
+                                        {
+                                          "title": "update LL Screening Status to \"Approved\"",
+                                          "duration": 715
+                                        },
+                                        {
+                                          "title": "update monthly rent to \"2000\"",
+                                          "duration": 519
+                                        },
+                                        {
+                                          "title": "update free rent to \"0\"",
+                                          "duration": 486
+                                        },
+                                        {
+                                          "title": "update prepaid rent to \"1000\"",
+                                          "duration": 505
+                                        },
+                                        {
+                                          "title": "update Lease Start date to \"2025/11/06\"",
+                                          "duration": 876
+                                        },
+                                        {
+                                          "title": "update Lease End date to \"2026/11/14\"",
+                                          "duration": 660
+                                        }
+                                      ]
+                                    },
+                                    {
+                                      "title": "click \"Preview changes\" and wait for changes to be loaded",
+                                      "duration": 6148
+                                    },
+                                    {
+                                      "title": "click \"Apply changes\" and wait for changes to be applied",
+                                      "duration": 1551
+                                    },
+                                    {
+                                      "title": "close \"Success\" dialog",
+                                      "duration": 781
+                                    }
+                                  ]
+                                },
+                                {
+                                  "title": "Validate LG month calculation for testData3 (Config 1)",
+                                  "duration": 497,
+                                  "steps": [
+                                    {
+                                      "title": "read coverage section",
+                                      "duration": 273
+                                    },
+                                    {
+                                      "title": "read coverage section",
+                                      "duration": 219
+                                    }
+                                  ]
+                                }
+                              ]
+                            },
+                            {
+                              "title": "Test scenario: testData4 (Config 1)",
+                              "duration": 12855,
+                              "steps": [
+                                {
+                                  "title": "update Coverage section and save",
+                                  "duration": 12255,
+                                  "steps": [
+                                    {
+                                      "title": "edit Coverage section",
+                                      "duration": 3942,
+                                      "steps": [
+                                        {
+                                          "title": "update unit to \"1\"",
+                                          "duration": 311
+                                        },
+                                        {
+                                          "title": "update LL Screening Status to \"Conditional\"",
+                                          "duration": 681
+                                        },
+                                        {
+                                          "title": "update monthly rent to \"3000\"",
+                                          "duration": 516
+                                        },
+                                        {
+                                          "title": "update free rent to \"1000\"",
+                                          "duration": 489
+                                        },
+                                        {
+                                          "title": "update prepaid rent to \"0\"",
+                                          "duration": 636
+                                        },
+                                        {
+                                          "title": "update Lease Start date to \"2025/11/06\"",
+                                          "duration": 532
+                                        },
+                                        {
+                                          "title": "update Lease End date to \"2026/11/07\"",
+                                          "duration": 764
+                                        }
+                                      ]
+                                    },
+                                    {
+                                      "title": "click \"Preview changes\" and wait for changes to be loaded",
+                                      "duration": 5818
+                                    },
+                                    {
+                                      "title": "click \"Apply changes\" and wait for changes to be applied",
+                                      "duration": 1371
+                                    },
+                                    {
+                                      "title": "close \"Success\" dialog",
+                                      "duration": 1100
+                                    }
+                                  ]
+                                },
+                                {
+                                  "title": "Validate LG month calculation for testData4 (Config 1)",
+                                  "duration": 597,
+                                  "steps": [
+                                    {
+                                      "title": "read coverage section",
+                                      "duration": 405
+                                    },
+                                    {
+                                      "title": "read coverage section",
+                                      "duration": 187
+                                    }
+                                  ]
+                                }
+                              ]
+                            },
+                            {
+                              "title": "Switch to Configuration 2 settings",
+                              "duration": 195
+                            },
+                            {
+                              "title": "Test scenario: testData1 (Config 2)",
+                              "duration": 12915,
+                              "steps": [
+                                {
+                                  "title": "update Coverage section and save",
+                                  "duration": 12426,
+                                  "steps": [
+                                    {
+                                      "title": "edit Coverage section",
+                                      "duration": 3847,
+                                      "steps": [
+                                        {
+                                          "title": "update unit to \"1\"",
+                                          "duration": 222
+                                        },
+                                        {
+                                          "title": "update LL Screening Status to \"Denied\"",
+                                          "duration": 683
+                                        },
+                                        {
+                                          "title": "update monthly rent to \"5000\"",
+                                          "duration": 552
+                                        },
+                                        {
+                                          "title": "update free rent to \"500\"",
+                                          "duration": 600
+                                        },
+                                        {
+                                          "title": "update prepaid rent to \"500\"",
+                                          "duration": 663
+                                        },
+                                        {
+                                          "title": "update Lease Start date to \"2025/11/06\"",
+                                          "duration": 534
+                                        },
+                                        {
+                                          "title": "update Lease End date to \"2026/11/16\"",
+                                          "duration": 583
+                                        }
+                                      ]
+                                    },
+                                    {
+                                      "title": "click \"Preview changes\" and wait for changes to be loaded",
+                                      "duration": 6200
+                                    },
+                                    {
+                                      "title": "click \"Apply changes\" and wait for changes to be applied",
+                                      "duration": 1155
+                                    },
+                                    {
+                                      "title": "close \"Success\" dialog",
+                                      "duration": 1187
+                                    }
+                                  ]
+                                },
+                                {
+                                  "title": "Validate LG month calculation for testData1 (Config 2)",
+                                  "duration": 486,
+                                  "steps": [
+                                    {
+                                      "title": "read coverage section",
+                                      "duration": 296
+                                    },
+                                    {
+                                      "title": "read coverage section",
+                                      "duration": 184
+                                    }
+                                  ]
+                                }
+                              ]
+                            },
+                            {
+                              "title": "Test scenario: testData2 (Config 2)",
+                              "duration": 14946,
+                              "steps": [
+                                {
+                                  "title": "update Coverage section and save",
+                                  "duration": 14424,
+                                  "steps": [
+                                    {
+                                      "title": "edit Coverage section",
+                                      "duration": 3729,
+                                      "steps": [
+                                        {
+                                          "title": "update unit to \"1\"",
+                                          "duration": 231
+                                        },
+                                        {
+                                          "title": "update LL Screening Status to \"Approved\"",
+                                          "duration": 729
+                                        },
+                                        {
+                                          "title": "update monthly rent to \"2000\"",
+                                          "duration": 479
+                                        },
+                                        {
+                                          "title": "update free rent to \"0\"",
+                                          "duration": 518
+                                        },
+                                        {
+                                          "title": "update prepaid rent to \"1000\"",
+                                          "duration": 638
+                                        },
+                                        {
+                                          "title": "update Lease Start date to \"2025/11/06\"",
+                                          "duration": 525
+                                        },
+                                        {
+                                          "title": "update Lease End date to \"2026/11/14\"",
+                                          "duration": 598
+                                        }
+                                      ]
+                                    },
+                                    {
+                                      "title": "click \"Preview changes\" and wait for changes to be loaded",
+                                      "duration": 6395
+                                    },
+                                    {
+                                      "title": "click \"Apply changes\" and wait for changes to be applied",
+                                      "duration": 3192
+                                    },
+                                    {
+                                      "title": "close \"Success\" dialog",
+                                      "duration": 1083
+                                    }
+                                  ]
+                                },
+                                {
+                                  "title": "Validate LG month calculation for testData2 (Config 2)",
+                                  "duration": 518,
+                                  "steps": [
+                                    {
+                                      "title": "read coverage section",
+                                      "duration": 305
+                                    },
+                                    {
+                                      "title": "read coverage section",
+                                      "duration": 208
+                                    }
+                                  ]
+                                }
+                              ]
+                            },
+                            {
+                              "title": "Test scenario: testData3 (Config 2)",
+                              "duration": 12503,
+                              "steps": [
+                                {
+                                  "title": "update Coverage section and save",
+                                  "duration": 12036,
+                                  "steps": [
+                                    {
+                                      "title": "edit Coverage section",
+                                      "duration": 3847,
+                                      "steps": [
+                                        {
+                                          "title": "update unit to \"1\"",
+                                          "duration": 214
+                                        },
+                                        {
+                                          "title": "update LL Screening Status to \"Conditional\"",
+                                          "duration": 597
+                                        },
+                                        {
+                                          "title": "update monthly rent to \"1000\"",
+                                          "duration": 608
+                                        },
+                                        {
+                                          "title": "update free rent to \"3000\"",
+                                          "duration": 553
+                                        },
+                                        {
+                                          "title": "update prepaid rent to \"4000\"",
+                                          "duration": 591
+                                        },
+                                        {
+                                          "title": "update Lease Start date to \"2025/11/06\"",
+                                          "duration": 651
+                                        },
+                                        {
+                                          "title": "update Lease End date to \"2026/11/07\"",
+                                          "duration": 623
+                                        }
+                                      ]
+                                    },
+                                    {
+                                      "title": "click \"Preview changes\" and wait for changes to be loaded",
+                                      "duration": 5794
+                                    },
+                                    {
+                                      "title": "click \"Apply changes\" and wait for changes to be applied",
+                                      "duration": 1124
+                                    },
+                                    {
+                                      "title": "close \"Success\" dialog",
+                                      "duration": 1242
+                                    }
+                                  ]
+                                },
+                                {
+                                  "title": "Validate LG month calculation for testData3 (Config 2)",
+                                  "duration": 464,
+                                  "steps": [
+                                    {
+                                      "title": "read coverage section",
+                                      "duration": 272
+                                    },
+                                    {
+                                      "title": "read coverage section",
+                                      "duration": 188
+                                    }
+                                  ]
+                                }
+                              ]
+                            }
+                          ],
+                          "startTime": "2026-05-22T07:18:54.636Z",
+                          "attachments": [
+                            {
+                              "name": "/tmp/videos/video_<REN-7175> Advance LG Months Calculation functionality - Multiple scenarios_msaAdmin_0.webm",
+                              "contentType": "video/webm",
+                              "path": "/tmp/lolz/rn-msa-ui-moved-from-ml-fo-6a485-nality---Multiple-scenarios/attachments/-tmp-videos-video-REN-7175-Advance-LG-Months-Calculation-functionality---Multiple-scenarios-msaAdmin-0-webm-2f3b51e12f223a8d33388237f45a0aeae0ac29e6.webm"
+                            }
+                          ]
+                        }
+                      ],
+                      "status": "expected"
+                    }
+                  ],
+                  "id": "927c849af9c58ce4c87c-f78f139debfb837b36cc62",
+                  "file": "rn-msa/ui/moved-from-ml-folder/advance.lgMonths.calculation.spec.ts",
+                  "line": 74,
+                  "column": 9
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "stats": {
+    "startTime": "2026-05-22T07:18:12.876Z",
+    "duration": 198094.522,
+    "expected": 1,
+    "skipped": 0,
+    "unexpected": 0,
+    "flaky": 0
+  },
+  "customReport": {
+    "testName": "<REN-7175> Advance LG Months Calculation functionality - Multiple scenarios",
+    "testNameHash": "04a38fd478939bc62046af44f36effcc",
+    "status": "passed",
+    "duration": 199845,
+    "retryCount": 1
+  }
+}

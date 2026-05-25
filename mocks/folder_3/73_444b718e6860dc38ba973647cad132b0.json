@@ -1,0 +1,297 @@
+{
+  "config": {
+    "configFile": "/function/playwright.config.ts",
+    "rootDir": "/function/tests",
+    "forbidOnly": false,
+    "fullyParallel": false,
+    "globalSetup": "/function/global-setup.ts",
+    "globalTeardown": null,
+    "globalTimeout": 810000,
+    "grep": {},
+    "grepInvert": null,
+    "maxFailures": 0,
+    "metadata": {
+      "actualWorkers": 1
+    },
+    "preserveOutput": "always",
+    "reporter": [
+      [
+        "line"
+      ],
+      [
+        "/function/node_modules/allure-playwright/dist/index.js"
+      ],
+      [
+        "json"
+      ]
+    ],
+    "reportSlowTests": {
+      "max": 5,
+      "threshold": 15000
+    },
+    "quiet": false,
+    "projects": [
+      {
+        "outputDir": "/tmp/lolz",
+        "repeatEach": 1,
+        "retries": 1,
+        "metadata": {},
+        "id": "",
+        "name": "",
+        "testDir": "/function/tests",
+        "testIgnore": [],
+        "testMatch": [
+          "**/*.@(spec|test).?(c|m)[jt]s?(x)"
+        ],
+        "timeout": 420000
+      }
+    ],
+    "shard": null,
+    "updateSnapshots": "missing",
+    "version": "1.49.1",
+    "workers": 1,
+    "webServer": null
+  },
+  "suites": [
+    {
+      "title": "rn-msa/ui/existing-tests/change.building.spec.ts",
+      "file": "rn-msa/ui/existing-tests/change.building.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [],
+      "suites": [
+        {
+          "title": "",
+          "file": "rn-msa/ui/existing-tests/change.building.spec.ts",
+          "line": 79,
+          "column": 8,
+          "specs": [
+            {
+              "title": "<REN-10702> Auto v2, Single renter can pay successfully on change building from NJ to CA #13",
+              "ok": true,
+              "tags": [
+                "preview-modal",
+                "change-building",
+                "checkout-v2",
+                "msa-nightly-group-3"
+              ],
+              "tests": [
+                {
+                  "timeout": 420000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "",
+                  "projectName": "",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "status": "passed",
+                      "duration": 88937,
+                      "errors": [],
+                      "stdout": [
+                        {
+                          "text": "Renter profile:\n"
+                        },
+                        {
+                          "text": "\t- email: qa.autotest.renter+1762414580493@securiti.io\n"
+                        },
+                        {
+                          "text": "\t- ssn: {\"value\":\"666003962\"}\n"
+                        },
+                        {
+                          "text": "\t- contact: undefined\n"
+                        },
+                        {
+                          "text": "\t- creditScore: {\"value\":709}\n"
+                        },
+                        {
+                          "text": "Building:\n"
+                        },
+                        {
+                          "text": "\t- id: 20692\n"
+                        },
+                        {
+                          "text": "\t- state: {\"name\":\"New Jersey\",\"code\":\"NJ\",\"ratesVersion\":\"4_cap\",\"isRateBased\":false,\"isRiskBased\":true,\"isDynamicPricing\":true}\n"
+                        },
+                        {
+                          "text": "\t- name: NJ State Building Automation\n"
+                        },
+                        {
+                          "text": "\t- address: null\n"
+                        },
+                        {
+                          "text": "Creating Dataverse V2 application with application: [object Object]\n"
+                        },
+                        {
+                          "text": "Setting up browser options for docker : headless\n"
+                        },
+                        {
+                          "text": "Launching Browser, context and page...\n"
+                        },
+                        {
+                          "text": "User-Agent: Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/131.0.6778.33 Safari/537.36\n"
+                        },
+                        {
+                          "text": "Browser executable path: /ms-playwright/chromium-1148/chrome-linux/chrome\nBrowser name: chromium\n"
+                        },
+                        {
+                          "text": "Filling credentials\n"
+                        },
+                        {
+                          "text": "Entering username\n"
+                        },
+                        {
+                          "text": "Entering password\n"
+                        },
+                        {
+                          "text": "Clicking submit button\n"
+                        },
+                        {
+                          "text": "Clicking agreement checkboxes\n"
+                        },
+                        {
+                          "text": "Clicking Pay Now button\n"
+                        },
+                        {
+                          "text": "No test case Id found, returning test title as is\n"
+                        },
+                        {
+                          "text": "File renamed from /tmp/videos/575dba6ea954acf3c4f9d470c0d64763.webm to /tmp/videos/video_<REN-10702> Auto v2, Single renter can pay successfully on change building from NJ to CA #13_renter_0.webm\n"
+                        }
+                      ],
+                      "stderr": [
+                        {
+                          "text": "(node:202) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.\n(Use `node --trace-deprecation ...` to show where the warning was created)\n"
+                        }
+                      ],
+                      "retry": 0,
+                      "steps": [
+                        {
+                          "title": "get lease start and end dates",
+                          "duration": 202
+                        },
+                        {
+                          "title": "click Continue button",
+                          "duration": 626
+                        },
+                        {
+                          "title": "sign agreement and continue",
+                          "duration": 5144,
+                          "steps": [
+                            {
+                              "title": "click agreement checkboxes",
+                              "duration": 865
+                            },
+                            {
+                              "title": "click Continue button",
+                              "duration": 4270
+                            }
+                          ]
+                        },
+                        {
+                          "title": "Clicking full payment radio",
+                          "duration": 2458
+                        },
+                        {
+                          "title": "Selecting credit card payment",
+                          "duration": 2036
+                        },
+                        {
+                          "title": "fill out credit card form",
+                          "duration": 10079,
+                          "steps": [
+                            {
+                              "title": "Entering name on card",
+                              "duration": 310
+                            },
+                            {
+                              "title": "Entering credit card number",
+                              "duration": 626
+                            },
+                            {
+                              "title": "Entering credit card expiry date",
+                              "duration": 389
+                            },
+                            {
+                              "title": "Entering credit card cvv",
+                              "duration": 298
+                            },
+                            {
+                              "title": "fill out billing address",
+                              "duration": 8449,
+                              "steps": [
+                                {
+                                  "title": "fill in address line1",
+                                  "duration": 329
+                                },
+                                {
+                                  "title": "fill in address city",
+                                  "duration": 332
+                                },
+                                {
+                                  "title": "Selecting address country",
+                                  "duration": 2123
+                                },
+                                {
+                                  "title": "fill in address state",
+                                  "duration": 5230
+                                },
+                                {
+                                  "title": "Entering zip code",
+                                  "duration": 426
+                                }
+                              ]
+                            }
+                          ]
+                        },
+                        {
+                          "title": "click Pay Now button",
+                          "duration": 6522,
+                          "steps": [
+                            {
+                              "title": "check if payment protection modal is shown and close it",
+                              "duration": 861
+                            }
+                          ]
+                        }
+                      ],
+                      "startTime": "2025-11-06T07:36:20.365Z",
+                      "attachments": [
+                        {
+                          "name": "/tmp/videos/video_<REN-10702> Auto v2, Single renter can pay successfully on change building from NJ to CA #13_renter_0.webm",
+                          "contentType": "video/webm",
+                          "path": "/tmp/lolz/rn-msa-ui-existing-tests-c-c7d4e-e-building-from-NJ-to-CA-13/attachments/-tmp-videos-video-REN-10702-Auto-v2-Single-renter-can-pay-successfully-on-change-building-from-NJ-to-CA-13-renter-0-webm-25d9908c6a4a50485e7a8499dfcecc61b701a556.webm"
+                        }
+                      ]
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "57c78de5a1c0433d277c-044573320bb061bc399573",
+              "file": "rn-msa/ui/existing-tests/change.building.spec.ts",
+              "line": 97,
+              "column": 9
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "stats": {
+    "startTime": "2025-11-06T07:36:05.269Z",
+    "duration": 104339.838,
+    "expected": 1,
+    "skipped": 0,
+    "unexpected": 0,
+    "flaky": 0
+  },
+  "customReport": {
+    "testName": "<REN-10702> Auto v2, Single renter can pay successfully on change building from NJ to CA #13",
+    "testNameHash": "444b718e6860dc38ba973647cad132b0",
+    "status": "passed",
+    "duration": 105708,
+    "retryCount": 1
+  }
+}

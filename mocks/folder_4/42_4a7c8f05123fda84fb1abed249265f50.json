@@ -1,0 +1,321 @@
+{
+  "config": {
+    "configFile": "/function/playwright.config.ts",
+    "rootDir": "/function/tests",
+    "forbidOnly": false,
+    "fullyParallel": false,
+    "globalSetup": "/function/global-setup.ts",
+    "globalTeardown": null,
+    "globalTimeout": 810000,
+    "grep": {},
+    "grepInvert": null,
+    "maxFailures": 0,
+    "metadata": {
+      "actualWorkers": 1
+    },
+    "preserveOutput": "always",
+    "reporter": [
+      [
+        "line"
+      ],
+      [
+        "/function/node_modules/allure-playwright/dist/index.js"
+      ],
+      [
+        "json"
+      ]
+    ],
+    "reportSlowTests": {
+      "max": 5,
+      "threshold": 15000
+    },
+    "quiet": false,
+    "projects": [
+      {
+        "outputDir": "/tmp/lolz",
+        "repeatEach": 1,
+        "retries": 1,
+        "metadata": {},
+        "id": "",
+        "name": "",
+        "testDir": "/function/tests",
+        "testIgnore": [],
+        "testMatch": [
+          "**/*.@(spec|test).?(c|m)[jt]s?(x)"
+        ],
+        "timeout": 420000
+      }
+    ],
+    "shard": null,
+    "updateSnapshots": "missing",
+    "version": "1.49.1",
+    "workers": 1,
+    "webServer": null
+  },
+  "suites": [
+    {
+      "title": "EAGLES/ui/mono.flow.match.res.match.spec.ts",
+      "file": "EAGLES/ui/mono.flow.match.res.match.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [],
+      "suites": [
+        {
+          "title": "match residents - mono",
+          "file": "EAGLES/ui/mono.flow.match.res.match.spec.ts",
+          "line": 21,
+          "column": 6,
+          "specs": [
+            {
+              "title": "<EAGLES-3404> Match residents - mono flow @msa-nightly-group-7 @EAGLES-ci @EAGLES-ui @checkout-v2",
+              "ok": true,
+              "tags": [
+                "msa-nightly-group-7",
+                "EAGLES-ci",
+                "EAGLES-ui",
+                "checkout-v2"
+              ],
+              "tests": [
+                {
+                  "timeout": 600000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "",
+                  "projectName": "",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "status": "passed",
+                      "duration": 63666,
+                      "errors": [],
+                      "stdout": [
+                        {
+                          "text": "Setting up browser options for docker : headless\n"
+                        },
+                        {
+                          "text": "Launching Browser, context and page...\n"
+                        },
+                        {
+                          "text": "User-Agent: Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/131.0.6778.33 Safari/537.36\n"
+                        },
+                        {
+                          "text": "Browser executable path: /ms-playwright/chromium-1148/chrome-linux/chrome\nBrowser name: chromium\n"
+                        },
+                        {
+                          "text": "Checking exact match scenario...\n"
+                        },
+                        {
+                          "text": "Query triggered successfully. Job ID: f2f3908f-6b15-44d2-b679-c0f0736bf5bf\n"
+                        },
+                        {
+                          "text": "Query response:  Query completed but it returned no data.\n"
+                        },
+                        {
+                          "text": "\nMatching resident:  request's body: \n {\n  \"building_id\": 121143,\n  \"email\": \"qa.test.renter+applicant_theguar1_2025-05-30_1748601957136@securiti.io\",\n  \"first_name\": \"PMSI-dheigabjfibdg\",\n  \"last_name\": \"PMSI-wheigabjfhbdg\",\n  \"method\": \"default\"\n}\n"
+                        },
+                        {
+                          "text": "response:  {\n  \"matches\": [\n    {\n      \"match_reason\": \"Email, first name and last name match\",\n      \"total_score\": 1,\n      \"resident\": {\n        \"id\": \"b4062b7d-52c8-41f4-a0b2-a26dd4d0b2dc\",\n        \"tenant_id\": \"t0151430\",\n        \"first_name\": \"PMSI-dheigabjfibdg\",\n        \"last_name\": \"PMSI-wheigabjfhbdg\",\n        \"email\": \"qa.test.renter+applicant_theguar1_2025-05-30_1748601957136@securiti.io\",\n        \"tenant_type\": \"Applicant\",\n        \"is_responsible\": true,\n        \"lease_id\": \"37ca26b7-77da-4e5a-a248-ea0998f0d395\",\n        \"status\": \"Applicant\",\n        \"move_in_date\": \"2026-06-30T00:00:00Z\",\n        \"move_out_date\": \"0001-01-01T00:00:00Z\",\n        \"created_at\": \"2025-05-30T10:59:34.73244Z\",\n        \"updated_at\": \"2025-05-30T10:59:34.73244Z\",\n        \"integration_property_id\": \"2e08a4a9-c693-4ecf-802e-dbfeeb8aacf6\",\n        \"lease\": {\n          \"id\": \"37ca26b7-77da-4e5a-a248-ea0998f0d395\",\n          \"integration_property_id\": \"2e08a4a9-c693-4ecf-802e-dbfeeb8aacf6\",\n          \"pms_lease_id\": \"9314094017487103705\",\n          \"property_id\": \"theguar1\",\n          \"tg_building_id\": 121143,\n          \"pms_unit_id\": \"48924\",\n          \"pms_unit_name\": \"2219\",\n          \"current_rent\": 98660,\n          \"pms_source\": \"yardi\",\n          \"status\": \"Applicant\",\n          \"lease_from_date\": \"2026-06-30T00:00:00Z\",\n          \"lease_to_date\": \"2027-07-30T00:00:00Z\",\n          \"move_in_date\": \"2026-06-30T00:00:00Z\",\n          \"move_out_date\": \"0001-01-01T00:00:00Z\",\n          \"address1\": \"100 West Channel Road 2219\",\n          \"city\": \"Santa Monica\",\n          \"state\": \"CA\",\n          \"country\": \"United States\",\n          \"zip_code\": \"90402\",\n          \"created_at\": \"2025-05-30T10:59:34.727179Z\",\n          \"updated_at\": \"2025-10-01T14:52:39.92845Z\",\n          \"last_seen\": \"2025-11-06T02:38:17.686053Z\",\n          \"raw_status\": \"Applicant\"\n        },\n        \"phone_number\": \"+12168166047\",\n        \"last_seen\": \"2025-11-06T02:38:17.697154Z\"\n      }\n    }\n  ]\n}\n"
+                        },
+                        {
+                          "text": "User name field is visible?: true\n"
+                        },
+                        {
+                          "text": "Filling credentials\n"
+                        },
+                        {
+                          "text": "Entering username\n"
+                        },
+                        {
+                          "text": "Entering password\n"
+                        },
+                        {
+                          "text": "Clicking submit button\n"
+                        },
+                        {
+                          "text": "There is no login error message\n"
+                        },
+                        {
+                          "text": "qa.test.admin@theguarantors.com\n"
+                        },
+                        {
+                          "text": "querying inbox for messages with to:(qa.test.admin+pmsi-C3502+1693336062806@theguarantors.com) subject:(Here's the code you requested) after:1762418478\n"
+                        },
+                        {
+                          "text": "no emails found - (attempt 1/25)\n"
+                        },
+                        {
+                          "text": "Token refreshed.\n"
+                        },
+                        {
+                          "text": "1 message(s) found\n"
+                        },
+                        {
+                          "text": "AUTH Verification Code is: 682987\n"
+                        },
+                        {
+                          "text": "Filling otp input\n"
+                        },
+                        {
+                          "text": "Clicking continue button\n"
+                        },
+                        {
+                          "text": "Resident ID is  \n"
+                        },
+                        {
+                          "text": "Resident ID is  \n"
+                        },
+                        {
+                          "text": "Renter email is  qa.test.renter+applicant_theguar1_2025-05-30_1748601957136@securiti.io\n"
+                        },
+                        {
+                          "text": "Updating renter's email to -  qa.test.renter+applicant_theguar1_2025-05-30_1748601957136@securiti.io\n"
+                        },
+                        {
+                          "text": "Filling in renter first name  PMSI-dheigabjfibdg\n"
+                        },
+                        {
+                          "text": "Filling in renter last name PMSI-wheigabjfhbdg\n"
+                        },
+                        {
+                          "text": "Resident ID is  b4062b7d-52c8-41f4-a0b2-a26dd4d0b2dc\n"
+                        },
+                        {
+                          "text": "Searching params: {\n  \"body\": {\n    \"filter\": {\n      \"query\": \"*:*b4062b7d-52c8-41f4-a0b2-a26dd4d0b2dc* Match found for the resident with score 1 env:staging \",\n      \"from\": \"1762418506853\",\n      \"to\": \"1762418806853\"\n    },\n    \"sort\": \"timestamp\",\n    \"page\": {\n      \"limit\": 10\n    }\n  }\n}\n"
+                        },
+                        {
+                          "text": "1 attempt to find logs for '*:*b4062b7d-52c8-41f4-a0b2-a26dd4d0b2dc* Match found for the resident with score 1'\n"
+                        },
+                        {
+                          "text": "1 attempt to find logs for '*:*b4062b7d-52c8-41f4-a0b2-a26dd4d0b2dc* Match found for the resident with score 1': No logs were found\n"
+                        },
+                        {
+                          "text": "2 attempt to find logs for '*:*b4062b7d-52c8-41f4-a0b2-a26dd4d0b2dc* Match found for the resident with score 1'\n"
+                        },
+                        {
+                          "text": "2 attempt to find logs for '*:*b4062b7d-52c8-41f4-a0b2-a26dd4d0b2dc* Match found for the resident with score 1': No logs were found\n"
+                        },
+                        {
+                          "text": "3 attempt to find logs for '*:*b4062b7d-52c8-41f4-a0b2-a26dd4d0b2dc* Match found for the resident with score 1'\n"
+                        },
+                        {
+                          "text": "3 attempt to find logs for '*:*b4062b7d-52c8-41f4-a0b2-a26dd4d0b2dc* Match found for the resident with score 1': No logs were found\n"
+                        },
+                        {
+                          "text": "4 attempt to find logs for '*:*b4062b7d-52c8-41f4-a0b2-a26dd4d0b2dc* Match found for the resident with score 1'\n"
+                        },
+                        {
+                          "text": "4 attempt to find logs for '*:*b4062b7d-52c8-41f4-a0b2-a26dd4d0b2dc* Match found for the resident with score 1': Logs were found: [\n  {\n    \"attributes\": {\n      \"attributes\": {\n        \"request\": \" Match found for the resident with score 1 {\\\"building_id\\\":121143,\\\"context\\\":\\\"PMSIService\\\",\\\"residentId\\\":\\\"b4062b7d-52c8-41f4-a0b2-a26dd4d0b2dc\\\",\\\"score\\\":1}\",\n        \"level\": \"info\"\n      },\n      \"host\": \"ip-10-0-1-186.ec2.internal-tg-modern-staging\",\n      \"message\": \"info: Match found for the resident with score 1 {\\\"building_id\\\":121143,\\\"context\\\":\\\"PMSIService\\\",\\\"residentId\\\":\\\"b4062b7d-52c8-41f4-a0b2-a26dd4d0b2dc\\\",\\\"score\\\":1}\",\n      \"service\": \"theguarantors\",\n      \"status\": \"info\",\n      \"tags\": [\n        \"availability-zone:us-east-1a\",\n        \"aws_account:182870258296\",\n        \"aws_autoscaling_groupname:eks-tg-monolith-staging-20250603102159138700000007-eccb9aa7-f50d-7593-c286-a7f945c2a03c\",\n        \"aws_ec2_fleet-id:fleet-d3bd9b2e-a106-4436-0c30-a722fff64969\",\n        \"aws_ec2launchtemplate_id:lt-0a834a502a76afcd8\",\n        \"aws_ec2launchtemplate_version:1\",\n        \"aws_eks_cluster-name:tg-modern-staging\",\n        \"cloud_provider:aws\",\n        \"cluster_name:tg-modern-staging\",\n        \"container_id:38aafdf43f66d868d11dd893801e2eb83dd1981cc64209f5ed3095dd21324196\",\n        \"container_name:theguarantors\",\n        \"datadog.submission_auth:api_key\",\n        \"description:node_group\",\n        \"dirname:/var/log/pods/theguarantors_theguarantors-8469654785-8sn5t_4332d876-331f-436e-ba97-20d5ede8fe78/theguarantors\",\n        \"display_container_name:theguarantors_theguarantors-8469654785-8sn5t\",\n        \"eks_cluster-name:tg-modern-staging\",\n        \"eks_nodegroup-name:tg-monolith-staging-20250603102159138700000007\",\n        \"env:staging\",\n        \"environment:staging\",\n        \"filename:2.log\",\n        \"iam_profile:eks-eccb9aa7-f50d-7593-c286-a7f945c2a03c\",\n        \"image:ami-03571be2203184664\",\n        \"image_id:051022924265.dkr.ecr.us-east-1.amazonaws.com/theguarantors/monolith-theguarantors@sha256:e21715fe02ee2fc078d14461393a155f3f4986e07fa39aa740cba1526ac7224d\",\n        \"image_name:051022924265.dkr.ecr.us-east-1.amazonaws.com/theguarantors/monolith-theguarantors\",\n        \"image_tag:v5.15.696-staging\",\n        \"instance-type:r5.2xlarge\",\n        \"k8s.io/cluster-autoscaler/enabled:true\",\n        \"k8s.io/cluster-autoscaler/tg-modern-staging:owned\",\n        \"kernel:none\",\n        \"kube_app_instance:theguarantors\",\n        \"kube_app_name:theguarantors\",\n        \"kube_cluster_name:tg-modern-staging\",\n        \"kube_container_name:theguarantors\",\n        \"kube_deployment:theguarantors\",\n        \"kube_namespace:theguarantors\",\n        \"kube_node:ip-10-0-1-186.ec2.internal\",\n        \"kube_ownerref_kind:replicaset\",\n        \"kube_ownerref_name:theguarantors-8469654785\",\n        \"kube_qos:burstable\",\n        \"kube_replica_set:theguarantors-8469654785\",\n        \"kube_service:theguarantors\",\n        \"kubernetes.io/cluster/tg-modern-staging:owned\",\n        \"managed-by:terragrunt-pipeline\",\n        \"name:tg-monolith-staging\",\n        \"orch_cluster_id:2fe9befe-93de-4f8d-960f-1bc4545691bd\",\n        \"pod_name:theguarantors-8469654785-8sn5t\",\n        \"pod_phase:running\",\n        \"region:us-east-1\",\n        \"security-group:sg-0511ed42f0cf86353\",\n        \"service.0:theguarantors\",\n        \"service.1:infra-shared-service\",\n        \"service:infra-shared-service\",\n        \"service:theguarantors\",\n        \"short_image:monolith-theguarantors\",\n        \"source:monolith-theguarantors\",\n        \"team:cloud-infrastructure-team\",\n        \"type:aws-eks\"\n      ],\n      \"timestamp\": \"2025-11-06T08:41:48.346Z\"\n    },\n    \"id\": \"AwAAAZpYVEI6vPqOmwAAABhBWnBZVkUtTkFBQkNFMVA5MTJaMUdBQlYAAAAkZjE5YTU4NTQtNGQ1My00MTRmLWE5NDUtZDkzZWM4Y2QyZjYwAAABqw\",\n    \"type\": \"log\"\n  }\n]\n"
+                        },
+                        {
+                          "text": "Assert found logs object:  {\n  request: \u001b[32m' Match found for the resident with score 1 {\"building_id\":121143,\"context\":\"PMSIService\",\"residentId\":\"b4062b7d-52c8-41f4-a0b2-a26dd4d0b2dc\",\"score\":1}'\u001b[39m,\n  level: \u001b[32m'info'\u001b[39m\n} \u001b[1mnull\u001b[22m \u001b[33m2\u001b[39m\n"
+                        },
+                        {
+                          "text": "Query triggered successfully. Job ID: e23bf51c-2f9b-4113-b2a3-789fb1404822\n"
+                        },
+                        {
+                          "text": "Query response:  \n"
+                        },
+                        {
+                          "text": "n====================================\n"
+                        },
+                        {
+                          "text": "Checking not exact match scenario...\n"
+                        },
+                        {
+                          "text": "Updating renter's email to -  Sam_Skiles64@gmail.com\n"
+                        },
+                        {
+                          "text": "Resident ID is  \n"
+                        },
+                        {
+                          "text": "Resident ID is  \n"
+                        },
+                        {
+                          "text": "Query triggered successfully. Job ID: b7cb45ad-2387-444a-8ca6-2f7185ad457b\n"
+                        },
+                        {
+                          "text": "Query response:  \n"
+                        },
+                        {
+                          "text": "Searching params: {\n  \"body\": {\n    \"filter\": {\n      \"query\": \"*:*b4062b7d-52c8-41f4-a0b2-a26dd4d0b2dc* Match found for the resident but score is less than 1 env:staging \",\n      \"from\": \"1762418522154\",\n      \"to\": \"1762418822154\"\n    },\n    \"sort\": \"timestamp\",\n    \"page\": {\n      \"limit\": 10\n    }\n  }\n}\n"
+                        },
+                        {
+                          "text": "1 attempt to find logs for '*:*b4062b7d-52c8-41f4-a0b2-a26dd4d0b2dc* Match found for the resident but score is less than 1'\n"
+                        },
+                        {
+                          "text": "1 attempt to find logs for '*:*b4062b7d-52c8-41f4-a0b2-a26dd4d0b2dc* Match found for the resident but score is less than 1': Logs were found: [\n  {\n    \"attributes\": {\n      \"attributes\": {\n        \"request\": \" Match found for the resident but score is less than 1 {\\\"building_id\\\":121143,\\\"context\\\":\\\"PMSIService\\\",\\\"residentId\\\":\\\"b4062b7d-52c8-41f4-a0b2-a26dd4d0b2dc\\\",\\\"score\\\":0.40952380952380957}\",\n        \"level\": \"info\"\n      },\n      \"host\": \"ip-10-0-4-24.ec2.internal-tg-modern-staging\",\n      \"message\": \"info: Match found for the resident but score is less than 1 {\\\"building_id\\\":121143,\\\"context\\\":\\\"PMSIService\\\",\\\"residentId\\\":\\\"b4062b7d-52c8-41f4-a0b2-a26dd4d0b2dc\\\",\\\"score\\\":0.40952380952380957}\",\n      \"service\": \"theguarantors\",\n      \"status\": \"info\",\n      \"tags\": [\n        \"availability-zone:us-east-1d\",\n        \"aws_account:182870258296\",\n        \"aws_autoscaling_groupname:eks-tg-monolith-staging-20250603102159138700000007-eccb9aa7-f50d-7593-c286-a7f945c2a03c\",\n        \"aws_ec2_fleet-id:fleet-f10cba8c-fb9f-eb96-0e98-84801853264c\",\n        \"aws_ec2launchtemplate_id:lt-0a834a502a76afcd8\",\n        \"aws_ec2launchtemplate_version:1\",\n        \"aws_eks_cluster-name:tg-modern-staging\",\n        \"cloud_provider:aws\",\n        \"cluster_name:tg-modern-staging\",\n        \"container_id:ee462ac7b7a3ba74a0b694bd69c0161531f068511396bb465696f7748a3c7a02\",\n        \"container_name:theguarantors\",\n        \"datadog.submission_auth:api_key\",\n        \"description:node_group\",\n        \"dirname:/var/log/pods/theguarantors_theguarantors-8469654785-x8cdf_709bd7fb-6299-4c1a-bbfb-96ce97757dba/theguarantors\",\n        \"display_container_name:theguarantors_theguarantors-8469654785-x8cdf\",\n        \"eks_cluster-name:tg-modern-staging\",\n        \"eks_nodegroup-name:tg-monolith-staging-20250603102159138700000007\",\n        \"env:staging\",\n        \"environment:staging\",\n        \"filename:2.log\",\n        \"iam_profile:eks-eccb9aa7-f50d-7593-c286-a7f945c2a03c\",\n        \"image:ami-03571be2203184664\",\n        \"image_id:051022924265.dkr.ecr.us-east-1.amazonaws.com/theguarantors/monolith-theguarantors@sha256:e21715fe02ee2fc078d14461393a155f3f4986e07fa39aa740cba1526ac7224d\",\n        \"image_name:051022924265.dkr.ecr.us-east-1.amazonaws.com/theguarantors/monolith-theguarantors\",\n        \"image_tag:v5.15.696-staging\",\n        \"instance-type:r5.2xlarge\",\n        \"k8s.io/cluster-autoscaler/enabled:true\",\n        \"k8s.io/cluster-autoscaler/tg-modern-staging:owned\",\n        \"kernel:none\",\n        \"kube_app_instance:theguarantors\",\n        \"kube_app_name:theguarantors\",\n        \"kube_cluster_name:tg-modern-staging\",\n        \"kube_container_name:theguarantors\",\n        \"kube_deployment:theguarantors\",\n        \"kube_namespace:theguarantors\",\n        \"kube_node:ip-10-0-4-24.ec2.internal\",\n        \"kube_ownerref_kind:replicaset\",\n        \"kube_ownerref_name:theguarantors-8469654785\",\n        \"kube_qos:burstable\",\n        \"kube_replica_set:theguarantors-8469654785\",\n        \"kube_service:theguarantors\",\n        \"kubernetes.io/cluster/tg-modern-staging:owned\",\n        \"managed-by:terragrunt-pipeline\",\n        \"name:tg-monolith-staging\",\n        \"orch_cluster_id:2fe9befe-93de-4f8d-960f-1bc4545691bd\",\n        \"pod_name:theguarantors-8469654785-x8cdf\",\n        \"pod_phase:running\",\n        \"region:us-east-1\",\n        \"security-group:sg-0511ed42f0cf86353\",\n        \"service.0:theguarantors\",\n        \"service.1:infra-shared-service\",\n        \"service:infra-shared-service\",\n        \"service:theguarantors\",\n        \"short_image:monolith-theguarantors\",\n        \"source:monolith-theguarantors\",\n        \"team:cloud-infrastructure-team\",\n        \"type:aws-eks\"\n      ],\n      \"timestamp\": \"2025-11-06T08:42:03.723Z\"\n    },\n    \"id\": \"AwAAAZpYVH5LQsFj4gAAABhBWnBZVkgtVEFBQ3J1SllNNVJzUWRnQmMAAAAkZjE5YTU4NTQtODQ4OC00NGRlLWIzODYtZTM5Yzk2ODUyOWYyAAABFg\",\n    \"type\": \"log\"\n  }\n]\n"
+                        },
+                        {
+                          "text": "Assert found logs object:  {\n  request: \u001b[32m' Match found for the resident but score is less than 1 {\"building_id\":121143,\"context\":\"PMSIService\",\"residentId\":\"b4062b7d-52c8-41f4-a0b2-a26dd4d0b2dc\",\"score\":0.40952380952380957}'\u001b[39m,\n  level: \u001b[32m'info'\u001b[39m\n} \u001b[1mnull\u001b[22m \u001b[33m2\u001b[39m\n"
+                        },
+                        {
+                          "text": "No test case Id found, returning test title as is\n"
+                        },
+                        {
+                          "text": "File renamed from /tmp/videos/6b680cf9da62e1714d8dd0db3eb01e9d.webm to /tmp/videos/video_<EAGLES-3404> Match residents - mono flow @msa-nightly-group-7 @EAGLES-ci @EAGLES-ui @checkout-v2_admin_0.webm\n"
+                        }
+                      ],
+                      "stderr": [
+                        {
+                          "text": "(node:130) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.\n(Use `node --trace-deprecation ...` to show where the warning was created)\n"
+                        }
+                      ],
+                      "retry": 0,
+                      "steps": [
+                        {
+                          "title": "update status to \"Deal Closed\"",
+                          "duration": 847
+                        },
+                        {
+                          "title": "save application changes",
+                          "duration": 1994
+                        },
+                        {
+                          "title": "update status to \"Deal Closed\"",
+                          "duration": 147
+                        },
+                        {
+                          "title": "save application changes",
+                          "duration": 2258
+                        }
+                      ],
+                      "startTime": "2025-11-06T08:41:21.354Z",
+                      "attachments": [
+                        {
+                          "name": "/tmp/videos/video_<EAGLES-3404> Match residents - mono flow @msa-nightly-group-7 @EAGLES-ci @EAGLES-ui @checkout-v2_admin_0.webm",
+                          "contentType": "video/webm",
+                          "path": "/tmp/lolz/EAGLES-ui-mono.flow.match.-cda32-ES-ci-EAGLES-ui-checkout-v2/attachments/-tmp-videos-video-EAGLES-3404-Match-residents---mono-flow-msa-nightly-group-7-EAGLES-ci-EAGLES-ui-checkout-v2-admin-0-webm-91c1f7c45ef04f18db221d0897a10af84a32bf20.webm"
+                        }
+                      ]
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "2ca638eff8106a08e29d-e592765f6a2281a6387b42",
+              "file": "EAGLES/ui/mono.flow.match.res.match.spec.ts",
+              "line": 25,
+              "column": 7
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "stats": {
+    "startTime": "2025-11-06T08:41:06.613Z",
+    "duration": 78543.375,
+    "expected": 1,
+    "skipped": 0,
+    "unexpected": 0,
+    "flaky": 0
+  },
+  "customReport": {
+    "testName": "<EAGLES-3404> Match residents - mono flow @msa-nightly-group-7 @EAGLES-ci @EAGLES-ui @checkout-v2",
+    "testNameHash": "4a7c8f05123fda84fb1abed249265f50",
+    "status": "passed",
+    "duration": 79829,
+    "retryCount": 1
+  }
+}

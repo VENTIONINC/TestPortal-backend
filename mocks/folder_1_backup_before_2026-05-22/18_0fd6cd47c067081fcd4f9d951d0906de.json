@@ -1,0 +1,234 @@
+{
+  "config": {
+    "configFile": "/function/playwright.config.ts",
+    "rootDir": "/function/tests",
+    "forbidOnly": false,
+    "fullyParallel": false,
+    "globalSetup": "/function/global-setup.ts",
+    "globalTeardown": null,
+    "globalTimeout": 810000,
+    "grep": {},
+    "grepInvert": null,
+    "maxFailures": 0,
+    "metadata": {
+      "actualWorkers": 1
+    },
+    "preserveOutput": "always",
+    "reporter": [
+      [
+        "line"
+      ],
+      [
+        "/function/node_modules/allure-playwright/dist/index.js"
+      ],
+      [
+        "json"
+      ]
+    ],
+    "reportSlowTests": {
+      "max": 5,
+      "threshold": 15000
+    },
+    "quiet": false,
+    "projects": [
+      {
+        "outputDir": "/tmp/lolz",
+        "repeatEach": 1,
+        "retries": 1,
+        "metadata": {},
+        "id": "",
+        "name": "",
+        "testDir": "/function/tests",
+        "testIgnore": [],
+        "testMatch": [
+          "**/*.@(spec|test).?(c|m)[jt]s?(x)"
+        ],
+        "timeout": 420000
+      }
+    ],
+    "shard": null,
+    "updateSnapshots": "missing",
+    "version": "1.49.1",
+    "workers": 1,
+    "webServer": null
+  },
+  "suites": [
+    {
+      "title": "rn-msa/ui/existing-tests/preview.spec.ts",
+      "file": "rn-msa/ui/existing-tests/preview.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "q05 changes reflected on renter portal",
+          "ok": true,
+          "tags": [
+            "smoke",
+            "preview-modal",
+            "rate-based",
+            "msa-nightly-group-4"
+          ],
+          "tests": [
+            {
+              "timeout": 420000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "status": "passed",
+                  "duration": 70162,
+                  "errors": [],
+                  "stdout": [
+                    {
+                      "text": "Renter profile:\n"
+                    },
+                    {
+                      "text": "\t- email: qa.autotest.renter+1762415107912@securiti.io\n"
+                    },
+                    {
+                      "text": "\t- ssn: {\"value\":\"666003962\"}\n"
+                    },
+                    {
+                      "text": "\t- contact: undefined\n"
+                    },
+                    {
+                      "text": "\t- creditScore: {\"value\":709}\n"
+                    },
+                    {
+                      "text": "Building:\n"
+                    },
+                    {
+                      "text": "\t- id: 126589\n"
+                    },
+                    {
+                      "text": "\t- state: {\"name\":\"Missouri\",\"code\":\"MO\",\"ratesVersion\":\"3.1\",\"isRateBased\":true,\"isRiskBased\":false,\"isDynamicPricing\":false}\n"
+                    },
+                    {
+                      "text": "\t- name: Automation Property C8187\n"
+                    },
+                    {
+                      "text": "\t- address: null\n"
+                    },
+                    {
+                      "text": "Creating Dataverse V1 application with application: [object Object]\n"
+                    },
+                    {
+                      "text": "Setting up browser options for docker : headless\n"
+                    },
+                    {
+                      "text": "Launching Browser, context and page...\n"
+                    },
+                    {
+                      "text": "User-Agent: Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/131.0.6778.33 Safari/537.36\n"
+                    },
+                    {
+                      "text": "Browser executable path: /ms-playwright/chromium-1148/chrome-linux/chrome\nBrowser name: chromium\n"
+                    },
+                    {
+                      "text": "Clicking on first application Id link in the list of applications\n"
+                    },
+                    {
+                      "text": "Getting application status\n"
+                    },
+                    {
+                      "text": "Current Deal status  'Quote-Ready' matches expected : Quote-Ready\n"
+                    },
+                    {
+                      "text": "Setting up browser options for docker : headless\n"
+                    },
+                    {
+                      "text": "Launching Browser, context and page...\n"
+                    },
+                    {
+                      "text": "User-Agent: Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/131.0.6778.33 Safari/537.36\n"
+                    },
+                    {
+                      "text": "Browser executable path: /ms-playwright/chromium-1148/chrome-linux/chrome\nBrowser name: chromium\n"
+                    },
+                    {
+                      "text": "Filling credentials\n"
+                    },
+                    {
+                      "text": "Entering username\n"
+                    },
+                    {
+                      "text": "Entering password\n"
+                    },
+                    {
+                      "text": "Clicking submit button\n"
+                    },
+                    {
+                      "text": "No test case Id found, returning test title as is\n"
+                    },
+                    {
+                      "text": "File renamed from /tmp/videos/ea8e4efdf0b2fc40d14cae627f6e26c7.webm to /tmp/videos/video_q05 changes reflected on renter portal_renter_0.webm\n"
+                    },
+                    {
+                      "text": "No test case Id found, returning test title as is\n"
+                    },
+                    {
+                      "text": "File renamed from /tmp/videos/79ca2b6bc13897a96450809ca39b7900.webm to /tmp/videos/video_q05 changes reflected on renter portal_msaAdmin_0.webm\n"
+                    }
+                  ],
+                  "stderr": [
+                    {
+                      "text": "(node:357) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.\n(Use `node --trace-deprecation ...` to show where the warning was created)\n"
+                    }
+                  ],
+                  "retry": 0,
+                  "steps": [
+                    {
+                      "title": "click \"Apply changes\" and wait for changes to be applied",
+                      "duration": 1463
+                    },
+                    {
+                      "title": "close \"Success\" dialog",
+                      "duration": 1685
+                    }
+                  ],
+                  "startTime": "2025-11-06T07:45:07.875Z",
+                  "attachments": [
+                    {
+                      "name": "/tmp/videos/video_q05 changes reflected on renter portal_renter_0.webm",
+                      "contentType": "video/webm",
+                      "path": "/tmp/lolz/rn-msa-ui-existing-tests-p-ceca1--reflected-on-renter-portal/attachments/-tmp-videos-video-q05-changes-reflected-on-renter-portal-renter-0-webm-aeadd4e24ed31555e739962e47a46db48a8f3838.webm"
+                    },
+                    {
+                      "name": "/tmp/videos/video_q05 changes reflected on renter portal_msaAdmin_0.webm",
+                      "contentType": "video/webm",
+                      "path": "/tmp/lolz/rn-msa-ui-existing-tests-p-ceca1--reflected-on-renter-portal/attachments/-tmp-videos-video-q05-changes-reflected-on-renter-portal-msaAdmin-0-webm-013fd7f9a576aa1ff674ed2336179c5e86409fcd.webm"
+                    }
+                  ]
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "e5d019c01e9fbcf75499-de384497a0f38154e74918",
+          "file": "rn-msa/ui/existing-tests/preview.spec.ts",
+          "line": 64,
+          "column": 5
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "stats": {
+    "startTime": "2025-11-06T07:44:53.039Z",
+    "duration": 85236.268,
+    "expected": 1,
+    "skipped": 0,
+    "unexpected": 0,
+    "flaky": 0
+  },
+  "customReport": {
+    "testName": "q05 changes reflected on renter portal",
+    "testNameHash": "0fd6cd47c067081fcd4f9d951d0906de",
+    "status": "passed",
+    "duration": 86552,
+    "retryCount": 1
+  }
+}

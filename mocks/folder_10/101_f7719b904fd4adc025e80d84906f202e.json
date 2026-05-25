@@ -1,0 +1,593 @@
+{
+  "config": {
+    "configFile": "/function/playwright.config.ts",
+    "rootDir": "/function/tests",
+    "forbidOnly": false,
+    "fullyParallel": false,
+    "globalSetup": "/function/global-setup.ts",
+    "globalTeardown": null,
+    "globalTimeout": 810000,
+    "grep": {},
+    "grepInvert": null,
+    "maxFailures": 0,
+    "metadata": {
+      "actualWorkers": 1
+    },
+    "preserveOutput": "always",
+    "reporter": [
+      [
+        "line"
+      ],
+      [
+        "/function/node_modules/allure-playwright/dist/index.js"
+      ],
+      [
+        "json"
+      ]
+    ],
+    "reportSlowTests": {
+      "max": 5,
+      "threshold": 15000
+    },
+    "quiet": false,
+    "projects": [
+      {
+        "outputDir": "/tmp/lolz",
+        "repeatEach": 1,
+        "retries": 1,
+        "metadata": {},
+        "id": "",
+        "name": "",
+        "testDir": "/function/tests",
+        "testIgnore": [],
+        "testMatch": [
+          "**/*.@(spec|test).?(c|m)[jt]s?(x)"
+        ],
+        "timeout": 420000
+      }
+    ],
+    "shard": null,
+    "updateSnapshots": "missing",
+    "version": "1.49.1",
+    "workers": 1,
+    "webServer": null
+  },
+  "suites": [
+    {
+      "title": "rn-msa/ui/existing-tests/checkoutV2.chargebee.risk.based.spec.ts",
+      "file": "rn-msa/ui/existing-tests/checkoutV2.chargebee.risk.based.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [],
+      "suites": [
+        {
+          "title": "Chargebee Payment on MSA New Checkout",
+          "file": "rn-msa/ui/existing-tests/checkoutV2.chargebee.risk.based.spec.ts",
+          "line": 30,
+          "column": 8,
+          "specs": [
+            {
+              "title": "<REN-9837> Complete Chargebee Payment on MSA New Checkout Page for NY E&S",
+              "ok": false,
+              "tags": [
+                "checkout-v2",
+                "risk-based-state",
+                "msa-nightly-all",
+                "msa-nightly-group-6"
+              ],
+              "tests": [
+                {
+                  "timeout": 420000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "",
+                  "projectName": "",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "status": "failed",
+                      "duration": 39631,
+                      "error": {
+                        "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32m201\u001b[39m\nReceived: \u001b[31m500\u001b[39m",
+                        "stack": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32m201\u001b[39m\nReceived: \u001b[31m500\u001b[39m\n    at /function/steps/surety/msa/checkoutV2.msa.steps.ts:714:53\n    at /function/tests/rn-msa/ui/existing-tests/checkoutV2.chargebee.risk.based.spec.ts:32:30",
+                        "matcherResult": {
+                          "actual": 500,
+                          "expected": 201,
+                          "message": "\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32m201\u001b[39m\nReceived: \u001b[31m500\u001b[39m",
+                          "name": "toBe",
+                          "pass": false
+                        },
+                        "location": {
+                          "file": "/function/steps/surety/msa/checkoutV2.msa.steps.ts",
+                          "column": 53,
+                          "line": 714
+                        },
+                        "snippet": "   at ../steps/surety/msa/checkoutV2.msa.steps.ts:714\n\n\u001b[0m \u001b[90m 712 |\u001b[39m         stage\u001b[33m:\u001b[39m stage\u001b[33m,\u001b[39m\n \u001b[90m 713 |\u001b[39m       })\u001b[33m;\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 714 |\u001b[39m       expect(newApplicationResponse\u001b[33m.\u001b[39mresponseStatus)\u001b[33m.\u001b[39mtoBe(\u001b[35m201\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m     |\u001b[39m                                                     \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 715 |\u001b[39m       console\u001b[33m.\u001b[39mlog(\u001b[32m'New application:'\u001b[39m\u001b[33m,\u001b[39m newApplicationResponse\u001b[33m.\u001b[39mresponseBody)\u001b[33m;\u001b[39m\n \u001b[90m 716 |\u001b[39m       \u001b[36mreturn\u001b[39m newApplicationResponse\u001b[33m.\u001b[39mresponseBody\u001b[33m;\u001b[39m\n \u001b[90m 717 |\u001b[39m     })\u001b[33m;\u001b[39m\u001b[0m"
+                      },
+                      "errors": [
+                        {
+                          "location": {
+                            "file": "/function/steps/surety/msa/checkoutV2.msa.steps.ts",
+                            "column": 53,
+                            "line": 714
+                          },
+                          "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32m201\u001b[39m\nReceived: \u001b[31m500\u001b[39m\n\n   at ../steps/surety/msa/checkoutV2.msa.steps.ts:714\n\n\u001b[0m \u001b[90m 712 |\u001b[39m         stage\u001b[33m:\u001b[39m stage\u001b[33m,\u001b[39m\n \u001b[90m 713 |\u001b[39m       })\u001b[33m;\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 714 |\u001b[39m       expect(newApplicationResponse\u001b[33m.\u001b[39mresponseStatus)\u001b[33m.\u001b[39mtoBe(\u001b[35m201\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m     |\u001b[39m                                                     \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 715 |\u001b[39m       console\u001b[33m.\u001b[39mlog(\u001b[32m'New application:'\u001b[39m\u001b[33m,\u001b[39m newApplicationResponse\u001b[33m.\u001b[39mresponseBody)\u001b[33m;\u001b[39m\n \u001b[90m 716 |\u001b[39m       \u001b[36mreturn\u001b[39m newApplicationResponse\u001b[33m.\u001b[39mresponseBody\u001b[33m;\u001b[39m\n \u001b[90m 717 |\u001b[39m     })\u001b[33m;\u001b[39m\u001b[0m\n    at /function/steps/surety/msa/checkoutV2.msa.steps.ts:714:53\n    at /function/tests/rn-msa/ui/existing-tests/checkoutV2.chargebee.risk.based.spec.ts:32:30"
+                        }
+                      ],
+                      "stdout": [
+                        {
+                          "text": "Setting up browser options for docker : headless\n"
+                        },
+                        {
+                          "text": "Launching Browser, context and page...\n"
+                        },
+                        {
+                          "text": "User-Agent: Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/131.0.6778.33 Safari/537.36\n"
+                        },
+                        {
+                          "text": "Browser executable path: /ms-playwright/chromium-1148/chrome-linux/chrome\nBrowser name: chromium\n"
+                        },
+                        {
+                          "text": "Setting up browser options for docker : headless\n"
+                        },
+                        {
+                          "text": "Launching Browser, context and page...\n"
+                        },
+                        {
+                          "text": "User-Agent: Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/131.0.6778.33 Safari/537.36\n"
+                        },
+                        {
+                          "text": "Browser executable path: /ms-playwright/chromium-1148/chrome-linux/chrome\nBrowser name: chromium\n"
+                        },
+                        {
+                          "text": "Creating Dataverse V1 application with application: [object Object]\n"
+                        },
+                        {
+                          "text": "No test case Id found, returning test title as is\n"
+                        },
+                        {
+                          "text": "File renamed from /tmp/videos/7c65ed277a309c96c9194885b2d61a70.webm to /tmp/videos/video_<REN-9837> Complete Chargebee Payment on MSA New Checkout Page for NY E&S_msaAdmin_0.webm\n"
+                        },
+                        {
+                          "text": "No test case Id found, returning test title as is\n"
+                        },
+                        {
+                          "text": "File renamed from /tmp/videos/306ca041d69f84fc554c7f3b532f97e1.webm to /tmp/videos/video_<REN-9837> Complete Chargebee Payment on MSA New Checkout Page for NY E&S_renter_0.webm\n"
+                        }
+                      ],
+                      "stderr": [
+                        {
+                          "text": "(node:61) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.\n(Use `node --trace-deprecation ...` to show where the warning was created)\n"
+                        }
+                      ],
+                      "retry": 0,
+                      "steps": [
+                        {
+                          "title": "create v1 application",
+                          "duration": 16344,
+                          "error": {
+                            "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32m201\u001b[39m\nReceived: \u001b[31m500\u001b[39m",
+                            "stack": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32m201\u001b[39m\nReceived: \u001b[31m500\u001b[39m\n    at /function/steps/surety/msa/checkoutV2.msa.steps.ts:714:53\n    at /function/tests/rn-msa/ui/existing-tests/checkoutV2.chargebee.risk.based.spec.ts:32:30",
+                            "matcherResult": {
+                              "actual": 500,
+                              "expected": 201,
+                              "message": "\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32m201\u001b[39m\nReceived: \u001b[31m500\u001b[39m",
+                              "name": "toBe",
+                              "pass": false
+                            },
+                            "location": {
+                              "file": "/function/steps/surety/msa/checkoutV2.msa.steps.ts",
+                              "column": 53,
+                              "line": 714
+                            },
+                            "snippet": "   at ../steps/surety/msa/checkoutV2.msa.steps.ts:714\n\n\u001b[0m \u001b[90m 712 |\u001b[39m         stage\u001b[33m:\u001b[39m stage\u001b[33m,\u001b[39m\n \u001b[90m 713 |\u001b[39m       })\u001b[33m;\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 714 |\u001b[39m       expect(newApplicationResponse\u001b[33m.\u001b[39mresponseStatus)\u001b[33m.\u001b[39mtoBe(\u001b[35m201\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m     |\u001b[39m                                                     \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 715 |\u001b[39m       console\u001b[33m.\u001b[39mlog(\u001b[32m'New application:'\u001b[39m\u001b[33m,\u001b[39m newApplicationResponse\u001b[33m.\u001b[39mresponseBody)\u001b[33m;\u001b[39m\n \u001b[90m 716 |\u001b[39m       \u001b[36mreturn\u001b[39m newApplicationResponse\u001b[33m.\u001b[39mresponseBody\u001b[33m;\u001b[39m\n \u001b[90m 717 |\u001b[39m     })\u001b[33m;\u001b[39m\u001b[0m"
+                          }
+                        }
+                      ],
+                      "startTime": "2025-11-06T08:10:04.076Z",
+                      "attachments": [
+                        {
+                          "name": "/tmp/videos/video_<REN-9837> Complete Chargebee Payment on MSA New Checkout Page for NY E&S_msaAdmin_0.webm",
+                          "contentType": "video/webm",
+                          "path": "/tmp/lolz/rn-msa-ui-existing-tests-c-7dcf2-ew-Checkout-Page-for-NY-E-S/attachments/-tmp-videos-video-REN-9837-Complete-Chargebee-Payment-on-MSA-New-Checkout-Page-for-NY-E-S-msaAdmin-0-webm-91d2f121a838c63dc03677d6652fdcbf96958c29.webm"
+                        },
+                        {
+                          "name": "/tmp/videos/video_<REN-9837> Complete Chargebee Payment on MSA New Checkout Page for NY E&S_renter_0.webm",
+                          "contentType": "video/webm",
+                          "path": "/tmp/lolz/rn-msa-ui-existing-tests-c-7dcf2-ew-Checkout-Page-for-NY-E-S/attachments/-tmp-videos-video-REN-9837-Complete-Chargebee-Payment-on-MSA-New-Checkout-Page-for-NY-E-S-renter-0-webm-3799a14458bf406d9534c4b5fc599ae1679c4d4a.webm"
+                        },
+                        {
+                          "name": "trace",
+                          "contentType": "application/zip",
+                          "path": "/tmp/lolz/rn-msa-ui-existing-tests-c-7dcf2-ew-Checkout-Page-for-NY-E-S/trace.zip"
+                        }
+                      ],
+                      "errorLocation": {
+                        "file": "/function/steps/surety/msa/checkoutV2.msa.steps.ts",
+                        "column": 53,
+                        "line": 714
+                      }
+                    },
+                    {
+                      "workerIndex": 1,
+                      "status": "failed",
+                      "duration": 126122,
+                      "error": {
+                        "message": "TimeoutError: page.waitForEvent: Timeout 20000ms exceeded while waiting for event \"download\"\n=========================== logs ===========================\nwaiting for event \"download\"\n============================================================",
+                        "stack": "TimeoutError: page.waitForEvent: Timeout 20000ms exceeded while waiting for event \"download\"\n=========================== logs ===========================\nwaiting for event \"download\"\n============================================================\n    at /function/steps/surety/msa/checkoutV2.msa.steps.ts:437:43\n    at MsaCheckoutV2Steps.downloadPolicyFromCongratulationsPage (/function/steps/surety/msa/checkoutV2.msa.steps.ts:434:16)\n    at /function/tests/rn-msa/ui/existing-tests/checkoutV2.chargebee.risk.based.spec.ts:70:61",
+                        "location": {
+                          "file": "/function/steps/surety/msa/checkoutV2.msa.steps.ts",
+                          "column": 43,
+                          "line": 437
+                        },
+                        "snippet": "   at ../steps/surety/msa/checkoutV2.msa.steps.ts:437\n\n\u001b[0m \u001b[90m 435 |\u001b[39m       \u001b[36mtry\u001b[39m {\n \u001b[90m 436 |\u001b[39m         \u001b[36mconst\u001b[39m fileDir \u001b[33m=\u001b[39m process\u001b[33m.\u001b[39menv\u001b[33m.\u001b[39m\u001b[33mCI\u001b[39m \u001b[33m===\u001b[39m \u001b[32m'true'\u001b[39m \u001b[33m?\u001b[39m \u001b[32m'/tmp/'\u001b[39m \u001b[33m:\u001b[39m \u001b[32m`${process.cwd()}/`\u001b[39m\u001b[33m;\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 437 |\u001b[39m         \u001b[36mconst\u001b[39m downloadPromise \u001b[33m=\u001b[39m \u001b[36mthis\u001b[39m\u001b[33m.\u001b[39mpage\u001b[33m.\u001b[39mwaitForEvent(\u001b[32m'download'\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m     |\u001b[39m                                           \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 438 |\u001b[39m         \u001b[36mawait\u001b[39m \u001b[36mthis\u001b[39m\u001b[33m.\u001b[39mcongratulationsPage\u001b[33m.\u001b[39mdownloadPolicy()\u001b[33m;\u001b[39m\n \u001b[90m 439 |\u001b[39m\n \u001b[90m 440 |\u001b[39m         \u001b[36mconst\u001b[39m download \u001b[33m=\u001b[39m \u001b[36mawait\u001b[39m downloadPromise\u001b[33m;\u001b[39m\u001b[0m"
+                      },
+                      "errors": [
+                        {
+                          "location": {
+                            "file": "/function/steps/surety/msa/checkoutV2.msa.steps.ts",
+                            "column": 43,
+                            "line": 437
+                          },
+                          "message": "TimeoutError: page.waitForEvent: Timeout 20000ms exceeded while waiting for event \"download\"\n=========================== logs ===========================\nwaiting for event \"download\"\n============================================================\n\n   at ../steps/surety/msa/checkoutV2.msa.steps.ts:437\n\n\u001b[0m \u001b[90m 435 |\u001b[39m       \u001b[36mtry\u001b[39m {\n \u001b[90m 436 |\u001b[39m         \u001b[36mconst\u001b[39m fileDir \u001b[33m=\u001b[39m process\u001b[33m.\u001b[39menv\u001b[33m.\u001b[39m\u001b[33mCI\u001b[39m \u001b[33m===\u001b[39m \u001b[32m'true'\u001b[39m \u001b[33m?\u001b[39m \u001b[32m'/tmp/'\u001b[39m \u001b[33m:\u001b[39m \u001b[32m`${process.cwd()}/`\u001b[39m\u001b[33m;\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 437 |\u001b[39m         \u001b[36mconst\u001b[39m downloadPromise \u001b[33m=\u001b[39m \u001b[36mthis\u001b[39m\u001b[33m.\u001b[39mpage\u001b[33m.\u001b[39mwaitForEvent(\u001b[32m'download'\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m     |\u001b[39m                                           \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 438 |\u001b[39m         \u001b[36mawait\u001b[39m \u001b[36mthis\u001b[39m\u001b[33m.\u001b[39mcongratulationsPage\u001b[33m.\u001b[39mdownloadPolicy()\u001b[33m;\u001b[39m\n \u001b[90m 439 |\u001b[39m\n \u001b[90m 440 |\u001b[39m         \u001b[36mconst\u001b[39m download \u001b[33m=\u001b[39m \u001b[36mawait\u001b[39m downloadPromise\u001b[33m;\u001b[39m\u001b[0m\n    at /function/steps/surety/msa/checkoutV2.msa.steps.ts:437:43\n    at MsaCheckoutV2Steps.downloadPolicyFromCongratulationsPage (/function/steps/surety/msa/checkoutV2.msa.steps.ts:434:16)\n    at /function/tests/rn-msa/ui/existing-tests/checkoutV2.chargebee.risk.based.spec.ts:70:61"
+                        },
+                        {
+                          "location": {
+                            "file": "/function/steps/surety/msa/checkoutV2.msa.steps.ts",
+                            "column": 15,
+                            "line": 453
+                          },
+                          "message": "Error: Failed to download policy file: locator.waitFor: Timeout 20000ms exceeded.\nCall log:\n\u001b[2m  - waiting for getByTestId('policy-download-button') to be visible\u001b[22m\n\n\n   at ../steps/surety/msa/checkoutV2.msa.steps.ts:453\n\n\u001b[0m \u001b[90m 451 |\u001b[39m         console\u001b[33m.\u001b[39mlog(\u001b[32m`Successfully downloaded policy file at path: ${fullpath}`\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m 452 |\u001b[39m       } \u001b[36mcatch\u001b[39m (error) {\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 453 |\u001b[39m         \u001b[36mthrow\u001b[39m \u001b[36mnew\u001b[39m \u001b[33mError\u001b[39m(\u001b[32m`Failed to download policy file: ${error.message}`\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m     |\u001b[39m               \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 454 |\u001b[39m       }\n \u001b[90m 455 |\u001b[39m     })\u001b[33m;\u001b[39m\n \u001b[90m 456 |\u001b[39m   }\u001b[0m\n    at /function/steps/surety/msa/checkoutV2.msa.steps.ts:453:15\n    at MsaCheckoutV2Steps.downloadPolicyFromCongratulationsPage (/function/steps/surety/msa/checkoutV2.msa.steps.ts:434:5)\n    at /function/tests/rn-msa/ui/existing-tests/checkoutV2.chargebee.risk.based.spec.ts:70:7"
+                        }
+                      ],
+                      "stdout": [
+                        {
+                          "text": "Setting up browser options for docker : headless\n"
+                        },
+                        {
+                          "text": "Launching Browser, context and page...\n"
+                        },
+                        {
+                          "text": "User-Agent: Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/131.0.6778.33 Safari/537.36\n"
+                        },
+                        {
+                          "text": "Browser executable path: /ms-playwright/chromium-1148/chrome-linux/chrome\nBrowser name: chromium\n"
+                        },
+                        {
+                          "text": "Setting up browser options for docker : headless\n"
+                        },
+                        {
+                          "text": "Launching Browser, context and page...\n"
+                        },
+                        {
+                          "text": "User-Agent: Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/131.0.6778.33 Safari/537.36\n"
+                        },
+                        {
+                          "text": "Browser executable path: /ms-playwright/chromium-1148/chrome-linux/chrome\nBrowser name: chromium\n"
+                        },
+                        {
+                          "text": "Creating Dataverse V1 application with application: [object Object]\n"
+                        },
+                        {
+                          "text": "New application: {\n  renterEmail: \u001b[32m'qa.autotest.renter+1762416655974@securiti.io'\u001b[39m,\n  renterPassword: \u001b[32m'Test@12345'\u001b[39m,\n  applicationId: \u001b[33m1383963\u001b[39m,\n  dealId: \u001b[33m1377576\u001b[39m,\n  metadata: {\n    renterAccount: {\n      renterEmail: \u001b[32m'qa.autotest.renter+1762416655974@securiti.io'\u001b[39m,\n      renterPassword: \u001b[32m'Test@12345'\u001b[39m\n    },\n    createAppResponse: { applicationId: \u001b[33m1383963\u001b[39m, metadata: \u001b[36m[Object]\u001b[39m },\n    renterCheckoutResponse: {}\n  }\n}\n"
+                        },
+                        {
+                          "text": "Filling credentials\n"
+                        },
+                        {
+                          "text": "Entering username\n"
+                        },
+                        {
+                          "text": "Entering password\n"
+                        },
+                        {
+                          "text": "Clicking submit button\n"
+                        },
+                        {
+                          "text": "Getting MSA application with email: qa.autotest.renter+1762416655974@securiti.io using application GET API \n"
+                        },
+                        {
+                          "text": "Getting expected risk based premium for application: 1383963\n"
+                        },
+                        {
+                          "text": "Expected Risk Based Premium Response: {\n  \"expectedPremium\": {\n    \"premium\": {\n      \"finalPremiumBeforeRounding\": 1045.2,\n      \"finalPremiumBeforeTax\": 1045,\n      \"surplusLinesTax\": 37.62000000000012,\n      \"stampingFee\": 1.5675000000001091,\n      \"finalPremiumAfterTax\": 1084.19,\n      \"totalWithCreditCardFee\": 1116.7157000000002,\n      \"lgPremium\": 796.26,\n      \"sdrPremium\": 248.94\n    },\n    \"monthlyPremium\": {\n      \"finalPremiumBeforeRounding\": 1493.1428571428573,\n      \"finalPremiumBeforeTax\": 1493,\n      \"surplusLinesTax\": 53.74285714285732,\n      \"stampingFee\": 2.23928571428587,\n      \"finalPremiumAfterTax\": 1548.9821428571431,\n      \"lgPremium\": 1137.5142857142857,\n      \"totalWithCreditCardFee\": 0,\n      \"sdrPremium\": 355.62857142857143\n    },\n    \"factors\": {\n      \"lgCoverage\": 2,\n      \"sdrCoverage\": 1400,\n      \"leaseLength\": 12,\n      \"freeRent\": null,\n      \"prepaidRent\": null,\n      \"monthlyRent\": 1400,\n      \"isFreeRentCovered\": false,\n      \"isPrepaidRentCovered\": false,\n      \"isProratedDaysCovered\": false,\n      \"stampingFeeFactor\": 1.0015,\n      \"surplusLinesTaxFactor\": 1.036,\n      \"fixedStampingFee\": 0,\n      \"flatPremium\": 25\n    },\n    \"formattedPremium\": {\n      \"finalPremiumBeforeRounding\": \"$1,045.2\",\n      \"finalPremiumBeforeTax\": \"$1,045\",\n      \"surplusLinesTax\": \"$37.62\",\n      \"stampingFee\": \"$1.57\",\n      \"finalPremiumAfterTax\": \"$1,084.19\",\n      \"lgPremium\": \"$796.26\",\n      \"sdrPremium\": \"$248.94\",\n      \"totalWithCreditCardFee\": \"$1,116.72\"\n    },\n    \"formattedPremiumMonthly\": {\n      \"finalPremiumBeforeRounding\": \"$1,493.14\",\n      \"finalPremiumBeforeTax\": \"$1,493\",\n      \"surplusLinesTax\": \"$53.74\",\n      \"stampingFee\": \"$2.24\",\n      \"finalPremiumAfterTax\": \"$1,548.98\",\n      \"lgPremium\": \"$1,137.51\",\n      \"sdrPremium\": \"$355.63\",\n      \"totalWithCreditCardFee\": 0\n    }\n  }\n}\n"
+                        },
+                        {
+                          "text": "Clicking agreement checkboxes\n"
+                        },
+                        {
+                          "text": "Clicking monthly payment radio\n"
+                        },
+                        {
+                          "text": "Getting MSA application with email: qa.autotest.renter+1762416655974@securiti.io using application GET API \n"
+                        },
+                        {
+                          "text": "Getting expected risk based premium for application: 1383963\n"
+                        },
+                        {
+                          "text": "Expected Risk Based Premium Response: {\n  \"expectedPremium\": {\n    \"premium\": {\n      \"finalPremiumBeforeRounding\": 1045.2,\n      \"finalPremiumBeforeTax\": 1045,\n      \"surplusLinesTax\": 37.62000000000012,\n      \"stampingFee\": 1.5675000000001091,\n      \"finalPremiumAfterTax\": 1084.19,\n      \"totalWithCreditCardFee\": 1116.7157000000002,\n      \"lgPremium\": 796.26,\n      \"sdrPremium\": 248.94\n    },\n    \"monthlyPremium\": {\n      \"finalPremiumBeforeRounding\": 1493.1428571428573,\n      \"finalPremiumBeforeTax\": 1493,\n      \"surplusLinesTax\": 53.74285714285732,\n      \"stampingFee\": 2.23928571428587,\n      \"finalPremiumAfterTax\": 1548.9821428571431,\n      \"lgPremium\": 1137.5142857142857,\n      \"totalWithCreditCardFee\": 0,\n      \"sdrPremium\": 355.62857142857143\n    },\n    \"factors\": {\n      \"lgCoverage\": 2,\n      \"sdrCoverage\": 1400,\n      \"leaseLength\": 12,\n      \"freeRent\": null,\n      \"prepaidRent\": null,\n      \"monthlyRent\": 1400,\n      \"isFreeRentCovered\": false,\n      \"isPrepaidRentCovered\": false,\n      \"isProratedDaysCovered\": false,\n      \"stampingFeeFactor\": 1.0015,\n      \"surplusLinesTaxFactor\": 1.036,\n      \"fixedStampingFee\": 0,\n      \"flatPremium\": 25\n    },\n    \"formattedPremium\": {\n      \"finalPremiumBeforeRounding\": \"$1,045.2\",\n      \"finalPremiumBeforeTax\": \"$1,045\",\n      \"surplusLinesTax\": \"$37.62\",\n      \"stampingFee\": \"$1.57\",\n      \"finalPremiumAfterTax\": \"$1,084.19\",\n      \"lgPremium\": \"$796.26\",\n      \"sdrPremium\": \"$248.94\",\n      \"totalWithCreditCardFee\": \"$1,116.72\"\n    },\n    \"formattedPremiumMonthly\": {\n      \"finalPremiumBeforeRounding\": \"$1,493.14\",\n      \"finalPremiumBeforeTax\": \"$1,493\",\n      \"surplusLinesTax\": \"$53.74\",\n      \"stampingFee\": \"$2.24\",\n      \"finalPremiumAfterTax\": \"$1,548.98\",\n      \"lgPremium\": \"$1,137.51\",\n      \"sdrPremium\": \"$355.63\",\n      \"totalWithCreditCardFee\": 0\n    }\n  }\n}\n"
+                        },
+                        {
+                          "text": "Getting MSA application with email: qa.autotest.renter+1762416655974@securiti.io using application GET API \n"
+                        },
+                        {
+                          "text": "Getting expected risk based premium for application: 1383963\n"
+                        },
+                        {
+                          "text": "Expected Risk Based Premium Response: {\n  \"expectedPremium\": {\n    \"premium\": {\n      \"finalPremiumBeforeRounding\": 1045.2,\n      \"finalPremiumBeforeTax\": 1045,\n      \"surplusLinesTax\": 37.62000000000012,\n      \"stampingFee\": 1.5675000000001091,\n      \"finalPremiumAfterTax\": 1084.19,\n      \"totalWithCreditCardFee\": 1116.7157000000002,\n      \"lgPremium\": 796.26,\n      \"sdrPremium\": 248.94\n    },\n    \"monthlyPremium\": {\n      \"finalPremiumBeforeRounding\": 1493.1428571428573,\n      \"finalPremiumBeforeTax\": 1493,\n      \"surplusLinesTax\": 53.74285714285732,\n      \"stampingFee\": 2.23928571428587,\n      \"finalPremiumAfterTax\": 1548.9821428571431,\n      \"lgPremium\": 1137.5142857142857,\n      \"totalWithCreditCardFee\": 0,\n      \"sdrPremium\": 355.62857142857143\n    },\n    \"factors\": {\n      \"lgCoverage\": 2,\n      \"sdrCoverage\": 1400,\n      \"leaseLength\": 12,\n      \"freeRent\": null,\n      \"prepaidRent\": null,\n      \"monthlyRent\": 1400,\n      \"isFreeRentCovered\": false,\n      \"isPrepaidRentCovered\": false,\n      \"isProratedDaysCovered\": false,\n      \"stampingFeeFactor\": 1.0015,\n      \"surplusLinesTaxFactor\": 1.036,\n      \"fixedStampingFee\": 0,\n      \"flatPremium\": 25\n    },\n    \"formattedPremium\": {\n      \"finalPremiumBeforeRounding\": \"$1,045.2\",\n      \"finalPremiumBeforeTax\": \"$1,045\",\n      \"surplusLinesTax\": \"$37.62\",\n      \"stampingFee\": \"$1.57\",\n      \"finalPremiumAfterTax\": \"$1,084.19\",\n      \"lgPremium\": \"$796.26\",\n      \"sdrPremium\": \"$248.94\",\n      \"totalWithCreditCardFee\": \"$1,116.72\"\n    },\n    \"formattedPremiumMonthly\": {\n      \"finalPremiumBeforeRounding\": \"$1,493.14\",\n      \"finalPremiumBeforeTax\": \"$1,493\",\n      \"surplusLinesTax\": \"$53.74\",\n      \"stampingFee\": \"$2.24\",\n      \"finalPremiumAfterTax\": \"$1,548.98\",\n      \"lgPremium\": \"$1,137.51\",\n      \"sdrPremium\": \"$355.63\",\n      \"totalWithCreditCardFee\": 0\n    }\n  }\n}\n"
+                        },
+                        {
+                          "text": "Clicking monthly payment radio\n"
+                        },
+                        {
+                          "text": "Clicking Pay Now button\n"
+                        },
+                        {
+                          "text": "Not able to close Payment Protection modal. Possible reasons:\n          - modal not shown (e.g. disabled by FF)\n          - modal elements have changed\n          Error: locator.waitFor: Timeout 3000ms exceeded.\nCall log:\n\u001b[2m  - waiting for getByText('continue with checkoutlet\\'s') to be visible\u001b[22m\n\n"
+                        },
+                        {
+                          "text": "Click proceed to checkout\n"
+                        },
+                        {
+                          "text": "Filling in first name with: Test\n"
+                        },
+                        {
+                          "text": "Filling in last name with: Renter\n"
+                        },
+                        {
+                          "text": "Clicking next\n"
+                        },
+                        {
+                          "text": "Filling in first name with: Test\n"
+                        },
+                        {
+                          "text": "Filling in last name with: Renter\n"
+                        },
+                        {
+                          "text": "Filling in city with: Weatherford\n"
+                        },
+                        {
+                          "text": "Selecting country: United States\n"
+                        },
+                        {
+                          "text": "Filling in state with: Texas\n"
+                        },
+                        {
+                          "text": "Clicking next in billing address\n"
+                        },
+                        {
+                          "text": "Filling in credit card number with: 4242424242424242\n"
+                        },
+                        {
+                          "text": "Filling in credit card expiry month with: 11\n"
+                        },
+                        {
+                          "text": "Filling in credit card expiry year with: 26\n"
+                        },
+                        {
+                          "text": "Filling in credit card cvv with: 123\n"
+                        },
+                        {
+                          "text": "Clicking credit card submit\n"
+                        },
+                        {
+                          "text": "Clicking confirm payment\n"
+                        },
+                        {
+                          "text": "No test case Id found, returning test title as is\n"
+                        },
+                        {
+                          "text": "File renamed from /tmp/videos/f4a86eaad0ff066eb18c181c7c6af9be.webm to /tmp/videos/video_<REN-9837> Complete Chargebee Payment on MSA New Checkout Page for NY E&S_msaAdmin_1.webm\n"
+                        },
+                        {
+                          "text": "No test case Id found, returning test title as is\n"
+                        },
+                        {
+                          "text": "File renamed from /tmp/videos/c46184fe855c69a931b71cbede944928.webm to /tmp/videos/video_<REN-9837> Complete Chargebee Payment on MSA New Checkout Page for NY E&S_renter_1.webm\n"
+                        }
+                      ],
+                      "stderr": [
+                        {
+                          "text": "(node:170) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.\n(Use `node --trace-deprecation ...` to show where the warning was created)\n"
+                        }
+                      ],
+                      "retry": 1,
+                      "steps": [
+                        {
+                          "title": "create v1 application",
+                          "duration": 11414
+                        },
+                        {
+                          "title": "navigate to \"Sign In\" page",
+                          "duration": 732
+                        },
+                        {
+                          "title": "fill in email, password and submit",
+                          "duration": 4988
+                        },
+                        {
+                          "title": "validate policy summary box content",
+                          "duration": 3588,
+                          "steps": [
+                            {
+                              "title": "get policy summary info",
+                              "duration": 79
+                            }
+                          ]
+                        },
+                        {
+                          "title": "validate premium on review policy page",
+                          "duration": 2797,
+                          "steps": [
+                            {
+                              "title": "get premium on review policy page",
+                              "duration": 57
+                            }
+                          ]
+                        },
+                        {
+                          "title": "click Continue button",
+                          "duration": 796
+                        },
+                        {
+                          "title": "validate agreement page",
+                          "duration": 215
+                        },
+                        {
+                          "title": "sign agreement and continue",
+                          "duration": 4849,
+                          "steps": [
+                            {
+                              "title": "click agreement checkboxes",
+                              "duration": 897
+                            },
+                            {
+                              "title": "click Continue button",
+                              "duration": 3949
+                            }
+                          ]
+                        },
+                        {
+                          "title": "validate pay page",
+                          "duration": 2458,
+                          "steps": [
+                            {
+                              "title": "Waiting for pay page to load",
+                              "duration": 1114
+                            }
+                          ]
+                        },
+                        {
+                          "title": "validate premium for installment on pay page",
+                          "duration": 3552,
+                          "steps": [
+                            {
+                              "title": "Getting first installment amount from sidebar on pay page",
+                              "duration": 206
+                            },
+                            {
+                              "title": "Getting total amount from sidebar on pay page",
+                              "duration": 172
+                            }
+                          ]
+                        },
+                        {
+                          "title": "validate tax and fee for installment on pay page",
+                          "duration": 3119,
+                          "steps": [
+                            {
+                              "title": "Getting surplus lines tax from sidebar on pay page",
+                              "duration": 76
+                            },
+                            {
+                              "title": "Getting stamping fee from sidebar on pay page",
+                              "duration": 81
+                            }
+                          ]
+                        },
+                        {
+                          "title": "click Pay Now button",
+                          "duration": 8729,
+                          "steps": [
+                            {
+                              "title": "check if payment protection modal is shown and close it",
+                              "duration": 3051
+                            }
+                          ]
+                        },
+                        {
+                          "title": "validate congratulations page",
+                          "duration": 8372,
+                          "steps": [
+                            {
+                              "title": "Waiting for congratulations page to load",
+                              "duration": 8165
+                            }
+                          ]
+                        },
+                        {
+                          "title": "download policy from congratulations page and verify it",
+                          "duration": 20097,
+                          "error": {
+                            "message": "Error: Failed to download policy file: locator.waitFor: Timeout 20000ms exceeded.\nCall log:\n\u001b[2m  - waiting for getByTestId('policy-download-button') to be visible\u001b[22m\n",
+                            "stack": "Error: Failed to download policy file: locator.waitFor: Timeout 20000ms exceeded.\nCall log:\n\u001b[2m  - waiting for getByTestId('policy-download-button') to be visible\u001b[22m\n\n    at /function/steps/surety/msa/checkoutV2.msa.steps.ts:453:15\n    at MsaCheckoutV2Steps.downloadPolicyFromCongratulationsPage (/function/steps/surety/msa/checkoutV2.msa.steps.ts:434:5)\n    at /function/tests/rn-msa/ui/existing-tests/checkoutV2.chargebee.risk.based.spec.ts:70:7",
+                            "location": {
+                              "file": "/function/steps/surety/msa/checkoutV2.msa.steps.ts",
+                              "column": 15,
+                              "line": 453
+                            },
+                            "snippet": "   at ../steps/surety/msa/checkoutV2.msa.steps.ts:453\n\n\u001b[0m \u001b[90m 451 |\u001b[39m         console\u001b[33m.\u001b[39mlog(\u001b[32m`Successfully downloaded policy file at path: ${fullpath}`\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m 452 |\u001b[39m       } \u001b[36mcatch\u001b[39m (error) {\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 453 |\u001b[39m         \u001b[36mthrow\u001b[39m \u001b[36mnew\u001b[39m \u001b[33mError\u001b[39m(\u001b[32m`Failed to download policy file: ${error.message}`\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m     |\u001b[39m               \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 454 |\u001b[39m       }\n \u001b[90m 455 |\u001b[39m     })\u001b[33m;\u001b[39m\n \u001b[90m 456 |\u001b[39m   }\u001b[0m"
+                          },
+                          "steps": [
+                            {
+                              "title": "Downloading policy from congratulations page",
+                              "duration": 20089,
+                              "error": {
+                                "message": "TimeoutError: locator.waitFor: Timeout 20000ms exceeded.\nCall log:\n\u001b[2m  - waiting for getByTestId('policy-download-button') to be visible\u001b[22m\n",
+                                "stack": "TimeoutError: locator.waitFor: Timeout 20000ms exceeded.\nCall log:\n\u001b[2m  - waiting for getByTestId('policy-download-button') to be visible\u001b[22m\n\n    at /function/pages/msa/renter/checkoutV2/congratulations.page.ts:68:39\n    at MsaRenterCheckoutCongratulationsPage.downloadPolicy (/function/pages/msa/renter/checkoutV2/congratulations.page.ts:67:16)\n    at /function/steps/surety/msa/checkoutV2.msa.steps.ts:438:40\n    at MsaCheckoutV2Steps.downloadPolicyFromCongratulationsPage (/function/steps/surety/msa/checkoutV2.msa.steps.ts:434:16)\n    at /function/tests/rn-msa/ui/existing-tests/checkoutV2.chargebee.risk.based.spec.ts:70:61",
+                                "location": {
+                                  "file": "/function/pages/msa/renter/checkoutV2/congratulations.page.ts",
+                                  "column": 39,
+                                  "line": 68
+                                },
+                                "snippet": "   at ../pages/msa/renter/checkoutV2/congratulations.page.ts:68\n\n\u001b[0m \u001b[90m 66 |\u001b[39m   \u001b[36masync\u001b[39m downloadPolicy()\u001b[33m:\u001b[39m \u001b[33mPromise\u001b[39m\u001b[33m<\u001b[39m\u001b[36mvoid\u001b[39m\u001b[33m>\u001b[39m {\n \u001b[90m 67 |\u001b[39m     \u001b[36mawait\u001b[39m test\u001b[33m.\u001b[39mstep(\u001b[32m'Downloading policy from congratulations page'\u001b[39m\u001b[33m,\u001b[39m \u001b[36masync\u001b[39m () \u001b[33m=>\u001b[39m {\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 68 |\u001b[39m       \u001b[36mawait\u001b[39m \u001b[36mthis\u001b[39m\u001b[33m.\u001b[39mpolicyDownloadButton\u001b[33m.\u001b[39mwaitFor()\u001b[33m;\u001b[39m\n \u001b[90m    |\u001b[39m                                       \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 69 |\u001b[39m       console\u001b[33m.\u001b[39mlog(\u001b[32m`Downloading policy`\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m 70 |\u001b[39m       \u001b[36mawait\u001b[39m \u001b[36mthis\u001b[39m\u001b[33m.\u001b[39mpolicyDownloadButton\u001b[33m.\u001b[39mclick()\u001b[33m;\u001b[39m\n \u001b[90m 71 |\u001b[39m     })\u001b[33m;\u001b[39m\u001b[0m"
+                              }
+                            }
+                          ]
+                        }
+                      ],
+                      "startTime": "2025-11-06T08:10:50.178Z",
+                      "attachments": [
+                        {
+                          "name": "/tmp/videos/video_<REN-9837> Complete Chargebee Payment on MSA New Checkout Page for NY E&S_msaAdmin_1.webm",
+                          "contentType": "video/webm",
+                          "path": "/tmp/lolz/rn-msa-ui-existing-tests-c-7dcf2-ew-Checkout-Page-for-NY-E-S-retry1/attachments/-tmp-videos-video-REN-9837-Complete-Chargebee-Payment-on-MSA-New-Checkout-Page-for-NY-E-S-msaAdmin-1-webm-be7e10857397c6eff94a7f47002395bfb1255679.webm"
+                        },
+                        {
+                          "name": "/tmp/videos/video_<REN-9837> Complete Chargebee Payment on MSA New Checkout Page for NY E&S_renter_1.webm",
+                          "contentType": "video/webm",
+                          "path": "/tmp/lolz/rn-msa-ui-existing-tests-c-7dcf2-ew-Checkout-Page-for-NY-E-S-retry1/attachments/-tmp-videos-video-REN-9837-Complete-Chargebee-Payment-on-MSA-New-Checkout-Page-for-NY-E-S-renter-1-webm-7e1b142ad402c44d0e971134fe8e3a411166c352.webm"
+                        },
+                        {
+                          "name": "trace",
+                          "contentType": "application/zip",
+                          "path": "/tmp/lolz/rn-msa-ui-existing-tests-c-7dcf2-ew-Checkout-Page-for-NY-E-S-retry1/trace.zip"
+                        }
+                      ],
+                      "errorLocation": {
+                        "file": "/function/steps/surety/msa/checkoutV2.msa.steps.ts",
+                        "column": 43,
+                        "line": 437
+                      }
+                    }
+                  ],
+                  "status": "unexpected"
+                }
+              ],
+              "id": "fca34c09c8776d995257-ad2d4144d19f202d4fd9101",
+              "file": "rn-msa/ui/existing-tests/checkoutV2.chargebee.risk.based.spec.ts",
+              "line": 31,
+              "column": 9
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "stats": {
+    "startTime": "2025-11-06T08:09:22.102Z",
+    "duration": 216498.005,
+    "expected": 0,
+    "skipped": 0,
+    "unexpected": 1,
+    "flaky": 0
+  },
+  "customReport": {
+    "testName": "<REN-9837> Complete Chargebee Payment on MSA New Checkout Page for NY E&S",
+    "testNameHash": "f7719b904fd4adc025e80d84906f202e",
+    "status": "failed",
+    "duration": 218249,
+    "retryCount": 1
+  }
+}

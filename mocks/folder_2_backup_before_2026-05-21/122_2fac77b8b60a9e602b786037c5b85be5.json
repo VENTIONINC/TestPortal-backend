@@ -1,0 +1,610 @@
+{
+  "config": {
+    "configFile": "/function/playwright.config.ts",
+    "rootDir": "/function/tests",
+    "forbidOnly": false,
+    "fullyParallel": false,
+    "globalSetup": "/function/global-setup.ts",
+    "globalTeardown": null,
+    "globalTimeout": 810000,
+    "grep": {},
+    "grepInvert": null,
+    "maxFailures": 0,
+    "metadata": {
+      "actualWorkers": 1
+    },
+    "preserveOutput": "always",
+    "reporter": [
+      [
+        "line"
+      ],
+      [
+        "/function/node_modules/allure-playwright/dist/index.js"
+      ],
+      [
+        "json"
+      ]
+    ],
+    "reportSlowTests": {
+      "max": 5,
+      "threshold": 15000
+    },
+    "quiet": false,
+    "projects": [
+      {
+        "outputDir": "/tmp/lolz",
+        "repeatEach": 1,
+        "retries": 1,
+        "metadata": {},
+        "id": "",
+        "name": "",
+        "testDir": "/function/tests",
+        "testIgnore": [],
+        "testMatch": [
+          "**/*.@(spec|test).?(c|m)[jt]s?(x)"
+        ],
+        "timeout": 420000
+      }
+    ],
+    "shard": null,
+    "updateSnapshots": "missing",
+    "version": "1.49.1",
+    "workers": 1,
+    "webServer": null
+  },
+  "suites": [
+    {
+      "title": "rn-monolith/ui/esrenewal/multi.renter.renewal.spec.ts",
+      "file": "rn-monolith/ui/esrenewal/multi.renter.renewal.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": " Validate multi-renter renewal deal for Renewal rates, lgPremium, Taxes and Fees created on deal close on parentid update  @monolith-nightly-group-5 @e&s-renewal",
+          "ok": true,
+          "tags": [
+            "monolith-nightly-group-5",
+            "e&s-renewal",
+            "monolith",
+            "L2",
+            "e&s-renewal",
+            "exNY"
+          ],
+          "tests": [
+            {
+              "timeout": 420000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "status": "passed",
+                  "duration": 187856,
+                  "errors": [],
+                  "stdout": [
+                    {
+                      "text": "Starting registration of uninvited renter -  qa.autotest.renter+1762411696499@securiti.io\n"
+                    },
+                    {
+                      "text": "Getting building ID from building name Automation Property C8186\n"
+                    },
+                    {
+                      "text": "Starting registration of uninvited renter -  qa.autotest.renter+co1+1762411696500@securiti.io\n"
+                    },
+                    {
+                      "text": "Getting building ID from building name Automation Property C8186\n"
+                    },
+                    {
+                      "text": "Link to set password for renter -  https://login.staging.theguarantors.com/set-password?redirect_uri=https%3A%2F%2Flogin.staging.theguarantors.com%2Ffinished&terms=true&user_id=4e8ab567-9dec-4337-acd2-20e606e628ed&Expires=1762498103&KeyName=set-password&SingleUse=1&Signature=UTSTlg_hmmof6X7Ipt5GstfNHbo=\n"
+                    },
+                    {
+                      "text": "Setting password\n"
+                    },
+                    {
+                      "text": "Link to set password for renter -  https://login.staging.theguarantors.com/set-password?redirect_uri=https%3A%2F%2Flogin.staging.theguarantors.com%2Ffinished&terms=true&user_id=c54d7c2f-454c-43c9-a7a4-837ec765228a&Expires=1762498105&KeyName=set-password&SingleUse=1&Signature=KzZKlISAiQC9eNo0mCFCfdBFVnc=\n"
+                    },
+                    {
+                      "text": "Setting password\n"
+                    },
+                    {
+                      "text": "Trying authorize without MFA\n"
+                    },
+                    {
+                      "text": "Creating ML cookie\n"
+                    },
+                    {
+                      "text": "Fetching connect.sid from cookie\n"
+                    },
+                    {
+                      "text": "Required Headers: [object Object]\n"
+                    },
+                    {
+                      "text": "Accessing home page for ml to create blank application\n"
+                    },
+                    {
+                      "text": "Invoking GET /application\n"
+                    },
+                    {
+                      "text": "Trying authorize without MFA\n"
+                    },
+                    {
+                      "text": "Creating ML cookie\n"
+                    },
+                    {
+                      "text": "Invoking GET /api/v1/renter/auth\n"
+                    },
+                    {
+                      "text": "\u001b[33m200\u001b[39m\n"
+                    },
+                    {
+                      "text": "Application ID:  \u001b[33m685969\u001b[39m\n"
+                    },
+                    {
+                      "text": "Invoking POST -  /api/v1/renter/start\n"
+                    },
+                    {
+                      "text": "Fetching connect.sid from cookie\n"
+                    },
+                    {
+                      "text": "Required Headers: [object Object]\n"
+                    },
+                    {
+                      "text": "Accessing home page for ml to create blank application\n"
+                    },
+                    {
+                      "text": "Invoking GET /application\n"
+                    },
+                    {
+                      "text": "Invoking GET /api/v1/renter/auth\n"
+                    },
+                    {
+                      "text": "\u001b[33m200\u001b[39m\n"
+                    },
+                    {
+                      "text": "Application ID:  \u001b[33m685972\u001b[39m\n"
+                    },
+                    {
+                      "text": "Invoking POST -  /api/v1/renter/start\n"
+                    },
+                    {
+                      "text": "Submitting application\n"
+                    },
+                    {
+                      "text": "Submitting application\n"
+                    },
+                    {
+                      "text": "Created application via API: 685972 for Automation Property C8186\n"
+                    },
+                    {
+                      "text": "Created application via API: 685969 for Automation Property C8186\n"
+                    },
+                    {
+                      "text": "Setting up browser options for docker : headless\n"
+                    },
+                    {
+                      "text": "Launching Browser, context and page...\n"
+                    },
+                    {
+                      "text": "User-Agent: Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/131.0.6778.33 Safari/537.36\n"
+                    },
+                    {
+                      "text": "Browser executable path: /ms-playwright/chromium-1148/chrome-linux/chrome\nBrowser name: chromium\n"
+                    },
+                    {
+                      "text": "Filling credentials\n"
+                    },
+                    {
+                      "text": "Entering username\n"
+                    },
+                    {
+                      "text": "Entering password\n"
+                    },
+                    {
+                      "text": "Clicking submit button\n"
+                    },
+                    {
+                      "text": "Clicking applications tab\n"
+                    },
+                    {
+                      "text": "Updating lease start date to:  10/10/2025\n"
+                    },
+                    {
+                      "text": "Updating lease end date to:  10/10/2026\n"
+                    },
+                    {
+                      "text": "Updating monthly rent to:  1000\n"
+                    },
+                    {
+                      "text": "Updating bond Months Covered to:  6\n"
+                    },
+                    {
+                      "text": "Updating rolling Sdr Amount to:  1100\n"
+                    },
+                    {
+                      "text": "Selecting carrier insurance: Hudson\n"
+                    },
+                    {
+                      "text": "Clicking \"Generate Bond\" button\n"
+                    },
+                    {
+                      "text": "Clicking applications tab\n"
+                    },
+                    {
+                      "text": "Updating monthly rent to:  1100\n"
+                    },
+                    {
+                      "text": "Updating lease start date to:  10/10/2025\n"
+                    },
+                    {
+                      "text": "Updating lease end date to:  10/10/2026\n"
+                    },
+                    {
+                      "text": "Updating bond Months Covered to:  6\n"
+                    },
+                    {
+                      "text": "Updating rolling Sdr Amount to:  1100\n"
+                    },
+                    {
+                      "text": "Update Equifax credit score with value 500\n"
+                    },
+                    {
+                      "text": "Selecting carrier insurance: Tsicdirect\n"
+                    },
+                    {
+                      "text": "Clicking \"Generate Bond\" button\n"
+                    },
+                    {
+                      "text": "Rate value: 21.5\n"
+                    },
+                    {
+                      "text": "LG premium is  $951\n"
+                    },
+                    {
+                      "text": "SDR premium is  $288\n"
+                    },
+                    {
+                      "text": "Updating monthly rent to:  1100\n"
+                    },
+                    {
+                      "text": "Updating bond Months Covered to:  6\n"
+                    },
+                    {
+                      "text": "Updating rolling Sdr Amount to:  1100\n"
+                    },
+                    {
+                      "text": "Update Equifax credit score with value 500\n"
+                    },
+                    {
+                      "text": "Rate value: 21.5\n"
+                    },
+                    {
+                      "text": "Updating Parent Renewal Application ID to:  delete\n"
+                    },
+                    {
+                      "text": "Updating Parent Renewal Application ID to:  685972\n"
+                    },
+                    {
+                      "text": "Rate value: 21.5\n"
+                    },
+                    {
+                      "text": "LG premium is  $856\n"
+                    },
+                    {
+                      "text": "SDR premium is  $288\n"
+                    },
+                    {
+                      "text": "taxes and fees premium is  $44.78\n"
+                    },
+                    {
+                      "text": "premium without taxes and fees is  $1,194\n"
+                    },
+                    {
+                      "text": "Total premium is  $1,239\n"
+                    },
+                    {
+                      "text": "Rate value: 21.5\n"
+                    },
+                    {
+                      "text": "LG premium is  $856\n"
+                    },
+                    {
+                      "text": "SDR premium is  $288\n"
+                    },
+                    {
+                      "text": "Total premium is  $1,239\n"
+                    },
+                    {
+                      "text": "No test case Id found, returning test title as is\n"
+                    },
+                    {
+                      "text": "File renamed from /tmp/videos/eb3836a4f5afbbfe5842e03151feb9f6.webm to /tmp/videos/video_ Validate multi-renter renewal deal for Renewal rates, lgPremium, Taxes and Fees created on deal close on parentid update  @monolith-nightly-group-5 @e&s-renewal_admin_0.webm\n"
+                    }
+                  ],
+                  "stderr": [
+                    {
+                      "text": "(node:321) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.\n(Use `node --trace-deprecation ...` to show where the warning was created)\n"
+                    }
+                  ],
+                  "retry": 0,
+                  "steps": [
+                    {
+                      "title": "Create and close parent NY application",
+                      "duration": 27059,
+                      "steps": [
+                        {
+                          "title": "open application #685969 page",
+                          "duration": 1456
+                        },
+                        {
+                          "title": "update Lease Start date to \"10/10/2025\"",
+                          "duration": 887,
+                          "steps": [
+                            {
+                              "title": "hide datepicker by setting \"display:none\"",
+                              "duration": 95
+                            }
+                          ]
+                        },
+                        {
+                          "title": "update Lease End date to \"10/10/2026\"",
+                          "duration": 763,
+                          "steps": [
+                            {
+                              "title": "hide datepicker by setting \"display:none\"",
+                              "duration": 283
+                            }
+                          ]
+                        },
+                        {
+                          "title": "run Equifax credit report",
+                          "duration": 248,
+                          "steps": [
+                            {
+                              "title": "select Equifax credit report",
+                              "duration": 162
+                            }
+                          ]
+                        },
+                        {
+                          "title": "save application changes",
+                          "duration": 4094
+                        },
+                        {
+                          "title": "generate bond with \"Hudson\" carrier",
+                          "duration": 6680,
+                          "steps": [
+                            {
+                              "title": "save application changes",
+                              "duration": 4842
+                            }
+                          ]
+                        },
+                        {
+                          "title": "save application changes",
+                          "duration": 3984
+                        },
+                        {
+                          "title": "update status to \"Deal Closed\"",
+                          "duration": 1072
+                        },
+                        {
+                          "title": "save application changes",
+                          "duration": 4503
+                        }
+                      ]
+                    },
+                    {
+                      "title": "Create and close parent exNY application",
+                      "duration": 22399,
+                      "steps": [
+                        {
+                          "title": "open application #685972 page",
+                          "duration": 1557
+                        },
+                        {
+                          "title": "update Lease Start date to \"10/10/2025\"",
+                          "duration": 544,
+                          "steps": [
+                            {
+                              "title": "hide datepicker by setting \"display:none\"",
+                              "duration": 85
+                            }
+                          ]
+                        },
+                        {
+                          "title": "update Lease End date to \"10/10/2026\"",
+                          "duration": 575,
+                          "steps": [
+                            {
+                              "title": "hide datepicker by setting \"display:none\"",
+                              "duration": 93
+                            }
+                          ]
+                        },
+                        {
+                          "title": "run Equifax credit report",
+                          "duration": 207,
+                          "steps": [
+                            {
+                              "title": "select Equifax credit report",
+                              "duration": 138
+                            }
+                          ]
+                        },
+                        {
+                          "title": "save application changes",
+                          "duration": 2904
+                        },
+                        {
+                          "title": "save application changes",
+                          "duration": 3882
+                        },
+                        {
+                          "title": "save application changes",
+                          "duration": 3526
+                        },
+                        {
+                          "title": "update status to \"Deal Closed\"",
+                          "duration": 519
+                        },
+                        {
+                          "title": "save application changes",
+                          "duration": 3960
+                        }
+                      ]
+                    },
+                    {
+                      "title": "Open renewal version NYC_E&S and update Renewal parent application Id of linked renewal appliction of NY and exNY state",
+                      "duration": 72024,
+                      "steps": [
+                        {
+                          "title": "open application #685969 page",
+                          "duration": 1540
+                        },
+                        {
+                          "title": "get application versions in drop-down",
+                          "duration": 578
+                        },
+                        {
+                          "title": "select \"685980\" application version",
+                          "duration": 1314
+                        },
+                        {
+                          "title": "save application changes",
+                          "duration": 6746
+                        },
+                        {
+                          "title": "run Equifax credit report",
+                          "duration": 2277,
+                          "steps": [
+                            {
+                              "title": "select Equifax credit report",
+                              "duration": 1103
+                            }
+                          ]
+                        },
+                        {
+                          "title": "save application changes",
+                          "duration": 6000
+                        },
+                        {
+                          "title": "open application #685972 page",
+                          "duration": 2775
+                        },
+                        {
+                          "title": "get application versions in drop-down",
+                          "duration": 1343
+                        },
+                        {
+                          "title": "select \"685983\" application version",
+                          "duration": 785
+                        },
+                        {
+                          "title": "save application changes",
+                          "duration": 10012
+                        },
+                        {
+                          "title": "run Equifax credit report",
+                          "duration": 2760,
+                          "steps": [
+                            {
+                              "title": "select Equifax credit report",
+                              "duration": 1359
+                            }
+                          ]
+                        },
+                        {
+                          "title": "save application changes",
+                          "duration": 4150
+                        },
+                        {
+                          "title": "save application changes",
+                          "duration": 5404
+                        },
+                        {
+                          "title": "save application changes",
+                          "duration": 2838
+                        },
+                        {
+                          "title": "save application changes",
+                          "duration": 6196
+                        },
+                        {
+                          "title": "save application changes",
+                          "duration": 4741
+                        },
+                        {
+                          "title": "save application changes",
+                          "duration": 3797
+                        },
+                        {
+                          "title": "save application changes",
+                          "duration": 3879
+                        }
+                      ]
+                    },
+                    {
+                      "title": "Read renewal premiums and calculate expected taxes",
+                      "duration": 5784,
+                      "steps": [
+                        {
+                          "title": "save application changes",
+                          "duration": 4037
+                        }
+                      ]
+                    },
+                    {
+                      "title": "Assert renewal calculations",
+                      "duration": 10
+                    },
+                    {
+                      "title": "Verify Parent rate should be synced to both linked renewal applications and premium should be same on both renewal applications",
+                      "duration": 3224,
+                      "steps": [
+                        {
+                          "title": "open application #685980 page",
+                          "duration": 2042
+                        }
+                      ]
+                    }
+                  ],
+                  "startTime": "2026-05-21T06:48:16.461Z",
+                  "attachments": [
+                    {
+                      "name": "/tmp/videos/video_ Validate multi-renter renewal deal for Renewal rates, lgPremium, Taxes and Fees created on deal close on parentid update  @monolith-nightly-group-5 @e&s-renewal_admin_0.webm",
+                      "contentType": "video/webm",
+                      "path": "/tmp/lolz/rn-monolith-ui-esrenewal-m-cb7c4-nightly-group-5-e-s-renewal/attachments/-tmp-videos-video-Validate-multi-renter-renewal-deal-for-Renewal-rates-lgPremium-Taxes-and-Fees-created-on-deal-close-on-parentid-update-monolith-nightly-group-5-e-s-renewal-admin-0-webm-fd2fc544fc0d7b79620424993036d58655fc3e64.webm"
+                    }
+                  ]
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "ef487e8eca7709418043-0dfafd74a145e64f92be122",
+          "file": "rn-monolith/ui/esrenewal/multi.renter.renewal.spec.ts",
+          "line": 23,
+          "column": 5
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "stats": {
+    "startTime": "2026-05-21T06:48:00.120Z",
+    "duration": 204443.135,
+    "expected": 1,
+    "skipped": 0,
+    "unexpected": 0,
+    "flaky": 0
+  },
+  "customReport": {
+    "testName": "Validate multi-renter renewal deal for Renewal rates, lgPremium, Taxes and Fees created on deal close on parentid update  @monolith-nightly-group-5 @e&s-renewal",
+    "testNameHash": "2fac77b8b60a9e602b786037c5b85be5",
+    "status": "passed",
+    "duration": 205871,
+    "retryCount": 1
+  }
+}

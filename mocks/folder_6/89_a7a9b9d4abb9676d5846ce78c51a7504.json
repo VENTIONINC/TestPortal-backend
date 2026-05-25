@@ -1,0 +1,450 @@
+{
+  "config": {
+    "configFile": "/function/playwright.config.ts",
+    "rootDir": "/function/tests",
+    "forbidOnly": false,
+    "fullyParallel": false,
+    "globalSetup": "/function/global-setup.ts",
+    "globalTeardown": null,
+    "globalTimeout": 810000,
+    "grep": {},
+    "grepInvert": null,
+    "maxFailures": 0,
+    "metadata": {
+      "actualWorkers": 1
+    },
+    "preserveOutput": "always",
+    "reporter": [
+      [
+        "line"
+      ],
+      [
+        "/function/node_modules/allure-playwright/dist/index.js"
+      ],
+      [
+        "json"
+      ]
+    ],
+    "reportSlowTests": {
+      "max": 5,
+      "threshold": 15000
+    },
+    "quiet": false,
+    "projects": [
+      {
+        "outputDir": "/tmp/lolz",
+        "repeatEach": 1,
+        "retries": 1,
+        "metadata": {},
+        "id": "",
+        "name": "",
+        "testDir": "/function/tests",
+        "testIgnore": [],
+        "testMatch": [
+          "**/*.@(spec|test).?(c|m)[jt]s?(x)"
+        ],
+        "timeout": 420000
+      }
+    ],
+    "shard": null,
+    "updateSnapshots": "missing",
+    "version": "1.49.1",
+    "workers": 1,
+    "webServer": null
+  },
+  "suites": [
+    {
+      "title": "rn-msa/ui/existing-tests/change.building.spec.ts",
+      "file": "rn-msa/ui/existing-tests/change.building.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [],
+      "suites": [
+        {
+          "title": "",
+          "file": "rn-msa/ui/existing-tests/change.building.spec.ts",
+          "line": 129,
+          "column": 8,
+          "specs": [
+            {
+              "title": "<REN-10702> Auto v2, Multi renter can pay successfully on change building from NJ to TX #14",
+              "ok": true,
+              "tags": [
+                "preview-modal",
+                "change-building",
+                "checkout-v2",
+                "msa-nightly-group-3",
+                "multi-renter"
+              ],
+              "tests": [
+                {
+                  "timeout": 420000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "",
+                  "projectName": "",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "status": "passed",
+                      "duration": 156627,
+                      "errors": [],
+                      "stdout": [
+                        {
+                          "text": "Renter profile:\n"
+                        },
+                        {
+                          "text": "\t- email: qa.autotest.renter+1762414580615@securiti.io\n"
+                        },
+                        {
+                          "text": "\t- ssn: {\"value\":\"666003962\"}\n"
+                        },
+                        {
+                          "text": "\t- contact: undefined\n"
+                        },
+                        {
+                          "text": "\t- creditScore: {\"value\":709}\n"
+                        },
+                        {
+                          "text": "Building:\n"
+                        },
+                        {
+                          "text": "\t- id: 20692\n"
+                        },
+                        {
+                          "text": "\t- state: {\"name\":\"New Jersey\",\"code\":\"NJ\",\"ratesVersion\":\"4_cap\",\"isRateBased\":false,\"isRiskBased\":true,\"isDynamicPricing\":true}\n"
+                        },
+                        {
+                          "text": "\t- name: NJ State Building Automation\n"
+                        },
+                        {
+                          "text": "\t- address: null\n"
+                        },
+                        {
+                          "text": "Setting up browser options for docker : headless\n"
+                        },
+                        {
+                          "text": "Launching Browser, context and page...\n"
+                        },
+                        {
+                          "text": "User-Agent: Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/131.0.6778.33 Safari/537.36\n"
+                        },
+                        {
+                          "text": "Browser executable path: /ms-playwright/chromium-1148/chrome-linux/chrome\nBrowser name: chromium\n"
+                        },
+                        {
+                          "text": "Filling credentials\n"
+                        },
+                        {
+                          "text": "Entering username\n"
+                        },
+                        {
+                          "text": "Entering password\n"
+                        },
+                        {
+                          "text": "Clicking submit button\n"
+                        },
+                        {
+                          "text": "Setting up browser options for docker : headless\n"
+                        },
+                        {
+                          "text": "Launching Browser, context and page...\n"
+                        },
+                        {
+                          "text": "User-Agent: Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/131.0.6778.33 Safari/537.36\n"
+                        },
+                        {
+                          "text": "Browser executable path: /ms-playwright/chromium-1148/chrome-linux/chrome\nBrowser name: chromium\n"
+                        },
+                        {
+                          "text": "Filling credentials\n"
+                        },
+                        {
+                          "text": "Entering username\n"
+                        },
+                        {
+                          "text": "Entering password\n"
+                        },
+                        {
+                          "text": "Clicking submit button\n"
+                        },
+                        {
+                          "text": "Clicking agreement checkboxes\n"
+                        },
+                        {
+                          "text": "Clicking Pay Now button\n"
+                        },
+                        {
+                          "text": "Not able to close Payment Protection modal. Possible reasons:\n          - modal not shown (e.g. disabled by FF)\n          - modal elements have changed\n          Error: locator.waitFor: Timeout 3000ms exceeded.\nCall log:\n\u001b[2m  - waiting for getByText('continue with checkoutlet\\'s') to be visible\u001b[22m\n\n"
+                        },
+                        {
+                          "text": "Clicking agreement checkboxes\n"
+                        },
+                        {
+                          "text": "Clicking Pay Now button\n"
+                        },
+                        {
+                          "text": "Not able to close Payment Protection modal. Possible reasons:\n          - modal not shown (e.g. disabled by FF)\n          - modal elements have changed\n          Error: locator.waitFor: Timeout 3000ms exceeded.\nCall log:\n\u001b[2m  - waiting for getByText('continue with checkoutlet\\'s') to be visible\u001b[22m\n\n"
+                        },
+                        {
+                          "text": "No test case Id found, returning test title as is\n"
+                        },
+                        {
+                          "text": "File renamed from /tmp/videos/59b60d4bc7d2d7bbb243bbb179eed9b0.webm to /tmp/videos/video_<REN-10702> Auto v2, Multi renter can pay successfully on change building from NJ to TX #14_cotenant1_0.webm\n"
+                        },
+                        {
+                          "text": "No test case Id found, returning test title as is\n"
+                        },
+                        {
+                          "text": "File renamed from /tmp/videos/ed86cbd7c197304f11960a94f68ec023.webm to /tmp/videos/video_<REN-10702> Auto v2, Multi renter can pay successfully on change building from NJ to TX #14_renter_0.webm\n"
+                        }
+                      ],
+                      "stderr": [
+                        {
+                          "text": "(node:203) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.\n(Use `node --trace-deprecation ...` to show where the warning was created)\n"
+                        }
+                      ],
+                      "retry": 0,
+                      "steps": [
+                        {
+                          "title": "renter 1: sign agreement and pay half the premium",
+                          "duration": 31368,
+                          "steps": [
+                            {
+                              "title": "get lease start and end dates",
+                              "duration": 180
+                            },
+                            {
+                              "title": "click Continue button",
+                              "duration": 2139
+                            },
+                            {
+                              "title": "sign agreement and continue",
+                              "duration": 4319,
+                              "steps": [
+                                {
+                                  "title": "click agreement checkboxes",
+                                  "duration": 1614
+                                },
+                                {
+                                  "title": "click Continue button",
+                                  "duration": 2699
+                                }
+                              ]
+                            },
+                            {
+                              "title": "fill in custom amount and validate right panel updates",
+                              "duration": 4919
+                            },
+                            {
+                              "title": "Selecting credit card payment",
+                              "duration": 739
+                            },
+                            {
+                              "title": "fill out credit card form",
+                              "duration": 10000,
+                              "steps": [
+                                {
+                                  "title": "Entering name on card",
+                                  "duration": 307
+                                },
+                                {
+                                  "title": "Entering credit card number",
+                                  "duration": 352
+                                },
+                                {
+                                  "title": "Entering credit card expiry date",
+                                  "duration": 361
+                                },
+                                {
+                                  "title": "Entering credit card cvv",
+                                  "duration": 374
+                                },
+                                {
+                                  "title": "fill out billing address",
+                                  "duration": 8598,
+                                  "steps": [
+                                    {
+                                      "title": "fill in address line1",
+                                      "duration": 319
+                                    },
+                                    {
+                                      "title": "fill in address city",
+                                      "duration": 425
+                                    },
+                                    {
+                                      "title": "Selecting address country",
+                                      "duration": 2196
+                                    },
+                                    {
+                                      "title": "fill in address state",
+                                      "duration": 5114
+                                    },
+                                    {
+                                      "title": "Entering zip code",
+                                      "duration": 447
+                                    }
+                                  ]
+                                }
+                              ]
+                            },
+                            {
+                              "title": "click Pay Now button",
+                              "duration": 8669,
+                              "steps": [
+                                {
+                                  "title": "check if payment protection modal is shown and close it",
+                                  "duration": 3038
+                                }
+                              ]
+                            }
+                          ]
+                        },
+                        {
+                          "title": "co-tenant: sign agreement and pay remaining price",
+                          "duration": 37015,
+                          "steps": [
+                            {
+                              "title": "get lease start and end dates",
+                              "duration": 60
+                            },
+                            {
+                              "title": "click Continue button",
+                              "duration": 575
+                            },
+                            {
+                              "title": "sign agreement and continue",
+                              "duration": 4410,
+                              "steps": [
+                                {
+                                  "title": "click agreement checkboxes",
+                                  "duration": 1044
+                                },
+                                {
+                                  "title": "click Continue button",
+                                  "duration": 3354
+                                }
+                              ]
+                            },
+                            {
+                              "title": "Clicking full payment radio",
+                              "duration": 3417
+                            },
+                            {
+                              "title": "Selecting credit card payment",
+                              "duration": 2257
+                            },
+                            {
+                              "title": "fill out credit card form",
+                              "duration": 10817,
+                              "steps": [
+                                {
+                                  "title": "Entering name on card",
+                                  "duration": 299
+                                },
+                                {
+                                  "title": "Entering credit card number",
+                                  "duration": 341
+                                },
+                                {
+                                  "title": "Entering credit card expiry date",
+                                  "duration": 415
+                                },
+                                {
+                                  "title": "Entering credit card cvv",
+                                  "duration": 635
+                                },
+                                {
+                                  "title": "fill out billing address",
+                                  "duration": 9114,
+                                  "steps": [
+                                    {
+                                      "title": "fill in address line1",
+                                      "duration": 335
+                                    },
+                                    {
+                                      "title": "fill in address city",
+                                      "duration": 567
+                                    },
+                                    {
+                                      "title": "Selecting address country",
+                                      "duration": 2197
+                                    },
+                                    {
+                                      "title": "fill in address state",
+                                      "duration": 5567
+                                    },
+                                    {
+                                      "title": "Entering zip code",
+                                      "duration": 442
+                                    }
+                                  ]
+                                }
+                              ]
+                            },
+                            {
+                              "title": "click Pay Now button",
+                              "duration": 8744,
+                              "steps": [
+                                {
+                                  "title": "check if payment protection modal is shown and close it",
+                                  "duration": 3034
+                                }
+                              ]
+                            }
+                          ]
+                        },
+                        {
+                          "title": "renter 1: validate congratulations page",
+                          "duration": 4246
+                        },
+                        {
+                          "title": "co-tenant: validate congratulations page",
+                          "duration": 7986
+                        }
+                      ],
+                      "startTime": "2025-11-06T07:36:20.490Z",
+                      "attachments": [
+                        {
+                          "name": "/tmp/videos/video_<REN-10702> Auto v2, Multi renter can pay successfully on change building from NJ to TX #14_cotenant1_0.webm",
+                          "contentType": "video/webm",
+                          "path": "/tmp/lolz/rn-msa-ui-existing-tests-c-44b22-e-building-from-NJ-to-TX-14/attachments/-tmp-videos-video-REN-10702-Auto-v2-Multi-renter-can-pay-successfully-on-change-building-from-NJ-to-TX-14-cotenant1-0-webm-6c65a756b5e921b9dee2084e7492b55e04ef8e99.webm"
+                        },
+                        {
+                          "name": "/tmp/videos/video_<REN-10702> Auto v2, Multi renter can pay successfully on change building from NJ to TX #14_renter_0.webm",
+                          "contentType": "video/webm",
+                          "path": "/tmp/lolz/rn-msa-ui-existing-tests-c-44b22-e-building-from-NJ-to-TX-14/attachments/-tmp-videos-video-REN-10702-Auto-v2-Multi-renter-can-pay-successfully-on-change-building-from-NJ-to-TX-14-renter-0-webm-e04a2eaeedc7c96e197d818aa8470fc7c6f7f06c.webm"
+                        }
+                      ]
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "57c78de5a1c0433d277c-157878d34d55f94c2f7b89",
+              "file": "rn-msa/ui/existing-tests/change.building.spec.ts",
+              "line": 147,
+              "column": 9
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "stats": {
+    "startTime": "2025-11-06T07:36:05.194Z",
+    "duration": 172326.55,
+    "expected": 1,
+    "skipped": 0,
+    "unexpected": 0,
+    "flaky": 0
+  },
+  "customReport": {
+    "testName": "<REN-10702> Auto v2, Multi renter can pay successfully on change building from NJ to TX #14",
+    "testNameHash": "a7a9b9d4abb9676d5846ce78c51a7504",
+    "status": "passed",
+    "duration": 173662,
+    "retryCount": 1
+  }
+}

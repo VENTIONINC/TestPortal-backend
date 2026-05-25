@@ -1,0 +1,505 @@
+{
+  "config": {
+    "configFile": "/function/playwright.config.ts",
+    "rootDir": "/function/tests",
+    "forbidOnly": false,
+    "fullyParallel": false,
+    "globalSetup": "/function/global-setup.ts",
+    "globalTeardown": null,
+    "globalTimeout": 810000,
+    "grep": {},
+    "grepInvert": null,
+    "maxFailures": 0,
+    "metadata": {
+      "actualWorkers": 1
+    },
+    "preserveOutput": "always",
+    "reporter": [
+      [
+        "line"
+      ],
+      [
+        "/function/node_modules/allure-playwright/dist/index.js"
+      ],
+      [
+        "json"
+      ]
+    ],
+    "reportSlowTests": {
+      "max": 5,
+      "threshold": 15000
+    },
+    "quiet": false,
+    "projects": [
+      {
+        "outputDir": "/tmp/lolz",
+        "repeatEach": 1,
+        "retries": 1,
+        "metadata": {},
+        "id": "",
+        "name": "",
+        "testDir": "/function/tests",
+        "testIgnore": [],
+        "testMatch": [
+          "**/*.@(spec|test).?(c|m)[jt]s?(x)"
+        ],
+        "timeout": 420000
+      }
+    ],
+    "shard": null,
+    "updateSnapshots": "missing",
+    "version": "1.49.1",
+    "workers": 1,
+    "webServer": null
+  },
+  "suites": [
+    {
+      "title": "rn-msa/ui/existing-tests/multi-renter.checkout-v2.spec.ts",
+      "file": "rn-msa/ui/existing-tests/multi-renter.checkout-v2.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [],
+      "suites": [
+        {
+          "title": "Multi renter success payment",
+          "file": "rn-msa/ui/existing-tests/multi-renter.checkout-v2.spec.ts",
+          "line": 39,
+          "column": 8,
+          "specs": [
+            {
+              "title": "<REN-10043> All renters pay with Credit Card",
+              "ok": true,
+              "tags": [
+                "credit-card-payment",
+                "auto-uw-v1",
+                "multi-renter",
+                "checkout-v2",
+                "rate-filing-state",
+                "msa-nightly-group-6"
+              ],
+              "tests": [
+                {
+                  "timeout": 420000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "",
+                  "projectName": "",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "status": "passed",
+                      "duration": 155470,
+                      "errors": [],
+                      "stdout": [
+                        {
+                          "text": "Setting up browser options for docker : headless\n"
+                        },
+                        {
+                          "text": "Launching Browser, context and page...\n"
+                        },
+                        {
+                          "text": "User-Agent: Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/131.0.6778.33 Safari/537.36\n"
+                        },
+                        {
+                          "text": "Browser executable path: /ms-playwright/chromium-1148/chrome-linux/chrome\nBrowser name: chromium\n"
+                        },
+                        {
+                          "text": "Filling credentials\n"
+                        },
+                        {
+                          "text": "Entering username\n"
+                        },
+                        {
+                          "text": "Entering password\n"
+                        },
+                        {
+                          "text": "Clicking submit button\n"
+                        },
+                        {
+                          "text": "Setting up browser options for docker : headless\n"
+                        },
+                        {
+                          "text": "Launching Browser, context and page...\n"
+                        },
+                        {
+                          "text": "User-Agent: Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/131.0.6778.33 Safari/537.36\n"
+                        },
+                        {
+                          "text": "Browser executable path: /ms-playwright/chromium-1148/chrome-linux/chrome\nBrowser name: chromium\n"
+                        },
+                        {
+                          "text": "Filling credentials\n"
+                        },
+                        {
+                          "text": "Entering username\n"
+                        },
+                        {
+                          "text": "Entering password\n"
+                        },
+                        {
+                          "text": "Clicking submit button\n"
+                        },
+                        {
+                          "text": "Clicking agreement checkboxes\n"
+                        },
+                        {
+                          "text": "Clicking Pay Now button\n"
+                        },
+                        {
+                          "text": "Not able to close Payment Protection modal. Possible reasons:\n          - modal not shown (e.g. disabled by FF)\n          - modal elements have changed\n          Error: locator.waitFor: Timeout 3000ms exceeded.\nCall log:\n\u001b[2m  - waiting for getByText('continue with checkoutlet\\'s') to be visible\u001b[22m\n\n"
+                        },
+                        {
+                          "text": "Clicking agreement checkboxes\n"
+                        },
+                        {
+                          "text": "Clicking Pay Now button\n"
+                        },
+                        {
+                          "text": "Not able to close Payment Protection modal. Possible reasons:\n          - modal not shown (e.g. disabled by FF)\n          - modal elements have changed\n          Error: locator.waitFor: Timeout 3000ms exceeded.\nCall log:\n\u001b[2m  - waiting for getByText('continue with checkoutlet\\'s') to be visible\u001b[22m\n\n"
+                        },
+                        {
+                          "text": "No test case Id found, returning test title as is\n"
+                        },
+                        {
+                          "text": "File renamed from /tmp/videos/3bb72cc2a25fd96c76dca7a424ab370d.webm to /tmp/videos/video_<REN-10043> All renters pay with Credit Card_cotenant1_0.webm\n"
+                        },
+                        {
+                          "text": "No test case Id found, returning test title as is\n"
+                        },
+                        {
+                          "text": "File renamed from /tmp/videos/d4bea84ef77446500c957a6dee5d18da.webm to /tmp/videos/video_<REN-10043> All renters pay with Credit Card_renter_0.webm\n"
+                        }
+                      ],
+                      "stderr": [
+                        {
+                          "text": "(node:344) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.\n(Use `node --trace-deprecation ...` to show where the warning was created)\n"
+                        }
+                      ],
+                      "retry": 0,
+                      "steps": [
+                        {
+                          "title": "get premium on review policy page",
+                          "duration": 473
+                        },
+                        {
+                          "title": "renter 1 pay half premium and complete checkout v2 flow",
+                          "duration": 43461,
+                          "steps": [
+                            {
+                              "title": "validate policy summary box content",
+                              "duration": 318,
+                              "steps": [
+                                {
+                                  "title": "get policy summary info",
+                                  "duration": 186
+                                }
+                              ]
+                            },
+                            {
+                              "title": "click Continue button",
+                              "duration": 2375
+                            },
+                            {
+                              "title": "validate agreement page",
+                              "duration": 567
+                            },
+                            {
+                              "title": "sign agreement and continue",
+                              "duration": 3206,
+                              "steps": [
+                                {
+                                  "title": "click agreement checkboxes",
+                                  "duration": 1279
+                                },
+                                {
+                                  "title": "click Continue button",
+                                  "duration": 1924
+                                }
+                              ]
+                            },
+                            {
+                              "title": "validate remaining balance",
+                              "duration": 6928
+                            },
+                            {
+                              "title": "fill in custom amount and validate right panel updates",
+                              "duration": 4468
+                            },
+                            {
+                              "title": "validate custom amount updates",
+                              "duration": 317,
+                              "steps": [
+                                {
+                                  "title": "Getting total amount from sidebar on pay page",
+                                  "duration": 122
+                                },
+                                {
+                                  "title": "Getting card fee from sidebar on pay page",
+                                  "duration": 128
+                                }
+                              ]
+                            },
+                            {
+                              "title": "Selecting credit card payment",
+                              "duration": 624
+                            },
+                            {
+                              "title": "fill out credit card form",
+                              "duration": 10421,
+                              "steps": [
+                                {
+                                  "title": "Entering name on card",
+                                  "duration": 351
+                                },
+                                {
+                                  "title": "Entering credit card number",
+                                  "duration": 411
+                                },
+                                {
+                                  "title": "Entering credit card expiry date",
+                                  "duration": 363
+                                },
+                                {
+                                  "title": "Entering credit card cvv",
+                                  "duration": 320
+                                },
+                                {
+                                  "title": "fill out billing address",
+                                  "duration": 8968,
+                                  "steps": [
+                                    {
+                                      "title": "fill in address line1",
+                                      "duration": 287
+                                    },
+                                    {
+                                      "title": "fill in address city",
+                                      "duration": 372
+                                    },
+                                    {
+                                      "title": "Selecting address country",
+                                      "duration": 2389
+                                    },
+                                    {
+                                      "title": "fill in address state",
+                                      "duration": 5492
+                                    },
+                                    {
+                                      "title": "Entering zip code",
+                                      "duration": 414
+                                    }
+                                  ]
+                                }
+                              ]
+                            },
+                            {
+                              "title": "click Pay Now button",
+                              "duration": 8669,
+                              "steps": [
+                                {
+                                  "title": "check if payment protection modal is shown and close it",
+                                  "duration": 3037
+                                }
+                              ]
+                            },
+                            {
+                              "title": "validate renter info",
+                              "duration": 190
+                            },
+                            {
+                              "title": "validate renter info",
+                              "duration": 212
+                            },
+                            {
+                              "title": "validate remaining balance on status page",
+                              "duration": 5113
+                            }
+                          ]
+                        },
+                        {
+                          "title": "renter 2 pay half premium and complete checkout v2 flow",
+                          "duration": 40666,
+                          "steps": [
+                            {
+                              "title": "validate policy summary box content",
+                              "duration": 364,
+                              "steps": [
+                                {
+                                  "title": "get policy summary info",
+                                  "duration": 235
+                                }
+                              ]
+                            },
+                            {
+                              "title": "click Continue button",
+                              "duration": 889
+                            },
+                            {
+                              "title": "validate agreement page",
+                              "duration": 265
+                            },
+                            {
+                              "title": "sign agreement and continue",
+                              "duration": 4247,
+                              "steps": [
+                                {
+                                  "title": "click agreement checkboxes",
+                                  "duration": 890
+                                },
+                                {
+                                  "title": "click Continue button",
+                                  "duration": 3349
+                                }
+                              ]
+                            },
+                            {
+                              "title": "validate remaining balance",
+                              "duration": 11420
+                            },
+                            {
+                              "title": "fill in custom amount and validate right panel updates",
+                              "duration": 3010
+                            },
+                            {
+                              "title": "validate custom amount updates",
+                              "duration": 552,
+                              "steps": [
+                                {
+                                  "title": "Getting total amount from sidebar on pay page",
+                                  "duration": 113
+                                },
+                                {
+                                  "title": "Getting card fee from sidebar on pay page",
+                                  "duration": 254
+                                }
+                              ]
+                            },
+                            {
+                              "title": "Selecting credit card payment",
+                              "duration": 647
+                            },
+                            {
+                              "title": "fill out credit card form",
+                              "duration": 10473,
+                              "steps": [
+                                {
+                                  "title": "Entering name on card",
+                                  "duration": 421
+                                },
+                                {
+                                  "title": "Entering credit card number",
+                                  "duration": 358
+                                },
+                                {
+                                  "title": "Entering credit card expiry date",
+                                  "duration": 387
+                                },
+                                {
+                                  "title": "Entering credit card cvv",
+                                  "duration": 210
+                                },
+                                {
+                                  "title": "fill out billing address",
+                                  "duration": 9088,
+                                  "steps": [
+                                    {
+                                      "title": "fill in address line1",
+                                      "duration": 381
+                                    },
+                                    {
+                                      "title": "fill in address city",
+                                      "duration": 375
+                                    },
+                                    {
+                                      "title": "Selecting address country",
+                                      "duration": 2240
+                                    },
+                                    {
+                                      "title": "fill in address state",
+                                      "duration": 5294
+                                    },
+                                    {
+                                      "title": "Entering zip code",
+                                      "duration": 788
+                                    }
+                                  ]
+                                }
+                              ]
+                            },
+                            {
+                              "title": "click Pay Now button",
+                              "duration": 8778,
+                              "steps": [
+                                {
+                                  "title": "check if payment protection modal is shown and close it",
+                                  "duration": 3114
+                                }
+                              ]
+                            }
+                          ]
+                        },
+                        {
+                          "title": "validate congratulations page",
+                          "duration": 6615,
+                          "steps": [
+                            {
+                              "title": "Waiting for congratulations page to load",
+                              "duration": 6123
+                            }
+                          ]
+                        },
+                        {
+                          "title": "validate congratulations page",
+                          "duration": 4948,
+                          "steps": [
+                            {
+                              "title": "Waiting for congratulations page to load",
+                              "duration": 4546
+                            }
+                          ]
+                        }
+                      ],
+                      "startTime": "2025-11-06T08:09:34.823Z",
+                      "attachments": [
+                        {
+                          "name": "/tmp/videos/video_<REN-10043> All renters pay with Credit Card_cotenant1_0.webm",
+                          "contentType": "video/webm",
+                          "path": "/tmp/lolz/rn-msa-ui-existing-tests-m-126cf-enters-pay-with-Credit-Card/attachments/-tmp-videos-video-REN-10043-All-renters-pay-with-Credit-Card-cotenant1-0-webm-a886bec3300b352f4ceed855fc35539b0176db7a.webm"
+                        },
+                        {
+                          "name": "/tmp/videos/video_<REN-10043> All renters pay with Credit Card_renter_0.webm",
+                          "contentType": "video/webm",
+                          "path": "/tmp/lolz/rn-msa-ui-existing-tests-m-126cf-enters-pay-with-Credit-Card/attachments/-tmp-videos-video-REN-10043-All-renters-pay-with-Credit-Card-renter-0-webm-a4f9261e4b06891c83e8790df68c20b8f227acee.webm"
+                        }
+                      ]
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "ae41e815ed6ebec6ce91-bb56af6a3684c1515cd430",
+              "file": "rn-msa/ui/existing-tests/multi-renter.checkout-v2.spec.ts",
+              "line": 46,
+              "column": 9
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "stats": {
+    "startTime": "2025-11-06T08:09:19.403Z",
+    "duration": 171153.165,
+    "expected": 1,
+    "skipped": 0,
+    "unexpected": 0,
+    "flaky": 0
+  },
+  "customReport": {
+    "testName": "<REN-10043> All renters pay with Credit Card",
+    "testNameHash": "ddac6f99bda8449bc21d5b6555e3d7cb",
+    "status": "passed",
+    "duration": 172453,
+    "retryCount": 1
+  }
+}
