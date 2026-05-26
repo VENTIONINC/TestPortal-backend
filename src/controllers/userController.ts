@@ -1,4 +1,5 @@
 import { Request, Response } from "express";
+import { authProviderService } from "@/services/authProviderService";
 import {
   userService,
   type CreateUserParams,
@@ -13,10 +14,22 @@ const createSafeUserResponse = (user: PrismaUser) => {
   return safeUser;
 };
 
+const getSingleParam = (value: string | string[] | undefined): string | null => {
+  if (typeof value === "string") {
+    return value;
+  }
+
+  return null;
+};
+
 export const userController = {
+  getAuthConfig: async (_req: Request, res: Response): Promise<void> => {
+    res.status(200).json(authProviderService.getConfig());
+  },
+
   getUserById: async (req: Request, res: Response): Promise<void> => {
     try {
-      const { userId } = req.params;
+      const userId = getSingleParam(req.params.userId);
 
       if (!userId) {
         res.status(400).json({
@@ -60,7 +73,7 @@ export const userController = {
 
   updateUser: async (req: Request, res: Response): Promise<void> => {
     try {
-      const { userId } = req.params;
+      const userId = getSingleParam(req.params.userId);
 
       if (!userId) {
         res.status(400).json({
@@ -100,10 +113,7 @@ export const userController = {
 
       const loginParams: LoginParams = req.body;
 
-      const authResponse = await userService.login(
-        loginParams.email,
-        loginParams.password,
-      );
+      const authResponse = await authProviderService.login(loginParams);
 
       res.status(200).json(authResponse);
     } catch (error) {
@@ -138,7 +148,7 @@ export const userController = {
 
   generateMcpToken: async (req: Request, res: Response): Promise<void> => {
     try {
-      const { userId } = req.params;
+      const userId = getSingleParam(req.params.userId);
 
       if (!userId) {
         res.status(400).json({
@@ -163,7 +173,7 @@ export const userController = {
 
   revokeMcpToken: async (req: Request, res: Response): Promise<void> => {
     try {
-      const { userId } = req.params;
+      const userId = getSingleParam(req.params.userId);
 
       if (!userId) {
         res.status(400).json({
@@ -185,8 +195,7 @@ export const userController = {
     }
   },
 
-  // Cognito authentication methods
-  cognitoSignup: async (req: Request, res: Response): Promise<void> => {
+  authSignup: async (req: Request, res: Response): Promise<void> => {
     try {
       if (!req.body) {
         res.status(400).json({
@@ -204,13 +213,12 @@ export const userController = {
         return;
       }
 
-      const result = await userService.signupWithCognito(name, email, password);
+      const result = await authProviderService.signup({ name, email, password });
       const safeUser = createSafeUserResponse(result.user);
 
       res.status(201).json({
         user: safeUser,
-        message:
-          "User created successfully with Cognito. Please check your email for verification.",
+        ...(result.message ? { message: result.message } : {}),
       });
     } catch (error) {
       const err = error as Error;
@@ -220,7 +228,7 @@ export const userController = {
     }
   },
 
-  cognitoLogin: async (req: Request, res: Response): Promise<void> => {
+  authLogin: async (req: Request, res: Response): Promise<void> => {
     try {
       if (!req.body) {
         res.status(400).json({
@@ -238,30 +246,24 @@ export const userController = {
         return;
       }
 
-      const authResponse = await userService.loginWithCognito(
+      const authResponse = await authProviderService.login({
         email,
         password,
-        newPassword,
-      );
+        ...(newPassword ? { newPassword } : {}),
+      });
+
       res.status(200).json(authResponse);
     } catch (error) {
       const err = error as Error;
-      if (err.message.includes("New password required")) {
-        res.status(200).json({
-          status: "NEW_PASSWORD_REQUIRED",
-          message: "New password required for first login",
-        });
-      } else {
-        res.status(401).json({
-          error: err.message,
-        });
-      }
+      res.status(401).json({
+        error: err.message,
+      });
     }
   },
 
-  cognitoSignOut: async (_req: Request, res: Response): Promise<void> => {
+  authLogout: async (_req: Request, res: Response): Promise<void> => {
     try {
-      const result = await userService.signOutFromCognito();
+      const result = await authProviderService.logout();
       res.status(200).json({
         message: result,
       });
@@ -273,12 +275,24 @@ export const userController = {
     }
   },
 
+  cognitoSignup: async (req: Request, res: Response): Promise<void> => {
+    await userController.authSignup(req, res);
+  },
+
+  cognitoLogin: async (req: Request, res: Response): Promise<void> => {
+    await userController.authLogin(req, res);
+  },
+
+  cognitoSignOut: async (req: Request, res: Response): Promise<void> => {
+    await userController.authLogout(req, res);
+  },
+
   updateUserIntegrations: async (
     req: Request,
     res: Response,
   ): Promise<void> => {
     try {
-      const { userId } = req.params;
+      const userId = getSingleParam(req.params.userId);
       const integrationsData: UpdateUserIntegrationsParams = req.body;
 
       if (!userId) {

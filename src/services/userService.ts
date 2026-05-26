@@ -30,6 +30,7 @@ export interface UpdateUserIntegrationsParams {
 export interface LoginParams {
   email: string;
   password: string;
+  newPassword?: string;
 }
 
 interface UpdateUserData {
@@ -45,6 +46,33 @@ interface UpdateUserData {
 }
 
 export const userService = {
+  createAuthResponse(
+    user: PrismaUser,
+    options: { cognitoSession?: unknown } = {},
+  ): AuthResponse {
+    const payload: JwtPayload = {
+      userId: user.id,
+      email: user.email,
+    };
+
+    const tokens = jwtService.generateTokenPair(payload);
+
+    return {
+      user: {
+        id: user.id,
+        name: user.name,
+        email: user.email,
+        createdAt: user.createdAt,
+        updatedAt: user.updatedAt,
+      },
+      accessToken: tokens.accessToken,
+      refreshToken: tokens.refreshToken,
+      ...(options.cognitoSession
+        ? { cognitoSession: options.cognitoSession }
+        : {}),
+    };
+  },
+
   async getUserById(userId: string): Promise<PrismaUser> {
     if (!userId) {
       throw new Error("User ID is required");
@@ -191,25 +219,7 @@ export const userService = {
 
   async login(email: string, password: string): Promise<AuthResponse> {
     const user = await this.verifyPassword(email, password);
-
-    const payload: JwtPayload = {
-      userId: user.id,
-      email: user.email,
-    };
-
-    const tokens = jwtService.generateTokenPair(payload);
-
-    return {
-      user: {
-        id: user.id,
-        name: user.name,
-        email: user.email,
-        createdAt: user.createdAt,
-        updatedAt: user.updatedAt,
-      },
-      accessToken: tokens.accessToken,
-      refreshToken: tokens.refreshToken,
-    };
+    return this.createAuthResponse(user);
   },
 
   async refreshTokens(refreshToken: string): Promise<AuthResponse> {
@@ -217,22 +227,7 @@ export const userService = {
 
     const user = await this.getUserById(payload.userId);
 
-    const newTokens = jwtService.generateTokenPair({
-      userId: user.id,
-      email: user.email,
-    });
-
-    return {
-      user: {
-        id: user.id,
-        name: user.name,
-        email: user.email,
-        createdAt: user.createdAt,
-        updatedAt: user.updatedAt,
-      },
-      accessToken: newTokens.accessToken,
-      refreshToken: newTokens.refreshToken,
-    };
+    return this.createAuthResponse(user);
   },
 
   async generateMcpToken(userId: string): Promise<string> {
@@ -334,38 +329,14 @@ export const userService = {
         throw new Error("New password required");
       }
 
-      // Find or create user in our database
       let user = await userModel.findByEmail(email);
       if (!user) {
-        // Create user if they don't exist (federated users, etc.)
-        const userData = {
-          name: email.split("@")[0] ?? "Unknown", // Use email prefix as default name
-          email,
-          cognitoUserId: email,
-        };
-        user = await userModel.create(userData);
+        user = await this.createCognitoBackedUser(email);
       }
 
-      // Generate our internal JWT tokens
-      const payload: JwtPayload = {
-        userId: user.id,
-        email: user.email,
-      };
-
-      const tokens = jwtService.generateTokenPair(payload);
-
-      return {
-        user: {
-          id: user.id,
-          name: user.name,
-          email: user.email,
-          createdAt: user.createdAt,
-          updatedAt: user.updatedAt,
-        },
-        accessToken: tokens.accessToken,
-        refreshToken: tokens.refreshToken,
-        ...(cognitoResult.session && { cognitoSession: cognitoResult.session }),
-      };
+      return this.createAuthResponse(user, {
+        ...(cognitoResult.session ? { cognitoSession: cognitoResult.session } : {}),
+      });
     } catch (error) {
       throw new Error(`Cognito login failed: ${(error as Error).message}`);
     }
@@ -382,6 +353,20 @@ export const userService = {
 
   async findUserByCognitoId(cognitoUserId: string): Promise<PrismaUser | null> {
     return await userModel.findByCognitoUserId(cognitoUserId);
+  },
+
+  async findUserByEmail(email: string): Promise<PrismaUser | null> {
+    return await userModel.findByEmail(email);
+  },
+
+  async createCognitoBackedUser(email: string): Promise<PrismaUser> {
+    const userData = {
+      name: email.split("@")[0] ?? "Unknown",
+      email,
+      cognitoUserId: email,
+    };
+
+    return await userModel.create(userData);
   },
 
   async updateUserIntegrations(

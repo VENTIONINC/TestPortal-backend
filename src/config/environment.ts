@@ -1,6 +1,7 @@
 const COGNITO_USER_POOL_ID = process.env.COGNITO_USER_POOL_ID ?? "";
 const COGNITO_CLIENT_ID = process.env.COGNITO_CLIENT_ID ?? "";
 const COGNITO_POOL_REGION = process.env.COGNITO_POOL_REGION ?? "";
+const AUTH_PROVIDER = process.env.AUTH_PROVIDER;
 const DEFAULT_PROJECT_ID =
   process.env.DEFAULT_PROJECT_ID ?? "b4225bdf-9e2b-43f9-8f13-5bb6f5079176"; // Default Project UUID
 
@@ -16,13 +17,39 @@ const LANGSMITH_ENDPOINT =
   process.env.LANGSMITH_ENDPOINT ?? "https://api.smith.langchain.com";
 const LANGSMITH_API_KEY = process.env.LANGSMITH_API_KEY ?? "";
 const LANGSMITH_PROJECT = process.env.LANGSMITH_PROJECT ?? "test-portal-backend";
+
+const SUPPORTED_AUTH_PROVIDERS = ["local", "cognito"] as const;
+type AuthProviderName = (typeof SUPPORTED_AUTH_PROVIDERS)[number];
+
+const isSupportedAuthProvider = (
+  value: string | undefined,
+): value is AuthProviderName =>
+  Boolean(value && SUPPORTED_AUTH_PROVIDERS.includes(value as AuthProviderName));
+
+if (!AUTH_PROVIDER) {
+  throw new Error(
+    "AUTH_PROVIDER environment variable is required. Supported values are: local, cognito.",
+  );
+}
+
+if (!isSupportedAuthProvider(AUTH_PROVIDER)) {
+  throw new Error(
+    `Unsupported AUTH_PROVIDER "${AUTH_PROVIDER}". Supported values are: local, cognito.`,
+  );
+}
+
 // Check if Cognito is configured
 export const isCognitoConfigured = Boolean(
   COGNITO_USER_POOL_ID && COGNITO_CLIENT_ID && COGNITO_POOL_REGION,
 );
 
-// Only warn if Cognito is not configured (don't throw error)
-if (!isCognitoConfigured) {
+if (AUTH_PROVIDER === "cognito" && !isCognitoConfigured) {
+  throw new Error(
+    "AUTH_PROVIDER is set to cognito, but Cognito configuration is incomplete. Set COGNITO_USER_POOL_ID, COGNITO_CLIENT_ID, and COGNITO_POOL_REGION.",
+  );
+}
+
+if (AUTH_PROVIDER !== "cognito" && !isCognitoConfigured) {
   console.warn(
     "Cognito authentication is not configured. Set COGNITO_USER_POOL_ID, COGNITO_CLIENT_ID, and COGNITO_POOL_REGION to enable Cognito features.",
   );
@@ -44,6 +71,9 @@ if (LANGSMITH_TRACING && !LANGSMITH_API_KEY) {
 }
 
 export const environment = {
+  auth: {
+    provider: AUTH_PROVIDER,
+  },
   cognito: {
     userPoolId: COGNITO_USER_POOL_ID,
     clientId: COGNITO_CLIENT_ID,
@@ -64,6 +94,7 @@ export const environment = {
 };
 
 export {
+  AUTH_PROVIDER,
   COGNITO_USER_POOL_ID,
   COGNITO_CLIENT_ID,
   COGNITO_POOL_REGION,

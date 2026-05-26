@@ -43,6 +43,7 @@ A comprehensive Node.js Express server for managing test results with TypeScript
    DATABASE_URL="postgresql://postgres:postgres@localhost:5433/test_portal"
    PORT=3001
    NODE_ENV=development
+   AUTH_PROVIDER=local
    ```
 
 4. **Initialize Prisma and set up the database:**
@@ -150,6 +151,14 @@ src/
 ```
 
 ## API Endpoints
+
+### Authentication
+
+- `GET /api/v2/auth/config` - Discover the active auth provider and capability flags
+- `POST /api/v2/auth/signup` - Sign up through the configured provider
+- `POST /api/v2/auth/login` - Login through the configured provider
+- `POST /api/v2/auth/refresh-token` - Exchange a refresh token for new internal JWTs
+- `POST /api/v2/auth/logout` - Logout through the configured provider
 
 ### Core Resources
 

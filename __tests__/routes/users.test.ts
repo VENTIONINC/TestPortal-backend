@@ -1,5 +1,6 @@
 import "@/test-utils/testEnv";
 import { jest } from "@jest/globals";
+import argon2 from "argon2";
 import type { PrismaUser } from "@/types";
 import { userController } from "@/controllers/userController";
 import {
@@ -17,6 +18,13 @@ const users: PrismaUser[] = [];
 const generateUserId = () => crypto.randomUUID();
 let shouldThrowDatabaseError = false;
 let databaseErrorMessage = "Database error";
+
+jest.mock("argon2");
+jest.mock("@/prisma/client", () => ({
+  dbClient: {
+    $transaction: jest.fn((callback: (tx: unknown) => unknown) => callback({})),
+  },
+}));
 
 jest.mock("@/services/authService", () => ({
   signUpUser: jest.fn(() =>
@@ -94,11 +102,32 @@ describe("Users Routes", () => {
     shouldThrowDatabaseError = false;
     databaseErrorMessage = "Database error";
     jest.clearAllMocks();
+    (argon2.hash as jest.MockedFunction<typeof argon2.hash>).mockResolvedValue(
+      "hashed_password",
+    );
+    (argon2.verify as jest.MockedFunction<typeof argon2.verify>).mockImplementation(
+      async (hash) => hash === "hashed_password",
+    );
   });
 
   describe("Authentication Flow", () => {
+    it("returns auth configuration for the active provider", async () => {
+      const res = await executeController(userController.getAuthConfig);
+
+      expect(res.statusCode).toBe(200);
+      expect(res.body).toEqual({
+        provider: "local",
+        capabilities: {
+          passwordLogin: true,
+          passwordSignup: true,
+          requiresRedirectLogin: false,
+          supportsNewPasswordChallenge: false,
+        },
+      });
+    });
+
     it("allows signup, login and protected access", async () => {
-      const signupRes = await executeController(userController.signup, {
+      const signupRes = await executeController(userController.authSignup, {
         method: "POST",
         body: {
           name: "Test",
@@ -107,8 +136,9 @@ describe("Users Routes", () => {
         },
       });
       expect(signupRes.statusCode).toBe(201);
+      expect(signupRes.body).toHaveProperty("user.email", "test@ventionteams.com");
 
-      const loginRes = await executeController(userController.login, {
+      const loginRes = await executeController(userController.authLogin, {
         method: "POST",
         body: { email: "test@ventionteams.com", password: "password123" },
       });
@@ -145,13 +175,13 @@ describe("Users Routes", () => {
 
   describe("Route Endpoints", () => {
     const signup = async (name: string, email: string) =>
-      executeController(userController.signup, {
+      executeController(userController.authSignup, {
         method: "POST",
         body: { name, email, password: "password123" },
       });
 
     const login = async (email: string) =>
-      executeController(userController.login, {
+      executeController(userController.authLogin, {
         method: "POST",
         body: { email, password: "password123" },
       });
@@ -160,7 +190,7 @@ describe("Users Routes", () => {
       const res = await signup("Alice", "alice@ventionteams.com");
       expect(res.statusCode).toBe(201);
       const body = res.body;
-      expect(body?.email).toBe("alice@ventionteams.com");
+      expect(body?.user.email).toBe("alice@ventionteams.com");
     });
 
     it("POST /login authenticates user", async () => {
@@ -252,7 +282,7 @@ describe("Users Routes", () => {
 
   describe("Update & Refresh Flows", () => {
     const signup = async () =>
-      executeController(userController.signup, {
+      executeController(userController.authSignup, {
         method: "POST",
         body: {
           name: "Test",
@@ -262,7 +292,7 @@ describe("Users Routes", () => {
       });
 
     const login = async () =>
-      executeController(userController.login, {
+      executeController(userController.authLogin, {
         method: "POST",
         body: { email: "test@ventionteams.com", password: "password123" },
       });
