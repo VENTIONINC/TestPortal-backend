@@ -1,3 +1,6 @@
+// Copyright 2026 Vention
+// SPDX-License-Identifier: Apache-2.0
+
 import { Request, Response } from "express";
 import { resultService } from "@/services/resultService";
 import type { GetResultsStatsParams } from "@/types";
@@ -18,8 +21,12 @@ type AnalysisFeedbackPreparation = {
   data?: AnalysisFeedbackData;
 };
 
+type ResultIdParams = {
+  resultId: string;
+};
+
 const prepareAnalysisFeedback = (
-  req: AuthenticatedRequest,
+  req: AuthenticatedRequest<ResultIdParams>,
 ): AnalysisFeedbackPreparation => {
   const { resultId } = req.params;
 
@@ -99,7 +106,10 @@ export const resultController = {
     }
   },
 
-  getResultById: async (req: Request, res: Response): Promise<void> => {
+  getResultById: async (
+    req: Request<ResultIdParams>,
+    res: Response,
+  ): Promise<void> => {
     try {
       const { resultId } = req.params;
       const { projectId } = req.query as Record<string, string>;
@@ -168,7 +178,10 @@ export const resultController = {
     }
   },
 
-  updateAnalysis: async (req: Request, res: Response): Promise<void> => {
+  updateAnalysis: async (
+    req: Request<ResultIdParams>,
+    res: Response,
+  ): Promise<void> => {
     try {
       const { resultId } = req.params;
       const {
@@ -226,7 +239,7 @@ export const resultController = {
   },
 
   updateAnalysisFeedback: async (
-    req: AuthenticatedRequest,
+    req: AuthenticatedRequest<ResultIdParams>,
     res: Response,
   ): Promise<void> => {
     try {
@@ -254,7 +267,10 @@ export const resultController = {
     }
   },
 
-  deleteResult: async (req: Request, res: Response): Promise<void> => {
+  deleteResult: async (
+    req: Request<ResultIdParams>,
+    res: Response,
+  ): Promise<void> => {
     try {
       const { resultId } = req.params;
       const { projectId } = req.query as Record<string, string>;

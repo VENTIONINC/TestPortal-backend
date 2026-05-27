@@ -67,6 +67,7 @@ prisma/prisma
 dev.db
 
 .tmp
+mocks/
 
 # TypeScript build output
 dist/
@@ -74,6 +75,10 @@ dist/
 
 # exmaple files
 example-reports/
+mocks/
+
+# Generated mock payloads
+mocks/
 
 # IDEs and editors
 .vscode/

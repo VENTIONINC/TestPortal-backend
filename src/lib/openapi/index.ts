@@ -1,3 +1,6 @@
+// Copyright 2026 Vention
+// SPDX-License-Identifier: Apache-2.0
+
 import {
   OpenAPIRegistry,
   OpenApiGeneratorV31,
@@ -17,6 +20,7 @@ import { registerUserRoutes } from "./users";
 import { registerAuthRoutes } from "./auth";
 import { registerErrorFormatterRoutes } from "./errorFormatter";
 import { registerPromptRoutes } from "./prompts";
+import { registerSkillRoutes } from "./skills";
 import { registerProjectRoutes } from "./projects";
 import { registerCtrfRoutes } from "./ctrf";
 import { registerUploadApiKeyRoutes } from "./uploadApiKey";
@@ -41,6 +45,7 @@ export function generateOpenAPISpec() {
   registerAuthRoutes(registry);
   registerErrorFormatterRoutes(registry);
   registerPromptRoutes(registry);
+  registerSkillRoutes(registry);
   registerProjectRoutes(registry);
   registerCtrfRoutes(registry);
   registerUploadApiKeyRoutes(registry);
@@ -123,6 +128,10 @@ export function generateOpenAPISpec() {
       {
         name: "Prompts",
         description: "Prompt template management and generation endpoints",
+      },
+      {
+        name: "Skills",
+        description: "Downloadable skill artifact catalog endpoints",
       },
       {
         name: "Projects",

@@ -1,3 +1,6 @@
+// Copyright 2026 Vention
+// SPDX-License-Identifier: Apache-2.0
+
 import type { ErrorSolutionInput } from "./types";
 
 export function pick<T>(i: number, arr: T[]): T {

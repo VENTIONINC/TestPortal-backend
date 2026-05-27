@@ -1,5 +1,9 @@
+// Copyright 2026 Vention
+// SPDX-License-Identifier: Apache-2.0
+
 import { Request, Response } from "express";
 import { authProviderService } from "@/services/authProviderService";
+import type { AuthenticatedRequest } from "@/middleware/authMiddleware";
 import {
   userService,
   type CreateUserParams,
@@ -14,12 +18,18 @@ const createSafeUserResponse = (user: PrismaUser) => {
   return safeUser;
 };
 
-const getSingleParam = (value: string | string[] | undefined): string | null => {
-  if (typeof value === "string") {
-    return value;
+const getAuthenticatedUserId = (
+  req: AuthenticatedRequest,
+  res: Response,
+): string | null => {
+  if (!req.user) {
+    res.status(401).json({
+      error: "User is not authenticated",
+    });
+    return null;
   }
 
-  return null;
+  return req.user.id;
 };
 
 export const userController = {
@@ -27,16 +37,13 @@ export const userController = {
     res.status(200).json(authProviderService.getConfig());
   },
 
-  getUserById: async (req: Request, res: Response): Promise<void> => {
+  getUserById: async (
+    req: AuthenticatedRequest,
+    res: Response,
+  ): Promise<void> => {
     try {
-      const userId = getSingleParam(req.params.userId);
-
-      if (!userId) {
-        res.status(400).json({
-          error: "User ID is required",
-        });
-        return;
-      }
+      const userId = getAuthenticatedUserId(req, res);
+      if (!userId) return;
 
       const user = await userService.getUserById(userId);
       const safeUser = createSafeUserResponse(user);
@@ -71,16 +78,13 @@ export const userController = {
     }
   },
 
-  updateUser: async (req: Request, res: Response): Promise<void> => {
+  updateUser: async (
+    req: AuthenticatedRequest,
+    res: Response,
+  ): Promise<void> => {
     try {
-      const userId = getSingleParam(req.params.userId);
-
-      if (!userId) {
-        res.status(400).json({
-          error: "User ID is required",
-        });
-        return;
-      }
+      const userId = getAuthenticatedUserId(req, res);
+      if (!userId) return;
 
       if (!req.body || Object.keys(req.body).length === 0) {
         res.status(400).json({
@@ -112,7 +116,6 @@ export const userController = {
       }
 
       const loginParams: LoginParams = req.body;
-
       const authResponse = await authProviderService.login(loginParams);
 
       res.status(200).json(authResponse);
@@ -146,16 +149,13 @@ export const userController = {
     }
   },
 
-  generateMcpToken: async (req: Request, res: Response): Promise<void> => {
+  generateMcpToken: async (
+    req: AuthenticatedRequest,
+    res: Response,
+  ): Promise<void> => {
     try {
-      const userId = getSingleParam(req.params.userId);
-
-      if (!userId) {
-        res.status(400).json({
-          error: "User ID is required",
-        });
-        return;
-      }
+      const userId = getAuthenticatedUserId(req, res);
+      if (!userId) return;
 
       const mcpToken = await userService.generateMcpToken(userId);
 
@@ -171,16 +171,13 @@ export const userController = {
     }
   },
 
-  revokeMcpToken: async (req: Request, res: Response): Promise<void> => {
+  revokeMcpToken: async (
+    req: AuthenticatedRequest,
+    res: Response,
+  ): Promise<void> => {
     try {
-      const userId = getSingleParam(req.params.userId);
-
-      if (!userId) {
-        res.status(400).json({
-          error: "User ID is required",
-        });
-        return;
-      }
+      const userId = getAuthenticatedUserId(req, res);
+      if (!userId) return;
 
       await userService.revokeMcpToken(userId);
 
@@ -288,19 +285,14 @@ export const userController = {
   },
 
   updateUserIntegrations: async (
-    req: Request,
+    req: AuthenticatedRequest,
     res: Response,
   ): Promise<void> => {
     try {
-      const userId = getSingleParam(req.params.userId);
-      const integrationsData: UpdateUserIntegrationsParams = req.body;
+      const userId = getAuthenticatedUserId(req, res);
+      if (!userId) return;
 
-      if (!userId) {
-        res.status(400).json({
-          error: "User ID is required",
-        });
-        return;
-      }
+      const integrationsData: UpdateUserIntegrationsParams = req.body;
 
       if (!integrationsData || Object.keys(integrationsData).length === 0) {
         res.status(400).json({

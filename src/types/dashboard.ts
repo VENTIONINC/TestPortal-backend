@@ -1,3 +1,6 @@
+// Copyright 2026 Vention
+// SPDX-License-Identifier: Apache-2.0
+
 // src/types/dashboard.ts
 
 export type ExecutionType = "Nightly" | "Release" | "OnDemand" | "Other";

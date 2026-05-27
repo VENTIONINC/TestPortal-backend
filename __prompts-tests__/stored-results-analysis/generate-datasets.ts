@@ -1,3 +1,6 @@
+// Copyright 2026 Vention
+// SPDX-License-Identifier: Apache-2.0
+
 /**
  * Dataset generation script for prompt testing framework
  * Generates smoke and regression test datasets using template factories

@@ -1,3 +1,6 @@
+// Copyright 2026 Vention
+// SPDX-License-Identifier: Apache-2.0
+
 import { Router, Request, Response, NextFunction } from "express";
 import { randomUUID } from "node:crypto";
 import {

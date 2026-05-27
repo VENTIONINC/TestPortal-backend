@@ -1,3 +1,6 @@
+// Copyright 2026 Vention
+// SPDX-License-Identifier: Apache-2.0
+
 import { Router, Request, Response } from "express";
 import issue from "@/routes/issue";
 import results from "@/routes/results";
@@ -11,6 +14,7 @@ import users from "@/routes/users";
 import openapi from "@/routes/openapi";
 import errorFormatter from "@/routes/error-formatter";
 import prompts from "@/routes/promptRoutes";
+import skills from "@/routes/skillRoutes";
 import projects from "@/routes/projects";
 import ctrf from "@/routes/ctrf";
 import upload from "@/routes/upload";
@@ -37,6 +41,7 @@ router.use(openapi);
 router.use(errorFormatter);
 router.use(analysisExport);
 router.use(prompts);
+router.use(skills);
 router.use(projects);
 router.use(ctrf);
 router.use(upload);

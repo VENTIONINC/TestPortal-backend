@@ -1,13 +1,12 @@
-import { specModel } from "@/models/specModel";
-import type { PrismaSpec } from "@/types";
+// Copyright 2026 Vention
+// SPDX-License-Identifier: Apache-2.0
 
-interface ProcessedSpec extends Omit<PrismaSpec, "tags" | "annotations"> {
-  tags: string[];
-  annotations: Record<string, unknown>;
-}
+import { specModel } from "@/models/specModel";
+import { normalizeJsonStringArray, normalizeJsonUnknownArray } from "@/lib/jsonPayloads";
+import type { StructuredSpec } from "@/types";
 
 export const specService = {
-  async getSpecById(specId: string, projectId: string): Promise<ProcessedSpec> {
+  async getSpecById(specId: string, projectId: string): Promise<StructuredSpec> {
     if (!specId) {
       throw new Error("Spec ID is required");
     }
@@ -22,18 +21,11 @@ export const specService = {
       throw new Error(`Spec with ID ${specId} not found`);
     }
 
-    try {
-      const processedSpec: ProcessedSpec = {
-        ...spec,
-        tags: spec.tags ? JSON.parse(spec.tags) : [],
-        annotations: spec.annotations ? JSON.parse(spec.annotations) : {},
-      };
-
-      return processedSpec;
-    } catch (parseError) {
-      const error = parseError as Error;
-      throw new Error(`Failed to parse spec data: ${error.message}`);
-    }
+    return {
+      ...spec,
+      tags: normalizeJsonStringArray(spec.tags),
+      annotations: normalizeJsonUnknownArray(spec.annotations),
+    };
   },
 
   async deleteSpec(specId: string, projectId: string): Promise<void> {

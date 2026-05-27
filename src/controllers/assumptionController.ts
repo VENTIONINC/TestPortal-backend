@@ -1,6 +1,13 @@
+// Copyright 2026 Vention
+// SPDX-License-Identifier: Apache-2.0
+
 import { Request, Response } from "express";
 import { assumptionService } from "@/services/assumptionService";
 import type { CreateAssumptionRequest, UpdateAssumptionRequest } from "@/types";
+
+type AssumptionIdParams = {
+  assumptionId: string;
+};
 
 export const assumptionController = {
   createAssumption: async (req: Request, res: Response): Promise<void> => {
@@ -25,7 +32,10 @@ export const assumptionController = {
     }
   },
 
-  updateAssumption: async (req: Request, res: Response): Promise<void> => {
+  updateAssumption: async (
+    req: Request<AssumptionIdParams>,
+    res: Response,
+  ): Promise<void> => {
     try {
       const { assumptionId } = req.params;
       const updateData: Partial<UpdateAssumptionRequest> = req.body;
@@ -62,7 +72,10 @@ export const assumptionController = {
     }
   },
 
-  getAssumptionById: async (req: Request, res: Response): Promise<void> => {
+  getAssumptionById: async (
+    req: Request<AssumptionIdParams>,
+    res: Response,
+  ): Promise<void> => {
     try {
       const { assumptionId } = req.params;
       const { projectId } = req.query;
@@ -92,7 +105,10 @@ export const assumptionController = {
     }
   },
 
-  deleteAssumption: async (req: Request, res: Response): Promise<void> => {
+  deleteAssumption: async (
+    req: Request<AssumptionIdParams>,
+    res: Response,
+  ): Promise<void> => {
     try {
       const { assumptionId } = req.params;
       const { projectId } = req.query as Record<string, string>;

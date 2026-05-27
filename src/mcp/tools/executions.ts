@@ -1,3 +1,6 @@
+// Copyright 2026 Vention
+// SPDX-License-Identifier: Apache-2.0
+
 import { mcpExecutionHandler } from "@/handlers/mcpExecutionHandler";
 import { createSuccessResponse, createMcpTool } from "@/mcp/helpers/mcpHelpers";
 import { getExecutionByIdSchema } from "@/mcp/schemas/executionSchemas";

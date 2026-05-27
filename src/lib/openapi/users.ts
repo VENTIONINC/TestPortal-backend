@@ -1,3 +1,6 @@
+// Copyright 2026 Vention
+// SPDX-License-Identifier: Apache-2.0
+
 import { OpenAPIRegistry } from "@asteasolutions/zod-to-openapi";
 import { z } from "./zod";
 import { ErrorResponseSchema, SuccessResponseSchema } from "./common";
@@ -245,14 +248,6 @@ export function registerUserRoutes(registry: OpenAPIRegistry) {
           },
         },
       },
-      403: {
-        description: "Forbidden - user can only generate tokens for themselves",
-        content: {
-          "application/json": {
-            schema: ErrorResponseSchema,
-          },
-        },
-      },
       404: {
         description: "User not found",
         content: {
@@ -294,14 +289,6 @@ export function registerUserRoutes(registry: OpenAPIRegistry) {
       },
       401: {
         description: "Unauthorized - invalid or missing token",
-        content: {
-          "application/json": {
-            schema: ErrorResponseSchema,
-          },
-        },
-      },
-      403: {
-        description: "Forbidden - user can only revoke their own tokens",
         content: {
           "application/json": {
             schema: ErrorResponseSchema,

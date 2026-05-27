@@ -1,37 +1,77 @@
+// Copyright 2026 Vention
+// SPDX-License-Identifier: Apache-2.0
+
 import { OpenAPIRegistry } from "@asteasolutions/zod-to-openapi";
 import { z } from "./zod";
 import { ErrorResponseSchema } from "./common";
 
+const ResultSpecSchema = z
+  .object({
+    id: z.string().uuid(),
+    key: z.string(),
+    file: z.string(),
+    title: z.string(),
+    tags: z.array(z.string()),
+  })
+  .openapi("ResultSpec");
+
+const ResultExecutionSchema = z
+  .object({
+    id: z.string().uuid(),
+    environment: z.string(),
+    type: z.string(),
+    name: z.string(),
+    version: z.string(),
+    startedAt: z.string(),
+    createdAt: z.string(),
+  })
+  .openapi("ResultExecution");
+
+const ResultErrorSchema = z
+  .object({
+    id: z.string().uuid(),
+    type: z.string(),
+    message: z.string(),
+    callLog: z.array(z.string()),
+    callStack: z.array(z.string()),
+    testAssertion: z.string().nullable().optional(),
+    expectedPattern: z.string().nullable().optional(),
+    receivedString: z.string().nullable().optional(),
+    location: z.string(),
+    resultId: z.string().uuid().nullable().optional(),
+    createdAt: z.string(),
+    updatedAt: z.string(),
+  })
+  .openapi("ResultNestedError");
+
 const ResultSchema = z
   .object({
     id: z.string().uuid(),
-    tag: z.string().optional(),
-    specId: z.string().uuid().optional(),
-    specFile: z.string().optional(),
-    specName: z.string().optional(),
-    environment: z.string().optional(),
-    type: z.string().optional(),
-    status: z.string().optional(),
-    reportPortalLink: z.string().optional(),
-    retry: z.number().optional(),
-    duration: z.number().optional(),
-    startTime: z.string().optional(),
+    status: z.string(),
+    reportPortalLink: z.string().nullable().optional(),
+    retry: z.number(),
+    duration: z.number(),
+    startTime: z.string(),
     analysisStatus: z
       .enum(["passed", "failed"])
+      .nullable()
       .optional()
       .describe("Test analysis status"),
     analysisCategory: z
       .enum(["bug", "infra", "performance", "script", "other"])
+      .nullable()
       .optional()
       .describe("Failure category from AI analysis"),
     analysisConfidence: z
       .number()
       .min(1)
       .max(5)
+      .nullable()
       .optional()
       .describe("Confidence level of analysis (1-5 scale)"),
     analysisConclusion: z
       .string()
+      .nullable()
       .optional()
       .describe("Explanation for the categorization decision"),
     analysisErrorQuality: z
@@ -49,6 +89,22 @@ const ResultSchema = z
       .nullable()
       .optional()
       .describe("Explanation for the error quality rating"),
+    analysisReviewedAt: z.string().nullable().optional(),
+    analysisReviewedById: z.string().uuid().nullable().optional(),
+    analysisFeedbackCategory: z
+      .enum(["bug", "infra", "performance", "script", "other"])
+      .nullable()
+      .optional(),
+    analysisFeedbackConfidence: z
+      .number()
+      .min(1)
+      .max(5)
+      .nullable()
+      .optional(),
+    analysisFeedbackConclusion: z.string().nullable().optional(),
+    spec: ResultSpecSchema,
+    execution: ResultExecutionSchema,
+    errors: z.array(ResultErrorSchema),
     createdAt: z.string(),
     updatedAt: z.string(),
   })
@@ -140,6 +196,9 @@ const UpdateResultAnalysisFeedbackRequestSchema = z
 
 export function registerResultRoutes(registry: OpenAPIRegistry) {
   registry.register("Result", ResultSchema);
+  registry.register("ResultSpec", ResultSpecSchema);
+  registry.register("ResultExecution", ResultExecutionSchema);
+  registry.register("ResultNestedError", ResultErrorSchema);
   registry.register("ResultsStats", ResultsStatsSchema);
   registry.register("ResultsListResponse", ResultsListResponseSchema);
   registry.register(

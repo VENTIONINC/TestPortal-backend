@@ -1,8 +1,18 @@
+// Copyright 2026 Vention
+// SPDX-License-Identifier: Apache-2.0
+
 import { Request, Response } from "express";
 import { specService } from "@/services/specService";
 
+type SpecIdParams = {
+  specId: string;
+};
+
 export const specController = {
-  getSpecById: async (req: Request, res: Response): Promise<void> => {
+  getSpecById: async (
+    req: Request<SpecIdParams>,
+    res: Response,
+  ): Promise<void> => {
     try {
       const { specId } = req.params;
       const { projectId } = req.query as Record<string, string>;
@@ -31,7 +41,10 @@ export const specController = {
     }
   },
 
-  deleteSpec: async (req: Request, res: Response): Promise<void> => {
+  deleteSpec: async (
+    req: Request<SpecIdParams>,
+    res: Response,
+  ): Promise<void> => {
     try {
       const { specId } = req.params;
       const { projectId } = req.query as Record<string, string>;

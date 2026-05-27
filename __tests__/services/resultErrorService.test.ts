@@ -1,3 +1,6 @@
+// Copyright 2026 Vention
+// SPDX-License-Identifier: Apache-2.0
+
 import "@/test-utils/testEnv";
 import { jest } from "@jest/globals";
 import { resultErrorService } from "@/services/resultErrorService";
@@ -54,7 +57,7 @@ describe("resultErrorService.analyzeErrors", () => {
         updatedAt: now,
         type: "assertion",
         message: "Error one",
-        callStack: "stack-1",
+        callStack: ["stack-1"],
         location: "loc-1",
         resultId: "res-1",
         result: {
@@ -74,7 +77,7 @@ describe("resultErrorService.analyzeErrors", () => {
         updatedAt: now,
         type: "assertion",
         message: "Error two",
-        callStack: "stack-2",
+        callStack: ["stack-2"],
         location: "loc-2",
         resultId: "res-1",
         result: {
@@ -94,7 +97,7 @@ describe("resultErrorService.analyzeErrors", () => {
         updatedAt: now,
         type: "assertion",
         message: "Error three",
-        callStack: "stack-3",
+        callStack: ["stack-3"],
         location: "loc-3",
         resultId: null,
         result: null,
@@ -143,7 +146,7 @@ describe("resultErrorService.analyzeErrors", () => {
         errors: [
           {
             message: "Error one",
-            callStack: "stack-1",
+            callStack: '[\n  "stack-1"\n]',
             location: "loc-1",
           },
         ],
@@ -182,7 +185,7 @@ describe("resultErrorService.analyzeErrors", () => {
         updatedAt: now,
         type: "assertion",
         message: "Error one",
-        callStack: "stack-1",
+        callStack: ["stack-1"],
         location: "loc-1",
         resultId: "res-1",
         result: {
