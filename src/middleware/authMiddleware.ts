@@ -1,8 +1,12 @@
+// Copyright 2026 Vention
+// SPDX-License-Identifier: Apache-2.0
+
+import type { ParamsDictionary } from "express-serve-static-core";
 import { Request, Response, NextFunction } from "express";
 import { jwtService, type JwtPayload } from "@/services/jwtService";
 import { userService } from "@/services/userService";
 
-export interface AuthenticatedRequest extends Request {
+export interface AuthenticatedRequest<P = ParamsDictionary> extends Request<P> {
   user?: {
     id: string;
     name: string;

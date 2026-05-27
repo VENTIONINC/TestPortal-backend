@@ -1,3 +1,6 @@
+// Copyright 2026 Vention
+// SPDX-License-Identifier: Apache-2.0
+
 import "@/test-utils/testEnv";
 import { jest } from "@jest/globals";
 import type { PrismaUser } from "@/types";
@@ -6,6 +9,14 @@ import {
   executeController,
   executeProtectedController,
 } from "@/test-utils/httpMocks";
+
+jest.mock("@/prisma/client", () => ({
+  dbClient: {
+    $transaction: jest.fn(
+      async (callback: (tx: object) => Promise<unknown>) => await callback({}),
+    ),
+  },
+}));
 
 interface CreateUserData {
   name: string;
@@ -17,6 +28,7 @@ const users: PrismaUser[] = [];
 const generateUserId = () => crypto.randomUUID();
 let shouldThrowDatabaseError = false;
 let databaseErrorMessage = "Database error";
+const mockTx = {};
 
 jest.mock("@/services/authService", () => ({
   signUpUser: jest.fn(() =>
@@ -32,6 +44,14 @@ jest.mock("@/services/authService", () => ({
     }),
   ),
   signOutUser: jest.fn(() => Promise.resolve("User signed out successfully")),
+}));
+
+jest.mock("@/prisma/client", () => ({
+  dbClient: {
+    $transaction: jest.fn((callback: (tx: unknown) => unknown) =>
+      callback(mockTx),
+    ),
+  },
 }));
 
 jest.mock("@/models/userModel", () => ({
@@ -93,6 +113,7 @@ describe("Users Routes", () => {
     users.length = 0;
     shouldThrowDatabaseError = false;
     databaseErrorMessage = "Database error";
+    process.env.MCP_SECRET = "test-mcp-secret";
     jest.clearAllMocks();
   });
 
@@ -247,6 +268,81 @@ describe("Users Routes", () => {
       expect(res.statusCode).toBe(200);
       const body = res.body;
       expect(body?.name).toBe("NewEve");
+    });
+
+    it("uses the authenticated user when route userId differs", async () => {
+      await signup("Owner", "owner@ventionteams.com");
+      await signup("Other", "other@ventionteams.com");
+
+      const ownerLoginRes = await login("owner@ventionteams.com");
+      const otherLoginRes = await login("other@ventionteams.com");
+      const ownerToken = ownerLoginRes.body.accessToken as string;
+      const ownerUserId = String(ownerLoginRes.body.user.id);
+      const otherUserId = String(otherLoginRes.body.user.id);
+
+      const getRes = await executeProtectedController(
+        userController.getUserById,
+        {
+          method: "GET",
+          params: { userId: otherUserId },
+          token: ownerToken,
+        },
+      );
+      expect(getRes.statusCode).toBe(200);
+      expect(getRes.body?.id).toBe(ownerUserId);
+      expect(getRes.body?.email).toBe("owner@ventionteams.com");
+
+      const updateRes = await executeProtectedController(
+        userController.updateUser,
+        {
+          method: "PATCH",
+          params: { userId: otherUserId },
+          body: { name: "Owner Updated" },
+          token: ownerToken,
+        },
+      );
+      expect(updateRes.statusCode).toBe(200);
+      expect(updateRes.body?.id).toBe(ownerUserId);
+      expect(updateRes.body?.name).toBe("Owner Updated");
+
+      const integrationsRes = await executeProtectedController(
+        userController.updateUserIntegrations,
+        {
+          method: "PATCH",
+          params: { userId: otherUserId },
+          body: { analyzeEnabled: true },
+          token: ownerToken,
+        },
+      );
+      expect(integrationsRes.statusCode).toBe(200);
+      expect(integrationsRes.body?.id).toBe(ownerUserId);
+      expect(integrationsRes.body?.analyzeEnabled).toBe(true);
+
+      const generateTokenRes = await executeProtectedController(
+        userController.generateMcpToken,
+        {
+          method: "POST",
+          params: { userId: otherUserId },
+          token: ownerToken,
+        },
+      );
+      expect(generateTokenRes.statusCode).toBe(200);
+      expect(users.find((user) => user.id === ownerUserId)?.mcpToken).toBe(
+        generateTokenRes.body?.mcpToken,
+      );
+      expect(users.find((user) => user.id === otherUserId)?.mcpToken).toBeNull();
+
+      const revokeTokenRes = await executeProtectedController(
+        userController.revokeMcpToken,
+        {
+          method: "DELETE",
+          params: { userId: otherUserId },
+          token: ownerToken,
+        },
+      );
+      expect(revokeTokenRes.statusCode).toBe(200);
+      expect(users.find((user) => user.id === ownerUserId)?.mcpToken).toBe("");
+      expect(users.find((user) => user.id === otherUserId)?.mcpToken).toBeNull();
     });
   });
 

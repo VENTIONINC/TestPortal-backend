@@ -7,12 +7,18 @@ This repository contains a Node.js backend written in **TypeScript** using an MV
 - Install dependencies with `npm install`.
 - Run the development server with `npm run dev`.
 - Database migrations are performed with `npm run migrate` and Prisma generates types with `npm run db:generate`.
+- For task tracking and ticket creation, use GitHub Issues only.
+- Use `npm run new:file -- <path>` when creating a new supported source file so the standard Apache 2.0 header is added automatically.
+- Use `npm run headers:add` to backfill the Apache 2.0 header across supported files in `src`, `__tests__`, and `__prompts-tests__`.
 - Run tests with `npm test`.
 - Start the built server with `npm run build` followed by `npm run server`.
 - Inspect MCP tools with `npm run inspector` after building.
 
 ## Code style guidelines
 
+- This repository is licensed under Apache 2.0. Supported source files in `src`, `__tests__`, and `__prompts-tests__` should carry:
+  - `// Copyright 2026 Vention`
+  - `// SPDX-License-Identifier: Apache-2.0`
 - Use the provided path aliases configured in `tsconfig.json`, including `@/services/*`, `@/controllers/*`, `@/models/*`, `@/routes/*`, `@/middleware/*`, `@/lib/*`, `@/mcp/*`, `@/types/*`, `@/prisma/*`, and `@/root/*`.
 - Follow the MVC patterns shown in `src/controllers`, `src/services`, `src/models`, and `src/routes`.
 - Keep controllers focused on HTTP concerns, services focused on business logic, and models focused on Prisma/database access.

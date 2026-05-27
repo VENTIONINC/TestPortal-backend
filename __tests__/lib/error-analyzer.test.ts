@@ -1,3 +1,6 @@
+// Copyright 2026 Vention
+// SPDX-License-Identifier: Apache-2.0
+
 import { jest } from '@jest/globals';
 
 // Mock the prisma client to prevent Prisma from initializing during tests

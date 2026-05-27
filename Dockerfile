@@ -45,6 +45,9 @@ COPY --from=builder /app/dist ./dist
 # Copy PDF branding assets used at runtime
 COPY --from=builder /app/src/assets/pdf ./src/assets/pdf
 
+# Copy skill artifacts served by the skills hub
+COPY --from=builder /app/src/skills ./src/skills
+
 # Copy generated Prisma Client
 COPY --from=builder /app/node_modules/.prisma ./node_modules/.prisma
 

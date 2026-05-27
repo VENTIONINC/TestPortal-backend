@@ -1,3 +1,6 @@
+// Copyright 2026 Vention
+// SPDX-License-Identifier: Apache-2.0
+
 /**
  * Test environment setup for prompt tests
  * Loads environment variables from .env file

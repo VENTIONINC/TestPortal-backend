@@ -1,7 +1,11 @@
+// Copyright 2026 Vention
+// SPDX-License-Identifier: Apache-2.0
+
 import { ChatPromptTemplate } from "@langchain/core/prompts";
 import { ChatOpenAI } from "@langchain/openai";
 import { z } from "zod";
 
+import { normalizeJsonArrayForText } from "@/lib/jsonPayloads";
 import getLogger from "@/lib/logger";
 import { getErrorFormatterPrompt } from "@/prompts/error-formatter/v1.0.0";
 import {
@@ -16,7 +20,7 @@ import {
 import { errorSuggestionSchema } from "@/schemas/errorSuggestionSchemas";
 import { resultService } from "@/services/resultService";
 import { testAnalysisService } from "@/services/testAnalysisService";
-import type { ResultWithRelations } from "@/types";
+import type { StructuredResultWithRelations } from "@/types";
 
 const logger = getLogger("error-formatter");
 
@@ -126,7 +130,7 @@ Category: ${input.category}`;
 };
 
 const resolveResultAnalysis = async (
-  result: ResultWithRelations,
+  result: StructuredResultWithRelations,
 ): Promise<{
   category: string;
   confidence?: number | null;
@@ -189,14 +193,5 @@ const normalizeErrorStack = (callStack: unknown): string | null => {
     return null;
   }
 
-  if (typeof callStack === "string") {
-    try {
-      const parsed = JSON.parse(callStack);
-      return JSON.stringify(parsed, null, 2);
-    } catch {
-      return callStack;
-    }
-  }
-
-  return JSON.stringify(callStack, null, 2);
+  return normalizeJsonArrayForText(callStack);
 };

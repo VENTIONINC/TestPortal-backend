@@ -1,3 +1,6 @@
+// Copyright 2026 Vention
+// SPDX-License-Identifier: Apache-2.0
+
 import type { Response, Request } from "express";
 import { dashboardService } from "@/services/dashboardService";
 import type { DashboardGranularity } from "@/types/dashboard";
@@ -5,7 +8,11 @@ import getLogger from "@/lib/logger";
 
 const logger = getLogger("dashboard-controller");
 
-function parseDashboardParams(req: Request) {
+type DashboardParams = {
+  projectId: string;
+};
+
+function parseDashboardParams(req: Request<DashboardParams>) {
   const { projectId } = req.params;
   const { environment, period, type, granularity } = req.query;
 
@@ -41,7 +48,10 @@ export const dashboardController = {
    * GET /api/v2/projects/:projectId/dashboard
    * Query Params: environment (string), period (number of days, default 30), type (string, optional)
    */
-  async getDashboard(req: Request, res: Response): Promise<void> {
+  async getDashboard(
+    req: Request<DashboardParams>,
+    res: Response,
+  ): Promise<void> {
     try {
       const { projectId, environment, periodDays, executionType, granularity } =
         parseDashboardParams(req);

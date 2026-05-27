@@ -1,3 +1,6 @@
+// Copyright 2026 Vention
+// SPDX-License-Identifier: Apache-2.0
+
 /**
  * Central export point for all Zod schemas and types
  * This provides a single import point for schema-related functionality

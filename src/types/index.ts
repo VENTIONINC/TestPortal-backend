@@ -1,9 +1,13 @@
+// Copyright 2026 Vention
+// SPDX-License-Identifier: Apache-2.0
+
 // Re-export all types from different modules
 export * from "@/types/database";
 export * from "@/types/api";
 export * from "@/types/mcp";
 export * from "@/types/tests";
 export * from "@/types/ctrf";
+export * from "@/types/skills";
 
 // Express types extensions
 import type { Request } from "express";
@@ -92,4 +96,3 @@ export interface UserIntegrations {
   monitoringPortalEnabled?: boolean;
   analyzeEnabled?: boolean;
 }
-

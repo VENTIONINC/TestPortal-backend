@@ -1,3 +1,6 @@
+// Copyright 2026 Vention
+// SPDX-License-Identifier: Apache-2.0
+
 import { Router, type Request, type Response } from "express";
 import { environment } from "@/config/environment";
 

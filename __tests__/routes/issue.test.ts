@@ -1,3 +1,6 @@
+// Copyright 2026 Vention
+// SPDX-License-Identifier: Apache-2.0
+
 import "@/test-utils/testEnv";
 import { jest } from "@jest/globals";
 import type { PrismaUser, PrismaIssue } from "@/types";
@@ -8,11 +11,28 @@ import {
   executeProtectedController,
 } from "@/test-utils/httpMocks";
 
+jest.mock("@/prisma/client", () => ({
+  dbClient: {
+    $transaction: jest.fn(
+      async (callback: (tx: object) => Promise<unknown>) => await callback({}),
+    ),
+  },
+}));
+
 const users: PrismaUser[] = [];
 const issues: PrismaIssue[] = [];
 
 const generateUserId = () => crypto.randomUUID();
 const generateIssueId = () => crypto.randomUUID();
+const mockTx = {};
+
+jest.mock("@/prisma/client", () => ({
+  dbClient: {
+    $transaction: jest.fn((callback: (tx: unknown) => unknown) =>
+      callback(mockTx),
+    ),
+  },
+}));
 
 jest.mock("@/models/userModel", () => ({
   userModel: {

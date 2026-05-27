@@ -1,6 +1,20 @@
+// Copyright 2026 Vention
+// SPDX-License-Identifier: Apache-2.0
+
 import { OpenAPIRegistry } from "@asteasolutions/zod-to-openapi";
 import { z } from "./zod";
 import { ErrorResponseSchema } from "./common";
+
+const ProjectCategoryWeightsSchema = z
+  .object({
+    bug: z.number().min(0).max(100),
+    infra: z.number().min(0).max(100),
+    performance: z.number().min(0).max(100),
+    script: z.number().min(0).max(100),
+    other: z.number().min(0).max(100),
+  })
+  .strict()
+  .openapi("ProjectCategoryWeights");
 
 const ProjectSchema = z
   .object({
@@ -9,6 +23,7 @@ const ProjectSchema = z
     description: z.string().nullable(),
     isActive: z.boolean(),
     ownerId: z.string().uuid(),
+    categoryWeights: ProjectCategoryWeightsSchema,
     createdAt: z.string(),
     updatedAt: z.string(),
     _count: z
@@ -25,6 +40,7 @@ const CreateProjectRequestSchema = z
   .object({
     name: z.string(),
     description: z.string().optional(),
+    categoryWeights: ProjectCategoryWeightsSchema.optional(),
   })
   .openapi("CreateProjectRequest");
 
@@ -33,6 +49,7 @@ const UpdateProjectRequestSchema = z
     name: z.string().optional(),
     description: z.string().optional(),
     isActive: z.boolean().optional(),
+    categoryWeights: ProjectCategoryWeightsSchema.optional(),
   })
   .openapi("UpdateProjectRequest");
 
@@ -106,6 +123,7 @@ const DashboardResponseSchema = z
 
 export function registerProjectRoutes(registry: OpenAPIRegistry) {
   registry.register("Project", ProjectSchema);
+  registry.register("ProjectCategoryWeights", ProjectCategoryWeightsSchema);
   registry.register("CreateProjectRequest", CreateProjectRequestSchema);
   registry.register("UpdateProjectRequest", UpdateProjectRequestSchema);
   registry.register("DashboardIssueMetrics", DashboardIssueMetricsSchema);

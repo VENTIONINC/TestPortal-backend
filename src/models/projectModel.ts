@@ -1,5 +1,15 @@
+// Copyright 2026 Vention
+// SPDX-License-Identifier: Apache-2.0
+
 import { Project, Prisma } from "@prisma/client";
 import { dbClient } from "@/prisma/client";
+import type { ProjectCategoryWeights } from "@/lib/projectCategoryWeights";
+
+function toProjectCategoryWeightsJson(
+  categoryWeights: ProjectCategoryWeights,
+): Prisma.InputJsonValue {
+  return categoryWeights as unknown as Prisma.InputJsonValue;
+}
 
 export const projectModel = {
   async findMany(
@@ -103,16 +113,20 @@ export const projectModel = {
       name: string;
       description?: string;
       ownerId: string;
+      categoryWeights: ProjectCategoryWeights;
     },
     tx?: Prisma.TransactionClient,
   ): Promise<Project> {
     const client = tx ?? dbClient;
+    const createData: Prisma.ProjectUncheckedCreateInput = {
+      name: data.name,
+      description: data.description ?? null,
+      ownerId: data.ownerId,
+      categoryWeights: toProjectCategoryWeightsJson(data.categoryWeights),
+    };
+
     return await client.project.create({
-      data: {
-        name: data.name,
-        description: data.description ?? null,
-        ownerId: data.ownerId,
-      },
+      data: createData,
       include: {
         owner: {
           select: {
@@ -131,13 +145,34 @@ export const projectModel = {
       name?: string;
       description?: string;
       isActive?: boolean;
+      categoryWeights?: ProjectCategoryWeights;
     },
     tx?: Prisma.TransactionClient,
   ): Promise<Project> {
     const client = tx ?? dbClient;
+    const updateData: Prisma.ProjectUncheckedUpdateInput = {};
+
+    if (data.name !== undefined) {
+      updateData.name = data.name;
+    }
+
+    if (data.description !== undefined) {
+      updateData.description = data.description;
+    }
+
+    if (data.isActive !== undefined) {
+      updateData.isActive = data.isActive;
+    }
+
+    if (data.categoryWeights !== undefined) {
+      updateData.categoryWeights = toProjectCategoryWeightsJson(
+        data.categoryWeights,
+      );
+    }
+
     return await client.project.update({
       where: { id },
-      data,
+      data: updateData,
       include: {
         owner: {
           select: {

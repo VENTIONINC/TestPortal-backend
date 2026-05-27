@@ -1,6 +1,18 @@
+// Copyright 2026 Vention
+// SPDX-License-Identifier: Apache-2.0
+
 import { Request, Response } from "express";
 import { projectService } from "@/services/projectService";
 import type { AuthenticatedRequest } from "@/middleware/authMiddleware";
+import {
+  DEFAULT_PROJECT_CATEGORY_WEIGHTS,
+  parseProjectCategoryWeights,
+  type ProjectCategoryWeights,
+} from "@/lib/projectCategoryWeights";
+
+type ProjectIdParams = {
+  id: string;
+};
 
 export const projectController = {
   async getProjects(_req: Request, res: Response): Promise<void> {
@@ -13,7 +25,10 @@ export const projectController = {
     }
   },
 
-  async getProjectById(req: Request, res: Response): Promise<void> {
+  async getProjectById(
+    req: Request<ProjectIdParams>,
+    res: Response,
+  ): Promise<void> {
     try {
       const { id } = req.params;
       const projectId = id;
@@ -44,7 +59,7 @@ export const projectController = {
         return;
       }
 
-      const { name, description } = req.body;
+      const { name, description, categoryWeights } = req.body;
 
       if (!name || typeof name !== "string" || name.trim().length === 0) {
         res.status(400).json({ error: "Project name is required" });
@@ -55,10 +70,24 @@ export const projectController = {
         return;
       }
 
+      let parsedCategoryWeights: ProjectCategoryWeights | undefined;
+      try {
+        parsedCategoryWeights =
+          categoryWeights === undefined
+            ? undefined
+            : parseProjectCategoryWeights(categoryWeights);
+      } catch (error) {
+        const err = error as Error;
+        res.status(400).json({ error: err.message });
+        return;
+      }
+
       const project = await projectService.createProject({
         name: name.trim(),
         description: description?.trim() ?? "",
         ownerId: req.user.id,
+        categoryWeights:
+          parsedCategoryWeights ?? DEFAULT_PROJECT_CATEGORY_WEIGHTS,
       });
 
       res.status(201).json(project);
@@ -72,7 +101,10 @@ export const projectController = {
     }
   },
 
-  async updateProject(req: Request, res: Response): Promise<void> {
+  async updateProject(
+    req: Request<ProjectIdParams>,
+    res: Response,
+  ): Promise<void> {
     try {
       const { id } = req.params;
       const projectId = id;
@@ -82,11 +114,12 @@ export const projectController = {
         return;
       }
 
-      const { name, description, isActive } = req.body;
+      const { name, description, isActive, categoryWeights } = req.body;
       const updateData: {
         name?: string;
         description?: string;
         isActive?: boolean;
+        categoryWeights?: ProjectCategoryWeights;
       } = {};
 
       if (name !== undefined) {
@@ -112,6 +145,17 @@ export const projectController = {
         updateData.isActive = isActive;
       }
 
+      if (categoryWeights !== undefined) {
+        try {
+          updateData.categoryWeights =
+            parseProjectCategoryWeights(categoryWeights);
+        } catch (error) {
+          const err = error as Error;
+          res.status(400).json({ error: err.message });
+          return;
+        }
+      }
+
       const project = await projectService.updateProject(id, updateData);
       res.json(project);
     } catch (error) {
@@ -126,7 +170,10 @@ export const projectController = {
     }
   },
 
-  async deleteProject(req: Request, res: Response): Promise<void> {
+  async deleteProject(
+    req: Request<ProjectIdParams>,
+    res: Response,
+  ): Promise<void> {
     try {
       const { id } = req.params;
       const projectId = id;

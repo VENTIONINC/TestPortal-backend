@@ -1,3 +1,6 @@
+// Copyright 2026 Vention
+// SPDX-License-Identifier: Apache-2.0
+
 import "@/test-utils/testEnv";
 import { jest } from "@jest/globals";
 import { resultService } from "@/services/resultService";
@@ -113,7 +116,7 @@ describe("resultService.exportAnalysisJsonl", () => {
         key: "SPEC-1",
         file: "spec.ts",
         title: "Spec Title",
-        tags: '["smoke","ui"]',
+        tags: ["smoke", "ui"],
       },
       execution: {
         id: "exec-1",
