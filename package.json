@@ -1,6 +1,6 @@
 {
-  "name": "result-manager-server",
-  "version": "0.10.3",
+  "name": "testportal-backend",
+  "version": "0.11.0",
   "description": "",
   "type": "module",
   "exports": "./index.js",
