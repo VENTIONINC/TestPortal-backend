@@ -1,6 +1,11 @@
 import type { PrismaUser } from "@/types";
 import { environment } from "@/config/environment";
-import { userService } from "@/services/userService";
+import {
+  userService,
+  UserServiceError,
+  type UserApplicationRole,
+  type UserLifecycleStatus,
+} from "@/services/userService";
 import { signInUser, signOutUser } from "@/services/authService";
 
 export type AuthProviderName = "local" | "cognito";
@@ -22,6 +27,7 @@ export interface AuthCapabilityFlags {
   passwordSignup: boolean;
   requiresRedirectLogin: boolean;
   supportsNewPasswordChallenge: boolean;
+  signupRequiresApproval: boolean;
 }
 
 export interface AuthConfigResponse {
@@ -66,6 +72,7 @@ const LOCAL_AUTH_CAPABILITIES: AuthCapabilityFlags = {
   passwordSignup: true,
   requiresRedirectLogin: false,
   supportsNewPasswordChallenge: false,
+  signupRequiresApproval: true,
 };
 
 const COGNITO_AUTH_CAPABILITIES: AuthCapabilityFlags = {
@@ -73,6 +80,7 @@ const COGNITO_AUTH_CAPABILITIES: AuthCapabilityFlags = {
   passwordSignup: true,
   requiresRedirectLogin: false,
   supportsNewPasswordChallenge: true,
+  signupRequiresApproval: false,
 };
 
 const localAuthProvider: AuthProvider = {
@@ -82,7 +90,9 @@ const localAuthProvider: AuthProvider = {
   }),
 
   async login({ email, password }) {
-    const user = await userService.verifyPassword(email, password);
+    const user = userService.assertActiveUser(
+      await userService.verifyPassword(email, password),
+    );
 
     return {
       status: "SUCCESS",
@@ -95,9 +105,14 @@ const localAuthProvider: AuthProvider = {
       name,
       email,
       password,
+      status: "pending",
+      role: "member",
     });
 
-    return { user };
+    return {
+      user,
+      message: userService.LOCAL_SIGNUP_PENDING_MESSAGE,
+    };
   },
 
   async logout() {
@@ -129,6 +144,8 @@ const cognitoAuthProvider: AuthProvider = {
     if (!user) {
       user = await userService.createCognitoBackedUser(email);
     }
+
+    user = userService.assertActiveUser(user);
 
     return {
       status: "SUCCESS",
@@ -199,3 +216,9 @@ export const authProviderService = {
     return await resolveActiveAuthProvider().logout();
   },
 };
+
+export const isBlockedAuthError = (error: unknown): error is UserServiceError =>
+  error instanceof UserServiceError && error.statusCode === 403;
+
+export type AuthUserStatus = UserLifecycleStatus;
+export type AuthUserRole = UserApplicationRole;

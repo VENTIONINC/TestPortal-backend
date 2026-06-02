@@ -16,6 +16,7 @@ const AuthConfigSchema = z
       passwordSignup: z.boolean(),
       requiresRedirectLogin: z.boolean(),
       supportsNewPasswordChallenge: z.boolean(),
+      signupRequiresApproval: z.boolean(),
     }),
   })
   .openapi("AuthConfig");
@@ -52,6 +53,13 @@ const UserLoginResponseSchema = z
   })
   .openapi("UserLoginResponse");
 
+const PendingApprovalSignupResponseSchema = z
+  .object({
+    user: UserSchema,
+    message: z.string(),
+  })
+  .openapi("PendingApprovalSignupResponse");
+
 const RefreshTokenRequestSchema = z
   .object({
     refreshToken: z.string(),
@@ -65,6 +73,10 @@ export function registerAuthRoutes(registry: OpenAPIRegistry) {
   registry.register("UserLoginRequest", UserLoginRequestSchema);
   registry.register("AuthChallengeResponse", AuthChallengeResponseSchema);
   registry.register("UserLoginResponse", UserLoginResponseSchema);
+  registry.register(
+    "PendingApprovalSignupResponse",
+    PendingApprovalSignupResponseSchema,
+  );
   registry.register("RefreshTokenRequest", RefreshTokenRequestSchema);
 
   registry.registerPath({
@@ -104,10 +116,7 @@ export function registerAuthRoutes(registry: OpenAPIRegistry) {
         description: "User created successfully",
         content: {
           "application/json": {
-            schema: z.object({
-              user: UserSchema,
-              message: z.string().optional(),
-            }),
+            schema: PendingApprovalSignupResponseSchema,
           },
         },
       },
@@ -157,6 +166,15 @@ export function registerAuthRoutes(registry: OpenAPIRegistry) {
           },
         },
       },
+      403: {
+        description:
+          "Forbidden - valid credentials for a pending or suspended user",
+        content: {
+          "application/json": {
+            schema: ErrorResponseSchema,
+          },
+        },
+      },
     },
     tags: ["Authentication"],
   });
@@ -194,6 +212,14 @@ export function registerAuthRoutes(registry: OpenAPIRegistry) {
       },
       401: {
         description: "Unauthorized - invalid or expired refresh token",
+        content: {
+          "application/json": {
+            schema: ErrorResponseSchema,
+          },
+        },
+      },
+      403: {
+        description: "Forbidden - pending or suspended users cannot refresh tokens",
         content: {
           "application/json": {
             schema: ErrorResponseSchema,
@@ -239,5 +265,6 @@ export {
   UserLoginRequestSchema,
   AuthChallengeResponseSchema,
   UserLoginResponseSchema,
+  PendingApprovalSignupResponseSchema,
   RefreshTokenRequestSchema,
 };

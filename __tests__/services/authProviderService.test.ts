@@ -1,12 +1,13 @@
 import "@/test-utils/testEnv";
 import { jest } from "@jest/globals";
 import { userModel } from "@/models/userModel";
-import { signInUser } from "@/services/authService";
+import { signInUser, signUpUser } from "@/services/authService";
 import type { PrismaUser } from "@/types";
 
 jest.mock("argon2");
 jest.mock("@/models/userModel");
 jest.mock("@/services/authService", () => ({
+  signUpUser: jest.fn(),
   signInUser: jest.fn(),
   signOutUser: jest.fn(() => Promise.resolve("Signed out successfully")),
 }));
@@ -29,6 +30,8 @@ const mockUser: PrismaUser = {
   id: "user-1",
   name: "Test User",
   email: "test@example.com",
+  status: "active",
+  role: "member",
   createdAt: new Date("2024-01-01T00:00:00.000Z"),
   updatedAt: new Date("2024-01-01T00:00:00.000Z"),
   passwordHash: "hashed-password",
@@ -53,6 +56,8 @@ const loadAuthProviderService = async (provider: "local" | "cognito") => {
   return {
     authProviderService: authProviderModule.authProviderService,
     userModel: userModelModule.userModel as jest.Mocked<typeof userModel>,
+    signUpUser:
+      authServiceModule.signUpUser as jest.MockedFunction<typeof signUpUser>,
     signInUser:
       authServiceModule.signInUser as jest.MockedFunction<typeof signInUser>,
     argon2: argon2Module.default,
@@ -99,6 +104,7 @@ describe("authProviderService", () => {
         passwordSignup: true,
         requiresRedirectLogin: false,
         supportsNewPasswordChallenge: false,
+        signupRequiresApproval: true,
       },
     });
   });
@@ -113,6 +119,7 @@ describe("authProviderService", () => {
         passwordSignup: true,
         requiresRedirectLogin: false,
         supportsNewPasswordChallenge: true,
+        signupRequiresApproval: false,
       },
     });
   });
@@ -142,6 +149,76 @@ describe("authProviderService", () => {
       accessToken: "access-token",
       refreshToken: "refresh-token",
     });
+  });
+
+  it("creates pending member users for local signup without tokens", async () => {
+    const { authProviderService, userModel: currentUserModel } =
+      await loadAuthProviderService("local");
+    currentUserModel.findByEmail.mockResolvedValue(null);
+    currentUserModel.create.mockResolvedValue({
+      ...mockUser,
+      email: "pending@ventionteams.com",
+      status: "pending",
+      role: "member",
+    });
+
+    const result = await authProviderService.signup({
+      name: "Pending User",
+      email: "pending@ventionteams.com",
+      password: "password123",
+    });
+
+    expect(currentUserModel.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        email: "pending@ventionteams.com",
+        status: "pending",
+        role: "member",
+      }),
+      expect.anything(),
+    );
+    expect(result).toEqual({
+      user: expect.objectContaining({
+        email: "pending@ventionteams.com",
+        status: "pending",
+        role: "member",
+      }),
+      message: "Your account is pending administrator approval.",
+    });
+  });
+
+  it("returns 403-style blocked errors for pending and suspended local users", async () => {
+    const {
+      authProviderService,
+      userModel: currentUserModel,
+      argon2: currentArgon2,
+    } = await loadAuthProviderService("local");
+    (
+      currentArgon2.verify as jest.MockedFunction<typeof currentArgon2.verify>
+    ).mockResolvedValue(true);
+
+    currentUserModel.findByEmail.mockResolvedValue({
+      ...mockUser,
+      status: "pending",
+    });
+    await expect(
+      authProviderService.login({
+        email: mockUser.email,
+        password: "password123",
+      }),
+    ).rejects.toThrow("Your account is pending administrator approval.");
+
+    currentUserModel.findByEmail.mockResolvedValue({
+      ...mockUser,
+      status: "suspended",
+    });
+    await expect(
+      authProviderService.login({
+        email: mockUser.email,
+        password: "password123",
+      }),
+    ).rejects.toThrow(
+      "Your account is suspended. Please contact an administrator.",
+    );
   });
 
   it("rejects invalid local credentials", async () => {
@@ -211,6 +288,39 @@ describe("authProviderService", () => {
       accessToken: "access-token",
       refreshToken: "refresh-token",
       cognitoSession,
+    });
+  });
+
+  it("keeps Cognito-created users active members", async () => {
+    const {
+      authProviderService,
+      userModel: currentUserModel,
+      signUpUser: currentSignUpUser,
+    } = await loadAuthProviderService("cognito");
+    currentUserModel.findByEmail.mockResolvedValue(null);
+    currentSignUpUser.mockResolvedValue({} as never);
+    currentUserModel.create.mockResolvedValue({
+      ...mockUser,
+      email: "cognito@ventionteams.com",
+      cognitoUserId: "cognito@ventionteams.com",
+    });
+
+    const result = await authProviderService.signup({
+      name: "Cognito User",
+      email: "cognito@ventionteams.com",
+      password: "password123",
+    });
+
+    expect(currentUserModel.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        status: "active",
+        role: "member",
+        cognitoUserId: "cognito@ventionteams.com",
+      }),
+    );
+    expect(result.user).toMatchObject({
+      status: "active",
+      role: "member",
     });
   });
 

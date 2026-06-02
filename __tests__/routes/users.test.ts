@@ -4,11 +4,19 @@
 import "@/test-utils/testEnv";
 import { jest } from "@jest/globals";
 import argon2 from "argon2";
+import type { Response } from "express";
 import type { PrismaUser } from "@/types";
 import { userController } from "@/controllers/userController";
 import {
+  authMiddleware,
+  requireRole,
+  type AuthenticatedRequest,
+} from "@/middleware/authMiddleware";
+import {
   executeController,
   executeProtectedController,
+  createMockRequest,
+  createMockResponse,
 } from "@/test-utils/httpMocks";
 
 jest.mock("@/prisma/client", () => ({
@@ -22,7 +30,9 @@ jest.mock("@/prisma/client", () => ({
 interface CreateUserData {
   name: string;
   email: string;
-  passwordHash: string;
+  passwordHash?: string;
+  status?: PrismaUser["status"];
+  role?: PrismaUser["role"];
 }
 
 const users: PrismaUser[] = [];
@@ -82,6 +92,13 @@ jest.mock("@/models/userModel", () => ({
       const user = users.find((u) => u.cognitoUserId === cognitoUserId);
       return Promise.resolve(user ?? null);
     }),
+    list: jest.fn(() => Promise.resolve([...users])),
+    countActiveAdmins: jest.fn(() =>
+      Promise.resolve(
+        users.filter((user) => user.status === "active" && user.role === "admin")
+          .length,
+      ),
+    ),
     create: jest.fn((data: CreateUserData) => {
       if (shouldThrowDatabaseError) {
         throw new Error(databaseErrorMessage);
@@ -92,7 +109,9 @@ jest.mock("@/models/userModel", () => ({
         updatedAt: new Date(),
         name: data.name,
         email: data.email,
-        passwordHash: data.passwordHash,
+        status: data.status ?? "active",
+        role: data.role ?? "member",
+        passwordHash: data.passwordHash ?? null,
         cognitoUserId: null,
         mcpToken: null,
         reportPortalUrl: null,
@@ -117,6 +136,48 @@ jest.mock("@/models/userModel", () => ({
 }));
 
 describe("Users Routes", () => {
+  const executeAdminProtectedController = async <
+    T = unknown,
+    P extends Record<string, string> = Record<string, string>,
+  >(
+    controller: (req: AuthenticatedRequest<P>, res: Response) => Promise<void>,
+    options: {
+      method?: string;
+      params?: P;
+      body?: unknown;
+      token?: string;
+    } = {},
+  ) => {
+    const requestOptions = {
+      ...(options.method ? { method: options.method } : {}),
+      ...(options.params ? { params: options.params } : {}),
+      ...(options.body !== undefined ? { body: options.body } : {}),
+      ...(options.token
+        ? {
+            headers: {
+              authorization: `Bearer ${options.token}`,
+            },
+          }
+        : {}),
+    };
+    const req = createMockRequest(requestOptions) as AuthenticatedRequest<P>;
+    const res = createMockResponse<T>();
+
+    let controllerPromise: Promise<void> | undefined;
+
+    await authMiddleware(req, res, () => {
+      requireRole("admin")(req, res, () => {
+        controllerPromise = controller(req, res);
+      });
+    });
+
+    if (controllerPromise) {
+      await controllerPromise;
+    }
+
+    return res;
+  };
+
   beforeEach(() => {
     users.length = 0;
     shouldThrowDatabaseError = false;
@@ -143,6 +204,7 @@ describe("Users Routes", () => {
           passwordSignup: true,
           requiresRedirectLogin: false,
           supportsNewPasswordChallenge: false,
+          signupRequiresApproval: true,
         },
       });
     });
@@ -157,40 +219,23 @@ describe("Users Routes", () => {
         },
       });
       expect(signupRes.statusCode).toBe(201);
-      expect(signupRes.body).toHaveProperty("user.email", "test@ventionteams.com");
+      expect(signupRes.body).toMatchObject({
+        user: {
+          email: "test@ventionteams.com",
+          status: "pending",
+          role: "member",
+        },
+        message: "Your account is pending administrator approval.",
+      });
 
       const loginRes = await executeController(userController.authLogin, {
         method: "POST",
         body: { email: "test@ventionteams.com", password: "password123" },
       });
-      expect(loginRes.statusCode).toBe(200);
-      const loginBody = loginRes.body;
-      expect(loginBody).toHaveProperty("accessToken");
-      expect(loginBody).toHaveProperty("refreshToken");
-
-      const userId = String(loginBody.user.id);
-      const token = loginBody.accessToken as string;
-
-      const unauthRes = await executeProtectedController(
-        userController.getUserById,
-        {
-          method: "GET",
-          params: { userId },
-        },
-      );
-      expect(unauthRes.statusCode).toBe(401);
-
-      const authRes = await executeProtectedController(
-        userController.getUserById,
-        {
-          method: "GET",
-          params: { userId },
-          token,
-        },
-      );
-      expect(authRes.statusCode).toBe(200);
-      const authBody = authRes.body;
-      expect(authBody?.email).toBe("test@ventionteams.com");
+      expect(loginRes.statusCode).toBe(403);
+      expect(loginRes.body).toEqual({
+        error: "Your account is pending administrator approval.",
+      });
     });
   });
 
@@ -207,26 +252,36 @@ describe("Users Routes", () => {
         body: { email, password: "password123" },
       });
 
+    const approveUser = (email: string) => {
+      const user = users.find((candidate) => candidate.email === email);
+      if (user) {
+        user.status = "active";
+      }
+    };
+
     it("POST /signup creates a user", async () => {
       const res = await signup("Alice", "alice@ventionteams.com");
       expect(res.statusCode).toBe(201);
       const body = res.body;
       expect(body?.user.email).toBe("alice@ventionteams.com");
+      expect(body?.user.status).toBe("pending");
+      expect(body).not.toHaveProperty("accessToken");
     });
 
-    it("POST /login authenticates user", async () => {
+    it("POST /login blocks pending user", async () => {
       await signup("Bob", "bob@ventionteams.com");
 
       const res = await login("bob@ventionteams.com");
 
-      expect(res.statusCode).toBe(200);
-      const body = res.body;
-      expect(body).toHaveProperty("accessToken");
-      expect(body).toHaveProperty("refreshToken");
+      expect(res.statusCode).toBe(403);
+      expect(res.body).toEqual({
+        error: "Your account is pending administrator approval.",
+      });
     });
 
     it("GET /:userId returns user when authorized", async () => {
       await signup("Carol", "carol@ventionteams.com");
+      approveUser("carol@ventionteams.com");
 
       const loginRes = await login("carol@ventionteams.com");
       const loginBody = loginRes.body;
@@ -255,6 +310,7 @@ describe("Users Routes", () => {
 
     it("POST /refresh-token issues new tokens", async () => {
       await signup("Dave", "dave@ventionteams.com");
+      approveUser("dave@ventionteams.com");
 
       const loginRes = await login("dave@ventionteams.com");
       const loginBody = loginRes.body;
@@ -272,6 +328,7 @@ describe("Users Routes", () => {
 
     it("PATCH /:userId updates user data", async () => {
       await signup("Eve", "eve@ventionteams.com");
+      approveUser("eve@ventionteams.com");
 
       const loginRes = await login("eve@ventionteams.com");
       const loginBody = loginRes.body;
@@ -303,6 +360,8 @@ describe("Users Routes", () => {
     it("uses the authenticated user when route userId differs", async () => {
       await signup("Owner", "owner@ventionteams.com");
       await signup("Other", "other@ventionteams.com");
+      approveUser("owner@ventionteams.com");
+      approveUser("other@ventionteams.com");
 
       const ownerLoginRes = await login("owner@ventionteams.com");
       const otherLoginRes = await login("other@ventionteams.com");
@@ -393,8 +452,16 @@ describe("Users Routes", () => {
         body: { email: "test@ventionteams.com", password: "password123" },
       });
 
+    const approveTestUser = () => {
+      const user = users.find((candidate) => candidate.email === "test@ventionteams.com");
+      if (user) {
+        user.status = "active";
+      }
+    };
+
     it("refreshes tokens using /refresh-token", async () => {
       await signup();
+      approveTestUser();
       const loginRes = await login();
       const loginBody = loginRes.body;
       const { refreshToken } = loginBody;
@@ -410,6 +477,7 @@ describe("Users Routes", () => {
 
     it("updates user data via PATCH", async () => {
       await signup();
+      approveTestUser();
       const loginRes = await login();
       const loginBody = loginRes.body;
       const userId = String(loginBody.user.id);
@@ -437,6 +505,244 @@ describe("Users Routes", () => {
       expect(patchRes.statusCode).toBe(200);
       const body = patchRes.body;
       expect(body?.name).toBe("Updated");
+    });
+
+    it("blocks refresh tokens for suspended users", async () => {
+      const signupRes = await executeController(userController.signup, {
+        method: "POST",
+        body: {
+          name: "Refresh User",
+          email: "refresh@ventionteams.com",
+          password: "password123",
+        },
+      });
+      const userId = String(signupRes.body?.id);
+
+      const loginRes = await executeController(userController.login, {
+        method: "POST",
+        body: {
+          email: "refresh@ventionteams.com",
+          password: "password123",
+        },
+      });
+
+      const refreshToken = String(loginRes.body?.refreshToken);
+      const user = users.find((candidate) => candidate.id === userId);
+      if (user) {
+        user.status = "suspended";
+      }
+
+      const refreshRes = await executeController(userController.refreshToken, {
+        method: "POST",
+        body: { refreshToken },
+      });
+
+      expect(refreshRes.statusCode).toBe(403);
+      expect(refreshRes.body).toEqual({
+        error: "Your account is suspended. Please contact an administrator.",
+      });
+    });
+
+    it("blocks protected routes for pending and suspended users with valid tokens", async () => {
+      const signupRes = await executeController(userController.signup, {
+        method: "POST",
+        body: {
+          name: "Protected User",
+          email: "protected@ventionteams.com",
+          password: "password123",
+        },
+      });
+      const userId = String(signupRes.body?.id);
+
+      const loginRes = await executeController(userController.login, {
+        method: "POST",
+        body: {
+          email: "protected@ventionteams.com",
+          password: "password123",
+        },
+      });
+      const token = String(loginRes.body?.accessToken);
+
+      const user = users.find((candidate) => candidate.id === userId);
+      if (user) {
+        user.status = "pending";
+      }
+
+      const pendingRes = await executeProtectedController(
+        userController.getUserById,
+        {
+          method: "GET",
+          params: { userId },
+          token,
+        },
+      );
+      expect(pendingRes.statusCode).toBe(403);
+
+      if (user) {
+        user.status = "suspended";
+      }
+
+      const suspendedRes = await executeProtectedController(
+        userController.getUserById,
+        {
+          method: "GET",
+          params: { userId },
+          token,
+        },
+      );
+      expect(suspendedRes.statusCode).toBe(403);
+    });
+  });
+
+  describe("Admin User Management", () => {
+    const createActiveUser = async (name: string, email: string) => {
+      const signupRes = await executeController(userController.signup, {
+        method: "POST",
+        body: {
+          name,
+          email,
+          password: "password123",
+        },
+      });
+
+      return signupRes.body as PrismaUser;
+    };
+
+    const loginActiveUser = async (email: string) => {
+      const loginRes = await executeController(userController.login, {
+        method: "POST",
+        body: {
+          email,
+          password: "password123",
+        },
+      });
+
+      return String(loginRes.body?.accessToken);
+    };
+
+    it("allows active admins to list users and manage pending users", async () => {
+      const admin = await createActiveUser("Admin", "admin@ventionteams.com");
+      const pendingSignupRes = await executeController(userController.authSignup, {
+        method: "POST",
+        body: {
+          name: "Pending User",
+          email: "pending@ventionteams.com",
+          password: "password123",
+        },
+      });
+      const pendingUserId = String(pendingSignupRes.body?.user.id);
+
+      const adminRecord = users.find((user) => user.id === admin.id);
+      if (adminRecord) {
+        adminRecord.role = "admin";
+      }
+
+      const token = await loginActiveUser("admin@ventionteams.com");
+
+      const listRes = await executeAdminProtectedController(
+        userController.listUsers,
+        {
+          method: "GET",
+          token,
+        },
+      );
+      expect(listRes.statusCode).toBe(200);
+      expect(listRes.body).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            email: "admin@ventionteams.com",
+            role: "admin",
+          }),
+          expect.objectContaining({
+            email: "pending@ventionteams.com",
+            status: "pending",
+          }),
+        ]),
+      );
+      expect(listRes.body).toEqual(
+        expect.not.arrayContaining([
+          expect.objectContaining({
+            mcpToken: expect.anything(),
+          }),
+        ]),
+      );
+
+      const approveRes = await executeAdminProtectedController(
+        userController.approveUser,
+        {
+          method: "POST",
+          params: { userId: pendingUserId },
+          token,
+        },
+      );
+      expect(approveRes.statusCode).toBe(200);
+      expect(approveRes.body).toMatchObject({
+        id: pendingUserId,
+        status: "active",
+      });
+      expect(approveRes.body).not.toHaveProperty("mcpToken");
+    });
+
+    it("rejects admin endpoints for non-admin and unauthenticated requests", async () => {
+      await createActiveUser("Member", "member@ventionteams.com");
+      const memberToken = await loginActiveUser("member@ventionteams.com");
+
+      const unauthRes = await executeAdminProtectedController(
+        userController.listUsers,
+        {
+          method: "GET",
+        },
+      );
+      expect(unauthRes.statusCode).toBe(401);
+
+      const memberRes = await executeAdminProtectedController(
+        userController.listUsers,
+        {
+          method: "GET",
+          token: memberToken,
+        },
+      );
+      expect(memberRes.statusCode).toBe(403);
+      expect(memberRes.body).toEqual({
+        error: "Admin access is required",
+      });
+    });
+
+    it("prevents suspending or demoting the last active admin", async () => {
+      const admin = await createActiveUser("Solo Admin", "solo@ventionteams.com");
+      const adminRecord = users.find((user) => user.id === admin.id);
+      if (adminRecord) {
+        adminRecord.role = "admin";
+      }
+
+      const token = await loginActiveUser("solo@ventionteams.com");
+
+      const suspendRes = await executeAdminProtectedController(
+        userController.suspendUser,
+        {
+          method: "POST",
+          params: { userId: admin.id },
+          token,
+        },
+      );
+      expect(suspendRes.statusCode).toBe(400);
+      expect(suspendRes.body).toEqual({
+        error: "Cannot suspend the last active admin user.",
+      });
+
+      const demoteRes = await executeAdminProtectedController(
+        userController.changeUserRole,
+        {
+          method: "PATCH",
+          params: { userId: admin.id },
+          body: { role: "member" },
+          token,
+        },
+      );
+      expect(demoteRes.statusCode).toBe(400);
+      expect(demoteRes.body).toEqual({
+        error: "Cannot demote the last active admin user.",
+      });
     });
   });
 

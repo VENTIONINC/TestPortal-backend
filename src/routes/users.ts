@@ -3,7 +3,7 @@
 
 import { Router } from "express";
 import { userController } from "@/controllers/userController";
-import { authMiddleware } from "@/middleware/authMiddleware";
+import { authMiddleware, requireRole } from "@/middleware/authMiddleware";
 
 const router = Router();
 
@@ -40,6 +40,38 @@ router.delete(
   "/v2/users/:userId/mcp-token",
   authMiddleware,
   userController.revokeMcpToken,
+);
+
+// ADMIN USER MANAGEMENT ROUTES
+router.get(
+  "/v2/admin/users",
+  authMiddleware,
+  requireRole("admin"),
+  userController.listUsers,
+);
+router.post(
+  "/v2/admin/users/:userId/approve",
+  authMiddleware,
+  requireRole("admin"),
+  userController.approveUser,
+);
+router.post(
+  "/v2/admin/users/:userId/suspend",
+  authMiddleware,
+  requireRole("admin"),
+  userController.suspendUser,
+);
+router.post(
+  "/v2/admin/users/:userId/restore",
+  authMiddleware,
+  requireRole("admin"),
+  userController.restoreUser,
+);
+router.patch(
+  "/v2/admin/users/:userId/role",
+  authMiddleware,
+  requireRole("admin"),
+  userController.changeUserRole,
 );
 
 export default router;
