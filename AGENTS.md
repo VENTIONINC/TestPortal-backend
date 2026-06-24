@@ -17,7 +17,7 @@ This repository contains a Node.js backend written in **TypeScript** using an MV
 ## Code style guidelines
 
 - This repository is licensed under Apache 2.0. Supported source files in `src`, `__tests__`, and `__prompts-tests__` should carry:
-  - `// Copyright 2026 Vention`
+  - `// Copyright 2026 VENSOLUTIONSGROUP LTD`
   - `// SPDX-License-Identifier: Apache-2.0`
 - Use the provided path aliases configured in `tsconfig.json`, including `@/services/*`, `@/controllers/*`, `@/models/*`, `@/routes/*`, `@/middleware/*`, `@/lib/*`, `@/mcp/*`, `@/types/*`, `@/prisma/*`, and `@/root/*`.
 - Follow the MVC patterns shown in `src/controllers`, `src/services`, `src/models`, and `src/routes`.
