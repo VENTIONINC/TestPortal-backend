@@ -22,7 +22,7 @@ For supported source file extensions, the `new:file` command SHALL prepend the s
 
 #### Scenario: TypeScript-family file is created
 - **WHEN** a developer creates a supported TypeScript or JavaScript-family file with `npm run new:file -- <path>`
-- **THEN** the new file SHALL begin with `Copyright 2026 Vention`
+- **THEN** the new file SHALL begin with `Copyright 2026 VENSOLUTIONSGROUP LTD`
 - **AND** the new file SHALL include the SPDX identifier `Apache-2.0` in the file header
 
 ### Requirement: Supported file behavior SHALL be documented

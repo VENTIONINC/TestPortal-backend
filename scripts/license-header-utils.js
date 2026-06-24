@@ -2,7 +2,7 @@ import fs from "node:fs";
 import path from "node:path";
 
 export const LICENSE_HEADER = [
-  "// Copyright 2026 Vention",
+  "// Copyright 2026 VENSOLUTIONSGROUP LTD",
   "// SPDX-License-Identifier: Apache-2.0",
 ].join("\n");
 
