@@ -1,4 +1,4 @@
-// Copyright 2026 Vention
+// Copyright 2026 VENSOLUTIONSGROUP LTD
 // SPDX-License-Identifier: Apache-2.0
 
 import { Project, Prisma } from "@prisma/client";
@@ -201,8 +201,9 @@ export const projectModel = {
    * 4. Issues (references Project)
    * 5. Executions (references Project)
    * 6. Specs (references Project)
-   * 7. UploadApiKeys (references Project)
-   * 8. Project itself
+   * 7. DailyExecutionMetric (references Project)
+   * 8. UploadApiKeys (references Project)
+   * 9. Project itself
    */
   async deleteWithCascade(id: string): Promise<Project> {
     return await dbClient.$transaction(async (tx) => {
@@ -300,12 +301,17 @@ export const projectModel = {
         where: { projectId: id },
       });
 
-      // Step 7: Delete UploadApiKeys (references Project)
+      // Step 7: Delete DailyExecutionMetric (references Project)
+      await tx.dailyExecutionMetric.deleteMany({
+        where: { projectId: id },
+      });
+
+      // Step 8: Delete UploadApiKeys (references Project)
       await tx.uploadApiKey.deleteMany({
         where: { projectId: id },
       });
 
-      // Step 8: Delete Project itself
+      // Step 9: Delete Project itself
       return await tx.project.delete({
         where: { id },
       });

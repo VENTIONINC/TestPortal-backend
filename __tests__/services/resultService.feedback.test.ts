@@ -1,4 +1,4 @@
-// Copyright 2026 Vention
+// Copyright 2026 VENSOLUTIONSGROUP LTD
 // SPDX-License-Identifier: Apache-2.0
 
 import "@/test-utils/testEnv";
@@ -109,7 +109,7 @@ describe("resultService.updateAnalysisFeedback", () => {
         { analysisFeedbackConfidence: 0 },
         reviewerId,
       ),
-    ).rejects.toThrow("Feedback confidence must be between 1 and 5");
+    ).rejects.toThrow("Feedback confidence must be an integer between 1 and 5");
   });
 
   it("should throw when no feedback fields are provided", async () => {

@@ -51,7 +51,7 @@ Alternatives considered:
 The initial command should support the repository's primary developer-facing text file types, with comment styles chosen by extension. At minimum, TypeScript and JavaScript-family files should use:
 
 ```text
-// Copyright 2026 Vention
+// Copyright 2026 VENSOLUTIONSGROUP LTD
 // SPDX-License-Identifier: Apache-2.0
 ```
 

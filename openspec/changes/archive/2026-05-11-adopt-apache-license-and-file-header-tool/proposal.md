@@ -8,7 +8,7 @@ The repository currently has inconsistent licensing metadata: `package.json` sti
 - Update repository metadata and documentation so contributors can clearly see the active license and contribution expectations.
 - Add a lightweight `npm run new:file` command that creates a file with a predefined license header.
 - Standardize the header content for newly created source files as:
-  - `// Copyright 2026 Vention`
+  - `// Copyright 2026 VENSOLUTIONSGROUP LTD`
   - `// SPDX-License-Identifier: Apache-2.0`
 - Add guidance describing when the headered file-creation flow should be used and how contributions are accepted under the project license.
 
