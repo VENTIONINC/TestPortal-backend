@@ -23,6 +23,9 @@ describe("dashboardService", () => {
       findUnique: jest.Mock<() => Promise<unknown>>;
       findMany: jest.Mock<() => Promise<unknown>>;
     };
+    result: {
+      findMany: jest.Mock<() => Promise<unknown>>;
+    };
     dailyExecutionMetric: {
       upsert: jest.Mock<() => Promise<unknown>>;
     };
@@ -38,6 +41,9 @@ describe("dashboardService", () => {
         findUnique: jest.fn(),
         findMany: jest.fn(),
       },
+      result: {
+        findMany: jest.fn(),
+      },
       dailyExecutionMetric: {
         upsert: jest.fn(),
       },
@@ -51,25 +57,15 @@ describe("dashboardService", () => {
     const type = "e2e";
 
     it("should correctly aggregate stats from multiple executions", async () => {
-      const mockExecutions = [
-        {
-          id: "exec-1",
-          results: [
-            { status: "passed", duration: 100, analysisCategory: null },
-            { status: "passed", duration: 200, analysisCategory: null },
-            { status: "failed", duration: 300, analysisCategory: "BUG" },
-          ],
-        },
-        {
-          id: "exec-2",
-          results: [
-            { status: "skipped", duration: 0, analysisCategory: null },
-            { status: "failed", duration: 50, analysisCategory: "ENVIRONMENT" },
-          ],
-        },
+      const mockResults = [
+        { status: "passed", duration: 100, analysisCategory: null },
+        { status: "passed", duration: 200, analysisCategory: null },
+        { status: "failed", duration: 300, analysisCategory: "BUG" },
+        { status: "skipped", duration: 0, analysisCategory: null },
+        { status: "failed", duration: 50, analysisCategory: "ENVIRONMENT" },
       ];
 
-      mockTxClient.execution.findMany.mockResolvedValue(mockExecutions);
+      mockTxClient.result.findMany.mockResolvedValue(mockResults);
 
       await dashboardService.refreshDailyStats(
         projectId,
@@ -82,24 +78,22 @@ describe("dashboardService", () => {
       const expectedStartDate = new Date("2025-01-01T00:00:00.000Z");
       const expectedEndDate = new Date("2025-01-02T00:00:00.000Z");
 
-      expect(mockTxClient.execution.findMany).toHaveBeenCalledWith({
+      expect(mockTxClient.result.findMany).toHaveBeenCalledWith({
         where: {
-          projectId,
-          environment,
-          type,
-          createdAt: {
+          startTime: {
             gte: expectedStartDate,
             lt: expectedEndDate,
           },
-        },
-        include: {
-          results: {
-            select: {
-              status: true,
-              duration: true,
-              analysisCategory: true,
-            },
+          execution: {
+            projectId,
+            environment,
+            type,
           },
+        },
+        select: {
+          status: true,
+          duration: true,
+          analysisCategory: true,
         },
       });
 
@@ -144,19 +138,14 @@ describe("dashboardService", () => {
     });
 
     it("should handle issue categorization case-insensitively", async () => {
-      const mockExecutions = [
-        {
-          id: "exec-1",
-          results: [
-            { status: "failed", duration: 10, analysisCategory: "Script" },
-            { status: "failed", duration: 10, analysisCategory: "PERFORMANCE" },
-            { status: "failed", duration: 10, analysisCategory: "Unknown" },
-            { status: "failed", duration: 10, analysisCategory: null },
-          ],
-        },
+      const mockResults = [
+        { status: "failed", duration: 10, analysisCategory: "Script" },
+        { status: "failed", duration: 10, analysisCategory: "PERFORMANCE" },
+        { status: "failed", duration: 10, analysisCategory: "Unknown" },
+        { status: "failed", duration: 10, analysisCategory: null },
       ];
 
-      mockTxClient.execution.findMany.mockResolvedValue(mockExecutions);
+      mockTxClient.result.findMany.mockResolvedValue(mockResults);
 
       await dashboardService.refreshDailyStats(
         projectId,
@@ -180,7 +169,7 @@ describe("dashboardService", () => {
     });
 
     it("should handle empty executions list", async () => {
-      mockTxClient.execution.findMany.mockResolvedValue([]);
+      mockTxClient.result.findMany.mockResolvedValue([]);
 
       await dashboardService.refreshDailyStats(
         projectId,
@@ -208,20 +197,23 @@ describe("dashboardService", () => {
     const projectId = "proj-123";
     const executionId = "exec-123";
 
-    it("should find execution and delegate to refreshDailyStats", async () => {
-      const date = new Date("2025-06-15T10:00:00Z");
+    it("should find execution and refresh distinct result dates", async () => {
       const mockExecution = {
         id: executionId,
         projectId,
         environment: "staging",
         type: "api",
-        createdAt: date,
-        results: [],
+        startedAt: new Date("2025-06-15T10:00:00Z"),
+        results: [
+          { startTime: new Date("2025-06-16T10:00:00Z") },
+          { startTime: new Date("2025-06-16T12:00:00Z") },
+          { startTime: new Date("2025-06-17T10:00:00Z") },
+        ],
       };
 
       mockTxClient.execution.findUnique.mockResolvedValue(mockExecution);
       const refreshSpy = jest.spyOn(dashboardService, "refreshDailyStats");
-      mockTxClient.execution.findMany.mockResolvedValue([]);
+      mockTxClient.result.findMany.mockResolvedValue([]);
 
       await dashboardService.updateStats(
         executionId,
@@ -231,18 +223,30 @@ describe("dashboardService", () => {
 
       expect(mockTxClient.execution.findUnique).toHaveBeenCalledWith({
         where: { id: executionId },
-        include: { results: true },
+        include: {
+          results: {
+            select: {
+              startTime: true,
+            },
+          },
+        },
       });
-
-      const expectedDate = new Date("2025-06-15");
 
       expect(refreshSpy).toHaveBeenCalledWith(
         projectId,
-        expectedDate,
+        new Date("2025-06-16T00:00:00.000Z"),
         "staging",
         "api",
         mockTxClient as unknown as Prisma.TransactionClient,
       );
+      expect(refreshSpy).toHaveBeenCalledWith(
+        projectId,
+        new Date("2025-06-17T00:00:00.000Z"),
+        "staging",
+        "api",
+        mockTxClient as unknown as Prisma.TransactionClient,
+      );
+      expect(refreshSpy).toHaveBeenCalledTimes(2);
     });
 
     it("should log error and return if execution not found", async () => {
@@ -265,12 +269,12 @@ describe("dashboardService", () => {
         projectId,
         environment: null,
         type: null,
-        createdAt: date,
+        startedAt: date,
         results: [],
       };
 
       mockTxClient.execution.findUnique.mockResolvedValue(mockExecution);
-      mockTxClient.execution.findMany.mockResolvedValue([]);
+      mockTxClient.result.findMany.mockResolvedValue([]);
       const refreshSpy = jest.spyOn(dashboardService, "refreshDailyStats");
 
       await dashboardService.updateStats(
