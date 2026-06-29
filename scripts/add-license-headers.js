@@ -7,6 +7,7 @@ import {
   getSupportedExtensions,
   hasLicenseHeader,
   normalizeHeader,
+  replaceLegacyLicenseHeader,
 } from "./license-header-utils.js";
 
 const TARGET_DIRECTORIES = ["src", "__tests__", "__prompts-tests__"];
@@ -59,6 +60,15 @@ targetFiles.forEach((targetFile) => {
 
   if (hasLicenseHeader(currentContent, header)) {
     skippedCount += 1;
+    return;
+  }
+
+  const normalizedLegacyContent = replaceLegacyLicenseHeader(currentContent, header);
+
+  if (normalizedLegacyContent) {
+    fs.writeFileSync(targetFile, normalizedLegacyContent, "utf8");
+    updatedCount += 1;
+    console.log(`Updated ${path.relative(rootDirectory, targetFile)}`);
     return;
   }
 

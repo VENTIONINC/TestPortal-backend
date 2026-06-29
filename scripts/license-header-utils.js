@@ -6,6 +6,13 @@ export const LICENSE_HEADER = [
   "// SPDX-License-Identifier: Apache-2.0",
 ].join("\n");
 
+export const LEGACY_LICENSE_HEADERS = [
+  [
+    "// Copyright 2026 Vention",
+    "// SPDX-License-Identifier: Apache-2.0",
+  ].join("\n"),
+];
+
 export const HEADER_BY_EXTENSION = new Map([
   [".ts", LICENSE_HEADER],
   [".tsx", LICENSE_HEADER],
@@ -37,6 +44,18 @@ export function normalizeHeader(header) {
 
 export function hasLicenseHeader(content, header) {
   return content.startsWith(normalizeHeader(header));
+}
+
+export function replaceLegacyLicenseHeader(content, header) {
+  for (const legacyHeader of LEGACY_LICENSE_HEADERS) {
+    const normalizedLegacyHeader = normalizeHeader(legacyHeader);
+
+    if (content.startsWith(normalizedLegacyHeader)) {
+      return `${normalizeHeader(header)}${content.slice(normalizedLegacyHeader.length)}`;
+    }
+  }
+
+  return null;
 }
 
 export function fail(message) {
