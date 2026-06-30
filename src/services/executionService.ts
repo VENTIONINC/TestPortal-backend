@@ -55,10 +55,27 @@ export const executionService = {
 
     await dbClient.$transaction(async (tx) => {
       // Fetch execution details before deletion to know which stats bucket to refresh
-      const execution = await executionModel.findById(
-        executionId,
-        projectId,
-        tx,
+      const execution = await tx.execution.findFirst({
+        where: {
+          id: executionId,
+          projectId,
+        },
+        include: {
+          results: {
+            select: {
+              startTime: true,
+            },
+          },
+        },
+      });
+
+      const affectedDates = Array.from(
+        new Map(
+          (execution?.results ?? []).map((result) => {
+            const dateStr = result.startTime.toISOString().split("T")[0] ?? "";
+            return [dateStr, new Date(`${dateStr}T00:00:00.000Z`)];
+          }),
+        ).values(),
       );
 
       await executionModel.delete(executionId, projectId, tx);
@@ -66,13 +83,15 @@ export const executionService = {
       if (execution) {
         // Refresh dashboard stats for the affected day
         try {
-          await dashboardService.refreshDailyStats(
-            projectId,
-            execution.createdAt,
-            execution.environment,
-            execution.type,
-            tx,
-          );
+          for (const date of affectedDates) {
+            await dashboardService.refreshDailyStats(
+              projectId,
+              date,
+              execution.environment,
+              execution.type,
+              tx,
+            );
+          }
         } catch (error) {
           logger.error(
             `Failed to refresh dashboard stats after execution deletion: ${error}`,
