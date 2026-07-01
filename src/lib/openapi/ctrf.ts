@@ -34,6 +34,8 @@ const CTRFTestSchema = z
     name: z.string().describe("Test name/title"),
     status: CTRFTestStatusSchema,
     duration: z.number().describe("Test duration in milliseconds"),
+    start: z.number().optional().describe("Test start timestamp (Unix epoch)"),
+    stop: z.number().optional().describe("Test end timestamp (Unix epoch)"),
     message: z.string().optional().describe("Error/failure message"),
     trace: z.string().optional().describe("Stack trace or detailed error info"),
     rawStatus: z.string().optional().describe("Original status from test framework"),

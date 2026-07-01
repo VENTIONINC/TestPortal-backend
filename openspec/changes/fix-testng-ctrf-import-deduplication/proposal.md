@@ -26,5 +26,7 @@ This needs a contract because import correctness affects dashboards, result coun
 - CTRF transformation in `src/services/ctrfService.ts`.
 - Generic report persistence and spec-key derivation in `src/services/jsonReportService.ts`.
 - CTRF type definitions in `src/types/ctrf.ts`.
+- REST OpenAPI CTRF schemas in `src/lib/openapi/ctrf.ts`.
+- MCP CTRF tool schemas in `src/mcp/schemas/ctrfSchemas.ts`.
 - Service-level tests for CTRF transformation and JSON report persistence.
 - GitHub issue #33: TestNG XML converted to CTRF imports only ~63 of 232 real test cases.

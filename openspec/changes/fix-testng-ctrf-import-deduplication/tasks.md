@@ -13,6 +13,7 @@
 - [x] 2.4 Preserve explicit `meta.testId` as the authoritative CTRF test identifier.
 - [x] 2.5 Update generic report persistence to prefer `custom_id` before legacy `/C\d+/` title extraction.
 - [x] 2.6 Extend CTRF TypeScript types for optional `start` and `stop` fields.
+- [x] 2.7 Align REST OpenAPI and MCP CTRF schemas with optional test-level `start` and `stop` fields.
 
 ## 3. Regression Coverage
 
