@@ -23,6 +23,8 @@ export interface CTRFTest {
   name: string;
   status: TestStatus;
   duration: number;
+  start?: number;
+  stop?: number;
   message?: string;
   trace?: string;
   rawStatus?: string;
