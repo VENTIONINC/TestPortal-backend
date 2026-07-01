@@ -223,4 +223,36 @@ describe("jsonReportService with optional runId", () => {
       }),
     });
   });
+
+  it("should prefer explicit custom IDs over loose C-number title matches", async () => {
+    const [baseTest] = mockTestData.tests;
+    if (!baseTest) {
+      throw new Error("Expected mock test data");
+    }
+
+    const reportData = {
+      ...mockTestData,
+      tests: [
+        {
+          location: baseTest.location,
+          results: baseTest.results,
+          title: "VerifyCheckoutPageNavigationForLoggedInUser_RT_TS61TC01",
+          custom_id:
+            "TestScriptRepository.checkout.VerifyCheckoutPageNavigationForLoggedInUser_RT_TS61TC01::default::VerifyCheckoutPageNavigationForLoggedInUser_RT_TS61TC01",
+        },
+      ],
+    };
+
+    await jsonReportService.processReport(
+      reportData,
+      "b4225bdf-9e2b-43f9-8f13-5bb6f5079176",
+    );
+
+    expect(dbClient.spec.findFirst).toHaveBeenCalledWith({
+      where: {
+        key: "TestScriptRepository.checkout.VerifyCheckoutPageNavigationForLoggedInUser_RT_TS61TC01::default::VerifyCheckoutPageNavigationForLoggedInUser_RT_TS61TC01",
+        AND: { projectId: "b4225bdf-9e2b-43f9-8f13-5bb6f5079176" },
+      },
+    });
+  });
 });

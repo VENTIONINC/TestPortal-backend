@@ -160,7 +160,7 @@ export const ctrfService = {
 
     const transformedTests = tests
       .filter((test) => test.status !== "pending")
-      .map((test) => this.transformCtrfTest(test));
+      .map((test, index) => this.transformCtrfTest(test, summary.start, index));
 
     const providerName = tool?.name.toLowerCase() || "ctrf";
 
@@ -177,13 +177,17 @@ export const ctrfService = {
     };
   },
 
-  transformCtrfTest(ctrfTest: CTRFTest) {
+  transformCtrfTest(
+    ctrfTest: CTRFTest,
+    fallbackStartTime: number,
+    index: number,
+  ) {
     const results = [
       {
         retry: ctrfTest.retry ?? 0,
         status: this.mapCtrfStatus(ctrfTest.status),
         duration: ctrfTest.duration,
-        startTime: new Date(),
+        startTime: this.getCtrfTestStartTime(ctrfTest, fallbackStartTime, index),
         ...(ctrfTest.message
           ? {
               error: {
@@ -203,12 +207,31 @@ export const ctrfService = {
       tags: ctrfTest.tags ?? [],
       annotations: [],
       results,
-      ...(ctrfTest.meta?.testId
-        ? { custom_id: ctrfTest.meta.testId as string }
-        : {}),
+      custom_id: this.getCtrfTestIdentifier(ctrfTest),
     };
 
     return testSpec;
+  },
+
+  getCtrfTestStartTime(
+    ctrfTest: CTRFTest,
+    fallbackStartTime: number,
+    index: number,
+  ): Date {
+    const startTime = ctrfTest.start ?? fallbackStartTime + index;
+    return new Date(startTime);
+  },
+
+  getCtrfTestIdentifier(ctrfTest: CTRFTest): string {
+    if (typeof ctrfTest.meta?.testId === "string" && ctrfTest.meta.testId) {
+      return ctrfTest.meta.testId;
+    }
+
+    return [
+      ctrfTest.filePath ?? "unknown",
+      ctrfTest.suite ?? "default",
+      ctrfTest.name,
+    ].join("::");
   },
 
   mapCtrfStatus(status: string): string {

@@ -246,10 +246,10 @@ export const jsonReportService = {
     let specKey = "";
     const titleMatch = specData.title.match(/C\d+/);
 
-    if (titleMatch) {
-      specKey = titleMatch[0];
-    } else if (specData.custom_id) {
+    if (specData.custom_id) {
       specKey = specData.custom_id;
+    } else if (titleMatch) {
+      specKey = titleMatch[0];
     } else {
       specKey = specData.title; // fallback to title
     }
