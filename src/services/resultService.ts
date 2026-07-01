@@ -173,7 +173,7 @@ export const resultService = {
         try {
           await dashboardService.refreshDailyStats(
             updatedResult.execution.projectId,
-            updatedResult.execution.createdAt,
+            updatedResult.startTime,
             updatedResult.execution.environment,
             updatedResult.execution.type,
             tx,
@@ -280,7 +280,7 @@ export const resultService = {
         try {
           await dashboardService.refreshDailyStats(
             result.execution.projectId,
-            result.execution.createdAt,
+            result.startTime,
             result.execution.environment,
             result.execution.type,
             tx,
