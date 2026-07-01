@@ -219,4 +219,77 @@ describe("ctrfService", () => {
       mockTx,
     );
   });
+
+  it("should preserve distinct CTRF tests whose names share a TestNG case suffix", async () => {
+    const start = Date.parse("2026-05-27T12:46:18Z");
+    const reportWithSharedSuffix: CTRFReport = {
+      results: {
+        tool: { name: "testng", version: "7.0.0" },
+        summary: {
+          start,
+          stop: start + 1000,
+          tests: 2,
+          passed: 1,
+          failed: 1,
+          pending: 0,
+          skipped: 0,
+          other: 0,
+        },
+        tests: [
+          {
+            name: "VerifyCheckoutPageNavigationForLoggedInUser_RT_TS61TC01",
+            status: "passed",
+            duration: 100,
+            filePath:
+              "TestScriptRepository.checkout.VerifyCheckoutPageNavigationForLoggedInUser_RT_TS61TC01",
+          },
+          {
+            name: "VerifyErrorMessageForInvalidCreditCardNumber_RT_TS27TC01",
+            status: "failed",
+            duration: 200,
+            filePath:
+              "TestScriptRepository.checkout.VerifyErrorMessageForInvalidCreditCardNumber_RT_TS27TC01",
+            message: "Expected message",
+          },
+        ],
+        environment: {
+          buildNumber: "testng-build",
+          testEnvironment: "local",
+        },
+      },
+    };
+
+    mockTx.project.findUnique.mockResolvedValue({
+      owner: { analyzeEnabled: false },
+    });
+
+    await ctrfService.processReport(reportWithSharedSuffix, {
+      projectId: mockProjectId,
+    });
+
+    const [reportData] = (jsonReportService.processReport as jest.Mock).mock
+      .calls[0];
+    expect(reportData.tests).toEqual([
+      expect.objectContaining({
+        title: "VerifyCheckoutPageNavigationForLoggedInUser_RT_TS61TC01",
+        custom_id:
+          "TestScriptRepository.checkout.VerifyCheckoutPageNavigationForLoggedInUser_RT_TS61TC01::default::VerifyCheckoutPageNavigationForLoggedInUser_RT_TS61TC01",
+        results: [
+          expect.objectContaining({
+            startTime: new Date(start),
+          }),
+        ],
+      }),
+      expect.objectContaining({
+        title: "VerifyErrorMessageForInvalidCreditCardNumber_RT_TS27TC01",
+        custom_id:
+          "TestScriptRepository.checkout.VerifyErrorMessageForInvalidCreditCardNumber_RT_TS27TC01::default::VerifyErrorMessageForInvalidCreditCardNumber_RT_TS27TC01",
+        results: [
+          expect.objectContaining({
+            startTime: new Date(start + 1),
+          }),
+        ],
+      }),
+    ]);
+  });
 });

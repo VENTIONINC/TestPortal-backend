@@ -56,6 +56,28 @@ function toUtcEndExclusive(value: string): Date {
   return endExclusive;
 }
 
+function getUtcDateString(date: Date): string {
+  return date.toISOString().split("T")[0] ?? "";
+}
+
+function getUtcStartOfDate(date: Date): Date | null {
+  const dateStr = getUtcDateString(date);
+  return dateStr ? toUtcStartOfDay(dateStr) : null;
+}
+
+function getUniqueUtcDateStarts(dates: Date[]): Date[] {
+  const dateMap = new Map<string, Date>();
+
+  for (const date of dates) {
+    const dateStart = getUtcStartOfDate(date);
+    if (dateStart) {
+      dateMap.set(dateStart.toISOString(), dateStart);
+    }
+  }
+
+  return Array.from(dateMap.values());
+}
+
 export const dashboardService = {
   /**
    * Updates the aggregated dashboard stats for a completed execution.
@@ -70,7 +92,11 @@ export const dashboardService = {
     const execution = await client.execution.findUnique({
       where: { id: executionId },
       include: {
-        results: true,
+        results: {
+          select: {
+            startTime: true,
+          },
+        },
       },
     });
 
@@ -88,17 +114,20 @@ export const dashboardService = {
     // 1. Determine Scope (Date, Env, Type)
     const environment = execution.environment || "Default";
     const type = execution.type || "Other";
-    const dateStr = execution.createdAt.toISOString().split("T")[0];
+    const dates = getUniqueUtcDateStarts(
+      execution.results.length > 0
+        ? execution.results.map((result) => result.startTime)
+        : [execution.startedAt],
+    );
 
-    // Check dateStr before usage to satisfy TypeScript
-    if (!dateStr) {
+    if (dates.length === 0) {
       logger.error(`Could not determine date for execution ${executionId}`);
       return;
     }
 
-    const date = new Date(dateStr);
-
-    await this.refreshDailyStats(projectId, date, environment, type, client);
+    for (const date of dates) {
+      await this.refreshDailyStats(projectId, date, environment, type, client);
+    }
   },
 
   /**
@@ -117,26 +146,23 @@ export const dashboardService = {
     const endDate = new Date(dateStr);
     endDate.setDate(endDate.getDate() + 1);
 
-    // 2. Fetch ALL executions for this day/env/type and their results
-    // We aggregate in memory for now
-    const allExecutionsForTheDay = await client.execution.findMany({
+    // Fetch all results for this day/env/type and aggregate them by result time.
+    const resultsForTheDay = await client.result.findMany({
       where: {
-        projectId,
-        environment,
-        type,
-        createdAt: {
+        startTime: {
           gte: startDate,
           lt: endDate,
         },
-      },
-      include: {
-        results: {
-          select: {
-            status: true,
-            duration: true,
-            analysisCategory: true,
-          },
+        execution: {
+          projectId,
+          environment,
+          type,
         },
+      },
+      select: {
+        status: true,
+        duration: true,
+        analysisCategory: true,
       },
     });
 
@@ -154,24 +180,22 @@ export const dashboardService = {
       issuesOther: 0,
     };
 
-    for (const exec of allExecutionsForTheDay) {
-      for (const res of exec.results) {
-        dailyTotal.totalTests++;
-        dailyTotal.totalDuration += res.duration || 0;
+    for (const res of resultsForTheDay) {
+      dailyTotal.totalTests++;
+      dailyTotal.totalDuration += res.duration || 0;
 
-        if (res.status === "passed") {
-          dailyTotal.passedTests++;
-        } else if (res.status === "failed") {
-          dailyTotal.failedTests++;
-          const category = res.analysisCategory?.toLowerCase() ?? "other";
-          if (category === "bug") dailyTotal.issuesBug++;
-          else if (category === "environment") dailyTotal.issuesEnvironment++;
-          else if (category === "script") dailyTotal.issuesScript++;
-          else if (category === "performance") dailyTotal.issuesPerformance++;
-          else dailyTotal.issuesOther++;
-        } else if (res.status === "skipped") {
-          dailyTotal.skippedTests++;
-        }
+      if (res.status === "passed") {
+        dailyTotal.passedTests++;
+      } else if (res.status === "failed") {
+        dailyTotal.failedTests++;
+        const category = res.analysisCategory?.toLowerCase() ?? "other";
+        if (category === "bug") dailyTotal.issuesBug++;
+        else if (category === "environment") dailyTotal.issuesEnvironment++;
+        else if (category === "script") dailyTotal.issuesScript++;
+        else if (category === "performance") dailyTotal.issuesPerformance++;
+        else dailyTotal.issuesOther++;
+      } else if (res.status === "skipped") {
+        dailyTotal.skippedTests++;
       }
     }
 
