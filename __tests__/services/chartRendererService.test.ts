@@ -148,6 +148,7 @@ describe("chartRendererService", () => {
           passed: 630,
           failed: 1104,
           skipped: 6,
+          timedOut: 14,
           duration: 100,
           issues: {
             bug: 2,
@@ -188,6 +189,7 @@ describe("chartRendererService", () => {
           datasets: expect.arrayContaining([
             expect.objectContaining({ label: "passed", data: [630] }),
             expect.objectContaining({ label: "failed", data: [1104] }),
+            expect.objectContaining({ label: "timedOut", data: [14] }),
             expect.objectContaining({ label: "skipped", data: [6] }),
           ]),
         }),
@@ -204,6 +206,7 @@ describe("chartRendererService", () => {
           passed: 630,
           failed: 1104,
           skipped: 6,
+          timedOut: 14,
           duration: 100,
           issues: {
             bug: 2,
@@ -237,6 +240,7 @@ describe("chartRendererService", () => {
           datasets: expect.arrayContaining([
             expect.objectContaining({ label: "passed", data: [630] }),
             expect.objectContaining({ label: "failed", data: [1104] }),
+            expect.objectContaining({ label: "timedOut", data: [14] }),
           ]),
         }),
       }),
@@ -252,6 +256,7 @@ describe("chartRendererService", () => {
           passed: 630,
           failed: 1104,
           skipped: 6,
+          timedOut: 14,
           duration: 100,
           issues: {
             bug: 2,

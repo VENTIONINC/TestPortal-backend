@@ -69,6 +69,7 @@ const DailyExecutionMetricsSchema = z
     passed: z.number().describe("Number of passed tests"),
     failed: z.number().describe("Number of failed tests"),
     skipped: z.number().describe("Number of skipped tests"),
+    timedOut: z.number().describe("Number of timed-out tests"),
     duration: z.number().describe("Total duration in milliseconds"),
     issues: DashboardIssueMetricsSchema,
   })

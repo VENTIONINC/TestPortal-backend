@@ -82,6 +82,11 @@ export const chartRendererService = {
             data: data.map((bucket) => bucket.metrics.failed),
             backgroundColor: "#f97316",
           },
+          {
+            label: "timedOut",
+            data: data.map((bucket) => bucket.metrics.timedOut),
+            backgroundColor: "#ef4444",
+          },
         ],
       },
       options: {
@@ -121,6 +126,11 @@ export const chartRendererService = {
             label: "failed",
             data: data.map((bucket) => bucket.metrics.failed),
             backgroundColor: "#f97316",
+          },
+          {
+            label: "timedOut",
+            data: data.map((bucket) => bucket.metrics.timedOut),
+            backgroundColor: "#ef4444",
           },
           {
             label: "skipped",

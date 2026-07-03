@@ -79,11 +79,14 @@ function extractTextContent(content: unknown): string {
 }
 
 function calculateBucketPassRate(bucket: DashboardResponse["history"][number]): number {
-  if (bucket.metrics.total <= 0) {
+  const effectiveTotal =
+    bucket.metrics.total - bucket.metrics.skipped;
+
+  if (effectiveTotal <= 0) {
     return 0;
   }
 
-  return (bucket.metrics.passed / bucket.metrics.total) * 100;
+  return (bucket.metrics.passed / effectiveTotal) * 100;
 }
 
 function getPassRateTrend(history: DashboardResponse["history"]): PassRateTrend {

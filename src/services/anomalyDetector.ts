@@ -22,11 +22,13 @@ function calculateAverage(values: number[]): number {
 }
 
 function calculatePassRate(bucket: AnomalyBucket): number {
-  if (bucket.total <= 0) {
+  const effectiveTotal = bucket.total - bucket.skipped;
+
+  if (effectiveTotal <= 0) {
     return 0;
   }
 
-  return (bucket.passed / bucket.total) * 100;
+  return (bucket.passed / effectiveTotal) * 100;
 }
 
 function buildAnomalyFlag(
