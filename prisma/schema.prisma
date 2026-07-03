@@ -217,6 +217,7 @@ model DailyExecutionMetric {
   passedTests   Int @default(0)
   failedTests   Int @default(0)
   skippedTests  Int @default(0)
+  timedOutTests Int @default(0)
   totalDuration Int @default(0)
 
   // Issues

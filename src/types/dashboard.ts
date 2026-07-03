@@ -20,6 +20,7 @@ export interface DailyExecutionMetrics {
   passed: number;
   failed: number;
   skipped: number;
+  timedOut: number;
   duration: number; // Total duration in ms
   issues: DashboardIssueMetrics;
 }

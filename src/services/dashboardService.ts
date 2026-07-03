@@ -19,6 +19,7 @@ type AggregationResult = {
   passed: number;
   failed: number;
   skipped: number;
+  timedOut: number;
   duration: number;
   issues: DashboardIssueMetrics;
 };
@@ -172,6 +173,7 @@ export const dashboardService = {
       passedTests: 0,
       failedTests: 0,
       skippedTests: 0,
+      timedOutTests: 0,
       totalDuration: 0,
       issuesBug: 0,
       issuesEnvironment: 0,
@@ -194,6 +196,8 @@ export const dashboardService = {
         else if (category === "script") dailyTotal.issuesScript++;
         else if (category === "performance") dailyTotal.issuesPerformance++;
         else dailyTotal.issuesOther++;
+      } else if (res.status === "timedOut") {
+        dailyTotal.timedOutTests++;
       } else if (res.status === "skipped") {
         dailyTotal.skippedTests++;
       }
@@ -237,6 +241,7 @@ export const dashboardService = {
       passed: 0,
       failed: 0,
       skipped: 0,
+      timedOut: 0,
       duration: 0,
       issues: { bug: 0, environment: 0, script: 0, performance: 0, other: 0 },
     };
@@ -252,7 +257,8 @@ export const dashboardService = {
         } else {
           metrics.issues.other++;
         }
-      } else if (res.status === "skipped") metrics.skipped++;
+      } else if (res.status === "timedOut") metrics.timedOut++;
+      else if (res.status === "skipped") metrics.skipped++;
 
       metrics.duration += res.duration ?? 0;
     }
@@ -304,6 +310,7 @@ export const dashboardService = {
     // 2. Aggregate into History & Summary
     const historyMap = new Map<string, DailyExecutionMetrics>();
     const summary = { totalRuns: 0, failures: 0, passRate: 0 };
+    let totalSkipped = 0;
 
     for (const row of dailyRows) {
       const dateObj = row.date;
@@ -311,13 +318,12 @@ export const dashboardService = {
 
       if (!dateKey) continue;
 
-      let bucket = historyMap.get(dateKey);
-      if (!bucket) {
-        bucket = {
+      const bucket = historyMap.get(dateKey) ?? {
           total: 0,
           passed: 0,
           failed: 0,
           skipped: 0,
+          timedOut: 0,
           duration: 0,
           issues: {
             bug: 0,
@@ -327,6 +333,7 @@ export const dashboardService = {
             other: 0,
           },
         };
+      if (!historyMap.has(dateKey)) {
         historyMap.set(dateKey, bucket);
       }
 
@@ -335,6 +342,7 @@ export const dashboardService = {
       bucket.passed += row.passedTests;
       bucket.failed += row.failedTests;
       bucket.skipped += row.skippedTests;
+      bucket.timedOut += row.timedOutTests;
       bucket.duration += row.totalDuration;
       bucket.issues.bug += row.issuesBug;
       bucket.issues.environment += row.issuesEnvironment;
@@ -344,7 +352,8 @@ export const dashboardService = {
 
       // Global Summary
       summary.totalRuns += row.totalTests;
-      summary.failures += row.failedTests;
+      summary.failures += row.failedTests + row.timedOutTests;
+      totalSkipped += row.skippedTests;
     }
 
     const history = Array.from(historyMap.entries())
@@ -353,8 +362,11 @@ export const dashboardService = {
 
     // Calculate Pass Rate
     if (summary.totalRuns > 0) {
+      const summaryNonSkipped = Math.max(summary.totalRuns - totalSkipped, 0);
       summary.passRate = Math.round(
-        ((summary.totalRuns - summary.failures) / summary.totalRuns) * 100,
+        summaryNonSkipped > 0
+          ? ((summaryNonSkipped - summary.failures) / summaryNonSkipped) * 100
+          : 0,
       );
     }
 
