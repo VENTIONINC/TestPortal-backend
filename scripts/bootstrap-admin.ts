@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import argon2 from "argon2";
+import "dotenv/config";
 import { PrismaClient, UserRole, UserStatus } from "@prisma/client";
 
 const prisma = new PrismaClient();
@@ -27,16 +28,18 @@ const parseArgs = () => {
   }
 
   return {
-    name: values.name ?? process.env.ADMIN_NAME,
-    email: values.email ?? process.env.ADMIN_EMAIL,
+    name: values.name ?? process.env.ADMIN_NAME ?? "Admin",
+    email: values.email ?? process.env.ADMIN ?? process.env.ADMIN_EMAIL,
     password: values.password ?? process.env.ADMIN_PASSWORD,
   };
 };
 
 const assertRequired = (value: string | undefined, field: string): string => {
   if (!value?.trim()) {
+    const envName =
+      field === "email" ? "ADMIN or ADMIN_EMAIL" : `ADMIN_${field.toUpperCase()}`;
     throw new Error(
-      `Missing ${field}. Provide --${field} or set ADMIN_${field.toUpperCase()}.`,
+      `Missing ${field}. Provide --${field} or set ${envName}.`,
     );
   }
 

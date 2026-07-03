@@ -11,6 +11,7 @@
     "headers:add": "node scripts/add-license-headers.js",
     "new:file": "node scripts/new-file.js",
     "bootstrap:admin": "tsx scripts/bootstrap-admin.ts",
+    "bootstrap:admin:prod": "node dist/scripts/bootstrap-admin.js",
     "server": "node dist/index.js",
     "type-check": "tsc --noEmit",
     "lint": "eslint .",
