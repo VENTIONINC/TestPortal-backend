@@ -4,16 +4,33 @@
 import { userModel } from "@/models/userModel";
 import { dbClient } from "@/prisma/client";
 import type { PrismaUser } from "@/types";
+import { Prisma, UserRole, UserStatus } from "@prisma/client";
 import argon2 from "argon2";
 import { jwtService, type AuthResponse, type JwtPayload } from "./jwtService";
 import { generateMcpToken } from "@/lib/mcp-token";
 import { signUpUser, signInUser, signOutUser } from "@/services/authService";
 import { CognitoUser } from "amazon-cognito-identity-js";
 
+export type SafeUser = Omit<PrismaUser, "passwordHash">;
+export type UserLifecycleStatus = PrismaUser["status"];
+export type UserApplicationRole = PrismaUser["role"];
+
+export class UserServiceError extends Error {
+  constructor(
+    message: string,
+    public readonly statusCode: number,
+  ) {
+    super(message);
+    this.name = "UserServiceError";
+  }
+}
+
 export interface CreateUserParams {
   name: string;
   email: string;
   password: string;
+  status?: UserLifecycleStatus;
+  role?: UserApplicationRole;
 }
 
 export interface UpdateUserParams {
@@ -39,6 +56,8 @@ export interface LoginParams {
 interface UpdateUserData {
   name?: string;
   email?: string;
+  status?: UserStatus;
+  role?: UserRole;
   passwordHash?: string;
   cognitoUserId?: string;
   reportPortalUrl?: string | null;
@@ -48,7 +67,37 @@ interface UpdateUserData {
   mcpToken?: string;
 }
 
+interface ChangeUserRoleParams {
+  targetUserId: string;
+  role: UserApplicationRole;
+}
+
+const PASSWORD_HASH_OPTIONS = {
+  type: argon2.argon2id,
+  memoryCost: 2 ** 16,
+  timeCost: 3,
+  parallelism: 1,
+} as const;
+
+const LOCAL_SIGNUP_PENDING_MESSAGE =
+  "Your account is pending administrator approval.";
+
+const getBlockedUserMessage = (status: UserLifecycleStatus): string => {
+  if (status === "pending") {
+    return LOCAL_SIGNUP_PENDING_MESSAGE;
+  }
+
+  return "Your account is suspended. Please contact an administrator.";
+};
+
+export const toSafeUser = (user: PrismaUser): SafeUser => {
+  const { passwordHash: _, ...safeUser } = user;
+  return safeUser;
+};
+
 export const userService = {
+  LOCAL_SIGNUP_PENDING_MESSAGE,
+
   createAuthResponse(
     user: PrismaUser,
     options: { cognitoSession?: unknown } = {},
@@ -61,13 +110,7 @@ export const userService = {
     const tokens = jwtService.generateTokenPair(payload);
 
     return {
-      user: {
-        id: user.id,
-        name: user.name,
-        email: user.email,
-        createdAt: user.createdAt,
-        updatedAt: user.updatedAt,
-      },
+      user: toSafeUser(user),
       accessToken: tokens.accessToken,
       refreshToken: tokens.refreshToken,
       ...(options.cognitoSession
@@ -76,15 +119,26 @@ export const userService = {
     };
   },
 
-  async getUserById(userId: string): Promise<PrismaUser> {
-    if (!userId) {
-      throw new Error("User ID is required");
+  assertActiveUser(user: PrismaUser): PrismaUser {
+    if (user.status !== UserStatus.active) {
+      throw new UserServiceError(getBlockedUserMessage(user.status), 403);
     }
 
-    const user = await userModel.findById(userId);
+    return user;
+  },
+
+  async getUserById(
+    userId: string,
+    tx?: Prisma.TransactionClient,
+  ): Promise<PrismaUser> {
+    if (!userId) {
+      throw new UserServiceError("User ID is required", 400);
+    }
+
+    const user = await userModel.findById(userId, tx);
 
     if (!user) {
-      throw new Error(`User with ID ${userId} not found`);
+      throw new UserServiceError(`User with ID ${userId} not found`, 404);
     }
 
     return user;
@@ -113,12 +167,10 @@ export const userService = {
     }
 
     // Hash password before checking user existence to prevent timing attacks
-    const passwordHash = await argon2.hash(userParams.password, {
-      type: argon2.argon2id,
-      memoryCost: 2 ** 16,
-      timeCost: 3,
-      parallelism: 1,
-    });
+    const passwordHash = await argon2.hash(
+      userParams.password,
+      PASSWORD_HASH_OPTIONS,
+    );
 
     return await dbClient.$transaction(async (tx) => {
       const existingUser = await userModel.findByEmail(userParams.email, tx);
@@ -131,6 +183,8 @@ export const userService = {
       const userData = {
         name: userParams.name,
         email: userParams.email,
+        status: userParams.status ?? UserStatus.active,
+        role: userParams.role ?? UserRole.member,
         passwordHash,
       };
 
@@ -143,7 +197,7 @@ export const userService = {
     updateData: UpdateUserParams,
   ): Promise<PrismaUser> {
     if (!userId) {
-      throw new Error("User ID is required");
+      throw new UserServiceError("User ID is required", 400);
     }
 
     return await dbClient.$transaction(async (tx) => {
@@ -178,12 +232,7 @@ export const userService = {
           throw new Error("Password must be at least 8 characters");
         }
 
-        const passwordHash = await argon2.hash(password, {
-          type: argon2.argon2id,
-          memoryCost: 2 ** 16,
-          timeCost: 3,
-          parallelism: 1,
-        });
+        const passwordHash = await argon2.hash(password, PASSWORD_HASH_OPTIONS);
 
         cleanUpdateData.passwordHash = passwordHash;
       }
@@ -200,12 +249,12 @@ export const userService = {
 
   async verifyPassword(email: string, password: string): Promise<PrismaUser> {
     if (!email || !password) {
-      throw new Error("Email and password are required");
+      throw new UserServiceError("Email and password are required", 400);
     }
 
     const user = await userModel.findByEmail(email);
     if (!user) {
-      throw new Error("Invalid email or password");
+      throw new UserServiceError("Invalid email or password", 401);
     }
 
     if (!user.passwordHash) {
@@ -214,7 +263,7 @@ export const userService = {
 
     const isValidPassword = await argon2.verify(user.passwordHash, password);
     if (!isValidPassword) {
-      throw new Error("Invalid email or password");
+      throw new UserServiceError("Invalid email or password", 401);
     }
 
     return user;
@@ -222,7 +271,7 @@ export const userService = {
 
   async login(email: string, password: string): Promise<AuthResponse> {
     const user = await this.verifyPassword(email, password);
-    return this.createAuthResponse(user);
+    return this.createAuthResponse(this.assertActiveUser(user));
   },
 
   async refreshTokens(refreshToken: string): Promise<AuthResponse> {
@@ -230,12 +279,12 @@ export const userService = {
 
     const user = await this.getUserById(payload.userId);
 
-    return this.createAuthResponse(user);
+    return this.createAuthResponse(this.assertActiveUser(user));
   },
 
   async generateMcpToken(userId: string): Promise<string> {
     if (!userId) {
-      throw new Error("User ID is required");
+      throw new UserServiceError("User ID is required", 400);
     }
 
     const user = await this.getUserById(userId);
@@ -254,7 +303,7 @@ export const userService = {
 
   async revokeMcpToken(userId: string): Promise<void> {
     if (!userId) {
-      throw new Error("User ID is required");
+      throw new UserServiceError("User ID is required", 400);
     }
 
     await this.getUserById(userId); // Verify user exists
@@ -301,6 +350,8 @@ export const userService = {
       const userData = {
         name,
         email,
+        status: UserStatus.active,
+        role: UserRole.member,
         cognitoUserId: email, // Using email as cognito user identifier for now
       };
 
@@ -337,7 +388,7 @@ export const userService = {
         user = await this.createCognitoBackedUser(email);
       }
 
-      return this.createAuthResponse(user, {
+      return this.createAuthResponse(this.assertActiveUser(user), {
         ...(cognitoResult.session ? { cognitoSession: cognitoResult.session } : {}),
       });
     } catch (error) {
@@ -366,10 +417,125 @@ export const userService = {
     const userData = {
       name: email.split("@")[0] ?? "Unknown",
       email,
+      status: UserStatus.active,
+      role: UserRole.member,
       cognitoUserId: email,
     };
 
     return await userModel.create(userData);
+  },
+
+  async listUsers(): Promise<PrismaUser[]> {
+    return await userModel.list();
+  },
+
+  async approvePendingUser(userId: string): Promise<PrismaUser> {
+    const user = await this.getUserById(userId);
+
+    if (user.status === UserStatus.active) {
+      return user;
+    }
+
+    return await userModel.update(userId, { status: UserStatus.active });
+  },
+
+  async suspendUser(userId: string): Promise<PrismaUser> {
+    return await dbClient.$transaction(async (tx) => {
+      const user = await this.getUserById(userId, tx);
+
+      if (
+        user.role === UserRole.admin &&
+        user.status === UserStatus.active &&
+        (await userModel.countActiveAdmins(tx)) <= 1
+      ) {
+        throw new UserServiceError(
+          "Cannot suspend the last active admin user.",
+          400,
+        );
+      }
+
+      if (user.status === UserStatus.suspended) {
+        return user;
+      }
+
+      return await userModel.update(userId, { status: UserStatus.suspended }, tx);
+    });
+  },
+
+  async restoreSuspendedUser(userId: string): Promise<PrismaUser> {
+    const user = await this.getUserById(userId);
+
+    if (user.status === UserStatus.active) {
+      return user;
+    }
+
+    return await userModel.update(userId, { status: UserStatus.active });
+  },
+
+  async changeUserRole({
+    targetUserId,
+    role,
+  }: ChangeUserRoleParams): Promise<PrismaUser> {
+    return await dbClient.$transaction(async (tx) => {
+      const user = await this.getUserById(targetUserId, tx);
+
+      if (
+        user.role === UserRole.admin &&
+        role === UserRole.member &&
+        user.status === UserStatus.active &&
+        (await userModel.countActiveAdmins(tx)) <= 1
+      ) {
+        throw new UserServiceError(
+          "Cannot demote the last active admin user.",
+          400,
+        );
+      }
+
+      if (user.role === role) {
+        return user;
+      }
+
+      return await userModel.update(targetUserId, { role }, tx);
+    });
+  },
+
+  async upsertLocalAdmin(params: CreateUserParams): Promise<PrismaUser> {
+    if (!params.name || !params.email || !params.password) {
+      throw new UserServiceError(
+        "Name, email, and password are required",
+        400,
+      );
+    }
+
+    const passwordHash = await argon2.hash(params.password, PASSWORD_HASH_OPTIONS);
+
+    return await dbClient.$transaction(async (tx) => {
+      const existingUser = await userModel.findByEmail(params.email, tx);
+
+      if (existingUser) {
+        return await userModel.update(
+          existingUser.id,
+          {
+            name: params.name,
+            passwordHash,
+            status: UserStatus.active,
+            role: UserRole.admin,
+          },
+          tx,
+        );
+      }
+
+      return await userModel.create(
+        {
+          name: params.name,
+          email: params.email,
+          passwordHash,
+          status: UserStatus.active,
+          role: UserRole.admin,
+        },
+        tx,
+      );
+    });
   },
 
   async updateUserIntegrations(
@@ -377,7 +543,7 @@ export const userService = {
     integrationsData: UpdateUserIntegrationsParams,
   ): Promise<PrismaUser> {
     if (!userId) {
-      throw new Error("User ID is required");
+      throw new UserServiceError("User ID is required", 400);
     }
 
     await this.getUserById(userId);

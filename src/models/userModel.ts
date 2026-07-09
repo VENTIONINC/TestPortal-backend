@@ -3,11 +3,13 @@
 
 import { dbClient } from "@/prisma/client";
 import type { PrismaUser } from "@/types";
-import { Prisma } from "@prisma/client";
+import { Prisma, UserRole, UserStatus } from "@prisma/client";
 
 interface CreateUserData {
   name: string;
   email: string;
+  status?: UserStatus;
+  role?: UserRole;
   passwordHash?: string;
   cognitoUserId?: string;
   mcpToken?: string;
@@ -16,6 +18,10 @@ interface CreateUserData {
   monitoringPortalUrl?: string | null;
   monitoringPortalEnabled?: boolean;
   analyzeEnabled?: boolean;
+}
+
+interface ListUsersOptions {
+  orderBy?: Prisma.UserOrderByWithRelationInput;
 }
 
 export const userModel = {
@@ -74,6 +80,26 @@ export const userModel = {
     return await client.user.update({
       where: { id },
       data,
+    });
+  },
+
+  list: async (
+    options: ListUsersOptions = {},
+    tx?: Prisma.TransactionClient,
+  ): Promise<PrismaUser[]> => {
+    const client = tx ?? dbClient;
+    return await client.user.findMany({
+      orderBy: options.orderBy ?? { createdAt: "asc" },
+    });
+  },
+
+  countActiveAdmins: async (tx?: Prisma.TransactionClient): Promise<number> => {
+    const client = tx ?? dbClient;
+    return await client.user.count({
+      where: {
+        status: UserStatus.active,
+        role: UserRole.admin,
+      },
     });
   },
 };

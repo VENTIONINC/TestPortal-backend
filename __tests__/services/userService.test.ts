@@ -140,6 +140,92 @@ describe("userService", () => {
       );
       expect(mockUserModel.update).not.toHaveBeenCalled();
     });
+
+    it("ignores role and status fields on self-service updates", async () => {
+      mockUserModel.findByEmail.mockResolvedValue(null);
+      mockUserModel.update.mockResolvedValue({
+        id: userId,
+        email: "member@ventionteams.com",
+        role: "member",
+        status: "active",
+      } as unknown as PrismaUser);
+
+      await userService.updateUser(
+        userId,
+        {
+          email: "member@ventionteams.com",
+          role: "admin",
+          status: "suspended",
+        } as unknown as Parameters<typeof userService.updateUser>[1],
+      );
+
+      expect(mockUserModel.update).toHaveBeenCalledWith(
+        userId,
+        expect.not.objectContaining({
+          role: expect.anything(),
+          status: expect.anything(),
+        }),
+        mockTx,
+      );
+    });
+  });
+
+  describe("upsertLocalAdmin", () => {
+    const adminParams = {
+      name: "Admin User",
+      email: "admin@ventionteams.com",
+      password: "password123",
+    };
+
+    it("creates an active admin when the user does not exist", async () => {
+      mockUserModel.findByEmail.mockResolvedValue(null);
+      mockUserModel.create.mockResolvedValue({
+        id: "admin-1",
+        name: adminParams.name,
+        email: adminParams.email,
+        status: "active",
+        role: "admin",
+      } as unknown as PrismaUser);
+
+      await userService.upsertLocalAdmin(adminParams);
+
+      expect(mockUserModel.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          name: adminParams.name,
+          email: adminParams.email,
+          status: "active",
+          role: "admin",
+          passwordHash: "hashed_password",
+        }),
+        mockTx,
+      );
+    });
+
+    it("updates an existing user into an active admin", async () => {
+      mockUserModel.findByEmail.mockResolvedValue({
+        id: "member-1",
+      } as unknown as PrismaUser);
+      mockUserModel.update.mockResolvedValue({
+        id: "member-1",
+        name: adminParams.name,
+        email: adminParams.email,
+        status: "active",
+        role: "admin",
+      } as unknown as PrismaUser);
+
+      await userService.upsertLocalAdmin(adminParams);
+
+      expect(mockUserModel.update).toHaveBeenCalledWith(
+        "member-1",
+        expect.objectContaining({
+          name: adminParams.name,
+          status: "active",
+          role: "admin",
+          passwordHash: "hashed_password",
+        }),
+        mockTx,
+      );
+    });
   });
 
   describe("MCP Token Operations", () => {
@@ -165,7 +251,7 @@ describe("userService", () => {
 
         const result = await userService.generateMcpToken(mockUserId);
 
-        expect(mockUserModel.findById).toHaveBeenCalledWith(mockUserId);
+        expect(mockUserModel.findById).toHaveBeenCalledWith(mockUserId, undefined);
         expect(mockGenerateMcpToken).toHaveBeenCalledWith(
           mockUserId,
           "test-secret",
@@ -189,7 +275,10 @@ describe("userService", () => {
 
         const result = await userService.generateMcpToken(differentUserId);
 
-        expect(mockUserModel.findById).toHaveBeenCalledWith(differentUserId);
+        expect(mockUserModel.findById).toHaveBeenCalledWith(
+          differentUserId,
+          undefined,
+        );
         expect(mockGenerateMcpToken).toHaveBeenCalledWith(
           differentUserId,
           "test-secret",
@@ -252,7 +341,7 @@ describe("userService", () => {
 
         await userService.revokeMcpToken(mockUserId);
 
-        expect(mockUserModel.findById).toHaveBeenCalledWith(mockUserId);
+        expect(mockUserModel.findById).toHaveBeenCalledWith(mockUserId, undefined);
         expect(mockUserModel.update).toHaveBeenCalledWith(mockUserId, {
           mcpToken: "",
         });
@@ -269,7 +358,10 @@ describe("userService", () => {
 
         await userService.revokeMcpToken(stringUserId);
 
-        expect(mockUserModel.findById).toHaveBeenCalledWith(stringUserId);
+        expect(mockUserModel.findById).toHaveBeenCalledWith(
+          stringUserId,
+          undefined,
+        );
         expect(mockUserModel.update).toHaveBeenCalledWith(stringUserId, {
           mcpToken: "",
         });
