@@ -2,20 +2,17 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { Request, Response } from "express";
+import { authProviderService } from "@/services/authProviderService";
+import type { AuthenticatedRequest } from "@/middleware/authMiddleware";
 import {
+  toSafeUser,
   userService,
   type CreateUserParams,
   type UpdateUserParams,
   type UpdateUserIntegrationsParams,
   type LoginParams,
+  UserServiceError,
 } from "@/services/userService";
-import type { AuthenticatedRequest } from "@/middleware/authMiddleware";
-import type { PrismaUser } from "@/types";
-
-const createSafeUserResponse = (user: PrismaUser) => {
-  const { passwordHash: _, ...safeUser } = user;
-  return safeUser;
-};
 
 const getAuthenticatedUserId = (
   req: AuthenticatedRequest,
@@ -31,7 +28,31 @@ const getAuthenticatedUserId = (
   return req.user.id;
 };
 
+const handleUserError = (
+  res: Response,
+  error: unknown,
+  fallbackStatusCode: number,
+  prefix?: string,
+): void => {
+  const err = error as Error;
+  const statusCode =
+    error instanceof UserServiceError ? error.statusCode : fallbackStatusCode;
+
+  res.status(statusCode).json({
+    error: prefix ? `${prefix}${err.message}` : err.message,
+  });
+};
+
+const toAdminSafeUser = (user: ReturnType<typeof toSafeUser>) => {
+  const { mcpToken: _, ...adminSafeUser } = user;
+  return adminSafeUser;
+};
+
 export const userController = {
+  getAuthConfig: async (_req: Request, res: Response): Promise<void> => {
+    res.status(200).json(authProviderService.getConfig());
+  },
+
   getUserById: async (
     req: AuthenticatedRequest,
     res: Response,
@@ -41,13 +62,10 @@ export const userController = {
       if (!userId) return;
 
       const user = await userService.getUserById(userId);
-      const safeUser = createSafeUserResponse(user);
+      const safeUser = toSafeUser(user);
       res.status(200).json(safeUser);
     } catch (error) {
-      const err = error as Error;
-      res.status(404).json({
-        error: err.message,
-      });
+      handleUserError(res, error, 404);
     }
   },
 
@@ -63,13 +81,10 @@ export const userController = {
       const userParams: CreateUserParams = req.body;
 
       const user = await userService.signup(userParams);
-      const safeUser = createSafeUserResponse(user);
+      const safeUser = toSafeUser(user);
       res.status(201).json(safeUser);
     } catch (error) {
-      const err = error as Error;
-      res.status(400).json({
-        error: err.message,
-      });
+      handleUserError(res, error, 400);
     }
   },
 
@@ -91,13 +106,10 @@ export const userController = {
       const updateData: UpdateUserParams = req.body;
 
       const updatedUser = await userService.updateUser(userId, updateData);
-      const safeUser = createSafeUserResponse(updatedUser);
+      const safeUser = toSafeUser(updatedUser);
       res.status(200).json(safeUser);
     } catch (error) {
-      const err = error as Error;
-      res.status(400).json({
-        error: `Failed to update user. ${err.message}`,
-      });
+      handleUserError(res, error, 400, "Failed to update user. ");
     }
   },
 
@@ -111,18 +123,11 @@ export const userController = {
       }
 
       const loginParams: LoginParams = req.body;
-
-      const authResponse = await userService.login(
-        loginParams.email,
-        loginParams.password,
-      );
+      const authResponse = await authProviderService.login(loginParams);
 
       res.status(200).json(authResponse);
     } catch (error) {
-      const err = error as Error;
-      res.status(401).json({
-        error: err.message,
-      });
+      handleUserError(res, error, 401);
     }
   },
 
@@ -141,10 +146,7 @@ export const userController = {
 
       res.status(200).json(authResponse);
     } catch (error) {
-      const err = error as Error;
-      res.status(401).json({
-        error: err.message,
-      });
+      handleUserError(res, error, 401);
     }
   },
 
@@ -163,10 +165,7 @@ export const userController = {
         message: "MCP token generated successfully",
       });
     } catch (error) {
-      const err = error as Error;
-      res.status(400).json({
-        error: err.message,
-      });
+      handleUserError(res, error, 400);
     }
   },
 
@@ -184,15 +183,11 @@ export const userController = {
         message: "MCP token revoked successfully",
       });
     } catch (error) {
-      const err = error as Error;
-      res.status(400).json({
-        error: err.message,
-      });
+      handleUserError(res, error, 400);
     }
   },
 
-  // Cognito authentication methods
-  cognitoSignup: async (req: Request, res: Response): Promise<void> => {
+  authSignup: async (req: Request, res: Response): Promise<void> => {
     try {
       if (!req.body) {
         res.status(400).json({
@@ -210,23 +205,19 @@ export const userController = {
         return;
       }
 
-      const result = await userService.signupWithCognito(name, email, password);
-      const safeUser = createSafeUserResponse(result.user);
+      const result = await authProviderService.signup({ name, email, password });
+      const safeUser = toSafeUser(result.user);
 
       res.status(201).json({
         user: safeUser,
-        message:
-          "User created successfully with Cognito. Please check your email for verification.",
+        ...(result.message ? { message: result.message } : {}),
       });
     } catch (error) {
-      const err = error as Error;
-      res.status(400).json({
-        error: err.message,
-      });
+      handleUserError(res, error, 400);
     }
   },
 
-  cognitoLogin: async (req: Request, res: Response): Promise<void> => {
+  authLogin: async (req: Request, res: Response): Promise<void> => {
     try {
       if (!req.body) {
         res.status(400).json({
@@ -244,39 +235,39 @@ export const userController = {
         return;
       }
 
-      const authResponse = await userService.loginWithCognito(
+      const authResponse = await authProviderService.login({
         email,
         password,
-        newPassword,
-      );
+        ...(newPassword ? { newPassword } : {}),
+      });
+
       res.status(200).json(authResponse);
     } catch (error) {
-      const err = error as Error;
-      if (err.message.includes("New password required")) {
-        res.status(200).json({
-          status: "NEW_PASSWORD_REQUIRED",
-          message: "New password required for first login",
-        });
-      } else {
-        res.status(401).json({
-          error: err.message,
-        });
-      }
+      handleUserError(res, error, 401);
     }
   },
 
-  cognitoSignOut: async (_req: Request, res: Response): Promise<void> => {
+  authLogout: async (_req: Request, res: Response): Promise<void> => {
     try {
-      const result = await userService.signOutFromCognito();
+      const result = await authProviderService.logout();
       res.status(200).json({
         message: result,
       });
     } catch (error) {
-      const err = error as Error;
-      res.status(400).json({
-        error: err.message,
-      });
+      handleUserError(res, error, 400);
     }
+  },
+
+  cognitoSignup: async (req: Request, res: Response): Promise<void> => {
+    await userController.authSignup(req, res);
+  },
+
+  cognitoLogin: async (req: Request, res: Response): Promise<void> => {
+    await userController.authLogin(req, res);
+  },
+
+  cognitoSignOut: async (req: Request, res: Response): Promise<void> => {
+    await userController.authLogout(req, res);
   },
 
   updateUserIntegrations: async (
@@ -300,13 +291,84 @@ export const userController = {
         userId,
         integrationsData,
       );
-      const safeUser = createSafeUserResponse(updatedUser);
+      const safeUser = toSafeUser(updatedUser);
       res.status(200).json(safeUser);
     } catch (error) {
-      const err = error as Error;
-      res.status(400).json({
-        error: `Failed to update user integrations. ${err.message}`,
+      handleUserError(
+        res,
+        error,
+        400,
+        "Failed to update user integrations. ",
+      );
+    }
+  },
+
+  listUsers: async (_req: AuthenticatedRequest, res: Response): Promise<void> => {
+    try {
+      const users = await userService.listUsers();
+      res.status(200).json(users.map((user) => toAdminSafeUser(toSafeUser(user))));
+    } catch (error) {
+      handleUserError(res, error, 400);
+    }
+  },
+
+  approveUser: async (
+    req: AuthenticatedRequest<{ userId: string }>,
+    res: Response,
+  ): Promise<void> => {
+    try {
+      const user = await userService.approvePendingUser(req.params.userId);
+      res.status(200).json(toAdminSafeUser(toSafeUser(user)));
+    } catch (error) {
+      handleUserError(res, error, 400);
+    }
+  },
+
+  suspendUser: async (
+    req: AuthenticatedRequest<{ userId: string }>,
+    res: Response,
+  ): Promise<void> => {
+    try {
+      const user = await userService.suspendUser(req.params.userId);
+      res.status(200).json(toAdminSafeUser(toSafeUser(user)));
+    } catch (error) {
+      handleUserError(res, error, 400);
+    }
+  },
+
+  restoreUser: async (
+    req: AuthenticatedRequest<{ userId: string }>,
+    res: Response,
+  ): Promise<void> => {
+    try {
+      const user = await userService.restoreSuspendedUser(req.params.userId);
+      res.status(200).json(toAdminSafeUser(toSafeUser(user)));
+    } catch (error) {
+      handleUserError(res, error, 400);
+    }
+  },
+
+  changeUserRole: async (
+    req: AuthenticatedRequest<{ userId: string }>,
+    res: Response,
+  ): Promise<void> => {
+    try {
+      const { role } = req.body as { role?: "admin" | "member" };
+
+      if (!role) {
+        res.status(400).json({
+          error: "Role is required",
+        });
+        return;
+      }
+
+      const user = await userService.changeUserRole({
+        targetUserId: req.params.userId,
+        role,
       });
+      res.status(200).json(toAdminSafeUser(toSafeUser(user)));
+    } catch (error) {
+      handleUserError(res, error, 400);
     }
   },
 };

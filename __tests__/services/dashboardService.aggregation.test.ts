@@ -6,6 +6,10 @@ import { jest } from "@jest/globals";
 import { dashboardService } from "@/services/dashboardService";
 import { dbClient } from "@/prisma/client";
 
+const mockDailyExecutionMetricFindMany =
+  dbClient.dailyExecutionMetric.findMany as jest.Mock;
+const mockExecutionFindMany = dbClient.execution.findMany as jest.Mock;
+
 // Mock generic logger
 jest.mock("@/lib/logger", () => ({
   __esModule: true,
@@ -83,10 +87,8 @@ describe("dashboardService Aggregation", () => {
   ];
 
   it("should aggregate data by week correctly", async () => {
-    (dbClient.dailyExecutionMetric.findMany as any).mockResolvedValue(
-      mockDailyRows,
-    );
-    (dbClient.execution.findMany as any).mockResolvedValue([]);
+    mockDailyExecutionMetricFindMany.mockResolvedValue(mockDailyRows as never);
+    mockExecutionFindMany.mockResolvedValue([] as never);
 
     const result = await dashboardService.getDashboard(
       projectId,
@@ -125,10 +127,8 @@ describe("dashboardService Aggregation", () => {
   });
 
   it("should aggregate data by month correctly", async () => {
-    (dbClient.dailyExecutionMetric.findMany as any).mockResolvedValue(
-      mockDailyRows,
-    );
-    (dbClient.execution.findMany as any).mockResolvedValue([]);
+    mockDailyExecutionMetricFindMany.mockResolvedValue(mockDailyRows as never);
+    mockExecutionFindMany.mockResolvedValue([] as never);
 
     const result = await dashboardService.getDashboard(
       projectId,
@@ -187,8 +187,8 @@ describe("dashboardService Aggregation", () => {
   });
 
   it("should use explicit UTC date range when startDate and endDate are provided", async () => {
-    (dbClient.dailyExecutionMetric.findMany as any).mockResolvedValue([]);
-    (dbClient.execution.findMany as any).mockResolvedValue([]);
+    mockDailyExecutionMetricFindMany.mockResolvedValue([] as never);
+    mockExecutionFindMany.mockResolvedValue([] as never);
 
     await dashboardService.getDashboard(
       projectId,

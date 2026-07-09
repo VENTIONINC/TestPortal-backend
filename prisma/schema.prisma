@@ -10,6 +10,17 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+enum UserStatus {
+  pending
+  active
+  suspended
+}
+
+enum UserRole {
+  admin
+  member
+}
+
 model Project {
   id          String   @id @default(uuid()) @db.Uuid
   createdAt   DateTime @default(now())
@@ -143,6 +154,8 @@ model User {
   updatedAt               DateTime @updatedAt
   name                    String
   email                   String   @unique
+  status                  UserStatus @default(active)
+  role                    UserRole   @default(member)
   passwordHash            String?
   cognitoUserId           String?  @unique
   mcpToken                String?  @unique

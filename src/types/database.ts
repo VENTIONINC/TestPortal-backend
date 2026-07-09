@@ -119,6 +119,8 @@ export interface PrismaUser {
   updatedAt: Date;
   name: string;
   email: string;
+  status: "pending" | "active" | "suspended";
+  role: "admin" | "member";
   passwordHash?: string | null;
   cognitoUserId?: string | null;
   mcpToken?: string | null;

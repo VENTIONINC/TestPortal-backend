@@ -2,3 +2,4 @@
 // SPDX-License-Identifier: Apache-2.0
 
 process.env.JWT_SECRET ??= "test-secret";
+process.env.AUTH_PROVIDER ??= "local";

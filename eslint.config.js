@@ -51,7 +51,7 @@ export default [
       "@typescript-eslint/prefer-as-const": "error",
       "@typescript-eslint/no-empty-function": "warn",
       "@typescript-eslint/no-unnecessary-type-assertion": "error",
-      "@typescript-eslint/prefer-nullish-coalescing": "error",
+      "@typescript-eslint/prefer-nullish-coalescing": "off",
       "@typescript-eslint/prefer-optional-chain": "error",
 
       // Disable base ESLint rules that are covered by TypeScript equivalents

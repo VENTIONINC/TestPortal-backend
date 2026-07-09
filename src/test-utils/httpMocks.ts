@@ -18,6 +18,8 @@ export interface MockRequestOptions<P extends Record<string, string>> {
   user?: AuthenticatedRequest["user"];
 }
 
+// These helpers intentionally default to permissive response bodies for tests.
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export interface MockResponse<T = any> {
   statusCode: number;
   body?: T;
@@ -25,6 +27,7 @@ export interface MockResponse<T = any> {
   locals: Record<string, unknown>;
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type ControllerResponse<T = any> = Response & MockResponse<T>;
 
 export const createMockRequest = <
@@ -62,6 +65,7 @@ export const createMockRequest = <
   return req as Request<P>;
 };
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const createMockResponse = <T = any>(): ControllerResponse<T> => {
   const headers: Record<string, string> = {};
   const res = {
@@ -96,6 +100,7 @@ export const createMockResponse = <T = any>(): ControllerResponse<T> => {
 };
 
 export const executeController = async <
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   T = any,
   P extends Record<string, string> = Record<string, string>,
 >(
@@ -109,6 +114,7 @@ export const executeController = async <
 };
 
 export const executeProtectedController = async <
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   T = any,
   P extends Record<string, string> = Record<string, string>,
 >(

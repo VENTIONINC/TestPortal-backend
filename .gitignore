@@ -57,6 +57,7 @@ typings/
 
 # dotenv environment constiables file
 .env
+.env.branch-*
 
 # next.js build output
 .next
@@ -84,3 +85,4 @@ mocks/
 
 # Prompt testing datasets (generated files)
 __prompts-tests__/**/datasets/
+mocks/
