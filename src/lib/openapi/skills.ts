@@ -6,23 +6,23 @@ import { OpenAPIRegistry } from "@asteasolutions/zod-to-openapi";
 import { ErrorResponseSchema } from "./common";
 import { z } from "./zod";
 
-const SkillNameParamSchema = z.object({
-  name: z.enum([
-    "developer-code-assistant",
-    "definition-of-ready-assistant",
-    "test-portal-assistant",
-    "issue-analysis-assistant",
-    "environment-performance-assistant",
-    "software-documentation-assistant",
-  ]),
+const SkillIdParamSchema = z.object({
+  id: z.string().min(1).openapi({
+    description:
+      "Persisted skill identifier returned by the skills catalog. Unknown or malformed values return 404.",
+    example: "6f5b8b53-5128-4b05-a8bf-b1d532f3a8d9",
+  }),
 });
 
 const SkillMetadataSchema = z
   .object({
+    id: z.string().uuid(),
     name: z.string(),
     title: z.string(),
     description: z.string(),
     category: z.string(),
+    source: z.enum(["system", "custom"]),
+    readOnly: z.boolean(),
     version: z.string().optional(),
     license: z.string().optional(),
     compatibility: z.string().optional(),
@@ -67,7 +67,7 @@ export function registerSkillRoutes(registry: OpenAPIRegistry) {
     method: "get",
     path: "/api/v2/skills",
     description:
-      "Retrieves predefined downloadable skills with metadata (requires authentication)",
+      "Retrieves persisted downloadable skills with metadata and ID-based artifact URLs (requires authentication)",
     security: [{ BearerAuth: [] }],
     responses: {
       200: {
@@ -100,11 +100,11 @@ export function registerSkillRoutes(registry: OpenAPIRegistry) {
 
   registry.registerPath({
     method: "get",
-    path: "/api/v2/skills/{name}",
+    path: "/api/v2/skills/{id}",
     description:
-      "Retrieves metadata and Markdown content for a predefined skill (requires authentication)",
+      "Retrieves metadata and Markdown content for a persisted skill by ID (requires authentication)",
     request: {
-      params: SkillNameParamSchema,
+      params: SkillIdParamSchema,
     },
     security: [{ BearerAuth: [] }],
     responses: {
@@ -125,7 +125,7 @@ export function registerSkillRoutes(registry: OpenAPIRegistry) {
         },
       },
       404: {
-        description: "Skill not found",
+        description: "Skill not found for the provided ID",
         content: {
           "application/json": {
             schema: ErrorResponseSchema,
@@ -146,11 +146,11 @@ export function registerSkillRoutes(registry: OpenAPIRegistry) {
 
   registry.registerPath({
     method: "get",
-    path: "/api/v2/skills/{name}/download",
+    path: "/api/v2/skills/{id}/download",
     description:
-      "Downloads the canonical SKILL.md artifact for a predefined skill (requires authentication)",
+      "Downloads the canonical SKILL.md artifact for a persisted skill by ID (requires authentication)",
     request: {
-      params: SkillNameParamSchema,
+      params: SkillIdParamSchema,
     },
     security: [{ BearerAuth: [] }],
     responses: {
@@ -179,7 +179,7 @@ export function registerSkillRoutes(registry: OpenAPIRegistry) {
         },
       },
       404: {
-        description: "Skill not found",
+        description: "Skill not found for the provided ID",
         content: {
           "application/json": {
             schema: ErrorResponseSchema,
@@ -200,11 +200,11 @@ export function registerSkillRoutes(registry: OpenAPIRegistry) {
 
   registry.registerPath({
     method: "get",
-    path: "/api/v2/skills/{name}/archive",
+    path: "/api/v2/skills/{id}/archive",
     description:
-      "Downloads a zip archive containing a predefined skill folder and bundled resources (requires authentication)",
+      "Downloads a zip archive containing a persisted skill folder and bundled resources by ID (requires authentication)",
     request: {
-      params: SkillNameParamSchema,
+      params: SkillIdParamSchema,
     },
     security: [{ BearerAuth: [] }],
     responses: {
@@ -233,7 +233,7 @@ export function registerSkillRoutes(registry: OpenAPIRegistry) {
         },
       },
       404: {
-        description: "Skill not found",
+        description: "Skill not found for the provided ID",
         content: {
           "application/json": {
             schema: ErrorResponseSchema,

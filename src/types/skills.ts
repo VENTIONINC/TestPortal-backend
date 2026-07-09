@@ -2,10 +2,13 @@
 // SPDX-License-Identifier: Apache-2.0
 
 export interface SkillCatalogEntry {
+  id: string;
   name: string;
   title: string;
   description: string;
   category: string;
+  source: SkillSource;
+  readOnly: boolean;
   version?: string;
   license?: string;
   compatibility?: string;
@@ -27,6 +30,15 @@ export interface SkillArchiveDownload {
   content: Buffer;
   contentType: "application/zip";
   filename: string;
+}
+
+export type SkillSource = "system" | "custom";
+
+export interface StoredSkillPackageFile {
+  path: string;
+  content: Buffer;
+  contentType: string;
+  size: number;
 }
 
 export interface ConfiguredSkill {

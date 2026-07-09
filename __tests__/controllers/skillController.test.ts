@@ -13,14 +13,17 @@ import {
 
 describe("SkillController", () => {
   const metadata = {
+    id: "6f5b8b53-5128-4b05-a8bf-b1d532f3a8d9",
     name: "developer-code-assistant",
     title: "Developer Code Analysis Assistant",
     description: "Analyzes code-level issues from Test Portal failures.",
     category: "development",
+    source: "system" as const,
+    readOnly: true,
     version: "1.0.0",
     license: "Apache-2.0",
     compatibility: "Requires repository access.",
-    downloadUrl: "/api/v2/skills/developer-code-assistant/download",
+    downloadUrl: "/api/v2/skills/6f5b8b53-5128-4b05-a8bf-b1d532f3a8d9/download",
   };
 
   afterEach(() => {
@@ -38,20 +41,20 @@ describe("SkillController", () => {
     expect(res.body).toEqual({ skills: [metadata] });
   });
 
-  it("returns skill detail for a known skill", async () => {
+  it("returns skill detail for a known skill id", async () => {
     jest.spyOn(skillArtifactService, "getSkill").mockResolvedValue({
       metadata,
       content: "---\nname: developer-code-assistant\n---\n",
     });
     const req = createMockRequest({
-      params: { name: "developer-code-assistant" },
+      params: { id: metadata.id },
     });
     const res = createMockResponse();
 
     await SkillController.getSkill(req, res);
 
     expect(skillArtifactService.getSkill).toHaveBeenCalledWith(
-      "developer-code-assistant",
+      metadata.id,
     );
     expect(res.statusCode).toBe(200);
     expect(res.body).toEqual({
@@ -60,9 +63,9 @@ describe("SkillController", () => {
     });
   });
 
-  it("returns not found for unknown skill detail requests", async () => {
+  it("returns not found for unknown skill id detail requests", async () => {
     jest.spyOn(skillArtifactService, "getSkill").mockResolvedValue(null);
-    const req = createMockRequest({ params: { name: "missing-skill" } });
+    const req = createMockRequest({ params: { id: "missing-skill-id" } });
     const res = createMockResponse();
 
     await SkillController.getSkill(req, res);
@@ -78,7 +81,7 @@ describe("SkillController", () => {
       filename: "developer-code-assistant-SKILL.md",
     });
     const req = createMockRequest({
-      params: { name: "developer-code-assistant" },
+      params: { id: metadata.id },
     });
     const res = createMockResponse();
 
@@ -100,14 +103,14 @@ describe("SkillController", () => {
       filename: "developer-code-assistant.zip",
     });
     const req = createMockRequest({
-      params: { name: "developer-code-assistant" },
+      params: { id: metadata.id },
     });
     const res = createMockResponse<Buffer>();
 
     await SkillController.downloadSkillArchive(req, res);
 
     expect(skillArtifactService.downloadSkillArchive).toHaveBeenCalledWith(
-      "developer-code-assistant",
+      metadata.id,
     );
     expect(res.statusCode).toBe(200);
     expect(res.get("content-type")).toBe("application/zip");
@@ -119,7 +122,7 @@ describe("SkillController", () => {
 
   it("returns not found for unknown downloads", async () => {
     jest.spyOn(skillArtifactService, "downloadSkill").mockResolvedValue(null);
-    const req = createMockRequest({ params: { name: "missing-skill" } });
+    const req = createMockRequest({ params: { id: "missing-skill-id" } });
     const res = createMockResponse();
 
     await SkillController.downloadSkill(req, res);
@@ -132,7 +135,7 @@ describe("SkillController", () => {
     jest
       .spyOn(skillArtifactService, "downloadSkillArchive")
       .mockResolvedValue(null);
-    const req = createMockRequest({ params: { name: "missing-skill" } });
+    const req = createMockRequest({ params: { id: "missing-skill-id" } });
     const res = createMockResponse();
 
     await SkillController.downloadSkillArchive(req, res);
