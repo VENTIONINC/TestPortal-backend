@@ -27,6 +27,9 @@
   },
   "author": "",
   "license": "Apache-2.0",
+  "engines": {
+    "node": ">=22.15.0"
+  },
   "dependencies": {
     "@asteasolutions/zod-to-openapi": "7.3.2",
     "@langchain/core": "1.1.45",

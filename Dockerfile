@@ -1,5 +1,5 @@
 # Base image with OpenSSL
-FROM node:20-slim AS base
+FROM node:22-slim AS base
 
 RUN apt-get update && apt-get install -y --no-install-recommends openssl fontconfig fonts-dejavu-core \
 	&& rm -rf /var/lib/apt/lists/*
