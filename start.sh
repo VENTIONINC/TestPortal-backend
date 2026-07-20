@@ -1,62 +1,6 @@
 #!/bin/sh
 set -e
 
-echo "Ensuring database exists..."
-node --input-type=module <<'NODE'
-import pg from "pg";
-
-const { Client } = pg;
-
-const databaseUrl = process.env.DATABASE_URL;
-
-if (!databaseUrl) {
-  console.error("DATABASE_URL is required.");
-  process.exit(1);
-}
-
-const targetUrl = new URL(databaseUrl);
-const databaseName = decodeURIComponent(targetUrl.pathname.replace(/^\/+/, ""));
-
-if (!databaseName) {
-  console.error("DATABASE_URL must include a database name.");
-  process.exit(1);
-}
-
-const adminUrl = new URL(databaseUrl);
-adminUrl.pathname = "/postgres";
-
-const quoteIdentifier = (value) => `"${value.replace(/"/g, "\"\"")}"`;
-
-let client;
-
-for (;;) {
-  try {
-    client = new Client({ connectionString: adminUrl.toString() });
-    await client.connect();
-    break;
-  } catch (error) {
-    console.log("Waiting for PostgreSQL server...");
-    await new Promise((resolve) => setTimeout(resolve, 2000));
-  }
-}
-
-try {
-  const existsResult = await client.query(
-    "SELECT 1 FROM pg_database WHERE datname = $1",
-    [databaseName],
-  );
-
-  if (existsResult.rowCount === 0) {
-    await client.query(`CREATE DATABASE ${quoteIdentifier(databaseName)}`);
-    console.log(`Created database ${databaseName}.`);
-  } else {
-    console.log(`Database ${databaseName} already exists.`);
-  }
-} finally {
-  await client.end();
-}
-NODE
-
 echo "Waiting for database..."
 until npx prisma db execute --stdin --schema prisma/schema.prisma <<'SQL'
 SELECT 1;
