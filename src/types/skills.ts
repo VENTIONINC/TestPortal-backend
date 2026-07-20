@@ -17,13 +17,8 @@ export interface SkillCatalogEntry {
 
 export interface SkillDetail {
   metadata: SkillCatalogEntry;
+  /** Markdown preview/source content; use downloadUrl for an installable package. */
   content: string;
-}
-
-export interface SkillDownload {
-  content: string;
-  contentType: "text/markdown; charset=utf-8";
-  filename: string;
 }
 
 export interface SkillArchiveDownload {

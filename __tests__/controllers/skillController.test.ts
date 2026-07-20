@@ -23,7 +23,7 @@ describe("SkillController", () => {
     version: "1.0.0",
     license: "Apache-2.0",
     compatibility: "Requires repository access.",
-    downloadUrl: "/api/v2/skills/6f5b8b53-5128-4b05-a8bf-b1d532f3a8d9/download",
+    downloadUrl: "/api/v2/skills/6f5b8b53-5128-4b05-a8bf-b1d532f3a8d9/archive",
   };
 
   afterEach(() => {
@@ -74,27 +74,6 @@ describe("SkillController", () => {
     expect(res.body).toEqual({ error: "Skill not found" });
   });
 
-  it("returns Markdown download content with attachment headers", async () => {
-    jest.spyOn(skillArtifactService, "downloadSkill").mockResolvedValue({
-      content: "# Skill",
-      contentType: "text/markdown; charset=utf-8",
-      filename: "developer-code-assistant-SKILL.md",
-    });
-    const req = createMockRequest({
-      params: { id: metadata.id },
-    });
-    const res = createMockResponse();
-
-    await SkillController.downloadSkill(req, res);
-
-    expect(res.statusCode).toBe(200);
-    expect(res.get("content-type")).toBe("text/markdown; charset=utf-8");
-    expect(res.get("content-disposition")).toBe(
-      'attachment; filename="developer-code-assistant-SKILL.md"',
-    );
-    expect(res.body).toBe("# Skill");
-  });
-
   it("returns archive download content with attachment headers", async () => {
     const archiveContent = Buffer.from("zip content");
     jest.spyOn(skillArtifactService, "downloadSkillArchive").mockResolvedValue({
@@ -118,17 +97,6 @@ describe("SkillController", () => {
       'attachment; filename="developer-code-assistant.zip"',
     );
     expect(res.body).toBe(archiveContent);
-  });
-
-  it("returns not found for unknown downloads", async () => {
-    jest.spyOn(skillArtifactService, "downloadSkill").mockResolvedValue(null);
-    const req = createMockRequest({ params: { id: "missing-skill-id" } });
-    const res = createMockResponse();
-
-    await SkillController.downloadSkill(req, res);
-
-    expect(res.statusCode).toBe(404);
-    expect(res.body).toEqual({ error: "Skill not found" });
   });
 
   it("returns not found for unknown archive downloads", async () => {

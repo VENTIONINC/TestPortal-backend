@@ -47,36 +47,6 @@ export class SkillController {
     }
   }
 
-  static async downloadSkill(
-    req: Request<SkillIdParams>,
-    res: Response,
-  ): Promise<void> {
-    try {
-      const { id } = req.params;
-
-      if (!id) {
-        res.status(400).json({ error: "Skill id is required" });
-        return;
-      }
-
-      const download = await skillArtifactService.downloadSkill(id);
-
-      if (!download) {
-        res.status(404).json({ error: "Skill not found" });
-        return;
-      }
-
-      res.set("Content-Type", download.contentType);
-      res.set(
-        "Content-Disposition",
-        `attachment; filename="${download.filename}"`,
-      );
-      res.send(download.content);
-    } catch (error) {
-      SkillController.handleError("Error downloading skill:", error, res);
-    }
-  }
-
   static async downloadSkillArchive(
     req: Request<SkillIdParams>,
     res: Response,
