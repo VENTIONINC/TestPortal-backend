@@ -62,6 +62,9 @@ export interface UpsertSkillPackageInput {
   files: StoredSkillPackageFile[];
 }
 
+export type CreateSkillPackageInput = UpsertSkillPackageInput;
+export type ReplaceSkillPackageInput = UpsertSkillPackageInput;
+
 export const skillModel = {
   async findManyMetadata(
     tx?: Prisma.TransactionClient,
@@ -108,6 +111,88 @@ export const skillModel = {
         },
       },
     });
+  },
+
+  async findMetadataById(
+    id: string,
+    tx?: Prisma.TransactionClient,
+  ): Promise<SkillMetadataRecord | null> {
+    const client = tx ?? dbClient;
+
+    return await client.skill.findUnique({
+      where: { id },
+      select: skillMetadataSelect,
+    });
+  },
+
+  async findMetadataByName(
+    name: string,
+    tx?: Prisma.TransactionClient,
+  ): Promise<SkillMetadataRecord | null> {
+    const client = tx ?? dbClient;
+
+    return await client.skill.findUnique({
+      where: { name },
+      select: skillMetadataSelect,
+    });
+  },
+
+  async createSkillPackage(
+    data: CreateSkillPackageInput,
+    tx?: Prisma.TransactionClient,
+  ): Promise<SkillMetadataRecord> {
+    const executor = async (
+      client: Prisma.TransactionClient,
+    ): Promise<SkillMetadataRecord> => {
+      return await client.skill.create({
+        data: {
+          ...toSkillUpsertData(data),
+          packageFiles: {
+            createMany: {
+              data: data.files.map(toPackageFileCreateData),
+            },
+          },
+        },
+        select: skillMetadataSelect,
+      });
+    };
+
+    return tx ? await executor(tx) : await dbClient.$transaction(executor);
+  },
+
+  async replaceSkillPackage(
+    id: string,
+    data: ReplaceSkillPackageInput,
+    tx?: Prisma.TransactionClient,
+  ): Promise<SkillMetadataRecord> {
+    const executor = async (
+      client: Prisma.TransactionClient,
+    ): Promise<SkillMetadataRecord> => {
+      await client.skillPackageFile.deleteMany({ where: { skillId: id } });
+
+      return await client.skill.update({
+        where: { id },
+        data: {
+          ...toSkillUpsertData(data),
+          packageFiles: {
+            createMany: {
+              data: data.files.map(toPackageFileCreateData),
+            },
+          },
+        },
+        select: skillMetadataSelect,
+      });
+    };
+
+    return tx ? await executor(tx) : await dbClient.$transaction(executor);
+  },
+
+  async deleteSkill(
+    id: string,
+    tx?: Prisma.TransactionClient,
+  ): Promise<void> {
+    const client = tx ?? dbClient;
+    await client.skill.delete({ where: { id } });
   },
 
   async upsertSkillPackage(
@@ -168,5 +253,14 @@ function toSkillUpsertData(
     version: data.version ?? null,
     license: data.license ?? null,
     compatibility: data.compatibility ?? null,
+  };
+}
+
+function toPackageFileCreateData(file: StoredSkillPackageFile) {
+  return {
+    path: file.path,
+    content: file.content,
+    contentType: file.contentType,
+    size: file.size,
   };
 }

@@ -4,6 +4,10 @@
 import { createHash } from "node:crypto";
 import { readdir, readFile } from "node:fs/promises";
 import path from "node:path";
+import type { Readable } from "node:stream";
+import { crc32 } from "node:zlib";
+
+import JSZip, { type JSZipObject } from "jszip";
 
 import type {
   SkillFrontmatter,
@@ -23,6 +27,9 @@ export const MAX_SKILL_PACKAGE_FILES = 64;
 export const MAX_SKILL_PACKAGE_FILE_BYTES = 64 * 1024;
 export const MAX_SKILL_PACKAGE_TOTAL_BYTES = 256 * 1024;
 export const SKILL_ARTIFACT_PATH = "SKILL.md";
+export const MAX_SKILL_NAME_LENGTH = 64;
+
+const SKILL_NAME_PATTERN = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 
 export interface SkillPackageInputFile {
   path: string;
@@ -58,6 +65,80 @@ export async function readSkillPackageDirectory(
       content: await readFile(filePath),
     })),
   );
+}
+
+export async function readSkillPackageZip(
+  zipBuffer: Buffer,
+): Promise<SkillPackageInputFile[]> {
+  if (zipBuffer.length === 0) {
+    throw new SkillPackageValidationError("Skill package zip is empty");
+  }
+
+  let zip: JSZip;
+  try {
+    zip = await JSZip.loadAsync(zipBuffer);
+  } catch {
+    throw new SkillPackageValidationError("Skill package zip is malformed");
+  }
+
+  const entries = Object.values(zip.files);
+  const fileEntries = entries.filter((entry) => !entry.dir);
+
+  if (fileEntries.length === 0) {
+    throw new SkillPackageValidationError("Skill package zip contains no files");
+  }
+
+  if (fileEntries.length > MAX_SKILL_PACKAGE_FILES) {
+    throw new SkillPackageValidationError(
+      `Skill package exceeds the ${MAX_SKILL_PACKAGE_FILES} file limit`,
+    );
+  }
+
+  entries.forEach(validateZipEntryPath);
+  validateZipEntryTypes(entries, fileEntries);
+  validateDeclaredZipEntrySizes(fileEntries);
+
+  const normalizedInputPaths = normalizeZipPackageRoot(
+    fileEntries.map((entry) => getZipEntryOriginalPath(entry)),
+  );
+  const duplicatePaths = findDuplicatePaths(normalizedInputPaths);
+
+  if (duplicatePaths.length > 0) {
+    throw new SkillPackageValidationError(
+      `Skill package contains duplicate files after normalization: ${duplicatePaths.join(", ")}`,
+    );
+  }
+
+  const extractedFiles: SkillPackageInputFile[] = [];
+  let extractedTotalBytes = 0;
+
+  for (const [index, entry] of fileEntries.entries()) {
+    let content: Buffer;
+    try {
+      content = await extractBoundedZipEntry(entry, (chunkBytes) => {
+        if (extractedTotalBytes + chunkBytes > MAX_SKILL_PACKAGE_TOTAL_BYTES) {
+          throw new SkillPackageValidationError(
+            `Skill package exceeds the ${MAX_SKILL_PACKAGE_TOTAL_BYTES} byte limit during extraction`,
+          );
+        }
+        extractedTotalBytes += chunkBytes;
+      });
+    } catch (error) {
+      if (error instanceof SkillPackageValidationError) {
+        throw error;
+      }
+      throw new SkillPackageValidationError(
+        `Skill package zip entry '${getZipEntryOriginalPath(entry)}' is malformed`,
+      );
+    }
+
+    extractedFiles.push({
+      path: normalizedInputPaths[index] as string,
+      content,
+    });
+  }
+
+  return extractedFiles;
 }
 
 export function validateSkillPackage(
@@ -208,6 +289,8 @@ export function parseSkillFrontmatter(
     );
   }
 
+  validateSkillName(frontmatter.name);
+
   if (!frontmatter.description) {
     throw new SkillPackageValidationError(
       "Skill artifact frontmatter is missing a description",
@@ -221,6 +304,17 @@ export function parseSkillFrontmatter(
   }
 
   return frontmatter;
+}
+
+export function validateSkillName(name: string): void {
+  if (
+    name.length > MAX_SKILL_NAME_LENGTH ||
+    !SKILL_NAME_PATTERN.test(name)
+  ) {
+    throw new SkillPackageValidationError(
+      `Skill artifact frontmatter name must be a lowercase slug of at most ${MAX_SKILL_NAME_LENGTH} characters`,
+    );
+  }
 }
 
 function parseYamlSubset(source: string): SkillFrontmatter {
@@ -359,4 +453,196 @@ function findDuplicatePaths(paths: string[]): string[] {
   });
 
   return [...duplicates].sort((left, right) => left.localeCompare(right));
+}
+
+function getZipEntryOriginalPath(entry: JSZipObject): string {
+  return entry.unsafeOriginalName ?? entry.name;
+}
+
+function validateZipEntryPath(entry: JSZipObject): void {
+  const originalPath = getZipEntryOriginalPath(entry);
+  const pathWithoutDirectorySuffix = entry.dir
+    ? originalPath.replace(/[\\/]+$/, "")
+    : originalPath;
+
+  normalizeSkillPackagePath(pathWithoutDirectorySuffix);
+}
+
+function validateZipEntryTypes(
+  entries: JSZipObject[],
+  fileEntries: JSZipObject[],
+): void {
+  const normalizedFilePaths = fileEntries.map((entry) =>
+    normalizeSkillPackagePath(getZipEntryOriginalPath(entry)),
+  );
+
+  entries.forEach((entry) => {
+    const unixFileType =
+      typeof entry.unixPermissions === "number"
+        ? entry.unixPermissions & 0o170000
+        : 0;
+
+    if (!entry.dir && unixFileType !== 0 && unixFileType !== 0o100000) {
+      throw new SkillPackageValidationError(
+        `Skill package zip entry '${getZipEntryOriginalPath(entry)}' is not a regular file`,
+      );
+    }
+
+    if (!entry.dir) {
+      return;
+    }
+
+    const directoryPath = normalizeSkillPackagePath(
+      getZipEntryOriginalPath(entry).replace(/[\\/]+$/, ""),
+    );
+    const isUsedDirectory = normalizedFilePaths.some((filePath) =>
+      filePath.startsWith(`${directoryPath}/`),
+    );
+
+    if (normalizedFilePaths.includes(directoryPath) || !isUsedDirectory) {
+      throw new SkillPackageValidationError(
+        `Skill package contains unsupported directory entry '${getZipEntryOriginalPath(entry)}'`,
+      );
+    }
+  });
+}
+
+function normalizeZipPackageRoot(paths: string[]): string[] {
+  const normalizedPaths = paths.map(normalizeSkillPackagePath);
+
+  if (normalizedPaths.includes(SKILL_ARTIFACT_PATH)) {
+    return normalizedPaths;
+  }
+
+  const firstSegments = new Set(
+    normalizedPaths.map((filePath) => filePath.split("/")[0]),
+  );
+
+  if (firstSegments.size !== 1) {
+    return normalizedPaths;
+  }
+
+  const [topLevelFolder] = firstSegments;
+  if (!topLevelFolder) {
+    return normalizedPaths;
+  }
+
+  const prefix = `${topLevelFolder}/`;
+  const strippedPaths = normalizedPaths.map((filePath) =>
+    filePath.startsWith(prefix) ? filePath.slice(prefix.length) : filePath,
+  );
+
+  return strippedPaths.includes(SKILL_ARTIFACT_PATH)
+    ? strippedPaths
+    : normalizedPaths;
+}
+
+function validateDeclaredZipEntrySizes(entries: JSZipObject[]): void {
+  let totalBytes = 0;
+
+  entries.forEach((entry) => {
+    const { uncompressedSize } = getDeclaredZipEntryData(entry);
+
+    if (uncompressedSize > MAX_SKILL_PACKAGE_FILE_BYTES) {
+      throw new SkillPackageValidationError(
+        `Skill package file '${getZipEntryOriginalPath(entry)}' exceeds the ${MAX_SKILL_PACKAGE_FILE_BYTES} byte limit`,
+      );
+    }
+
+    totalBytes += uncompressedSize;
+  });
+
+  if (totalBytes > MAX_SKILL_PACKAGE_TOTAL_BYTES) {
+    throw new SkillPackageValidationError(
+      `Skill package exceeds the ${MAX_SKILL_PACKAGE_TOTAL_BYTES} byte limit`,
+    );
+  }
+}
+
+interface DeclaredZipEntryData {
+  crc32: number;
+  uncompressedSize: number;
+}
+
+function getDeclaredZipEntryData(entry: JSZipObject): DeclaredZipEntryData {
+  const entryData = entry as JSZipObject & {
+    _data?: Partial<DeclaredZipEntryData>;
+  };
+  const { crc32: expectedCrc32, uncompressedSize } = entryData._data ?? {};
+
+  if (
+    uncompressedSize === undefined ||
+    !Number.isSafeInteger(uncompressedSize) ||
+    expectedCrc32 === undefined ||
+    !Number.isInteger(expectedCrc32)
+  ) {
+    throw new SkillPackageValidationError(
+      `Skill package zip entry '${getZipEntryOriginalPath(entry)}' has invalid metadata`,
+    );
+  }
+
+  return { crc32: expectedCrc32, uncompressedSize };
+}
+
+async function extractBoundedZipEntry(
+  entry: JSZipObject,
+  accountForChunk: (chunkBytes: number) => void,
+): Promise<Buffer> {
+  const declaredData = getDeclaredZipEntryData(entry);
+  const stream = entry.nodeStream("nodebuffer") as Readable;
+  const chunks: Buffer[] = [];
+  let checksum = 0;
+  let extractedBytes = 0;
+
+  return await new Promise<Buffer>((resolve, reject) => {
+    let extractionFailed = false;
+
+    stream.on("data", (chunk: Buffer) => {
+      try {
+        extractedBytes += chunk.length;
+        if (
+          extractedBytes > declaredData.uncompressedSize ||
+          extractedBytes > MAX_SKILL_PACKAGE_FILE_BYTES
+        ) {
+          throw new SkillPackageValidationError(
+            `Skill package file '${getZipEntryOriginalPath(entry)}' exceeds its declared or permitted size during extraction`,
+          );
+        }
+
+        accountForChunk(chunk.length);
+        chunks.push(Buffer.from(chunk));
+        checksum = crc32(chunk, checksum);
+      } catch (error) {
+        extractionFailed = true;
+        reject(error);
+        stream.destroy();
+      }
+    });
+    stream.once("error", reject);
+    stream.once("end", () => {
+      if (extractionFailed) {
+        return;
+      }
+
+      if (extractedBytes !== declaredData.uncompressedSize) {
+        reject(
+          new SkillPackageValidationError(
+            `Skill package file '${getZipEntryOriginalPath(entry)}' does not match its declared size`,
+          ),
+        );
+        return;
+      }
+
+      if ((checksum >>> 0) !== (declaredData.crc32 >>> 0)) {
+        reject(
+          new SkillPackageValidationError(
+            `Skill package file '${getZipEntryOriginalPath(entry)}' failed CRC validation`,
+          ),
+        );
+        return;
+      }
+
+      resolve(Buffer.concat(chunks, extractedBytes));
+    });
+  });
 }

@@ -37,9 +37,14 @@ const sampleMetadata = {
 
 const createService = () => {
   const skillStore = {
+    createSkillPackage: jest.fn(),
+    deleteSkill: jest.fn(),
     findManyMetadata: jest.fn(),
     findDetailById: jest.fn(),
+    findMetadataById: jest.fn(),
+    findMetadataByName: jest.fn(),
     findPackageById: jest.fn(),
+    replaceSkillPackage: jest.fn(),
   };
 
   return {
@@ -48,7 +53,169 @@ const createService = () => {
   };
 };
 
+const createPackageZip = async (
+  content: string = validSkillContent,
+): Promise<Buffer> => {
+  const zip = new JSZip();
+  zip.file("uploaded-folder/SKILL.md", content);
+  zip.file("uploaded-folder/references/guide.md", "# Guide\n");
+  return await zip.generateAsync({ type: "nodebuffer" });
+};
+
 describe("SkillArtifactService", () => {
+  it("creates a writable custom skill from uploaded package metadata", async () => {
+    const { service, skillStore } = createService();
+    const customMetadata = {
+      ...sampleMetadata,
+      source: "custom" as const,
+      readOnly: false,
+    };
+    skillStore.findMetadataByName.mockResolvedValue(null);
+    skillStore.createSkillPackage.mockImplementation(async (data) => ({
+      ...customMetadata,
+      title: data.title,
+      category: data.category,
+      packageHash: data.packageHash,
+    }));
+
+    const created = await service.createCustomSkill({
+      packageBuffer: await createPackageZip(),
+      title: "Uploaded Skill",
+      category: "testing",
+    });
+
+    expect(skillStore.findMetadataByName).toHaveBeenCalledWith("sample-skill");
+    expect(skillStore.createSkillPackage).toHaveBeenCalledWith(
+      expect.objectContaining({
+        name: "sample-skill",
+        title: "Uploaded Skill",
+        description: "Helps test skill downloads.",
+        category: "testing",
+        source: "custom",
+        readOnly: false,
+        version: "1.2.3",
+        license: "MIT",
+        compatibility: "Requires tests.",
+        files: expect.arrayContaining([
+          expect.objectContaining({ path: "SKILL.md" }),
+          expect.objectContaining({ path: "references/guide.md" }),
+        ]),
+      }),
+    );
+    expect(created).toMatchObject({
+      id: sampleMetadata.id,
+      source: "custom",
+      readOnly: false,
+    });
+  });
+
+  it("rejects create when the frontmatter name already exists", async () => {
+    const { service, skillStore } = createService();
+    skillStore.findMetadataByName.mockResolvedValue(sampleMetadata);
+
+    await expect(
+      service.createCustomSkill({
+        packageBuffer: await createPackageZip(),
+        title: "Duplicate",
+        category: "testing",
+      }),
+    ).rejects.toMatchObject({ code: "CONFLICT" });
+    expect(skillStore.createSkillPackage).not.toHaveBeenCalled();
+  });
+
+  it("replaces a custom package while preserving its id", async () => {
+    const { service, skillStore } = createService();
+    const customMetadata = {
+      ...sampleMetadata,
+      source: "custom" as const,
+      readOnly: false,
+    };
+    skillStore.findMetadataById.mockResolvedValue(customMetadata);
+    skillStore.findMetadataByName.mockResolvedValue(customMetadata);
+    skillStore.replaceSkillPackage.mockResolvedValue({
+      ...customMetadata,
+      title: "Replacement Skill",
+      packageHash: "replacement-hash",
+    });
+
+    const replaced = await service.replaceCustomSkill(sampleMetadata.id, {
+      packageBuffer: await createPackageZip(),
+      title: "Replacement Skill",
+      category: "updated",
+    });
+
+    expect(skillStore.replaceSkillPackage).toHaveBeenCalledWith(
+      sampleMetadata.id,
+      expect.objectContaining({
+        name: "sample-skill",
+        title: "Replacement Skill",
+        category: "updated",
+      }),
+    );
+    expect(replaced.id).toBe(sampleMetadata.id);
+  });
+
+  it("rejects replacement name conflicts with another skill", async () => {
+    const { service, skillStore } = createService();
+    skillStore.findMetadataById.mockResolvedValue({
+      ...sampleMetadata,
+      source: "custom",
+      readOnly: false,
+    });
+    skillStore.findMetadataByName.mockResolvedValue({
+      ...sampleMetadata,
+      id: "69aa3ba0-9f8a-4d4a-a20a-e0f6215f7a32",
+    });
+
+    await expect(
+      service.replaceCustomSkill(sampleMetadata.id, {
+        packageBuffer: await createPackageZip(),
+        title: "Conflict",
+        category: "testing",
+      }),
+    ).rejects.toMatchObject({ code: "CONFLICT" });
+    expect(skillStore.replaceSkillPackage).not.toHaveBeenCalled();
+  });
+
+  it("deletes custom skills and protects unknown or read-only skills", async () => {
+    const { service, skillStore } = createService();
+    skillStore.findMetadataById.mockResolvedValueOnce({
+      ...sampleMetadata,
+      source: "custom",
+      readOnly: false,
+    });
+
+    await expect(service.deleteCustomSkill(sampleMetadata.id)).resolves.toEqual({
+      id: sampleMetadata.id,
+    });
+    expect(skillStore.deleteSkill).toHaveBeenCalledWith(sampleMetadata.id);
+
+    skillStore.findMetadataById.mockResolvedValueOnce(sampleMetadata);
+    await expect(service.deleteCustomSkill(sampleMetadata.id)).rejects.toMatchObject({
+      code: "FORBIDDEN",
+    });
+
+    skillStore.findMetadataById.mockResolvedValueOnce(null);
+    await expect(service.deleteCustomSkill("missing-id")).rejects.toMatchObject({
+      code: "NOT_FOUND",
+    });
+  });
+
+  it("rejects read-only replacement before parsing the uploaded package", async () => {
+    const { service, skillStore } = createService();
+    skillStore.findMetadataById.mockResolvedValue(sampleMetadata);
+
+    await expect(
+      service.replaceCustomSkill(sampleMetadata.id, {
+        packageBuffer: Buffer.from("malformed zip"),
+        title: "Blocked",
+        category: "testing",
+      }),
+    ).rejects.toMatchObject({ code: "FORBIDDEN" });
+    expect(skillStore.findMetadataByName).not.toHaveBeenCalled();
+    expect(skillStore.replaceSkillPackage).not.toHaveBeenCalled();
+  });
+
   it("lists persisted skills with additive source and read-only metadata", async () => {
     const { service, skillStore } = createService();
     skillStore.findManyMetadata.mockResolvedValue([sampleMetadata]);
@@ -176,6 +343,47 @@ describe("SkillArtifactService", () => {
     ).resolves.toBe("# Report Template\n");
   });
 
+  it("generates custom archives from the current replacement package files", async () => {
+    const { service, skillStore } = createService();
+    const customMetadata = {
+      ...sampleMetadata,
+      source: "custom" as const,
+      readOnly: false,
+    };
+    let currentContent = "# Original\n";
+    skillStore.findPackageById.mockImplementation(async () => ({
+      ...customMetadata,
+      packageFiles: [
+        {
+          path: "SKILL.md",
+          content: Buffer.from(currentContent, "utf8"),
+          contentType: "text/markdown; charset=utf-8",
+          size: Buffer.byteLength(currentContent),
+        },
+      ],
+    }));
+
+    const originalArchive = await service.downloadSkillArchive(sampleMetadata.id);
+    currentContent = "# Replacement\n";
+    const replacementArchive = await service.downloadSkillArchive(
+      sampleMetadata.id,
+    );
+    const originalZip = await JSZip.loadAsync(
+      originalArchive?.content ?? Buffer.alloc(0),
+    );
+    const replacementZip = await JSZip.loadAsync(
+      replacementArchive?.content ?? Buffer.alloc(0),
+    );
+
+    await expect(
+      originalZip.file("sample-skill/SKILL.md")?.async("string"),
+    ).resolves.toBe("# Original\n");
+    await expect(
+      replacementZip.file("sample-skill/SKILL.md")?.async("string"),
+    ).resolves.toBe("# Replacement\n");
+    expect(skillStore.findPackageById).toHaveBeenCalledTimes(2);
+  });
+
   it("returns null for unknown archive ids without fallback behavior", async () => {
     const { service, skillStore } = createService();
     skillStore.findPackageById.mockResolvedValue(null);
@@ -184,6 +392,28 @@ describe("SkillArtifactService", () => {
       service.downloadSkillArchive("missing-skill-id"),
     ).resolves.toBeNull();
     await expect(service.downloadSkillArchive("not-a-uuid")).resolves.toBeNull();
+  });
+
+  it("rejects unsafe persisted names before generating an archive", async () => {
+    const { service, skillStore } = createService();
+    skillStore.findPackageById.mockResolvedValue({
+      ...sampleMetadata,
+      name: "../../payload",
+      source: "custom",
+      readOnly: false,
+      packageFiles: [
+        {
+          path: "SKILL.md",
+          content: Buffer.from(validSkillContent, "utf8"),
+          contentType: "text/markdown; charset=utf-8",
+          size: Buffer.byteLength(validSkillContent),
+        },
+      ],
+    });
+
+    await expect(
+      service.downloadSkillArchive(sampleMetadata.id),
+    ).rejects.toMatchObject({ code: "INVALID_ARTIFACT" });
   });
 
   it("throws an explicit service error for malformed persisted artifacts", async () => {
