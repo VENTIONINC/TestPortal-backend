@@ -80,6 +80,33 @@
 
 These remain available as compatibility aliases while the provider-neutral `/api/v2/auth/*` routes become the primary documented interface.
 
+## Skills Routes
+
+All skills routes require bearer authentication.
+
+### GET `/api/v2/skills`
+
+Returns persisted skill metadata. Each entry's `downloadUrl` points to
+`/api/v2/skills/{id}/archive`, the complete portable ZIP package and the only
+supported installable download.
+
+### GET `/api/v2/skills/{id}`
+
+Returns metadata and the skill's `SKILL.md` Markdown as preview/source content.
+This content is readable for inspection but is not a complete installable
+artifact; use `downloadUrl` to retrieve the ZIP package.
+
+### GET `/api/v2/skills/{id}/archive`
+
+Downloads the complete portable ZIP package, including `SKILL.md` and bundled
+resources.
+
+### Breaking change: raw Markdown downloads removed
+
+`GET /api/v2/skills/{id}/download` is no longer available. Migrate clients to
+the catalog-provided `downloadUrl` or directly to
+`GET /api/v2/skills/{id}/archive`.
+
 ## Related Documentation
 
 - [How to Inspect the MCP Server](INSPECT_MCP_SERVER.md)

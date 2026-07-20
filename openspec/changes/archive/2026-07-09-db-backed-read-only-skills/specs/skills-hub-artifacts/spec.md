@@ -1,8 +1,5 @@
-# skills-hub-artifacts Specification
+## MODIFIED Requirements
 
-## Purpose
-TBD - created by archiving change add-skills-hub-artifacts. Update Purpose after archive.
-## Requirements
 ### Requirement: Authenticated skills catalog
 The system SHALL provide an authenticated REST endpoint that returns the persisted skills available for client download, including seeded read-only system skills and their persisted IDs.
 

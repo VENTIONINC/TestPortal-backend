@@ -108,15 +108,17 @@ will be deployed. In that case either:
 
 ## Database migrations
 
-Migrations are run **inside the container at startup** by `start.sh`:
+Migrations and persisted skill seeding are run **inside the container at startup** by `start.sh`:
 
 ```sh
 npx prisma migrate deploy
+node dist/prisma/seed/index.js
 ```
 
 That means:
 
 - They run on every fresh task (including every deploy and every scale-up).
+- The persisted system skills are reseeded idempotently on startup so fresh databases do not require a separate manual seed step.
 - The deploy is considered successful only when migrations succeed
   **and** the new task passes its health check
   (otherwise ECS rolls back and `services-stable` fails).

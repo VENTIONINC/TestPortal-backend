@@ -21,6 +21,11 @@ enum UserRole {
   member
 }
 
+enum SkillSource {
+  system
+  custom
+}
+
 model Project {
   id          String   @id @default(uuid()) @db.Uuid
   createdAt   DateTime @default(now())
@@ -244,4 +249,38 @@ model DailyExecutionMetric {
 
   @@unique([projectId, environment, type, date])
   @@index([projectId, date])
+}
+
+model Skill {
+  id            String             @id @default(uuid()) @db.Uuid
+  createdAt     DateTime           @default(now())
+  updatedAt     DateTime           @updatedAt
+  name          String             @unique
+  title         String
+  description   String
+  category      String
+  source        SkillSource
+  readOnly      Boolean
+  packageHash   String
+  version       String?
+  license       String?
+  compatibility String?
+  packageFiles  SkillPackageFile[]
+
+  @@index([name])
+}
+
+model SkillPackageFile {
+  id          String   @id @default(uuid()) @db.Uuid
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  skillId     String   @db.Uuid
+  path        String
+  content     Bytes
+  contentType String
+  size        Int
+  skill       Skill    @relation(fields: [skillId], references: [id], onDelete: Cascade)
+
+  @@unique([skillId, path])
+  @@index([skillId, path])
 }

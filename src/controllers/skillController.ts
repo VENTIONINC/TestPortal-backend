@@ -8,8 +8,8 @@ import {
   skillArtifactService,
 } from "@/services/skillArtifactService";
 
-type SkillNameParams = {
-  name: string;
+type SkillIdParams = {
+  id: string;
 };
 
 export class SkillController {
@@ -23,18 +23,18 @@ export class SkillController {
   }
 
   static async getSkill(
-    req: Request<SkillNameParams>,
+    req: Request<SkillIdParams>,
     res: Response,
   ): Promise<void> {
     try {
-      const { name } = req.params;
+      const { id } = req.params;
 
-      if (!name) {
-        res.status(400).json({ error: "Skill name is required" });
+      if (!id) {
+        res.status(400).json({ error: "Skill id is required" });
         return;
       }
 
-      const skill = await skillArtifactService.getSkill(name);
+      const skill = await skillArtifactService.getSkill(id);
 
       if (!skill) {
         res.status(404).json({ error: "Skill not found" });
@@ -47,49 +47,19 @@ export class SkillController {
     }
   }
 
-  static async downloadSkill(
-    req: Request<SkillNameParams>,
-    res: Response,
-  ): Promise<void> {
-    try {
-      const { name } = req.params;
-
-      if (!name) {
-        res.status(400).json({ error: "Skill name is required" });
-        return;
-      }
-
-      const download = await skillArtifactService.downloadSkill(name);
-
-      if (!download) {
-        res.status(404).json({ error: "Skill not found" });
-        return;
-      }
-
-      res.set("Content-Type", download.contentType);
-      res.set(
-        "Content-Disposition",
-        `attachment; filename="${download.filename}"`,
-      );
-      res.send(download.content);
-    } catch (error) {
-      SkillController.handleError("Error downloading skill:", error, res);
-    }
-  }
-
   static async downloadSkillArchive(
-    req: Request<SkillNameParams>,
+    req: Request<SkillIdParams>,
     res: Response,
   ): Promise<void> {
     try {
-      const { name } = req.params;
+      const { id } = req.params;
 
-      if (!name) {
-        res.status(400).json({ error: "Skill name is required" });
+      if (!id) {
+        res.status(400).json({ error: "Skill id is required" });
         return;
       }
 
-      const archive = await skillArtifactService.downloadSkillArchive(name);
+      const archive = await skillArtifactService.downloadSkillArchive(id);
 
       if (!archive) {
         res.status(404).json({ error: "Skill not found" });

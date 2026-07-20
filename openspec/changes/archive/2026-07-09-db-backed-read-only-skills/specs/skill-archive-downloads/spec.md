@@ -1,8 +1,5 @@
-# skill-archive-downloads Specification
+## MODIFIED Requirements
 
-## Purpose
-TBD - created by archiving change add-skill-archive-download. Update Purpose after archive.
-## Requirements
 ### Requirement: Skill Archive Download
 The system SHALL allow an authenticated client to download a persisted skill by ID as a zip archive containing the skill's `SKILL.md` and bundled resource files.
 
@@ -29,7 +26,7 @@ The system SHALL build skill archives only from normalized package files stored 
 - **THEN** the system reads files only from that skill's stored package file records
 - **AND** file paths inside the archive are relative to the skill package.
 
-#### Scenario: Malicious skill name does not escape catalog
+#### Scenario: Malicious skill ID does not escape catalog
 - **WHEN** a client requests an archive with an ID parameter containing path traversal characters or separators
 - **THEN** the system treats the value only as an invalid or unknown skill ID
 - **AND** the system does not attempt a skill-name fallback
