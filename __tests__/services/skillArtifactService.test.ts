@@ -216,7 +216,7 @@ describe("SkillArtifactService", () => {
     expect(skillStore.replaceSkillPackage).not.toHaveBeenCalled();
   });
 
-  it("lists persisted skills with additive source and read-only metadata", async () => {
+  it("lists persisted skills with archive download URLs and source metadata", async () => {
     const { service, skillStore } = createService();
     skillStore.findManyMetadata.mockResolvedValue([sampleMetadata]);
 
@@ -234,7 +234,7 @@ describe("SkillArtifactService", () => {
         version: "1.2.3",
         license: "MIT",
         compatibility: "Requires tests.",
-        downloadUrl: "/api/v2/skills/6f5b8b53-5128-4b05-a8bf-b1d532f3a8d9/download",
+        downloadUrl: "/api/v2/skills/6f5b8b53-5128-4b05-a8bf-b1d532f3a8d9/archive",
       },
     ]);
   });
@@ -261,36 +261,12 @@ describe("SkillArtifactService", () => {
     expect(skill?.content).toBe(validSkillContent);
   });
 
-  it("returns null for unknown or invalid ids without fallback behavior", async () => {
+  it("returns null for unknown or invalid detail ids without fallback behavior", async () => {
     const { service, skillStore } = createService();
     skillStore.findDetailById.mockResolvedValue(null);
     skillStore.findPackageById.mockResolvedValue(null);
 
     await expect(service.getSkill("not-a-uuid")).resolves.toBeNull();
-    await expect(service.downloadSkill("missing-skill-id")).resolves.toBeNull();
-  });
-
-  it("returns raw Markdown download content with derived filename", async () => {
-    const { service, skillStore } = createService();
-    skillStore.findDetailById.mockResolvedValue({
-      ...sampleMetadata,
-      packageFiles: [
-        {
-          path: "SKILL.md",
-          content: Buffer.from(validSkillContent, "utf8"),
-          contentType: "text/markdown; charset=utf-8",
-          size: Buffer.byteLength(validSkillContent),
-        },
-      ],
-    });
-
-    const download = await service.downloadSkill(sampleMetadata.id);
-
-    expect(download).toEqual({
-      content: validSkillContent,
-      contentType: "text/markdown; charset=utf-8",
-      filename: "sample-skill-SKILL.md",
-    });
   });
 
   it("packages a skill folder into a zip archive with bundled resources", async () => {

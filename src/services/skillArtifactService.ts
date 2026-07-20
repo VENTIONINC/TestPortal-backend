@@ -9,7 +9,6 @@ import type {
   SkillArchiveDownload,
   SkillCatalogEntry,
   SkillDetail,
-  SkillDownload,
   SkillPackageUploadInput,
 } from "@/types/skills";
 import {
@@ -148,20 +147,6 @@ export class SkillArtifactService {
     };
   }
 
-  async downloadSkill(id: string): Promise<SkillDownload | null> {
-    const detail = await this.getSkill(id);
-
-    if (!detail) {
-      return null;
-    }
-
-    return {
-      content: detail.content,
-      contentType: "text/markdown; charset=utf-8",
-      filename: `${detail.metadata.name}-SKILL.md`,
-    };
-  }
-
   async downloadSkillArchive(
     id: string,
   ): Promise<SkillArchiveDownload | null> {
@@ -204,7 +189,7 @@ export class SkillArtifactService {
       category: skill.category,
       source: skill.source,
       readOnly: skill.readOnly,
-      downloadUrl: `/api/v2/skills/${skill.id}/download`,
+      downloadUrl: `/api/v2/skills/${skill.id}/archive`,
     };
 
     if (skill.version) {

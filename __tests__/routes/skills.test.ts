@@ -36,7 +36,7 @@ const createZip = async (): Promise<Buffer> => {
   return await zip.generateAsync({ type: "nodebuffer" });
 };
 
-describe("skill mutation routes", () => {
+describe("skill routes", () => {
   const catalog: Array<{
     id: string;
     name: string;
@@ -64,7 +64,7 @@ describe("skill mutation routes", () => {
           category: input.category,
           source: "custom" as const,
           readOnly: false as const,
-          downloadUrl: `/api/v2/skills/${skillId}/download`,
+          downloadUrl: `/api/v2/skills/${skillId}/archive`,
         };
         catalog.push(metadata);
         return metadata;
@@ -122,6 +122,7 @@ describe("skill mutation routes", () => {
       title: "Custom Skill",
       source: "custom",
       readOnly: false,
+      downloadUrl: `/api/v2/skills/${skillId}/archive`,
     });
 
     const listedAfterCreate = await request(app)
@@ -151,5 +152,20 @@ describe("skill mutation routes", () => {
       .get("/v2/skills")
       .set("Authorization", "Bearer valid-token");
     expect(listedAfterDelete.body).toEqual({ skills: [] });
+  });
+
+  it("exposes detail and archive routes but not the raw Markdown download route", () => {
+    const paths = skillRoutes.stack.flatMap((layer) =>
+      layer.route ? [layer.route.path] : [],
+    );
+
+    expect(paths).toEqual(
+      expect.arrayContaining([
+        "/v2/skills",
+        "/v2/skills/:id",
+        "/v2/skills/:id/archive",
+      ]),
+    );
+    expect(paths).not.toContain("/v2/skills/:id/download");
   });
 });
