@@ -12,6 +12,7 @@ import type {
   ResultErrorWithRelations,
   StructuredResultError,
 } from "@/types";
+import { MAX_ANALYZE_ERROR_IDS } from "@/config/aiLimits";
 
 const logger = getLogger("result-error-service");
 
@@ -42,6 +43,12 @@ const validateAnalyzeErrorsParams = (
 
   if (!errorIds || !Array.isArray(errorIds) || errorIds.length === 0) {
     throw new Error("Error IDs array is required and must not be empty");
+  }
+
+  if (errorIds.length > MAX_ANALYZE_ERROR_IDS) {
+    throw new Error(
+      `Error IDs array cannot contain more than ${MAX_ANALYZE_ERROR_IDS} items`,
+    );
   }
 
   if (errorIds.some((id) => typeof id !== "string" || id.length === 0)) {

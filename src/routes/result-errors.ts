@@ -4,6 +4,7 @@
 import { Router } from "express";
 import { resultErrorController } from "@/controllers/resultErrorController";
 import { authMiddleware } from "@/middleware/authMiddleware";
+import { aiRateLimit } from "@/middleware/aiRateLimit";
 
 const router = Router();
 
@@ -25,6 +26,7 @@ router.patch(
 router.post(
   "/v2/result-errors/analyze",
   authMiddleware,
+  aiRateLimit,
   resultErrorController.analyzeErrors,
 );
 router.get(
