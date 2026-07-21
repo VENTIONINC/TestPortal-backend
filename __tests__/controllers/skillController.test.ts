@@ -4,6 +4,7 @@
 import { SkillController } from "@/controllers/skillController";
 import {
   SkillArtifactError,
+  SkillMutationError,
   skillArtifactService,
 } from "@/services/skillArtifactService";
 import {
@@ -28,6 +29,116 @@ describe("SkillController", () => {
 
   afterEach(() => {
     jest.restoreAllMocks();
+  });
+
+  const createUploadRequest = <
+    P extends Record<string, string> = Record<string, string>,
+  >(
+    params: P = {} as P,
+  ) => {
+    const req = createMockRequest<P>({
+      method: "POST",
+      params,
+      body: { title: "Custom Skill", category: "testing" },
+    });
+    req.file = {
+      buffer: Buffer.from("zip"),
+    } as Express.Multer.File;
+    return req;
+  };
+
+  it("creates a custom skill and returns catalog metadata", async () => {
+    const customMetadata = {
+      ...metadata,
+      source: "custom" as const,
+      readOnly: false,
+    };
+    jest
+      .spyOn(skillArtifactService, "createCustomSkill")
+      .mockResolvedValue(customMetadata);
+    const req = createUploadRequest();
+    const res = createMockResponse();
+
+    await SkillController.createCustomSkill(req, res);
+
+    expect(skillArtifactService.createCustomSkill).toHaveBeenCalledWith({
+      packageBuffer: Buffer.from("zip"),
+      title: "Custom Skill",
+      category: "testing",
+    });
+    expect(res.statusCode).toBe(201);
+    expect(res.body).toEqual(customMetadata);
+  });
+
+  it("replaces a custom skill and preserves the response metadata shape", async () => {
+    const customMetadata = {
+      ...metadata,
+      source: "custom" as const,
+      readOnly: false,
+    };
+    jest
+      .spyOn(skillArtifactService, "replaceCustomSkill")
+      .mockResolvedValue(customMetadata);
+    const req = createUploadRequest<{ id: string }>({ id: metadata.id });
+    const res = createMockResponse();
+
+    await SkillController.replaceCustomSkill(req, res);
+
+    expect(skillArtifactService.replaceCustomSkill).toHaveBeenCalledWith(
+      metadata.id,
+      expect.objectContaining({
+        title: "Custom Skill",
+        category: "testing",
+      }),
+    );
+    expect(res.statusCode).toBe(200);
+    expect(res.body).toEqual(customMetadata);
+  });
+
+  it("deletes a custom skill with no response body", async () => {
+    jest
+      .spyOn(skillArtifactService, "deleteCustomSkill")
+      .mockResolvedValue({ id: metadata.id });
+    const req = createMockRequest({ params: { id: metadata.id } });
+    const res = createMockResponse();
+
+    await SkillController.deleteCustomSkill(req, res);
+
+    expect(res.statusCode).toBe(204);
+    expect(res.body).toBeUndefined();
+  });
+
+  it.each([
+    ["VALIDATION", 400],
+    ["FORBIDDEN", 403],
+    ["NOT_FOUND", 404],
+    ["CONFLICT", 409],
+  ] as const)("maps %s mutation errors to HTTP %i", async (code, status) => {
+    jest.spyOn(console, "error").mockImplementation();
+    jest
+      .spyOn(skillArtifactService, "createCustomSkill")
+      .mockRejectedValue(new SkillMutationError("Mutation failed", code));
+    const res = createMockResponse();
+
+    await SkillController.createCustomSkill(createUploadRequest(), res);
+
+    expect(res.statusCode).toBe(status);
+    expect(res.body).toEqual({ error: "Mutation failed" });
+  });
+
+  it("rejects a missing package before calling the service", async () => {
+    jest.spyOn(console, "error").mockImplementation();
+    const createSpy = jest.spyOn(skillArtifactService, "createCustomSkill");
+    const req = createMockRequest({
+      method: "POST",
+      body: { title: "Custom Skill", category: "testing" },
+    });
+    const res = createMockResponse();
+
+    await SkillController.createCustomSkill(req, res);
+
+    expect(res.statusCode).toBe(400);
+    expect(createSpy).not.toHaveBeenCalled();
   });
 
   it("returns the skills catalog", async () => {

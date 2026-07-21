@@ -27,6 +27,19 @@ export interface SkillArchiveDownload {
   filename: string;
 }
 
+export interface SkillPackageUploadInput {
+  packageBuffer: Buffer;
+  title: string;
+  category: string;
+}
+
+export type CreateSkillPackageResponse = SkillCatalogEntry;
+export type ReplaceSkillPackageResponse = SkillCatalogEntry;
+
+export interface DeleteSkillPackageOutcome {
+  id: string;
+}
+
 export type SkillSource = "system" | "custom";
 
 export interface StoredSkillPackageFile {

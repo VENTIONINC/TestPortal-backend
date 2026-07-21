@@ -57,11 +57,180 @@ const SkillArchiveDownloadSchema = z
       "Complete portable ZIP package containing the skill folder, SKILL.md, and bundled files.",
   });
 
+const SkillPackageUploadSchema = z
+  .object({
+    package: z.string().openapi({
+      format: "binary",
+      description: "Zip archive containing SKILL.md and optional package resources.",
+    }),
+    title: z.string().min(1).openapi({
+      description: "Display title used in the shared skills catalog.",
+      example: "Deployment Runbook Assistant",
+    }),
+    category: z.string().min(1).openapi({
+      description: "Catalog category for the custom skill.",
+      example: "operations",
+    }),
+  })
+  .openapi("SkillPackageUpload");
+
 export function registerSkillRoutes(registry: OpenAPIRegistry) {
   registry.register("SkillMetadata", SkillMetadataSchema);
   registry.register("SkillDetailResponse", SkillDetailResponseSchema);
   registry.register("SkillsListResponse", SkillsListResponseSchema);
   registry.register("SkillArchiveDownload", SkillArchiveDownloadSchema);
+  registry.register("SkillPackageUpload", SkillPackageUploadSchema);
+
+  registry.registerPath({
+    method: "post",
+    path: "/api/v2/skills",
+    description:
+      "Creates a shared custom skill from a zip package and required catalog metadata (requires authentication)",
+    request: {
+      body: {
+        required: true,
+        content: {
+          "multipart/form-data": {
+            schema: SkillPackageUploadSchema,
+          },
+        },
+      },
+    },
+    security: [{ BearerAuth: [] }],
+    responses: {
+      201: {
+        description: "Custom skill created",
+        content: {
+          "application/json": { schema: SkillMetadataSchema },
+        },
+      },
+      400: {
+        description: "Missing metadata or invalid, malformed, or unsafe package",
+        content: {
+          "application/json": { schema: ErrorResponseSchema },
+        },
+      },
+      401: {
+        description: "Unauthorized - invalid or missing token",
+        content: {
+          "application/json": { schema: ErrorResponseSchema },
+        },
+      },
+      409: {
+        description: "A persisted skill already uses the package frontmatter name",
+        content: {
+          "application/json": { schema: ErrorResponseSchema },
+        },
+      },
+      500: {
+        description: "Internal server error",
+        content: {
+          "application/json": { schema: ErrorResponseSchema },
+        },
+      },
+    },
+    tags: ["Skills"],
+  });
+
+  registry.registerPath({
+    method: "put",
+    path: "/api/v2/skills/{id}",
+    description:
+      "Replaces a custom skill package and catalog metadata while preserving its ID (requires authentication)",
+    request: {
+      params: SkillIdParamSchema,
+      body: {
+        required: true,
+        content: {
+          "multipart/form-data": {
+            schema: SkillPackageUploadSchema,
+          },
+        },
+      },
+    },
+    security: [{ BearerAuth: [] }],
+    responses: {
+      200: {
+        description: "Custom skill replaced",
+        content: {
+          "application/json": { schema: SkillMetadataSchema },
+        },
+      },
+      400: {
+        description: "Missing metadata or invalid, malformed, or unsafe package",
+        content: {
+          "application/json": { schema: ErrorResponseSchema },
+        },
+      },
+      401: {
+        description: "Unauthorized - invalid or missing token",
+        content: {
+          "application/json": { schema: ErrorResponseSchema },
+        },
+      },
+      403: {
+        description: "The selected skill is read-only",
+        content: {
+          "application/json": { schema: ErrorResponseSchema },
+        },
+      },
+      404: {
+        description: "Skill not found for the provided ID",
+        content: {
+          "application/json": { schema: ErrorResponseSchema },
+        },
+      },
+      409: {
+        description: "Another persisted skill uses the replacement package name",
+        content: {
+          "application/json": { schema: ErrorResponseSchema },
+        },
+      },
+      500: {
+        description: "Internal server error",
+        content: {
+          "application/json": { schema: ErrorResponseSchema },
+        },
+      },
+    },
+    tags: ["Skills"],
+  });
+
+  registry.registerPath({
+    method: "delete",
+    path: "/api/v2/skills/{id}",
+    description: "Deletes a custom skill and its package files (requires authentication)",
+    request: { params: SkillIdParamSchema },
+    security: [{ BearerAuth: [] }],
+    responses: {
+      204: { description: "Custom skill deleted" },
+      401: {
+        description: "Unauthorized - invalid or missing token",
+        content: {
+          "application/json": { schema: ErrorResponseSchema },
+        },
+      },
+      403: {
+        description: "The selected skill is read-only",
+        content: {
+          "application/json": { schema: ErrorResponseSchema },
+        },
+      },
+      404: {
+        description: "Skill not found for the provided ID",
+        content: {
+          "application/json": { schema: ErrorResponseSchema },
+        },
+      },
+      500: {
+        description: "Internal server error",
+        content: {
+          "application/json": { schema: ErrorResponseSchema },
+        },
+      },
+    },
+    tags: ["Skills"],
+  });
 
   registry.registerPath({
     method: "get",
@@ -204,4 +373,5 @@ export {
   SkillDetailResponseSchema,
   SkillsListResponseSchema,
   SkillArchiveDownloadSchema,
+  SkillPackageUploadSchema,
 };
