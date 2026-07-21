@@ -115,6 +115,22 @@ jest.mock("@/models/issueModel", () => ({
   },
 }));
 
+jest.mock("@/models/projectModel", () => ({
+  projectModel: {
+    findById: jest.fn((id: string) => {
+      const owner = users[0];
+      return Promise.resolve(
+        owner
+          ? {
+              id,
+              ownerId: owner.id,
+            }
+          : null,
+      );
+    }),
+  },
+}));
+
 describe("v2 issues auth flow", () => {
   beforeEach(() => {
     users.length = 0;

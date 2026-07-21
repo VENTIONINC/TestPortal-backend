@@ -182,6 +182,13 @@ export const uploadApiKeyService = {
       throw new Error("API key has been revoked or does not exist");
     }
 
+    if (
+      keyRecord.projectId !== validated.projectId ||
+      keyRecord.ownerId !== validated.ownerId
+    ) {
+      throw new Error("API key payload does not match stored key record");
+    }
+
     return {
       projectId: validated.projectId,
       ownerId: validated.ownerId,

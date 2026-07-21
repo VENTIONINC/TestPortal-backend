@@ -1,10 +1,14 @@
 // Copyright 2026 VENSOLUTIONSGROUP LTD
 // SPDX-License-Identifier: Apache-2.0
 
-import { Request, Response } from "express";
+import { Response } from "express";
 import { type AuthenticatedRequest } from "@/middleware/authMiddleware";
 import { issueService } from "@/services/issueService";
 import { buildIssueParams } from "@/lib/params-builder";
+import {
+  ProjectAccessError,
+  projectAccessService,
+} from "@/services/projectAccessService";
 
 import type { CreateIssueParams, UpdateIssueParams } from "@/types";
 
@@ -13,7 +17,7 @@ type IssueIdParams = {
 };
 
 export const issueController = {
-  getAllIssues: async (req: Request, res: Response): Promise<void> => {
+  getAllIssues: async (req: AuthenticatedRequest, res: Response): Promise<void> => {
     try {
       const {
         projectId,
@@ -30,6 +34,8 @@ export const issueController = {
         return;
       }
 
+      await projectAccessService.assertProjectAccess(req.user, projectId);
+
       const params = buildIssueParams({
         projectId,
         category,
@@ -42,12 +48,12 @@ export const issueController = {
       res.status(200).json(result);
     } catch (error) {
       const err = error as Error;
-      res.status(500).json({
+      res.status(error instanceof ProjectAccessError ? error.statusCode : 500).json({
         error: `Failed to fetch issues. ${err.message}`,
       });
     }
   },
-  getAllIssuesV2: async (req: Request, res: Response): Promise<void> => {
+  getAllIssuesV2: async (req: AuthenticatedRequest, res: Response): Promise<void> => {
     try {
       const {
         projectId,
@@ -64,6 +70,8 @@ export const issueController = {
         return;
       }
 
+      await projectAccessService.assertProjectAccess(req.user, projectId);
+
       const params = buildIssueParams({
         projectId,
         category,
@@ -76,13 +84,13 @@ export const issueController = {
       res.status(200).json(result);
     } catch (error) {
       const err = error as Error;
-      res.status(500).json({
+      res.status(error instanceof ProjectAccessError ? error.statusCode : 500).json({
         error: `Failed to fetch issues. ${err.message}`,
       });
     }
   },
 
-  getAllIssuesWithStats: async (req: Request, res: Response): Promise<void> => {
+  getAllIssuesWithStats: async (req: AuthenticatedRequest, res: Response): Promise<void> => {
     try {
       const {
         projectId,
@@ -100,6 +108,8 @@ export const issueController = {
         });
         return;
       }
+
+      await projectAccessService.assertProjectAccess(req.user, projectId);
 
       const params = buildIssueParams({
         projectId,
@@ -115,14 +125,14 @@ export const issueController = {
       res.status(200).json(result);
     } catch (error) {
       const err = error as Error;
-      res.status(500).json({
+      res.status(error instanceof ProjectAccessError ? error.statusCode : 500).json({
         error: `Failed to fetch issues with statistics. ${err.message}`,
       });
     }
   },
 
   getAllIssuesWithStatsV2: async (
-    req: Request,
+    req: AuthenticatedRequest,
     res: Response,
   ): Promise<void> => {
     try {
@@ -143,6 +153,8 @@ export const issueController = {
         return;
       }
 
+      await projectAccessService.assertProjectAccess(req.user, projectId);
+
       const params = buildIssueParams({
         projectId,
         category,
@@ -157,14 +169,14 @@ export const issueController = {
       res.status(200).json(result);
     } catch (error) {
       const err = error as Error;
-      res.status(500).json({
+      res.status(error instanceof ProjectAccessError ? error.statusCode : 500).json({
         error: `Failed to fetch issues with statistics. ${err.message}`,
       });
     }
   },
 
   getIssueById: async (
-    req: Request<IssueIdParams>,
+    req: AuthenticatedRequest<IssueIdParams>,
     res: Response,
   ): Promise<void> => {
     try {
@@ -185,6 +197,8 @@ export const issueController = {
         });
         return;
       }
+
+      await projectAccessService.assertProjectAccess(req.user, projectId);
 
       const issueRecords = await issueService.getIssueById(issueId, projectId);
       res.status(200).json(issueRecords);
@@ -198,7 +212,7 @@ export const issueController = {
 
   // V2 method with serialized response including user information
   getIssueByIdV2: async (
-    req: Request<IssueIdParams>,
+    req: AuthenticatedRequest<IssueIdParams>,
     res: Response,
   ): Promise<void> => {
     try {
@@ -219,6 +233,8 @@ export const issueController = {
         });
         return;
       }
+
+      await projectAccessService.assertProjectAccess(req.user, projectId);
 
       const issueRecords = await issueService.getIssueByIdV2(
         issueId,
@@ -233,10 +249,10 @@ export const issueController = {
     }
   },
 
-  createIssue: async (req: Request, res: Response): Promise<void> => {
+  createIssue: async (req: AuthenticatedRequest, res: Response): Promise<void> => {
     try {
       const issueParams: CreateIssueParams = req.body;
-      const user = (req as AuthenticatedRequest).user;
+      const user = req.user;
       if (user) {
         issueParams.createdById = user.id;
         issueParams.updatedById = user.id;
@@ -256,18 +272,20 @@ export const issueController = {
         return;
       }
 
+      await projectAccessService.assertProjectAccess(req.user, issueParams.projectId);
+
       const issueRecord = await issueService.createIssue(issueParams);
       res.status(201).json(issueRecord);
     } catch (error) {
       const err = error as Error;
-      res.status(400).json({
+      res.status(error instanceof ProjectAccessError ? error.statusCode : 400).json({
         error: err.message,
       });
     }
   },
 
   updateIssue: async (
-    req: Request<IssueIdParams>,
+    req: AuthenticatedRequest<IssueIdParams>,
     res: Response,
   ): Promise<void> => {
     try {
@@ -292,18 +310,20 @@ export const issueController = {
         return;
       }
 
+      await projectAccessService.assertIssueAccess(req.user, issueId);
+
       const updatedIssue = await issueService.updateIssue(issueId, updateData);
       res.status(200).json(updatedIssue);
     } catch (error) {
       const err = error as Error;
-      res.status(400).json({
+      res.status(error instanceof ProjectAccessError ? error.statusCode : 400).json({
         error: `Failed to update issue. ${err.message}`,
       });
     }
   },
 
   deleteIssue: async (
-    req: Request<IssueIdParams>,
+    req: AuthenticatedRequest<IssueIdParams>,
     res: Response,
   ): Promise<void> => {
     try {
@@ -325,6 +345,8 @@ export const issueController = {
         return;
       }
 
+      await projectAccessService.assertProjectAccess(req.user, projectId);
+
       const deletedIssue = await issueService.deleteIssue(issueId, projectId);
       res.status(200).json({
         message: "Issue and all associated assumptions deleted successfully",
@@ -334,6 +356,13 @@ export const issueController = {
       const err = error as Error;
 
       // Check if it's a "not found" error
+      if (error instanceof ProjectAccessError) {
+        res.status(error.statusCode).json({
+          error: err.message,
+        });
+        return;
+      }
+
       if (err.message.includes("not found")) {
         res.status(404).json({
           error: err.message,

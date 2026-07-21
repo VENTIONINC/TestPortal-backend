@@ -13,6 +13,10 @@ import type { AuthenticatedRequest } from "@/middleware/authMiddleware";
 import { dbClient } from "@/prisma/client";
 import getLogger from "@/lib/logger";
 import { dashboardService } from "@/services/dashboardService";
+import {
+  ProjectAccessError,
+  projectAccessService,
+} from "@/services/projectAccessService";
 
 const logger = getLogger("json-report-controller");
 
@@ -173,6 +177,10 @@ export const jsonReportController = {
         .projectId;
       const userId = req.user?.id;
 
+      if (projectId) {
+        await projectAccessService.assertProjectAccess(req.user, projectId);
+      }
+
       const response = await jsonReportController._processRawReportFileCore(
         req.file,
         projectId,
@@ -182,7 +190,7 @@ export const jsonReportController = {
       res.status(201).json(response);
     } catch (error) {
       const err = error as Error;
-      res.status(400).json({
+      res.status(error instanceof ProjectAccessError ? error.statusCode : 400).json({
         error: `Failed to process raw JSON report file. ${err.message}`,
       });
     }

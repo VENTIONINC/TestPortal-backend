@@ -5,6 +5,11 @@ import type { Response, Request } from "express";
 import { dashboardService } from "@/services/dashboardService";
 import type { DashboardGranularity } from "@/types/dashboard";
 import getLogger from "@/lib/logger";
+import type { AuthenticatedRequest } from "@/middleware/authMiddleware";
+import {
+  ProjectAccessError,
+  projectAccessService,
+} from "@/services/projectAccessService";
 
 const logger = getLogger("dashboard-controller");
 
@@ -49,12 +54,14 @@ export const dashboardController = {
    * Query Params: environment (string), period (number of days, default 30), type (string, optional)
    */
   async getDashboard(
-    req: Request<DashboardParams>,
+    req: AuthenticatedRequest<DashboardParams>,
     res: Response,
   ): Promise<void> {
     try {
       const { projectId, environment, periodDays, executionType, granularity } =
         parseDashboardParams(req);
+
+      await projectAccessService.assertProjectAccess(req.user, projectId);
 
       const dashboardData = await dashboardService.getDashboard(
         projectId,
@@ -76,6 +83,10 @@ export const dashboardController = {
         }
       }
       logger.error("Error fetching dashboard data", error);
+      if (error instanceof ProjectAccessError) {
+        res.status(error.statusCode).json({ error: error.message });
+        return;
+      }
       res.status(500).json({ error: "Failed to fetch dashboard data" });
     }
   },

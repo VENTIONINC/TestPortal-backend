@@ -1,8 +1,13 @@
 // Copyright 2026 VENSOLUTIONSGROUP LTD
 // SPDX-License-Identifier: Apache-2.0
 
-import { Request, Response } from "express";
+import { Response } from "express";
 import { specService } from "@/services/specService";
+import type { AuthenticatedRequest } from "@/middleware/authMiddleware";
+import {
+  ProjectAccessError,
+  projectAccessService,
+} from "@/services/projectAccessService";
 
 type SpecIdParams = {
   specId: string;
@@ -10,7 +15,7 @@ type SpecIdParams = {
 
 export const specController = {
   getSpecById: async (
-    req: Request<SpecIdParams>,
+    req: AuthenticatedRequest<SpecIdParams>,
     res: Response,
   ): Promise<void> => {
     try {
@@ -31,18 +36,20 @@ export const specController = {
         return;
       }
 
+      await projectAccessService.assertProjectAccess(req.user, projectId);
+
       const spec = await specService.getSpecById(specId, projectId);
       res.status(200).json(spec);
     } catch (error) {
       const err = error as Error;
-      res.status(404).json({
+      res.status(error instanceof ProjectAccessError ? error.statusCode : 404).json({
         error: err.message,
       });
     }
   },
 
   deleteSpec: async (
-    req: Request<SpecIdParams>,
+    req: AuthenticatedRequest<SpecIdParams>,
     res: Response,
   ): Promise<void> => {
     try {
@@ -63,11 +70,17 @@ export const specController = {
         return;
       }
 
+      await projectAccessService.assertProjectAccess(req.user, projectId);
+
       await specService.deleteSpec(specId, projectId);
       res.status(204).send();
     } catch (error) {
       const err = error as Error;
-      if (err.message.includes("not found")) {
+      if (error instanceof ProjectAccessError) {
+        res.status(error.statusCode).json({
+          error: err.message,
+        });
+      } else if (err.message.includes("not found")) {
         res.status(404).json({
           error: err.message,
         });

@@ -5,6 +5,10 @@ import type { Response } from "express";
 import { uploadApiKeyService } from "@/services/uploadApiKeyService";
 import type { AuthenticatedRequest } from "@/middleware/authMiddleware";
 import getLogger from "@/lib/logger";
+import {
+  ProjectAccessError,
+  projectAccessService,
+} from "@/services/projectAccessService";
 
 const logger = getLogger("upload-api-key-controller");
 
@@ -40,6 +44,8 @@ export const uploadApiKeyController = {
         `Generating API key for project ${projectId} by user ${userId}`,
       );
 
+      await projectAccessService.assertProjectAccess(req.user, projectId);
+
       const apiKeyData = await uploadApiKeyService.generateApiKey(
         projectId,
         userId,
@@ -60,6 +66,13 @@ export const uploadApiKeyController = {
       res.json(response);
     } catch (error) {
       logger.error("Error generating API key:", error);
+      if (error instanceof ProjectAccessError) {
+        res.status(error.statusCode).json({
+          error: error.message,
+        });
+        return;
+      }
+
       res.status(500).json({
         error: "Failed to generate API key",
         details: error instanceof Error ? error.message : "Unknown error",

@@ -1,9 +1,13 @@
 // Copyright 2026 VENSOLUTIONSGROUP LTD
 // SPDX-License-Identifier: Apache-2.0
 
-import { Request, Response } from "express";
+import { Response } from "express";
 import { projectService } from "@/services/projectService";
 import type { AuthenticatedRequest } from "@/middleware/authMiddleware";
+import {
+  ProjectAccessError,
+  projectAccessService,
+} from "@/services/projectAccessService";
 import {
   DEFAULT_PROJECT_CATEGORY_WEIGHTS,
   parseProjectCategoryWeights,
@@ -15,18 +19,20 @@ type ProjectIdParams = {
 };
 
 export const projectController = {
-  async getProjects(_req: Request, res: Response): Promise<void> {
+  async getProjects(req: AuthenticatedRequest, res: Response): Promise<void> {
     try {
-      const projects = await projectService.getProjects({});
+      const projects = await projectService.getProjects(
+        projectAccessService.projectFilterForUser(req.user),
+      );
       res.json(projects);
     } catch (error) {
       const err = error as Error;
-      res.status(500).json({ error: err.message });
+      res.status(error instanceof ProjectAccessError ? error.statusCode : 500).json({ error: err.message });
     }
   },
 
   async getProjectById(
-    req: Request<ProjectIdParams>,
+    req: AuthenticatedRequest<ProjectIdParams>,
     res: Response,
   ): Promise<void> {
     try {
@@ -38,7 +44,10 @@ export const projectController = {
         return;
       }
 
-      const project = await projectService.getProjectById(id);
+      const project = await projectAccessService.assertProjectAccess(
+        req.user,
+        id,
+      );
 
       if (!project) {
         res.status(404).json({ error: "Project not found" });
@@ -48,7 +57,7 @@ export const projectController = {
       res.json(project);
     } catch (error) {
       const err = error as Error;
-      res.status(500).json({ error: err.message });
+      res.status(error instanceof ProjectAccessError ? error.statusCode : 500).json({ error: err.message });
     }
   },
 
@@ -102,7 +111,7 @@ export const projectController = {
   },
 
   async updateProject(
-    req: Request<ProjectIdParams>,
+    req: AuthenticatedRequest<ProjectIdParams>,
     res: Response,
   ): Promise<void> {
     try {
@@ -156,11 +165,15 @@ export const projectController = {
         }
       }
 
+      await projectAccessService.assertProjectAccess(req.user, id);
+
       const project = await projectService.updateProject(id, updateData);
       res.json(project);
     } catch (error) {
       const err = error as Error;
-      if (err.message.includes("already exists")) {
+      if (error instanceof ProjectAccessError) {
+        res.status(error.statusCode).json({ error: err.message });
+      } else if (err.message.includes("already exists")) {
         res.status(409).json({ error: err.message });
       } else if (err.message.includes("not found")) {
         res.status(404).json({ error: err.message });
@@ -171,7 +184,7 @@ export const projectController = {
   },
 
   async deleteProject(
-    req: Request<ProjectIdParams>,
+    req: AuthenticatedRequest<ProjectIdParams>,
     res: Response,
   ): Promise<void> {
     try {
@@ -183,11 +196,15 @@ export const projectController = {
         return;
       }
 
+      await projectAccessService.assertProjectAccess(req.user, id);
+
       await projectService.deleteProject(id);
       res.status(204).send();
     } catch (error) {
       const err = error as Error;
-      if (err.message.includes("not found")) {
+      if (error instanceof ProjectAccessError) {
+        res.status(error.statusCode).json({ error: err.message });
+      } else if (err.message.includes("not found")) {
         res.status(404).json({ error: err.message });
       } else {
         res.status(500).json({ error: err.message });

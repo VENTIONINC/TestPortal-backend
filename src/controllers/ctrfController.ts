@@ -1,12 +1,17 @@
 // Copyright 2026 VENSOLUTIONSGROUP LTD
 // SPDX-License-Identifier: Apache-2.0
 
-import type { Request, Response } from "express";
+import type { Response } from "express";
 import { ctrfService } from "@/services/ctrfService";
 import type { CTRFReport } from "@/types/ctrf";
 import type { ApiKeyAuthenticatedRequest } from "@/middleware/apiKeyMiddleware";
+import type { AuthenticatedRequest } from "@/middleware/authMiddleware";
 import type { ProcessReportResult } from "@/services/jsonReportService";
 import getLogger from "@/lib/logger";
+import {
+  ProjectAccessError,
+  projectAccessService,
+} from "@/services/projectAccessService";
 
 const logger = getLogger("ctrf-controller");
 
@@ -58,10 +63,14 @@ export const ctrfController = {
     return result;
   },
 
-  async processRawReportFile(req: Request, res: Response): Promise<void> {
+  async processRawReportFile(req: AuthenticatedRequest, res: Response): Promise<void> {
     try {
       // Extract projectId from form data (multipart form upload)
       const projectId = req.body.projectId;
+
+      if (projectId) {
+        await projectAccessService.assertProjectAccess(req.user, projectId);
+      }
 
       const response = await ctrfController._processRawReportFileCore(
         req.file,
@@ -71,7 +80,7 @@ export const ctrfController = {
       res.status(201).json(response);
     } catch (error) {
       const err = error as Error;
-      res.status(400).json({
+      res.status(error instanceof ProjectAccessError ? error.statusCode : 400).json({
         error: `Failed to process raw CTRF report file. ${err.message}`,
       });
     }

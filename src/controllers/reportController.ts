@@ -1,10 +1,15 @@
 // Copyright 2026 VENSOLUTIONSGROUP LTD
 // SPDX-License-Identifier: Apache-2.0
 
-import type { Request, Response } from "express";
+import type { Response } from "express";
 import getLogger from "@/lib/logger";
 import { reportService, ReportGenerationError } from "@/services/reportService";
 import type { PdfExportFilters } from "@/types/dashboard";
+import type { AuthenticatedRequest } from "@/middleware/authMiddleware";
+import {
+  ProjectAccessError,
+  projectAccessService,
+} from "@/services/projectAccessService";
 
 const logger = getLogger("report-controller");
 
@@ -23,7 +28,7 @@ function buildFilename(params: PdfExportFilters): string {
 }
 
 export const reportController = {
-  async exportPdf(req: Request, res: Response): Promise<void> {
+  async exportPdf(req: AuthenticatedRequest, res: Response): Promise<void> {
     const params = res.locals.exportParams as PdfExportFilters | undefined;
 
     if (!params) {
@@ -44,6 +49,11 @@ export const reportController = {
     });
 
     try {
+      await projectAccessService.assertProjectReferenceAccess(
+        req.user,
+        params.project,
+      );
+
       const pdf = await reportService.generatePdf(params);
 
       if (timedOut) {
@@ -82,6 +92,11 @@ export const reportController = {
           res.status(500).json({ error: "PDF_BUILD_FAILED" });
           return;
         }
+      }
+
+      if (error instanceof ProjectAccessError) {
+        res.status(error.statusCode).json({ error: error.message });
+        return;
       }
 
       res.status(500).json({ error: "PDF_BUILD_FAILED" });

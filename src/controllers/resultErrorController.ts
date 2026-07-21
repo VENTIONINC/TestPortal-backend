@@ -1,8 +1,13 @@
 // Copyright 2026 VENSOLUTIONSGROUP LTD
 // SPDX-License-Identifier: Apache-2.0
 
-import { Request, Response } from "express";
+import { Response } from "express";
 import { resultErrorService } from "@/services/resultErrorService";
+import type { AuthenticatedRequest } from "@/middleware/authMiddleware";
+import {
+  ProjectAccessError,
+  projectAccessService,
+} from "@/services/projectAccessService";
 
 interface AssignIssueRequest {
   assumptionId: string; // UUID
@@ -39,7 +44,7 @@ const validateAnalyzeErrorsRequest = (
 
 export const resultErrorController = {
   assignIssue: async (
-    req: Request<ResultErrorIdParams>,
+    req: AuthenticatedRequest<ResultErrorIdParams>,
     res: Response,
   ): Promise<void> => {
     try {
@@ -60,6 +65,9 @@ export const resultErrorController = {
         return;
       }
 
+      await projectAccessService.assertResultErrorAccess(req.user, resultErrorId);
+      await projectAccessService.assertAssumptionAccess(req.user, assumptionId);
+
       const updatedRecord = await resultErrorService.assignIssue(
         resultErrorId,
         assumptionId,
@@ -67,14 +75,14 @@ export const resultErrorController = {
       res.status(200).json(updatedRecord);
     } catch (error) {
       const err = error as Error;
-      res.status(400).json({
+      res.status(error instanceof ProjectAccessError ? error.statusCode : 400).json({
         error: `Failed to assign issue. ${err.message}`,
       });
     }
   },
 
   reviewError: async (
-    req: Request<ResultErrorIdParams>,
+    req: AuthenticatedRequest<ResultErrorIdParams>,
     res: Response,
   ): Promise<void> => {
     try {
@@ -87,18 +95,22 @@ export const resultErrorController = {
         return;
       }
 
-      const reviewedRecord =
-        await resultErrorService.reviewError(resultErrorId);
+      await projectAccessService.assertResultErrorAccess(req.user, resultErrorId);
+
+      const reviewedRecord = await resultErrorService.reviewError(resultErrorId);
       res.status(200).json(reviewedRecord);
     } catch (error) {
       const err = error as Error;
-      res.status(400).json({
+      res.status(error instanceof ProjectAccessError ? error.statusCode : 400).json({
         error: `Failed to review result error. ${err.message}`,
       });
     }
   },
 
-  bulkReview: async (req: Request, res: Response): Promise<void> => {
+  bulkReview: async (
+    req: AuthenticatedRequest,
+    res: Response,
+  ): Promise<void> => {
     try {
       const { errorIds }: BulkReviewRequest = req.body;
 
@@ -109,20 +121,33 @@ export const resultErrorController = {
         return;
       }
 
+      await Promise.all(
+        errorIds.map((errorId) =>
+          projectAccessService.assertResultErrorAccess(req.user, errorId),
+        ),
+      );
+
       const bulkResults = await resultErrorService.bulkReview(errorIds);
       res.status(200).json(bulkResults);
     } catch (error) {
       const err = error as Error;
-      res.status(400).json({
+      res.status(error instanceof ProjectAccessError ? error.statusCode : 400).json({
         error: `Failed to complete bulk review. ${err.message}`,
       });
     }
   },
 
-  analyzeErrors: async (req: Request, res: Response): Promise<void> => {
+  analyzeErrors: async (req: AuthenticatedRequest, res: Response): Promise<void> => {
     try {
       const { projectId, errorIds } = validateAnalyzeErrorsRequest(
         req.body as AnalyzeErrorsRequest,
+      );
+
+      await projectAccessService.assertProjectAccess(req.user, projectId);
+      await Promise.all(
+        errorIds.map((errorId) =>
+          projectAccessService.assertResultErrorAccess(req.user, errorId),
+        ),
       );
 
       const analysisResult = await resultErrorService.analyzeErrors(
@@ -133,14 +158,14 @@ export const resultErrorController = {
       res.status(200).json(analysisResult);
     } catch (error) {
       const err = error as Error;
-      res.status(400).json({
+      res.status(error instanceof ProjectAccessError ? error.statusCode : 400).json({
         error: `Failed to analyze result errors. ${err.message}`,
       });
     }
   },
 
   getResultErrorById: async (
-    req: Request<ResultErrorIdParams>,
+    req: AuthenticatedRequest<ResultErrorIdParams>,
     res: Response,
   ): Promise<void> => {
     try {
@@ -161,6 +186,8 @@ export const resultErrorController = {
         return;
       }
 
+      await projectAccessService.assertProjectAccess(req.user, projectId as string);
+
       const resultError = await resultErrorService.getResultErrorById(
         resultErrorId,
         projectId as string,
@@ -168,7 +195,7 @@ export const resultErrorController = {
       res.status(200).json(resultError);
     } catch (error) {
       const err = error as Error;
-      res.status(404).json({
+      res.status(error instanceof ProjectAccessError ? error.statusCode : 404).json({
         error: err.message,
       });
     }

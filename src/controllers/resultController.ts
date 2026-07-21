@@ -1,11 +1,15 @@
 // Copyright 2026 VENSOLUTIONSGROUP LTD
 // SPDX-License-Identifier: Apache-2.0
 
-import { Request, Response } from "express";
+import { Response } from "express";
 import { resultService } from "@/services/resultService";
 import type { GetResultsStatsParams } from "@/types";
 import { buildResultParams } from "@/lib/params-builder";
 import type { AuthenticatedRequest } from "@/middleware/authMiddleware";
+import {
+  ProjectAccessError,
+  projectAccessService,
+} from "@/services/projectAccessService";
 
 type AnalysisFeedbackData = {
   analysisFeedbackCategory?: string;
@@ -83,7 +87,7 @@ const buildExportFileName = (
 };
 
 export const resultController = {
-  getResults: async (req: Request, res: Response): Promise<void> => {
+  getResults: async (req: AuthenticatedRequest, res: Response): Promise<void> => {
     try {
       const params = buildResultParams(req.query as Record<string, string>);
 
@@ -95,19 +99,21 @@ export const resultController = {
         return;
       }
 
+      await projectAccessService.assertProjectAccess(req.user, params.projectId);
+
       const result = await resultService.getResults(params);
 
       res.json(result);
     } catch (error) {
       const err = error as Error;
-      res.status(500).json({
+      res.status(error instanceof ProjectAccessError ? error.statusCode : 500).json({
         error: `Failed to fetch results. ${err.message}`,
       });
     }
   },
 
   getResultById: async (
-    req: Request<ResultIdParams>,
+    req: AuthenticatedRequest<ResultIdParams>,
     res: Response,
   ): Promise<void> => {
     try {
@@ -128,6 +134,8 @@ export const resultController = {
         return;
       }
 
+      await projectAccessService.assertProjectAccess(req.user, projectId);
+
       const resultRecord = await resultService.getResultById(
         resultId,
         projectId,
@@ -135,13 +143,13 @@ export const resultController = {
       res.status(200).json(resultRecord);
     } catch (error) {
       const err = error as Error;
-      res.status(404).json({
+      res.status(error instanceof ProjectAccessError ? error.statusCode : 404).json({
         error: err.message,
       });
     }
   },
 
-  getResultsStats: async (req: Request, res: Response): Promise<void> => {
+  getResultsStats: async (req: AuthenticatedRequest, res: Response): Promise<void> => {
     try {
       const { projectId, dates } = req.query;
 
@@ -167,19 +175,22 @@ export const resultController = {
         projectId,
         ...(parsedDates && { dates: parsedDates }),
       };
+
+      await projectAccessService.assertProjectAccess(req.user, projectId);
+
       const stats = await resultService.getResultsStats(params);
 
       res.json(stats);
     } catch (error) {
       const err = error as Error;
-      res.status(500).json({
+      res.status(error instanceof ProjectAccessError ? error.statusCode : 500).json({
         error: `Failed to fetch results stats. ${err.message}`,
       });
     }
   },
 
   updateAnalysis: async (
-    req: Request<ResultIdParams>,
+    req: AuthenticatedRequest<ResultIdParams>,
     res: Response,
   ): Promise<void> => {
     try {
@@ -224,6 +235,8 @@ export const resultController = {
         return;
       }
 
+      await projectAccessService.assertResultAccess(req.user, resultId);
+
       const updatedResult = await resultService.updateAnalysis(
         resultId,
         analysisData,
@@ -232,7 +245,7 @@ export const resultController = {
       res.status(200).json(updatedResult);
     } catch (error) {
       const err = error as Error;
-      res.status(400).json({
+      res.status(error instanceof ProjectAccessError ? error.statusCode : 400).json({
         error: `Failed to update result analysis. ${err.message}`,
       });
     }
@@ -252,6 +265,11 @@ export const resultController = {
         return;
       }
 
+      await projectAccessService.assertResultAccess(
+        req.user,
+        prepared.resultId as string,
+      );
+
       const updatedResult = await resultService.updateAnalysisFeedback(
         prepared.resultId as string,
         prepared.data as AnalysisFeedbackData,
@@ -261,14 +279,14 @@ export const resultController = {
       res.status(200).json(updatedResult);
     } catch (error) {
       const err = error as Error;
-      res.status(400).json({
+      res.status(error instanceof ProjectAccessError ? error.statusCode : 400).json({
         error: `Failed to update result analysis feedback. ${err.message}`,
       });
     }
   },
 
   deleteResult: async (
-    req: Request<ResultIdParams>,
+    req: AuthenticatedRequest<ResultIdParams>,
     res: Response,
   ): Promise<void> => {
     try {
@@ -289,11 +307,17 @@ export const resultController = {
         return;
       }
 
+      await projectAccessService.assertProjectAccess(req.user, projectId);
+
       await resultService.deleteResult(resultId, projectId);
       res.status(204).send();
     } catch (error) {
       const err = error as Error;
-      if (err.message.includes("not found")) {
+      if (error instanceof ProjectAccessError) {
+        res.status(error.statusCode).json({
+          error: err.message,
+        });
+      } else if (err.message.includes("not found")) {
         res.status(404).json({
           error: err.message,
         });
@@ -305,10 +329,15 @@ export const resultController = {
     }
   },
 
-  exportAnalysisJsonl: async (req: Request, res: Response): Promise<void> => {
+  exportAnalysisJsonl: async (
+    req: AuthenticatedRequest,
+    res: Response,
+  ): Promise<void> => {
     try {
-      const { projectId, dateFrom, dateTo } =
-        req.query as Record<string, string>;
+      const { projectId, dateFrom, dateTo } = req.query as Record<
+        string,
+        string
+      >;
 
       if (!projectId) {
         res.status(400).json({
@@ -324,6 +353,8 @@ export const resultController = {
         return;
       }
 
+      await projectAccessService.assertProjectAccess(req.user, projectId);
+
       const { content } = await resultService.exportAnalysisJsonl({
         projectId,
         dateFrom,
@@ -333,15 +364,12 @@ export const resultController = {
       const filename = buildExportFileName(projectId, dateFrom, dateTo);
 
       res.set("Content-Type", "application/jsonl; charset=utf-8");
-      res.set(
-        "Content-Disposition",
-        `attachment; filename="${filename}"`,
-      );
+      res.set("Content-Disposition", `attachment; filename="${filename}"`);
 
       res.status(200).send(content);
     } catch (error) {
       const err = error as Error;
-      res.status(400).json({
+      res.status(error instanceof ProjectAccessError ? error.statusCode : 400).json({
         error: `Failed to export analysis. ${err.message}`,
       });
     }
