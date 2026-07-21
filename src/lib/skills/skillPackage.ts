@@ -82,7 +82,13 @@ export async function readSkillPackageZip(
   }
 
   const entries = Object.values(zip.files);
-  const fileEntries = entries.filter((entry) => !entry.dir);
+
+  entries.forEach(validateZipEntryPath);
+
+  const packageEntries = entries.filter(
+    (entry) => !isMacOsMetadataPath(getZipEntryOriginalPath(entry)),
+  );
+  const fileEntries = packageEntries.filter((entry) => !entry.dir);
 
   if (fileEntries.length === 0) {
     throw new SkillPackageValidationError("Skill package zip contains no files");
@@ -94,8 +100,7 @@ export async function readSkillPackageZip(
     );
   }
 
-  entries.forEach(validateZipEntryPath);
-  validateZipEntryTypes(entries, fileEntries);
+  validateZipEntryTypes(packageEntries, fileEntries);
   validateDeclaredZipEntrySizes(fileEntries);
 
   const normalizedInputPaths = normalizeZipPackageRoot(
@@ -457,6 +462,18 @@ function findDuplicatePaths(paths: string[]): string[] {
 
 function getZipEntryOriginalPath(entry: JSZipObject): string {
   return entry.unsafeOriginalName ?? entry.name;
+}
+
+function isMacOsMetadataPath(value: string): boolean {
+  const normalizedPath = normalizeSkillPackagePath(
+    value.replace(/[\\/]+$/, ""),
+  );
+  const pathSegments = normalizedPath.split("/");
+
+  return (
+    pathSegments[0] === "__MACOSX" ||
+    pathSegments[pathSegments.length - 1] === ".DS_Store"
+  );
 }
 
 function validateZipEntryPath(entry: JSZipObject): void {

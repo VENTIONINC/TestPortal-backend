@@ -227,6 +227,38 @@ describe("readSkillPackageZip", () => {
     ]);
   });
 
+  it("ignores metadata added when a skill package is archived on macOS", async () => {
+    const zip = await createZip({
+      "test123/SKILL.md": validSkillMarkdown,
+      "test123/references/checklist.md": "# Checklist\n",
+      "test123/.DS_Store": Buffer.from("Finder metadata", "utf8"),
+      "__MACOSX/._test123": Buffer.from("AppleDouble metadata", "utf8"),
+      "__MACOSX/test123/._SKILL.md": Buffer.from(
+        "AppleDouble metadata",
+        "utf8",
+      ),
+    });
+
+    const files = await readSkillPackageZip(zip);
+
+    expect(files.map((file) => file.path)).toEqual([
+      "SKILL.md",
+      "references/checklist.md",
+    ]);
+    expect(validateSkillPackage(files).frontmatter.name).toBe("sample-skill");
+  });
+
+  it("does not ignore AppleDouble-style files outside the macOS metadata folder", async () => {
+    const zip = await createZip({
+      "SKILL.md": validSkillMarkdown,
+      "._payload": Buffer.from("unsupported", "utf8"),
+    });
+
+    const files = await readSkillPackageZip(zip);
+
+    expect(() => validateSkillPackage(files)).toThrow("unsupported file type");
+  });
+
   it("rejects empty and malformed zip uploads", async () => {
     await expect(readSkillPackageZip(Buffer.alloc(0))).rejects.toThrow("empty");
     await expect(
