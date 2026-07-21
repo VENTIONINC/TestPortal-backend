@@ -3,7 +3,12 @@
 
 import { Request, Response } from "express";
 import { z } from "zod";
+import type { AuthenticatedRequest } from "@/middleware/authMiddleware";
 import { errorFormatterService } from "@/services/errorFormatterService";
+import {
+  ProjectAccessError,
+  projectAccessService,
+} from "@/services/projectAccessService";
 
 const ErrorMessageSchema = z.object({
   name: z.string().min(1, "Name cannot be empty").max(100, "Name is too long"),
@@ -54,7 +59,10 @@ export const errorFormatterController = {
     }
   },
 
-  suggestFromResult: async (req: Request, res: Response): Promise<void> => {
+  suggestFromResult: async (
+    req: AuthenticatedRequest,
+    res: Response,
+  ): Promise<void> => {
     try {
       const validation = ErrorSuggestionSchema.safeParse(req.body);
 
@@ -67,6 +75,7 @@ export const errorFormatterController = {
       }
 
       const { resultId, projectId } = validation.data;
+      await projectAccessService.assertResultAccess(req.user, resultId);
       const suggestion = await errorFormatterService.suggestFromResult(
         resultId,
         projectId,
@@ -80,7 +89,13 @@ export const errorFormatterController = {
         err.message.includes("failed or flaky") ||
         err.message.includes("no error details");
 
-      res.status(isValidationError ? 400 : 500).json({
+      res.status(
+        error instanceof ProjectAccessError
+          ? error.statusCode
+          : isValidationError
+            ? 400
+            : 500,
+      ).json({
         error: err.message || "Failed to generate suggestion",
       });
     }
