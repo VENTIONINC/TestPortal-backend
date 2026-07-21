@@ -28,3 +28,22 @@ export const aiRateLimit = rateLimit({
       "Too many AI requests. Please wait before requesting another AI analysis.",
   },
 });
+
+export const aiInsightsRateLimit = rateLimit({
+  windowMs: AI_RATE_LIMIT_WINDOW_MS,
+  limit: AI_RATE_LIMIT_MAX_REQUESTS,
+  standardHeaders: "draft-8",
+  legacyHeaders: false,
+  keyGenerator: aiRateLimitKey,
+  skip: (req) =>
+    !(
+      req.body &&
+      typeof req.body === "object" &&
+      "includeAiInsights" in req.body &&
+      req.body.includeAiInsights === true
+    ),
+  message: {
+    error:
+      "Too many AI insight requests. Please wait before requesting another AI insight.",
+  },
+});
