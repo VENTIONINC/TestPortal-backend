@@ -2,43 +2,117 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { OpenAPIRegistry } from "@asteasolutions/zod-to-openapi";
-import { IssueCategory } from "@/types/enums";
 import { z } from "./zod";
 import { ErrorResponseSchema } from "./common";
 
-const IssueSchema = z
+const ResultCategorySchema = z.enum([
+  "bug",
+  "infra",
+  "performance",
+  "script",
+  "other",
+]);
+
+const SerializedUserSchema = z.object({
+  id: z.string().uuid(),
+  name: z.string(),
+  email: z.string().email(),
+  createdAt: z.string(),
+});
+
+const IssueCoreSchema = z
   .object({
     id: z.string().uuid(),
     name: z.string(),
-    category: z.string().optional(),
-    description: z.string().optional(),
-    portal: z.string().optional(),
-    service: z.string().optional(),
-    ticket: z.string().optional(),
-    projectId: z.string().uuid(),
-    createdById: z.string().uuid().optional(),
-    updatedById: z.string().uuid().optional(),
+    description: z.string().nullable().optional(),
+    portal: z.string().nullable().optional(),
+    service: z.string().nullable().optional(),
+    ticket: z.string().nullable().optional(),
+    projectId: z.string().uuid().optional(),
+    createdById: z.string().uuid().nullable().optional(),
+    updatedById: z.string().uuid().nullable().optional(),
+    createdBy: SerializedUserSchema.nullable().optional(),
+    updatedBy: SerializedUserSchema.nullable().optional(),
     createdAt: z.string(),
     updatedAt: z.string(),
   })
-  .openapi("Issue");
+  .openapi("IssueCore");
+
+const IssueCategorySummarySchema = z
+  .object({
+    displayCategory: ResultCategorySchema.nullable(),
+    isMixed: z.boolean(),
+    distribution: z.object({
+      bug: z.number().int().nonnegative(),
+      infra: z.number().int().nonnegative(),
+      performance: z.number().int().nonnegative(),
+      script: z.number().int().nonnegative(),
+      other: z.number().int().nonnegative(),
+    }),
+    uncategorizedCount: z.number().int().nonnegative(),
+  })
+  .openapi("IssueCategorySummary");
+
+const IssueReadSchema = IssueCoreSchema.extend({
+  categorySummary: IssueCategorySummarySchema.describe(
+    "Derived from distinct linked results. Human analysis feedback takes precedence over AI analysis category.",
+  ),
+}).openapi("IssueRead");
+
+const IssueStatisticsSchema = z
+  .object({
+    occurrenceCount: z.number().int().nonnegative(),
+    firstOccurrence: z.string().nullable(),
+    lastOccurrence: z.string().nullable(),
+    impactedTestsCount: z.number().int().nonnegative(),
+    timeDistribution: z.array(
+      z.object({
+        date: z.string(),
+        count: z.number().int().nonnegative(),
+      }),
+    ),
+  })
+  .openapi("IssueStatistics");
+
+const IssueWithStatisticsSchema = IssueReadSchema.extend({
+  statistics: IssueStatisticsSchema,
+}).openapi("IssueWithStatistics");
+
+const PaginatedIssueListSchema = z
+  .object({
+    issues: z.array(IssueReadSchema),
+    total: z.number().int().nonnegative(),
+    page: z.number().int().positive(),
+    totalPages: z.number().int().nonnegative(),
+  })
+  .openapi("PaginatedIssueList");
+
+const PaginatedIssueStatisticsListSchema = z
+  .object({
+    issues: z.array(IssueWithStatisticsSchema),
+    total: z.number().int().nonnegative(),
+    page: z.number().int().positive(),
+    totalPages: z.number().int().nonnegative(),
+  })
+  .openapi("PaginatedIssueStatisticsList");
 
 const CreateIssueRequestSchema = z
   .object({
     name: z.string(),
-    category: z.string().optional(),
     description: z.string().optional(),
     portal: z.string().optional(),
     service: z.string().optional(),
     ticket: z.string().optional(),
-    projectId: z.string().uuid().describe("The UUID of the project this issue belongs to"),
+    projectId: z
+      .string()
+      .uuid()
+      .describe("The UUID of the project this issue belongs to"),
   })
   .openapi("CreateIssueRequest");
 
 const UpdateIssueRequestSchema = z
   .object({
     name: z.string().optional(),
-    category: z.string().optional(),
     description: z.string().optional(),
     portal: z.string().optional(),
     service: z.string().optional(),
@@ -46,31 +120,44 @@ const UpdateIssueRequestSchema = z
   })
   .openapi("UpdateIssueRequest");
 
+const PaginationQuerySchema = {
+  name: z.string().optional(),
+  page: z.number().default(1).optional(),
+  limit: z.number().default(30).optional(),
+};
+
 export function registerIssueRoutes(registry: OpenAPIRegistry) {
-  registry.register("Issue", IssueSchema);
+  registry.register("IssueCore", IssueCoreSchema);
+  registry.register("IssueCategorySummary", IssueCategorySummarySchema);
+  registry.register("IssueRead", IssueReadSchema);
+  registry.register("IssueStatistics", IssueStatisticsSchema);
+  registry.register("IssueWithStatistics", IssueWithStatisticsSchema);
+  registry.register("PaginatedIssueList", PaginatedIssueListSchema);
+  registry.register(
+    "PaginatedIssueStatisticsList",
+    PaginatedIssueStatisticsListSchema,
+  );
   registry.register("CreateIssueRequest", CreateIssueRequestSchema);
   registry.register("UpdateIssueRequest", UpdateIssueRequestSchema);
 
   registry.registerPath({
     method: "get",
     path: "/api/v2/issues",
-    description: "Retrieves all issues (requires authentication)",
+    description:
+      "Retrieves issues with pagination and category summaries derived from distinct linked results. Issue category filtering has been removed.",
     request: {
       query: z.object({
         projectId: z.string().uuid().describe("Project ID to filter issues"),
-        category: z.string().optional(),
-        name: z.string().optional(),
-        page: z.number().default(1).optional(),
-        limit: z.number().default(30).optional(),
+        ...PaginationQuerySchema,
       }),
     },
     security: [{ BearerAuth: [] }],
     responses: {
       200: {
-        description: "List of issues",
+        description: "Paginated list of issues with derived category summaries",
         content: {
           "application/json": {
-            schema: z.array(IssueSchema),
+            schema: PaginatedIssueListSchema,
           },
         },
       },
@@ -96,23 +183,83 @@ export function registerIssueRoutes(registry: OpenAPIRegistry) {
 
   registry.registerPath({
     method: "get",
-    path: "/api/v2/issues/{issueId}",
-    description: "Retrieves an issue by its ID (requires authentication)",
+    path: "/api/v2/issues/with-stats",
+    description:
+      "Retrieves issues with occurrence statistics and derived category summaries. statFrom and statTo constrain the same distinct linked-result set for both.",
     request: {
-      params: z.object({
-        issueId: z.string().uuid(),
-      }),
       query: z.object({
-        projectId: z.string().uuid().describe("Project ID to verify ownership of the issue"),
+        projectId: z
+          .string()
+          .uuid()
+          .describe("Project ID to filter issues with statistics"),
+        ...PaginationQuerySchema,
+        limit: z.number().default(10).optional(),
+        statFrom: z.string().datetime().optional(),
+        statTo: z.string().datetime().optional(),
       }),
     },
     security: [{ BearerAuth: [] }],
     responses: {
       200: {
-        description: "Issue details",
+        description:
+          "Paginated list of issues with statistics and derived summaries",
         content: {
           "application/json": {
-            schema: IssueSchema,
+            schema: PaginatedIssueStatisticsListSchema,
+          },
+        },
+      },
+      400: {
+        description: "Bad request - missing required projectId parameter",
+        content: {
+          "application/json": {
+            schema: ErrorResponseSchema,
+          },
+        },
+      },
+      401: {
+        description: "Unauthorized",
+        content: {
+          "application/json": {
+            schema: ErrorResponseSchema,
+          },
+        },
+      },
+      500: {
+        description: "Internal server error",
+        content: {
+          "application/json": {
+            schema: ErrorResponseSchema,
+          },
+        },
+      },
+    },
+    tags: ["Issues"],
+  });
+
+  registry.registerPath({
+    method: "get",
+    path: "/api/v2/issues/{issueId}",
+    description:
+      "Retrieves an issue with a category summary derived from linked result analysis and human feedback.",
+    request: {
+      params: z.object({
+        issueId: z.string().uuid(),
+      }),
+      query: z.object({
+        projectId: z
+          .string()
+          .uuid()
+          .describe("Project ID to verify ownership of the issue"),
+      }),
+    },
+    security: [{ BearerAuth: [] }],
+    responses: {
+      200: {
+        description: "Issue details with derived category summary",
+        content: {
+          "application/json": {
+            schema: IssueReadSchema,
           },
         },
       },
@@ -147,7 +294,8 @@ export function registerIssueRoutes(registry: OpenAPIRegistry) {
   registry.registerPath({
     method: "post",
     path: "/api/v2/issues",
-    description: "Creates a new issue (requires authentication)",
+    description:
+      "Creates an issue core record. Failure categories are written on result analysis or analysis feedback, not on issues.",
     request: {
       body: {
         content: {
@@ -160,10 +308,10 @@ export function registerIssueRoutes(registry: OpenAPIRegistry) {
     security: [{ BearerAuth: [] }],
     responses: {
       201: {
-        description: "Issue created successfully",
+        description: "Issue core created successfully",
         content: {
           "application/json": {
-            schema: IssueSchema,
+            schema: IssueCoreSchema,
           },
         },
       },
@@ -190,7 +338,8 @@ export function registerIssueRoutes(registry: OpenAPIRegistry) {
   registry.registerPath({
     method: "patch",
     path: "/api/v2/issues/{issueId}",
-    description: "Updates an existing issue (requires authentication)",
+    description:
+      "Updates issue core fields. Result analysis feedback is the human category correction path.",
     request: {
       params: z.object({
         issueId: z.string().uuid(),
@@ -206,10 +355,10 @@ export function registerIssueRoutes(registry: OpenAPIRegistry) {
     security: [{ BearerAuth: [] }],
     responses: {
       200: {
-        description: "Issue updated successfully",
+        description: "Issue core updated successfully",
         content: {
           "application/json": {
-            schema: IssueSchema,
+            schema: IssueCoreSchema,
           },
         },
       },
@@ -245,13 +394,16 @@ export function registerIssueRoutes(registry: OpenAPIRegistry) {
     method: "delete",
     path: "/api/v2/issues/{issueId}",
     description:
-      "Deletes an issue by its ID (requires authentication). Also deletes all associated assumptions (cascade delete).",
+      "Deletes an issue and its associated assumptions. The response contains the deleted issue core.",
     request: {
       params: z.object({
         issueId: z.string().uuid(),
       }),
       query: z.object({
-        projectId: z.string().uuid().describe("Project ID to verify ownership of the issue"),
+        projectId: z
+          .string()
+          .uuid()
+          .describe("Project ID to verify ownership of the issue"),
       }),
     },
     security: [{ BearerAuth: [] }],
@@ -263,7 +415,7 @@ export function registerIssueRoutes(registry: OpenAPIRegistry) {
           "application/json": {
             schema: z.object({
               message: z.string(),
-              issue: IssueSchema,
+              issue: IssueCoreSchema,
             }),
           },
         },
@@ -295,93 +447,15 @@ export function registerIssueRoutes(registry: OpenAPIRegistry) {
     },
     tags: ["Issues", "Results"],
   });
-
-  registry.registerPath({
-    method: "get",
-    path: "/api/v2/issues/with-stats",
-    description:
-      "Retrieves all issues with their statistics including occurrence count, first/last occurrence, impacted tests count, and time-based distribution. Requires authentication. Optionally filter statistics by date range.",
-    request: {
-      query: z.object({
-        projectId: z.string().uuid().describe("Project ID to filter issues with statistics"),
-        category: z.nativeEnum(IssueCategory).optional(),
-        name: z.string().optional(),
-        page: z.number().default(1).optional(),
-        limit: z.number().default(10).optional(),
-        statFrom: z
-          .string()
-          .datetime()
-          .optional()
-          .describe(
-            "Start date for statistics in ISO format (YYYY-MM-DDTHH:mm:ss.sssZ)",
-          ),
-        statTo: z
-          .string()
-          .datetime()
-          .optional()
-          .describe(
-            "End date for statistics in ISO format (YYYY-MM-DDTHH:mm:ss.sssZ)",
-          ),
-      }),
-    },
-    security: [{ BearerAuth: [] }],
-    responses: {
-      200: {
-        description: "List of issues with statistics",
-        content: {
-          "application/json": {
-            schema: z.object({
-              issues: z.array(
-                z.object({
-                  ...IssueSchema.shape,
-                  statistics: z.object({
-                    occurrenceCount: z.number(),
-                    firstOccurrence: z.date().nullable(),
-                    lastOccurrence: z.date().nullable(),
-                    impactedTestsCount: z.number(),
-                    timeDistribution: z.array(
-                      z.object({
-                        date: z.string(),
-                        count: z.number(),
-                      }),
-                    ),
-                  }),
-                }),
-              ),
-              total: z.number(),
-              page: z.number(),
-              totalPages: z.number(),
-            }),
-          },
-        },
-      },
-      400: {
-        description: "Bad request - missing required projectId parameter",
-        content: {
-          "application/json": {
-            schema: ErrorResponseSchema,
-          },
-        },
-      },
-      401: {
-        description: "Unauthorized",
-        content: {
-          "application/json": {
-            schema: ErrorResponseSchema,
-          },
-        },
-      },
-      500: {
-        description: "Internal server error",
-        content: {
-          "application/json": {
-            schema: ErrorResponseSchema,
-          },
-        },
-      },
-    },
-    tags: ["Issues"],
-  });
 }
 
-export { IssueSchema, CreateIssueRequestSchema, UpdateIssueRequestSchema };
+export {
+  IssueCoreSchema,
+  IssueCategorySummarySchema,
+  IssueReadSchema,
+  IssueStatisticsSchema,
+  IssueWithStatisticsSchema,
+  PaginatedIssueListSchema,
+  CreateIssueRequestSchema,
+  UpdateIssueRequestSchema,
+};

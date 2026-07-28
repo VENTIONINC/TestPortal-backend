@@ -52,7 +52,6 @@
 {
   "id": 1,
   "name": "Test Issue",
-  "category": "Bug",
   "createdById": 1,    // ✅ Auto-populated
   "updatedById": 1,    // ✅ Auto-populated
   "createdAt": "2024-01-01T00:00:00.000Z",
@@ -110,9 +109,15 @@ pm.test('createdBy/updatedBy populated', function () {
 pm.test('Required fields present', function () {
     const responseJson = pm.response.json();
     pm.expect(responseJson).to.have.property('name');
-    pm.expect(responseJson).to.have.property('category');
+    pm.expect(responseJson).to.not.have.property('category');
 });
 ```
+
+Issue create and update payloads no longer accept `category`, and issue category
+filtering has been removed. Read responses include `categorySummary`, derived
+from distinct linked results. To correct a category, update
+`analysisFeedbackCategory` on the result; feedback takes precedence over the AI
+`analysisCategory`.
 
 ## 🛠️ Environment Setup
 
@@ -154,4 +159,4 @@ pm.test('Required fields present', function () {
 - Enable Postman Console (`View > Show Postman Console`)
 - Check pre-request script logs
 - Verify token refresh attempts
-- Monitor auto-refresh behavior 
+- Monitor auto-refresh behavior

@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { dbClient } from "@/prisma/client";
+import { buildIssueCategorySummary } from "@/lib/resultCategory";
 import type { ResultWithRelations, ResultsStats } from "@/types";
 import { Prisma } from "@prisma/client";
 
@@ -565,12 +566,22 @@ export const resultModel = {
     >();
     const issueMap = new Map<
       string,
-      { id: string; name: string | null; category: string | null }
+      { id: string; name: string | null }
     >();
 
-    // Local tracking for errors and issues (not stored in final stats)
+    // Local tracking for errors and distinct results linked to each issue.
     const errorCounts = new Map<string, number>();
-    const issueCounts = new Map<string, { count: number; category: string }>();
+    const issueResults = new Map<
+      string,
+      Map<
+        string,
+        {
+          id: string;
+          analysisCategory: string | null;
+          analysisFeedbackCategory: string | null;
+        }
+      >
+    >();
 
     // Initialize stats object
     const stats: ResultsStats = {
@@ -621,16 +632,22 @@ export const resultModel = {
             const issue = assumption.issue;
             if (!issueMap.has(issue.id)) issueMap.set(issue.id, issue);
 
-            // Count issue names
-            const issueName = issue.name ?? "Unknown Issue Name";
-            const current = issueCounts.get(issueName) ?? {
-              count: 0,
-              category: issue.category ?? "Other",
-            };
-            issueCounts.set(issueName, {
-              ...current,
-              count: current.count + 1,
+            const linkedResults =
+              issueResults.get(issue.id) ??
+              new Map<
+                string,
+                {
+                  id: string;
+                  analysisCategory: string | null;
+                  analysisFeedbackCategory: string | null;
+                }
+              >();
+            linkedResults.set(result.id, {
+              id: result.id,
+              analysisCategory: result.analysisCategory,
+              analysisFeedbackCategory: result.analysisFeedbackCategory,
             });
+            issueResults.set(issue.id, linkedResults);
           }
         });
       });
@@ -656,13 +673,16 @@ export const resultModel = {
       .slice(0, 10)
       .map(([title, count]) => ({ title, count }));
 
-    stats.topIssues = Array.from(issueCounts.entries())
-      .sort((a, b) => b[1].count - a[1].count)
+    stats.topIssues = Array.from(issueResults.entries())
+      .sort((a, b) => b[1].size - a[1].size)
       .slice(0, 10)
-      .map(([title, data]) => ({
-        title,
-        count: data.count,
-        category: data.category,
+      .map(([issueId, linkedResults]) => ({
+        id: issueId,
+        title: issueMap.get(issueId)?.name ?? "Unknown Issue Name",
+        count: linkedResults.size,
+        categorySummary: buildIssueCategorySummary(
+          Array.from(linkedResults.values()),
+        ),
       }));
 
     return stats;

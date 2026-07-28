@@ -21,6 +21,19 @@ The system SHALL use result analysis fields as the canonical source for failure 
 - **WHEN** a result has `analysisCategory` and no `analysisFeedbackCategory`
 - **THEN** the system SHALL treat `analysisCategory` as the result's effective category.
 
+#### Scenario: Effective result category is normalized
+- **WHEN** a stored result category differs from a supported category only by letter case
+- **THEN** the system SHALL normalize it to the lowercase supported category.
+
+#### Scenario: Legacy environment category is normalized
+- **WHEN** a stored result category is `environment`, ignoring letter case
+- **THEN** the system SHALL treat it as the canonical `infra` category.
+
+#### Scenario: Unsupported category is uncategorized
+- **WHEN** the authoritative result category value is missing, empty, or cannot be normalized to a supported category
+- **THEN** the system SHALL treat the result as uncategorized
+- **AND** the system SHALL NOT silently classify it as `other`.
+
 ### Requirement: Issues do not persist category
 The system SHALL NOT persist failure category as an issue-owned field.
 
@@ -68,17 +81,53 @@ The system SHALL derive issue category display from the effective categories of 
 - **WHEN** an issue has linked results without `analysisCategory` or `analysisFeedbackCategory`
 - **THEN** the derived category summary SHALL count those results separately from the supported category distribution.
 
+#### Scenario: Duplicate graph paths count a result once
+- **WHEN** multiple errors or assumptions connect the same result to the same issue
+- **THEN** the derived category summary SHALL count that result once for that issue.
+
 ### Requirement: Issue statistics use derived category summaries
 The system SHALL use derived category summaries for issue statistics and issue category display.
 
-#### Scenario: Issue stats include derived category summary
-- **WHEN** a client requests issues with statistics
-- **THEN** each issue that includes category display SHALL expose a derived category summary based on linked result effective categories.
+#### Scenario: Issue read endpoints include derived category summary
+- **WHEN** a client requests an issue list, issue detail, or issues with statistics through REST or MCP
+- **THEN** each returned issue SHALL expose a derived category summary based on linked result effective categories
+- **AND** the response SHALL NOT expose an issue-owned `category`.
+
+#### Scenario: Issue mutation responses omit category summary
+- **WHEN** a client creates, updates, or deletes an issue
+- **THEN** the returned issue core SHALL NOT expose an issue-owned `category`
+- **AND** the response SHALL NOT require a derived `categorySummary`.
+
+#### Scenario: Issue stats date range constrains category summary
+- **WHEN** a client requests issues with statistics using `statFrom` or `statTo`
+- **THEN** the issue statistics and category summary SHALL be derived from the same date-filtered set of distinct linked results.
 
 #### Scenario: Top issue stats do not read issue category
 - **WHEN** result statistics return top issues
 - **THEN** top issue category display SHALL be derived from linked result effective categories
 - **AND** the system SHALL NOT read a persisted `Issue.category`.
+
+#### Scenario: Top issues aggregate by identity and distinct result
+- **WHEN** result statistics aggregate linked issues
+- **THEN** separate issue IDs SHALL remain separate even when their names are identical
+- **AND** each result SHALL count at most once per issue
+- **AND** each top issue entry SHALL expose `id`, `title`, `count`, and `categorySummary`
+- **AND** `count` SHALL equal the category distribution total plus `uncategorizedCount`.
+
+### Requirement: Dashboard metrics use effective result category
+The system SHALL derive dashboard failure-category metrics from effective result categories.
+
+#### Scenario: Feedback category controls dashboard bucket
+- **WHEN** a failed result has an analysis feedback category
+- **THEN** dashboard category aggregation SHALL use the feedback category instead of the AI analysis category.
+
+#### Scenario: Infra maps to the legacy environment bucket
+- **WHEN** a failed result's effective category is `infra`
+- **THEN** dashboard aggregation SHALL increment the existing environment metric bucket.
+
+#### Scenario: Category feedback refreshes persisted metrics
+- **WHEN** an authenticated user changes a result's analysis feedback category
+- **THEN** the system SHALL refresh the affected daily project, environment, and execution-type metric bucket in the feedback update transaction.
 
 ### Requirement: Contracts document category source of truth
 The system SHALL document result analysis and feedback as the only category write paths.
@@ -94,3 +143,13 @@ The system SHALL document result analysis and feedback as the only category writ
 #### Scenario: MCP issue tools exclude issue category writes
 - **WHEN** MCP issue tool schemas are exposed
 - **THEN** issue creation and update tool contracts SHALL NOT accept an issue-owned `category`.
+
+#### Scenario: Issue read contracts document derived summary
+- **WHEN** OpenAPI and MCP issue read contracts are exposed
+- **THEN** issue list, detail, and with-statistics responses SHALL document `categorySummary`
+- **AND** issue list responses SHALL document their actual pagination envelope.
+
+#### Scenario: Human-facing examples migrate from issue category
+- **WHEN** API/MCP documentation and Postman issue examples are updated for this change
+- **THEN** they SHALL NOT send, filter, or assert an issue-owned `category`
+- **AND** they SHALL explain result analysis feedback as the human category correction path.

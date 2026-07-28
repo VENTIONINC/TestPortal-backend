@@ -86,7 +86,6 @@ export interface PrismaIssue {
   createdAt: Date;
   updatedAt: Date;
   name: string;
-  category: string;
   description?: string | null;
   portal?: string | null;
   service?: string | null;
@@ -251,7 +250,6 @@ export interface AssumptionSummary {
 export interface IssueSummary {
   id: string;
   name: string;
-  category: string;
   description?: string;
   portal?: string;
   service?: string;
@@ -287,7 +285,6 @@ export interface SerializedIssue {
   createdAt: Date;
   updatedAt: Date;
   name: string;
-  category: string;
   description?: string | null;
   portal?: string | null;
   service?: string | null;
@@ -296,8 +293,12 @@ export interface SerializedIssue {
   updatedBy?: SerializedUser | null;
 }
 
+export interface SerializedIssueRead extends SerializedIssue {
+  categorySummary: import("@/types/resultCategory").IssueCategorySummary;
+}
+
 export interface SerializedIssuesResponse {
-  issues: SerializedIssue[];
+  issues: SerializedIssueRead[];
   total: number;
   page: number;
   totalPages: number;

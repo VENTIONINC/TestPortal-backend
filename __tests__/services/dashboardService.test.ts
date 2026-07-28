@@ -95,6 +95,7 @@ describe("dashboardService", () => {
           status: true,
           duration: true,
           analysisCategory: true,
+          analysisFeedbackCategory: true,
         },
       });
 
@@ -140,12 +141,38 @@ describe("dashboardService", () => {
       });
     });
 
-    it("should handle issue categorization case-insensitively", async () => {
+    it("uses feedback precedence, legacy normalization, and ignores unsupported values", async () => {
       const mockResults = [
-        { status: "failed", duration: 10, analysisCategory: "Script" },
-        { status: "failed", duration: 10, analysisCategory: "PERFORMANCE" },
-        { status: "failed", duration: 10, analysisCategory: "Unknown" },
-        { status: "failed", duration: 10, analysisCategory: null },
+        {
+          status: "failed",
+          duration: 10,
+          analysisCategory: "bug",
+          analysisFeedbackCategory: "Script",
+        },
+        {
+          status: "failed",
+          duration: 10,
+          analysisCategory: "PERFORMANCE",
+          analysisFeedbackCategory: null,
+        },
+        {
+          status: "failed",
+          duration: 10,
+          analysisCategory: "ENVIRONMENT",
+          analysisFeedbackCategory: null,
+        },
+        {
+          status: "failed",
+          duration: 10,
+          analysisCategory: "Unknown",
+          analysisFeedbackCategory: null,
+        },
+        {
+          status: "failed",
+          duration: 10,
+          analysisCategory: "bug",
+          analysisFeedbackCategory: "unsupported",
+        },
       ];
 
       mockTxClient.result.findMany.mockResolvedValue(mockResults);
@@ -163,9 +190,9 @@ describe("dashboardService", () => {
           update: expect.objectContaining({
             issuesScript: 1,
             issuesPerformance: 1,
-            issuesOther: 2,
+            issuesOther: 0,
             issuesBug: 0,
-            issuesEnvironment: 0,
+            issuesEnvironment: 1,
           }),
         }),
       );

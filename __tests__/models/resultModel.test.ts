@@ -71,3 +71,118 @@ describe("resultModel tag filtering", () => {
     );
   });
 });
+
+describe("resultModel issue statistics", () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
+
+  it("aggregates by issue ID and distinct linked result with derived summaries", async () => {
+    const issueA = { id: "issue-a", name: "Duplicate name" };
+    const issueB = { id: "issue-b", name: "Duplicate name" };
+    const issueC = { id: "issue-c", name: "Dominant mixed" };
+    const issueD = { id: "issue-d", name: "Uncategorized" };
+    const makeResult = (
+      id: string,
+      analysisCategory: string | null,
+      analysisFeedbackCategory: string | null,
+      assumptions: Array<{ id: string; issue: typeof issueA }>,
+    ) => ({
+      id,
+      status: "failed",
+      startTime: new Date("2026-07-28T10:00:00.000Z"),
+      analysisCategory,
+      analysisFeedbackCategory,
+      spec: {
+        id: `spec-${id}`,
+        key: id,
+        title: id,
+        file: `${id}.ts`,
+        tags: [],
+      },
+      execution: {
+        id: `execution-${id}`,
+        environment: "test",
+        type: "e2e",
+      },
+      errors: [
+        {
+          id: `error-${id}`,
+          message: "Failure",
+          assumptions,
+        },
+      ],
+    });
+    const results = [
+      makeResult("result-1", "bug", null, [
+        { id: "a-1", issue: issueA },
+        { id: "a-2", issue: issueA },
+        { id: "b-1", issue: issueB },
+        { id: "c-1", issue: issueC },
+      ]),
+      makeResult("result-2", "bug", "script", [
+        { id: "a-3", issue: issueA },
+        { id: "c-2", issue: issueC },
+      ]),
+      makeResult("result-3", null, null, [
+        { id: "d-1", issue: issueD },
+      ]),
+      makeResult("result-4", "SCRIPT", null, [
+        { id: "c-3", issue: issueC },
+      ]),
+    ];
+    (
+      findManyMock.mockResolvedValue as unknown as (value: unknown[]) => void
+    )(results);
+
+    const stats = await resultModel.getStats({ projectId: "project-1" });
+    const topA = stats.topIssues.find((issue) => issue.id === issueA.id);
+    const topB = stats.topIssues.find((issue) => issue.id === issueB.id);
+    const topC = stats.topIssues.find((issue) => issue.id === issueC.id);
+    const topD = stats.topIssues.find((issue) => issue.id === issueD.id);
+
+    expect(topA).toMatchObject({
+      title: "Duplicate name",
+      count: 2,
+      categorySummary: {
+        displayCategory: null,
+        isMixed: true,
+        distribution: { bug: 1, infra: 0, performance: 0, script: 1, other: 0 },
+        uncategorizedCount: 0,
+      },
+    });
+    expect(topB).toMatchObject({
+      title: "Duplicate name",
+      count: 1,
+      categorySummary: {
+        displayCategory: "bug",
+        isMixed: false,
+      },
+    });
+    expect(topC).toMatchObject({
+      count: 3,
+      categorySummary: {
+        displayCategory: "script",
+        isMixed: true,
+        distribution: { bug: 1, infra: 0, performance: 0, script: 2, other: 0 },
+      },
+    });
+    expect(topD).toMatchObject({
+      count: 1,
+      categorySummary: {
+        displayCategory: null,
+        isMixed: false,
+        uncategorizedCount: 1,
+      },
+    });
+
+    for (const issue of stats.topIssues) {
+      const categorizedTotal = Object.values(
+        issue.categorySummary.distribution,
+      ).reduce((sum, count) => sum + count, 0);
+      expect(issue.count).toBe(
+        categorizedTotal + issue.categorySummary.uncategorizedCount,
+      );
+    }
+  });
+});

@@ -3,42 +3,18 @@
 
 import { issueService } from "@/services/issueService";
 import type { PrismaIssue } from "@/types";
-import { IssueCategory } from "@/types/enums";
 
 interface IssueFilterParams {
   projectId: string;
-  category?: IssueCategory;
   name?: string;
   page?: number;
   limit?: number;
-}
-
-interface GetAllIssuesResponse {
-  issues: PrismaIssue[];
-  total: number;
-  page: number;
-  totalPages: number;
-}
-
-interface IssueWithStatistics extends PrismaIssue {
-  statistics: {
-    occurrenceCount: number;
-    firstOccurrence: Date | null;
-    lastOccurrence: Date | null;
-    impactedTestsCount: number;
-  };
-}
-
-interface GetAllIssuesWithStatsResponse {
-  issues: IssueWithStatistics[];
-  total: number;
-  page: number;
-  totalPages: number;
+  statFrom?: string;
+  statTo?: string;
 }
 
 interface CreateIssueParams {
   name: string;
-  category: string;
   description?: string;
   portal?: string;
   service?: string;
@@ -48,7 +24,6 @@ interface CreateIssueParams {
 
 interface UpdateIssueParams {
   name?: string;
-  category?: string;
   description?: string;
   portal?: string;
   service?: string;
@@ -56,12 +31,10 @@ interface UpdateIssueParams {
 }
 
 export const mcpIssueHandler = {
-  async getAllIssues(params: IssueFilterParams): Promise<GetAllIssuesResponse> {
-    const { projectId, category, name, page = 1, limit = 30 } = params;
+  async getAllIssues(params: IssueFilterParams) {
+    const { projectId, name, page = 1, limit = 30 } = params;
 
-    // Build parameters object, filtering out undefined values
     const issueParams: IssueFilterParams = { projectId };
-    if (category) issueParams.category = category;
     if (name) issueParams.name = name;
     if (page) issueParams.page = page;
     if (limit) issueParams.limit = limit;
@@ -71,15 +44,22 @@ export const mcpIssueHandler = {
 
   async getAllIssuesWithStats(
     params: IssueFilterParams,
-  ): Promise<GetAllIssuesWithStatsResponse> {
-    const { projectId, category, name, page = 1, limit = 30 } = params;
+  ) {
+    const {
+      projectId,
+      name,
+      page = 1,
+      limit = 30,
+      statFrom,
+      statTo,
+    } = params;
 
-    // Build parameters object, filtering out undefined values
     const issueParams: IssueFilterParams = { projectId };
-    if (category) issueParams.category = category;
     if (name) issueParams.name = name;
     if (page) issueParams.page = page;
     if (limit) issueParams.limit = limit;
+    if (statFrom) issueParams.statFrom = statFrom;
+    if (statTo) issueParams.statTo = statTo;
 
     return await issueService.getAllIssuesWithStats(issueParams);
   },
@@ -87,7 +67,7 @@ export const mcpIssueHandler = {
   async getIssueById(
     issueId: string,
     projectId: string,
-  ): Promise<PrismaIssue> {
+  ) {
     return await issueService.getIssueById(issueId, projectId);
   },
 

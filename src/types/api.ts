@@ -143,7 +143,12 @@ export interface ResultsStats {
     assumptions: number;
   };
   topErrors: { title: string; count: number }[];
-  topIssues: { title: string; count: number; category: string }[];
+  topIssues: Array<{
+    id: string;
+    title: string;
+    count: number;
+    categorySummary: import("@/types/resultCategory").IssueCategorySummary;
+  }>;
 }
 
 // Assumption API Types

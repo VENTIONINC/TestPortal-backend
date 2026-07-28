@@ -91,6 +91,7 @@ export default [
       "*.d.ts",
       "jest.config.ts",
       "jest.prompts.config.ts",
+      ".codex/**",
     ],
   },
 ];

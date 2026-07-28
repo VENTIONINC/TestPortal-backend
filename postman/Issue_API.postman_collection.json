@@ -146,7 +146,7 @@
             },
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"name\": \"Public API Test Issue\",\n  \"category\": \"Bug\",\n  \"description\": \"Test issue created via public API\",\n  \"portal\": \"test-portal\",\n  \"service\": \"api-service\",\n  \"ticket\": \"TICKET-123\"\n}"
+              "raw": "{\n  \"name\": \"Public API Test Issue\",\n  \"description\": \"Test issue created via public API\",\n  \"portal\": \"test-portal\",\n  \"service\": \"api-service\",\n  \"ticket\": \"TICKET-123\"\n}"
             }
           }
         },
@@ -263,7 +263,7 @@
             },
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"name\": \"Authenticated API Test Issue\",\n  \"category\": \"Feature\",\n  \"description\": \"Test issue created via authenticated API with user tracking\",\n  \"portal\": \"secure-portal\",\n  \"service\": \"auth-service\",\n  \"ticket\": \"SECURE-456\"\n}"
+              "raw": "{\n  \"name\": \"Authenticated API Test Issue\",\n  \"description\": \"Test issue created via authenticated API with user tracking\",\n  \"portal\": \"secure-portal\",\n  \"service\": \"auth-service\",\n  \"ticket\": \"SECURE-456\"\n}"
             }
           }
         },
@@ -308,7 +308,7 @@
             },
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"name\": \"Updated Authenticated Issue\",\n  \"description\": \"This issue was updated via authenticated API with user tracking\",\n  \"category\": \"Enhancement\"\n}"
+              "raw": "{\n  \"name\": \"Updated Authenticated Issue\",\n  \"description\": \"This issue was updated via authenticated API with user tracking\"\n}"
             }
           }
         },
@@ -318,7 +318,7 @@
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "{{baseUrl}}{{V_2}}/issues?page=1&limit=10&category=Feature",
+              "raw": "{{baseUrl}}{{V_2}}/issues?page=1&limit=10&name=Authenticated",
               "host": [
                 "{{baseUrl}}"
               ],
@@ -336,8 +336,8 @@
                   "value": "10"
                 },
                 {
-                  "key": "category",
-                  "value": "Feature"
+                  "key": "name",
+                  "value": "Authenticated"
                 }
               ]
             }
@@ -414,7 +414,7 @@
             },
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"description\": \"Missing required name and category fields\"\n}"
+              "raw": "{\n  \"description\": \"Missing required name field\"\n}"
             }
           }
         },

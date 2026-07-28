@@ -10,6 +10,7 @@ import type {
   ExecutionSummary,
   DashboardGranularity,
 } from "@/types/dashboard";
+import { getEffectiveResultCategory } from "@/lib/resultCategory";
 import getLogger from "@/lib/logger";
 
 const logger = getLogger("dashboard-service");
@@ -164,6 +165,7 @@ export const dashboardService = {
         status: true,
         duration: true,
         analysisCategory: true,
+        analysisFeedbackCategory: true,
       },
     });
 
@@ -190,12 +192,12 @@ export const dashboardService = {
         dailyTotal.passedTests++;
       } else if (res.status === "failed") {
         dailyTotal.failedTests++;
-        const category = res.analysisCategory?.toLowerCase() ?? "other";
+        const category = getEffectiveResultCategory(res);
         if (category === "bug") dailyTotal.issuesBug++;
-        else if (category === "environment") dailyTotal.issuesEnvironment++;
+        else if (category === "infra") dailyTotal.issuesEnvironment++;
         else if (category === "script") dailyTotal.issuesScript++;
         else if (category === "performance") dailyTotal.issuesPerformance++;
-        else dailyTotal.issuesOther++;
+        else if (category === "other") dailyTotal.issuesOther++;
       } else if (res.status === "timedOut") {
         dailyTotal.timedOutTests++;
       } else if (res.status === "skipped") {
@@ -251,12 +253,9 @@ export const dashboardService = {
       else if (res.status === "failed") {
         metrics.failed++;
         // Categorize issue
-        const category = res.analysisCategory?.toLowerCase() ?? "other";
-        if (category in metrics.issues) {
-          metrics.issues[category as keyof DashboardIssueMetrics]++;
-        } else {
-          metrics.issues.other++;
-        }
+        const category = getEffectiveResultCategory(res);
+        if (category === "infra") metrics.issues.environment++;
+        else if (category) metrics.issues[category]++;
       } else if (res.status === "timedOut") metrics.timedOut++;
       else if (res.status === "skipped") metrics.skipped++;
 

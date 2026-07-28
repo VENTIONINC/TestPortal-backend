@@ -31,32 +31,38 @@ Tools are registered with the MCP server instance and can be invoked by clients 
 
 #### `get-issues`
 - **Source File:** `src/mcp/tools/issues.js`
-- **Description:** Retrieve issues with optional filtering by category, name, with pagination support
+- **Description:** Retrieve issues with optional name filtering, pagination, and a `categorySummary` derived from distinct linked results
 - **Parameters:**
-  - `category` (optional): Filter by issue category
+  - `projectId` (required): Project UUID
   - `name` (optional): Filter by issue name
   - `page` (optional): Page number for pagination (default: 1)
   - `limit` (optional): Number of items per page (default: 30)
-- **Response:** Array of issues with pagination metadata
+- **Response:** Issues with pagination metadata and derived category summaries. Issue category filtering is no longer supported.
 
 #### `get-issue-by-id`
 - **Source File:** `src/mcp/tools/issues.js`
-- **Description:** Retrieve detailed information about a specific issue by its unique ID
+- **Description:** Retrieve an issue with a `categorySummary` derived from linked result analysis and feedback
 - **Parameters:**
   - `issueId` (required): Unique identifier for the issue
-- **Response:** Detailed issue object
+  - `projectId` (required): Project UUID
+- **Response:** Detailed issue object with a derived category summary
 
 #### `create-issue`
 - **Source File:** `src/mcp/tools/issues.js`
-- **Description:** Create a new issue with name (required) and optional category, description, portal, service, and ticket information
+- **Description:** Create a new issue with name (required) and optional description, portal, service, and ticket information
 - **Parameters:**
   - `name` (required): Issue name
-  - `category` (optional): Issue category
   - `description` (optional): Issue description
   - `portal` (optional): Associated portal
   - `service` (optional): Associated service
   - `ticket` (optional): Related ticket information
 - **Response:** Created issue object with success message
+
+Issue creation and update do not accept a category. AI categories are stored in
+`Result.analysisCategory`; human corrections use
+`Result.analysisFeedbackCategory`, which takes precedence. Issue read tools
+summarize those effective result categories and explicitly report mixed and
+uncategorized linked results.
 
 #### `get-mock-issues`
 - **Source File:** `src/mcp/tools/issues.js`
@@ -201,4 +207,4 @@ All tools return standardized responses using the `createSuccessResponse` helper
 
 ---
 
-*This document is automatically updated based on the contents of the `src/mcp/tools/` directory.* 
+*This document is automatically updated based on the contents of the `src/mcp/tools/` directory.*

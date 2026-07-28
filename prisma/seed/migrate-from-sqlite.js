@@ -32,7 +32,6 @@ async function migrateSQLiteToPostgres() {
           createdAt: new Date(issue.createdAt),
           updatedAt: new Date(issue.updatedAt),
           name: issue.name,
-          category: issue.category,
           description: issue.description,
           portal: issue.portal,
           service: issue.service,
@@ -192,4 +191,4 @@ migrateSQLiteToPostgres()
   .catch((error) => {
     console.error('Migration failed:', error);
     process.exit(1);
-  }); 
+  });

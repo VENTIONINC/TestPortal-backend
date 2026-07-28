@@ -4,6 +4,7 @@
 import { OpenAPIRegistry } from "@asteasolutions/zod-to-openapi";
 import { z } from "./zod";
 import { ErrorResponseSchema } from "./common";
+import { IssueCategorySummarySchema } from "./issues";
 
 const ResultSpecSchema = z
   .object({
@@ -94,7 +95,10 @@ const ResultSchema = z
     analysisFeedbackCategory: z
       .enum(["bug", "infra", "performance", "script", "other"])
       .nullable()
-      .optional(),
+      .optional()
+      .describe(
+        "Human category correction. When present, this is authoritative over analysisCategory.",
+      ),
     analysisFeedbackConfidence: z
       .number()
       .min(1)
@@ -144,9 +148,12 @@ const ResultsStatsSchema = z
     ),
     topIssues: z.array(
       z.object({
+        id: z.string().uuid(),
         title: z.string(),
         count: z.number(),
-        category: z.string().describe("Failure category (bug, infra, script, performance, other)"),
+        categorySummary: IssueCategorySummarySchema.describe(
+          "Derived from the same distinct linked results counted by count.",
+        ),
       }),
     ),
   })
@@ -180,7 +187,9 @@ const UpdateResultAnalysisFeedbackRequestSchema = z
     analysisFeedbackCategory: z
       .enum(["bug", "infra", "performance", "script", "other"])
       .optional()
-      .describe("Manual reviewer category"),
+      .describe(
+        "Human category correction. This becomes the effective category instead of the AI analysisCategory while preserving the AI value.",
+      ),
     analysisFeedbackConfidence: z
       .number()
       .min(1)

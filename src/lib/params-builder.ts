@@ -1,13 +1,11 @@
 // Copyright 2026 VENSOLUTIONSGROUP LTD
 // SPDX-License-Identifier: Apache-2.0
 
-import { IssueCategory } from "@/types/enums";
 import type { GetResultsParams } from "@/types";
 
 export function buildIssueParams(query: Record<string, string | undefined>) {
   const params: {
     projectId: string;
-    category?: IssueCategory;
     name?: string;
     page?: number;
     limit?: number;
@@ -15,7 +13,6 @@ export function buildIssueParams(query: Record<string, string | undefined>) {
     statTo?: string;
   } = { projectId: query.projectId ?? "" };
 
-  if (query.category) params.category = query.category as IssueCategory;
   if (query.name) params.name = query.name;
   if (query.page) params.page = Number(query.page);
   if (query.limit) params.limit = Number(query.limit);

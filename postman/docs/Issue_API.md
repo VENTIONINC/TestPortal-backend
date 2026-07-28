@@ -59,7 +59,12 @@
     {
       "id": 1,
       "name": "Database Performance Issue",
-      "category": "Bug",
+      "categorySummary": {
+        "displayCategory": "bug",
+        "isMixed": false,
+        "distribution": {"bug": 2, "infra": 0, "performance": 0, "script": 0, "other": 0},
+        "uncategorizedCount": 0
+      },
       "description": "Query taking too long",
       "portal": "main-portal", 
       "service": "database-service",
@@ -96,7 +101,12 @@
     {
       "id": 1,
       "name": "Database Performance Issue",
-      "category": "Bug",
+      "categorySummary": {
+        "displayCategory": "bug",
+        "isMixed": false,
+        "distribution": {"bug": 2, "infra": 0, "performance": 0, "script": 0, "other": 0},
+        "uncategorizedCount": 0
+      },
       "description": "Query taking too long",
       "portal": "main-portal",
       "service": "database-service",
@@ -145,7 +155,12 @@
 {
   "id": 1,
   "name": "Database Performance Issue",
-  "category": "Bug",
+  "categorySummary": {
+    "displayCategory": "bug",
+    "isMixed": false,
+    "distribution": {"bug": 2, "infra": 0, "performance": 0, "script": 0, "other": 0},
+    "uncategorizedCount": 0
+  },
   "description": "Query taking too long", 
   "portal": "main-portal",
   "service": "database-service",
@@ -176,7 +191,6 @@
 {
   "id": 1,
   "name": "New Issue",
-  "category": "Feature",
   "description": "New feature request",
   "portal": "test-portal",
   "service": "api-service", 
@@ -307,4 +321,4 @@ issues.issues.forEach(issue => {
 - Enable Postman Console (`View > Show Postman Console`)
 - Check pre-request script logs
 - Verify token refresh attempts
-- Monitor auto-refresh behavior 
+- Monitor auto-refresh behavior
