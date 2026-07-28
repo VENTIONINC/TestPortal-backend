@@ -1,58 +1,28 @@
 // Copyright 2026 VENSOLUTIONSGROUP LTD
 // SPDX-License-Identifier: Apache-2.0
 
-import { readdir, readFile } from "node:fs/promises";
-import path from "node:path";
-
 import JSZip from "jszip";
+import { Prisma } from "@prisma/client";
 
 import type {
-  ConfiguredSkill,
+  DeleteSkillPackageOutcome,
   SkillArchiveDownload,
   SkillCatalogEntry,
   SkillDetail,
-  SkillDownload,
-  SkillFrontmatter,
+  SkillPackageUploadInput,
 } from "@/types/skills";
-
-const DEFAULT_SKILLS: ConfiguredSkill[] = [
-  {
-    name: "developer-code-assistant",
-    title: "Developer Code Analysis Assistant",
-    category: "development",
-    relativePath: "src/skills/developer-code-assistant/SKILL.md",
-  },
-  {
-    name: "definition-of-ready-assistant",
-    title: "Definition of Ready Assistant",
-    category: "planning",
-    relativePath: "src/skills/definition-of-ready-assistant/SKILL.md",
-  },
-  {
-    name: "test-portal-assistant",
-    title: "Test Portal Report Generator",
-    category: "reporting",
-    relativePath: "src/skills/test-portal-assistant/SKILL.md",
-  },
-  {
-    name: "issue-analysis-assistant",
-    title: "Issue Analysis & Root Cause Assistant",
-    category: "analysis",
-    relativePath: "src/skills/issue-analysis-assistant/SKILL.md",
-  },
-  {
-    name: "environment-performance-assistant",
-    title: "Environment & Performance Analysis Assistant",
-    category: "performance",
-    relativePath: "src/skills/environment-performance-assistant/SKILL.md",
-  },
-  {
-    name: "software-documentation-assistant",
-    title: "Software Documentation Architect",
-    category: "documentation",
-    relativePath: "src/skills/software-documentation-assistant/SKILL.md",
-  },
-];
+import {
+  readSkillPackageZip,
+  SKILL_ARTIFACT_PATH,
+  validateSkillName,
+  validateSkillPackage,
+} from "@/lib/skills/skillPackage";
+import {
+  skillModel,
+  type SkillDetailRecord,
+  type SkillMetadataRecord,
+  type SkillPackageRecord,
+} from "@/models/skillModel";
 
 export class SkillArtifactError extends Error {
   constructor(
@@ -64,81 +34,136 @@ export class SkillArtifactError extends Error {
   }
 }
 
-export class SkillArtifactService {
-  private readonly skillsByName: Map<string, ConfiguredSkill>;
-
+export class SkillMutationError extends Error {
   constructor(
-    private readonly configuredSkills: ConfiguredSkill[] = DEFAULT_SKILLS,
-    private readonly rootDirectory: string = process.cwd(),
+    message: string,
+    public readonly code:
+      | "CONFLICT"
+      | "FORBIDDEN"
+      | "NOT_FOUND"
+      | "VALIDATION",
   ) {
-    this.skillsByName = new Map(
-      configuredSkills.map((skill) => [skill.name, skill]),
-    );
+    super(message);
+    this.name = "SkillMutationError";
   }
+}
+
+interface SkillArtifactStore {
+  createSkillPackage(
+    data: Parameters<typeof skillModel.createSkillPackage>[0],
+  ): Promise<SkillMetadataRecord>;
+  deleteSkill(id: string): Promise<void>;
+  findDetailById(id: string): Promise<SkillDetailRecord | null>;
+  findManyMetadata(): Promise<SkillMetadataRecord[]>;
+  findMetadataById(id: string): Promise<SkillMetadataRecord | null>;
+  findMetadataByName(name: string): Promise<SkillMetadataRecord | null>;
+  findPackageById(id: string): Promise<SkillPackageRecord | null>;
+  replaceSkillPackage(
+    id: string,
+    data: Parameters<typeof skillModel.replaceSkillPackage>[1],
+  ): Promise<SkillMetadataRecord>;
+}
+
+export class SkillArtifactService {
+  constructor(private readonly skillStore: SkillArtifactStore = skillModel) {}
 
   async listSkills(): Promise<SkillCatalogEntry[]> {
-    const skills = await Promise.all(
-      this.configuredSkills.map((skill) => this.buildMetadata(skill)),
-    );
-
-    return skills.sort((left, right) => left.title.localeCompare(right.title));
+    const skills = await this.skillStore.findManyMetadata();
+    return skills.map((skill) => this.toCatalogEntry(skill));
   }
 
-  async getSkill(name: string): Promise<SkillDetail | null> {
-    const skill = this.skillsByName.get(name);
+  async createCustomSkill(
+    input: SkillPackageUploadInput,
+  ): Promise<SkillCatalogEntry> {
+    const packageData = await this.toCustomPackageData(input);
+    const conflict = await this.skillStore.findMetadataByName(packageData.name);
 
+    if (conflict) {
+      throw new SkillMutationError(
+        `Skill name '${packageData.name}' already exists`,
+        "CONFLICT",
+      );
+    }
+
+    try {
+      return this.toCatalogEntry(
+        await this.skillStore.createSkillPackage(packageData),
+      );
+    } catch (error) {
+      this.rethrowPersistenceMutationError(error, packageData.name);
+    }
+  }
+
+  async replaceCustomSkill(
+    id: string,
+    input: SkillPackageUploadInput,
+  ): Promise<SkillCatalogEntry> {
+    const existingSkill = await this.getMutableSkill(id);
+    const packageData = await this.toCustomPackageData(input);
+    const conflict = await this.skillStore.findMetadataByName(packageData.name);
+
+    if (conflict && conflict.id !== existingSkill.id) {
+      throw new SkillMutationError(
+        `Skill name '${packageData.name}' already exists`,
+        "CONFLICT",
+      );
+    }
+
+    try {
+      return this.toCatalogEntry(
+        await this.skillStore.replaceSkillPackage(id, packageData),
+      );
+    } catch (error) {
+      this.rethrowPersistenceMutationError(error, packageData.name);
+    }
+  }
+
+  async deleteCustomSkill(id: string): Promise<DeleteSkillPackageOutcome> {
+    await this.getMutableSkill(id);
+
+    try {
+      await this.skillStore.deleteSkill(id);
+    } catch (error) {
+      if (isPrismaError(error, "P2025")) {
+        throw new SkillMutationError("Skill not found", "NOT_FOUND");
+      }
+      throw error;
+    }
+
+    return { id };
+  }
+
+  async getSkill(id: string): Promise<SkillDetail | null> {
+    const skill = await this.skillStore.findDetailById(id);
     if (!skill) {
       return null;
     }
 
-    const artifact = await this.readArtifact(skill);
+    const artifact = this.getSkillArtifactFile(skill);
 
     return {
-      metadata: this.toCatalogEntry(skill, artifact.frontmatter),
-      content: artifact.content,
-    };
-  }
-
-  async downloadSkill(name: string): Promise<SkillDownload | null> {
-    const detail = await this.getSkill(name);
-
-    if (!detail) {
-      return null;
-    }
-
-    return {
-      content: detail.content,
-      contentType: "text/markdown; charset=utf-8",
-      filename: `${detail.metadata.name}-SKILL.md`,
+      metadata: this.toCatalogEntry(skill),
+      content: Buffer.from(artifact.content).toString("utf8"),
     };
   }
 
   async downloadSkillArchive(
-    name: string,
+    id: string,
   ): Promise<SkillArchiveDownload | null> {
-    const skill = this.skillsByName.get(name);
-
+    const skill = await this.skillStore.findPackageById(id);
     if (!skill) {
       return null;
     }
 
-    const skillDirectory = this.getSkillDirectory(skill);
+    this.assertPersistedSkillName(skill.name);
+
     const archive = new JSZip();
-    const filePaths = await this.listSkillFiles(skillDirectory);
 
-    await Promise.all(
-      filePaths.map(async (filePath) => {
-        const relativePath = path
-          .relative(skillDirectory, filePath)
-          .split(path.sep)
-          .join("/");
-        const content = await readFile(filePath);
-
-        archive.file(`${skill.name}/${relativePath}`, content, {
-          date: new Date(0),
-        });
-      }),
-    );
+    skill.packageFiles.forEach((file) => {
+      archive.file(`${skill.name}/${file.path}`, file.content, {
+        date: new Date(0),
+      });
+    });
 
     const content = await archive.generateAsync({
       type: "nodebuffer",
@@ -153,221 +178,135 @@ export class SkillArtifactService {
     };
   }
 
-  private async buildMetadata(
-    skill: ConfiguredSkill,
-  ): Promise<SkillCatalogEntry> {
-    const artifact = await this.readArtifact(skill);
-    return this.toCatalogEntry(skill, artifact.frontmatter);
-  }
+  private toCatalogEntry(skill: SkillMetadataRecord): SkillCatalogEntry {
+    this.assertPersistedSkillName(skill.name);
 
-  private async readArtifact(skill: ConfiguredSkill): Promise<{
-    content: string;
-    frontmatter: SkillFrontmatter;
-  }> {
-    const artifactPath = this.getSkillArtifactPath(skill);
-    const content = await readFile(artifactPath, "utf8");
-    const frontmatter = this.parseFrontmatter(content, skill.name);
-
-    return { content, frontmatter };
-  }
-
-  private getSkillDirectory(skill: ConfiguredSkill): string {
-    return path.dirname(this.getSkillArtifactPath(skill));
-  }
-
-  private getSkillArtifactPath(skill: ConfiguredSkill): string {
-    const rootPath = path.resolve(this.rootDirectory);
-    const artifactPath = path.resolve(rootPath, skill.relativePath);
-    const relativePath = path.relative(rootPath, artifactPath);
-
-    if (relativePath.startsWith("..") || path.isAbsolute(relativePath)) {
-      throw new SkillArtifactError(
-        `Skill artifact '${skill.name}' path escapes the configured root`,
-        "INVALID_ARTIFACT",
-      );
-    }
-
-    return artifactPath;
-  }
-
-  private async listSkillFiles(directory: string): Promise<string[]> {
-    const entries = await readdir(directory, { withFileTypes: true });
-    const files = await Promise.all(
-      entries.map(async (entry) => {
-        const entryPath = path.join(directory, entry.name);
-
-        if (entry.isDirectory()) {
-          return this.listSkillFiles(entryPath);
-        }
-
-        if (entry.isFile()) {
-          return [entryPath];
-        }
-
-        return [];
-      }),
-    );
-
-    return files.flat().sort((left, right) => left.localeCompare(right));
-  }
-
-  private toCatalogEntry(
-    skill: ConfiguredSkill,
-    frontmatter: SkillFrontmatter,
-  ): SkillCatalogEntry {
     const entry: SkillCatalogEntry = {
+      id: skill.id,
       name: skill.name,
       title: skill.title,
-      description: frontmatter.description,
+      description: skill.description,
       category: skill.category,
-      downloadUrl: `/api/v2/skills/${skill.name}/download`,
+      source: skill.source,
+      readOnly: skill.readOnly,
+      downloadUrl: `/api/v2/skills/${skill.id}/archive`,
     };
 
-    if (frontmatter.metadata?.version) {
-      entry.version = frontmatter.metadata.version;
+    if (skill.version) {
+      entry.version = skill.version;
     }
 
-    if (frontmatter.license) {
-      entry.license = frontmatter.license;
+    if (skill.license) {
+      entry.license = skill.license;
     }
 
-    if (frontmatter.compatibility) {
-      entry.compatibility = frontmatter.compatibility;
+    if (skill.compatibility) {
+      entry.compatibility = skill.compatibility;
     }
 
     return entry;
   }
 
-  private parseFrontmatter(
-    content: string,
-    skillName: string,
-  ): SkillFrontmatter {
-    if (!content.startsWith("---\n")) {
-      throw new SkillArtifactError(
-        `Skill artifact '${skillName}' is missing frontmatter`,
-        "INVALID_ARTIFACT",
+  private async getMutableSkill(id: string): Promise<SkillMetadataRecord> {
+    const skill = await this.skillStore.findMetadataById(id);
+
+    if (!skill) {
+      throw new SkillMutationError("Skill not found", "NOT_FOUND");
+    }
+
+    if (skill.readOnly) {
+      throw new SkillMutationError(
+        "Read-only system skills cannot be modified",
+        "FORBIDDEN",
       );
     }
 
-    const closingIndex = content.indexOf("\n---", 4);
-    if (closingIndex === -1) {
-      throw new SkillArtifactError(
-        `Skill artifact '${skillName}' has malformed frontmatter`,
-        "INVALID_ARTIFACT",
+    return skill;
+  }
+
+  private async toCustomPackageData(input: SkillPackageUploadInput) {
+    const title = input.title.trim();
+    const category = input.category.trim();
+
+    if (!title || !category) {
+      throw new SkillMutationError(
+        "Skill title and category are required",
+        "VALIDATION",
       );
     }
 
-    const frontmatter = this.parseYamlSubset(
-      content.slice(4, closingIndex),
-      skillName,
+    const validatedPackage = validateSkillPackage(
+      await readSkillPackageZip(input.packageBuffer),
     );
 
-    if (frontmatter.name !== skillName) {
-      throw new SkillArtifactError(
-        `Skill artifact '${skillName}' frontmatter name does not match catalog`,
-        "INVALID_ARTIFACT",
-      );
-    }
-
-    if (!frontmatter.description) {
-      throw new SkillArtifactError(
-        `Skill artifact '${skillName}' is missing a description`,
-        "INVALID_ARTIFACT",
-      );
-    }
-
-    return frontmatter;
-  }
-
-  private parseYamlSubset(
-    source: string,
-    skillName: string,
-  ): SkillFrontmatter {
-    const parsed: SkillFrontmatter = {
-      name: "",
-      description: "",
+    return {
+      name: validatedPackage.frontmatter.name,
+      title,
+      description: validatedPackage.frontmatter.description,
+      category,
+      source: "custom" as const,
+      readOnly: false,
+      packageHash: validatedPackage.packageHash,
+      files: validatedPackage.files,
+      ...(validatedPackage.frontmatter.metadata?.version
+        ? { version: validatedPackage.frontmatter.metadata.version }
+        : {}),
+      ...(validatedPackage.frontmatter.license
+        ? { license: validatedPackage.frontmatter.license }
+        : {}),
+      ...(validatedPackage.frontmatter.compatibility
+        ? { compatibility: validatedPackage.frontmatter.compatibility }
+        : {}),
     };
-    let currentObjectKey: "metadata" | null = null;
-
-    source.split("\n").forEach((line) => {
-      if (!line.trim()) {
-        return;
-      }
-
-      const nestedMatch = line.match(/^ {2}([A-Za-z0-9_-]+):\s*(.*)$/);
-      if (nestedMatch && currentObjectKey === "metadata") {
-        const key = nestedMatch[1];
-        const value = nestedMatch[2] ?? "";
-        if (!key) {
-          throw new SkillArtifactError(
-            `Skill artifact '${skillName}' contains unsupported frontmatter`,
-            "INVALID_ARTIFACT",
-          );
-        }
-        parsed.metadata ??= {};
-        parsed.metadata[key] = this.parseScalar(value);
-        return;
-      }
-
-      const topLevelMatch = line.match(/^([A-Za-z0-9_-]+):\s*(.*)$/);
-      if (!topLevelMatch) {
-        throw new SkillArtifactError(
-          `Skill artifact '${skillName}' contains unsupported frontmatter`,
-          "INVALID_ARTIFACT",
-        );
-      }
-
-      const key = topLevelMatch[1];
-      const value = topLevelMatch[2] ?? "";
-      if (!key) {
-        throw new SkillArtifactError(
-          `Skill artifact '${skillName}' contains unsupported frontmatter`,
-          "INVALID_ARTIFACT",
-        );
-      }
-      currentObjectKey = null;
-
-      if (key === "metadata" && value === "") {
-        parsed.metadata = {};
-        currentObjectKey = "metadata";
-        return;
-      }
-
-      if (key === "name") {
-        parsed.name = this.parseScalar(value);
-        return;
-      }
-
-      if (key === "description") {
-        parsed.description = this.parseScalar(value);
-        return;
-      }
-
-      if (key === "license") {
-        parsed.license = this.parseScalar(value);
-        return;
-      }
-
-      if (key === "compatibility") {
-        parsed.compatibility = this.parseScalar(value);
-      }
-    });
-
-    return parsed;
   }
 
-  private parseScalar(value: string): string {
-    const trimmed = value.trim();
-
-    if (
-      (trimmed.startsWith("\"") && trimmed.endsWith("\"")) ||
-      (trimmed.startsWith("'") && trimmed.endsWith("'"))
-    ) {
-      return trimmed.slice(1, -1);
+  private rethrowPersistenceMutationError(
+    error: unknown,
+    skillName: string,
+  ): never {
+    if (isPrismaError(error, "P2002")) {
+      throw new SkillMutationError(
+        `Skill name '${skillName}' already exists`,
+        "CONFLICT",
+      );
     }
 
-    return trimmed;
+    if (isPrismaError(error, "P2025")) {
+      throw new SkillMutationError("Skill not found", "NOT_FOUND");
+    }
+
+    throw error;
+  }
+
+  private getSkillArtifactFile(skill: SkillDetailRecord | SkillPackageRecord) {
+    const artifact = skill.packageFiles.find((file) => file.path === SKILL_ARTIFACT_PATH);
+
+    if (!artifact) {
+      throw new SkillArtifactError(
+        `Persisted skill '${skill.name}' is missing SKILL.md`,
+        "INVALID_ARTIFACT",
+      );
+    }
+
+    return artifact;
+  }
+
+  private assertPersistedSkillName(name: string): void {
+    try {
+      validateSkillName(name);
+    } catch {
+      throw new SkillArtifactError(
+        `Persisted skill '${name}' has an unsafe name`,
+        "INVALID_ARTIFACT",
+      );
+    }
   }
 }
 
 export const skillArtifactService = new SkillArtifactService();
+
+function isPrismaError(error: unknown, code: string): boolean {
+  return (
+    error instanceof Prisma.PrismaClientKnownRequestError && error.code === code
+  );
+}

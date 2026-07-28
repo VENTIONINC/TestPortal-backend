@@ -61,4 +61,14 @@ describe("anomalyDetector.detect", () => {
       ]),
     ).toEqual([]);
   });
+
+  it("ignores skipped tests when calculating pass-rate anomalies", () => {
+    const result = anomalyDetector.detect([
+      { date: "2026-01-01", total: 10, passed: 8, failed: 1, skipped: 1 },
+      { date: "2026-01-02", total: 10, passed: 8, failed: 1, skipped: 1 },
+      { date: "2026-01-03", total: 10, passed: 8, failed: 1, skipped: 1 },
+    ]);
+
+    expect(result).toEqual([]);
+  });
 });

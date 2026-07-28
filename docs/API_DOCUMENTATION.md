@@ -31,6 +31,82 @@
 - Use tools like `@rtk-query/codegen-openapi` or `openapi-typescript` to generate TypeScript types and API hooks
 - Example: `npx openapi-typescript http://localhost:3001/api/openapi.json --output ./types/api.ts`
 
+## Authentication Routes
+
+### GET `/api/v2/auth/config`
+
+- **Description:** Returns the active authentication provider and capability flags so the frontend can render the correct login experience for the current deployment.
+- **Response:**
+  - `200 OK`
+    ```json
+    {
+      "provider": "local",
+      "capabilities": {
+        "passwordLogin": true,
+        "passwordSignup": true,
+        "requiresRedirectLogin": false,
+        "supportsNewPasswordChallenge": false
+      }
+    }
+    ```
+
+### POST `/api/v2/auth/signup`
+
+- **Description:** Creates a user account through the configured auth provider.
+- **Response:** Returns the created application user and, when applicable, a provider-specific success message such as Cognito email verification guidance.
+
+### POST `/api/v2/auth/login`
+
+- **Description:** Authenticates the submitted credentials using the active provider.
+- **Response:**
+  - `200 OK` with application `user`, `accessToken`, and `refreshToken` when login succeeds
+  - `200 OK` with `{ "status": "NEW_PASSWORD_REQUIRED", "message": "..." }` when the Cognito provider requires the first-login password challenge
+  - `401 Unauthorized` when credentials are invalid
+
+### POST `/api/v2/auth/refresh-token`
+
+- **Description:** Exchanges a valid refresh token for a new internal JWT access/refresh token pair.
+
+### POST `/api/v2/auth/logout`
+
+- **Description:** Signs out through the active auth provider. Local auth returns a successful no-op message because protected API access is still governed by the internal JWT contract.
+
+### Compatibility Routes
+
+- `POST /api/v2/users/signup`
+- `POST /api/v2/users/login`
+- `POST /api/v2/users/signout`
+- `POST /api/v2/users/refresh-token`
+
+These remain available as compatibility aliases while the provider-neutral `/api/v2/auth/*` routes become the primary documented interface.
+
+## Skills Routes
+
+All skills routes require bearer authentication.
+
+### GET `/api/v2/skills`
+
+Returns persisted skill metadata. Each entry's `downloadUrl` points to
+`/api/v2/skills/{id}/archive`, the complete portable ZIP package and the only
+supported installable download.
+
+### GET `/api/v2/skills/{id}`
+
+Returns metadata and the skill's `SKILL.md` Markdown as preview/source content.
+This content is readable for inspection but is not a complete installable
+artifact; use `downloadUrl` to retrieve the ZIP package.
+
+### GET `/api/v2/skills/{id}/archive`
+
+Downloads the complete portable ZIP package, including `SKILL.md` and bundled
+resources.
+
+### Breaking change: raw Markdown downloads removed
+
+`GET /api/v2/skills/{id}/download` is no longer available. Migrate clients to
+the catalog-provided `downloadUrl` or directly to
+`GET /api/v2/skills/{id}/archive`.
+
 ## Related Documentation
 
 - [How to Inspect the MCP Server](INSPECT_MCP_SERVER.md)

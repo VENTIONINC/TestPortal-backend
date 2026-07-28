@@ -1,0 +1,4 @@
+interface:
+  display_name: "Create Branch DB"
+  short_description: "Create an isolated DB per branch"
+  default_prompt: "Use $create-branch-db to create a fresh database for the current branch and print the DATABASE_URL."

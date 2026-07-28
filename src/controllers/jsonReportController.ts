@@ -217,6 +217,9 @@ export const jsonReportController = {
   /**
    * Transform raw JSON report to the expected format
    */
+  // Raw imported reports are intentionally loosely typed because upstream
+  // Playwright JSON payloads vary between versions.
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   _transformRawReport: async (rawJsonReport: any) => {
     const config = rawJsonReport.config ?? {};
     config.env = config.env ?? "staging";
@@ -227,6 +230,7 @@ export const jsonReportController = {
     const tests = jsonReportController
       ._getTestCases(rawJsonReport.suites ?? [])
       .map((test) => {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         test.results = test.results.map((result: any) => {
           const reportPortalLink =
             result.reportPortalLink ??
@@ -251,6 +255,7 @@ export const jsonReportController = {
   /**
    * Extract and flatten test cases from suites (like seed script does)
    */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   _getTestCases: (suitesList: any[], testCases: any[] = []) => {
     for (const { suites, specs } of suitesList) {
       if (suites) {
@@ -259,6 +264,7 @@ export const jsonReportController = {
 
       if (specs) {
         for (const spec of specs) {
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
           const flatSpecs = spec.tests.map((t: any) => ({
             ok: spec.ok,
             custom_id: spec.id,
@@ -274,6 +280,7 @@ export const jsonReportController = {
             expectedStatus: t.expectedStatus,
             projectId: t.projectId,
             projectName: t.projectName,
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             results: t.results.map((r: any) => {
               const { /* errors, */ ...rest } = r;
               const maxSize = 10000;

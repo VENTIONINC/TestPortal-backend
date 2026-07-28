@@ -3,17 +3,23 @@
 
 import { Router } from "express";
 import { userController } from "@/controllers/userController";
-import { authMiddleware } from "@/middleware/authMiddleware";
+import { authMiddleware, requireRole } from "@/middleware/authMiddleware";
 
 const router = Router();
 
 // PUBLIC ROUTES
+router.get("/v2/auth/config", userController.getAuthConfig);
+router.post("/v2/auth/signup", userController.authSignup);
+router.post("/v2/auth/login", userController.authLogin);
+router.post("/v2/auth/refresh-token", userController.refreshToken);
+router.post("/v2/auth/logout", userController.authLogout);
+
 router.post("/v2/users/refresh-token", userController.refreshToken);
 
-// COGNITO AUTHENTICATION ROUTES
-router.post("/v2/users/signup", userController.cognitoSignup);
-router.post("/v2/users/login", userController.cognitoLogin);
-router.post("/v2/users/signout", userController.cognitoSignOut);
+// Compatibility authentication routes
+router.post("/v2/users/signup", userController.authSignup);
+router.post("/v2/users/login", userController.authLogin);
+router.post("/v2/users/signout", userController.authLogout);
 
 // PROTECTED ROUTES
 router.get("/v2/users/:userId", authMiddleware, userController.getUserById);
@@ -34,6 +40,38 @@ router.delete(
   "/v2/users/:userId/mcp-token",
   authMiddleware,
   userController.revokeMcpToken,
+);
+
+// ADMIN USER MANAGEMENT ROUTES
+router.get(
+  "/v2/admin/users",
+  authMiddleware,
+  requireRole("admin"),
+  userController.listUsers,
+);
+router.post(
+  "/v2/admin/users/:userId/approve",
+  authMiddleware,
+  requireRole("admin"),
+  userController.approveUser,
+);
+router.post(
+  "/v2/admin/users/:userId/suspend",
+  authMiddleware,
+  requireRole("admin"),
+  userController.suspendUser,
+);
+router.post(
+  "/v2/admin/users/:userId/restore",
+  authMiddleware,
+  requireRole("admin"),
+  userController.restoreUser,
+);
+router.patch(
+  "/v2/admin/users/:userId/role",
+  authMiddleware,
+  requireRole("admin"),
+  userController.changeUserRole,
 );
 
 export default router;

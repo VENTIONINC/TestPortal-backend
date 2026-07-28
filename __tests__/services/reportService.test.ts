@@ -35,6 +35,7 @@ describe("reportService.generatePdf", () => {
           passed: 9,
           failed: 1,
           skipped: 0,
+          timedOut: 0,
           duration: 1000,
           issues: {
             bug: 1,

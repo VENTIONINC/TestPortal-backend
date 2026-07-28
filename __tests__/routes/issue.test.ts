@@ -52,6 +52,8 @@ jest.mock("@/models/userModel", () => ({
           updatedAt: new Date(),
           name: data.name,
           email: data.email,
+          status: "active",
+          role: "member",
           passwordHash: data.passwordHash,
           cognitoUserId: null,
           mcpToken: null,
