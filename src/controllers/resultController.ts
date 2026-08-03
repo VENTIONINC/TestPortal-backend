@@ -85,7 +85,9 @@ const buildExportFileName = (
 export const resultController = {
   getResults: async (req: Request, res: Response): Promise<void> => {
     try {
-      const params = buildResultParams(req.query as Record<string, string>);
+      const params = buildResultParams(
+        req.query as Record<string, string | string[] | undefined>,
+      );
 
       // Validate required projectId parameter
       if (!params.projectId) {

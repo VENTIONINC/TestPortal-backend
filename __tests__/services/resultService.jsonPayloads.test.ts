@@ -102,8 +102,10 @@ describe("resultService JSON payload normalization", () => {
   });
 
   it("normalizes getResults payloads into array-shaped fields", async () => {
-    mockResultModel.findMany.mockResolvedValue([buildRawResult()]);
-    mockResultModel.count.mockResolvedValue(1);
+    mockResultModel.findMany
+      .mockResolvedValueOnce([buildRawResult()])
+      .mockResolvedValueOnce([buildRawResult()]);
+    mockResultModel.count.mockResolvedValueOnce(1);
 
     const response = await resultService.getResults({
       projectId: "project-1",
@@ -125,6 +127,81 @@ describe("resultService JSON payload normalization", () => {
         },
       ],
     });
+    expect(response.rawResults[0]).toMatchObject({
+      spec: {
+        tags: ["smoke", "ui"],
+        annotations: ["owner:qa"],
+      },
+    });
+    expect(response.rawTotal).toBe(1);
+  });
+
+  it("limits raw results to unique specs from the filtered page", async () => {
+    const secondFilteredResult = buildRawResult();
+    secondFilteredResult.id = "result-2";
+    secondFilteredResult.specId = "spec-1";
+    mockResultModel.findMany
+      .mockResolvedValueOnce([buildRawResult(), secondFilteredResult])
+      .mockResolvedValueOnce([buildRawResult()]);
+    mockResultModel.count.mockResolvedValue(0);
+
+    await resultService.getResults({
+      projectId: "project-1",
+      from: "2026-07-01",
+      to: "2026-07-07",
+      dates: ["2026-07-02", "2026-07-04"],
+      status: "failed",
+      tag: "smoke",
+      page: 2,
+      limit: 25,
+    });
+
+    expect(mockResultModel.findMany).toHaveBeenNthCalledWith(
+      1,
+      {
+        projectId: "project-1",
+        from: "2026-07-01",
+        to: "2026-07-07",
+        dates: ["2026-07-02", "2026-07-04"],
+        status: "failed",
+        tag: "smoke",
+      },
+      2,
+      25,
+    );
+    expect(mockResultModel.findMany).toHaveBeenNthCalledWith(2, {
+      projectId: "project-1",
+      from: "2026-07-01",
+      to: "2026-07-07",
+      specRecordIds: ["spec-1"],
+    });
+    expect(mockResultModel.count).toHaveBeenCalledWith({
+      projectId: "project-1",
+      from: "2026-07-01",
+      to: "2026-07-07",
+      dates: ["2026-07-02", "2026-07-04"],
+      status: "failed",
+      tag: "smoke",
+    });
+    expect(mockResultModel.count).toHaveBeenCalledTimes(1);
+  });
+
+  it("skips the raw query when no cards match the filters", async () => {
+    mockResultModel.findMany.mockResolvedValue([]);
+    mockResultModel.count.mockResolvedValue(0);
+
+    const response = await resultService.getResults({
+      projectId: "project-1",
+      from: "2026-07-01",
+      to: "2026-07-07",
+      dates: ["2026-07-02"],
+      status: "failed",
+    });
+
+    expect(mockResultModel.findMany).toHaveBeenCalledTimes(1);
+    expect(mockResultModel.count).toHaveBeenCalledTimes(1);
+    expect(response.rawResults).toEqual([]);
+    expect(response.rawTotal).toBe(0);
   });
 
   it("normalizes getResultById payloads into array-shaped fields", async () => {
