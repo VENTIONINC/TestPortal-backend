@@ -159,6 +159,40 @@ describe("resultModel filtering", () => {
 describe("resultModel issue statistics", () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    findManyMock.mockImplementation(() => Promise.resolve([]));
+  });
+
+  it("requests only the fields required to calculate statistics", async () => {
+    await resultModel.getStats({ projectId: "project-1" });
+
+    expect(findManyMock).toHaveBeenCalledTimes(1);
+    expect(findManyMock).toHaveBeenCalledWith({
+      where: {
+        spec: { projectId: "project-1" },
+        execution: { projectId: "project-1" },
+      },
+      select: {
+        id: true,
+        status: true,
+        analysisCategory: true,
+        analysisFeedbackCategory: true,
+        spec: { select: { id: true } },
+        execution: { select: { id: true } },
+        errors: {
+          select: {
+            id: true,
+            message: true,
+            assumptions: {
+              select: {
+                id: true,
+                issue: { select: { id: true, name: true } },
+              },
+            },
+          },
+        },
+      },
+    });
+
   });
 
   it("aggregates by issue ID and distinct linked result with derived summaries", async () => {

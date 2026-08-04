@@ -66,6 +66,31 @@ export interface AnalysisExportRow {
   };
 }
 
+const resultStatsSelect = Prisma.validator<Prisma.ResultSelect>()({
+  id: true,
+  status: true,
+  analysisCategory: true,
+  analysisFeedbackCategory: true,
+  spec: { select: { id: true } },
+  execution: { select: { id: true } },
+  errors: {
+    select: {
+      id: true,
+      message: true,
+      assumptions: {
+        select: {
+          id: true,
+          issue: { select: { id: true, name: true } },
+        },
+      },
+    },
+  },
+});
+
+type ResultStatsRow = Prisma.ResultGetPayload<{
+  select: typeof resultStatsSelect;
+}>;
+
 export const resultModel = {
   findById: async (
     id: number | string,
@@ -574,52 +599,19 @@ export const resultModel = {
       whereClause.OR = dateRanges;
     }
 
-    // Single database query to get all results with relations
-    const results = await dbClient.result.findMany({
+    // Single database query to get all results with only the statistics fields.
+    const results: ResultStatsRow[] = await dbClient.result.findMany({
       where: whereClause,
-      include: {
-        spec: true,
-        execution: true,
-        errors: {
-          include: {
-            assumptions: {
-              include: {
-                issue: true,
-              },
-            },
-          },
-        },
-      },
+      select: resultStatsSelect,
     });
 
-    // Initialize tracking maps (same approach as frontend)
-    const specMap = new Map<
-      string,
-      {
-        id: string;
-        key: string;
-        title: string;
-        file: string;
-        tags: Prisma.JsonValue;
-      }
-    >();
-    const executionMap = new Map<
-      string,
-      { id: string; environment: string; type: string }
-    >();
-    const errorMap = new Map<string, { id: string; message: string | null }>();
-    const assumptionMap = new Map<
-      string,
-      { id: string; isConfirmed: boolean }
-    >();
-    const resultMap = new Map<
-      string,
-      { id: string; status: string; startTime: Date }
-    >();
-    const issueMap = new Map<
-      string,
-      { id: string; name: string | null }
-    >();
+    // Track unique entity IDs and issue names for final counts.
+    const specIds = new Set<string>();
+    const executionIds = new Set<string>();
+    const errorIds = new Set<string>();
+    const assumptionIds = new Set<string>();
+    const resultIds = new Set<string>();
+    const issueMap = new Map<string, string>();
 
     // Local tracking for errors and distinct results linked to each issue.
     const errorCounts = new Map<string, number>();
@@ -659,16 +651,13 @@ export const resultModel = {
       }
 
       // Track unique entities
-      if (!specMap.has(result.spec.id))
-        specMap.set(result.spec.id, result.spec);
-      if (!executionMap.has(result.execution.id))
-        executionMap.set(result.execution.id, result.execution);
-      if (!resultMap.has(result.id)) resultMap.set(result.id, result);
+      specIds.add(result.spec.id);
+      executionIds.add(result.execution.id);
+      resultIds.add(result.id);
 
       // Process errors and assumptions
       result.errors?.forEach((error) => {
-        const errorKey = error.id;
-        if (!errorMap.has(errorKey)) errorMap.set(errorKey, error);
+        errorIds.add(error.id);
 
         // Count error messages
         const errorMessage = error.message ?? "Unknown Error";
@@ -676,13 +665,11 @@ export const resultModel = {
 
         // Process assumptions
         error.assumptions?.forEach((assumption) => {
-          const assumptionKey = assumption.id;
-          if (!assumptionMap.has(assumptionKey))
-            assumptionMap.set(assumptionKey, assumption);
+          assumptionIds.add(assumption.id);
           // Process issues
           if (assumption.issue) {
             const issue = assumption.issue;
-            if (!issueMap.has(issue.id)) issueMap.set(issue.id, issue);
+            if (!issueMap.has(issue.id)) issueMap.set(issue.id, issue.name);
 
             const linkedResults =
               issueResults.get(issue.id) ??
@@ -706,12 +693,12 @@ export const resultModel = {
     }
 
     // Set final counts
-    stats.entityCounts.specs = specMap.size;
-    stats.entityCounts.results = resultMap.size;
-    stats.entityCounts.executions = executionMap.size;
+    stats.entityCounts.specs = specIds.size;
+    stats.entityCounts.results = resultIds.size;
+    stats.entityCounts.executions = executionIds.size;
     stats.entityCounts.issues = issueMap.size;
-    stats.entityCounts.errors = errorMap.size;
-    stats.entityCounts.assumptions = assumptionMap.size;
+    stats.entityCounts.errors = errorIds.size;
+    stats.entityCounts.assumptions = assumptionIds.size;
 
     // Calculate total status count
     stats.byStatusTotal = Object.values(stats.byStatus).reduce(
@@ -730,7 +717,7 @@ export const resultModel = {
       .slice(0, 10)
       .map(([issueId, linkedResults]) => ({
         id: issueId,
-        title: issueMap.get(issueId)?.name ?? "Unknown Issue Name",
+        title: issueMap.get(issueId) ?? "Unknown Issue Name",
         count: linkedResults.size,
         categorySummary: buildIssueCategorySummary(
           Array.from(linkedResults.values()),
