@@ -10,6 +10,7 @@ export interface ResultFilters {
   projectId: string;
   tag?: string;
   specId?: string;
+  specRecordIds?: string[];
   specFile?: string;
   specName?: string;
   environment?: string;
@@ -20,6 +21,7 @@ export interface ResultFilters {
   issueName?: string;
   from?: string;
   to?: string;
+  dates?: string[];
 }
 
 export interface AnalysisExportFilters {
@@ -99,12 +101,13 @@ export const resultModel = {
   findMany: async (
     filters: ResultFilters,
     page = 1,
-    limit = 1000,
+    limit?: number,
   ): Promise<ResultWithRelations[]> => {
     const {
       projectId,
       tag,
       specId,
+      specRecordIds,
       specFile,
       specName,
       environment,
@@ -115,6 +118,7 @@ export const resultModel = {
       issueName,
       from,
       to,
+      dates,
     } = filters;
 
     let toDate: Date | undefined;
@@ -129,6 +133,7 @@ export const resultModel = {
     whereClause.spec = {};
     whereClause.spec.projectId = projectId;
     if (specId) whereClause.spec.key = specId;
+    if (specRecordIds) whereClause.spec.id = { in: specRecordIds };
     if (specFile) whereClause.spec.file = { contains: specFile };
     if (specName) whereClause.spec.title = { contains: specName };
     if (tag) whereClause.spec.tags = { array_contains: [tag] };
@@ -243,10 +248,35 @@ export const resultModel = {
       if (toDate) whereClause.startTime.lte = toDate;
     }
 
+    if (dates?.length) {
+      const selectedDatesCondition: Prisma.ResultWhereInput = {
+        OR: dates.map((date) => {
+          const start = new Date(date);
+          const end = new Date(date);
+          end.setUTCDate(end.getUTCDate() + 1);
+
+          return { startTime: { gte: start, lt: end } };
+        }),
+      };
+      const existingAnd = whereClause.AND;
+      whereClause.AND = [
+        ...(Array.isArray(existingAnd)
+          ? existingAnd
+          : existingAnd
+            ? [existingAnd]
+            : []),
+        selectedDatesCondition,
+      ];
+    }
+
     return (await dbClient.result.findMany({
       where: whereClause,
-      skip: (page - 1) * limit,
-      take: Number(limit),
+      ...(limit === undefined
+        ? {}
+        : {
+            skip: (page - 1) * limit,
+            take: Number(limit),
+          }),
       orderBy: {
         startTime: "desc", // Most recent results first
       },
@@ -281,6 +311,7 @@ export const resultModel = {
       issueName,
       from,
       to,
+      dates,
     } = filters;
 
     let toDate: Date | undefined;
@@ -408,6 +439,27 @@ export const resultModel = {
       whereClause.startTime = {};
       if (from) whereClause.startTime.gte = new Date(from);
       if (toDate) whereClause.startTime.lte = toDate;
+    }
+
+    if (dates?.length) {
+      const selectedDatesCondition: Prisma.ResultWhereInput = {
+        OR: dates.map((date) => {
+          const start = new Date(date);
+          const end = new Date(date);
+          end.setUTCDate(end.getUTCDate() + 1);
+
+          return { startTime: { gte: start, lt: end } };
+        }),
+      };
+      const existingAnd = whereClause.AND;
+      whereClause.AND = [
+        ...(Array.isArray(existingAnd)
+          ? existingAnd
+          : existingAnd
+            ? [existingAnd]
+            : []),
+        selectedDatesCondition,
+      ];
     }
 
     return await dbClient.result.count({

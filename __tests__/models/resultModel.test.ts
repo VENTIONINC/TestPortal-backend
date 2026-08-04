@@ -18,7 +18,7 @@ jest.mock("@/prisma/client", () => ({
 
 import { resultModel } from "@/models/resultModel";
 
-describe("resultModel tag filtering", () => {
+describe("resultModel filtering", () => {
   beforeEach(() => {
     jest.clearAllMocks();
     (
@@ -66,6 +66,90 @@ describe("resultModel tag filtering", () => {
               array_contains: ["smoke"],
             },
           }),
+        }),
+      }),
+    );
+  });
+
+  it("limits raw results to the supplied spec record IDs", async () => {
+    await resultModel.findMany({
+      projectId: "project-1",
+      from: "2026-07-01",
+      to: "2026-07-07",
+      specRecordIds: ["spec-1", "spec-2"],
+    });
+
+    expect(findManyMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: expect.objectContaining({
+          spec: expect.objectContaining({
+            projectId: "project-1",
+            id: { in: ["spec-1", "spec-2"] },
+          }),
+          startTime: {
+            gte: new Date("2026-07-01T00:00:00.000Z"),
+            lte: new Date("2026-07-08T00:00:00.000Z"),
+          },
+        }),
+      }),
+    );
+  });
+
+  it("limits findMany to each selected calendar day", async () => {
+    await resultModel.findMany({
+      projectId: "project-1",
+      from: "2026-07-01",
+      to: "2026-07-07",
+      dates: ["2026-07-02", "2026-07-04"],
+    });
+
+    expect(findManyMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: expect.objectContaining({
+          AND: expect.arrayContaining([
+            {
+              OR: [
+                {
+                  startTime: {
+                    gte: new Date("2026-07-02T00:00:00.000Z"),
+                    lt: new Date("2026-07-03T00:00:00.000Z"),
+                  },
+                },
+                {
+                  startTime: {
+                    gte: new Date("2026-07-04T00:00:00.000Z"),
+                    lt: new Date("2026-07-05T00:00:00.000Z"),
+                  },
+                },
+              ],
+            },
+          ]),
+        }),
+      }),
+    );
+  });
+
+  it("applies selected calendar days to count", async () => {
+    await resultModel.count({
+      projectId: "project-1",
+      dates: ["2026-07-02"],
+    });
+
+    expect(countMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: expect.objectContaining({
+          AND: expect.arrayContaining([
+            {
+              OR: [
+                {
+                  startTime: {
+                    gte: new Date("2026-07-02T00:00:00.000Z"),
+                    lt: new Date("2026-07-03T00:00:00.000Z"),
+                  },
+                },
+              ],
+            },
+          ]),
         }),
       }),
     );

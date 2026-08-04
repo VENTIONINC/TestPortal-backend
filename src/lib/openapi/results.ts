@@ -117,7 +117,15 @@ const ResultSchema = z
 const ResultsListResponseSchema = z
   .object({
     results: z.array(ResultSchema),
+    rawResults: z
+      .array(ResultSchema)
+      .describe("Unfiltered period results for specs in the current results page"),
     total: z.number().int().nonnegative(),
+    rawTotal: z
+      .number()
+      .int()
+      .nonnegative()
+      .describe("Number of raw results returned for the current results page"),
     page: z.number().int().positive(),
     totalPages: z.number().int().nonnegative(),
   })
@@ -240,6 +248,7 @@ export function registerResultRoutes(registry: OpenAPIRegistry) {
         issueName: z.string().optional(),
         from: z.string().optional(),
         to: z.string().optional(),
+        dates: z.array(z.string()).optional(),
         page: z.number().default(1).optional(),
         limit: z.number().default(1000).optional(),
       }),

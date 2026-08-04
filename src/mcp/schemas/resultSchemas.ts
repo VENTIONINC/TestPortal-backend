@@ -18,6 +18,7 @@ export const getResultsSchema: MCPToolSchema = {
   status: z.string().optional(),
   from: z.string().optional(),
   to: z.string().optional(),
+  dates: z.array(z.string()).optional(),
   page: z.number().default(1).optional(),
   limit: z.number().default(1000).optional(),
 };
@@ -37,4 +38,3 @@ export const getResultsStatsSchema: MCPToolSchema = {
   projectId: z.string(),
   dates: z.array(z.string()).optional(),
 };
-

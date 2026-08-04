@@ -28,7 +28,9 @@ const logger = getLogger("result-service");
 
 interface GetResultsResponse {
   results: StructuredResultWithRelations[];
+  rawResults: StructuredResultWithRelations[];
   total: number;
+  rawTotal: number;
   page: number;
   totalPages: number;
 }
@@ -49,6 +51,7 @@ export const resultService = {
       issueName,
       from,
       to,
+      dates,
       page = 1,
       limit = 1000,
     } = params;
@@ -74,13 +77,29 @@ export const resultService = {
     if (issueName) filters.issueName = issueName;
     if (from) filters.from = from;
     if (to) filters.to = to;
+    if (dates) filters.dates = dates;
 
-    const results = await resultModel.findMany(filters, page, limit);
-    const totalResults = await resultModel.count(filters);
+    const [results, totalResults] = await Promise.all([
+      resultModel.findMany(filters, page, limit),
+      resultModel.count(filters),
+    ]);
+
+    const specRecordIds = [
+      ...new Set(results.map((result) => result.spec.id)),
+    ];
+    const rawFilters: ResultFilters = { projectId, specRecordIds };
+    if (from) rawFilters.from = from;
+    if (to) rawFilters.to = to;
+
+    const rawResults = specRecordIds.length
+      ? await resultModel.findMany(rawFilters)
+      : [];
 
     return {
       results: results.map(normalizeResultPayload),
+      rawResults: rawResults.map(normalizeResultPayload),
       total: totalResults,
+      rawTotal: rawResults.length,
       page: Number(page),
       totalPages: Math.ceil(totalResults / limit),
     };

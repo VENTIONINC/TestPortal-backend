@@ -54,6 +54,7 @@ export interface GetResultsParams extends PaginationParams {
   issueName?: string;
   from?: string;
   to?: string;
+  dates?: string[];
 }
 
 export interface GetResultByIdParams {
