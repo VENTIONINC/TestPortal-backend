@@ -40,7 +40,7 @@ const IssueCoreSchema = z
 
 const IssueCategorySummarySchema = z
   .object({
-    displayCategory: ResultCategorySchema.nullable(),
+    displayCategory: z.union([ResultCategorySchema, z.null()]),
     isMixed: z.boolean(),
     distribution: z.object({
       bug: z.number().int().nonnegative(),
@@ -54,9 +54,7 @@ const IssueCategorySummarySchema = z
   .openapi("IssueCategorySummary");
 
 const IssueReadSchema = IssueCoreSchema.extend({
-  categorySummary: IssueCategorySummarySchema.describe(
-    "Derived from distinct linked results. Human analysis feedback takes precedence over AI analysis category.",
-  ),
+  categorySummary: IssueCategorySummarySchema,
 }).openapi("IssueRead");
 
 const IssueStatisticsSchema = z

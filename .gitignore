@@ -82,6 +82,7 @@ mocks/
 
 # IDEs and editors
 .vscode/
+.idea/
 
 # Prompt testing datasets (generated files)
 __prompts-tests__/**/datasets/

@@ -7,6 +7,7 @@ import { z } from "zod";
 
 import { normalizeJsonArrayForText } from "@/lib/jsonPayloads";
 import getLogger from "@/lib/logger";
+import { getEffectiveResultCategory } from "@/lib/resultCategory";
 import { getErrorFormatterPrompt } from "@/prompts/error-formatter/v1.0.0";
 import {
   systemPrompt as errorSolutionSystemPrompt,
@@ -44,9 +45,13 @@ export const errorFormatterService = {
         name: "error_formatter_response",
       });
 
-      const userContent = `Name: ${input.name}
-Description: ${input.description}
-Category: ${input.category}`;
+      const userContent = [
+        `Name: ${input.name}`,
+        `Description: ${input.description}`,
+        ...(input.contextCategory
+          ? [`Context category: ${input.contextCategory}`]
+          : []),
+      ].join("\n");
 
       const result = await structuredModel.invoke([
         { role: "system", content: getErrorFormatterPrompt() },
@@ -64,7 +69,7 @@ Category: ${input.category}`;
   async suggestFromResult(
     resultId: string,
     projectId: string,
-  ): Promise<{ category: string; description: string }> {
+  ): Promise<{ description: string }> {
     try {
       if (!resultId) {
         throw new Error("Result ID is required");
@@ -110,12 +115,11 @@ Category: ${input.category}`;
           errorMessage: primaryError.message,
           errorStack: normalizeErrorStack(primaryError.callStack) ?? "(none)",
           errorLocation: primaryError.location ?? "(none)",
-          analysisCategory: analysis.category,
+          analysisCategory: analysis.category ?? "uncategorized",
         }),
       );
 
       return {
-        category: analysis.category,
         description: suggestion.description,
       };
     } catch (error) {
@@ -132,15 +136,20 @@ Category: ${input.category}`;
 const resolveResultAnalysis = async (
   result: StructuredResultWithRelations,
 ): Promise<{
-  category: string;
+  category: ReturnType<typeof getEffectiveResultCategory>;
   confidence?: number | null;
   conclusion?: string | null;
   errorQuality?: number | null;
   errorQualityConclusion?: string | null;
 }> => {
-  if (result.analysisCategory) {
+  const hasAuthoritativeFeedback =
+    result.analysisFeedbackCategory !== null &&
+    result.analysisFeedbackCategory !== undefined;
+  const effectiveCategory = getEffectiveResultCategory(result);
+
+  if (hasAuthoritativeFeedback || effectiveCategory) {
     return {
-      category: result.analysisCategory,
+      category: effectiveCategory,
       confidence: result.analysisConfidence ?? null,
       conclusion: result.analysisConclusion ?? null,
       errorQuality: result.analysisErrorQuality ?? null,

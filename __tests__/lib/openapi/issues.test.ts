@@ -13,6 +13,24 @@ describe("issue OpenAPI contract", () => {
     expect(schemas).toHaveProperty("IssueRead");
     expect(schemas).toHaveProperty("IssueStatistics");
     expect(schemas).toHaveProperty("PaginatedIssueList");
+
+    expect(schemas.IssueRead).toMatchObject({
+      allOf: [
+        { $ref: "#/components/schemas/IssueCore" },
+        {
+          properties: {
+            categorySummary: { $ref: "#/components/schemas/IssueCategorySummary" },
+          },
+        },
+      ],
+    });
+    expect(schemas.IssueCategorySummary).toMatchObject({
+      properties: {
+        displayCategory: {
+          anyOf: expect.arrayContaining([{ type: "null" }]),
+        },
+      },
+    });
   });
 
   it("removes category writes and filtering while documenting derived reads", () => {

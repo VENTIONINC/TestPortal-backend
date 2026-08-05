@@ -159,9 +159,7 @@ const ResultsStatsSchema = z
         id: z.string().uuid(),
         title: z.string(),
         count: z.number(),
-        categorySummary: IssueCategorySummarySchema.describe(
-          "Derived from the same distinct linked results counted by count.",
-        ),
+        categorySummary: IssueCategorySummarySchema,
       }),
     ),
   })
