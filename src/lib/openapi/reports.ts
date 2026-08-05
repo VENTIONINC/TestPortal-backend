@@ -102,7 +102,7 @@ export function registerReportRoutes(registry: OpenAPIRegistry) {
     method: "post",
     path: "/api/v2/upload-json-report",
     description:
-      "Accepts JSON test report files for processing. Supports large files that exceed POST body size limits.",
+      "Accepts JSON test reports for any shared-workspace project from an active authenticated user. Project ownerId does not restrict uploads.",
     security: [{ BearerAuth: [] }],
     request: {
       body: {
@@ -158,7 +158,7 @@ export function registerReportRoutes(registry: OpenAPIRegistry) {
     method: "post",
     path: "/api/v2/upload-json-report-api-key",
     description:
-      "Accepts JSON test report files for processing with API key authentication. The project ID is automatically extracted from the validated API key. Supports large files and includes optional AI analysis of test failures.",
+      "Accepts JSON test reports using a scoped upload API key. The project and owner identifiers come from the matching active stored key record.",
     security: [{ ApiKeyAuth: [] }],
     request: {
       body: {

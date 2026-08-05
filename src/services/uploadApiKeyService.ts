@@ -155,8 +155,8 @@ export const uploadApiKeyService = {
   },
 
   /**
-   * Validate an API key and return project/owner information
-   * Uses HMAC verification - no database lookup needed for validation
+   * Validate an API key and return project/owner information.
+   * Signed identifiers must match the active stored record.
    */
   async validateApiKey(plainApiKey: string): Promise<ValidatedApiKey> {
     if (!plainApiKey) {
@@ -182,10 +182,18 @@ export const uploadApiKeyService = {
       throw new Error("API key has been revoked or does not exist");
     }
 
+    if (
+      keyRecord.apiKey !== plainApiKey.split(".")[0] ||
+      keyRecord.projectId !== validated.projectId ||
+      keyRecord.ownerId !== validated.ownerId
+    ) {
+      throw new Error("Invalid API key");
+    }
+
     return {
-      projectId: validated.projectId,
-      ownerId: validated.ownerId,
-      keyId: validated.keyId,
+      projectId: keyRecord.projectId,
+      ownerId: keyRecord.ownerId,
+      keyId: keyRecord.id,
     };
   },
 

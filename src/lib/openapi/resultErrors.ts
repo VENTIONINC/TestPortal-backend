@@ -222,7 +222,8 @@ export function registerResultErrorRoutes(registry: OpenAPIRegistry) {
   registry.registerPath({
     method: "get",
     path: "/api/v2/result-errors/{resultErrorId}",
-    description: "Retrieves a specific result error by ID (requires projectId)",
+    description:
+      "Retrieves a result error in a shared-workspace project (requires projectId; project ownership does not restrict access)",
     request: {
       params: z.object({
         resultErrorId: z.string().uuid(),
@@ -231,7 +232,7 @@ export function registerResultErrorRoutes(registry: OpenAPIRegistry) {
         projectId: z
           .string()
           .uuid()
-          .describe("Project ID to verify ownership of the result error"),
+          .describe("Project ID used to scope the result-error lookup"),
       }),
     },
     responses: {

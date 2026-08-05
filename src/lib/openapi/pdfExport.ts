@@ -110,7 +110,7 @@ export function registerPdfExportRoutes(registry: OpenAPIRegistry) {
     method: "post",
     path: "/api/v2/reports/pdf-export",
     description:
-      "Exports dashboard KPIs, trends, and failure breakdown as PDF. Optionally includes an AI-generated insights section when includeAiInsights is true.",
+      "Exports dashboard KPIs, trends, and failure breakdown for a shared-workspace project as PDF. Project ownerId does not restrict active authenticated users. Optionally includes AI-generated insights.",
     security: [{ BearerAuth: [] }],
     request: {
       body: {

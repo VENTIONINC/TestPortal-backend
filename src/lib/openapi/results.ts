@@ -222,7 +222,7 @@ export function registerResultRoutes(registry: OpenAPIRegistry) {
     method: "get",
     path: "/api/v2/results",
     description:
-      "Retrieves results with optional filtering (requires projectId)",
+      "Retrieves results from a shared-workspace project with optional filtering (requires projectId)",
     security: [{ BearerAuth: [] }],
     request: {
       query: z.object({
@@ -284,7 +284,8 @@ export function registerResultRoutes(registry: OpenAPIRegistry) {
   registry.registerPath({
     method: "get",
     path: "/api/v2/results/{resultId}",
-    description: "Retrieves a specific result by its ID (requires projectId)",
+    description:
+      "Retrieves a result in a shared-workspace project (requires projectId; project ownership does not restrict access)",
     security: [{ BearerAuth: [] }],
     request: {
       params: z.object({
@@ -294,7 +295,7 @@ export function registerResultRoutes(registry: OpenAPIRegistry) {
         projectId: z
           .string()
           .uuid()
-          .describe("Project ID to verify ownership of the result"),
+          .describe("Project ID used to scope the result lookup"),
       }),
     },
     responses: {
@@ -532,7 +533,7 @@ export function registerResultRoutes(registry: OpenAPIRegistry) {
     method: "delete",
     path: "/api/v2/results/{resultId}",
     description:
-      "Delete a specific result by its ID (requires projectId and authentication)",
+      "Deletes a result in a shared-workspace project (requires projectId and authentication)",
     security: [{ BearerAuth: [] }],
     request: {
       params: z.object({
@@ -544,7 +545,7 @@ export function registerResultRoutes(registry: OpenAPIRegistry) {
         projectId: z
           .string()
           .uuid()
-          .describe("Project ID to verify ownership of the result"),
+          .describe("Project ID used to scope the result deletion"),
       }),
     },
     responses: {
