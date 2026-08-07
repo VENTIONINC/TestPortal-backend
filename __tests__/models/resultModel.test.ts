@@ -6,12 +6,16 @@ import { jest } from "@jest/globals";
 
 const findManyMock: jest.Mock = jest.fn();
 const countMock: jest.Mock = jest.fn();
+const specFindManyMock: jest.Mock = jest.fn();
 
 jest.mock("@/prisma/client", () => ({
   dbClient: {
     result: {
       findMany: findManyMock,
       count: countMock,
+    },
+    spec: {
+      findMany: specFindManyMock,
     },
   },
 }));
@@ -25,6 +29,11 @@ describe("resultModel filtering", () => {
       findManyMock.mockResolvedValue as unknown as (value: unknown[]) => void
     )([]);
     (countMock.mockResolvedValue as unknown as (value: number) => void)(0);
+    (
+      specFindManyMock.mockResolvedValue as unknown as (
+        value: Array<{ tags: unknown }>,
+      ) => void
+    )([]);
   });
 
   it("uses exact JSON array membership for findMany tag filtering", async () => {
@@ -69,6 +78,50 @@ describe("resultModel filtering", () => {
         }),
       }),
     );
+  });
+
+  it("matches any selected tag in findMany", async () => {
+    await resultModel.findMany(
+      {
+        projectId: "project-1",
+        tag: "L1, L2,L1,,",
+      },
+      1,
+      25,
+    );
+
+    expect(findManyMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: expect.objectContaining({
+          spec: {
+            projectId: "project-1",
+            OR: [
+              { tags: { array_contains: ["L1"] } },
+              { tags: { array_contains: ["L2"] } },
+            ],
+          },
+        }),
+      }),
+    );
+  });
+
+  it("matches any selected tag in count", async () => {
+    await resultModel.count({
+      projectId: "project-1",
+      tag: "L1,L2",
+    });
+
+    expect(countMock).toHaveBeenCalledWith({
+      where: expect.objectContaining({
+        spec: {
+          projectId: "project-1",
+          OR: [
+            { tags: { array_contains: ["L1"] } },
+            { tags: { array_contains: ["L2"] } },
+          ],
+        },
+      }),
+    });
   });
 
   it("limits raw results to the supplied spec record IDs", async () => {
@@ -153,5 +206,40 @@ describe("resultModel filtering", () => {
         }),
       }),
     );
+  });
+
+  it("selects tags from matching specs without loading matching results", async () => {
+    await resultModel.findSpecTags({
+      projectId: "project-1",
+      status: "failed",
+      dates: ["2026-07-02"],
+    });
+
+    expect(specFindManyMock).toHaveBeenCalledWith({
+      where: {
+        projectId: "project-1",
+        results: {
+          some: expect.objectContaining({
+            status: "failed",
+            AND: expect.arrayContaining([
+              {
+                OR: [
+                  {
+                    startTime: {
+                      gte: new Date("2026-07-02T00:00:00.000Z"),
+                      lt: new Date("2026-07-03T00:00:00.000Z"),
+                    },
+                  },
+                ],
+              },
+            ]),
+          }),
+        },
+      },
+      select: {
+        tags: true,
+      },
+    });
+    expect(findManyMock).not.toHaveBeenCalled();
   });
 });

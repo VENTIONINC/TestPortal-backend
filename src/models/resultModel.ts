@@ -65,6 +65,190 @@ export interface AnalysisExportRow {
   };
 }
 
+const buildResultWhereClause = (
+  filters: ResultFilters,
+): Prisma.ResultWhereInput => {
+  const {
+    projectId,
+    tag,
+    specId,
+    specRecordIds,
+    specFile,
+    specName,
+    environment,
+    type,
+    status,
+    reviewStatus,
+    errorMessage,
+    issueName,
+    from,
+    to,
+    dates,
+  } = filters;
+
+  let toDate: Date | undefined;
+  if (to) {
+    toDate = new Date(to);
+    toDate.setDate(toDate.getDate() + 1);
+  }
+
+  const specFilter: Prisma.SpecWhereInput = { projectId };
+  if (specId) specFilter.key = specId;
+  if (specRecordIds) specFilter.id = { in: specRecordIds };
+  if (specFile) specFilter.file = { contains: specFile };
+  if (specName) specFilter.title = { contains: specName };
+  if (tag) {
+    const selectedTags = [
+      ...new Set(
+        tag
+          .split(",")
+          .map((value) => value.trim())
+          .filter(Boolean),
+      ),
+    ];
+
+    if (selectedTags.length === 1) {
+      const selectedTag = selectedTags[0];
+      if (selectedTag) {
+        specFilter.tags = { array_contains: [selectedTag] };
+      }
+    } else if (selectedTags.length > 1) {
+      specFilter.OR = selectedTags.map((selectedTag) => ({
+        tags: { array_contains: [selectedTag] },
+      }));
+    }
+  }
+
+  const executionFilter: Prisma.ExecutionWhereInput = { projectId };
+  if (environment) executionFilter.environment = environment;
+  if (type) executionFilter.type = type;
+
+  const whereClause: Prisma.ResultWhereInput = {
+    spec: specFilter,
+    execution: executionFilter,
+  };
+
+  if (status) whereClause.status = status;
+
+  if (errorMessage) {
+    whereClause.errors = {
+      some: {
+        message: {
+          contains: errorMessage,
+          mode: "insensitive",
+        },
+      },
+    };
+  }
+
+  if (reviewStatus) {
+    if (reviewStatus.toLowerCase() === "completed") {
+      whereClause.OR = [
+        { status: "passed" },
+        {
+          AND: [
+            { status: { not: "passed" } },
+            {
+              errors: {
+                every: {
+                  assumptions: {
+                    every: {
+                      isConfirmed: true,
+                    },
+                  },
+                },
+              },
+            },
+            {
+              errors: {
+                some: {
+                  assumptions: {
+                    some: {},
+                  },
+                },
+              },
+            },
+          ],
+        },
+      ];
+    } else if (reviewStatus.toLowerCase() === "incompleted") {
+      whereClause.AND = [
+        { status: { not: "passed" } },
+        {
+          OR: [
+            {
+              errors: {
+                every: {
+                  assumptions: {
+                    none: {},
+                  },
+                },
+              },
+            },
+            {
+              errors: {
+                some: {
+                  assumptions: {
+                    some: {
+                      isConfirmed: false,
+                    },
+                  },
+                },
+              },
+            },
+          ],
+        },
+      ];
+    }
+  }
+
+  if (issueName) {
+    whereClause.errors = {
+      some: {
+        assumptions: {
+          some: {
+            issue: {
+              name: {
+                contains: issueName,
+                mode: "insensitive",
+              },
+            },
+          },
+        },
+      },
+    };
+  }
+
+  if (from || to) {
+    whereClause.startTime = {};
+    if (from) whereClause.startTime.gte = new Date(from);
+    if (toDate) whereClause.startTime.lte = toDate;
+  }
+
+  if (dates?.length) {
+    const selectedDatesCondition: Prisma.ResultWhereInput = {
+      OR: dates.map((date) => {
+        const start = new Date(date);
+        const end = new Date(date);
+        end.setUTCDate(end.getUTCDate() + 1);
+
+        return { startTime: { gte: start, lt: end } };
+      }),
+    };
+    const existingAnd = whereClause.AND;
+    whereClause.AND = [
+      ...(Array.isArray(existingAnd)
+        ? existingAnd
+        : existingAnd
+          ? [existingAnd]
+          : []),
+      selectedDatesCondition,
+    ];
+  }
+
+  return whereClause;
+};
+
 export const resultModel = {
   findById: async (
     id: number | string,
@@ -102,174 +286,8 @@ export const resultModel = {
     page = 1,
     limit?: number,
   ): Promise<ResultWithRelations[]> => {
-    const {
-      projectId,
-      tag,
-      specId,
-      specRecordIds,
-      specFile,
-      specName,
-      environment,
-      type,
-      status,
-      reviewStatus,
-      errorMessage,
-      issueName,
-      from,
-      to,
-      dates,
-    } = filters;
-
-    let toDate: Date | undefined;
-    if (to) {
-      toDate = new Date(to);
-      toDate.setDate(toDate.getDate() + 1); // +1 day to include results of the whole day
-    }
-
-    const whereClause: Prisma.ResultWhereInput = {};
-
-    // Build spec filter (always include projectId)
-    whereClause.spec = {};
-    whereClause.spec.projectId = projectId;
-    if (specId) whereClause.spec.key = specId;
-    if (specRecordIds) whereClause.spec.id = { in: specRecordIds };
-    if (specFile) whereClause.spec.file = { contains: specFile };
-    if (specName) whereClause.spec.title = { contains: specName };
-    if (tag) whereClause.spec.tags = { array_contains: [tag] };
-
-    // Build execution filter (always include projectId)
-    whereClause.execution = {};
-    whereClause.execution.projectId = projectId;
-    if (environment) whereClause.execution.environment = environment;
-    if (type) whereClause.execution.type = type;
-
-    // Add other filters
-    if (status) whereClause.status = status;
-
-    // Error message filter
-    if (errorMessage) {
-      whereClause.errors = {
-        some: {
-          message: {
-            contains: errorMessage,
-            mode: "insensitive",
-          },
-        },
-      };
-    }
-
-    // Review status filter
-    if (reviewStatus) {
-      if (reviewStatus.toLowerCase() === "completed") {
-        // For 'completed': status is 'passed' OR all assumptions are confirmed
-        whereClause.OR = [
-          { status: "passed" },
-          {
-            AND: [
-              { status: { not: "passed" } },
-              {
-                errors: {
-                  every: {
-                    assumptions: {
-                      every: {
-                        isConfirmed: true,
-                      },
-                    },
-                  },
-                },
-              },
-              {
-                errors: {
-                  some: {
-                    assumptions: {
-                      some: {},
-                    },
-                  },
-                },
-              },
-            ],
-          },
-        ];
-      } else if (reviewStatus.toLowerCase() === "incompleted") {
-        // For 'inCompleted': status is not 'passed' AND (no assumptions OR not all assumptions confirmed)
-        whereClause.AND = [
-          { status: { not: "passed" } },
-          {
-            OR: [
-              // No assumptions at all
-              {
-                errors: {
-                  every: {
-                    assumptions: {
-                      none: {},
-                    },
-                  },
-                },
-              },
-              // Has assumptions but not all are confirmed
-              {
-                errors: {
-                  some: {
-                    assumptions: {
-                      some: {
-                        isConfirmed: false,
-                      },
-                    },
-                  },
-                },
-              },
-            ],
-          },
-        ];
-      }
-    }
-
-    if (issueName) {
-      whereClause.errors = {
-        some: {
-          assumptions: {
-            some: {
-              issue: {
-                name: {
-                  contains: issueName,
-                  mode: "insensitive",
-                },
-              },
-            },
-          },
-        },
-      };
-    }
-
-    if (from || to) {
-      whereClause.startTime = {};
-      if (from) whereClause.startTime.gte = new Date(from);
-      if (toDate) whereClause.startTime.lte = toDate;
-    }
-
-    if (dates?.length) {
-      const selectedDatesCondition: Prisma.ResultWhereInput = {
-        OR: dates.map((date) => {
-          const start = new Date(date);
-          const end = new Date(date);
-          end.setUTCDate(end.getUTCDate() + 1);
-
-          return { startTime: { gte: start, lt: end } };
-        }),
-      };
-      const existingAnd = whereClause.AND;
-      whereClause.AND = [
-        ...(Array.isArray(existingAnd)
-          ? existingAnd
-          : existingAnd
-            ? [existingAnd]
-            : []),
-        selectedDatesCondition,
-      ];
-    }
-
     return (await dbClient.result.findMany({
-      where: whereClause,
+      where: buildResultWhereClause(filters),
       ...(limit === undefined
         ? {}
         : {
@@ -296,174 +314,27 @@ export const resultModel = {
   },
 
   count: async (filters: ResultFilters): Promise<number> => {
-    const {
-      projectId,
-      tag,
-      specId,
-      specFile,
-      specName,
-      environment,
-      type,
-      status,
-      reviewStatus,
-      errorMessage,
-      issueName,
-      from,
-      to,
-      dates,
-    } = filters;
-
-    let toDate: Date | undefined;
-    if (to) {
-      toDate = new Date(to);
-      toDate.setDate(toDate.getDate() + 1);
-    }
-
-    const whereClause: Prisma.ResultWhereInput = {};
-
-    // Build spec filter (always include projectId)
-    whereClause.spec = {};
-    whereClause.spec.projectId = projectId;
-    if (specId) whereClause.spec.key = specId;
-    if (specFile) whereClause.spec.file = { contains: specFile };
-    if (specName) whereClause.spec.title = { contains: specName };
-    if (tag) whereClause.spec.tags = { array_contains: [tag] };
-
-    // Build execution filter (always include projectId)
-    whereClause.execution = {};
-    whereClause.execution.projectId = projectId;
-    if (environment) whereClause.execution.environment = environment;
-    if (type) whereClause.execution.type = type;
-
-    // Add other filters
-    if (status) whereClause.status = status;
-
-    // Error message filter
-    if (errorMessage) {
-      whereClause.errors = {
-        some: {
-          message: {
-            contains: errorMessage,
-            mode: "insensitive",
-          },
-        },
-      };
-    }
-
-    // Review status filter
-    if (reviewStatus) {
-      if (reviewStatus.toLowerCase() === "completed") {
-        // For 'completed': status is 'passed' OR all assumptions are confirmed
-        whereClause.OR = [
-          { status: "passed" },
-          {
-            AND: [
-              { status: { not: "passed" } },
-              {
-                errors: {
-                  every: {
-                    assumptions: {
-                      every: {
-                        isConfirmed: true,
-                      },
-                    },
-                  },
-                },
-              },
-              {
-                errors: {
-                  some: {
-                    assumptions: {
-                      some: {},
-                    },
-                  },
-                },
-              },
-            ],
-          },
-        ];
-      } else if (reviewStatus.toLowerCase() === "incompleted") {
-        // For 'inCompleted': status is not 'passed' AND (no assumptions OR not all assumptions confirmed)
-        whereClause.AND = [
-          { status: { not: "passed" } },
-          {
-            OR: [
-              // No assumptions at all
-              {
-                errors: {
-                  every: {
-                    assumptions: {
-                      none: {},
-                    },
-                  },
-                },
-              },
-              // Has assumptions but not all are confirmed
-              {
-                errors: {
-                  some: {
-                    assumptions: {
-                      some: {
-                        isConfirmed: false,
-                      },
-                    },
-                  },
-                },
-              },
-            ],
-          },
-        ];
-      }
-    }
-
-    // Issue name filter
-    if (issueName) {
-      whereClause.errors = {
-        some: {
-          assumptions: {
-            some: {
-              issue: {
-                name: {
-                  contains: issueName,
-                  mode: "insensitive",
-                },
-              },
-            },
-          },
-        },
-      };
-    }
-
-    if (from || to) {
-      whereClause.startTime = {};
-      if (from) whereClause.startTime.gte = new Date(from);
-      if (toDate) whereClause.startTime.lte = toDate;
-    }
-
-    if (dates?.length) {
-      const selectedDatesCondition: Prisma.ResultWhereInput = {
-        OR: dates.map((date) => {
-          const start = new Date(date);
-          const end = new Date(date);
-          end.setUTCDate(end.getUTCDate() + 1);
-
-          return { startTime: { gte: start, lt: end } };
-        }),
-      };
-      const existingAnd = whereClause.AND;
-      whereClause.AND = [
-        ...(Array.isArray(existingAnd)
-          ? existingAnd
-          : existingAnd
-            ? [existingAnd]
-            : []),
-        selectedDatesCondition,
-      ];
-    }
-
     return await dbClient.result.count({
-      where: whereClause,
+      where: buildResultWhereClause(filters),
     });
+  },
+
+  findSpecTags: async (filters: ResultFilters): Promise<Prisma.JsonValue[]> => {
+    const resultWhere = buildResultWhereClause(filters);
+    const { spec, ...matchingResultWhere } = resultWhere;
+    const rows = await dbClient.spec.findMany({
+      where: {
+        ...(spec as Prisma.SpecWhereInput),
+        results: {
+          some: matchingResultWhere,
+        },
+      },
+      select: {
+        tags: true,
+      },
+    });
+
+    return rows.map((row) => row.tags);
   },
 
   findForAnalysisExport: async (
