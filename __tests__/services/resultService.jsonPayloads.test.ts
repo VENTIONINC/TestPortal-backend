@@ -99,6 +99,7 @@ describe("resultService JSON payload normalization", () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
+    mockResultModel.findSpecTags.mockResolvedValue([]);
   });
 
   it("normalizes getResults payloads into array-shaped fields", async () => {
@@ -202,6 +203,53 @@ describe("resultService JSON payload normalization", () => {
     expect(mockResultModel.count).toHaveBeenCalledTimes(1);
     expect(response.rawResults).toEqual([]);
     expect(response.rawTotal).toBe(0);
+  });
+
+  it("returns normalized available tags from filters that exclude tag", async () => {
+    mockResultModel.findMany.mockResolvedValue([]);
+    mockResultModel.count.mockResolvedValue(0);
+    mockResultModel.findSpecTags.mockResolvedValue([
+      ["L2", "L1"],
+      '["L3","L1"]',
+      ["L4", 7],
+      { invalid: true },
+    ]);
+
+    const response = await resultService.getResults({
+      projectId: "project-1",
+      from: "2026-07-01",
+      to: "2026-07-07",
+      dates: ["2026-07-02"],
+      status: "failed",
+      reviewStatus: "completed",
+      errorMessage: "timeout",
+      issueName: "Checkout",
+      specFile: "checkout.spec.ts",
+      environment: "staging",
+      type: "e2e",
+      tag: "L1,L2",
+    });
+
+    expect(response).toMatchObject({
+      results: [],
+      rawResults: [],
+      availableTags: ["L1", "L2", "L3", "L4"],
+      total: 0,
+      rawTotal: 0,
+    });
+    expect(mockResultModel.findSpecTags).toHaveBeenCalledWith({
+      projectId: "project-1",
+      from: "2026-07-01",
+      to: "2026-07-07",
+      dates: ["2026-07-02"],
+      status: "failed",
+      reviewStatus: "completed",
+      errorMessage: "timeout",
+      issueName: "Checkout",
+      specFile: "checkout.spec.ts",
+      environment: "staging",
+      type: "e2e",
+    });
   });
 
   it("normalizes getResultById payloads into array-shaped fields", async () => {
