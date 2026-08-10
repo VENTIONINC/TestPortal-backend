@@ -14,12 +14,11 @@ function safeToken(value: string | null | undefined): string {
 
 function buildFilename(params: PdfExportFilters): string {
   const project = safeToken(params.project);
-  const environment = safeToken(params.environment);
   const executionType = safeToken(params.executionType);
   const periodStart = safeToken(params.periodStart);
   const periodEnd = safeToken(params.periodEnd);
 
-  return `${project}-${environment}-${executionType}-${periodStart}_${periodEnd}.pdf`;
+  return `${project}-${executionType}-${periodStart}_${periodEnd}.pdf`;
 }
 
 export const reportController = {

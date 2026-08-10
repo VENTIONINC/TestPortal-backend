@@ -124,7 +124,6 @@ describe("pdfBuilderService.buildPdf", () => {
       insightsText: null,
       filters: {
         project: "ProjectA",
-        environment: "staging",
         executionType: "Nightly",
         periodStart: "2026-01-01",
         periodEnd: "2026-01-31",
@@ -165,7 +164,6 @@ describe("pdfBuilderService.buildPdf", () => {
       insightsText: null,
       filters: {
         project: "ProjectA",
-        environment: "staging",
         executionType: "Nightly",
         periodStart: "2026-01-01",
         periodEnd: "2026-01-31",
@@ -202,7 +200,6 @@ describe("pdfBuilderService.buildPdf", () => {
       insightsText: null,
       filters: {
         project: "ProjectA",
-        environment: "prod",
         executionType: "Release",
         periodStart: "2026-02-01",
         periodEnd: "2026-02-10",
@@ -287,7 +284,6 @@ describe("pdfBuilderService.buildPdf", () => {
       insightsText: "Pass rate remained stable with a drop in total runs on 2026-02-05.",
       filters: {
         project: "ProjectA",
-        environment: "prod",
         executionType: "Release",
         periodStart: "2026-02-01",
         periodEnd: "2026-02-10",
@@ -323,7 +319,6 @@ describe("pdfBuilderService.buildPdf", () => {
       insightsText: AI_INSIGHTS_FALLBACK_TEXT,
       filters: {
         project: "ProjectA",
-        environment: "prod",
         executionType: "Release",
         periodStart: "2026-02-01",
         periodEnd: "2026-02-10",
@@ -363,7 +358,6 @@ describe("pdfBuilderService.buildPdf", () => {
       insightsText: "A very long AI summary",
       filters: {
         project: "ProjectA",
-        environment: "prod",
         executionType: "Release",
         periodStart: "2026-02-01",
         periodEnd: "2026-02-10",
@@ -399,7 +393,6 @@ describe("pdfBuilderService.buildPdf", () => {
       insightsText: null,
       filters: {
         project: "ProjectA",
-        environment: "prod",
         executionType: "Release",
         periodStart: "2026-02-01",
         periodEnd: "2026-02-10",
