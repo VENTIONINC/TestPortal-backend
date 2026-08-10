@@ -27,7 +27,7 @@
         ],
         "body": {
           "mode": "raw",
-          "raw": "{\n  \"project\": \"{{projectName}}\",\n  \"environment\": \"staging\",\n  \"executionType\": \"Nightly\",\n  \"periodStart\": \"2026-01-01\",\n  \"periodEnd\": \"2026-01-31\",\n  \"granularity\": \"daily\"\n}"
+          "raw": "{\n  \"project\": \"{{projectName}}\",\n  \"executionType\": \"Nightly\",\n  \"periodStart\": \"2026-01-01\",\n  \"periodEnd\": \"2026-01-31\",\n  \"granularity\": \"daily\"\n}"
         },
         "url": {
           "raw": "{{baseUrl}}{{V_2}}/reports/pdf-export",
@@ -40,7 +40,7 @@
             "pdf-export"
           ]
         },
-        "description": "Exports dashboard data as PDF. Response is binary application/pdf with Content-Disposition filename."
+        "description": "Exports dashboard data across all execution environments as PDF. Response is binary application/pdf with Content-Disposition filename."
       },
       "response": []
     }
