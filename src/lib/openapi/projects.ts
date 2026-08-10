@@ -374,6 +374,9 @@ export function registerProjectRoutes(registry: OpenAPIRegistry) {
           .describe("The unique identifier of the project"),
       }),
       query: z.object({
+        environment: z
+          .string()
+          .describe("Target environment to filter results"),
         period: z
           .string()
           .optional()

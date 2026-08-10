@@ -38,6 +38,7 @@ describe("validatePdfExport", () => {
   it("returns 400 INVALID_PARAMS when required field is missing", () => {
     const req = {
       body: {
+        environment: "staging",
         executionType: "Nightly",
         periodStart: "2026-01-01",
         periodEnd: "2026-01-31",
@@ -60,6 +61,7 @@ describe("validatePdfExport", () => {
     const req = {
       body: {
         project: "Project A",
+        environment: "staging",
         executionType: "Nightly",
         periodStart: "2026-02-01",
         periodEnd: "2026-01-01",
@@ -82,6 +84,7 @@ describe("validatePdfExport", () => {
     const req = {
       body: {
         project: "Project A",
+        environment: "staging",
         executionType: "Nightly",
         periodStart: "2024-01-01",
         periodEnd: "2026-01-31",
@@ -105,6 +108,7 @@ describe("validatePdfExport", () => {
     const req = {
       body: {
         project: "Project A",
+        environment: "staging",
         executionType: "Nightly",
         periodStart: "2026-01-01",
         periodEnd: "2026-01-31",
@@ -127,6 +131,7 @@ describe("validatePdfExport", () => {
     const req = {
       body: {
         project: "92efb159-ccc7-43a0-8a1d-20eeea442824",
+        environment: "staging",
         executionType: "all",
         periodStart: "2026-01-29T21:59:05.987Z",
         periodEnd: "2026-02-27T21:59:05.987Z",
@@ -151,6 +156,7 @@ describe("validatePdfExport", () => {
     const req = {
       body: {
         project: "Project A",
+        environment: "staging",
         executionType: "Nightly",
         periodStart: "2026-01-01",
         periodEnd: "2026-01-31",
@@ -171,6 +177,7 @@ describe("validatePdfExport", () => {
     const req = {
       body: {
         project: "Project A",
+        environment: "staging",
         executionType: "Nightly",
         periodStart: "not-a-date",
         periodEnd: "2026-01-31T00:00:00.000Z",

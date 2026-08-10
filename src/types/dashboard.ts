@@ -42,6 +42,7 @@ export interface ExecutionSummary {
 
 export interface PdfExportFilters {
   project: string;
+  environment: string;
   executionType: string;
   periodStart: string;
   periodEnd: string;

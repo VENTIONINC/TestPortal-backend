@@ -10,6 +10,10 @@ const PdfExportRequestSchema = z
       description: "Project UUID or project name",
       example: "web-app-qa",
     }),
+    environment: z.string().min(1).openapi({
+      description: "Execution environment filter",
+      example: "staging",
+    }),
     executionType: z.string().min(1).openapi({
       description: "Execution type filter, use 'all' to include all types",
       example: "Nightly",
@@ -115,6 +119,7 @@ export function registerPdfExportRoutes(registry: OpenAPIRegistry) {
             schema: PdfExportRequestSchema,
             example: {
               project: "web-app-qa",
+              environment: "staging",
               executionType: "Nightly",
               periodStart: "2026-01-01",
               periodEnd: "2026-01-31",

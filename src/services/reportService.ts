@@ -96,6 +96,7 @@ export const reportService = {
     try {
       dashboard = await dashboardService.getDashboard(
         project.id,
+        filters.environment,
         periodDays,
         executionTypeFilter,
         filters.granularity,

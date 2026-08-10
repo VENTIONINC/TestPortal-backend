@@ -16,12 +16,8 @@ The dashboard requires fast access to historical trends (Pass Rate, Issue Catego
 We use a dedicated relational table to store pre-aggregated metrics. Avoiding large JSON blobs ensures atomic updates and prevents race conditions.
 
 - **Model**: `DailyExecutionMetric`
-- **Storage Scope**: Per Project / Execution Environment / Date / Type
-- **Granularity**: One row per day, execution environment, and execution type.
-
-Execution environment remains part of the write-side aggregation key so metrics
-can be refreshed idempotently from execution metadata. It is not a Dashboard
-request filter: reads sum all matching environment rows.
+- **Scope**: Per Project / Environment / Date / Type
+- **Granularity**: One row per day per execution type.
 
 ### B. Table Structure
 
@@ -83,13 +79,13 @@ To ensure the dashboard is always in sync with operation data:
 
 _Trigger_: User loads the Dashboard.
 
-1.  **Request**: `GET /api/v2/projects/:id/dashboard?period=30&type=Nightly&granularity=daily`
+1.  **Request**: `GET /api/projects/:id/dashboard?env=Dev&period=30d&type=Nightly`
 2.  **Fetch Aggregates**:
     - Query `DailyExecutionMetric` table.
-    - `Where`: project and date range, plus optional execution type. There is no execution-environment predicate.
-    - In-memory aggregation sums rows from every stored execution environment and groups them at the requested daily, weekly, or monthly granularity.
+    - `Where`: `date >= cutoff` AND `environment = 'Dev'`.
+    - `GroupBy` or In-Memory Sum: Group results by date to form the history timeline.
 3.  **Fetch Recent**:
-    - Query `Execution` with the same project/date/type scope: `LIMIT 20 ORDER BY startedAt DESC`. Each returned execution retains its environment as descriptive metadata.
+    - Query `Execution` table: `LIMIT 20 ORDER BY startedAt DESC`.
 4.  **Response**: Return the refined data structure to the frontend.
 
 ---
@@ -100,13 +96,10 @@ _Trigger_: User loads the Dashboard.
 
 **Query Params**:
 
-- `period` (optional; defaults to 30 days)
+- `period` (required)
+- `environment` (required)
 - `type` (optional)
-- `granularity` (optional: `daily`, `weekly`, or `monthly`; defaults to weekly when `period > 90`, otherwise daily)
-
-The endpoint intentionally has no execution-environment query parameter.
-Dashboard totals, history, and recent executions cover all environments within
-the selected project/date/type scope.
+- `granularity` (optional, currently ignored; returns daily data)
 
 **Response**:
 
@@ -120,20 +113,12 @@ the selected project/date/type scope.
   "history": [
     {
       "date": "2025-12-08",
-      "metrics": {
-        "total": 32,
-        "passed": 25,
-        "failed": 7,
-        "issues": { "bug": 5, "environment": 2 }
-      }
+      "metrics": { "total": 32, "passed": 25, "failed": 7 },
+      "issues": { "bug": 5, "environment": 2 }
     }
   ],
   "recentExecutions": [
-    { "id": "...", "name": "Nightly Run", "status": "failed", "startedAt": "...", "environment": "staging" }
+    { "id": "...", "name": "Nightly Run", "status": "failed", "date": "..." }
   ]
 }
 ```
-
-In the response, `recentExecutions[].environment` is execution metadata and
-`history[].metrics.issues.environment` is an issue-category count. Neither is a
-Dashboard selector.

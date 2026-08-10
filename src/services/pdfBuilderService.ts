@@ -130,6 +130,7 @@ export const pdfBuilderService = {
     doc
       .fontSize(11)
       .text(`• Project: ${params.filters.project}`)
+      .text(`• Environment: ${params.filters.environment}`)
       .text(`• Execution Type: ${params.filters.executionType}`)
       .text(
         `• Period: ${formatDisplayDate(params.filters.periodStart)} to ${formatDisplayDate(params.filters.periodEnd)}`,

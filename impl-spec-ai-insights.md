@@ -2,7 +2,7 @@
 
 **Author:** Igor Mikailov
 **Date:** 2026-02-27
-**Status:** Superseded by the current TypeScript implementation; the environment-scope note below reflects the current API contract
+**Status:** Ready for Development
 **Related ADR:** ADR-002 — AI Insights LLM Integration Approach
 **Related PRD:** spec-ai-insights-pdf.md
 **Dependency:** PDF export (ADR-001, impl-spec-pdf-export.md) must be live first
@@ -15,23 +15,17 @@ This spec covers the implementation of AI-generated insights injected into the P
 
 Insights are **opt-in** via an `includeAiInsights` flag in the request body. If the flag is false or absent, no AI call is made and the PDF is identical to a standard export. When the flag is true, the AI call runs in parallel with chart rendering. If it fails for any reason, the PDF is still delivered with a fallback message.
 
-PDF export intentionally has no execution-environment request field. Dashboard
-metrics and AI insights are generated across all execution environments for the
-selected project, date range, and optional execution type. Execution environment
-may still appear as descriptive execution metadata, while the “Environment”
-failure category below remains an issue-category count.
-
 > **Stack:** GPT-4.1-mini (OpenAI) · Prompt input: aggregated stats + pre-computed anomaly flags · Timeout: 8 s · Monitoring: LangSmith
 
 ---
 
 ## 2. API Changes
 
-No new endpoint. The existing `POST /api/v2/reports/pdf-export` absorbs the AI call transparently.
+No new endpoint. The existing `POST /api/reports/pdf-export` absorbs the AI call transparently.
 
 | Property | Detail |
 |----------|--------|
-| Endpoint | `POST /api/v2/reports/pdf-export` (unchanged) |
+| Endpoint | `POST /api/reports/pdf-export` (unchanged) |
 | Trigger | AI insights generated only when `includeAiInsights: true` is in the request body. If absent or false, no AI call is made. |
 | New request field | `includeAiInsights: boolean` (optional, default: `false`) |
 | New response fields | None. Insights text is embedded in the PDF stream when opted in. |
@@ -44,6 +38,7 @@ No new endpoint. The existing `POST /api/v2/reports/pdf-export` absorbs the AI c
 ```json
 {
   "project": "payments",
+  "environment": "staging",
   "executionType": "nightly",
   "periodStart": "2026-01-01",
   "periodEnd": "2026-01-31",
@@ -109,7 +104,7 @@ Rules:
 - Do not use markdown formatting — plain text only.
 
 USER:
-Project: {project} | Environment scope: All environments | Execution Type: {executionType}
+Project: {project} | Environment: {environment} | Execution Type: {executionType}
 Period: {periodStart} to {periodEnd} | Granularity: {granularity}
 
 Summary KPIs:

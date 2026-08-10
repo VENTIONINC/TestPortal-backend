@@ -46,6 +46,7 @@ describe("insightsService.generateInsights", () => {
   const params = {
     filters: {
       project: "ProjectA",
+      environment: "staging",
       executionType: "Nightly",
       periodStart: "2026-01-01",
       periodEnd: "2026-01-31",
