@@ -116,7 +116,7 @@ describe("reportService.generatePdf", () => {
     expect(result).toBe(pdfDoc);
   });
 
-  it("resolves project by UUID and disables type filter when executionType is all", async () => {
+  it("resolves a foreign-owned project by UUID without owner scoping", async () => {
     const uuidFilters = {
       ...filters,
       project: "92efb159-ccc7-43a0-8a1d-20eeea442824",
@@ -127,6 +127,7 @@ describe("reportService.generatePdf", () => {
     jest.spyOn(projectModel, "findById").mockResolvedValue({
       id: "92efb159-ccc7-43a0-8a1d-20eeea442824",
       name: "ProjectA",
+      ownerId: "11111111-1111-4111-8111-111111111111",
     } as never);
     jest.spyOn(projectModel, "findByName").mockResolvedValue(null);
     jest

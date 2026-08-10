@@ -81,3 +81,25 @@ describe("resultErrorController.analyzeErrors", () => {
     });
   });
 });
+
+describe("resultErrorController shared workspace access", () => {
+  it("reads a result error using project scope without owner scope", async () => {
+    jest
+      .spyOn(resultErrorService, "getResultErrorById")
+      .mockResolvedValue({ id: "error-1" } as never);
+
+    const response = await executeController(
+      resultErrorController.getResultErrorById,
+      {
+        params: { resultErrorId: "error-1" },
+        query: { projectId: "project-1" },
+      },
+    );
+
+    expect(response.statusCode).toBe(200);
+    expect(resultErrorService.getResultErrorById).toHaveBeenCalledWith(
+      "error-1",
+      "project-1",
+    );
+  });
+});

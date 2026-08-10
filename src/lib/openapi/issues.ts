@@ -54,7 +54,8 @@ export function registerIssueRoutes(registry: OpenAPIRegistry) {
   registry.registerPath({
     method: "get",
     path: "/api/v2/issues",
-    description: "Retrieves all issues (requires authentication)",
+    description:
+      "Retrieves issues from a shared-workspace project (requires authentication)",
     request: {
       query: z.object({
         projectId: z.string().uuid().describe("Project ID to filter issues"),
@@ -97,13 +98,17 @@ export function registerIssueRoutes(registry: OpenAPIRegistry) {
   registry.registerPath({
     method: "get",
     path: "/api/v2/issues/{issueId}",
-    description: "Retrieves an issue by its ID (requires authentication)",
+    description:
+      "Retrieves an issue from a shared-workspace project; project ownership does not restrict access",
     request: {
       params: z.object({
         issueId: z.string().uuid(),
       }),
       query: z.object({
-        projectId: z.string().uuid().describe("Project ID to verify ownership of the issue"),
+        projectId: z
+          .string()
+          .uuid()
+          .describe("Project ID used to scope the issue lookup"),
       }),
     },
     security: [{ BearerAuth: [] }],
@@ -147,7 +152,8 @@ export function registerIssueRoutes(registry: OpenAPIRegistry) {
   registry.registerPath({
     method: "post",
     path: "/api/v2/issues",
-    description: "Creates a new issue (requires authentication)",
+    description:
+      "Creates an issue in a shared-workspace project (requires authentication)",
     request: {
       body: {
         content: {
@@ -190,7 +196,8 @@ export function registerIssueRoutes(registry: OpenAPIRegistry) {
   registry.registerPath({
     method: "patch",
     path: "/api/v2/issues/{issueId}",
-    description: "Updates an existing issue (requires authentication)",
+    description:
+      "Updates an issue in a shared-workspace project (requires authentication)",
     request: {
       params: z.object({
         issueId: z.string().uuid(),
@@ -245,13 +252,16 @@ export function registerIssueRoutes(registry: OpenAPIRegistry) {
     method: "delete",
     path: "/api/v2/issues/{issueId}",
     description:
-      "Deletes an issue by its ID (requires authentication). Also deletes all associated assumptions (cascade delete).",
+      "Deletes an issue and associated assumptions from a shared-workspace project (requires authentication).",
     request: {
       params: z.object({
         issueId: z.string().uuid(),
       }),
       query: z.object({
-        projectId: z.string().uuid().describe("Project ID to verify ownership of the issue"),
+        projectId: z
+          .string()
+          .uuid()
+          .describe("Project ID used to scope the issue deletion"),
       }),
     },
     security: [{ BearerAuth: [] }],

@@ -120,7 +120,8 @@ export function registerCtrfRoutes(registry: OpenAPIRegistry) {
     method: "post",
     path: "/api/v2/upload-ctrf-report",
     summary: "Upload CTRF report file (JWT)",
-    description: "Uploads and processes a CTRF (Common Test Result Format) report from a JSON file (requires JWT authentication)",
+    description:
+      "Uploads a CTRF report to any shared-workspace project for an active authenticated user; project ownerId does not restrict uploads",
     request: {
       body: {
         content: {
@@ -181,7 +182,8 @@ export function registerCtrfRoutes(registry: OpenAPIRegistry) {
     method: "post",
     path: "/api/v2/upload-ctrf-report-api-key",
     summary: "Upload CTRF report file (API Key)",
-    description: "Uploads and processes a CTRF (Common Test Result Format) report from a JSON file (requires API key authentication)",
+    description:
+      "Uploads a CTRF report using a scoped API key whose signed project and owner identifiers match the active stored record",
     request: {
       body: {
         content: {

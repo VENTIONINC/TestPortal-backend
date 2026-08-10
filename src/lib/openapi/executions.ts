@@ -26,7 +26,8 @@ export function registerExecutionRoutes(registry: OpenAPIRegistry) {
   registry.registerPath({
     method: "get",
     path: "/api/v2/executions/{executionId}",
-    description: "Retrieves an execution by its ID (requires projectId)",
+    description:
+      "Retrieves an execution in a shared-workspace project (requires projectId; project ownership does not restrict access)",
     security: [{ BearerAuth: [] }],
     request: {
       params: z.object({
@@ -35,7 +36,10 @@ export function registerExecutionRoutes(registry: OpenAPIRegistry) {
         }),
       }),
       query: z.object({
-        projectId: z.string().uuid().describe("Project ID to verify ownership of the execution"),
+        projectId: z
+          .string()
+          .uuid()
+          .describe("Project ID used to scope the execution lookup"),
       }),
     },
     responses: {
@@ -79,7 +83,8 @@ export function registerExecutionRoutes(registry: OpenAPIRegistry) {
   registry.registerPath({
     method: "delete",
     path: "/api/v2/executions/{executionId}",
-    description: "Delete an execution by its ID (requires projectId and authentication)",
+    description:
+      "Deletes an execution in a shared-workspace project (requires projectId and authentication)",
     security: [{ BearerAuth: [] }],
     request: {
       params: z.object({
@@ -88,7 +93,10 @@ export function registerExecutionRoutes(registry: OpenAPIRegistry) {
         }),
       }),
       query: z.object({
-        projectId: z.string().uuid().describe("Project ID to verify ownership of the execution"),
+        projectId: z
+          .string()
+          .uuid()
+          .describe("Project ID used to scope the execution deletion"),
       }),
     },
     responses: {
