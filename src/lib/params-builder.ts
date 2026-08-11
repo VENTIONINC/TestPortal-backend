@@ -4,6 +4,16 @@
 import { IssueCategory } from "@/types/enums";
 import type { GetResultsParams } from "@/types";
 
+export function resolveExecutionTypeFilter(
+  type?: string,
+): string | undefined {
+  if (!type || type === "all") {
+    return undefined;
+  }
+
+  return type;
+}
+
 export function buildIssueParams(query: Record<string, string | undefined>) {
   const params: {
     projectId: string;
@@ -22,7 +32,8 @@ export function buildIssueParams(query: Record<string, string | undefined>) {
   if (query.limit) params.limit = Number(query.limit);
   if (query.statFrom) params.statFrom = query.statFrom;
   if (query.statTo) params.statTo = query.statTo;
-  if (query.type) params.type = query.type;
+  const type = resolveExecutionTypeFilter(query.type);
+  if (type) params.type = type;
 
   return params;
 }
@@ -58,7 +69,15 @@ export function buildResultParams(
 
   for (const key of RESULT_STRING_KEYS) {
     const value = getString(key);
-    if (value) params[key] = value;
+    if (!value) continue;
+
+    if (key === "type") {
+      const resolvedType = resolveExecutionTypeFilter(value);
+      if (resolvedType) params[key] = resolvedType;
+      continue;
+    }
+
+    params[key] = value;
   }
 
   for (const key of RESULT_NUMBER_KEYS) {

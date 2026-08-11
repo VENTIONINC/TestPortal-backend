@@ -12,6 +12,15 @@ describe("buildIssueParams", () => {
       }),
     ).toMatchObject({ projectId: "project-1", type: "Custom Release" });
   });
+
+  it("omits the reserved all sentinel", () => {
+    expect(
+      buildIssueParams({
+        projectId: "project-1",
+        type: "all",
+      }),
+    ).toEqual({ projectId: "project-1" });
+  });
 });
 
 describe("buildResultParams", () => {
@@ -25,5 +34,14 @@ describe("buildResultParams", () => {
         dates,
       }),
     ).toMatchObject({ dates: expected });
+  });
+
+  it("omits the reserved all sentinel for result type filters", () => {
+    expect(
+      buildResultParams({
+        projectId: "project-1",
+        type: "all",
+      }),
+    ).toEqual({ projectId: "project-1" });
   });
 });
