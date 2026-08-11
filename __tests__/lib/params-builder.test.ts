@@ -1,7 +1,27 @@
 // Copyright 2026 VENSOLUTIONSGROUP LTD
 // SPDX-License-Identifier: Apache-2.0
 
-import { buildResultParams } from "@/lib/params-builder";
+import { buildIssueParams, buildResultParams } from "@/lib/params-builder";
+
+describe("buildIssueParams", () => {
+  it("preserves an exact execution type", () => {
+    expect(
+      buildIssueParams({
+        projectId: "project-1",
+        type: "Custom Release",
+      }),
+    ).toMatchObject({ projectId: "project-1", type: "Custom Release" });
+  });
+
+  it("omits the reserved all sentinel", () => {
+    expect(
+      buildIssueParams({
+        projectId: "project-1",
+        type: "all",
+      }),
+    ).toEqual({ projectId: "project-1" });
+  });
+});
 
 describe("buildResultParams", () => {
   it.each([
@@ -14,5 +34,14 @@ describe("buildResultParams", () => {
         dates,
       }),
     ).toMatchObject({ dates: expected });
+  });
+
+  it("omits the reserved all sentinel for result type filters", () => {
+    expect(
+      buildResultParams({
+        projectId: "project-1",
+        type: "all",
+      }),
+    ).toEqual({ projectId: "project-1" });
   });
 });

@@ -308,6 +308,10 @@ export function registerIssueRoutes(registry: OpenAPIRegistry) {
         name: z.string().optional(),
         page: z.number().default(1).optional(),
         limit: z.number().default(10).optional(),
+        type: z
+          .string()
+          .optional()
+          .describe("Filter statistics by exact execution type"),
         statFrom: z
           .string()
           .datetime()

@@ -22,6 +22,7 @@ interface GetAllIssuesParams {
   limit?: number;
   statFrom?: string; // ISO date string
   statTo?: string; // ISO date string
+  type?: string;
 }
 
 interface GetAllIssuesResponse {
@@ -234,6 +235,7 @@ export const issueService = {
       limit = 10,
       statFrom,
       statTo,
+      type,
     } = params;
 
     const issues = await issueModel.findMany(
@@ -242,13 +244,15 @@ export const issueService = {
       name,
       page,
       limit,
+      type,
     );
-    const totalIssues = await issueModel.count(projectId, category, name);
+    const totalIssues = await issueModel.count(projectId, category, name, type);
 
     // Get statistics for each issue
     const issuesWithStats = await Promise.all(
       issues.map(async (issue) => {
         const whereClause: Prisma.ResultWhereInput = {
+          ...(type && { execution: { type } }),
           errors: {
             some: {
               assumptions: {
@@ -331,6 +335,7 @@ export const issueService = {
       limit = 10,
       statFrom,
       statTo,
+      type,
     } = params;
 
     const issues = await issueModel.findManyWithUsers(
@@ -339,13 +344,15 @@ export const issueService = {
       name,
       page,
       limit,
+      type,
     );
-    const totalIssues = await issueModel.count(projectId, category, name);
+    const totalIssues = await issueModel.count(projectId, category, name, type);
 
     // Get statistics for each issue
     const issuesWithStats = await Promise.all(
       issues.map(async (issue) => {
         const whereClause: Prisma.ResultWhereInput = {
+          ...(type && { execution: { type } }),
           errors: {
             some: {
               assumptions: {

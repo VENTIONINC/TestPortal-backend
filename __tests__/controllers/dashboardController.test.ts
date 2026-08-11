@@ -49,4 +49,30 @@ describe("dashboardController.getDashboard", () => {
     );
     expect(res.json).toHaveBeenCalledWith(dashboard);
   });
+
+  it("treats the reserved all sentinel as an unfiltered dashboard request", async () => {
+    const dashboard = {
+      summary: { totalRuns: 0, failures: 0, passRate: 0 },
+      history: [],
+      recentExecutions: [],
+    };
+    jest.spyOn(dashboardService, "getDashboard").mockResolvedValue(dashboard);
+    const req = {
+      params: { projectId: "project-1" },
+      query: {
+        period: "14",
+        type: "all",
+      },
+    } as unknown as Request<{ projectId: string }>;
+    const res = { json: jest.fn() } as unknown as Response;
+
+    await dashboardController.getDashboard(req, res);
+
+    expect(dashboardService.getDashboard).toHaveBeenCalledWith(
+      "project-1",
+      14,
+      undefined,
+      "daily",
+    );
+  });
 });

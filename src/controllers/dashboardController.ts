@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import type { Response, Request } from "express";
+import { resolveExecutionTypeFilter } from "@/lib/params-builder";
 import { dashboardService } from "@/services/dashboardService";
 import type { DashboardGranularity } from "@/types/dashboard";
 import getLogger from "@/lib/logger";
@@ -21,7 +22,8 @@ function parseDashboardParams(req: Request<DashboardParams>) {
   }
 
   const periodDays = parseInt(String(period ?? "30"), 10) || 30;
-  const executionType = typeof type === "string" ? type : undefined;
+  const executionType =
+    typeof type === "string" ? resolveExecutionTypeFilter(type) : undefined;
   const dataGranularity =
     typeof granularity === "string" &&
     ["daily", "weekly", "monthly"].includes(granularity)
