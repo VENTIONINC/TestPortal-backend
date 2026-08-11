@@ -13,6 +13,7 @@ export function buildIssueParams(query: Record<string, string | undefined>) {
     limit?: number;
     statFrom?: string;
     statTo?: string;
+    type?: string;
   } = { projectId: query.projectId ?? "" };
 
   if (query.category) params.category = query.category as IssueCategory;
@@ -21,6 +22,7 @@ export function buildIssueParams(query: Record<string, string | undefined>) {
   if (query.limit) params.limit = Number(query.limit);
   if (query.statFrom) params.statFrom = query.statFrom;
   if (query.statTo) params.statTo = query.statTo;
+  if (query.type) params.type = query.type;
 
   return params;
 }

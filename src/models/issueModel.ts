@@ -5,12 +5,6 @@ import { dbClient } from "@/prisma/client";
 import type { PrismaIssue, PrismaIssueWithUsers } from "@/types";
 import { Prisma } from "@prisma/client";
 
-interface IssueWhereInput {
-  category?: string;
-  name?: { contains: string };
-  projectId?: string;
-}
-
 interface CreateIssueData {
   name: string;
   category: string;
@@ -23,6 +17,28 @@ interface CreateIssueData {
   updatedById?: string;
 }
 
+const buildWhereClause = (
+  projectId: string,
+  category?: string,
+  name?: string,
+  type?: string,
+): Prisma.IssueWhereInput => ({
+  projectId,
+  ...(category && { category }),
+  ...(name && { name: { contains: name } }),
+  ...(type && {
+    assumptions: {
+      some: {
+        resultError: {
+          result: {
+            execution: { type },
+          },
+        },
+      },
+    },
+  }),
+});
+
 export const issueModel = {
   findMany: async (
     projectId: string,
@@ -30,10 +46,9 @@ export const issueModel = {
     name?: string,
     page = 1,
     limit = 30,
+    type?: string,
   ): Promise<PrismaIssue[]> => {
-    const whereClause: IssueWhereInput = { projectId };
-    if (category) whereClause.category = category;
-    if (name) whereClause.name = { contains: name };
+    const whereClause = buildWhereClause(projectId, category, name, type);
 
     return await dbClient.issue.findMany({
       where: whereClause,
@@ -49,10 +64,9 @@ export const issueModel = {
     name?: string,
     page = 1,
     limit = 30,
+    type?: string,
   ): Promise<PrismaIssueWithUsers[]> => {
-    const whereClause: Prisma.IssueWhereInput = { projectId };
-    if (category) whereClause.category = category;
-    if (name) whereClause.name = { contains: name };
+    const whereClause = buildWhereClause(projectId, category, name, type);
 
     return (await dbClient.issue.findMany({
       where: whereClause,
@@ -70,10 +84,9 @@ export const issueModel = {
     projectId: string,
     category?: string,
     name?: string,
+    type?: string,
   ): Promise<number> => {
-    const whereClause: IssueWhereInput = { projectId };
-    if (category) whereClause.category = category;
-    if (name) whereClause.name = { contains: name };
+    const whereClause = buildWhereClause(projectId, category, name, type);
 
     return await dbClient.issue.count({
       where: whereClause,

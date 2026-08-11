@@ -92,6 +92,7 @@ export const issueController = {
         limit = "10",
         statFrom,
         statTo,
+        type,
       } = req.query as Record<string, string>;
 
       if (!projectId) {
@@ -109,6 +110,7 @@ export const issueController = {
         limit,
         statFrom,
         statTo,
+        type,
       });
       const result = await issueService.getAllIssuesWithStats(params);
 
@@ -134,6 +136,7 @@ export const issueController = {
         limit = "10",
         statFrom,
         statTo,
+        type,
       } = req.query as Record<string, string>;
 
       if (!projectId) {
@@ -151,6 +154,7 @@ export const issueController = {
         limit,
         statFrom,
         statTo,
+        type,
       });
       const result = await issueService.getAllIssuesWithStatsV2(params);
 

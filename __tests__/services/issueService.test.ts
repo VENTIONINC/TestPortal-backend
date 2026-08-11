@@ -5,6 +5,7 @@ import "@/test-utils/testEnv";
 import { jest } from "@jest/globals";
 import type { PrismaIssue, PrismaUser } from "@/types";
 import { issueService } from "@/services/issueService";
+import { issueModel } from "@/models/issueModel";
 import { IssueCategory } from "@/types/enums";
 
 const users: PrismaUser[] = [];
@@ -13,7 +14,7 @@ const issues: PrismaIssue[] = [];
 const generateUserId = () => crypto.randomUUID();
 const generateIssueId = () => crypto.randomUUID();
 
-const mockResultFindMany = jest.fn(async () => [] as unknown[]);
+const mockResultFindMany = jest.fn(async (_args?: unknown) => [] as unknown[]);
 
 jest.mock("@/models/userModel", () => ({
   userModel: {
@@ -182,7 +183,7 @@ jest.mock("@/models/issueModel", () => ({
 jest.mock("@/prisma/client", () => ({
   dbClient: {
     result: {
-      findMany: () => mockResultFindMany(),
+      findMany: (args: unknown) => mockResultFindMany(args),
     },
   },
 }));
@@ -226,6 +227,7 @@ describe("Issue service V2 behaviours", () => {
   let primaryUser: PrismaUser;
 
   beforeEach(async () => {
+    jest.clearAllMocks();
     users.length = 0;
     issues.length = 0;
     mockResultFindMany.mockResolvedValue([]);
@@ -322,5 +324,65 @@ describe("Issue service V2 behaviours", () => {
     });
 
     expect(result.issues[0]?.statistics.occurrenceCount).toBe(2);
+  });
+
+  it("scopes issue pagination and every statistic to the exact execution type", async () => {
+    const issue = await createIssueRecord("Release issue", "bug", primaryUser);
+    mockResultFindMany.mockResolvedValueOnce([
+      {
+        startTime: new Date("2024-01-01T10:00:00Z"),
+        spec: { id: "spec-1" },
+      },
+      {
+        startTime: new Date("2024-01-02T12:00:00Z"),
+        spec: { id: "spec-2" },
+      },
+    ]);
+
+    const result = await issueService.getAllIssuesWithStatsV2({
+      projectId: "test-project",
+      type: "Release",
+      page: 1,
+      limit: 5,
+    });
+
+    expect(issueModel.findManyWithUsers).toHaveBeenCalledWith(
+      "test-project",
+      undefined,
+      undefined,
+      1,
+      5,
+      "Release",
+    );
+    expect(issueModel.count).toHaveBeenCalledWith(
+      "test-project",
+      undefined,
+      undefined,
+      "Release",
+    );
+    expect(mockResultFindMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: expect.objectContaining({
+          execution: { type: "Release" },
+          errors: {
+            some: {
+              assumptions: {
+                some: { issueId: issue.id },
+              },
+            },
+          },
+        }),
+      }),
+    );
+    expect(result.issues[0]?.statistics).toEqual({
+      occurrenceCount: 2,
+      firstOccurrence: new Date("2024-01-01T10:00:00Z"),
+      lastOccurrence: new Date("2024-01-02T12:00:00Z"),
+      impactedTestsCount: 2,
+      timeDistribution: [
+        { date: "2024-01-01", count: 1 },
+        { date: "2024-01-02", count: 1 },
+      ],
+    });
   });
 });
