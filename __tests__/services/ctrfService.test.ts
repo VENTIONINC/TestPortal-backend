@@ -292,4 +292,47 @@ describe("ctrfService", () => {
       }),
     ]);
   });
+
+  it("should pass executionType from CTRF environment to report data", async () => {
+    const reportWithExecutionType: CTRFReport = {
+      ...mockReport,
+      results: {
+        ...mockReport.results,
+        environment: {
+          ...mockReport.results.environment,
+          executionType: "  release  ",
+        },
+      },
+    };
+
+    mockTx.project.findUnique.mockResolvedValue({
+      owner: { analyzeEnabled: false },
+    });
+
+    await ctrfService.processReport(reportWithExecutionType, {
+      projectId: mockProjectId,
+    });
+
+    expect(jsonReportService.processReport).toHaveBeenCalledWith(
+      expect.objectContaining({ executionType: "release" }),
+      mockProjectId,
+      mockTx,
+    );
+  });
+
+  it("should omit executionType when CTRF environment does not provide it", async () => {
+    mockTx.project.findUnique.mockResolvedValue({
+      owner: { analyzeEnabled: false },
+    });
+
+    await ctrfService.processReport(mockReport, {
+      projectId: mockProjectId,
+    });
+
+    expect(jsonReportService.processReport).toHaveBeenCalledWith(
+      expect.not.objectContaining({ executionType: expect.anything() }),
+      mockProjectId,
+      mockTx,
+    );
+  });
 });

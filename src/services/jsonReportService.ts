@@ -43,6 +43,7 @@ export interface ReportData {
   env?: string;
   version?: string;
   provider: string;
+  executionType?: string;
   stats?: {
     startTime?: string | Date;
   };
@@ -103,6 +104,7 @@ export const jsonReportService = {
       env,
       version,
       provider,
+      executionType,
       stats,
       tests,
       identifierStrategy = "time-period",
@@ -134,6 +136,7 @@ export const jsonReportService = {
           env: env ?? "unknown",
           version: version ?? "unknown",
           provider,
+          ...(executionType ? { executionType } : {}),
           ...(stats && { stats }),
           projectId,
         },
@@ -181,12 +184,14 @@ export const jsonReportService = {
       env: string;
       version: string;
       provider: string;
+      executionType?: string;
       stats?: { startTime?: string | Date };
       projectId: string;
     },
     tx?: Prisma.TransactionClient,
   ): Promise<PrismaExecution> {
-    const { runId, env, version, provider, stats, projectId } = params;
+    const { runId, env, version, provider, executionType, stats, projectId } =
+      params;
     const client = tx ?? dbClient;
 
     let executionRecord = await client.execution.findFirst({
@@ -199,7 +204,7 @@ export const jsonReportService = {
     if (!executionRecord) {
       executionRecord = await client.execution.create({
         data: {
-          type: "nightly",
+          type: executionType?.trim() || "nightly",
           name: runId,
           environment: env,
           version,
