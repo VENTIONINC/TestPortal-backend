@@ -163,12 +163,14 @@ export const ctrfService = {
       .map((test, index) => this.transformCtrfTest(test, summary.start, index));
 
     const providerName = tool?.name.toLowerCase() || "ctrf";
+    const executionType = environment?.executionType?.trim();
 
     return {
       runId: environment?.buildNumber ?? `${providerName}-${Date.now()}`,
       env: environment?.testEnvironment ?? "N/A",
       version: tool.version ?? "N/A",
       provider: providerName,
+      ...(executionType ? { executionType } : {}),
       stats: {
         startTime: new Date(summary.start),
       },

@@ -272,4 +272,43 @@ describe("jsonReportService with optional runId", () => {
       },
     });
   });
+
+  it("should persist provided executionType on execution create", async () => {
+    const reportData = {
+      ...mockTestData,
+      runId: "RELEASE_RUN",
+      executionType: "release",
+    };
+
+    await jsonReportService.processReport(
+      reportData,
+      "b4225bdf-9e2b-43f9-8f13-5bb6f5079176",
+    );
+
+    expect(dbClient.execution.create).toHaveBeenCalledWith({
+      data: expect.objectContaining({
+        type: "release",
+        name: "RELEASE_RUN",
+      }),
+    });
+  });
+
+  it("should default execution type to nightly when executionType is absent", async () => {
+    const reportData = {
+      ...mockTestData,
+      runId: "DEFAULT_RUN",
+    };
+
+    await jsonReportService.processReport(
+      reportData,
+      "b4225bdf-9e2b-43f9-8f13-5bb6f5079176",
+    );
+
+    expect(dbClient.execution.create).toHaveBeenCalledWith({
+      data: expect.objectContaining({
+        type: "nightly",
+        name: "DEFAULT_RUN",
+      }),
+    });
+  });
 });
