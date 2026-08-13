@@ -355,7 +355,6 @@ describe("ctrfService", () => {
     expect(jsonReportService.processReport).toHaveBeenCalledWith(
       expect.objectContaining({ executionType: "release" }),
       mockProjectId,
-      mockTx,
     );
   });
 
@@ -371,7 +370,6 @@ describe("ctrfService", () => {
     expect(jsonReportService.processReport).toHaveBeenCalledWith(
       expect.not.objectContaining({ executionType: expect.anything() }),
       mockProjectId,
-      mockTx,
     );
   });
 });
