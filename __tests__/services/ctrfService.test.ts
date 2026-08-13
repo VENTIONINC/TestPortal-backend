@@ -6,11 +6,13 @@ import "@/test-utils/testEnv";
 import { ctrfService } from "@/services/ctrfService";
 import { jsonReportService } from "@/services/jsonReportService";
 import { testAnalysisService } from "@/services/testAnalysisService";
+import { dashboardService } from "@/services/dashboardService";
 import type { CTRFReport } from "@/types/ctrf";
 
 // Mock dependencies
 jest.mock("@/services/jsonReportService");
 jest.mock("@/services/testAnalysisService");
+jest.mock("@/services/dashboardService");
 jest.mock("@/lib/logger", () => ({
   __esModule: true,
   default: () => ({
@@ -21,21 +23,24 @@ jest.mock("@/lib/logger", () => ({
 }));
 
 // Mock Prisma client
-const mockTx = {
-  project: {
-    findUnique: jest.fn(),
-  },
-  result: {
-    findMany: jest.fn(),
-    update: jest.fn(),
-  },
-};
+jest.mock("@/prisma/client", () => {
+  const dbClient = {
+    project: {
+      findUnique: jest.fn(),
+    },
+    result: {
+      findMany: jest.fn(),
+      update: jest.fn(),
+    },
+    $transaction: jest.fn(),
+  };
 
-jest.mock("@/prisma/client", () => ({
-  dbClient: {
-    $transaction: jest.fn((callback) => callback(mockTx)),
-  },
-}));
+  dbClient.$transaction.mockImplementation((callback) => callback(dbClient));
+  return { dbClient };
+});
+
+const { dbClient: mockDbClient } = require("@/prisma/client");
+const mockTx = mockDbClient;
 
 describe("ctrfService", () => {
   const mockProjectId = "project-123";
@@ -73,6 +78,42 @@ describe("ctrfService", () => {
       executionId: "exec-123",
       specsProcessed: 1,
     });
+    (dashboardService.updateStats as jest.Mock).mockResolvedValue(undefined);
+  });
+
+  it("commits persistence before running analysis and dashboard work", async () => {
+    mockDbClient.project.findUnique.mockResolvedValue({
+      owner: { analyzeEnabled: false },
+    });
+
+    await ctrfService.processReport(mockReport, {
+      projectId: mockProjectId,
+    });
+
+    expect(mockDbClient.$transaction).not.toHaveBeenCalled();
+    expect(jsonReportService.processReport).toHaveBeenCalledWith(
+      expect.objectContaining({ runId: "build-1" }),
+      mockProjectId,
+    );
+    expect(dashboardService.updateStats).toHaveBeenCalledWith(
+      "exec-123",
+      mockProjectId,
+      mockDbClient,
+    );
+  });
+
+  it("does not run post-persistence work when the import transaction fails", async () => {
+    (jsonReportService.processReport as jest.Mock).mockRejectedValue(
+      new Error("batch insert failed"),
+    );
+
+    await expect(
+      ctrfService.processReport(mockReport, { projectId: mockProjectId }),
+    ).rejects.toThrow("batch insert failed");
+
+    expect(mockDbClient.project.findUnique).not.toHaveBeenCalled();
+    expect(testAnalysisService.analyzeStoredResults).not.toHaveBeenCalled();
+    expect(dashboardService.updateStats).not.toHaveBeenCalled();
   });
 
   it("should process report and skip analysis if disabled", async () => {
@@ -87,7 +128,6 @@ describe("ctrfService", () => {
     expect(jsonReportService.processReport).toHaveBeenCalledWith(
       expect.objectContaining({ runId: "build-1" }),
       mockProjectId,
-      mockTx,
     );
     expect(mockTx.project.findUnique).toHaveBeenCalledWith({
       where: { id: mockProjectId },
@@ -216,7 +256,6 @@ describe("ctrfService", () => {
         ]),
       }),
       mockProjectId,
-      mockTx,
     );
   });
 
