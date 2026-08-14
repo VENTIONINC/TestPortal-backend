@@ -104,8 +104,7 @@ There is no production `DEFAULT_ENVIRONMENT` constant or
 
 Other examples and compatibility artifacts worth tracking separately:
 
-- `prisma/seed/index.js` forces imported seed report `config.env` to `"staging"`.
-- The currently unreferenced client Dashboard mock-data generator also includes
+- The currently unreferenced client Dashboard mock-data generator includes
   `staging` among synthetic execution metadata values.
 - Backend OpenAPI/MCP CTRF descriptions mention `staging` as an example value.
 

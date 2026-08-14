@@ -50,7 +50,7 @@ Core domain data is project-scoped. `Project` owns executions, specs, issues, up
 | `src/prompts` | Production LLM prompt modules used by backend services. | 7038 |
 | `src/skills` | Downloadable backend-owned assistant skill artifacts. | 7891 |
 | `src/types` | Shared API, Prisma-shaped, MCP, CTRF, dashboard, skills, and test types. | 5251 |
-| `prisma` | PostgreSQL schema, migrations, seed and migration helpers. | 13857 |
+| `prisma` | PostgreSQL schema, migrations, client, and persisted skill package seeder. | 13857 |
 | `__tests__` | Jest unit/integration coverage for routes, controllers, services, models, middleware, lib. | 49199 |
 | `__prompts-tests__` | Prompt evaluation runners, templates, dataset generators, smoke/regression tests. | 10585 |
 | `docs` | Human-facing API, MCP, Docker, deploy, auth, dashboard, release, and research docs. | 29688 |
@@ -262,7 +262,6 @@ Core domain data is project-scoped. `Project` owns executions, specs, issues, up
 - `src/mcp/schemas/ctrfSchemas.ts` exists, but no CTRF MCP tools are registered.
 - Prompt datasets are generated artifacts and are not part of the scanner output.
 - `prisma/client.ts` logs `"sqlite STARTED"` even though the datasource is PostgreSQL.
-- `prisma/seed/migrate-from-sqlite.js` appears stale for the current UUID/project schema.
 - Manual Prisma-shaped types in `src/types/database.ts` can drift from `schema.prisma`.
 - Category naming is not fully unified: some code uses `infra`, while daily metrics include `issuesEnvironment`.
 - `npm run inspector` points to `node build/index.js`, while the build emits and runtime uses `dist/index.js`.
