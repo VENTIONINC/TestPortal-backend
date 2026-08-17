@@ -38,69 +38,61 @@ export const ctrfService = {
     // Step 1: Transform CTRF to report data WITHOUT analysis
     const reportData = this.transformCtrfToReportData(ctrfReport);
 
-    const result = await dbClient.$transaction(
-      async (tx) => {
-        // Step 2: Persist to database
-        const processResult = await jsonReportService.processReport(
-          {
-            ...reportData,
-            provider: reportData.provider || "ctrf",
-          },
-          projectId.toString(),
-          tx,
-        );
+    // Step 2: Persist atomically. Analysis and dashboard work intentionally run
+    // after this transaction commits so external work cannot expire it.
+    const processResult = await jsonReportService.processReport(
+      {
+        ...reportData,
+        provider: reportData.provider || "ctrf",
+      },
+      projectId.toString(),
+    );
 
-        // Step 3: Check if analysis is enabled for project owner
-        const project = await tx.project.findUnique({
-          where: { id: projectId },
-          include: { owner: true },
-        });
+    // Step 3: Check if analysis is enabled for project owner
+    const project = await dbClient.project.findUnique({
+      where: { id: projectId },
+      include: { owner: true },
+    });
 
-        const shouldAnalyze = project?.owner.analyzeEnabled ?? false;
+    const shouldAnalyze = project?.owner.analyzeEnabled ?? false;
 
-        if (!shouldAnalyze) {
-          logger.info("Analysis disabled for user, skipping analysis");
-          return {
-            ...processResult,
-            analysis: undefined,
-          };
-        }
+    let result: CTRFProcessResult = {
+      ...processResult,
+      analysis: undefined,
+    };
 
-        // Step 4: Fetch just-created results from DB with relations
-        const createdResults = await tx.result.findMany({
-          where: { executionId: processResult.executionId },
-          include: {
-            spec: true,
-            execution: true,
-            errors: true,
-          },
-        });
+    if (!shouldAnalyze) {
+      logger.info("Analysis disabled for user, skipping analysis");
+    } else {
+      // Step 4: Fetch just-created results from DB with relations
+      const createdResults = await dbClient.result.findMany({
+        where: { executionId: processResult.executionId },
+        include: {
+          spec: true,
+          execution: true,
+          errors: true,
+        },
+      });
 
-        logger.info(
-          `Fetched ${createdResults.length} results from DB for analysis`,
-        );
+      logger.info(
+        `Fetched ${createdResults.length} results from DB for analysis`,
+      );
 
-        if (this.shouldSkipAnalysis(createdResults)) {
-          return {
-            ...processResult,
-            analysis: undefined,
-          };
-        }
-
+      if (!this.shouldSkipAnalysis(createdResults)) {
         // Step 5: Analyze stored results (POST-PERSIST)
         let analysisMap: Map<string, TestResultAnalysis> | null = null;
         try {
           analysisMap =
             await testAnalysisService.analyzeStoredResults(createdResults);
 
-          // Step 6: Update results with analysis fields
+          // Step 6: Update results with analysis fields (POST-PERSIST)
           logger.info(
             `Updating ${analysisMap.size} results with analysis data`,
           );
 
           await Promise.all(
             Array.from(analysisMap.entries()).map(([resultId, analysis]) =>
-              tx.result.update({
+              dbClient.result.update({
                 where: { id: resultId },
                 data: {
                   analysisStatus: analysis.status,
@@ -125,15 +117,12 @@ export const ctrfService = {
           );
         }
 
-        return {
+        result = {
           ...processResult,
           analysis: analysisMap ? Array.from(analysisMap.values()) : undefined,
         };
-      },
-      {
-        timeout: 30000, // Increase timeout for analysis
-      },
-    );
+      }
+    }
 
     // Update dashboard metrics asynchronously (fire and forget or await?)
     // Awaiting to ensure data consistency in case subsequent calls depend on it,
@@ -189,7 +178,11 @@ export const ctrfService = {
         retry: ctrfTest.retry ?? 0,
         status: this.mapCtrfStatus(ctrfTest.status),
         duration: ctrfTest.duration,
-        startTime: this.getCtrfTestStartTime(ctrfTest, fallbackStartTime, index),
+        startTime: this.getCtrfTestStartTime(
+          ctrfTest,
+          fallbackStartTime,
+          index,
+        ),
         ...(ctrfTest.message
           ? {
               error: {
