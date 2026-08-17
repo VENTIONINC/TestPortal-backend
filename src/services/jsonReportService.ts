@@ -12,6 +12,10 @@ import {
   type IdentifierStrategy,
 } from "@/lib/executionIdentifiers";
 import { normalizeJsonStringArray } from "@/lib/jsonPayloads";
+import {
+  detectFutureReportTimestamps,
+  type FutureExecutionTimestampsWarning,
+} from "@/lib/reportTimestampWarnings";
 import type {
   PrismaExecution,
   PrismaSpec,
@@ -95,6 +99,7 @@ export interface ProcessReportResult {
   success: boolean;
   executionId: string;
   specsProcessed: number;
+  warnings: FutureExecutionTimestampsWarning[];
 }
 
 export const jsonReportService = {
@@ -109,6 +114,8 @@ export const jsonReportService = {
     if (!reportData) {
       throw new Error("Report data is required");
     }
+
+    const warnings = detectFutureReportTimestamps(reportData);
 
     const {
       runId,
@@ -174,6 +181,7 @@ export const jsonReportService = {
         success: true,
         executionId: executionRecord.id,
         specsProcessed: tests.length,
+        warnings,
       };
     };
 

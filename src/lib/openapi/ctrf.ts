@@ -4,6 +4,7 @@
 import { OpenAPIRegistry } from "@asteasolutions/zod-to-openapi";
 import { z } from "./zod";
 import { ErrorResponseSchema } from "./common";
+import { ReportWarningsSchema } from "./reportWarnings";
 
 const CTRFTestStatusSchema = z
   .enum(["passed", "failed", "skipped", "pending", "other"])
@@ -86,18 +87,15 @@ const CTRFReportRequestSchema = z
 const CTRFReportResponseSchema = z
   .object({
     success: z.boolean(),
-    message: z.string(),
     executionId: z
       .string()
       .uuid()
       .describe("Execution ID for the processed report"),
-    data: z.object({
-      specsProcessed: z.number().describe("Number of test specs processed"),
-      executionId: z
-        .string()
-        .uuid()
-        .describe("Database execution ID"),
+    specsProcessed: z.number().describe("Number of test specs processed"),
+    analysis: z.array(z.any()).optional().openapi({
+      description: "Optional AI analysis results for test failures",
     }),
+    warnings: ReportWarningsSchema,
   })
   .openapi("CTRFReportResponse");
 
@@ -145,7 +143,7 @@ export function registerCtrfRoutes(registry: OpenAPIRegistry) {
     },
     security: [{ BearerAuth: [] }],
     responses: {
-      200: {
+      201: {
         description: "CTRF report file processed successfully",
         content: {
           "application/json": {
@@ -205,7 +203,7 @@ export function registerCtrfRoutes(registry: OpenAPIRegistry) {
     },
     security: [{ ApiKeyAuth: [] }],
     responses: {
-      200: {
+      201: {
         description: "CTRF report file processed successfully",
         content: {
           "application/json": {

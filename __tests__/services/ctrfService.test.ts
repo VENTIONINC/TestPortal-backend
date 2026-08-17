@@ -8,6 +8,7 @@ import { jsonReportService } from "@/services/jsonReportService";
 import { testAnalysisService } from "@/services/testAnalysisService";
 import { dashboardService } from "@/services/dashboardService";
 import type { CTRFReport } from "@/types/ctrf";
+import { detectFutureReportTimestamps } from "@/lib/reportTimestampWarnings";
 
 // Mock dependencies
 jest.mock("@/services/jsonReportService");
@@ -371,5 +372,67 @@ describe("ctrfService", () => {
       expect.not.objectContaining({ executionType: expect.anything() }),
       mockProjectId,
     );
+  });
+
+  it("should expose explicit CTRF summary and test start times to validation", () => {
+    const now = new Date("2026-08-14T12:00:00.000Z");
+    const futureStart = Date.parse("2026-08-14T12:30:00.000Z");
+    const baseTest = mockReport.results.tests[0];
+    if (!baseTest) {
+      throw new Error("Expected mock CTRF test");
+    }
+    const report: CTRFReport = {
+      ...mockReport,
+      results: {
+        ...mockReport.results,
+        summary: {
+          ...mockReport.results.summary,
+          start: futureStart,
+        },
+        tests: [
+          {
+            ...baseTest,
+            start: futureStart + 60_000,
+          },
+        ],
+      },
+    };
+
+    const transformed = ctrfService.transformCtrfToReportData(report);
+
+    expect(detectFutureReportTimestamps(transformed, now)).toEqual([
+      {
+        code: "FUTURE_EXECUTION_TIMESTAMPS",
+        count: 2,
+        maxDeviationMinutes: 31,
+        thresholdMinutes: 10,
+      },
+    ]);
+  });
+
+  it("should expose the CTRF summary start used as a test fallback to validation", () => {
+    const now = new Date("2026-08-14T12:00:00.000Z");
+    const futureStart = Date.parse("2026-08-14T12:45:00.000Z");
+    const report: CTRFReport = {
+      ...mockReport,
+      results: {
+        ...mockReport.results,
+        summary: {
+          ...mockReport.results.summary,
+          start: futureStart,
+        },
+      },
+    };
+
+    const transformed = ctrfService.transformCtrfToReportData(report);
+
+    expect(detectFutureReportTimestamps(transformed, now)).toEqual([
+      {
+        code: "FUTURE_EXECUTION_TIMESTAMPS",
+        count: 2,
+        maxDeviationMinutes: 45,
+        thresholdMinutes: 10,
+      },
+    ]);
   });
 });

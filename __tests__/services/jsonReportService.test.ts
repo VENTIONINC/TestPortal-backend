@@ -180,6 +180,7 @@ describe("jsonReportService with optional runId", () => {
     expect(result.success).toBe(true);
     expect(result.executionId).toBe(1);
     expect(result.specsProcessed).toBe(1);
+    expect(result.warnings).toEqual([]);
 
     // Verify execution was created with the provided runId
     expect(dbClient.execution.create).toHaveBeenCalledWith({
@@ -448,5 +449,44 @@ describe("jsonReportService with optional runId", () => {
         location: "test.js:1",
       }),
     );
+  });
+
+  it("should persist a report and return a future timestamp warning", async () => {
+    jest.useFakeTimers().setSystemTime(new Date("2026-08-14T12:00:00.000Z"));
+    const reportData = {
+      ...mockTestData,
+      stats: { startTime: "2026-08-14T12:15:00.000Z" },
+      tests: mockTestData.tests.map((test) => ({
+        ...test,
+        results: test.results.map((result) => ({
+          ...result,
+          startTime: "2026-08-14T12:20:00.000Z",
+        })),
+      })),
+    };
+
+    try {
+      const result = await jsonReportService.processReport(
+        reportData,
+        "b4225bdf-9e2b-43f9-8f13-5bb6f5079176",
+      );
+
+      expect(result).toEqual({
+        success: true,
+        executionId: 1,
+        specsProcessed: 1,
+        warnings: [
+          {
+            code: "FUTURE_EXECUTION_TIMESTAMPS",
+            count: 2,
+            maxDeviationMinutes: 20,
+            thresholdMinutes: 10,
+          },
+        ],
+      });
+      expect(dbClient.result.create).toHaveBeenCalled();
+    } finally {
+      jest.useRealTimers();
+    }
   });
 });
