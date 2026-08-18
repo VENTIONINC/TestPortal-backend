@@ -4,7 +4,6 @@
 import { OpenAPIRegistry } from "@asteasolutions/zod-to-openapi";
 import { z } from "./zod";
 import { ErrorResponseSchema } from "./common";
-import { ReportWarningsSchema } from "./reportWarnings";
 
 const CTRFTestStatusSchema = z
   .enum(["passed", "failed", "skipped", "pending", "other"])
@@ -95,7 +94,6 @@ const CTRFReportResponseSchema = z
     analysis: z.array(z.any()).optional().openapi({
       description: "Optional AI analysis results for test failures",
     }),
-    warnings: ReportWarningsSchema,
   })
   .openapi("CTRFReportResponse");
 
@@ -152,7 +150,8 @@ export function registerCtrfRoutes(registry: OpenAPIRegistry) {
         },
       },
       400: {
-        description: "Bad request - Invalid file format, missing file, or missing projectId",
+        description:
+          "Bad request - invalid file, missing projectId, or future execution timestamp validation failure",
         content: {
           "application/json": {
             schema: ErrorResponseSchema,
@@ -212,7 +211,8 @@ export function registerCtrfRoutes(registry: OpenAPIRegistry) {
         },
       },
       400: {
-        description: "Bad request - Invalid file format, missing file, or missing projectId",
+        description:
+          "Bad request - invalid file, missing projectId, or future execution timestamp validation failure",
         content: {
           "application/json": {
             schema: ErrorResponseSchema,

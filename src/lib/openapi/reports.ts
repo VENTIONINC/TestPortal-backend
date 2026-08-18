@@ -4,10 +4,6 @@
 import { OpenAPIRegistry } from "@asteasolutions/zod-to-openapi";
 import { z } from "./zod";
 import { ErrorResponseSchema } from "./common";
-import {
-  FutureExecutionTimestampsWarningSchema,
-  ReportWarningsSchema,
-} from "./reportWarnings";
 
 const JsonReportTestResultSchema = z
   .object({
@@ -61,7 +57,6 @@ const JsonReportResponseSchema = z
     success: z.boolean(),
     executionId: z.string().uuid(),
     specsProcessed: z.number(),
-    warnings: ReportWarningsSchema,
   })
   .openapi("JsonReportResponse");
 
@@ -70,7 +65,6 @@ const JsonReportResponseWithAnalysisSchema = z
     success: z.boolean(),
     executionId: z.string().uuid(),
     specsProcessed: z.number(),
-    warnings: ReportWarningsSchema,
     analysis: z.array(z.any()).optional().openapi({
       description: "Optional AI analysis results for test failures",
     }),
@@ -103,10 +97,6 @@ export function registerReportRoutes(registry: OpenAPIRegistry) {
   registry.register("JsonReportResponse", JsonReportResponseSchema);
   registry.register("JsonReportResponseWithAnalysis", JsonReportResponseWithAnalysisSchema);
   registry.register("RawJsonReportRequest", RawJsonReportRequestSchema);
-  registry.register(
-    "FutureExecutionTimestampsWarning",
-    FutureExecutionTimestampsWarningSchema,
-  );
 
   registry.registerPath({
     method: "post",
@@ -145,7 +135,8 @@ export function registerReportRoutes(registry: OpenAPIRegistry) {
         },
       },
       400: {
-        description: "Invalid file format, missing file, or processing error",
+        description:
+          "Invalid file, future execution timestamp validation failure, or processing error",
         content: {
           "application/json": {
             schema: ErrorResponseSchema,
@@ -195,7 +186,8 @@ export function registerReportRoutes(registry: OpenAPIRegistry) {
         },
       },
       400: {
-        description: "Invalid file format, missing file, or processing error",
+        description:
+          "Invalid file, future execution timestamp validation failure, or processing error",
         content: {
           "application/json": {
             schema: ErrorResponseSchema,

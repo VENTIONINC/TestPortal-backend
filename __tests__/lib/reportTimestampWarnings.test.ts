@@ -2,8 +2,8 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import {
-  detectFutureReportTimestamps,
-  FUTURE_TIMESTAMP_THRESHOLD_MINUTES,
+  FutureReportTimestampsError,
+  validateReportTimestamps,
 } from "@/lib/reportTimestampWarnings";
 import type { ReportData } from "@/services/jsonReportService";
 
@@ -30,45 +30,49 @@ const createReport = (
   ],
 });
 
-describe("detectFutureReportTimestamps", () => {
-  it("does not warn for past, current, or exactly-threshold timestamps", () => {
+describe("validateReportTimestamps", () => {
+  it("accepts past, current, exactly-threshold, and invalid timestamps", () => {
     const report = createReport(NOW, [
       "2026-08-14T11:59:59.999Z",
       NOW,
       "2026-08-14T12:10:00.000Z",
+      "invalid-date",
     ]);
 
-    expect(detectFutureReportTimestamps(report, NOW)).toEqual([]);
+    expect(() => validateReportTimestamps(report, NOW)).not.toThrow();
   });
 
-  it("warns when a timestamp exceeds the threshold by one millisecond", () => {
+  it("rejects a timestamp that exceeds the threshold by one millisecond", () => {
     const report = createReport("2026-08-14T12:10:00.001Z", [NOW]);
 
-    expect(detectFutureReportTimestamps(report, NOW)).toEqual([
-      {
-        code: "FUTURE_EXECUTION_TIMESTAMPS",
-        count: 1,
-        maxDeviationMinutes: 10.01,
-        thresholdMinutes: FUTURE_TIMESTAMP_THRESHOLD_MINUTES,
-      },
-    ]);
+    expect(() => validateReportTimestamps(report, NOW)).toThrow(
+      "1 timestamp exceeds the allowed 10-minute tolerance. Maximum deviation: 11m.",
+    );
+    expect(() => validateReportTimestamps(report, NOW)).toThrow(
+      FutureReportTimestampsError,
+    );
   });
 
-  it("aggregates execution and result timestamps and ignores invalid values", () => {
+  it("reports the execution/result count and formatted maximum deviation", () => {
     const report = createReport("2026-08-14T12:15:00.000Z", [
-      "invalid-date",
-      "2026-08-14T12:20:30.000Z",
-      "2026-08-14T13:00:00.000Z",
+      "2026-08-14T12:20:00.000Z",
+      "2026-08-14T14:15:00.000Z",
       "2026-08-14T11:00:00.000Z",
     ]);
 
-    expect(detectFutureReportTimestamps(report, NOW)).toEqual([
-      {
-        code: "FUTURE_EXECUTION_TIMESTAMPS",
+    expect(() => validateReportTimestamps(report, NOW)).toThrow(
+      "Import failed. Future test execution timestamps were detected. 3 timestamps exceed the allowed 10-minute tolerance. Maximum deviation: 2h 15m. No data was imported.",
+    );
+
+    try {
+      validateReportTimestamps(report, NOW);
+    } catch (error) {
+      expect(error).toMatchObject({
+        name: "FutureReportTimestampsError",
         count: 3,
-        maxDeviationMinutes: 60,
+        maxDeviationMinutes: 135,
         thresholdMinutes: 10,
-      },
-    ]);
+      });
+    }
   });
 });

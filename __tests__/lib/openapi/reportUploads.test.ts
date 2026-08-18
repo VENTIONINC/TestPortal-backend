@@ -4,26 +4,10 @@
 import { generateOpenAPISpec } from "@/lib/openapi";
 
 describe("report upload OpenAPI contracts", () => {
-  it("documents the shared timestamp warning on every successful upload", () => {
+  it("documents clean success responses and validation errors for every upload", () => {
     const spec = generateOpenAPISpec();
     const componentSchemas = spec.components?.schemas ?? {};
-    const warningSchema = componentSchemas.FutureExecutionTimestampsWarning;
-
-    expect(warningSchema).toMatchObject({
-      type: "object",
-      required: [
-        "code",
-        "count",
-        "maxDeviationMinutes",
-        "thresholdMinutes",
-      ],
-      properties: {
-        code: { type: "string", enum: ["FUTURE_EXECUTION_TIMESTAMPS"] },
-        count: { type: "integer" },
-        maxDeviationMinutes: { type: "number" },
-        thresholdMinutes: { type: "number", enum: [10] },
-      },
-    });
+    expect(componentSchemas.FutureExecutionTimestampsWarning).toBeUndefined();
 
     const responseSchemas = new Map([
       ["/api/v2/upload-json-report", "JsonReportResponse"],
@@ -42,9 +26,14 @@ describe("report upload OpenAPI contracts", () => {
       expect(responseSchema).toEqual({
         $ref: `#/components/schemas/${componentName}`,
       });
-      expect(JSON.stringify(componentSchemas[componentName])).toContain(
+      expect(JSON.stringify(componentSchemas[componentName])).not.toContain(
         '"warnings"',
       );
+      expect(
+        spec.paths?.[path]?.post?.responses?.["400"]?.content?.[
+          "application/json"
+        ]?.schema,
+      ).toEqual({ $ref: "#/components/schemas/ErrorResponse" });
     }
   });
 
@@ -54,12 +43,11 @@ describe("report upload OpenAPI contracts", () => {
 
     expect(ctrfSchema).toMatchObject({
       type: "object",
-      required: ["success", "executionId", "specsProcessed", "warnings"],
+      required: ["success", "executionId", "specsProcessed"],
       properties: {
         success: { type: "boolean" },
         executionId: { type: "string", format: "uuid" },
         specsProcessed: { type: "number" },
-        warnings: { type: "array" },
       },
     });
     expect(JSON.stringify(ctrfSchema)).not.toContain('"data"');

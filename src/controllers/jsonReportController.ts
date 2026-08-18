@@ -13,6 +13,7 @@ import type { AuthenticatedRequest } from "@/middleware/authMiddleware";
 import { dbClient } from "@/prisma/client";
 import getLogger from "@/lib/logger";
 import { dashboardService } from "@/services/dashboardService";
+import { FutureReportTimestampsError } from "@/lib/reportTimestampWarnings";
 
 const logger = getLogger("json-report-controller");
 
@@ -183,7 +184,10 @@ export const jsonReportController = {
     } catch (error) {
       const err = error as Error;
       res.status(400).json({
-        error: `Failed to process raw JSON report file. ${err.message}`,
+        error:
+          err instanceof FutureReportTimestampsError
+            ? err.message
+            : `Failed to process raw JSON report file. ${err.message}`,
       });
     }
   },
@@ -209,7 +213,10 @@ export const jsonReportController = {
     } catch (error) {
       const err = error as Error;
       res.status(400).json({
-        error: `Failed to process raw JSON report file. ${err.message}`,
+        error:
+          err instanceof FutureReportTimestampsError
+            ? err.message
+            : `Failed to process raw JSON report file. ${err.message}`,
       });
     }
   },

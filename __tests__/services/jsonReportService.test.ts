@@ -180,7 +180,6 @@ describe("jsonReportService with optional runId", () => {
     expect(result.success).toBe(true);
     expect(result.executionId).toBe(1);
     expect(result.specsProcessed).toBe(1);
-    expect(result.warnings).toEqual([]);
 
     // Verify execution was created with the provided runId
     expect(dbClient.execution.create).toHaveBeenCalledWith({
@@ -451,7 +450,7 @@ describe("jsonReportService with optional runId", () => {
     );
   });
 
-  it("should persist a report and return a future timestamp warning", async () => {
+  it("should reject a future timestamp before starting persistence", async () => {
     jest.useFakeTimers().setSystemTime(new Date("2026-08-14T12:00:00.000Z"));
     const reportData = {
       ...mockTestData,
@@ -466,25 +465,19 @@ describe("jsonReportService with optional runId", () => {
     };
 
     try {
-      const result = await jsonReportService.processReport(
-        reportData,
-        "b4225bdf-9e2b-43f9-8f13-5bb6f5079176",
+      await expect(
+        jsonReportService.processReport(
+          reportData,
+          "b4225bdf-9e2b-43f9-8f13-5bb6f5079176",
+        ),
+      ).rejects.toThrow(
+        "Import failed. Future test execution timestamps were detected. 2 timestamps exceed the allowed 10-minute tolerance. Maximum deviation: 20m. No data was imported.",
       );
-
-      expect(result).toEqual({
-        success: true,
-        executionId: 1,
-        specsProcessed: 1,
-        warnings: [
-          {
-            code: "FUTURE_EXECUTION_TIMESTAMPS",
-            count: 2,
-            maxDeviationMinutes: 20,
-            thresholdMinutes: 10,
-          },
-        ],
-      });
-      expect(dbClient.result.create).toHaveBeenCalled();
+      expect(dbClient.$transaction).not.toHaveBeenCalled();
+      expect(dbClient.execution.findFirst).not.toHaveBeenCalled();
+      expect(dbClient.execution.create).not.toHaveBeenCalled();
+      expect(dbClient.spec.create).not.toHaveBeenCalled();
+      expect(dbClient.result.create).not.toHaveBeenCalled();
     } finally {
       jest.useRealTimers();
     }

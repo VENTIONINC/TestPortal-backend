@@ -8,7 +8,7 @@ import { jsonReportService } from "@/services/jsonReportService";
 import { testAnalysisService } from "@/services/testAnalysisService";
 import { dashboardService } from "@/services/dashboardService";
 import type { CTRFReport } from "@/types/ctrf";
-import { detectFutureReportTimestamps } from "@/lib/reportTimestampWarnings";
+import { validateReportTimestamps } from "@/lib/reportTimestampWarnings";
 
 // Mock dependencies
 jest.mock("@/services/jsonReportService");
@@ -103,14 +103,14 @@ describe("ctrfService", () => {
     );
   });
 
-  it("does not run post-persistence work when the import transaction fails", async () => {
+  it("does not run analysis or dashboard work when timestamp validation fails", async () => {
     (jsonReportService.processReport as jest.Mock).mockRejectedValue(
-      new Error("batch insert failed"),
+      new Error("Future test execution timestamps were detected"),
     );
 
     await expect(
       ctrfService.processReport(mockReport, { projectId: mockProjectId }),
-    ).rejects.toThrow("batch insert failed");
+    ).rejects.toThrow("Future test execution timestamps were detected");
 
     expect(mockDbClient.project.findUnique).not.toHaveBeenCalled();
     expect(testAnalysisService.analyzeStoredResults).not.toHaveBeenCalled();
@@ -400,14 +400,9 @@ describe("ctrfService", () => {
 
     const transformed = ctrfService.transformCtrfToReportData(report);
 
-    expect(detectFutureReportTimestamps(transformed, now)).toEqual([
-      {
-        code: "FUTURE_EXECUTION_TIMESTAMPS",
-        count: 2,
-        maxDeviationMinutes: 31,
-        thresholdMinutes: 10,
-      },
-    ]);
+    expect(() => validateReportTimestamps(transformed, now)).toThrow(
+      "2 timestamps exceed the allowed 10-minute tolerance. Maximum deviation: 31m.",
+    );
   });
 
   it("should expose the CTRF summary start used as a test fallback to validation", () => {
@@ -426,13 +421,8 @@ describe("ctrfService", () => {
 
     const transformed = ctrfService.transformCtrfToReportData(report);
 
-    expect(detectFutureReportTimestamps(transformed, now)).toEqual([
-      {
-        code: "FUTURE_EXECUTION_TIMESTAMPS",
-        count: 2,
-        maxDeviationMinutes: 45,
-        thresholdMinutes: 10,
-      },
-    ]);
+    expect(() => validateReportTimestamps(transformed, now)).toThrow(
+      "2 timestamps exceed the allowed 10-minute tolerance. Maximum deviation: 45m.",
+    );
   });
 });
