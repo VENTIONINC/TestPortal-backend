@@ -8,7 +8,7 @@ import { FutureReportTimestampsError } from "@/lib/reportTimestampWarnings";
 import { createMockResponse } from "@/test-utils/httpMocks";
 
 const expectedMessage =
-  "Import failed. Future test execution timestamps were detected. 3 timestamps exceed the allowed 10-minute tolerance. Maximum deviation: 2h 15m. No data was imported.";
+  'Import failed for file "invalid-results.ctrf.json". Future test execution timestamps were detected. 3 timestamps exceed the allowed 10-minute tolerance. Maximum deviation: 2h 15m. No data was imported.';
 
 describe("report upload timestamp validation responses", () => {
   it.each([
@@ -42,7 +42,13 @@ describe("report upload timestamp validation responses", () => {
       .mockRejectedValue(new FutureReportTimestampsError(3, 135));
     const res = createMockResponse<{ error: string }>();
 
-    await controller[handlerName]({ body: {} } as Request, res as Response);
+    await controller[handlerName](
+      {
+        body: {},
+        file: { originalname: "invalid-results.ctrf.json" },
+      } as Request,
+      res as Response,
+    );
 
     expect(res.statusCode).toBe(400);
     expect(res.body).toEqual({ error: expectedMessage });

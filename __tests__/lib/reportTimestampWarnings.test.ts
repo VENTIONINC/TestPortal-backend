@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import {
+  formatFutureReportTimestampsError,
   FutureReportTimestampsError,
   validateReportTimestamps,
 } from "@/lib/reportTimestampWarnings";
@@ -74,5 +75,15 @@ describe("validateReportTimestamps", () => {
         thresholdMinutes: 10,
       });
     }
+  });
+
+  it("adds the uploaded filename to the validation message", () => {
+    const error = new FutureReportTimestampsError(1, 45);
+
+    expect(
+      formatFutureReportTimestampsError(error, "invalid-results.ctrf.json"),
+    ).toBe(
+      'Import failed for file "invalid-results.ctrf.json". Future test execution timestamps were detected. 1 timestamp exceeds the allowed 10-minute tolerance. Maximum deviation: 45m. No data was imported.',
+    );
   });
 });

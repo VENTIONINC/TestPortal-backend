@@ -53,6 +53,20 @@ export class FutureReportTimestampsError extends Error {
   }
 }
 
+export const formatFutureReportTimestampsError = (
+  error: FutureReportTimestampsError,
+  originalFileName?: string,
+): string => {
+  if (!originalFileName) {
+    return error.message;
+  }
+
+  return error.message.replace(
+    "Import failed.",
+    `Import failed for file "${originalFileName}".`,
+  );
+};
+
 export const validateReportTimestamps = (
   report: TimestampedReport,
   now: Date = new Date(),
