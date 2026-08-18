@@ -5,11 +5,6 @@ import { dbClient } from "@/prisma/client";
 import type { PrismaIssue, PrismaIssueWithUsers } from "@/types";
 import { Prisma } from "@prisma/client";
 
-interface IssueWhereInput {
-  name?: { contains: string };
-  projectId?: string;
-}
-
 interface CreateIssueData {
   name: string;
   description?: string;
@@ -34,15 +29,35 @@ export interface LinkedIssueResult {
   }>;
 }
 
+const buildWhereClause = (
+  projectId: string,
+  name?: string,
+  type?: string,
+): Prisma.IssueWhereInput => ({
+  projectId,
+  ...(name && { name: { contains: name } }),
+  ...(type && {
+    assumptions: {
+      some: {
+        resultError: {
+          result: {
+            execution: { type },
+          },
+        },
+      },
+    },
+  }),
+});
+
 export const issueModel = {
   findMany: async (
     projectId: string,
     name?: string,
     page = 1,
     limit = 30,
+    type?: string,
   ): Promise<PrismaIssue[]> => {
-    const whereClause: IssueWhereInput = { projectId };
-    if (name) whereClause.name = { contains: name };
+    const whereClause = buildWhereClause(projectId, name, type);
 
     return await dbClient.issue.findMany({
       where: whereClause,
@@ -57,9 +72,9 @@ export const issueModel = {
     name?: string,
     page = 1,
     limit = 30,
+    type?: string,
   ): Promise<PrismaIssueWithUsers[]> => {
-    const whereClause: Prisma.IssueWhereInput = { projectId };
-    if (name) whereClause.name = { contains: name };
+    const whereClause = buildWhereClause(projectId, name, type);
 
     return (await dbClient.issue.findMany({
       where: whereClause,
@@ -76,9 +91,9 @@ export const issueModel = {
   count: async (
     projectId: string,
     name?: string,
+    type?: string,
   ): Promise<number> => {
-    const whereClause: IssueWhereInput = { projectId };
-    if (name) whereClause.name = { contains: name };
+    const whereClause = buildWhereClause(projectId, name, type);
 
     return await dbClient.issue.count({
       where: whereClause,
@@ -117,12 +132,14 @@ export const issueModel = {
     issueIds: string[],
     statFrom?: string,
     statTo?: string,
+    type?: string,
   ): Promise<LinkedIssueResult[]> => {
     if (issueIds.length === 0) {
       return [];
     }
 
     const where: Prisma.ResultWhereInput = {
+      ...(type && { execution: { type } }),
       errors: {
         some: {
           assumptions: {

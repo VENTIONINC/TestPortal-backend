@@ -29,6 +29,7 @@ const logger = getLogger("result-service");
 interface GetResultsResponse {
   results: StructuredResultWithRelations[];
   rawResults: StructuredResultWithRelations[];
+  availableTags: string[];
   total: number;
   rawTotal: number;
   page: number;
@@ -79,10 +80,18 @@ export const resultService = {
     if (to) filters.to = to;
     if (dates) filters.dates = dates;
 
-    const [results, totalResults] = await Promise.all([
+    const availableTagsFilters: ResultFilters = { ...filters };
+    delete availableTagsFilters.tag;
+
+    const [results, totalResults, specTags] = await Promise.all([
       resultModel.findMany(filters, page, limit),
       resultModel.count(filters),
+      resultModel.findSpecTags(availableTagsFilters),
     ]);
+
+    const availableTags = [
+      ...new Set(specTags.flatMap(normalizeJsonStringArray)),
+    ].sort((left, right) => left.localeCompare(right));
 
     const specRecordIds = [
       ...new Set(results.map((result) => result.spec.id)),
@@ -98,6 +107,7 @@ export const resultService = {
     return {
       results: results.map(normalizeResultPayload),
       rawResults: rawResults.map(normalizeResultPayload),
+      availableTags,
       total: totalResults,
       rawTotal: rawResults.length,
       page: Number(page),

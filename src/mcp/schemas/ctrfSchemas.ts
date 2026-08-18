@@ -55,6 +55,7 @@ export const processCtrfReportSchema: MCPToolSchema = {
         repositoryUrl: z.string().optional().describe("Repository URL"),
         branchName: z.string().optional().describe("Git branch name"),
         testEnvironment: z.string().optional().describe("Test environment (e.g., 'staging', 'prod')"),
+        executionType: z.string().optional().describe("Execution type (e.g., nightly, release, ondemand)"),
         extra: z.record(z.string(), z.any()).optional().describe("Custom environment metadata"),
       }).optional(),
       extra: z.record(z.string(), z.any()).optional().describe("Custom metadata"),

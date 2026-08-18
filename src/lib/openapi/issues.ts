@@ -194,6 +194,10 @@ export function registerIssueRoutes(registry: OpenAPIRegistry) {
         limit: z.number().default(10).optional(),
         statFrom: z.string().datetime().optional(),
         statTo: z.string().datetime().optional(),
+        type: z
+          .string()
+          .optional()
+          .describe("Filter issues and statistics by exact execution type"),
       }),
     },
     security: [{ BearerAuth: [] }],

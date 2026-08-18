@@ -26,6 +26,7 @@ interface GetAllIssuesParams {
   limit?: number;
   statFrom?: string;
   statTo?: string;
+  type?: string;
 }
 
 export interface IssueRead extends PrismaIssue {
@@ -131,12 +132,11 @@ async function getResultsByIssueId(
   issueIds: readonly string[],
   statFrom?: string,
   statTo?: string,
+  type?: string,
 ): Promise<ResultsByIssueId> {
-  const linkedResults = await issueModel.findLinkedResults(
-    [...issueIds],
-    statFrom,
-    statTo,
-  );
+  const linkedResults = type
+    ? await issueModel.findLinkedResults([...issueIds], statFrom, statTo, type)
+    : await issueModel.findLinkedResults([...issueIds], statFrom, statTo);
 
   return groupResultsByIssueId(issueIds, linkedResults);
 }
@@ -312,14 +312,16 @@ export const issueService = {
       limit = 10,
       statFrom,
       statTo,
+      type,
     } = params;
-    const issues = await issueModel.findMany(projectId, name, page, limit);
+    const issues = await issueModel.findMany(projectId, name, page, limit, type);
     const [totalIssues, resultsByIssueId] = await Promise.all([
-      issueModel.count(projectId, name),
+      issueModel.count(projectId, name, type),
       getResultsByIssueId(
         issues.map((issue) => issue.id),
         statFrom,
         statTo,
+        type,
       ),
     ]);
 
@@ -348,19 +350,22 @@ export const issueService = {
       limit = 10,
       statFrom,
       statTo,
+      type,
     } = params;
     const issues = await issueModel.findManyWithUsers(
       projectId,
       name,
       page,
       limit,
+      type,
     );
     const [totalIssues, resultsByIssueId] = await Promise.all([
-      issueModel.count(projectId, name),
+      issueModel.count(projectId, name, type),
       getResultsByIssueId(
         issues.map((issue) => issue.id),
         statFrom,
         statTo,
+        type,
       ),
     ]);
 

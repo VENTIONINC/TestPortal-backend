@@ -91,6 +91,30 @@ type ResultStatsRow = Prisma.ResultGetPayload<{
   select: typeof resultStatsSelect;
 }>;
 
+function applyTagFilter(specFilter: Prisma.SpecWhereInput, tag?: string) {
+  if (!tag) return;
+
+  const selectedTags = [
+    ...new Set(
+      tag
+        .split(",")
+        .map((value) => value.trim())
+        .filter(Boolean),
+    ),
+  ];
+
+  if (selectedTags.length === 1) {
+    const selectedTag = selectedTags[0];
+    if (selectedTag) {
+      specFilter.tags = { array_contains: [selectedTag] };
+    }
+  } else if (selectedTags.length > 1) {
+    specFilter.OR = selectedTags.map((selectedTag) => ({
+      tags: { array_contains: [selectedTag] },
+    }));
+  }
+}
+
 export const resultModel = {
   findById: async (
     id: number | string,
@@ -161,7 +185,7 @@ export const resultModel = {
     if (specRecordIds) whereClause.spec.id = { in: specRecordIds };
     if (specFile) whereClause.spec.file = { contains: specFile };
     if (specName) whereClause.spec.title = { contains: specName };
-    if (tag) whereClause.spec.tags = { array_contains: [tag] };
+    applyTagFilter(whereClause.spec, tag);
 
     // Build execution filter (always include projectId)
     whereClause.execution = {};
@@ -326,6 +350,7 @@ export const resultModel = {
       projectId,
       tag,
       specId,
+      specRecordIds,
       specFile,
       specName,
       environment,
@@ -351,9 +376,10 @@ export const resultModel = {
     whereClause.spec = {};
     whereClause.spec.projectId = projectId;
     if (specId) whereClause.spec.key = specId;
+    if (specRecordIds) whereClause.spec.id = { in: specRecordIds };
     if (specFile) whereClause.spec.file = { contains: specFile };
     if (specName) whereClause.spec.title = { contains: specName };
-    if (tag) whereClause.spec.tags = { array_contains: [tag] };
+    applyTagFilter(whereClause.spec, tag);
 
     // Build execution filter (always include projectId)
     whereClause.execution = {};
@@ -490,6 +516,67 @@ export const resultModel = {
     return await dbClient.result.count({
       where: whereClause,
     });
+  },
+
+  findSpecTags: async (filters: ResultFilters): Promise<Prisma.JsonValue[]> => {
+    const {
+      projectId,
+      tag,
+      specId,
+      specRecordIds,
+      specFile,
+      specName,
+      environment,
+      type,
+      status,
+      from,
+      to,
+      dates,
+    } = filters;
+    const specWhere: Prisma.SpecWhereInput = { projectId };
+    if (specId) specWhere.key = specId;
+    if (specRecordIds) specWhere.id = { in: specRecordIds };
+    if (specFile) specWhere.file = { contains: specFile };
+    if (specName) specWhere.title = { contains: specName };
+    applyTagFilter(specWhere, tag);
+
+    const resultWhere: Prisma.ResultWhereInput = {
+      execution: {
+        projectId,
+        ...(environment && { environment }),
+        ...(type && { type }),
+      },
+      ...(status && { status }),
+    };
+    if (from || to) {
+      const toDate = to ? new Date(to) : undefined;
+      toDate?.setDate(toDate.getDate() + 1);
+      resultWhere.startTime = {
+        ...(from && { gte: new Date(from) }),
+        ...(toDate && { lte: toDate }),
+      };
+    }
+    if (dates?.length) {
+      resultWhere.AND = [
+        {
+          OR: dates.map((date) => {
+            const start = new Date(date);
+            const end = new Date(date);
+            end.setUTCDate(end.getUTCDate() + 1);
+            return { startTime: { gte: start, lt: end } };
+          }),
+        },
+      ];
+    }
+
+    const rows = await dbClient.spec.findMany({
+      where: {
+        ...specWhere,
+        results: { some: resultWhere },
+      },
+      select: { tags: true },
+    });
+    return rows.map((row) => row.tags);
   },
 
   findForAnalysisExport: async (

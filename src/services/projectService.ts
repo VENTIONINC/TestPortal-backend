@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { projectModel } from "@/models/projectModel";
+import { executionModel } from "@/models/executionModel";
 import type { Project } from "@prisma/client";
 import {
   DEFAULT_PROJECT_CATEGORY_WEIGHTS,
@@ -57,6 +58,16 @@ function normalizeProject<T>(
 }
 
 export const projectService = {
+  async getExecutionTypes(projectId: string): Promise<string[]> {
+    const types = await executionModel.findDistinctTypes(projectId);
+
+    return types
+      .filter((type) => type.trim().length > 0 && type.toLowerCase() !== "all")
+      .sort((left, right) =>
+        left.localeCompare(right, undefined, { sensitivity: "base" }),
+      );
+  },
+
   async getProjects(params: GetProjectsParams): Promise<ProjectWithDetails[]> {
     const projects = await projectModel.findMany(params);
     return projects.map((project) =>

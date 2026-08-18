@@ -270,7 +270,6 @@ export const dashboardService = {
    */
   async getDashboard(
     projectId: string,
-    environment: string,
     periodDays: number,
     filterType?: string,
     granularity: DashboardGranularity = "daily",
@@ -292,7 +291,6 @@ export const dashboardService = {
     // 1. Fetch Daily Metrics (Atomic Rows)
     const metricsWhere: Prisma.DailyExecutionMetricWhereInput = {
       projectId,
-      environment,
       date: rangeEndExclusive
         ? { gte: rangeStartDate, lt: rangeEndExclusive }
         : { gte: rangeStartDate },
@@ -373,7 +371,6 @@ export const dashboardService = {
     // We fetch actual recent entries from DB execution table
     const executionWhere: Prisma.ExecutionWhereInput = {
       projectId,
-      environment, // Filter by env
       startedAt: rangeEndExclusive
         ? { gte: rangeStartDate, lt: rangeEndExclusive }
         : { gte: rangeStartDate },

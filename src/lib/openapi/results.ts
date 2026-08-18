@@ -120,6 +120,11 @@ const ResultsListResponseSchema = z
     rawResults: z
       .array(ResultSchema)
       .describe("Unfiltered period results for specs in the current results page"),
+    availableTags: z
+      .array(z.string())
+      .describe(
+        "Unique sorted tags matching all active result filters except tag",
+      ),
     total: z.number().int().nonnegative(),
     rawTotal: z
       .number()

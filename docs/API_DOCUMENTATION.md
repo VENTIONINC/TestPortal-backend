@@ -169,52 +169,37 @@ the catalog-provided `downloadUrl` or directly to
   - `issueId` (in path): The ID of the issue to update.
 - **Controller:** `issueController.updateIssue`
 
-## JSON Report Route (`src/routes/json-report.js`)
+## JSON Report Routes (`src/routes/json-report.ts`)
 
-### POST `/json-report`
+### POST `/v2/upload-json-report`
 
-- **Description:** Processes and stores a JSON test report following the Service Layer Pattern. This endpoint handles creating or updating execution records, spec records, and result records (including errors) based on the provided report.
-- **Controller:** `jsonReportController.processReport`
-- **Service:** `jsonReportService.processReport`
-- **Request Body:** Expects a JSON object representing the test report. Key fields include:
-  - `runId` (required): Identifier for the test run.
-  - `env`: Environment where the test run occurred.
-  - `version`: Version of the software under test.
-  - `stats.startTime`: Start time of the execution.
-  - `tests` (required): An array of test spec objects, each containing:
-    - `title` (required): Title of the spec (may contain a spec key like C[digits]).
-    - `custom_id`: Alternative custom ID for the spec.
-    - `location.file`: File path of the spec.
-    - `tags`: Array of tags associated with the spec.
-    - `annotations`: Array of annotations for the spec.
-    - `results` (required): An array of result objects for the spec, each containing:
-      - `reportPortalLink`: Link to the Report Portal report for this result.
-      - `retry`: Retry attempt number.
-      - `status`: Status of the test result (e.g., 'passed', 'failed').
-      - `duration`: Duration of the test execution.
-      - `startTime`: Start time of this specific test result.
-      - `error` (optional): Error details if the test failed, including stack trace and assertion information.
-- **Response:**
-  - `201 Created`: Report processed successfully
-    ```json
-    {
-      "success": true,
-      "executionId": 123,
-      "specsProcessed": 15
-    }
-    ```
-  - `400 Bad Request`: Invalid request data or processing error
-    ```json
-    {
-      "error": "Failed to process JSON report. [specific error message]"
-    }
-    ```
-- **Business Logic:** 
-  - Creates or finds execution record by runId
-  - Processes each test spec and creates spec records if they don't exist
-  - Creates result records for each test result
-  - Handles error parsing and creates error records when tests fail
-  - Prevents duplicate result records by checking existing startTime combinations
+- **Description:** Uploads and processes a raw JSON test report.
+- **Authentication:** Bearer JWT.
+- **Controller:** `jsonReportController.processRawReportFile`
+- **Content type:** `multipart/form-data`.
+- **Form fields:**
+  - `projectId` (required): UUID of the project associated with the report.
+  - `report` (required): JSON report file.
+- **Responses:**
+  - `201 Created`: Report processed successfully.
+  - `400 Bad Request`: Invalid or missing report file, project ID, or report data.
+  - `401 Unauthorized`: Invalid or missing JWT.
+
+### POST `/v2/upload-json-report-api-key`
+
+- **Description:** Uploads and processes a raw JSON test report using the project associated with an API key.
+- **Authentication:** API key in the `x-api-key` header.
+- **Controller:** `jsonReportController.processRawReportFileWithApiKey`
+- **Content type:** `multipart/form-data`.
+- **Form fields:**
+  - `report` (required): JSON report file.
+- **Responses:**
+  - `201 Created`: Report processed successfully, with optional analysis results.
+  - `400 Bad Request`: Invalid or missing report file or report data.
+  - `401 Unauthorized`: Invalid or missing API key.
+
+Both route paths are mounted under `/api`, producing the public endpoints
+`/api/v2/upload-json-report` and `/api/v2/upload-json-report-api-key`.
 
 ## Result Error Routes (`src/routes/result-errors.js`)
 

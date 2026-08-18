@@ -46,6 +46,7 @@ export interface CTRFEnvironment {
   repositoryUrl?: string;
   branchName?: string;
   testEnvironment?: string;
+  executionType?: string;
   extra?: Record<string, unknown>;
 }
 
