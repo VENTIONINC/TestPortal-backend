@@ -449,4 +449,37 @@ describe("jsonReportService with optional runId", () => {
       }),
     );
   });
+
+  it("should reject a future timestamp before starting persistence", async () => {
+    jest.useFakeTimers().setSystemTime(new Date("2026-08-14T12:00:00.000Z"));
+    const reportData = {
+      ...mockTestData,
+      stats: { startTime: "2026-08-14T12:15:00.000Z" },
+      tests: mockTestData.tests.map((test) => ({
+        ...test,
+        results: test.results.map((result) => ({
+          ...result,
+          startTime: "2026-08-14T12:20:00.000Z",
+        })),
+      })),
+    };
+
+    try {
+      await expect(
+        jsonReportService.processReport(
+          reportData,
+          "b4225bdf-9e2b-43f9-8f13-5bb6f5079176",
+        ),
+      ).rejects.toThrow(
+        "Import failed. Future test execution timestamps were detected. 2 timestamps exceed the allowed 10-minute tolerance. Maximum deviation: 20m. No data was imported.",
+      );
+      expect(dbClient.$transaction).not.toHaveBeenCalled();
+      expect(dbClient.execution.findFirst).not.toHaveBeenCalled();
+      expect(dbClient.execution.create).not.toHaveBeenCalled();
+      expect(dbClient.spec.create).not.toHaveBeenCalled();
+      expect(dbClient.result.create).not.toHaveBeenCalled();
+    } finally {
+      jest.useRealTimers();
+    }
+  });
 });

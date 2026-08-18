@@ -8,6 +8,7 @@ import { jsonReportService } from "@/services/jsonReportService";
 import { testAnalysisService } from "@/services/testAnalysisService";
 import { dashboardService } from "@/services/dashboardService";
 import type { CTRFReport } from "@/types/ctrf";
+import { validateReportTimestamps } from "@/lib/reportTimestampWarnings";
 
 // Mock dependencies
 jest.mock("@/services/jsonReportService");
@@ -102,14 +103,14 @@ describe("ctrfService", () => {
     );
   });
 
-  it("does not run post-persistence work when the import transaction fails", async () => {
+  it("does not run analysis or dashboard work when timestamp validation fails", async () => {
     (jsonReportService.processReport as jest.Mock).mockRejectedValue(
-      new Error("batch insert failed"),
+      new Error("Future test execution timestamps were detected"),
     );
 
     await expect(
       ctrfService.processReport(mockReport, { projectId: mockProjectId }),
-    ).rejects.toThrow("batch insert failed");
+    ).rejects.toThrow("Future test execution timestamps were detected");
 
     expect(mockDbClient.project.findUnique).not.toHaveBeenCalled();
     expect(testAnalysisService.analyzeStoredResults).not.toHaveBeenCalled();
@@ -370,6 +371,58 @@ describe("ctrfService", () => {
     expect(jsonReportService.processReport).toHaveBeenCalledWith(
       expect.not.objectContaining({ executionType: expect.anything() }),
       mockProjectId,
+    );
+  });
+
+  it("should expose explicit CTRF summary and test start times to validation", () => {
+    const now = new Date("2026-08-14T12:00:00.000Z");
+    const futureStart = Date.parse("2026-08-14T12:30:00.000Z");
+    const baseTest = mockReport.results.tests[0];
+    if (!baseTest) {
+      throw new Error("Expected mock CTRF test");
+    }
+    const report: CTRFReport = {
+      ...mockReport,
+      results: {
+        ...mockReport.results,
+        summary: {
+          ...mockReport.results.summary,
+          start: futureStart,
+        },
+        tests: [
+          {
+            ...baseTest,
+            start: futureStart + 60_000,
+          },
+        ],
+      },
+    };
+
+    const transformed = ctrfService.transformCtrfToReportData(report);
+
+    expect(() => validateReportTimestamps(transformed, now)).toThrow(
+      "2 timestamps exceed the allowed 10-minute tolerance. Maximum deviation: 31m.",
+    );
+  });
+
+  it("should expose the CTRF summary start used as a test fallback to validation", () => {
+    const now = new Date("2026-08-14T12:00:00.000Z");
+    const futureStart = Date.parse("2026-08-14T12:45:00.000Z");
+    const report: CTRFReport = {
+      ...mockReport,
+      results: {
+        ...mockReport.results,
+        summary: {
+          ...mockReport.results.summary,
+          start: futureStart,
+        },
+      },
+    };
+
+    const transformed = ctrfService.transformCtrfToReportData(report);
+
+    expect(() => validateReportTimestamps(transformed, now)).toThrow(
+      "2 timestamps exceed the allowed 10-minute tolerance. Maximum deviation: 45m.",
     );
   });
 });

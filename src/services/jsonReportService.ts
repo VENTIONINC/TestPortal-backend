@@ -12,6 +12,7 @@ import {
   type IdentifierStrategy,
 } from "@/lib/executionIdentifiers";
 import { normalizeJsonStringArray } from "@/lib/jsonPayloads";
+import { validateReportTimestamps } from "@/lib/reportTimestampWarnings";
 import type {
   PrismaExecution,
   PrismaSpec,
@@ -109,6 +110,8 @@ export const jsonReportService = {
     if (!reportData) {
       throw new Error("Report data is required");
     }
+
+    validateReportTimestamps(reportData);
 
     const {
       runId,

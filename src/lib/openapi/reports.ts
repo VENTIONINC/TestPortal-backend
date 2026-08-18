@@ -135,7 +135,8 @@ export function registerReportRoutes(registry: OpenAPIRegistry) {
         },
       },
       400: {
-        description: "Invalid file format, missing file, or processing error",
+        description:
+          "Invalid file, future execution timestamp validation failure, or processing error",
         content: {
           "application/json": {
             schema: ErrorResponseSchema,
@@ -185,7 +186,8 @@ export function registerReportRoutes(registry: OpenAPIRegistry) {
         },
       },
       400: {
-        description: "Invalid file format, missing file, or processing error",
+        description:
+          "Invalid file, future execution timestamp validation failure, or processing error",
         content: {
           "application/json": {
             schema: ErrorResponseSchema,
