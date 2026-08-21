@@ -63,11 +63,21 @@ export interface PrismaResultError {
   message: string;
   callLog?: Prisma.JsonValue | null;
   callStack: Prisma.JsonValue;
+  rawLogs?: Prisma.JsonValue | null;
+  sourceSnippet?: Prisma.JsonValue | null;
+  generatedTestCase?: string | null;
   testAssertion?: string | null;
   expectedPattern?: string | null;
   receivedString?: string | null;
   location: string;
   resultId?: string | null; // UUID reference to Result
+}
+
+export interface ResultErrorSourceSnippet {
+  path: string;
+  text: string;
+  startLine: number;
+  failingLine: number;
 }
 
 export interface PrismaAssumption {
@@ -170,9 +180,14 @@ export interface StructuredSpec extends Omit<PrismaSpec, "tags" | "annotations">
 }
 
 export interface StructuredResultError
-  extends Omit<PrismaResultError, "callLog" | "callStack"> {
+  extends Omit<
+    PrismaResultError,
+    "callLog" | "callStack" | "rawLogs" | "sourceSnippet"
+  > {
   callLog: string[];
   callStack: string[];
+  rawLogs: string[];
+  sourceSnippet: ResultErrorSourceSnippet | null;
 }
 
 export interface StructuredResultWithRelations extends PrismaResult {
