@@ -4,6 +4,7 @@
 import "@/test-utils/testEnv";
 import { jest } from "@jest/globals";
 import { resultErrorService } from "@/services/resultErrorService";
+import { MAX_ANALYZE_ERROR_IDS } from "@/config/aiLimits";
 import { resultErrorModel } from "@/models/resultErrorModel";
 import { testAnalysisService } from "@/services/testAnalysisService";
 import { dashboardService } from "@/services/dashboardService";
@@ -46,6 +47,20 @@ describe("resultErrorService.analyzeErrors", () => {
     await expect(
       resultErrorService.analyzeErrors("project-1", [""]),
     ).rejects.toThrow("Error IDs must be non-empty strings");
+  });
+
+  it("throws when errorIds exceeds the analysis batch limit", async () => {
+    await expect(
+      resultErrorService.analyzeErrors(
+        "project-1",
+        Array.from(
+          { length: MAX_ANALYZE_ERROR_IDS + 1 },
+          (_, index) => `err-${index}`,
+        ),
+      ),
+    ).rejects.toThrow(
+      `Error IDs array cannot contain more than ${MAX_ANALYZE_ERROR_IDS} items`,
+    );
   });
 
   it("analyzes deduped results and updates stats", async () => {

@@ -3,6 +3,7 @@
 
 import { Request, Response } from "express";
 import { resultErrorService } from "@/services/resultErrorService";
+import { MAX_ANALYZE_ERROR_IDS } from "@/config/aiLimits";
 
 interface AssignIssueRequest {
   assumptionId: string; // UUID
@@ -32,6 +33,12 @@ const validateAnalyzeErrorsRequest = (
 
   if (!errorIds || !Array.isArray(errorIds) || errorIds.length === 0) {
     throw new Error("Error IDs array is required and must not be empty");
+  }
+
+  if (errorIds.length > MAX_ANALYZE_ERROR_IDS) {
+    throw new Error(
+      `Error IDs array cannot contain more than ${MAX_ANALYZE_ERROR_IDS} items`,
+    );
   }
 
   return { projectId, errorIds };

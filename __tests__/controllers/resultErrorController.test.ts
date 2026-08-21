@@ -5,6 +5,7 @@ import "@/test-utils/testEnv";
 import { jest } from "@jest/globals";
 import { executeController } from "@/test-utils/httpMocks";
 import { resultErrorController } from "@/controllers/resultErrorController";
+import { MAX_ANALYZE_ERROR_IDS } from "@/config/aiLimits";
 import { resultErrorService } from "@/services/resultErrorService";
 
 describe("resultErrorController.analyzeErrors", () => {
@@ -62,6 +63,27 @@ describe("resultErrorController.analyzeErrors", () => {
       updatedResultIds: ["res-1"],
       skippedErrorIds: [],
       totalErrors: 1,
+    });
+  });
+
+  it("returns 400 when errorIds exceeds the analysis batch limit", async () => {
+    const analyzeErrorsSpy = jest.spyOn(resultErrorService, "analyzeErrors");
+
+    const res = await executeController(resultErrorController.analyzeErrors, {
+      method: "POST",
+      body: {
+        projectId: "project-1",
+        errorIds: Array.from(
+          { length: MAX_ANALYZE_ERROR_IDS + 1 },
+          (_, index) => `err-${index}`,
+        ),
+      },
+    });
+
+    expect(analyzeErrorsSpy).not.toHaveBeenCalled();
+    expect(res.statusCode).toBe(400);
+    expect(res.body).toEqual({
+      error: `Failed to analyze result errors. Error IDs array cannot contain more than ${MAX_ANALYZE_ERROR_IDS} items`,
     });
   });
 
