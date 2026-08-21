@@ -3,12 +3,22 @@
 
 import { resultErrorModel } from "@/models/resultErrorModel";
 import { runReview } from "@/lib/error-analyzer";
-import { normalizeJsonArrayForText, normalizeResultErrorPayload } from "@/lib/jsonPayloads";
+import { normalizeJsonArrayForText, normalizeJsonStringArray, normalizeResultErrorPayload, } from "@/lib/jsonPayloads";
+import {
+  normalizeGeneratedTestCase,
+  normalizeResultErrorLogs,
+  normalizeResultErrorSourceSnippet,
+} from "@/lib/resultErrorModalContext";
 import getLogger from "@/lib/logger";
+import { selectBestIssueSuggestion } from "@/lib/issueSimilarity";
+import { buildIssueCategorySummary, getEffectiveResultCategory, } from "@/lib/resultCategory";
 import { dbClient } from "@/prisma/client";
 import { dashboardService } from "@/services/dashboardService";
 import { testAnalysisService } from "@/services/testAnalysisService";
 import type {
+  ResultErrorModalAssignmentSummary,
+  ResultErrorModalContext,
+  ResultErrorSimilarityOutcome,
   ResultErrorWithRelations,
   StructuredResultError,
 } from "@/types";
@@ -52,6 +62,146 @@ const validateAnalyzeErrorsParams = (
 };
 
 export const resultErrorService = {
+  async getSimilaritySuggestion(
+    resultErrorId: string,
+    projectId: string,
+  ): Promise<ResultErrorSimilarityOutcome> {
+    if (!resultErrorId) throw new Error("Result error ID is required");
+    if (!projectId) throw new Error("Project ID is required");
+
+    const target = await resultErrorModel.findModalContext(
+      resultErrorId,
+      projectId,
+    );
+    if (!target?.result) {
+      throw new Error(`Result error with ID ${resultErrorId} not found`);
+    }
+
+    const rows = await resultErrorModel.findSimilarityCandidates(projectId);
+    const candidates = rows
+      .filter((row) => row.projectId === projectId)
+      .map((row) => ({
+        issueId: row.issue.id,
+        issue: row.issue,
+        evidence: row.evidence
+          .filter((entry) => entry.isConfirmed)
+          .map((entry) => ({
+            message: entry.message,
+            callStack: normalizeJsonStringArray(entry.callStack),
+            specPath: entry.specPath,
+            resultId: entry.resultId,
+            resultErrorId: entry.resultErrorId,
+            analysisCategory: entry.analysisCategory,
+            analysisFeedbackCategory: entry.analysisFeedbackCategory,
+          })),
+      }));
+    const suggestion = selectBestIssueSuggestion(
+      {
+        message: target.message,
+        callStack: normalizeJsonStringArray(target.callStack),
+        specPath: target.result.spec.file,
+      },
+      candidates,
+    );
+    if (!suggestion) return { outcome: "no_match" };
+
+    const selected = candidates.find(
+      (candidate) => candidate.issueId === suggestion.issueId,
+    );
+    const affectedResults = new Set(
+      selected?.evidence
+        .map((evidence) => evidence.resultId)
+        .filter(
+          (id): id is string => Boolean(id) && id !== target.result?.id,
+        ) ?? [],
+    );
+    const category = buildIssueCategorySummary(
+      selected?.evidence.map((evidence) => ({
+        id: evidence.resultId ?? evidence.resultErrorId,
+        analysisCategory: evidence.analysisCategory,
+        analysisFeedbackCategory: evidence.analysisFeedbackCategory,
+      })) ?? [],
+    ).displayCategory ?? "other";
+    return {
+      outcome: "match",
+      suggestion: {
+        issue: suggestion.issue,
+        category,
+        score: suggestion.score,
+        otherAffectedTests: affectedResults.size,
+      },
+    };
+  },
+
+  async getModalContext(
+    resultErrorId: string,
+    projectId: string,
+  ): Promise<ResultErrorModalContext> {
+    if (!resultErrorId) {
+      throw new Error("Result error ID is required");
+    }
+    if (!projectId) {
+      throw new Error("Project ID is required");
+    }
+
+    const record = await resultErrorModel.findModalContext(
+      resultErrorId,
+      projectId,
+    );
+    if (!record?.result) {
+      throw new Error(`Result error with ID ${resultErrorId} not found`);
+    }
+
+    const toAssignment = (
+      assignment: (typeof record.assumptions)[number],
+    ): ResultErrorModalAssignmentSummary => ({
+      id: assignment.id,
+      isConfirmed: assignment.isConfirmed,
+      score: assignment.score,
+      madeBy: assignment.madeBy,
+      issue: assignment.issue,
+    });
+    const confirmed = record.assumptions.find(
+      (assignment) => assignment.isConfirmed,
+    );
+
+    return {
+      error: {
+        id: record.id,
+        type: record.type,
+        message: record.message,
+        callLog: normalizeJsonStringArray(record.callLog),
+        callStack: normalizeJsonStringArray(record.callStack),
+        logs: normalizeResultErrorLogs(record.rawLogs) ?? [],
+        sourceSnippet: normalizeResultErrorSourceSnippet(record.sourceSnippet),
+        generatedTestCase: normalizeGeneratedTestCase(
+          record.generatedTestCase,
+        ),
+        location: record.location,
+      },
+      result: {
+        id: record.result.id,
+        attempt: record.result.retry + 1,
+        status: record.result.status,
+        duration: record.result.duration,
+        startTime: record.result.startTime,
+        reportPortalLink: record.result.reportPortalLink,
+        category: getEffectiveResultCategory(record.result) ?? "other",
+        testTitle: record.result.spec.title,
+        specPath: record.result.spec.file,
+        specKey: record.result.spec.key,
+        executionName: record.result.execution.name,
+        environment: record.result.execution.environment,
+      },
+      assignments: {
+        confirmed: confirmed ? toAssignment(confirmed) : null,
+        suggestions: record.assumptions
+          .filter((assignment) => !assignment.isConfirmed)
+          .map(toAssignment),
+      },
+    };
+  },
+
   async assignIssue(
     resultErrorId: string,
     assumptionId: string,
@@ -67,11 +217,7 @@ export const resultErrorService = {
 
     // Business logic - assign the issue
     try {
-      const updatedRecord = await resultErrorModel.assignIssue(
-        resultErrorId,
-        assumptionId,
-      );
-      return updatedRecord;
+      return await resultErrorModel.assignIssue(resultErrorId, assumptionId);
     } catch (error) {
       const err = error as Error;
       throw new Error(`Failed to assign issue to result error: ${err.message}`);
@@ -96,8 +242,7 @@ export const resultErrorService = {
       }
 
       // Adapt PrismaResultError to TargetResultError format expected by runReview
-      const reviewedRecord = await runReview(resultError);
-      return reviewedRecord;
+      return await runReview(resultError);
     } catch (error) {
       const err = error as Error;
       throw new Error(

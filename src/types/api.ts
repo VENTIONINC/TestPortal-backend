@@ -61,6 +61,65 @@ export interface GetResultByIdParams {
   resultId: string;
 }
 
+export interface ResultErrorModalAssignmentSummary {
+  id: string;
+  isConfirmed: boolean;
+  score: number;
+  madeBy: string;
+  issue: {
+    id: string;
+    name: string;
+    description: string | null;
+    portal: string | null;
+    service: string | null;
+    ticket: string | null;
+  };
+}
+
+export interface ResultErrorModalContext {
+  error: {
+    id: string;
+    type: string;
+    message: string;
+    callLog: string[];
+    callStack: string[];
+    logs: string[];
+    sourceSnippet: import("@/types/database").ResultErrorSourceSnippet | null;
+    generatedTestCase: string | null;
+    location: string;
+  };
+  result: {
+    id: string;
+    attempt: number;
+    status: string;
+    duration: number;
+    startTime: Date;
+    reportPortalLink: string | null;
+    category: "bug" | "infra" | "performance" | "script" | "other";
+    testTitle: string;
+    specPath: string;
+    specKey: string;
+    executionName: string;
+    environment: string;
+  };
+  assignments: {
+    confirmed: ResultErrorModalAssignmentSummary | null;
+    suggestions: ResultErrorModalAssignmentSummary[];
+  };
+}
+
+export type ResultErrorSimilarityOutcome =
+  | {
+      outcome: "match";
+      suggestion: {
+        issue: ResultErrorModalAssignmentSummary["issue"];
+        category: "bug" | "infra" | "performance" | "script" | "other";
+        score: number;
+        otherAffectedTests: number;
+      };
+    }
+  | { outcome: "no_match" };
+
 export interface GetResultsStatsParams {
   projectId: string;
   dates?: string[];

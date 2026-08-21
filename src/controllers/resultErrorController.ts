@@ -38,6 +38,71 @@ const validateAnalyzeErrorsRequest = (
 };
 
 export const resultErrorController = {
+  getSimilaritySuggestion: async (
+    req: Request<ResultErrorIdParams>,
+    res: Response,
+  ): Promise<void> => {
+    const { resultErrorId } = req.params;
+    const { projectId } = req.query;
+    if (!resultErrorId) {
+      res.status(400).json({ error: "Result error ID is required" });
+      return;
+    }
+    if (typeof projectId !== "string" || !projectId) {
+      res.status(400).json({ error: "Project ID is required" });
+      return;
+    }
+
+    try {
+      const outcome = await resultErrorService.getSimilaritySuggestion(
+        resultErrorId,
+        projectId,
+      );
+      res.status(200).json(outcome);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "";
+      if (message.includes("not found")) {
+        res.status(404).json({ error: message });
+        return;
+      }
+      res
+        .status(500)
+        .json({ error: "Failed to retrieve similarity suggestion" });
+    }
+  },
+
+  getModalContext: async (
+    req: Request<ResultErrorIdParams>,
+    res: Response,
+  ): Promise<void> => {
+    const { resultErrorId } = req.params;
+    const { projectId } = req.query;
+
+    if (!resultErrorId) {
+      res.status(400).json({ error: "Result error ID is required" });
+      return;
+    }
+    if (typeof projectId !== "string" || !projectId) {
+      res.status(400).json({ error: "Project ID is required" });
+      return;
+    }
+
+    try {
+      const context = await resultErrorService.getModalContext(
+        resultErrorId,
+        projectId,
+      );
+      res.status(200).json(context);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "";
+      if (message.includes("not found")) {
+        res.status(404).json({ error: message });
+        return;
+      }
+      res.status(500).json({ error: "Failed to retrieve modal context" });
+    }
+  },
+
   assignIssue: async (
     req: Request<ResultErrorIdParams>,
     res: Response,

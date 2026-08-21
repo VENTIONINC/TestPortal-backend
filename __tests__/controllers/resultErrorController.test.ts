@@ -81,3 +81,160 @@ describe("resultErrorController.analyzeErrors", () => {
     });
   });
 });
+
+describe("resultErrorController.getModalContext", () => {
+  const getController = () =>
+    Reflect.get(resultErrorController, "getModalContext");
+
+  afterEach(() => jest.restoreAllMocks());
+
+  it("returns 400 when projectId is missing", async () => {
+    const controller = getController();
+    expect(controller).toEqual(expect.any(Function));
+    if (typeof controller !== "function") return;
+
+    const res = await executeController(controller, {
+      params: { resultErrorId: "error-1" },
+    });
+
+    expect(res.statusCode).toBe(400);
+    expect(res.body).toEqual({ error: "Project ID is required" });
+  });
+
+  it("returns 200 with modal context", async () => {
+    const controller = getController();
+    expect(controller).toEqual(expect.any(Function));
+    if (typeof controller !== "function") return;
+    const context = {
+      error: { id: "error-1" },
+      result: { id: "result-1" },
+      assignments: { confirmed: null, suggestions: [] },
+    };
+    jest
+      .spyOn(resultErrorService, "getModalContext")
+      .mockResolvedValue(context as never);
+
+    const res = await executeController(controller, {
+      params: { resultErrorId: "error-1" },
+      query: { projectId: "project-1" },
+    });
+
+    expect(resultErrorService.getModalContext).toHaveBeenCalledWith(
+      "error-1",
+      "project-1",
+    );
+    expect(res.statusCode).toBe(200);
+    expect(res.body).toEqual(context);
+  });
+
+  it("returns 404 for inaccessible or missing context", async () => {
+    const controller = getController();
+    expect(controller).toEqual(expect.any(Function));
+    if (typeof controller !== "function") return;
+    jest
+      .spyOn(resultErrorService, "getModalContext")
+      .mockRejectedValue(new Error("Result error with ID error-1 not found"));
+
+    const res = await executeController(controller, {
+      params: { resultErrorId: "error-1" },
+      query: { projectId: "foreign-project" },
+    });
+
+    expect(res.statusCode).toBe(404);
+    expect(res.body).toEqual({
+      error: "Result error with ID error-1 not found",
+    });
+  });
+
+  it("returns 500 for unexpected service failures", async () => {
+    const controller = getController();
+    expect(controller).toEqual(expect.any(Function));
+    if (typeof controller !== "function") return;
+    jest
+      .spyOn(resultErrorService, "getModalContext")
+      .mockRejectedValue(new Error("database unavailable"));
+
+    const res = await executeController(controller, {
+      params: { resultErrorId: "error-1" },
+      query: { projectId: "project-1" },
+    });
+
+    expect(res.statusCode).toBe(500);
+    expect(res.body).toEqual({ error: "Failed to retrieve modal context" });
+  });
+});
+
+describe("resultErrorController.getSimilaritySuggestion", () => {
+  const getController = () =>
+    Reflect.get(resultErrorController, "getSimilaritySuggestion");
+
+  afterEach(() => jest.restoreAllMocks());
+
+  it("returns 400 when projectId is missing", async () => {
+    const controller = getController();
+    expect(controller).toEqual(expect.any(Function));
+    if (typeof controller !== "function") return;
+    const res = await executeController(controller, {
+      params: { resultErrorId: "error-1" },
+    });
+    expect(res.statusCode).toBe(400);
+    expect(res.body).toEqual({ error: "Project ID is required" });
+  });
+
+  it.each([
+    {
+      outcome: "match" as const,
+      suggestion: {
+        issue: { id: "issue-1", name: "Checkout timeout" },
+        category: "bug",
+        score: 91,
+        otherAffectedTests: 2,
+      },
+    },
+    { outcome: "no_match" as const },
+  ])("returns 200 for $outcome", async (outcome) => {
+    const controller = getController();
+    expect(controller).toEqual(expect.any(Function));
+    if (typeof controller !== "function") return;
+    jest
+      .spyOn(resultErrorService, "getSimilaritySuggestion")
+      .mockResolvedValue(outcome as never);
+    const res = await executeController(controller, {
+      params: { resultErrorId: "error-1" },
+      query: { projectId: "project-1" },
+    });
+    expect(res.statusCode).toBe(200);
+    expect(res.body).toEqual(outcome);
+  });
+
+  it("returns 404 for an inaccessible target", async () => {
+    const controller = getController();
+    expect(controller).toEqual(expect.any(Function));
+    if (typeof controller !== "function") return;
+    jest
+      .spyOn(resultErrorService, "getSimilaritySuggestion")
+      .mockRejectedValue(new Error("Result error with ID error-1 not found"));
+    const res = await executeController(controller, {
+      params: { resultErrorId: "error-1" },
+      query: { projectId: "foreign-project" },
+    });
+    expect(res.statusCode).toBe(404);
+  });
+
+  it("returns 500 without leaking unexpected failures", async () => {
+    const controller = getController();
+    expect(controller).toEqual(expect.any(Function));
+    if (typeof controller !== "function") return;
+    jest
+      .spyOn(resultErrorService, "getSimilaritySuggestion")
+      .mockRejectedValue(new Error("database unavailable"));
+    const res = await executeController(controller, {
+      params: { resultErrorId: "error-1" },
+      query: { projectId: "project-1" },
+    });
+    expect(res.statusCode).toBe(500);
+    expect(res.body).toEqual({
+      error: "Failed to retrieve similarity suggestion",
+    });
+  });
+});

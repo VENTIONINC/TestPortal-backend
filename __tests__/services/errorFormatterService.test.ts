@@ -83,7 +83,14 @@ describe("errorFormatterService.suggestFromResult", () => {
     .invokeMock as unknown as jest.MockedFunction<
     (
       messages: Array<{ role: string; content: string }>,
-    ) => Promise<{ name: string; description: string } | { description: string }>
+    ) => Promise<
+      | {
+          category: "bug" | "infra" | "performance" | "script" | "other";
+          name: string;
+          description: string;
+        }
+      | { name: string; description: string }
+    >
   >;
   const chatOpenAIMock = openAiMocks.__mocks__.chatOpenAIMock;
   const withStructuredOutputMock =
@@ -143,6 +150,8 @@ describe("errorFormatterService.suggestFromResult", () => {
         message: "Error",
         callLog: [],
         callStack: ["stack"],
+        rawLogs: [],
+        sourceSnippet: null,
         testAssertion: null,
         expectedPattern: null,
         receivedString: null,
@@ -182,7 +191,11 @@ describe("errorFormatterService.suggestFromResult", () => {
       { role: "system", content: "system" },
       { role: "user", content: "user" },
     ]);
-    invokeMock.mockResolvedValue({ description: "Suggested steps" });
+    invokeMock.mockResolvedValue({
+      category: "bug",
+      name: "Checkout request fails",
+      description: "Suggested steps",
+    });
   });
 
   it("passes canonical generic context to the formatter prompt without making it output data", async () => {
@@ -248,7 +261,7 @@ describe("errorFormatterService.suggestFromResult", () => {
     ).rejects.toThrow("Result has no error details to analyze");
   });
 
-  it("uses existing analysis when present without exposing its category", async () => {
+  it("returns the complete issue draft generated from existing analysis", async () => {
     getResultByIdMock.mockResolvedValue(
       makeResult({
         analysisCategory: "bug",
@@ -269,6 +282,8 @@ describe("errorFormatterService.suggestFromResult", () => {
     expect(withStructuredOutputMock).toHaveBeenCalledTimes(1);
     expect(invokeMock).toHaveBeenCalledTimes(1);
     expect(result).toEqual({
+      category: "bug",
+      name: "Checkout request fails",
       description: "Suggested steps",
     });
   });
@@ -305,7 +320,7 @@ describe("errorFormatterService.suggestFromResult", () => {
     );
   });
 
-  it("runs analysis when missing without exposing its category", async () => {
+  it("runs analysis when missing and returns the complete issue draft", async () => {
     getResultByIdMock.mockResolvedValue(makeResult({}));
 
     const analysisMap = new Map();
@@ -330,6 +345,8 @@ describe("errorFormatterService.suggestFromResult", () => {
       expect.objectContaining({ analysisCategory: "infra" }),
     );
     expect(result).toEqual({
+      category: "bug",
+      name: "Checkout request fails",
       description: "Suggested steps",
     });
   });

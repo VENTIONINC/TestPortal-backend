@@ -13,6 +13,7 @@ import type { AuthenticatedRequest } from "@/middleware/authMiddleware";
 import { dbClient } from "@/prisma/client";
 import getLogger from "@/lib/logger";
 import { dashboardService } from "@/services/dashboardService";
+import { normalizeResultErrorModalContext } from "@/lib/resultErrorModalContext";
 
 const logger = getLogger("json-report-controller");
 
@@ -237,9 +238,50 @@ export const jsonReportController = {
             result.allureReportLink ??
             "https://automation.qa.theguarantors.com/allure-report/index.html";
 
+          const outputLogs = [...(result.stdout ?? []), ...(result.stderr ?? [])]
+            .map((entry: unknown) =>
+              typeof entry === "string"
+                ? entry
+                : entry &&
+                    typeof entry === "object" &&
+                    typeof (entry as { text?: unknown }).text === "string"
+                  ? (entry as { text: string }).text
+                  : null,
+            )
+            .filter((entry: string | null): entry is string => entry !== null);
+          const errorLocation = result.error?.location;
+          const derivedSnippet =
+            typeof result.error?.snippet === "string" &&
+            typeof errorLocation?.file === "string" &&
+            Number.isInteger(errorLocation.line)
+              ? {
+                  path: errorLocation.file,
+                  text: result.error.snippet,
+                  startLine: Math.min(
+                    Number.isInteger(test.location?.line)
+                      ? test.location.line
+                      : errorLocation.line,
+                    errorLocation.line,
+                  ),
+                  failingLine: errorLocation.line,
+                }
+              : undefined;
+          const modalContext = normalizeResultErrorModalContext({
+            logs: result.logs ?? outputLogs,
+            sourceSnippet: result.sourceSnippet ?? derivedSnippet,
+            generatedTestCase: result.generatedTestCase,
+          });
+
           return {
             reportPortalLink,
             ...result,
+            ...(modalContext.rawLogs ? { logs: modalContext.rawLogs } : {}),
+            ...(modalContext.sourceSnippet
+              ? { sourceSnippet: modalContext.sourceSnippet }
+              : {}),
+            ...(modalContext.generatedTestCase
+              ? { generatedTestCase: modalContext.generatedTestCase }
+              : {}),
           };
         });
         return test;

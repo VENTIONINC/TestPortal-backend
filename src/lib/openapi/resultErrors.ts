@@ -50,6 +50,95 @@ const AnalyzeResultErrorsResponseSchema = z
   })
   .openapi("AnalyzeResultErrorsResponse");
 
+const resultErrorSourceSnippetShape = {
+  path: z.string(),
+  text: z.string(),
+  startLine: z.number().int().positive(),
+  failingLine: z.number().int().positive(),
+};
+
+const ResultErrorSourceSnippetSchema = z
+  .object(resultErrorSourceSnippetShape)
+  .openapi("ResultErrorSourceSnippet");
+
+const ResultErrorModalIssueSchema = z
+  .object({
+    id: z.string().uuid(),
+    name: z.string(),
+    description: z.string().nullable(),
+    portal: z.string().nullable(),
+    service: z.string().nullable(),
+    ticket: z.string().nullable(),
+  })
+  .openapi("ResultErrorModalIssue");
+
+const resultErrorModalAssignmentShape = {
+  id: z.string().uuid(),
+  isConfirmed: z.boolean(),
+  score: z.number(),
+  madeBy: z.string(),
+  issue: ResultErrorModalIssueSchema,
+};
+
+const ResultErrorModalAssignmentSchema = z
+  .object(resultErrorModalAssignmentShape)
+  .openapi("ResultErrorModalAssignment");
+
+const ResultErrorModalContextSchema = z
+  .object({
+    error: z.object({
+      id: z.string().uuid(),
+      type: z.string(),
+      message: z.string(),
+      callLog: z.array(z.string()),
+      callStack: z.array(z.string()),
+      logs: z.array(z.string()),
+      sourceSnippet: z.union([
+        z.object(resultErrorSourceSnippetShape),
+        z.null(),
+      ]),
+      generatedTestCase: z.string().nullable(),
+      location: z.string(),
+    }),
+    result: z.object({
+      id: z.string().uuid(),
+      attempt: z.number().int().positive(),
+      status: z.string(),
+      duration: z.number().int().nonnegative(),
+      startTime: z.string().datetime(),
+      reportPortalLink: z.string().nullable(),
+      category: z.enum(["bug", "infra", "performance", "script", "other"]),
+      testTitle: z.string(),
+      specPath: z.string(),
+      specKey: z.string(),
+      executionName: z.string(),
+      environment: z.string(),
+    }),
+    assignments: z.object({
+      confirmed: z.union([
+        z.object(resultErrorModalAssignmentShape),
+        z.null(),
+      ]),
+      suggestions: z.array(ResultErrorModalAssignmentSchema),
+    }),
+  })
+  .openapi("ResultErrorModalContext");
+
+const ResultErrorSimilarityOutcomeSchema = z
+  .discriminatedUnion("outcome", [
+    z.object({
+      outcome: z.literal("match"),
+      suggestion: z.object({
+        issue: ResultErrorModalIssueSchema,
+        category: z.enum(["bug", "infra", "performance", "script", "other"]),
+        score: z.number().int().min(0).max(100),
+        otherAffectedTests: z.number().int().nonnegative(),
+      }),
+    }),
+    z.object({ outcome: z.literal("no_match") }),
+  ])
+  .openapi("ResultErrorSimilarityOutcome");
+
 export function registerResultErrorRoutes(registry: OpenAPIRegistry) {
   registry.register("ResultError", ResultErrorSchema);
   registry.register("AssignIssueRequest", AssignIssueRequestSchema);
@@ -62,6 +151,83 @@ export function registerResultErrorRoutes(registry: OpenAPIRegistry) {
     "AnalyzeResultErrorsResponse",
     AnalyzeResultErrorsResponseSchema,
   );
+  registry.register("ResultErrorSourceSnippet", ResultErrorSourceSnippetSchema);
+  registry.register("ResultErrorModalIssue", ResultErrorModalIssueSchema);
+  registry.register(
+    "ResultErrorModalAssignment",
+    ResultErrorModalAssignmentSchema,
+  );
+  registry.register("ResultErrorModalContext", ResultErrorModalContextSchema);
+  registry.register(
+    "ResultErrorSimilarityOutcome",
+    ResultErrorSimilarityOutcomeSchema,
+  );
+
+  registry.registerPath({
+    method: "get",
+    path: "/api/v2/result-errors/{resultErrorId}/modal-context",
+    description:
+      "Retrieves project-scoped result, error, optional tab, and assignment context for the Assign Issue modal",
+    request: {
+      params: z.object({ resultErrorId: z.string().uuid() }),
+      query: z.object({ projectId: z.string().uuid() }),
+    },
+    responses: {
+      200: {
+        description: "Modal context retrieved successfully",
+        content: {
+          "application/json": { schema: ResultErrorModalContextSchema },
+        },
+      },
+      400: {
+        description: "Missing or invalid identifier",
+        content: { "application/json": { schema: ErrorResponseSchema } },
+      },
+      404: {
+        description: "Result error not found in the accessible project",
+        content: { "application/json": { schema: ErrorResponseSchema } },
+      },
+      500: {
+        description: "Modal context retrieval failed",
+        content: { "application/json": { schema: ErrorResponseSchema } },
+      },
+    },
+    tags: ["Result Errors"],
+    security: [{ BearerAuth: [] }],
+  });
+
+  registry.registerPath({
+    method: "get",
+    path: "/api/v2/result-errors/{resultErrorId}/similarity-suggestion",
+    description:
+      "Finds the best qualifying same-project Issue without creating an Assumption or assignment",
+    request: {
+      params: z.object({ resultErrorId: z.string().uuid() }),
+      query: z.object({ projectId: z.string().uuid() }),
+    },
+    responses: {
+      200: {
+        description: "Match or explicit no-match outcome",
+        content: {
+          "application/json": { schema: ResultErrorSimilarityOutcomeSchema },
+        },
+      },
+      400: {
+        description: "Missing or invalid identifier",
+        content: { "application/json": { schema: ErrorResponseSchema } },
+      },
+      404: {
+        description: "Result error not found in the accessible project",
+        content: { "application/json": { schema: ErrorResponseSchema } },
+      },
+      500: {
+        description: "Similarity lookup failed",
+        content: { "application/json": { schema: ErrorResponseSchema } },
+      },
+    },
+    tags: ["Result Errors"],
+    security: [{ BearerAuth: [] }],
+  });
 
   registry.registerPath({
     method: "patch",
@@ -273,4 +439,9 @@ export {
   BulkReviewRequestSchema,
   AnalyzeResultErrorsRequestSchema,
   AnalyzeResultErrorsResponseSchema,
+  ResultErrorSourceSnippetSchema,
+  ResultErrorModalIssueSchema,
+  ResultErrorModalAssignmentSchema,
+  ResultErrorModalContextSchema,
+  ResultErrorSimilarityOutcomeSchema,
 };
