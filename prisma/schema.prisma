@@ -43,6 +43,7 @@ model Project {
   executions    Execution[]
   specs         Spec[]
   issues        Issue[]
+  testScenarios TestScenario[]
   uploadApiKeys UploadApiKey[]
   dailyMetrics  DailyExecutionMetric[]
 
@@ -171,10 +172,11 @@ model User {
   analyzeEnabled          Boolean  @default(false)
 
   // Project relationships
-  projects      Project[]
-  issuesCreated Issue[]        @relation("IssuesCreated")
-  issuesUpdated Issue[]        @relation("IssuesUpdated")
-  uploadApiKeys UploadApiKey[]
+  projects             Project[]
+  issuesCreated        Issue[]        @relation("IssuesCreated")
+  issuesUpdated        Issue[]        @relation("IssuesUpdated")
+  testScenariosCreated TestScenario[] @relation("TestScenarioCreatedBy")
+  uploadApiKeys        UploadApiKey[]
 }
 
 model Issue {
@@ -201,6 +203,23 @@ model Issue {
   @@index([projectId])
   @@index([projectId, category])
   @@index([projectId, createdAt])
+}
+
+model TestScenario {
+  id          String   @id @default(uuid()) @db.Uuid
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  title       String
+  contentMd   String   @db.Text
+  createdById String   @db.Uuid
+
+  project   Project @relation(fields: [projectId], references: [id])
+  projectId String  @db.Uuid
+  createdBy User    @relation("TestScenarioCreatedBy", fields: [createdById], references: [id])
+
+  @@index([projectId])
+  @@index([projectId, createdAt])
+  @@index([createdById])
 }
 
 model UploadApiKey {

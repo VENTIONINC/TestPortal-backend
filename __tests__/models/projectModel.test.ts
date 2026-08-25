@@ -63,6 +63,9 @@ describe("projectModel", () => {
         dailyExecutionMetric: {
           deleteMany: mockResolved({ count: 1 }),
         },
+        testScenario: {
+          deleteMany: mockResolved({ count: 1 }),
+        },
         uploadApiKey: {
           deleteMany: mockResolved({ count: 0 }),
         },
@@ -82,22 +85,30 @@ describe("projectModel", () => {
       expect(mockTxClient.dailyExecutionMetric.deleteMany).toHaveBeenCalledWith({
         where: { projectId },
       });
+      expect(mockTxClient.testScenario.deleteMany).toHaveBeenCalledWith({
+        where: { projectId },
+      });
       const dailyMetricsDeleteOrder =
         mockTxClient.dailyExecutionMetric.deleteMany.mock
           .invocationCallOrder[0];
+      const scenarioDeleteOrder =
+        mockTxClient.testScenario.deleteMany.mock.invocationCallOrder[0];
       const projectDeleteOrder =
         mockTxClient.project.delete.mock.invocationCallOrder[0];
 
       expect(dailyMetricsDeleteOrder).toEqual(expect.any(Number));
+      expect(scenarioDeleteOrder).toEqual(expect.any(Number));
       expect(projectDeleteOrder).toEqual(expect.any(Number));
 
       if (
         dailyMetricsDeleteOrder === undefined ||
+        scenarioDeleteOrder === undefined ||
         projectDeleteOrder === undefined
       ) {
         throw new Error("Expected delete calls to be recorded");
       }
 
+      expect(scenarioDeleteOrder).toBeLessThan(projectDeleteOrder);
       expect(dailyMetricsDeleteOrder).toBeLessThan(projectDeleteOrder);
       expect(mockTxClient.project.delete).toHaveBeenCalledWith({
         where: { id: projectId },

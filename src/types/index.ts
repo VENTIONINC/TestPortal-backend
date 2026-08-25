@@ -8,6 +8,7 @@ export * from "@/types/mcp";
 export * from "@/types/tests";
 export * from "@/types/ctrf";
 export * from "@/types/skills";
+export * from "@/types/testScenarios";
 
 // Express types extensions
 import type { Request } from "express";
