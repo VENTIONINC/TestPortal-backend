@@ -108,18 +108,6 @@ export interface ResultErrorModalContext {
   };
 }
 
-export type ResultErrorSimilarityOutcome =
-  | {
-      outcome: "match";
-      suggestion: {
-        issue: ResultErrorModalAssignmentSummary["issue"];
-        category: "bug" | "infra" | "performance" | "script" | "other";
-        score: number;
-        otherAffectedTests: number;
-      };
-    }
-  | { outcome: "no_match" };
-
 export interface GetResultsStatsParams {
   projectId: string;
   dates?: string[];

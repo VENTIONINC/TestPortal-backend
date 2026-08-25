@@ -57,23 +57,14 @@ describe("result-error modal OpenAPI contract", () => {
     );
   });
 
-  it("documents discriminated match and no-match similarity outcomes", () => {
+  it("does not document the removed similarity contract", () => {
     const spec = generateOpenAPISpec();
     const schemas = spec.components?.schemas ?? {};
     const operation =
       spec.paths?.[
         "/api/v2/result-errors/{resultErrorId}/similarity-suggestion"
       ]?.get;
-    const responseJson = JSON.stringify(operation?.responses?.["200"]);
-
-    expect(schemas).toHaveProperty("ResultErrorSimilarityOutcome");
-    expect(responseJson).toContain("ResultErrorSimilarityOutcome");
-    expect(JSON.stringify(schemas.ResultErrorSimilarityOutcome)).toContain(
-      '"match"',
-    );
-    expect(JSON.stringify(schemas.ResultErrorSimilarityOutcome)).toContain(
-      '"no_match"',
-    );
-    expect(operation?.security).toEqual([{ BearerAuth: [] }]);
+    expect(schemas).not.toHaveProperty("ResultErrorSimilarityOutcome");
+    expect(operation).toBeUndefined();
   });
 });

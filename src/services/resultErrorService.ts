@@ -10,15 +10,13 @@ import {
   normalizeResultErrorSourceSnippet,
 } from "@/lib/resultErrorModalContext";
 import getLogger from "@/lib/logger";
-import { selectBestIssueSuggestion } from "@/lib/issueSimilarity";
-import { buildIssueCategorySummary, getEffectiveResultCategory, } from "@/lib/resultCategory";
+import { getEffectiveResultCategory } from "@/lib/resultCategory";
 import { dbClient } from "@/prisma/client";
 import { dashboardService } from "@/services/dashboardService";
 import { testAnalysisService } from "@/services/testAnalysisService";
 import type {
   ResultErrorModalAssignmentSummary,
   ResultErrorModalContext,
-  ResultErrorSimilarityOutcome,
   ResultErrorWithRelations,
   StructuredResultError,
 } from "@/types";
@@ -62,77 +60,6 @@ const validateAnalyzeErrorsParams = (
 };
 
 export const resultErrorService = {
-  async getSimilaritySuggestion(
-    resultErrorId: string,
-    projectId: string,
-  ): Promise<ResultErrorSimilarityOutcome> {
-    if (!resultErrorId) throw new Error("Result error ID is required");
-    if (!projectId) throw new Error("Project ID is required");
-
-    const target = await resultErrorModel.findModalContext(
-      resultErrorId,
-      projectId,
-    );
-    if (!target?.result) {
-      throw new Error(`Result error with ID ${resultErrorId} not found`);
-    }
-
-    const rows = await resultErrorModel.findSimilarityCandidates(projectId);
-    const candidates = rows
-      .filter((row) => row.projectId === projectId)
-      .map((row) => ({
-        issueId: row.issue.id,
-        issue: row.issue,
-        evidence: row.evidence
-          .filter((entry) => entry.isConfirmed)
-          .map((entry) => ({
-            message: entry.message,
-            callStack: normalizeJsonStringArray(entry.callStack),
-            specPath: entry.specPath,
-            resultId: entry.resultId,
-            resultErrorId: entry.resultErrorId,
-            analysisCategory: entry.analysisCategory,
-            analysisFeedbackCategory: entry.analysisFeedbackCategory,
-          })),
-      }));
-    const suggestion = selectBestIssueSuggestion(
-      {
-        message: target.message,
-        callStack: normalizeJsonStringArray(target.callStack),
-        specPath: target.result.spec.file,
-      },
-      candidates,
-    );
-    if (!suggestion) return { outcome: "no_match" };
-
-    const selected = candidates.find(
-      (candidate) => candidate.issueId === suggestion.issueId,
-    );
-    const affectedResults = new Set(
-      selected?.evidence
-        .map((evidence) => evidence.resultId)
-        .filter(
-          (id): id is string => Boolean(id) && id !== target.result?.id,
-        ) ?? [],
-    );
-    const category = buildIssueCategorySummary(
-      selected?.evidence.map((evidence) => ({
-        id: evidence.resultId ?? evidence.resultErrorId,
-        analysisCategory: evidence.analysisCategory,
-        analysisFeedbackCategory: evidence.analysisFeedbackCategory,
-      })) ?? [],
-    ).displayCategory ?? "other";
-    return {
-      outcome: "match",
-      suggestion: {
-        issue: suggestion.issue,
-        category,
-        score: suggestion.score,
-        otherAffectedTests: affectedResults.size,
-      },
-    };
-  },
-
   async getModalContext(
     resultErrorId: string,
     projectId: string,

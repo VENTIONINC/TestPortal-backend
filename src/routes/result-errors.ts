@@ -33,11 +33,6 @@ router.get(
   resultErrorController.getModalContext,
 );
 router.get(
-  "/v2/result-errors/:resultErrorId/similarity-suggestion",
-  authMiddleware,
-  resultErrorController.getSimilaritySuggestion,
-);
-router.get(
   "/v2/result-errors/:resultErrorId",
   authMiddleware,
   resultErrorController.getResultErrorById,

@@ -11,11 +11,6 @@ import type {
   ResultErrorWithRelations,
 } from "@/types/database";
 
-export {
-  scoreIssueSimilarity,
-  selectBestIssueSuggestion,
-} from "@/lib/issueSimilarity";
-
 interface TargetResultError extends PrismaResultError {
   message: string;
   id: string; // UUID

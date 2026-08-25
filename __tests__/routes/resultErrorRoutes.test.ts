@@ -18,7 +18,7 @@ describe("result-error modal-context route", () => {
     expect(response.status).toBe(401);
   });
 
-  it("protects the similarity endpoint with authentication", async () => {
+  it("does not register the removed similarity endpoint", async () => {
     const app = express();
     app.use(resultErrorRoutes);
 
@@ -26,6 +26,6 @@ describe("result-error modal-context route", () => {
       "/v2/result-errors/error-1/similarity-suggestion?projectId=project-1",
     );
 
-    expect(response.status).toBe(401);
+    expect(response.status).toBe(404);
   });
 });

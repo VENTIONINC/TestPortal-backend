@@ -62,65 +62,6 @@ export type ResultErrorModalContextRecord = Prisma.ResultErrorGetPayload<{
   select: typeof modalContextSelect;
 }>;
 
-const similarityCandidateSelect = Prisma.validator<Prisma.IssueSelect>()({
-  id: true,
-  name: true,
-  description: true,
-  portal: true,
-  service: true,
-  ticket: true,
-  projectId: true,
-  assumptions: {
-    where: { isConfirmed: true, resultErrorId: { not: null } },
-    orderBy: { createdAt: "desc" },
-    take: 20,
-    select: {
-      isConfirmed: true,
-      resultError: {
-        select: {
-          id: true,
-          message: true,
-          callStack: true,
-          result: {
-            select: {
-              id: true,
-              analysisCategory: true,
-              analysisFeedbackCategory: true,
-              spec: { select: { file: true } },
-            },
-          },
-        },
-      },
-    },
-  },
-});
-
-export type ResultErrorSimilarityCandidateRecord = Prisma.IssueGetPayload<{
-  select: typeof similarityCandidateSelect;
-}>;
-
-export interface ResultErrorSimilarityCandidate {
-  projectId: string;
-  issue: {
-    id: string;
-    name: string;
-    description: string | null;
-    portal: string | null;
-    service: string | null;
-    ticket: string | null;
-  };
-  evidence: Array<{
-    resultErrorId: string;
-    resultId: string | null;
-    analysisCategory: string | null;
-    analysisFeedbackCategory: string | null;
-    isConfirmed: true;
-    message: string;
-    callStack: Prisma.JsonValue;
-    specPath: string | null;
-  }>;
-}
-
 export const resultErrorModel = {
   findModalContext: async (
     id: string,
@@ -136,51 +77,6 @@ export const resultErrorModel = {
       },
       select: modalContextSelect,
     }),
-
-  findSimilarityCandidates: async (
-    projectId: string,
-  ): Promise<ResultErrorSimilarityCandidate[]> => {
-    const rows: ResultErrorSimilarityCandidateRecord[] =
-      await dbClient.issue.findMany({
-      where: {
-        projectId,
-        assumptions: {
-          some: { isConfirmed: true, resultErrorId: { not: null } },
-        },
-      },
-      orderBy: { id: "asc" },
-      take: 100,
-      select: similarityCandidateSelect,
-      });
-    return rows.map((row) => ({
-      projectId: row.projectId,
-      issue: {
-        id: row.id,
-        name: row.name,
-        description: row.description,
-        portal: row.portal,
-        service: row.service,
-        ticket: row.ticket,
-      },
-      evidence: row.assumptions.flatMap((assumption) => {
-        const error = assumption.resultError;
-        if (!error) return [];
-        return [
-          {
-            resultErrorId: error.id,
-            resultId: error.result?.id ?? null,
-            analysisCategory: error.result?.analysisCategory ?? null,
-            analysisFeedbackCategory:
-              error.result?.analysisFeedbackCategory ?? null,
-            isConfirmed: true as const,
-            message: error.message,
-            callStack: error.callStack,
-            specPath: error.result?.spec.file ?? null,
-          },
-        ];
-      }),
-    }));
-  },
 
   findById: async (
     id: string,

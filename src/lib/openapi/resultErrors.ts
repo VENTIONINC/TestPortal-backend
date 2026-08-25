@@ -124,21 +124,6 @@ const ResultErrorModalContextSchema = z
   })
   .openapi("ResultErrorModalContext");
 
-const ResultErrorSimilarityOutcomeSchema = z
-  .discriminatedUnion("outcome", [
-    z.object({
-      outcome: z.literal("match"),
-      suggestion: z.object({
-        issue: ResultErrorModalIssueSchema,
-        category: z.enum(["bug", "infra", "performance", "script", "other"]),
-        score: z.number().int().min(0).max(100),
-        otherAffectedTests: z.number().int().nonnegative(),
-      }),
-    }),
-    z.object({ outcome: z.literal("no_match") }),
-  ])
-  .openapi("ResultErrorSimilarityOutcome");
-
 export function registerResultErrorRoutes(registry: OpenAPIRegistry) {
   registry.register("ResultError", ResultErrorSchema);
   registry.register("AssignIssueRequest", AssignIssueRequestSchema);
@@ -158,10 +143,6 @@ export function registerResultErrorRoutes(registry: OpenAPIRegistry) {
     ResultErrorModalAssignmentSchema,
   );
   registry.register("ResultErrorModalContext", ResultErrorModalContextSchema);
-  registry.register(
-    "ResultErrorSimilarityOutcome",
-    ResultErrorSimilarityOutcomeSchema,
-  );
 
   registry.registerPath({
     method: "get",
@@ -196,38 +177,6 @@ export function registerResultErrorRoutes(registry: OpenAPIRegistry) {
     security: [{ BearerAuth: [] }],
   });
 
-  registry.registerPath({
-    method: "get",
-    path: "/api/v2/result-errors/{resultErrorId}/similarity-suggestion",
-    description:
-      "Finds the best qualifying same-project Issue without creating an Assumption or assignment",
-    request: {
-      params: z.object({ resultErrorId: z.string().uuid() }),
-      query: z.object({ projectId: z.string().uuid() }),
-    },
-    responses: {
-      200: {
-        description: "Match or explicit no-match outcome",
-        content: {
-          "application/json": { schema: ResultErrorSimilarityOutcomeSchema },
-        },
-      },
-      400: {
-        description: "Missing or invalid identifier",
-        content: { "application/json": { schema: ErrorResponseSchema } },
-      },
-      404: {
-        description: "Result error not found in the accessible project",
-        content: { "application/json": { schema: ErrorResponseSchema } },
-      },
-      500: {
-        description: "Similarity lookup failed",
-        content: { "application/json": { schema: ErrorResponseSchema } },
-      },
-    },
-    tags: ["Result Errors"],
-    security: [{ BearerAuth: [] }],
-  });
 
   registry.registerPath({
     method: "patch",
@@ -443,5 +392,4 @@ export {
   ResultErrorModalIssueSchema,
   ResultErrorModalAssignmentSchema,
   ResultErrorModalContextSchema,
-  ResultErrorSimilarityOutcomeSchema,
 };
