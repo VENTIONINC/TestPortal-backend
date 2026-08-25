@@ -2,7 +2,7 @@
 url = "https://api.githubcopilot.com/mcp/"
 bearer_token_env_var = "GITHUB_PAT_TOKEN"
 enabled = true
-required = true
+required = false
 default_tools_approval_mode = "auto"
 http_headers = { "X-MCP-Tools" = "get_me,get_file_contents,list_pull_requests,pull_request_read,search_pull_requests,issue_write,create_pull_request,update_pull_request,add_issue_comment,add_reply_to_pull_request_comment,pull_request_review_write", "X-MCP-Lockdown" = "true" }
 enabled_tools = [
