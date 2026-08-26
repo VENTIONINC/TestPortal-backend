@@ -89,6 +89,7 @@ model Spec {
   projectId String  @db.Uuid
 
   results Result[]
+  testScenarioLinks TestScenarioSpecLink[]
 
   // Unique key per project
   @@unique([projectId, key])
@@ -122,6 +123,8 @@ model Result {
   analysisFeedbackCategory        String?
   analysisFeedbackConfidence      Int?
   analysisFeedbackConclusion      String?
+
+  @@index([specId, startTime])
 }
 
 model ResultError {
@@ -139,6 +142,8 @@ model ResultError {
   result          Result?      @relation(fields: [resultId], references: [id])
   resultId        String?      @db.Uuid
   assumptions     Assumption[]
+
+  @@index([resultId])
 }
 
 model Assumption {
@@ -152,6 +157,9 @@ model Assumption {
   issueId       String       @db.Uuid
   resultError   ResultError? @relation(fields: [resultErrorId], references: [id])
   resultErrorId String?      @db.Uuid
+
+  @@index([issueId])
+  @@index([resultErrorId])
 }
 
 model User {
@@ -217,9 +225,22 @@ model TestScenario {
   projectId String  @db.Uuid
   createdBy User    @relation("TestScenarioCreatedBy", fields: [createdById], references: [id])
 
+  specLinks TestScenarioSpecLink[]
+
   @@index([projectId])
   @@index([projectId, createdAt])
   @@index([createdById])
+}
+
+model TestScenarioSpecLink {
+  testScenarioId String @db.Uuid
+  specId         String @db.Uuid
+
+  testScenario TestScenario @relation(fields: [testScenarioId], references: [id], onDelete: Cascade)
+  spec         Spec         @relation(fields: [specId], references: [id], onDelete: Cascade)
+
+  @@id([testScenarioId, specId])
+  @@index([specId])
 }
 
 model UploadApiKey {

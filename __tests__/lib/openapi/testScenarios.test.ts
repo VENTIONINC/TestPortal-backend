@@ -84,4 +84,74 @@ describe("test-scenario OpenAPI contract", () => {
       ],
     ).toEqual(expect.objectContaining({ description: "Test scenario deleted" }));
   });
+
+  it("registers all five integration operations with bearer security", () => {
+    const spec = generateOpenAPISpec();
+    const paths = spec.paths ?? {};
+    const operations = [
+      paths["/api/v2/test-scenarios/{scenarioId}/spec-links"]?.post,
+      paths["/api/v2/test-scenarios/{scenarioId}/spec-links"]?.get,
+      paths["/api/v2/test-scenarios/{scenarioId}/spec-links/{specId}"]?.delete,
+      paths["/api/v2/test-scenarios/{scenarioId}/results"]?.get,
+      paths["/api/v2/test-scenarios/{scenarioId}/issues"]?.get,
+    ];
+
+    for (const operation of operations) {
+      expect(operation).toBeDefined();
+      expect(operation?.tags).toContain("Test Scenarios");
+      expect(operation?.security).toEqual([{ BearerAuth: [] }]);
+      expect(operation?.responses?.["400"]).toBeDefined();
+      expect(operation?.responses?.["401"]).toBeDefined();
+      expect(operation?.responses?.["404"]).toBeDefined();
+      expect(operation?.responses?.["500"]).toBeDefined();
+    }
+
+    expect(
+      paths["/api/v2/test-scenarios/{scenarioId}/spec-links"]?.post?.responses?.[
+        "409"
+      ],
+    ).toBeDefined();
+  });
+
+  it("documents reusable integration schemas and exact response envelopes", () => {
+    const spec = generateOpenAPISpec();
+    const schemas = spec.components?.schemas ?? {};
+
+    expect(schemas.TestScenarioSpecLinkBody).toBeDefined();
+    expect(schemas.TestScenarioSpecLinkResponse).toBeDefined();
+    expect(schemas.TestScenarioLinkedSpec).toBeDefined();
+    expect(schemas.TestScenarioSpecLinkListResponse).toBeDefined();
+    expect(schemas.TestScenarioResultsResponse).toBeDefined();
+    expect(schemas.TestScenarioIssuesResponse).toBeDefined();
+    expect(schemas.TestScenarioEvidenceQuery).toBeDefined();
+
+    for (const name of [
+      "TestScenarioSpecLinkListResponse",
+      "TestScenarioResultsResponse",
+      "TestScenarioIssuesResponse",
+    ]) {
+      const schema = schemas[name] as { properties?: Record<string, unknown> };
+      expect(Object.keys(schema.properties ?? {})).toEqual(
+        name === "TestScenarioSpecLinkListResponse"
+          ? ["scenarioId", "projectId", "specs", "total", "page", "limit", "totalPages"]
+          : [
+              "scenarioId",
+              "projectId",
+              "linkedSpecCount",
+              name === "TestScenarioResultsResponse" ? "results" : "issues",
+              "total",
+              "page",
+              "limit",
+              "totalPages",
+            ],
+      );
+    }
+
+    const query = schemas.TestScenarioEvidenceQuery as {
+      properties?: Record<string, { maximum?: number; minimum?: number }>;
+    };
+    expect(query.properties?.page?.minimum).toBe(1);
+    expect(query.properties?.limit?.minimum).toBe(1);
+    expect(query.properties?.limit?.maximum).toBe(100);
+  });
 });

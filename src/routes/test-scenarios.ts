@@ -17,6 +17,31 @@ router.get(
   authMiddleware,
   testScenarioController.list,
 );
+router.post(
+  "/v2/test-scenarios/:scenarioId/spec-links",
+  authMiddleware,
+  testScenarioController.addSpecLink,
+);
+router.get(
+  "/v2/test-scenarios/:scenarioId/spec-links",
+  authMiddleware,
+  testScenarioController.listSpecLinks,
+);
+router.delete(
+  "/v2/test-scenarios/:scenarioId/spec-links/:specId",
+  authMiddleware,
+  testScenarioController.removeSpecLink,
+);
+router.get(
+  "/v2/test-scenarios/:scenarioId/results",
+  authMiddleware,
+  testScenarioController.getResults,
+);
+router.get(
+  "/v2/test-scenarios/:scenarioId/issues",
+  authMiddleware,
+  testScenarioController.getIssues,
+);
 router.get(
   "/v2/test-scenarios/:scenarioId",
   authMiddleware,
