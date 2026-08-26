@@ -16,6 +16,13 @@ describe("test-scenario persistence contract", () => {
     ),
     "utf8",
   );
+  const linkMigration = readFileSync(
+    path.join(
+      process.cwd(),
+      "prisma/migrations/20260826120000_add_test_scenario_spec_links/migration.sql",
+    ),
+    "utf8",
+  );
 
   it("defines a project-owned Markdown record with creator and timestamp fields", () => {
     expect(schema).toMatch(
@@ -42,5 +49,38 @@ describe("test-scenario persistence contract", () => {
     expect(migration).not.toContain('"Spec"');
     expect(migration).not.toContain('"Execution"');
     expect(migration).not.toContain('"Issue"');
+  });
+
+  it("defines a cascading unique scenario/Spec join without changing existing data", () => {
+    expect(schema).toMatch(
+      /model TestScenarioSpecLink \{[\s\S]*testScenarioId\s+String @db\.Uuid[\s\S]*specId\s+String @db\.Uuid[\s\S]*@@id\(\[testScenarioId, specId\]\)[\s\S]*@@index\(\[specId\]\)/,
+    );
+    expect(schema).toContain("specLinks TestScenarioSpecLink[]");
+    expect(schema).toContain("testScenarioLinks TestScenarioSpecLink[]");
+    expect(linkMigration).toContain('CREATE TABLE "TestScenarioSpecLink"');
+    expect(linkMigration).toContain(
+      'CONSTRAINT "TestScenarioSpecLink_pkey" PRIMARY KEY ("testScenarioId", "specId")',
+    );
+    expect(linkMigration).toContain(
+      'REFERENCES "TestScenario"("id") ON DELETE CASCADE',
+    );
+    expect(linkMigration).toContain(
+      'REFERENCES "Spec"("id") ON DELETE CASCADE',
+    );
+    expect(linkMigration).toContain(
+      'CREATE INDEX "TestScenarioSpecLink_specId_idx"',
+    );
+    expect(linkMigration).toContain(
+      'CREATE INDEX "Result_specId_startTime_idx"',
+    );
+    expect(linkMigration).toContain(
+      'CREATE INDEX "ResultError_resultId_idx"',
+    );
+    expect(linkMigration).toContain(
+      'CREATE INDEX "Assumption_issueId_idx"',
+    );
+    expect(linkMigration).toContain(
+      'CREATE INDEX "Assumption_resultErrorId_idx"',
+    );
   });
 });

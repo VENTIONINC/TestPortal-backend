@@ -319,6 +319,62 @@ export const resultModel = {
     });
   },
 
+  findManyBySpecRecordIds: async (
+    specRecordIds: string[],
+    projectId: string,
+    page = 1,
+    limit = 30,
+  ): Promise<ResultWithRelations[]> => {
+    if (specRecordIds.length === 0) {
+      return [];
+    }
+
+    return (await dbClient.result.findMany({
+      where: {
+        spec: {
+          id: { in: specRecordIds },
+          projectId,
+        },
+        execution: { projectId },
+      },
+      skip: (page - 1) * limit,
+      take: limit,
+      orderBy: [{ startTime: "desc" }, { id: "desc" }],
+      include: {
+        spec: true,
+        execution: true,
+        errors: {
+          include: {
+            assumptions: {
+              include: {
+                issue: true,
+              },
+            },
+          },
+        },
+      },
+    })) as unknown as ResultWithRelations[];
+  },
+
+  countBySpecRecordIds: async (
+    specRecordIds: string[],
+    projectId: string,
+  ): Promise<number> => {
+    if (specRecordIds.length === 0) {
+      return 0;
+    }
+
+    return await dbClient.result.count({
+      where: {
+        spec: {
+          id: { in: specRecordIds },
+          projectId,
+        },
+        execution: { projectId },
+      },
+    });
+  },
+
   findSpecTags: async (filters: ResultFilters): Promise<Prisma.JsonValue[]> => {
     const resultWhere = buildResultWhereClause(filters);
     const { spec, ...matchingResultWhere } = resultWhere;

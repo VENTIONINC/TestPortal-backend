@@ -93,6 +93,71 @@ export const issueModel = {
     });
   },
 
+  findObservedBySpecRecordIds: async (
+    specRecordIds: string[],
+    projectId: string,
+    page = 1,
+    limit = 30,
+  ): Promise<PrismaIssueWithUsers[]> => {
+    if (specRecordIds.length === 0) {
+      return [];
+    }
+
+    return (await dbClient.issue.findMany({
+      where: {
+        projectId,
+        assumptions: {
+          some: {
+            resultError: {
+              result: {
+                spec: {
+                  id: { in: specRecordIds },
+                  projectId,
+                },
+                execution: { projectId },
+              },
+            },
+          },
+        },
+      },
+      skip: (page - 1) * limit,
+      take: limit,
+      orderBy: [{ createdAt: "desc" }, { id: "desc" }],
+      include: {
+        createdBy: true,
+        updatedBy: true,
+      },
+    })) as PrismaIssueWithUsers[];
+  },
+
+  countObservedBySpecRecordIds: async (
+    specRecordIds: string[],
+    projectId: string,
+  ): Promise<number> => {
+    if (specRecordIds.length === 0) {
+      return 0;
+    }
+
+    return await dbClient.issue.count({
+      where: {
+        projectId,
+        assumptions: {
+          some: {
+            resultError: {
+              result: {
+                spec: {
+                  id: { in: specRecordIds },
+                  projectId,
+                },
+                execution: { projectId },
+              },
+            },
+          },
+        },
+      },
+    });
+  },
+
   findById: async (
     id: string,
     projectId: string,

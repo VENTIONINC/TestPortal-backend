@@ -3,6 +3,7 @@
 
 import { OpenAPIRegistry } from "@asteasolutions/zod-to-openapi";
 import { ErrorResponseSchema } from "./common";
+import { ResultSchema } from "./results";
 import { z } from "./zod";
 
 const TestScenarioSchema = z
@@ -55,6 +56,124 @@ const TestScenarioListResponseSchema = z
   })
   .openapi("TestScenarioListResponse");
 
+const TestScenarioSpecLinkBodySchema = z
+  .object({
+    specId: z.string().uuid(),
+  })
+  .openapi("TestScenarioSpecLinkBody");
+
+const TestScenarioSpecLinkResponseSchema = z
+  .object({
+    scenarioId: z.string().uuid(),
+    specId: z.string().uuid(),
+  })
+  .openapi("TestScenarioSpecLinkResponse");
+
+const TestScenarioLinkedSpecSchema = z
+  .object({
+    id: z.string().uuid(),
+    projectId: z.string().uuid(),
+    key: z.string(),
+    file: z.string(),
+    title: z.string(),
+    tags: z.array(z.string()),
+    annotations: z.array(z.unknown()),
+    createdAt: z.string(),
+    updatedAt: z.string(),
+  })
+  .openapi("TestScenarioLinkedSpec");
+
+const TestScenarioSpecLinkListQuerySchema = z
+  .object({
+    projectId: z.string().uuid(),
+    page: z.number().int().min(1).default(1).optional(),
+    limit: z.number().int().min(1).max(100).default(30).optional(),
+  })
+  .openapi("TestScenarioSpecLinkListQuery");
+
+const TestScenarioSpecLinkDeleteParamsSchema = z
+  .object({
+    scenarioId: z.string().uuid(),
+    specId: z.string().uuid(),
+  })
+  .openapi("TestScenarioSpecLinkDeleteParams");
+
+const TestScenarioEvidenceQuerySchema = z
+  .object({
+    projectId: z.string().uuid(),
+    page: z.number().int().min(1).default(1).optional(),
+    limit: z.number().int().min(1).max(100).default(30).optional(),
+  })
+  .openapi("TestScenarioEvidenceQuery");
+
+const TestScenarioSpecLinkListResponseSchema = z
+  .object({
+    scenarioId: z.string().uuid(),
+    projectId: z.string().uuid(),
+    specs: z.array(TestScenarioLinkedSpecSchema),
+    total: z.number().int().nonnegative(),
+    page: z.number().int().positive(),
+    limit: z.number().int().positive().max(100),
+    totalPages: z.number().int().nonnegative(),
+  })
+  .openapi("TestScenarioSpecLinkListResponse");
+
+const TestScenarioObservedIssueSchema = z
+  .object({
+    id: z.string().uuid(),
+    createdAt: z.string(),
+    updatedAt: z.string(),
+    name: z.string(),
+    category: z.string(),
+    description: z.string().nullable(),
+    portal: z.string().nullable(),
+    service: z.string().nullable(),
+    ticket: z.string().nullable(),
+    createdBy: z
+      .object({
+        id: z.string().uuid(),
+        name: z.string(),
+        email: z.string(),
+        createdAt: z.string(),
+      })
+      .nullable(),
+    updatedBy: z
+      .object({
+        id: z.string().uuid(),
+        name: z.string(),
+        email: z.string(),
+        createdAt: z.string(),
+      })
+      .nullable(),
+  })
+  .openapi("TestScenarioObservedIssue");
+
+const TestScenarioResultsResponseSchema = z
+  .object({
+    scenarioId: z.string().uuid(),
+    projectId: z.string().uuid(),
+    linkedSpecCount: z.number().int().nonnegative(),
+    results: z.array(ResultSchema),
+    total: z.number().int().nonnegative(),
+    page: z.number().int().positive(),
+    limit: z.number().int().positive().max(100),
+    totalPages: z.number().int().nonnegative(),
+  })
+  .openapi("TestScenarioResultsResponse");
+
+const TestScenarioIssuesResponseSchema = z
+  .object({
+    scenarioId: z.string().uuid(),
+    projectId: z.string().uuid(),
+    linkedSpecCount: z.number().int().nonnegative(),
+    issues: z.array(TestScenarioObservedIssueSchema),
+    total: z.number().int().nonnegative(),
+    page: z.number().int().positive(),
+    limit: z.number().int().positive().max(100),
+    totalPages: z.number().int().nonnegative(),
+  })
+  .openapi("TestScenarioIssuesResponse");
+
 export function registerTestScenarioRoutes(registry: OpenAPIRegistry): void {
   registry.register("TestScenario", TestScenarioSchema);
   registry.register(
@@ -71,6 +190,174 @@ export function registerTestScenarioRoutes(registry: OpenAPIRegistry): void {
     "TestScenarioListResponse",
     TestScenarioListResponseSchema,
   );
+  registry.register(
+    "TestScenarioSpecLinkBody",
+    TestScenarioSpecLinkBodySchema,
+  );
+  registry.register(
+    "TestScenarioSpecLinkResponse",
+    TestScenarioSpecLinkResponseSchema,
+  );
+  registry.register(
+    "TestScenarioLinkedSpec",
+    TestScenarioLinkedSpecSchema,
+  );
+  registry.register(
+    "TestScenarioSpecLinkListQuery",
+    TestScenarioSpecLinkListQuerySchema,
+  );
+  registry.register(
+    "TestScenarioSpecLinkDeleteParams",
+    TestScenarioSpecLinkDeleteParamsSchema,
+  );
+  registry.register("TestScenarioEvidenceQuery", TestScenarioEvidenceQuerySchema);
+  registry.register(
+    "TestScenarioSpecLinkListResponse",
+    TestScenarioSpecLinkListResponseSchema,
+  );
+  registry.register(
+    "TestScenarioObservedIssue",
+    TestScenarioObservedIssueSchema,
+  );
+  registry.register(
+    "TestScenarioResultsResponse",
+    TestScenarioResultsResponseSchema,
+  );
+  registry.register(
+    "TestScenarioIssuesResponse",
+    TestScenarioIssuesResponseSchema,
+  );
+
+  const errorResponse = (description: string) => ({
+    description,
+    content: {
+      "application/json": { schema: ErrorResponseSchema },
+    },
+  });
+
+  registry.registerPath({
+    method: "post",
+    path: "/api/v2/test-scenarios/{scenarioId}/spec-links",
+    description: "Links a project-local Spec to a test scenario.",
+    request: {
+      params: TestScenarioIdParamsSchema,
+      query: TestScenarioProjectQuerySchema,
+      body: {
+        required: true,
+        content: {
+          "application/json": { schema: TestScenarioSpecLinkBodySchema },
+        },
+      },
+    },
+    security: [{ BearerAuth: [] }],
+    responses: {
+      201: {
+        description: "Test scenario Spec link created",
+        content: {
+          "application/json": { schema: TestScenarioSpecLinkResponseSchema },
+        },
+      },
+      400: errorResponse("Invalid scenario, project, or Spec link input"),
+      401: errorResponse("Unauthorized"),
+      404: errorResponse("Test scenario or Spec not found in the project"),
+      409: errorResponse("The scenario/Spec link already exists"),
+      500: errorResponse("Internal server error"),
+    },
+    tags: ["Test Scenarios"],
+  });
+
+  registry.registerPath({
+    method: "get",
+    path: "/api/v2/test-scenarios/{scenarioId}/spec-links",
+    description: "Lists Specs linked to a test scenario.",
+    request: {
+      params: TestScenarioIdParamsSchema,
+      query: TestScenarioSpecLinkListQuerySchema,
+    },
+    security: [{ BearerAuth: [] }],
+    responses: {
+      200: {
+        description: "Paginated linked Specs",
+        content: {
+          "application/json": {
+            schema: TestScenarioSpecLinkListResponseSchema,
+          },
+        },
+      },
+      400: errorResponse("Invalid scenario, project, or pagination query"),
+      401: errorResponse("Unauthorized"),
+      404: errorResponse("Test scenario not found in the project"),
+      500: errorResponse("Internal server error"),
+    },
+    tags: ["Test Scenarios"],
+  });
+
+  registry.registerPath({
+    method: "delete",
+    path: "/api/v2/test-scenarios/{scenarioId}/spec-links/{specId}",
+    description: "Removes a Spec link without deleting either endpoint.",
+    request: {
+      params: TestScenarioSpecLinkDeleteParamsSchema,
+      query: TestScenarioProjectQuerySchema,
+    },
+    security: [{ BearerAuth: [] }],
+    responses: {
+      204: { description: "Test scenario Spec link removed" },
+      400: errorResponse("Invalid scenario, project, or Spec identifier"),
+      401: errorResponse("Unauthorized"),
+      404: errorResponse("Test scenario Spec link not found in the project"),
+      500: errorResponse("Internal server error"),
+    },
+    tags: ["Test Scenarios"],
+  });
+
+  registry.registerPath({
+    method: "get",
+    path: "/api/v2/test-scenarios/{scenarioId}/results",
+    description: "Lists paginated execution Results across linked Specs.",
+    request: {
+      params: TestScenarioIdParamsSchema,
+      query: TestScenarioEvidenceQuerySchema,
+    },
+    security: [{ BearerAuth: [] }],
+    responses: {
+      200: {
+        description: "Paginated scenario Result evidence",
+        content: {
+          "application/json": { schema: TestScenarioResultsResponseSchema },
+        },
+      },
+      400: errorResponse("Invalid scenario, project, or pagination query"),
+      401: errorResponse("Unauthorized"),
+      404: errorResponse("Test scenario not found in the project"),
+      500: errorResponse("Internal server error"),
+    },
+    tags: ["Test Scenarios"],
+  });
+
+  registry.registerPath({
+    method: "get",
+    path: "/api/v2/test-scenarios/{scenarioId}/issues",
+    description: "Lists paginated observed Issues across linked Specs.",
+    request: {
+      params: TestScenarioIdParamsSchema,
+      query: TestScenarioEvidenceQuerySchema,
+    },
+    security: [{ BearerAuth: [] }],
+    responses: {
+      200: {
+        description: "Paginated scenario Issue evidence",
+        content: {
+          "application/json": { schema: TestScenarioIssuesResponseSchema },
+        },
+      },
+      400: errorResponse("Invalid scenario, project, or pagination query"),
+      401: errorResponse("Unauthorized"),
+      404: errorResponse("Test scenario not found in the project"),
+      500: errorResponse("Internal server error"),
+    },
+    tags: ["Test Scenarios"],
+  });
 
   registry.registerPath({
     method: "post",
@@ -247,9 +534,19 @@ export function registerTestScenarioRoutes(registry: OpenAPIRegistry): void {
 
 export {
   CreateTestScenarioRequestSchema,
+  TestScenarioEvidenceQuerySchema,
   TestScenarioIdParamsSchema,
+  TestScenarioIssuesResponseSchema,
+  TestScenarioLinkedSpecSchema,
   TestScenarioListQuerySchema,
   TestScenarioListResponseSchema,
+  TestScenarioObservedIssueSchema,
   TestScenarioProjectQuerySchema,
+  TestScenarioResultsResponseSchema,
+  TestScenarioSpecLinkBodySchema,
+  TestScenarioSpecLinkDeleteParamsSchema,
+  TestScenarioSpecLinkListQuerySchema,
+  TestScenarioSpecLinkListResponseSchema,
+  TestScenarioSpecLinkResponseSchema,
   TestScenarioSchema,
 };

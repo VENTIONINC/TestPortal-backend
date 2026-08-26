@@ -28,3 +28,20 @@ export {
 } from "./testAnalysisSchemas";
 
 export { pdfExportSchema, type PdfExportInput } from "./reportExportSchemas";
+
+export {
+  testScenarioEvidenceParamsSchema,
+  testScenarioEvidenceQuerySchema,
+  testScenarioSpecLinkBodySchema,
+  testScenarioSpecLinkDeleteParamsSchema,
+  testScenarioSpecLinkListQuerySchema,
+  testScenarioSpecLinkParamsSchema,
+  testScenarioSpecLinkQuerySchema,
+  type TestScenarioEvidenceParams,
+  type TestScenarioEvidenceQuery,
+  type TestScenarioSpecLinkBody,
+  type TestScenarioSpecLinkDeleteParams,
+  type TestScenarioSpecLinkListQuery,
+  type TestScenarioSpecLinkParams,
+  type TestScenarioSpecLinkQuery,
+} from "./testScenarioIntegrationSchemas";
