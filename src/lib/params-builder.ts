@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import type { GetResultsParams } from "@/types";
+import type { ResultCategory } from "@/types/resultCategory";
 
 export function resolveExecutionTypeFilter(
   type?: string,
@@ -16,6 +17,7 @@ export function resolveExecutionTypeFilter(
 export function buildIssueParams(query: Record<string, string | undefined>) {
   const params: {
     projectId: string;
+    category?: ResultCategory;
     name?: string;
     page?: number;
     limit?: number;
@@ -24,6 +26,7 @@ export function buildIssueParams(query: Record<string, string | undefined>) {
     type?: string;
   } = { projectId: query.projectId ?? "" };
 
+  if (query.category) params.category = query.category as ResultCategory;
   if (query.name) params.name = query.name;
   if (query.page) params.page = Number(query.page);
   if (query.limit) params.limit = Number(query.limit);

@@ -30,12 +30,17 @@ const user: PrismaUser = {
   analyzeEnabled: false,
 };
 
-function makeIssue(id: string, name = `Issue ${id}`): PrismaIssue {
+function makeIssue(
+  id: string,
+  name = `Issue ${id}`,
+  category: PrismaIssue["category"] = "other",
+): PrismaIssue {
   return {
     id,
     createdAt: now,
     updatedAt: now,
     name,
+    category,
     description: null,
     portal: null,
     service: null,
@@ -90,6 +95,7 @@ describe("issueService", () => {
     const second = makeIssue(
       "00000000-0000-4000-8000-000000000102",
       "Checkout",
+      "script",
     );
     mockIssueModel.findManyWithUsers.mockResolvedValue([
       withUsers(first),
@@ -113,20 +119,22 @@ describe("issueService", () => {
     );
     expect(response.issues[0]).toMatchObject({
       name: "Login",
+      category: "other",
       categorySummary: {
-        displayCategory: null,
+        displayCategory: "other",
         isMixed: true,
         distribution: { bug: 1, infra: 0, performance: 0, script: 1, other: 0 },
       },
       createdBy: { id: user.id },
     });
     expect(response.issues[1]?.categorySummary.displayCategory).toBe("script");
-    expect(response.issues[0]).not.toHaveProperty("category");
+    expect(response.issues[0]?.category).toBe("other");
   });
 
   it("forwards only supported issue list filters", async () => {
     await issueService.getAllIssuesV2({
       projectId: "project-1",
+      category: "script",
       name: "Login",
       page: 2,
       limit: 5,
@@ -134,11 +142,16 @@ describe("issueService", () => {
 
     expect(mockIssueModel.findManyWithUsers).toHaveBeenCalledWith(
       "project-1",
+      "script",
       "Login",
       2,
       5,
     );
-    expect(mockIssueModel.count).toHaveBeenCalledWith("project-1", "Login");
+    expect(mockIssueModel.count).toHaveBeenCalledWith(
+      "project-1",
+      "script",
+      "Login",
+    );
   });
 
   it("adds a summary to issue detail reads", async () => {
@@ -153,7 +166,7 @@ describe("issueService", () => {
       issue.projectId,
     );
 
-    expect(response.categorySummary.displayCategory).toBe("infra");
+    expect(response.categorySummary.displayCategory).toBe("other");
   });
 
   it("uses the same date-filtered distinct result set for stats and summary", async () => {
@@ -199,25 +212,44 @@ describe("issueService", () => {
     });
   });
 
-  it("keeps mutation responses on the issue core shape", async () => {
+  it("requires category on create and forwards optional category updates", async () => {
     const issue = makeIssue("00000000-0000-4000-8000-000000000105");
     mockIssueModel.create.mockResolvedValue(issue);
     mockIssueModel.update.mockResolvedValue({
       ...issue,
       name: "Updated",
+      category: "performance",
     });
 
     const created = await issueService.createIssue({
       name: issue.name,
+      category: "other",
       projectId: issue.projectId,
     });
     const updated = await issueService.updateIssue(issue.id, {
       name: "Updated",
+      category: "performance",
     });
 
-    expect(created).not.toHaveProperty("category");
+    expect(created.category).toBe("other");
     expect(created).not.toHaveProperty("categorySummary");
-    expect(updated).not.toHaveProperty("category");
+    expect(mockIssueModel.update).toHaveBeenCalledWith(
+      issue.id,
+      expect.objectContaining({ category: "performance" }),
+    );
+    expect(updated.category).toBe("performance");
     expect(updated).not.toHaveProperty("categorySummary");
+  });
+
+  it("rejects missing or non-lowercase categories", async () => {
+    await expect(
+      issueService.createIssue({
+        name: "Missing category",
+        projectId: "project-1",
+      } as never),
+    ).rejects.toThrow("Invalid issue category");
+    await expect(
+      issueService.updateIssue("issue-1", { category: "Bug" } as never),
+    ).rejects.toThrow("Invalid issue category");
   });
 });

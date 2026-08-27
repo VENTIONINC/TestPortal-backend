@@ -94,6 +94,7 @@ jest.mock("@/models/issueModel", () => ({
         createdAt: new Date(),
         updatedAt: new Date(),
         name: data.name as string,
+        category: data.category as PrismaIssue["category"],
         description: data.description ?? null,
         portal: data.portal ?? null,
         service: data.service ?? null,
@@ -159,7 +160,11 @@ describe("v2 issues auth flow", () => {
       issueController.createIssue,
       {
         method: "POST",
-        body: { name: "Issue1", projectId: "test-project-uuid" },
+        body: {
+          name: "Issue1",
+          category: "bug",
+          projectId: "test-project-uuid",
+        },
         token,
       },
     );
@@ -167,6 +172,22 @@ describe("v2 issues auth flow", () => {
     const authBody = authRes.body;
     expect(authBody?.createdById).toBe(userId);
     expect(authBody?.updatedById).toBe(userId);
-    expect(authBody).not.toHaveProperty("category");
+    expect(authBody?.category).toBe("bug");
+  });
+
+  it("rejects authenticated issue creation without a category", async () => {
+    await signup();
+    const loginRes = await login();
+
+    const response = await executeProtectedController(
+      issueController.createIssue,
+      {
+        method: "POST",
+        body: { name: "Issue1", projectId: "test-project-uuid" },
+        token: loginRes.body.accessToken as string,
+      },
+    );
+
+    expect(response.statusCode).toBe(400);
   });
 });

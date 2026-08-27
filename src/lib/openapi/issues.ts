@@ -24,6 +24,7 @@ const IssueCoreSchema = z
   .object({
     id: z.string().uuid(),
     name: z.string(),
+    category: ResultCategorySchema,
     description: z.string().nullable().optional(),
     portal: z.string().nullable().optional(),
     service: z.string().nullable().optional(),
@@ -40,7 +41,7 @@ const IssueCoreSchema = z
 
 const IssueCategorySummarySchema = z
   .object({
-    displayCategory: z.union([ResultCategorySchema, z.null()]),
+    displayCategory: ResultCategorySchema,
     isMixed: z.boolean(),
     distribution: z.object({
       bug: z.number().int().nonnegative(),
@@ -97,6 +98,7 @@ const PaginatedIssueStatisticsListSchema = z
 const CreateIssueRequestSchema = z
   .object({
     name: z.string(),
+    category: ResultCategorySchema,
     description: z.string().optional(),
     portal: z.string().optional(),
     service: z.string().optional(),
@@ -111,6 +113,7 @@ const CreateIssueRequestSchema = z
 const UpdateIssueRequestSchema = z
   .object({
     name: z.string().optional(),
+    category: ResultCategorySchema.optional(),
     description: z.string().optional(),
     portal: z.string().optional(),
     service: z.string().optional(),
@@ -119,6 +122,7 @@ const UpdateIssueRequestSchema = z
   .openapi("UpdateIssueRequest");
 
 const PaginationQuerySchema = {
+  category: ResultCategorySchema.optional(),
   name: z.string().optional(),
   page: z.number().default(1).optional(),
   limit: z.number().default(30).optional(),
@@ -142,7 +146,7 @@ export function registerIssueRoutes(registry: OpenAPIRegistry) {
     method: "get",
     path: "/api/v2/issues",
     description:
-      "Retrieves issues with pagination and category summaries derived from distinct linked results. Issue category filtering has been removed.",
+      "Retrieves issues with pagination, optional persisted category filtering, and linked-result category summaries.",
     request: {
       query: z.object({
         projectId: z.string().uuid().describe("Project ID to filter issues"),
@@ -152,7 +156,7 @@ export function registerIssueRoutes(registry: OpenAPIRegistry) {
     security: [{ BearerAuth: [] }],
     responses: {
       200: {
-        description: "Paginated list of issues with derived category summaries",
+        description: "Paginated list of categorized issues with linked-result summaries",
         content: {
           "application/json": {
             schema: PaginatedIssueListSchema,
@@ -183,7 +187,7 @@ export function registerIssueRoutes(registry: OpenAPIRegistry) {
     method: "get",
     path: "/api/v2/issues/with-stats",
     description:
-      "Retrieves issues with occurrence statistics and derived category summaries. statFrom and statTo constrain the same distinct linked-result set for both.",
+      "Retrieves categorized issues with occurrence statistics and linked-result summaries. statFrom and statTo constrain the same distinct linked-result set for both.",
     request: {
       query: z.object({
         projectId: z
@@ -243,7 +247,7 @@ export function registerIssueRoutes(registry: OpenAPIRegistry) {
     method: "get",
     path: "/api/v2/issues/{issueId}",
     description:
-      "Retrieves an issue with a category summary derived from linked result analysis and human feedback.",
+      "Retrieves an issue with its persisted category and a linked-result category summary.",
     request: {
       params: z.object({
         issueId: z.string().uuid(),
@@ -297,7 +301,7 @@ export function registerIssueRoutes(registry: OpenAPIRegistry) {
     method: "post",
     path: "/api/v2/issues",
     description:
-      "Creates an issue core record. Failure categories are written on result analysis or analysis feedback, not on issues.",
+      "Creates an issue with a required lowercase category.",
     request: {
       body: {
         content: {
@@ -310,7 +314,7 @@ export function registerIssueRoutes(registry: OpenAPIRegistry) {
     security: [{ BearerAuth: [] }],
     responses: {
       201: {
-        description: "Issue core created successfully",
+        description: "Categorized issue created successfully",
         content: {
           "application/json": {
             schema: IssueCoreSchema,
@@ -341,7 +345,7 @@ export function registerIssueRoutes(registry: OpenAPIRegistry) {
     method: "patch",
     path: "/api/v2/issues/{issueId}",
     description:
-      "Updates issue core fields. Result analysis feedback is the human category correction path.",
+      "Updates issue core fields, including an optional lowercase category.",
     request: {
       params: z.object({
         issueId: z.string().uuid(),

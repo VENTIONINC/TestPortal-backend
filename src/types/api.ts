@@ -195,6 +195,7 @@ export interface ResultsStats {
     id: string;
     title: string;
     count: number;
+    category: import("@/types/resultCategory").ResultCategory;
     categorySummary: import("@/types/resultCategory").IssueCategorySummary;
   }>;
 }

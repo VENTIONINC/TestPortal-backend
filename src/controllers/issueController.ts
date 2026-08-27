@@ -17,6 +17,7 @@ export const issueController = {
     try {
       const {
         projectId,
+        category,
         name,
         page = "1",
         limit = "30",
@@ -31,6 +32,7 @@ export const issueController = {
 
       const params = buildIssueParams({
         projectId,
+        category,
         name,
         page,
         limit,
@@ -49,6 +51,7 @@ export const issueController = {
     try {
       const {
         projectId,
+        category,
         name,
         page = "1",
         limit = "10",
@@ -63,6 +66,7 @@ export const issueController = {
 
       const params = buildIssueParams({
         projectId,
+        category,
         name,
         page,
         limit,
@@ -82,6 +86,7 @@ export const issueController = {
     try {
       const {
         projectId,
+        category,
         name,
         page = "1",
         limit = "10",
@@ -99,6 +104,7 @@ export const issueController = {
 
       const params = buildIssueParams({
         projectId,
+        category,
         name,
         page,
         limit,
@@ -124,6 +130,7 @@ export const issueController = {
     try {
       const {
         projectId,
+        category,
         name,
         page = "1",
         limit = "10",
@@ -141,6 +148,7 @@ export const issueController = {
 
       const params = buildIssueParams({
         projectId,
+        category,
         name,
         page,
         limit,

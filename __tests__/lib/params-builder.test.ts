@@ -4,6 +4,15 @@
 import { buildIssueParams, buildResultParams } from "@/lib/params-builder";
 
 describe("buildIssueParams", () => {
+  it("preserves an exact lowercase issue category", () => {
+    expect(
+      buildIssueParams({
+        projectId: "project-1",
+        category: "performance",
+      }),
+    ).toMatchObject({ projectId: "project-1", category: "performance" });
+  });
+
   it("preserves an exact execution type", () => {
     expect(
       buildIssueParams({

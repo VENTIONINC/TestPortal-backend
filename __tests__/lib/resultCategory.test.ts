@@ -49,9 +49,9 @@ describe("resultCategory", () => {
   });
 
   describe("buildIssueCategorySummary", () => {
-    it("returns an empty summary when there are no results", () => {
-      expect(buildIssueCategorySummary([])).toEqual({
-        displayCategory: null,
+    it("uses the persisted issue category when there are no results", () => {
+      expect(buildIssueCategorySummary([], "other")).toEqual({
+        displayCategory: "other",
         isMixed: false,
         distribution: {
           bug: 0,
@@ -64,64 +64,82 @@ describe("resultCategory", () => {
       });
     });
 
-    it("returns a unanimous category", () => {
-      const summary = buildIssueCategorySummary([
-        { id: "one", analysisCategory: "BUG" },
-        { id: "two", analysisCategory: "bug" },
-      ]);
+    it("keeps the persisted issue category for a unanimous mismatching result category", () => {
+      const summary = buildIssueCategorySummary(
+        [
+          { id: "one", analysisCategory: "BUG" },
+          { id: "two", analysisCategory: "bug" },
+        ],
+        "infra",
+      );
 
-      expect(summary.displayCategory).toBe("bug");
+      expect(summary.displayCategory).toBe("infra");
       expect(summary.isMixed).toBe(false);
       expect(summary.distribution.bug).toBe(2);
     });
 
-    it("returns the dominant category for mixed results", () => {
-      const summary = buildIssueCategorySummary([
-        { id: "one", analysisCategory: "bug" },
-        { id: "two", analysisCategory: "bug" },
-        { id: "three", analysisCategory: "script" },
-      ]);
+    it("keeps the persisted issue category for mixed results", () => {
+      const summary = buildIssueCategorySummary(
+        [
+          { id: "one", analysisCategory: "bug" },
+          { id: "two", analysisCategory: "bug" },
+          { id: "three", analysisCategory: "script" },
+        ],
+        "other",
+      );
 
-      expect(summary.displayCategory).toBe("bug");
+      expect(summary.displayCategory).toBe("other");
       expect(summary.isMixed).toBe(true);
     });
 
-    it("returns no display category for a tie", () => {
-      const summary = buildIssueCategorySummary([
-        { id: "one", analysisCategory: "bug" },
-        { id: "two", analysisCategory: "script" },
-      ]);
+    it("keeps the persisted issue category for a tie", () => {
+      const summary = buildIssueCategorySummary(
+        [
+          { id: "one", analysisCategory: "bug" },
+          { id: "two", analysisCategory: "script" },
+        ],
+        "performance",
+      );
 
-      expect(summary.displayCategory).toBeNull();
+      expect(summary.displayCategory).toBe("performance");
       expect(summary.isMixed).toBe(true);
     });
 
     it("tracks uncategorized values separately", () => {
-      const summary = buildIssueCategorySummary([
-        { id: "one", analysisCategory: null },
-        { id: "two", analysisCategory: "unsupported" },
-        { id: "three", analysisFeedbackCategory: "" },
-      ]);
+      const summary = buildIssueCategorySummary(
+        [
+          { id: "one", analysisCategory: null },
+          { id: "two", analysisCategory: "unsupported" },
+          { id: "three", analysisFeedbackCategory: "" },
+        ],
+        "script",
+      );
 
       expect(summary.uncategorizedCount).toBe(3);
       expect(summary.distribution.other).toBe(0);
+      expect(summary.displayCategory).toBe("script");
+      expect(summary.isMixed).toBe(false);
     });
 
     it("normalizes the legacy environment category", () => {
-      const summary = buildIssueCategorySummary([
-        { id: "one", analysisCategory: "ENVIRONMENT" },
-      ]);
+      const summary = buildIssueCategorySummary(
+        [{ id: "one", analysisCategory: "ENVIRONMENT" }],
+        "bug",
+      );
 
-      expect(summary.displayCategory).toBe("infra");
+      expect(summary.displayCategory).toBe("bug");
       expect(summary.distribution.infra).toBe(1);
     });
 
     it("deduplicates repeated graph paths by result ID", () => {
-      const summary = buildIssueCategorySummary([
-        { id: "one", analysisCategory: "bug" },
-        { id: "one", analysisCategory: "bug" },
-        { id: "two", analysisCategory: "script" },
-      ]);
+      const summary = buildIssueCategorySummary(
+        [
+          { id: "one", analysisCategory: "bug" },
+          { id: "one", analysisCategory: "bug" },
+          { id: "two", analysisCategory: "script" },
+        ],
+        "other",
+      );
 
       expect(summary.distribution.bug).toBe(1);
       expect(summary.distribution.script).toBe(1);

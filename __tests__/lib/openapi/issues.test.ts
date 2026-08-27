@@ -27,13 +27,13 @@ describe("issue OpenAPI contract", () => {
     expect(schemas.IssueCategorySummary).toMatchObject({
       properties: {
         displayCategory: {
-          anyOf: expect.arrayContaining([{ type: "null" }]),
+          enum: ["bug", "infra", "performance", "script", "other"],
         },
       },
     });
   });
 
-  it("removes category writes and filtering while documenting derived reads", () => {
+  it("requires lowercase category writes and documents persisted filtering", () => {
     const spec = generateOpenAPISpec();
     const schemas = spec.components?.schemas ?? {};
     const createSchema = JSON.stringify(schemas.CreateIssueRequest);
@@ -44,22 +44,24 @@ describe("issue OpenAPI contract", () => {
       spec.paths?.["/api/v2/issues/{issueId}"]?.get?.responses?.["200"],
     );
 
-    expect(createSchema).not.toContain('"category"');
-    expect(updateSchema).not.toContain('"category"');
-    expect(listOperationJson).not.toContain('"category"');
+    expect(createSchema).toContain('"category"');
+    expect(schemas.CreateIssueRequest).toMatchObject({
+      required: expect.arrayContaining(["category"]),
+    });
+    expect(updateSchema).toContain('"category"');
+    expect(listOperationJson).toContain('"category"');
     expect(listOperationJson).toContain("PaginatedIssueList");
     expect(detailResponseJson).toContain("IssueRead");
   });
 
-  it("documents feedback precedence and revised top-issue summaries", () => {
+  it("documents mixed summaries while retaining persisted top-issue categories", () => {
     const specJson = JSON.stringify(generateOpenAPISpec());
 
     expect(specJson).toContain(
       "Human category correction. When present, this is authoritative over analysisCategory.",
     );
     expect(specJson).toContain("categorySummary");
-    expect(specJson).not.toContain(
-      "Failure category (bug, infra, script, performance, other)",
-    );
+    expect(specJson).toContain('"topIssues"');
+    expect(specJson).toContain('"category"');
   });
 });

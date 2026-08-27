@@ -49,6 +49,7 @@ export function getEffectiveResultCategory(
 
 export function buildIssueCategorySummary(
   results: readonly ResultCategorySource[],
+  issueCategory: ResultCategory,
 ): IssueCategorySummary {
   const distribution: ResultCategoryDistribution = {
     bug: 0,
@@ -74,35 +75,9 @@ export function buildIssueCategorySummary(
     (category) => distribution[category] > 0,
   );
 
-  if (populatedCategories.length === 0) {
-    return {
-      displayCategory: null,
-      isMixed: false,
-      distribution,
-      uncategorizedCount,
-    };
-  }
-
-  if (populatedCategories.length === 1) {
-    return {
-      displayCategory: populatedCategories[0] ?? null,
-      isMixed: false,
-      distribution,
-      uncategorizedCount,
-    };
-  }
-
-  const highestCount = Math.max(
-    ...populatedCategories.map((category) => distribution[category]),
-  );
-  const dominantCategories = populatedCategories.filter(
-    (category) => distribution[category] === highestCount,
-  );
-
   return {
-    displayCategory:
-      dominantCategories.length === 1 ? (dominantCategories[0] ?? null) : null,
-    isMixed: true,
+    displayCategory: issueCategory,
+    isMixed: populatedCategories.length >= 2,
     distribution,
     uncategorizedCount,
   };

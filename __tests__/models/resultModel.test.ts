@@ -273,7 +273,7 @@ describe("resultModel issue statistics", () => {
             assumptions: {
               select: {
                 id: true,
-                issue: { select: { id: true, name: true } },
+                issue: { select: { id: true, name: true, category: true } },
               },
             },
           },
@@ -284,10 +284,26 @@ describe("resultModel issue statistics", () => {
   });
 
   it("aggregates by issue ID and distinct linked result with derived summaries", async () => {
-    const issueA = { id: "issue-a", name: "Duplicate name" };
-    const issueB = { id: "issue-b", name: "Duplicate name" };
-    const issueC = { id: "issue-c", name: "Dominant mixed" };
-    const issueD = { id: "issue-d", name: "Uncategorized" };
+    const issueA = {
+      id: "issue-a",
+      name: "Duplicate name",
+      category: "other",
+    };
+    const issueB = {
+      id: "issue-b",
+      name: "Duplicate name",
+      category: "infra",
+    };
+    const issueC = {
+      id: "issue-c",
+      name: "Dominant mixed",
+      category: "performance",
+    };
+    const issueD = {
+      id: "issue-d",
+      name: "Uncategorized",
+      category: "script",
+    };
     const makeResult = (
       id: string,
       analysisCategory: string | null,
@@ -350,8 +366,9 @@ describe("resultModel issue statistics", () => {
     expect(topA).toMatchObject({
       title: "Duplicate name",
       count: 2,
+      category: "other",
       categorySummary: {
-        displayCategory: null,
+        displayCategory: "other",
         isMixed: true,
         distribution: { bug: 1, infra: 0, performance: 0, script: 1, other: 0 },
         uncategorizedCount: 0,
@@ -360,23 +377,26 @@ describe("resultModel issue statistics", () => {
     expect(topB).toMatchObject({
       title: "Duplicate name",
       count: 1,
+      category: "infra",
       categorySummary: {
-        displayCategory: "bug",
+        displayCategory: "infra",
         isMixed: false,
       },
     });
     expect(topC).toMatchObject({
       count: 3,
+      category: "performance",
       categorySummary: {
-        displayCategory: "script",
+        displayCategory: "performance",
         isMixed: true,
         distribution: { bug: 1, infra: 0, performance: 0, script: 2, other: 0 },
       },
     });
     expect(topD).toMatchObject({
       count: 1,
+      category: "script",
       categorySummary: {
-        displayCategory: null,
+        displayCategory: "script",
         isMixed: false,
         uncategorizedCount: 1,
       },

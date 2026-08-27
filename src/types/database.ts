@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import type { Prisma } from "@prisma/client";
+import type { ResultCategory } from "@/types/resultCategory";
 
 // Minimal Prisma model type definitions to allow compilation without the
 // generated client types. These mirror the fields defined in the Prisma
@@ -96,6 +97,7 @@ export interface PrismaIssue {
   createdAt: Date;
   updatedAt: Date;
   name: string;
+  category: string;
   description?: string | null;
   portal?: string | null;
   service?: string | null;
@@ -265,6 +267,7 @@ export interface AssumptionSummary {
 export interface IssueSummary {
   id: string;
   name: string;
+  category: string;
   description?: string;
   portal?: string;
   service?: string;
@@ -300,6 +303,7 @@ export interface SerializedIssue {
   createdAt: Date;
   updatedAt: Date;
   name: string;
+  category: ResultCategory;
   description?: string | null;
   portal?: string | null;
   service?: string | null;
