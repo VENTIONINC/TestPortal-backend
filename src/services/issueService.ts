@@ -7,7 +7,7 @@ import {
 } from "@/models/issueModel";
 import {
   buildIssueCategorySummary,
-  SUPPORTED_RESULT_CATEGORIES,
+  isResultCategory,
 } from "@/lib/resultCategory";
 import type {
   IssueCategorySummary,
@@ -153,13 +153,6 @@ function getCategorySummary(
   return buildIssueCategorySummary(results, issueCategory);
 }
 
-function isIssueCategory(value: unknown): value is ResultCategory {
-  return (
-    typeof value === "string" &&
-    (SUPPORTED_RESULT_CATEGORIES as readonly string[]).includes(value)
-  );
-}
-
 function getIssueStatistics(
   results: readonly LinkedIssueResult[],
 ): IssueStatistics {
@@ -287,7 +280,7 @@ export const issueService = {
     if (!issueParams?.name) {
       throw new Error("Unable to create issue without name");
     }
-    if (!isIssueCategory(issueParams.category)) {
+    if (!isResultCategory(issueParams.category)) {
       throw new Error(
         "Invalid issue category. Must be one of: bug, infra, performance, script, other",
       );
@@ -310,7 +303,7 @@ export const issueService = {
 
     if (name) cleanUpdateData.name = name;
     if (category !== undefined) {
-      if (!isIssueCategory(category)) {
+      if (!isResultCategory(category)) {
         throw new Error(
           "Invalid issue category. Must be one of: bug, infra, performance, script, other",
         );

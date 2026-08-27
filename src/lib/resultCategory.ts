@@ -18,6 +18,10 @@ export const SUPPORTED_RESULT_CATEGORIES = [
 
 const SUPPORTED_CATEGORY_SET = new Set<string>(SUPPORTED_RESULT_CATEGORIES);
 
+export function isResultCategory(value: unknown): value is ResultCategory {
+  return typeof value === "string" && SUPPORTED_CATEGORY_SET.has(value);
+}
+
 export function normalizeResultCategory(
   value: string | null | undefined,
 ): ResultCategory | null {
@@ -31,9 +35,7 @@ export function normalizeResultCategory(
     return "infra";
   }
 
-  return SUPPORTED_CATEGORY_SET.has(normalized)
-    ? (normalized as ResultCategory)
-    : null;
+  return isResultCategory(normalized) ? normalized : null;
 }
 
 export function getEffectiveResultCategory(

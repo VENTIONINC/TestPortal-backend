@@ -3,6 +3,7 @@
 
 import type { GetResultsParams } from "@/types";
 import type { ResultCategory } from "@/types/resultCategory";
+import { isResultCategory } from "@/lib/resultCategory";
 
 export function resolveExecutionTypeFilter(
   type?: string,
@@ -26,7 +27,7 @@ export function buildIssueParams(query: Record<string, string | undefined>) {
     type?: string;
   } = { projectId: query.projectId ?? "" };
 
-  if (query.category) params.category = query.category as ResultCategory;
+  if (isResultCategory(query.category)) params.category = query.category;
   if (query.name) params.name = query.name;
   if (query.page) params.page = Number(query.page);
   if (query.limit) params.limit = Number(query.limit);

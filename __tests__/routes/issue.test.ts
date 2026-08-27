@@ -84,6 +84,8 @@ jest.mock("@/models/userModel", () => ({
 jest.mock("@/models/issueModel", () => ({
   issueModel: {
     findMany: jest.fn(() => Promise.resolve(issues)),
+    count: jest.fn(() => Promise.resolve(issues.length)),
+    findLinkedResults: jest.fn(() => Promise.resolve([])),
     findById: jest.fn((id: string) => {
       const issue = issues.find((i) => i.id === id);
       return Promise.resolve(issue ?? null);
@@ -137,6 +139,22 @@ describe("v2 issues auth flow", () => {
       method: "POST",
       body: { email: "test2@ventionteams.com", password: "password123" },
     });
+
+  it.each(["Bug", "environment", "unknown"])(
+    "rejects the invalid category filter %s",
+    async (category) => {
+      const response = await executeController(issueController.getAllIssues, {
+        method: "GET",
+        query: { projectId: "test-project-uuid", category },
+      });
+
+      expect(response.statusCode).toBe(400);
+      expect(response.body).toEqual({
+        error:
+          "Invalid category query parameter. Must be one of: bug, infra, performance, script, other",
+      });
+    },
+  );
 
   it("requires auth for creating issues and sets user references", async () => {
     const signupRes = await signup();
