@@ -9,6 +9,36 @@ export interface RequestWithMcpUser extends Request {
   mcpUserId?: string;
 }
 
+export const handleMcpSessionRequest = async (
+  sessionUserId: string,
+  req: RequestWithMcpUser,
+  res: Response,
+  handleTransport: () => Promise<void>,
+): Promise<void> => {
+  if (!req.mcpUserId) {
+    res.status(401).json({
+      jsonrpc: "2.0",
+      error: { code: -32001, message: "MCP user is not authenticated" },
+      id: null,
+    });
+    return;
+  }
+
+  if (req.mcpUserId !== sessionUserId) {
+    res.status(403).json({
+      jsonrpc: "2.0",
+      error: {
+        code: -32004,
+        message: "MCP session belongs to a different user",
+      },
+      id: null,
+    });
+    return;
+  }
+
+  await handleTransport();
+};
+
 // MCP token validation middleware
 export const authenticateMcpToken = (
   req: RequestWithMcpUser,

@@ -1,7 +1,7 @@
 // Copyright 2026 VENSOLUTIONSGROUP LTD
 // SPDX-License-Identifier: Apache-2.0
 
-import { Router, Request, Response, NextFunction } from "express";
+import { Router, Response, NextFunction } from "express";
 import { randomUUID } from "node:crypto";
 import {
   McpServer,
@@ -9,7 +9,10 @@ import {
 } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/streamableHttp.js";
 import { isInitializeRequest } from "@modelcontextprotocol/sdk/types.js";
-import { authenticateMcpToken } from "@/mcp/middleware/auth";
+import {
+  authenticateMcpToken,
+  handleMcpSessionRequest,
+} from "@/mcp/middleware/auth";
 import { statusCheck } from "@/mcp/tools/status-check";
 import { currentTime } from "@/mcp/tools/current-time";
 import { getIssues, getIssueById, createIssue } from "@/mcp/tools/issues";
@@ -44,6 +47,7 @@ const router = Router();
 interface TransportEntry {
   transport: StreamableHTTPServerTransport;
   lastActive: number;
+  userId: string;
 }
 
 interface TransportStorage {
@@ -80,9 +84,11 @@ router.post(
 
       if (sessionId && transports[sessionId]) {
         const entry = transports[sessionId];
-        entry.lastActive = Date.now();
         transport = entry.transport;
-        await transport.handleRequest(req, res, req.body);
+        await handleMcpSessionRequest(entry.userId, req, res, async () => {
+          entry.lastActive = Date.now();
+          await transport.handleRequest(req, res, req.body);
+        });
         return;
       }
 
@@ -103,6 +109,7 @@ router.post(
             transports[sessionId] = {
               transport,
               lastActive: Date.now(),
+              userId: reviewedById,
             };
           },
         });
@@ -267,7 +274,7 @@ router.post(
 );
 
 const handleSessionRequest = async (
-  req: Request,
+  req: RequestWithMcpUser,
   res: Response,
   next: NextFunction,
 ): Promise<void> => {
@@ -279,9 +286,11 @@ const handleSessionRequest = async (
     }
 
     const entry = transports[sessionId];
-    entry.lastActive = Date.now();
     const transport = entry.transport;
-    await transport.handleRequest(req, res);
+    await handleMcpSessionRequest(entry.userId, req, res, async () => {
+      entry.lastActive = Date.now();
+      await transport.handleRequest(req, res);
+    });
   } catch (error) {
     next(error);
   }
