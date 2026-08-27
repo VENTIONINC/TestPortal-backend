@@ -49,6 +49,12 @@ describe("result-error modal OpenAPI contract", () => {
       spec.paths?.["/api/v2/result-errors/{resultErrorId}/modal-context"]?.get;
 
     expect(schemas).toHaveProperty("ResultErrorModalContext");
+    expect(schemas.ResultErrorModalIssue).toMatchObject({
+      required: expect.arrayContaining(["category"]),
+      properties: {
+        category: { $ref: "#/components/schemas/ResultCategory" },
+      },
+    });
     expect(JSON.stringify(schemas.ResultErrorModalContext)).toContain(
       '"sourceSnippet"',
     );

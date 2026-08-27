@@ -62,6 +62,7 @@ const buildContextRecord = () => ({
       issue: {
         id: "issue-1",
         name: "Checkout is flaky",
+        category: "bug",
         description: "Intermittent checkout failure",
         portal: null,
         service: "checkout",
@@ -77,6 +78,7 @@ const buildContextRecord = () => ({
       issue: {
         id: "issue-2",
         name: "Submit timeout",
+        category: "infra",
         description: null,
         portal: null,
         service: null,
@@ -122,12 +124,15 @@ describe("resultErrorService modal context", () => {
       assignments: {
         confirmed: expect.objectContaining({
           id: "confirmed-1",
-          issue: expect.objectContaining({ id: "issue-1" }),
+          issue: expect.objectContaining({ id: "issue-1", category: "bug" }),
         }),
         suggestions: [
           expect.objectContaining({
             id: "suggested-1",
-            issue: expect.objectContaining({ id: "issue-2" }),
+            issue: expect.objectContaining({
+              id: "issue-2",
+              category: "infra",
+            }),
           }),
         ],
       },

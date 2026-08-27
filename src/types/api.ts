@@ -69,6 +69,7 @@ export interface ResultErrorModalAssignmentSummary {
   issue: {
     id: string;
     name: string;
+    category: import("@/types/resultCategory").ResultCategory;
     description: string | null;
     portal: string | null;
     service: string | null;

@@ -340,13 +340,24 @@ export const resultErrorService = {
 
     const toAssignment = (
       assignment: (typeof record.assumptions)[number],
-    ): ResultErrorModalAssignmentSummary => ({
-      id: assignment.id,
-      isConfirmed: assignment.isConfirmed,
-      score: assignment.score,
-      madeBy: assignment.madeBy,
-      issue: assignment.issue,
-    });
+    ): ResultErrorModalAssignmentSummary => {
+      if (!isResultCategory(assignment.issue.category)) {
+        throw new Error(
+          `Issue ${assignment.issue.id} has an invalid category`,
+        );
+      }
+
+      return {
+        id: assignment.id,
+        isConfirmed: assignment.isConfirmed,
+        score: assignment.score,
+        madeBy: assignment.madeBy,
+        issue: {
+          ...assignment.issue,
+          category: assignment.issue.category,
+        },
+      };
+    };
     const confirmed = record.assumptions.find(
       (assignment) => assignment.isConfirmed,
     );

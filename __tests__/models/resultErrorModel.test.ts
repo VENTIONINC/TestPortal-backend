@@ -36,7 +36,13 @@ describe("resultErrorModel modal context", () => {
           sourceSnippet: true,
           generatedTestCase: true,
           result: expect.any(Object),
-          assumptions: expect.any(Object),
+          assumptions: expect.objectContaining({
+            select: expect.objectContaining({
+              issue: expect.objectContaining({
+                select: expect.objectContaining({ category: true }),
+              }),
+            }),
+          }),
         }),
       }),
     );

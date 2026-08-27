@@ -102,6 +102,7 @@ const ResultErrorModalIssueSchema = z
   .object({
     id: z.string().uuid(),
     name: z.string(),
+    category: ResultCategorySchema,
     description: z.string().nullable(),
     portal: z.string().nullable(),
     service: z.string().nullable(),

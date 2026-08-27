@@ -48,6 +48,7 @@ const modalContextSelect = Prisma.validator<Prisma.ResultErrorSelect>()({
         select: {
           id: true,
           name: true,
+          category: true,
           description: true,
           portal: true,
           service: true,
