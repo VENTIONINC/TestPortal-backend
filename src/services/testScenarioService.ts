@@ -10,6 +10,7 @@ import {
   type ListTestScenariosParams,
   type TestScenarioListResponse,
   type TestScenarioResponse,
+  type UpdateTestScenarioParams,
 } from "@/types/testScenarios";
 
 const DEFAULT_PAGE = 1;
@@ -93,6 +94,57 @@ export const testScenarioService = {
     if (!scenario) {
       throw new TestScenarioNotFoundError(
         `Test scenario with id '${scenarioId}' not found`,
+      );
+    }
+
+    return scenario;
+  },
+
+  async updateScenario(
+    params: UpdateTestScenarioParams,
+  ): Promise<TestScenarioResponse> {
+    if (!params.scenarioId) {
+      throw new TestScenarioValidationError("Scenario ID is required");
+    }
+
+    if (!params.projectId) {
+      throw new TestScenarioValidationError("Project ID is required");
+    }
+
+    if (params.title === undefined && params.contentMd === undefined) {
+      throw new TestScenarioValidationError(
+        "At least one of title or contentMd is required",
+      );
+    }
+
+    if (
+      params.title !== undefined &&
+      (typeof params.title !== "string" || !params.title.trim())
+    ) {
+      throw new TestScenarioValidationError("Title is required");
+    }
+
+    if (
+      params.contentMd !== undefined &&
+      (typeof params.contentMd !== "string" || params.contentMd.length === 0)
+    ) {
+      throw new TestScenarioValidationError("contentMd is required");
+    }
+
+    const scenario = await testScenarioModel.update(
+      params.scenarioId,
+      params.projectId,
+      {
+        ...(params.title !== undefined ? { title: params.title.trim() } : {}),
+        ...(params.contentMd !== undefined
+          ? { contentMd: params.contentMd }
+          : {}),
+      },
+    );
+
+    if (!scenario) {
+      throw new TestScenarioNotFoundError(
+        `Test scenario with id '${params.scenarioId}' not found`,
       );
     }
 

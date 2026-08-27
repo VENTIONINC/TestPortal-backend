@@ -63,6 +63,23 @@ jest.mock("@/models/testScenarioModel", () => ({
         ) ?? null,
       ),
     ),
+    update: jest.fn(
+      (
+        id: string,
+        projectId: string,
+        data: { title?: string; contentMd?: string },
+      ) => {
+        const scenario = mockScenarios.find(
+          (candidate) => candidate.id === id && candidate.projectId === projectId,
+        );
+        if (!scenario) return Promise.resolve(null);
+
+        Object.assign(scenario, data, {
+          updatedAt: new Date("2026-01-02T00:00:00.000Z"),
+        });
+        return Promise.resolve({ ...scenario });
+      },
+    ),
     delete: jest.fn((id: string, projectId: string) => {
       const index = mockScenarios.findIndex(
         (scenario) => scenario.id === id && scenario.projectId === projectId,
@@ -181,5 +198,93 @@ describe("test-scenario project-isolated workflow", () => {
       "Second",
     );
     expect(second.statusCode).toBe(201);
+  });
+
+  it("round-trips exact Markdown and preserves immutable metadata on updates", async () => {
+    const created = await executeController(testScenarioController.create, {
+      method: "POST",
+      user: authenticatedUser,
+      body: { projectId: projectA, title: "Original", contentMd: "# Original" },
+    });
+    const original = { ...(created.body as TestScenario) };
+    const exactMarkdown =
+      "# Ünïcøde heading\r\n\r\n  indented text  \r\n\r\n```typescript\r\n\tconst value = `✓`;\r\n```\r\n";
+
+    const updated = await executeController(testScenarioController.update, {
+      method: "PATCH",
+      params: { scenarioId: original.id },
+      query: { projectId: projectA },
+      body: { title: "  Revised title  ", contentMd: exactMarkdown },
+    });
+    const updatedScenario = updated.body as TestScenario;
+
+    expect(updated.statusCode).toBe(200);
+    expect(updatedScenario.title).toBe("Revised title");
+    expect(updatedScenario.contentMd).toBe(exactMarkdown);
+    expect(updatedScenario.id).toBe(original.id);
+    expect(updatedScenario.projectId).toBe(original.projectId);
+    expect(updatedScenario.createdById).toBe(original.createdById);
+    expect(updatedScenario.createdAt).toBe(original.createdAt);
+    expect(updatedScenario.updatedAt.getTime()).toBeGreaterThan(
+      original.updatedAt.getTime(),
+    );
+
+    const detail = await executeController(testScenarioController.getById, {
+      params: { scenarioId: original.id },
+      query: { projectId: projectA },
+    });
+    expect((detail.body as TestScenario).contentMd).toBe(exactMarkdown);
+
+    const whitespaceOnly = " \t\r\n  ";
+    const whitespaceUpdate = await executeController(
+      testScenarioController.update,
+      {
+        method: "PATCH",
+        params: { scenarioId: original.id },
+        query: { projectId: projectA },
+        body: { contentMd: whitespaceOnly },
+      },
+    );
+    expect((whitespaceUpdate.body as TestScenario).contentMd).toBe(whitespaceOnly);
+
+    const firstWrite = await executeController(testScenarioController.update, {
+      method: "PATCH",
+      params: { scenarioId: original.id },
+      query: { projectId: projectA },
+      body: { title: "First write" },
+    });
+    const lastWrite = await executeController(testScenarioController.update, {
+      method: "PATCH",
+      params: { scenarioId: original.id },
+      query: { projectId: projectA },
+      body: { title: "Last write" },
+    });
+    expect((firstWrite.body as TestScenario).title).toBe("First write");
+    expect((lastWrite.body as TestScenario).title).toBe("Last write");
+
+    const rejected = await executeController(testScenarioController.update, {
+      method: "PATCH",
+      params: { scenarioId: original.id },
+      query: { projectId: projectA },
+      body: {},
+    });
+    expect(rejected.statusCode).toBe(400);
+
+    const crossProject = await executeController(testScenarioController.update, {
+      method: "PATCH",
+      params: { scenarioId: original.id },
+      query: { projectId: projectB },
+      body: { title: "Should not apply" },
+    });
+    expect(crossProject.statusCode).toBe(404);
+
+    const unchangedAfterRejection = await executeController(
+      testScenarioController.getById,
+      { params: { scenarioId: original.id }, query: { projectId: projectA } },
+    );
+    expect((unchangedAfterRejection.body as TestScenario).title).toBe("Last write");
+    expect((unchangedAfterRejection.body as TestScenario).contentMd).toBe(
+      whitespaceOnly,
+    );
   });
 });

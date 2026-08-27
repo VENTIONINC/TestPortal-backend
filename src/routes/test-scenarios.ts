@@ -42,6 +42,11 @@ router.get(
   authMiddleware,
   testScenarioController.getIssues,
 );
+router.patch(
+  "/v2/test-scenarios/:scenarioId",
+  authMiddleware,
+  testScenarioController.update,
+);
 router.get(
   "/v2/test-scenarios/:scenarioId",
   authMiddleware,

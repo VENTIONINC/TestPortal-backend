@@ -84,6 +84,13 @@ const scenarioFindByIdMock = jest.fn<
 const scenarioDeleteMock = jest.fn<
   (id: string, projectId: string) => Promise<number>
 >();
+const scenarioUpdateMock = jest.fn<
+  (
+    id: string,
+    projectId: string,
+    data: { title?: string; contentMd?: string },
+  ) => Promise<ScenarioRecord | null>
+>();
 const specFindByIdMock = jest.fn<
   (id: string, projectId: string) => Promise<SpecRecord | null>
 >();
@@ -129,6 +136,7 @@ jest.mock("@/models/projectModel", () => ({
 jest.mock("@/models/testScenarioModel", () => ({
   testScenarioModel: {
     findById: scenarioFindByIdMock,
+    update: scenarioUpdateMock,
     delete: scenarioDeleteMock,
   },
 }));
@@ -197,6 +205,9 @@ describe("test scenario execution evidence workflow", () => {
     scenarios.sort((left, right) => left.id.localeCompare(right.id));
     specs.sort((left, right) => left.id.localeCompare(right.id));
     scenarioFindByIdMock.mockImplementation(async (id, projectId) =>
+      scenarios.find((scenario) => scenario.id === id && scenario.projectId === projectId) ?? null,
+    );
+    scenarioUpdateMock.mockImplementation(async (id, projectId) =>
       scenarios.find((scenario) => scenario.id === id && scenario.projectId === projectId) ?? null,
     );
     scenarioDeleteMock.mockImplementation(async (id, projectId) => {
@@ -305,6 +316,45 @@ describe("test scenario execution evidence workflow", () => {
     expect(assumptions).toEqual(endpointSnapshot.assumptions);
     expect(issueEvidence).toEqual(endpointSnapshot.issues);
     await expect(testScenarioIntegrationService.getResults({ scenarioId: scenarioA, projectId: projectA })).resolves.toEqual(expect.objectContaining({ linkedSpecCount: 1, total: 1 }));
+  });
+
+  it("preserves Spec links and derived evidence when scenario content changes", async () => {
+    await testScenarioIntegrationService.addSpecLink({ scenarioId: scenarioA, specId: specA, projectId: projectA });
+    await testScenarioIntegrationService.addSpecLink({ scenarioId: scenarioA, specId: specB, projectId: projectA });
+    const snapshot = {
+      scenarios: scenarios.map((scenario) => ({ ...scenario })),
+      links: links.map((link) => ({ ...link })),
+      specs: specs.map((spec) => ({ ...spec })),
+      results: resultEvidence.map((result) => ({ ...result })),
+      resultErrors: resultErrors.map((error) => ({ ...error })),
+      assumptions: assumptions.map((assumption) => ({ ...assumption })),
+      issues: issueEvidence.map((issue) => ({ ...issue })),
+    };
+
+    await testScenarioService.updateScenario({
+      scenarioId: scenarioA,
+      projectId: projectA,
+      title: "Updated title",
+    });
+    await testScenarioService.updateScenario({
+      scenarioId: scenarioA,
+      projectId: projectA,
+      contentMd: "# Updated Markdown",
+    });
+
+    expect(scenarios).toEqual(snapshot.scenarios);
+    expect(links).toEqual(snapshot.links);
+    expect(specs).toEqual(snapshot.specs);
+    expect(resultEvidence).toEqual(snapshot.results);
+    expect(resultErrors).toEqual(snapshot.resultErrors);
+    expect(assumptions).toEqual(snapshot.assumptions);
+    expect(issueEvidence).toEqual(snapshot.issues);
+    await expect(
+      testScenarioIntegrationService.getResults({ scenarioId: scenarioA, projectId: projectA }),
+    ).resolves.toEqual(expect.objectContaining({ linkedSpecCount: 2, total: 2 }));
+    await expect(
+      testScenarioIntegrationService.getIssues({ scenarioId: scenarioA, projectId: projectA }),
+    ).resolves.toEqual(expect.objectContaining({ linkedSpecCount: 2, total: 2 }));
   });
 
   it("removes scenario links while preserving Specs and evidence on scenario deletion", async () => {

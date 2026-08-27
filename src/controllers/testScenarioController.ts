@@ -8,6 +8,7 @@ import {
   testScenarioIdParamsSchema,
   testScenarioListQuerySchema,
   testScenarioProjectQuerySchema,
+  updateTestScenarioSchema,
 } from "@/schemas/testScenarioSchemas";
 import {
   testScenarioEvidenceParamsSchema as integrationEvidenceParamsSchema,
@@ -127,6 +128,40 @@ export const testScenarioController = {
       res.status(200).json(scenario);
     } catch (error) {
       sendServiceError(res, error, "fetch test scenario");
+    }
+  },
+
+  async update(
+    req: Request<{ scenarioId: string }>,
+    res: Response,
+  ): Promise<void> {
+    const params = testScenarioIdParamsSchema.safeParse(req.params);
+    const query = testScenarioProjectQuerySchema.safeParse(req.query);
+    const body = updateTestScenarioSchema.safeParse(req.body);
+    if (!params.success) {
+      sendValidationError(res, validationMessage(params.error));
+      return;
+    }
+
+    if (!query.success) {
+      sendValidationError(res, validationMessage(query.error));
+      return;
+    }
+
+    if (!body.success) {
+      sendValidationError(res, validationMessage(body.error));
+      return;
+    }
+
+    try {
+      const scenario = await testScenarioService.updateScenario({
+        scenarioId: params.data.scenarioId,
+        projectId: query.data.projectId,
+        ...body.data,
+      });
+      res.status(200).json(scenario);
+    } catch (error) {
+      sendServiceError(res, error, "update test scenario");
     }
   },
 

@@ -26,6 +26,23 @@ const CreateTestScenarioRequestSchema = z
   })
   .openapi("CreateTestScenarioRequest");
 
+const UpdateTestScenarioRequestSchema = z
+  .union([
+    z
+      .object({
+        title: z.string().min(1).regex(/\S/),
+        contentMd: z.string().min(1).optional(),
+      })
+      .strict(),
+    z
+      .object({
+        title: z.string().min(1).regex(/\S/).optional(),
+        contentMd: z.string().min(1),
+      })
+      .strict(),
+  ])
+  .openapi("UpdateTestScenarioRequest");
+
 const TestScenarioIdParamsSchema = z
   .object({
     scenarioId: z.string().uuid(),
@@ -180,6 +197,10 @@ export function registerTestScenarioRoutes(registry: OpenAPIRegistry): void {
     "CreateTestScenarioRequest",
     CreateTestScenarioRequestSchema,
   );
+  registry.register(
+    "UpdateTestScenarioRequest",
+    UpdateTestScenarioRequestSchema,
+  );
   registry.register("TestScenarioIdParams", TestScenarioIdParamsSchema);
   registry.register(
     "TestScenarioProjectQuery",
@@ -261,6 +282,37 @@ export function registerTestScenarioRoutes(registry: OpenAPIRegistry): void {
       401: errorResponse("Unauthorized"),
       404: errorResponse("Test scenario or Spec not found in the project"),
       409: errorResponse("The scenario/Spec link already exists"),
+      500: errorResponse("Internal server error"),
+    },
+    tags: ["Test Scenarios"],
+  });
+
+  registry.registerPath({
+    method: "patch",
+    path: "/api/v2/test-scenarios/{scenarioId}",
+    description:
+      "Partially updates a test scenario within a project context. Omitted fields are preserved.",
+    request: {
+      params: TestScenarioIdParamsSchema,
+      query: TestScenarioProjectQuerySchema,
+      body: {
+        required: true,
+        content: {
+          "application/json": { schema: UpdateTestScenarioRequestSchema },
+        },
+      },
+    },
+    security: [{ BearerAuth: [] }],
+    responses: {
+      200: {
+        description: "Updated test scenario details",
+        content: {
+          "application/json": { schema: TestScenarioSchema },
+        },
+      },
+      400: errorResponse("Invalid scenario, project, or update input"),
+      401: errorResponse("Unauthorized"),
+      404: errorResponse("Test scenario not found in the requested project"),
       500: errorResponse("Internal server error"),
     },
     tags: ["Test Scenarios"],
@@ -534,6 +586,7 @@ export function registerTestScenarioRoutes(registry: OpenAPIRegistry): void {
 
 export {
   CreateTestScenarioRequestSchema,
+  UpdateTestScenarioRequestSchema,
   TestScenarioEvidenceQuerySchema,
   TestScenarioIdParamsSchema,
   TestScenarioIssuesResponseSchema,

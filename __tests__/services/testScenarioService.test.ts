@@ -10,6 +10,13 @@ const mockCreate = jest.fn<() => Promise<TestScenario>>();
 const mockFindMany = jest.fn<() => Promise<TestScenario[]>>();
 const mockCount = jest.fn<() => Promise<number>>();
 const mockFindById = jest.fn<() => Promise<TestScenario | null>>();
+const mockUpdate = jest.fn<
+  (
+    scenarioId: string,
+    projectId: string,
+    data: { title?: string; contentMd?: string },
+  ) => Promise<TestScenario | null>
+>();
 const mockDelete = jest.fn<() => Promise<number>>();
 
 jest.mock("@/models/projectModel", () => ({
@@ -24,6 +31,7 @@ jest.mock("@/models/testScenarioModel", () => ({
     findMany: mockFindMany,
     count: mockCount,
     findById: mockFindById,
+    update: mockUpdate,
     delete: mockDelete,
   },
 }));
@@ -54,6 +62,7 @@ describe("testScenarioService", () => {
     mockFindMany.mockResolvedValue([scenario]);
     mockCount.mockResolvedValue(1);
     mockFindById.mockResolvedValue(scenario);
+    mockUpdate.mockResolvedValue(scenario);
     mockDelete.mockResolvedValue(1);
   });
 
@@ -143,6 +152,121 @@ describe("testScenarioService", () => {
     await testScenarioService.deleteScenario(scenario.id, projectId);
 
     expect(mockDelete).toHaveBeenCalledWith(scenario.id, projectId);
+  });
+
+  it("updates only the title and trims it", async () => {
+    await testScenarioService.updateScenario({
+      scenarioId: scenario.id,
+      projectId,
+      title: "  Updated title  ",
+    });
+
+    expect(mockUpdate).toHaveBeenCalledWith(scenario.id, projectId, {
+      title: "Updated title",
+    });
+  });
+
+  it("updates only Markdown without changing its source text", async () => {
+    const contentMd = "  # Updated\n\n  ✓\n";
+
+    await testScenarioService.updateScenario({
+      scenarioId: scenario.id,
+      projectId,
+      contentMd,
+    });
+
+    expect(mockUpdate).toHaveBeenCalledWith(scenario.id, projectId, {
+      contentMd,
+    });
+  });
+
+  it("updates title and Markdown together", async () => {
+    const contentMd = "# Combined";
+
+    await testScenarioService.updateScenario({
+      scenarioId: scenario.id,
+      projectId,
+      title: "  Combined title ",
+      contentMd,
+    });
+
+    expect(mockUpdate).toHaveBeenCalledWith(scenario.id, projectId, {
+      title: "Combined title",
+      contentMd,
+    });
+  });
+
+  it("allows an intentional no-op value update", async () => {
+    await testScenarioService.updateScenario({
+      scenarioId: scenario.id,
+      projectId,
+      title: scenario.title,
+    });
+
+    expect(mockUpdate).toHaveBeenCalledWith(scenario.id, projectId, {
+      title: scenario.title,
+    });
+  });
+
+  it("uses the value returned by the later last-write-wins update", async () => {
+    const first = { ...scenario, title: "First write" };
+    const second = { ...scenario, title: "Last write" };
+    mockUpdate.mockResolvedValueOnce(first).mockResolvedValueOnce(second);
+
+    await expect(
+      testScenarioService.updateScenario({
+        scenarioId: scenario.id,
+        projectId,
+        title: "First write",
+      }),
+    ).resolves.toBe(first);
+    await expect(
+      testScenarioService.updateScenario({
+        scenarioId: scenario.id,
+        projectId,
+        title: "Last write",
+      }),
+    ).resolves.toBe(second);
+    expect(mockUpdate.mock.calls.map((call) => call[2])).toEqual([
+      { title: "First write" },
+      { title: "Last write" },
+    ]);
+  });
+
+  it("rejects an empty update and invalid field values before persistence", async () => {
+    await expect(
+      testScenarioService.updateScenario({ scenarioId: scenario.id, projectId }),
+    ).rejects.toBeInstanceOf(TestScenarioValidationError);
+    await expect(
+      testScenarioService.updateScenario({
+        scenarioId: scenario.id,
+        projectId,
+        title: "   ",
+      }),
+    ).rejects.toBeInstanceOf(TestScenarioValidationError);
+    await expect(
+      testScenarioService.updateScenario({
+        scenarioId: scenario.id,
+        projectId,
+        contentMd: "",
+      }),
+    ).rejects.toBeInstanceOf(TestScenarioValidationError);
+    expect(mockUpdate).not.toHaveBeenCalled();
+  });
+
+  it("maps a cross-project update miss to the existing not-found error", async () => {
+    mockUpdate.mockResolvedValue(null);
+
+    await expect(
+      testScenarioService.updateScenario({
+        scenarioId: scenario.id,
+        projectId: otherProjectId,
+        contentMd: "# Never applied",
+      }),
+    ).rejects.toBeInstanceOf(TestScenarioNotFoundError);
+    expect(mockUpdate).toHaveBeenCalledWith(scenario.id, otherProjectId, {
+      contentMd: "# Never applied",
+    });
   });
 
   it("does not report deletion success when the composite identity is absent", async () => {

@@ -4,17 +4,19 @@
 import { generateOpenAPISpec } from "@/lib/openapi";
 
 describe("test-scenario OpenAPI contract", () => {
-  it("registers all four authenticated operations under the Test Scenarios tag", () => {
+  it("registers authenticated scenario operations under the Test Scenarios tag", () => {
     const spec = generateOpenAPISpec();
     const paths = spec.paths ?? {};
     const list = paths["/api/v2/test-scenarios"]?.get;
     const create = paths["/api/v2/test-scenarios"]?.post;
     const detail = paths["/api/v2/test-scenarios/{scenarioId}"]?.get;
+    const update = paths["/api/v2/test-scenarios/{scenarioId}"]?.patch;
     const remove = paths["/api/v2/test-scenarios/{scenarioId}"]?.delete;
 
     expect(list).toBeDefined();
     expect(create).toBeDefined();
     expect(detail).toBeDefined();
+    expect(update).toBeDefined();
     expect(remove).toBeDefined();
     expect(spec.tags).toEqual(
       expect.arrayContaining([
@@ -22,12 +24,15 @@ describe("test-scenario OpenAPI contract", () => {
       ]),
     );
 
-    for (const operation of [list, create, detail, remove]) {
+    for (const operation of [list, create, detail, update, remove]) {
       expect(operation?.tags).toContain("Test Scenarios");
       expect(operation?.security).toEqual([{ BearerAuth: [] }]);
       expect(operation?.responses?.["400"]).toBeDefined();
       expect(operation?.responses?.["401"]).toBeDefined();
     }
+    expect(update?.responses?.["200"]).toBeDefined();
+    expect(update?.responses?.["404"]).toBeDefined();
+    expect(update?.responses?.["500"]).toBeDefined();
     expect(detail?.responses?.["404"]).toBeDefined();
     expect(remove?.responses?.["404"]).toBeDefined();
     expect(create?.responses?.["404"]).toBeDefined();
@@ -40,6 +45,7 @@ describe("test-scenario OpenAPI contract", () => {
 
     expect(schemas.TestScenario).toBeDefined();
     expect(schemas.CreateTestScenarioRequest).toBeDefined();
+    expect(schemas.UpdateTestScenarioRequest).toBeDefined();
     expect(schemas.TestScenarioListResponse).toBeDefined();
     expect(schemas.TestScenarioListQuery).toBeDefined();
 
@@ -70,6 +76,53 @@ describe("test-scenario OpenAPI contract", () => {
     };
     expect(listQuery.properties?.limit?.minimum).toBe(1);
     expect(listQuery.properties?.limit?.maximum).toBe(100);
+  });
+
+  it("documents strict partial alternatives and reuses the detail response", () => {
+    const spec = generateOpenAPISpec();
+    const schemas = spec.components?.schemas ?? {};
+    const updateSchema = schemas.UpdateTestScenarioRequest as {
+      anyOf?: Array<{
+        additionalProperties?: boolean;
+        required?: string[];
+        properties?: Record<string, { pattern?: string } | unknown>;
+      }>;
+      oneOf?: Array<{
+        additionalProperties?: boolean;
+        required?: string[];
+        properties?: Record<string, { pattern?: string } | unknown>;
+      }>;
+    };
+    const alternatives = updateSchema.oneOf ?? updateSchema.anyOf;
+
+    expect(alternatives).toHaveLength(2);
+    expect(alternatives?.[0]?.additionalProperties).toBe(false);
+    expect(alternatives?.[1]?.additionalProperties).toBe(false);
+    expect(alternatives?.map((alternative) => alternative.required)).toEqual([
+      ["title"],
+      ["contentMd"],
+    ]);
+    for (const alternative of alternatives ?? []) {
+      expect(Object.keys(alternative.properties ?? {}).sort()).toEqual([
+        "contentMd",
+        "title",
+      ]);
+      expect(alternative.properties?.projectId).toBeUndefined();
+      expect(alternative.properties?.createdById).toBeUndefined();
+      expect(alternative.properties?.createdAt).toBeUndefined();
+      expect(alternative.properties?.updatedAt).toBeUndefined();
+      expect(
+        (alternative.properties?.title as { pattern?: string } | undefined)
+          ?.pattern,
+      ).toBe("\\S");
+    }
+
+    const update = spec.paths?.["/api/v2/test-scenarios/{scenarioId}"]?.patch;
+    const responseSchema = update?.responses?.["200"]?.content?.[
+      "application/json"
+    ]?.schema;
+    expect(responseSchema).toEqual({ $ref: "#/components/schemas/TestScenario" });
+    expect(spec.paths?.["/api/v2/test-scenarios/{scenarioId}"]?.put).toBeUndefined();
   });
 
   it("documents 201 creation and empty 204 deletion", () => {

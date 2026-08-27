@@ -18,6 +18,7 @@ const controllerMocks = {
   removeSpecLink: jest.fn<(req: Request, res: Response) => void>(),
   getResults: jest.fn<(req: Request, res: Response) => void>(),
   getIssues: jest.fn<(req: Request, res: Response) => void>(),
+  update: jest.fn<(req: Request, res: Response) => void>(),
   getById: jest.fn<(req: Request, res: Response) => void>(),
   delete: jest.fn<(req: Request, res: Response) => void>(),
 };
@@ -66,10 +67,10 @@ describe("test-scenario routes", () => {
       "delete /v2/test-scenarios/:scenarioId/spec-links/:specId",
       "get /v2/test-scenarios/:scenarioId/results",
       "get /v2/test-scenarios/:scenarioId/issues",
+      "patch /v2/test-scenarios/:scenarioId",
       "get /v2/test-scenarios/:scenarioId",
       "delete /v2/test-scenarios/:scenarioId",
     ]);
-    expect(routes.some((route) => route.startsWith("patch "))).toBe(false);
     expect(routes.some((route) => route.startsWith("put "))).toBe(false);
   });
 
@@ -128,5 +129,17 @@ describe("test-scenario routes", () => {
 
       expect(route?.route?.stack.some((entry) => entry.handle === controller)).toBe(true);
     }
+  });
+
+  it("hands PATCH to the update controller after JWT authentication", () => {
+    const route = routeLayers().find((layer) => {
+      const metadata = layer.route;
+      return metadata &&
+        `${Object.keys(metadata.methods)[0]} ${metadata.path}` ===
+          "patch /v2/test-scenarios/:scenarioId";
+    });
+
+    expect(route?.route?.stack.some((entry) => entry.handle === authMiddleware)).toBe(true);
+    expect(route?.route?.stack.some((entry) => entry.handle === controllerMocks.update)).toBe(true);
   });
 });

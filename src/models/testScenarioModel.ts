@@ -11,6 +11,11 @@ export interface CreateTestScenarioData {
   createdById: string;
 }
 
+export interface UpdateTestScenarioData {
+  title?: string;
+  contentMd?: string;
+}
+
 const projectWhere = (projectId: string): Prisma.TestScenarioWhereInput => ({
   projectId,
 });
@@ -58,6 +63,36 @@ export const testScenarioModel = {
     return await client.testScenario.findFirst({
       where: { id, projectId },
     });
+  },
+
+  async update(
+    id: string,
+    projectId: string,
+    data: UpdateTestScenarioData,
+    tx?: Prisma.TransactionClient,
+  ): Promise<TestScenario | null> {
+    const updateWithinTransaction = async (
+      client: Prisma.TransactionClient,
+    ): Promise<TestScenario | null> => {
+      const scenario = await client.testScenario.findFirst({
+        where: { id, projectId },
+      });
+
+      if (!scenario) {
+        return null;
+      }
+
+      return await client.testScenario.update({
+        where: { id: scenario.id },
+        data,
+      });
+    };
+
+    if (tx) {
+      return await updateWithinTransaction(tx);
+    }
+
+    return await dbClient.$transaction(updateWithinTransaction);
   },
 
   async delete(

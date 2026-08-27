@@ -19,6 +19,7 @@ const listScenariosMock = jest.fn<
   }>
 >();
 const getScenarioByIdMock = jest.fn<() => Promise<TestScenario>>();
+const updateScenarioMock = jest.fn<() => Promise<TestScenario>>();
 const deleteScenarioMock = jest.fn<() => Promise<void>>();
 
 jest.mock("@/services/testScenarioService", () => ({
@@ -26,6 +27,7 @@ jest.mock("@/services/testScenarioService", () => ({
     createScenario: createScenarioMock,
     listScenarios: listScenariosMock,
     getScenarioById: getScenarioByIdMock,
+    updateScenario: updateScenarioMock,
     deleteScenario: deleteScenarioMock,
   },
 }));
@@ -68,6 +70,7 @@ describe("testScenarioController", () => {
       totalPages: 1,
     });
     getScenarioByIdMock.mockResolvedValue(scenario);
+    updateScenarioMock.mockResolvedValue(scenario);
     deleteScenarioMock.mockResolvedValue(undefined);
   });
 
@@ -190,5 +193,66 @@ describe("testScenarioController", () => {
     expect(response.statusCode).toBe(204);
     expect(response.body).toBeUndefined();
     expect(deleteScenarioMock).toHaveBeenCalledWith(scenarioId, projectId);
+  });
+
+  it("updates a scenario with a complete persisted detail response", async () => {
+    const updatedScenario = {
+      ...scenario,
+      title: "Updated title",
+      contentMd: "# Updated",
+      updatedAt: new Date("2026-01-02T00:00:00.000Z"),
+    };
+    updateScenarioMock.mockResolvedValue(updatedScenario);
+
+    const response = await executeController(testScenarioController.update, {
+      method: "PATCH",
+      params: { scenarioId },
+      query: { projectId },
+      body: { title: " Updated title ", contentMd: "# Updated" },
+    });
+
+    expect(response.statusCode).toBe(200);
+    expect(response.body).toBe(updatedScenario);
+    expect(updateScenarioMock).toHaveBeenCalledWith({
+      scenarioId,
+      projectId,
+      title: "Updated title",
+      contentMd: "# Updated",
+    });
+  });
+
+  it("rejects invalid update bodies without changing state", async () => {
+    const response = await executeController(testScenarioController.update, {
+      method: "PATCH",
+      params: { scenarioId },
+      query: { projectId },
+      body: { title: "Updated", projectId },
+    });
+
+    expect(response.statusCode).toBe(400);
+    expect(response.body).toEqual(expect.objectContaining({ error: expect.any(String) }));
+    expect(updateScenarioMock).not.toHaveBeenCalled();
+  });
+
+  it("maps update not-found and unexpected errors", async () => {
+    updateScenarioMock.mockRejectedValueOnce(
+      new TestScenarioNotFoundError("Scenario not found"),
+    );
+    const notFound = await executeController(testScenarioController.update, {
+      method: "PATCH",
+      params: { scenarioId },
+      query: { projectId },
+      body: { contentMd: "# Missing" },
+    });
+    expect(notFound.statusCode).toBe(404);
+
+    updateScenarioMock.mockRejectedValueOnce(new Error("database unavailable"));
+    const failed = await executeController(testScenarioController.update, {
+      method: "PATCH",
+      params: { scenarioId },
+      query: { projectId },
+      body: { title: "Updated" },
+    });
+    expect(failed.statusCode).toBe(500);
   });
 });

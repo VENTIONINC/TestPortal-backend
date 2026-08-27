@@ -20,6 +20,13 @@ export interface CreateTestScenarioParams {
   createdById: string;
 }
 
+export interface UpdateTestScenarioParams {
+  scenarioId: string;
+  projectId: string;
+  title?: string | undefined;
+  contentMd?: string | undefined;
+}
+
 export interface ListTestScenariosParams {
   projectId: string;
   page?: number | undefined;
