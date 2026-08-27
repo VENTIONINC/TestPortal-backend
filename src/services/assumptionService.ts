@@ -62,7 +62,7 @@ export const assumptionService = {
   async updateAssumption(
     assumptionId: string,
     updateData: Partial<UpdateAssumptionRequest>,
-    reviewedById?: string,
+    reviewedById: string,
   ): Promise<AssumptionUpdateResult> {
     if (!assumptionId) {
       throw new Error("Assumption ID is required");

@@ -140,6 +140,11 @@ export const resultErrorService = {
         },
         select: {
           id: true,
+          assumptions: {
+            where: { isConfirmed: true },
+            take: 1,
+            select: { id: true },
+          },
           result: {
             select: {
               id: true,
@@ -157,6 +162,11 @@ export const resultErrorService = {
       });
       if (!resultError?.result) {
         throw new Error(`Result error with ID ${resultErrorId} not found`);
+      }
+      if (resultError.assumptions.length > 0) {
+        throw new Error(
+          `Result error with ID ${resultErrorId} already has a confirmed assumption`,
+        );
       }
 
       const issue = await tx.issue.create({
@@ -215,10 +225,11 @@ export const resultErrorService = {
     );
 
     return await dbClient.$transaction(async (tx) => {
-      const confirmed = await tx.assumption.findFirst({
+      const confirmations = await tx.assumption.findMany({
         where: {
           resultErrorId,
           isConfirmed: true,
+          issue: { projectId: issueData.projectId },
           resultError: {
             result: {
               execution: { projectId: issueData.projectId },
@@ -226,6 +237,7 @@ export const resultErrorService = {
             },
           },
         },
+        take: 2,
         select: {
           id: true,
           createdAt: true,
@@ -254,10 +266,22 @@ export const resultErrorService = {
           },
         },
       });
-      const resultContext = confirmed?.resultError?.result;
-      if (!confirmed || !resultContext) {
+      if (confirmations.length === 0) {
         throw new Error(
-          `Confirmed assumption for result error ${resultErrorId} not found`,
+          `Confirmed assumption for result error ${resultErrorId} not found in project ${issueData.projectId}`,
+        );
+      }
+      if (confirmations.length > 1) {
+        throw new Error(
+          `Multiple confirmed assumptions for result error ${resultErrorId} found in project ${issueData.projectId}`,
+        );
+      }
+
+      const confirmed = confirmations[0];
+      const resultContext = confirmed?.resultError?.result;
+      if (!resultContext) {
+        throw new Error(
+          `Confirmed assumption for result error ${resultErrorId} is not linked to a result`,
         );
       }
 

@@ -20,9 +20,10 @@ import {
 } from "@/mcp/tools/results";
 import {
   createAssumption,
-  updateAssumption,
+  createUpdateAssumptionTool,
   getAssumptionById,
 } from "@/mcp/tools/assumptions";
+import type { RequestWithMcpUser } from "@/mcp/middleware/auth";
 import { getExecutionById } from "@/mcp/tools/executions";
 import {
   assignIssue,
@@ -72,7 +73,7 @@ setInterval(() => {
 router.post(
   "/v2/mcp",
   authenticateMcpToken,
-  async (req: Request, res: Response): Promise<void> => {
+  async (req: RequestWithMcpUser, res: Response): Promise<void> => {
     try {
       const sessionId = req.headers["mcp-session-id"] as string | undefined;
       let transport: StreamableHTTPServerTransport;
@@ -86,6 +87,16 @@ router.post(
       }
 
       if (!sessionId && isInitializeRequest(req.body)) {
+        const reviewedById = req.mcpUserId;
+        if (!reviewedById) {
+          res.status(401).json({
+            jsonrpc: "2.0",
+            error: { code: -32001, message: "MCP user is not authenticated" },
+            id: null,
+          });
+          return;
+        }
+
         transport = new StreamableHTTPServerTransport({
           sessionIdGenerator: () => randomUUID(),
           onsessioninitialized: (sessionId: string) => {
@@ -126,7 +137,7 @@ router.post(
 
         // Assumption tools
         server.tool(...createAssumption);
-        server.tool(...updateAssumption);
+        server.tool(...createUpdateAssumptionTool(reviewedById));
         server.tool(...getAssumptionById);
 
         // Execution tools

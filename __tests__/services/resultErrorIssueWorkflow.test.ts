@@ -52,6 +52,7 @@ const mockTx = {
   assumption: {
     create: jest.fn<(args: unknown) => Promise<unknown>>(),
     findFirst: jest.fn<(args: unknown) => Promise<unknown>>(),
+    findMany: jest.fn<(args: unknown) => Promise<unknown>>(),
   },
   result: {
     update: jest.fn<(args: unknown) => Promise<unknown>>(),
@@ -86,6 +87,7 @@ describe("resultErrorService issue modal workflows", () => {
     mockTx.resultError.findFirst.mockResolvedValue({
       id: "error-1",
       result: resultContext,
+      assumptions: [],
     });
     mockTx.issue.create.mockResolvedValue(createdIssue);
     mockTx.assumption.create.mockResolvedValue(confirmedAssumption);
@@ -169,6 +171,12 @@ describe("resultErrorService issue modal workflows", () => {
       ...confirmedAssumption,
       resultError: { result: resultContext },
     });
+    mockTx.assumption.findMany.mockResolvedValue([
+      {
+        ...confirmedAssumption,
+        resultError: { result: resultContext },
+      },
+    ]);
     mockTx.issue.update.mockResolvedValue({
       ...createdIssue,
       name: "Updated checkout failure",
@@ -195,11 +203,13 @@ describe("resultErrorService issue modal workflows", () => {
     );
 
     expect(mockTransaction).toHaveBeenCalledTimes(1);
-    expect(mockTx.assumption.findFirst).toHaveBeenCalledWith(
+    expect(mockTx.assumption.findMany).toHaveBeenCalledWith(
       expect.objectContaining({
+        take: 2,
         where: expect.objectContaining({
           resultErrorId: "error-1",
           isConfirmed: true,
+          issue: { projectId: "project-1" },
           resultError: expect.objectContaining({
             result: expect.objectContaining({
               execution: { projectId: "project-1" },
@@ -242,6 +252,54 @@ describe("resultErrorService issue modal workflows", () => {
       assumption: expect.objectContaining({ id: "assumption-1" }),
       result: { id: "result-1", analysisFeedbackCategory: "infra" },
     });
+  });
+
+  it("rejects create-and-assign when the result error already has a confirmed assumption", async () => {
+    mockTx.resultError.findFirst.mockResolvedValue({
+      id: "error-1",
+      result: resultContext,
+      assumptions: [{ id: "existing-confirmed" }],
+    });
+
+    await expect(
+      resultErrorService.createIssue(
+        "error-1",
+        {
+          projectId: "project-1",
+          name: "Checkout failure",
+          category: "bug",
+        },
+        "user-1",
+      ),
+    ).rejects.toThrow(
+      "Result error with ID error-1 already has a confirmed assumption",
+    );
+    expect(mockTx.issue.create).not.toHaveBeenCalled();
+    expect(mockTx.assumption.create).not.toHaveBeenCalled();
+    expect(mockTx.result.update).not.toHaveBeenCalled();
+  });
+
+  it("rejects confirmed edit when multiple project-scoped confirmations exist", async () => {
+    const confirmed = {
+      ...confirmedAssumption,
+      resultError: { result: resultContext },
+    };
+    mockTx.assumption.findMany.mockResolvedValue([
+      confirmed,
+      { ...confirmed, id: "assumption-2", issueId: "issue-2" },
+    ]);
+
+    await expect(
+      resultErrorService.updateIssue(
+        "error-1",
+        { projectId: "project-1", category: "infra" },
+        "user-1",
+      ),
+    ).rejects.toThrow(
+      "Multiple confirmed assumptions for result error error-1 found in project project-1",
+    );
+    expect(mockTx.issue.update).not.toHaveBeenCalled();
+    expect(mockTx.result.update).not.toHaveBeenCalled();
   });
 
   it.each(["Bug", "environment", "unknown"])(
