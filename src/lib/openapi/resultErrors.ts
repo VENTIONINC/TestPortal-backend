@@ -4,6 +4,8 @@
 import { OpenAPIRegistry } from "@asteasolutions/zod-to-openapi";
 import { z } from "./zod";
 import { ErrorResponseSchema, SuccessResponseSchema } from "./common";
+import { AssumptionSchema } from "./assumptions";
+import { IssueCoreSchema, ResultCategorySchema } from "./issues";
 
 const ResultErrorSchema = z
   .object({
@@ -49,6 +51,41 @@ const AnalyzeResultErrorsResponseSchema = z
     totalErrors: z.number(),
   })
   .openapi("AnalyzeResultErrorsResponse");
+
+const ResultErrorIssueCreateRequestSchema = z
+  .object({
+    projectId: z.string().uuid(),
+    name: z.string(),
+    category: ResultCategorySchema,
+    description: z.string().optional(),
+    portal: z.string().optional(),
+    service: z.string().optional(),
+    ticket: z.string().optional(),
+  })
+  .openapi("ResultErrorIssueCreateRequest");
+
+const ResultErrorIssueUpdateRequestSchema = z
+  .object({
+    projectId: z.string().uuid(),
+    category: ResultCategorySchema,
+    name: z.string().optional(),
+    description: z.string().optional(),
+    portal: z.string().optional(),
+    service: z.string().optional(),
+    ticket: z.string().optional(),
+  })
+  .openapi("ResultErrorIssueUpdateRequest");
+
+const ResultErrorIssueWorkflowResponseSchema = z
+  .object({
+    issue: IssueCoreSchema,
+    assumption: AssumptionSchema,
+    result: z.object({
+      id: z.string().uuid(),
+      analysisFeedbackCategory: ResultCategorySchema,
+    }),
+  })
+  .openapi("ResultErrorIssueWorkflowResponse");
 
 const resultErrorSourceSnippetShape = {
   path: z.string(),
@@ -143,6 +180,86 @@ export function registerResultErrorRoutes(registry: OpenAPIRegistry) {
     ResultErrorModalAssignmentSchema,
   );
   registry.register("ResultErrorModalContext", ResultErrorModalContextSchema);
+  registry.register(
+    "ResultErrorIssueCreateRequest",
+    ResultErrorIssueCreateRequestSchema,
+  );
+  registry.register(
+    "ResultErrorIssueUpdateRequest",
+    ResultErrorIssueUpdateRequestSchema,
+  );
+  registry.register(
+    "ResultErrorIssueWorkflowResponse",
+    ResultErrorIssueWorkflowResponseSchema,
+  );
+
+  registry.registerPath({
+    method: "post",
+    path: "/api/v2/result-errors/{resultErrorId}/issue",
+    description: "Creates and assigns a confirmed issue atomically",
+    security: [{ BearerAuth: [] }],
+    request: {
+      params: z.object({ resultErrorId: z.string().uuid() }),
+      body: {
+        content: {
+          "application/json": { schema: ResultErrorIssueCreateRequestSchema },
+        },
+      },
+    },
+    responses: {
+      201: {
+        description: "Issue created and assigned",
+        content: {
+          "application/json": {
+            schema: ResultErrorIssueWorkflowResponseSchema,
+          },
+        },
+      },
+      400: {
+        description: "Invalid workflow request",
+        content: { "application/json": { schema: ErrorResponseSchema } },
+      },
+      404: {
+        description: "Result error not found in the project",
+        content: { "application/json": { schema: ErrorResponseSchema } },
+      },
+    },
+    tags: ["Result Errors"],
+  });
+
+  registry.registerPath({
+    method: "patch",
+    path: "/api/v2/result-errors/{resultErrorId}/issue",
+    description: "Updates the confirmed issue and containing result atomically",
+    security: [{ BearerAuth: [] }],
+    request: {
+      params: z.object({ resultErrorId: z.string().uuid() }),
+      body: {
+        content: {
+          "application/json": { schema: ResultErrorIssueUpdateRequestSchema },
+        },
+      },
+    },
+    responses: {
+      200: {
+        description: "Confirmed issue updated",
+        content: {
+          "application/json": {
+            schema: ResultErrorIssueWorkflowResponseSchema,
+          },
+        },
+      },
+      400: {
+        description: "Invalid workflow request",
+        content: { "application/json": { schema: ErrorResponseSchema } },
+      },
+      404: {
+        description: "Confirmed assignment not found in the project",
+        content: { "application/json": { schema: ErrorResponseSchema } },
+      },
+    },
+    tags: ["Result Errors"],
+  });
 
   registry.registerPath({
     method: "get",

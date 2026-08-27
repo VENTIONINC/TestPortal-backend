@@ -2,6 +2,8 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { assumptionModel } from "@/models/assumptionModel";
+import { dbClient } from "@/prisma/client";
+import { dashboardService } from "@/services/dashboardService";
 import type {
   CreateAssumptionRequest,
   UpdateAssumptionRequest,
@@ -27,12 +29,26 @@ export const assumptionService = {
       throw new Error("Unable to create assumption: missing result error ID");
     }
 
-    const { issueId, resultErrorId, ...rest } = assumptionData;
+    const {
+      issueId,
+      resultErrorId,
+      madeBy,
+      isConfirmed,
+      score,
+      description,
+      hypothesis,
+      evidence,
+    } = assumptionData;
 
     const processedAssumption: CreateAssumptionRequest = {
       issueId,
       resultErrorId,
-      ...rest,
+      madeBy,
+      isConfirmed,
+      score,
+      ...(description !== undefined && { description }),
+      ...(hypothesis !== undefined && { hypothesis }),
+      ...(evidence !== undefined && { evidence }),
     };
 
     if (!processedAssumption.issueId) {
@@ -46,6 +62,7 @@ export const assumptionService = {
   async updateAssumption(
     assumptionId: string,
     updateData: Partial<UpdateAssumptionRequest>,
+    reviewedById?: string,
   ): Promise<AssumptionUpdateResult> {
     if (!assumptionId) {
       throw new Error("Assumption ID is required");
@@ -60,11 +77,52 @@ export const assumptionService = {
     }
 
     if (updateData.isConfirmed === true) {
-      const updatedAssumption = await assumptionModel.update(
-        assumptionId,
-        updateData,
-      );
-      return { action: "updated", assumption: updatedAssumption };
+      if (!reviewedById) {
+        throw new Error("Reviewer ID is required");
+      }
+
+      return await dbClient.$transaction(async (tx) => {
+        const updatedAssumption = await tx.assumption.update({
+          where: { id: assumptionId },
+          data: updateData,
+          include: {
+            issue: true,
+            resultError: {
+              include: {
+                result: { include: { execution: true } },
+              },
+            },
+          },
+        });
+        const result = updatedAssumption.resultError?.result;
+
+        if (!result) {
+          throw new Error(
+            `Assumption with ID ${assumptionId} is not linked to a result`,
+          );
+        }
+
+        await tx.result.update({
+          where: { id: result.id },
+          data: {
+            analysisFeedbackCategory: updatedAssumption.issue.category,
+            analysisReviewedAt: new Date(),
+            analysisReviewedById: reviewedById,
+          },
+        });
+        await dashboardService.refreshDailyStats(
+          result.execution.projectId,
+          result.startTime,
+          result.execution.environment,
+          result.execution.type,
+          tx,
+        );
+
+        return {
+          action: "updated" as const,
+          assumption: updatedAssumption as AssumptionWithRelations,
+        };
+      });
     } else if (updateData.isConfirmed === false) {
       await assumptionModel.delete(assumptionId);
       return { action: "deleted", assumptionId };

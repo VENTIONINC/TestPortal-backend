@@ -11,6 +11,7 @@ import {
 } from "@/lib/resultErrorModalContext";
 import getLogger from "@/lib/logger";
 import { getEffectiveResultCategory } from "@/lib/resultCategory";
+import { isResultCategory } from "@/lib/resultCategory";
 import { dbClient } from "@/prisma/client";
 import { dashboardService } from "@/services/dashboardService";
 import { testAnalysisService } from "@/services/testAnalysisService";
@@ -18,6 +19,9 @@ import type {
   ResultErrorModalAssignmentSummary,
   ResultErrorModalContext,
   ResultErrorWithRelations,
+  PrismaAssumption,
+  PrismaIssue,
+  ResultCategory,
   StructuredResultError,
 } from "@/types";
 
@@ -40,6 +44,56 @@ interface AnalyzeErrorsResult {
   totalErrors: number;
 }
 
+export interface ResultErrorIssueCreateRequest {
+  projectId: string;
+  name: string;
+  category: ResultCategory;
+  description?: string;
+  portal?: string;
+  service?: string;
+  ticket?: string;
+}
+
+export interface ResultErrorIssueUpdateRequest {
+  projectId: string;
+  category: ResultCategory;
+  name?: string;
+  description?: string;
+  portal?: string;
+  service?: string;
+  ticket?: string;
+}
+
+interface ResultErrorIssueWorkflowResponse {
+  issue: PrismaIssue;
+  assumption: PrismaAssumption;
+  result: {
+    id: string;
+    analysisFeedbackCategory: string | null;
+  };
+}
+
+const invalidCategoryMessage =
+  "Invalid issue category. Must be one of: bug, infra, performance, script, other";
+
+function validateIssueWorkflowIdentity(
+  resultErrorId: string,
+  projectId: string,
+  category: unknown,
+  reviewedById: string,
+): asserts category is ResultCategory {
+  if (!resultErrorId) throw new Error("Result error ID is required");
+  if (!projectId) throw new Error("Project ID is required");
+  if (!isResultCategory(category)) throw new Error(invalidCategoryMessage);
+  if (!reviewedById) throw new Error("Reviewer ID is required");
+}
+
+const feedbackUpdate = (category: ResultCategory, reviewedById: string) => ({
+  analysisFeedbackCategory: category,
+  analysisReviewedAt: new Date(),
+  analysisReviewedById: reviewedById,
+});
+
 const validateAnalyzeErrorsParams = (
   projectId: string,
   errorIds: string[],
@@ -60,6 +114,187 @@ const validateAnalyzeErrorsParams = (
 };
 
 export const resultErrorService = {
+  async createIssue(
+    resultErrorId: string,
+    issueData: ResultErrorIssueCreateRequest,
+    reviewedById: string,
+  ): Promise<ResultErrorIssueWorkflowResponse> {
+    validateIssueWorkflowIdentity(
+      resultErrorId,
+      issueData?.projectId,
+      issueData?.category,
+      reviewedById,
+    );
+    if (!issueData.name) {
+      throw new Error("Unable to create issue without name");
+    }
+
+    return await dbClient.$transaction(async (tx) => {
+      const resultError = await tx.resultError.findFirst({
+        where: {
+          id: resultErrorId,
+          result: {
+            execution: { projectId: issueData.projectId },
+            spec: { projectId: issueData.projectId },
+          },
+        },
+        select: {
+          id: true,
+          result: {
+            select: {
+              id: true,
+              startTime: true,
+              execution: {
+                select: {
+                  projectId: true,
+                  environment: true,
+                  type: true,
+                },
+              },
+            },
+          },
+        },
+      });
+      if (!resultError?.result) {
+        throw new Error(`Result error with ID ${resultErrorId} not found`);
+      }
+
+      const issue = await tx.issue.create({
+        data: {
+          projectId: issueData.projectId,
+          name: issueData.name,
+          category: issueData.category,
+          ...(issueData.description !== undefined && {
+            description: issueData.description,
+          }),
+          ...(issueData.portal !== undefined && { portal: issueData.portal }),
+          ...(issueData.service !== undefined && {
+            service: issueData.service,
+          }),
+          ...(issueData.ticket !== undefined && { ticket: issueData.ticket }),
+          createdById: reviewedById,
+          updatedById: reviewedById,
+        },
+      });
+      const assumption = await tx.assumption.create({
+        data: {
+          issueId: issue.id,
+          resultErrorId,
+          madeBy: "user",
+          isConfirmed: true,
+          score: 1,
+        },
+      });
+      const result = await tx.result.update({
+        where: { id: resultError.result.id },
+        data: feedbackUpdate(issueData.category, reviewedById),
+        select: { id: true, analysisFeedbackCategory: true },
+      });
+      await dashboardService.refreshDailyStats(
+        issueData.projectId,
+        resultError.result.startTime,
+        resultError.result.execution.environment,
+        resultError.result.execution.type,
+        tx,
+      );
+
+      return { issue, assumption, result };
+    });
+  },
+
+  async updateIssue(
+    resultErrorId: string,
+    issueData: ResultErrorIssueUpdateRequest,
+    reviewedById: string,
+  ): Promise<ResultErrorIssueWorkflowResponse> {
+    validateIssueWorkflowIdentity(
+      resultErrorId,
+      issueData?.projectId,
+      issueData?.category,
+      reviewedById,
+    );
+
+    return await dbClient.$transaction(async (tx) => {
+      const confirmed = await tx.assumption.findFirst({
+        where: {
+          resultErrorId,
+          isConfirmed: true,
+          resultError: {
+            result: {
+              execution: { projectId: issueData.projectId },
+              spec: { projectId: issueData.projectId },
+            },
+          },
+        },
+        select: {
+          id: true,
+          createdAt: true,
+          updatedAt: true,
+          isConfirmed: true,
+          score: true,
+          madeBy: true,
+          issueId: true,
+          resultErrorId: true,
+          resultError: {
+            select: {
+              result: {
+                select: {
+                  id: true,
+                  startTime: true,
+                  execution: {
+                    select: {
+                      projectId: true,
+                      environment: true,
+                      type: true,
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+      });
+      const resultContext = confirmed?.resultError?.result;
+      if (!confirmed || !resultContext) {
+        throw new Error(
+          `Confirmed assumption for result error ${resultErrorId} not found`,
+        );
+      }
+
+      const issue = await tx.issue.update({
+        where: { id: confirmed.issueId },
+        data: {
+          ...(issueData.name !== undefined && { name: issueData.name }),
+          category: issueData.category,
+          ...(issueData.description !== undefined && {
+            description: issueData.description,
+          }),
+          ...(issueData.portal !== undefined && { portal: issueData.portal }),
+          ...(issueData.service !== undefined && {
+            service: issueData.service,
+          }),
+          ...(issueData.ticket !== undefined && { ticket: issueData.ticket }),
+          updatedById: reviewedById,
+        },
+      });
+      const result = await tx.result.update({
+        where: { id: resultContext.id },
+        data: feedbackUpdate(issueData.category, reviewedById),
+        select: { id: true, analysisFeedbackCategory: true },
+      });
+      await dashboardService.refreshDailyStats(
+        issueData.projectId,
+        resultContext.startTime,
+        resultContext.execution.environment,
+        resultContext.execution.type,
+        tx,
+      );
+
+      const { resultError: _resultError, ...assumption } = confirmed;
+      return { issue, assumption, result };
+    });
+  },
+
   async getModalContext(
     resultErrorId: string,
     projectId: string,

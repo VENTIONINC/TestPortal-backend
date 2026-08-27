@@ -2,7 +2,12 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { Request, Response } from "express";
-import { resultErrorService } from "@/services/resultErrorService";
+import {
+  resultErrorService,
+  type ResultErrorIssueCreateRequest,
+  type ResultErrorIssueUpdateRequest,
+} from "@/services/resultErrorService";
+import type { AuthenticatedRequest } from "@/middleware/authMiddleware";
 
 interface AssignIssueRequest {
   assumptionId: string; // UUID
@@ -38,6 +43,58 @@ const validateAnalyzeErrorsRequest = (
 };
 
 export const resultErrorController = {
+  createIssue: async (
+    req: Request<ResultErrorIdParams>,
+    res: Response,
+  ): Promise<void> => {
+    const reviewerId = (req as AuthenticatedRequest<ResultErrorIdParams>).user
+      ?.id;
+    if (!reviewerId) {
+      res.status(401).json({ error: "User is not authenticated" });
+      return;
+    }
+
+    try {
+      const workflow = await resultErrorService.createIssue(
+        req.params.resultErrorId,
+        req.body as ResultErrorIssueCreateRequest,
+        reviewerId,
+      );
+      res.status(201).json(workflow);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "";
+      res.status(message.includes("not found") ? 404 : 400).json({
+        error: message || "Failed to create and assign issue",
+      });
+    }
+  },
+
+  updateIssue: async (
+    req: Request<ResultErrorIdParams>,
+    res: Response,
+  ): Promise<void> => {
+    const reviewerId = (req as AuthenticatedRequest<ResultErrorIdParams>).user
+      ?.id;
+    if (!reviewerId) {
+      res.status(401).json({ error: "User is not authenticated" });
+      return;
+    }
+
+    try {
+      const workflow = await resultErrorService.updateIssue(
+        req.params.resultErrorId,
+        req.body as ResultErrorIssueUpdateRequest,
+        reviewerId,
+      );
+      res.status(200).json(workflow);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "";
+      res.status(message.includes("not found") ? 404 : 400).json({
+        error: message || "Failed to update confirmed issue",
+      });
+    }
+  },
+
   getModalContext: async (
     req: Request<ResultErrorIdParams>,
     res: Response,

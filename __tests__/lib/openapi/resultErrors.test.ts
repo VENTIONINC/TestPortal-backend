@@ -4,6 +4,44 @@
 import { generateOpenAPISpec } from "@/lib/openapi";
 
 describe("result-error modal OpenAPI contract", () => {
+  it("documents atomic create and confirmed-edit issue workflows with reusable lowercase categories", () => {
+    const spec = generateOpenAPISpec();
+    const schemas = spec.components?.schemas ?? {};
+    const path = spec.paths?.["/api/v2/result-errors/{resultErrorId}/issue"];
+
+    expect(schemas).toHaveProperty("ResultCategory", {
+      type: "string",
+      enum: ["bug", "infra", "performance", "script", "other"],
+    });
+    expect(schemas).toHaveProperty("ResultErrorIssueWorkflowResponse");
+    expect(path?.post?.security).toEqual([{ BearerAuth: [] }]);
+    expect(path?.patch?.security).toEqual([{ BearerAuth: [] }]);
+    expect(path?.post?.responses).toEqual(
+      expect.objectContaining({
+        "201": expect.any(Object),
+        "400": expect.any(Object),
+        "404": expect.any(Object),
+      }),
+    );
+    expect(path?.patch?.responses).toEqual(
+      expect.objectContaining({
+        "200": expect.any(Object),
+        "400": expect.any(Object),
+        "404": expect.any(Object),
+      }),
+    );
+
+    const serialized = JSON.stringify({
+      resultCategory: schemas.ResultCategory,
+      createRequest: schemas.ResultErrorIssueCreateRequest,
+      updateRequest: schemas.ResultErrorIssueUpdateRequest,
+      response: schemas.ResultErrorIssueWorkflowResponse,
+      path,
+    });
+    expect(serialized).not.toContain('"Bug"');
+    expect(serialized).not.toContain('"environment"');
+  });
+
   it("documents nullable modal context and authenticated response statuses", () => {
     const spec = generateOpenAPISpec();
     const schemas = spec.components?.schemas ?? {};

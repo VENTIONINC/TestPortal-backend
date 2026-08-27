@@ -7,6 +7,92 @@ import { executeController } from "@/test-utils/httpMocks";
 import { resultErrorController } from "@/controllers/resultErrorController";
 import { resultErrorService } from "@/services/resultErrorService";
 
+const authenticatedUser = {
+  id: "user-1",
+  name: "Reviewer",
+  email: "reviewer@example.com",
+  status: "active" as const,
+  role: "member" as const,
+  createdAt: new Date("2026-08-27T09:00:00.000Z"),
+  updatedAt: new Date("2026-08-27T09:00:00.000Z"),
+};
+
+describe("resultErrorController issue modal workflows", () => {
+  afterEach(() => jest.restoreAllMocks());
+
+  it.each([
+    ["createIssue", 201],
+    ["updateIssue", 200],
+  ] as const)("passes the authenticated reviewer to %s", async (method, status) => {
+    const controller: unknown = Reflect.get(resultErrorController, method);
+    expect(controller).toEqual(expect.any(Function));
+    if (typeof controller !== "function") return;
+
+    const workflowResult = {
+      issue: { id: "issue-1" },
+      assumption: { id: "assumption-1" },
+      result: { id: "result-1", analysisFeedbackCategory: "bug" },
+    };
+    const service = jest
+      .spyOn(
+        resultErrorService as unknown as Record<
+          typeof method,
+          (...args: unknown[]) => Promise<unknown>
+        >,
+        method,
+      )
+      .mockResolvedValue(workflowResult);
+
+    const response = await executeController(
+      async (req, res) => await controller(req, res),
+      {
+      method: method === "createIssue" ? "POST" : "PATCH",
+      params: { resultErrorId: "error-1" },
+      body: {
+        projectId: "project-1",
+        name: "Failure",
+        category: "bug",
+      },
+      user: authenticatedUser,
+      },
+    );
+
+    expect(service).toHaveBeenCalledWith(
+      "error-1",
+      {
+        projectId: "project-1",
+        name: "Failure",
+        category: "bug",
+      },
+      "user-1",
+    );
+    expect(response.statusCode).toBe(status);
+    expect(response.body).toEqual(workflowResult);
+  });
+
+  it("rejects a workflow request without an authenticated user", async () => {
+    const controller: unknown = Reflect.get(resultErrorController, "createIssue");
+    expect(controller).toEqual(expect.any(Function));
+    if (typeof controller !== "function") return;
+
+    const response = await executeController(
+      async (req, res) => await controller(req, res),
+      {
+        method: "POST",
+        params: { resultErrorId: "error-1" },
+        body: {
+          projectId: "project-1",
+          name: "Failure",
+          category: "bug",
+        },
+      },
+    );
+
+    expect(response.statusCode).toBe(401);
+    expect(response.body).toEqual({ error: "User is not authenticated" });
+  });
+});
+
 describe("resultErrorController.analyzeErrors", () => {
   beforeEach(() => {
     jest.clearAllMocks();

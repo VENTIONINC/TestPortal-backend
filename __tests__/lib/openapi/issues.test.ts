@@ -9,6 +9,10 @@ describe("issue OpenAPI contract", () => {
     const schemas = spec.components?.schemas ?? {};
 
     expect(schemas).toHaveProperty("IssueCore");
+    expect(schemas).toHaveProperty("ResultCategory", {
+      type: "string",
+      enum: ["bug", "infra", "performance", "script", "other"],
+    });
     expect(schemas).toHaveProperty("IssueCategorySummary");
     expect(schemas).toHaveProperty("IssueRead");
     expect(schemas).toHaveProperty("IssueStatistics");
@@ -26,9 +30,7 @@ describe("issue OpenAPI contract", () => {
     });
     expect(schemas.IssueCategorySummary).toMatchObject({
       properties: {
-        displayCategory: {
-          enum: ["bug", "infra", "performance", "script", "other"],
-        },
+        displayCategory: { $ref: "#/components/schemas/ResultCategory" },
       },
     });
   });

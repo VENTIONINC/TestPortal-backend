@@ -5,13 +5,9 @@ import { OpenAPIRegistry } from "@asteasolutions/zod-to-openapi";
 import { z } from "./zod";
 import { ErrorResponseSchema } from "./common";
 
-const ResultCategorySchema = z.enum([
-  "bug",
-  "infra",
-  "performance",
-  "script",
-  "other",
-]);
+const ResultCategorySchema = z
+  .enum(["bug", "infra", "performance", "script", "other"])
+  .openapi("ResultCategory");
 
 const SerializedUserSchema = z.object({
   id: z.string().uuid(),
@@ -129,6 +125,7 @@ const PaginationQuerySchema = {
 };
 
 export function registerIssueRoutes(registry: OpenAPIRegistry) {
+  registry.register("ResultCategory", ResultCategorySchema);
   registry.register("IssueCore", IssueCoreSchema);
   registry.register("IssueCategorySummary", IssueCategorySummarySchema);
   registry.register("IssueRead", IssueReadSchema);
@@ -456,6 +453,7 @@ export function registerIssueRoutes(registry: OpenAPIRegistry) {
 }
 
 export {
+  ResultCategorySchema,
   IssueCoreSchema,
   IssueCategorySummarySchema,
   IssueReadSchema,
