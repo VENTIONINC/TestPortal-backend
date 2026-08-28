@@ -42,6 +42,7 @@ const confirmedAssumption = {
 };
 
 const mockTx = {
+  $queryRaw: jest.fn<() => Promise<unknown>>(),
   resultError: {
     findFirst: jest.fn<(args: unknown) => Promise<unknown>>(),
   },
@@ -84,6 +85,7 @@ const mockRefreshDailyStats = dashboardService.refreshDailyStats as jest.Mock;
 describe("resultErrorService issue modal workflows", () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    mockTx.$queryRaw.mockResolvedValue([{ id: "error-1" }]);
     mockTx.resultError.findFirst.mockResolvedValue({
       id: "error-1",
       result: resultContext,
@@ -114,6 +116,14 @@ describe("resultErrorService issue modal workflows", () => {
     );
 
     expect(mockTransaction).toHaveBeenCalledTimes(1);
+    expect(mockTx.$queryRaw).toHaveBeenCalledTimes(1);
+    const lockOrder = mockTx.$queryRaw.mock.invocationCallOrder[0] ?? 0;
+    const lookupOrder =
+      mockTx.resultError.findFirst.mock.invocationCallOrder[0] ?? 0;
+    const createOrder = mockTx.issue.create.mock.invocationCallOrder[0] ?? 0;
+    expect(lockOrder).toBeGreaterThan(0);
+    expect(lockOrder).toBeLessThan(lookupOrder);
+    expect(lookupOrder).toBeLessThan(createOrder);
     expect(mockTx.resultError.findFirst).toHaveBeenCalledWith(
       expect.objectContaining({
         where: expect.objectContaining({

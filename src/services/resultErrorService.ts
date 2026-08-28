@@ -130,6 +130,14 @@ export const resultErrorService = {
     }
 
     return await dbClient.$transaction(async (tx) => {
+      // Serialize create-and-assign workflows for the same result error. The
+      // project-scoped lookup below remains the source of truth for ownership.
+      await tx.$queryRaw`
+        SELECT "id"
+        FROM "ResultError"
+        WHERE "id" = ${resultErrorId}::uuid
+        FOR UPDATE
+      `;
       const resultError = await tx.resultError.findFirst({
         where: {
           id: resultErrorId,
