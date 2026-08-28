@@ -18,7 +18,11 @@ const baseAssumption = {
 };
 
 const mockTx = {
+  $queryRaw: jest.fn<() => Promise<unknown>>(),
   assumption: {
+    create: jest.fn<(args: unknown) => Promise<unknown>>(),
+    findFirst: jest.fn<(args: unknown) => Promise<unknown>>(),
+    findUnique: jest.fn<(args: unknown) => Promise<unknown>>(),
     update: jest.fn<(args: unknown) => Promise<unknown>>(),
   },
   result: { update: jest.fn<(args: unknown) => Promise<unknown>>() },
@@ -57,6 +61,10 @@ describe("assumption confirmation synchronization", () => {
     jest.clearAllMocks();
     mockCreate.mockResolvedValue(baseAssumption);
     mockDelete.mockResolvedValue(baseAssumption);
+    mockTx.$queryRaw.mockResolvedValue([{ id: "error-1" }]);
+    mockTx.assumption.create.mockResolvedValue(baseAssumption);
+    mockTx.assumption.findFirst.mockResolvedValue(null);
+    mockTx.assumption.findUnique.mockResolvedValue({ resultErrorId: "error-1" });
     mockTx.assumption.update.mockResolvedValue({
       ...baseAssumption,
       madeBy: "user",
@@ -98,6 +106,21 @@ describe("assumption confirmation synchronization", () => {
     );
 
     expect(mockTransaction).toHaveBeenCalledTimes(1);
+    expect(mockTx.$queryRaw).toHaveBeenCalledTimes(1);
+    expect(mockTx.assumption.findFirst).toHaveBeenCalledWith({
+      where: {
+        resultErrorId: "error-1",
+        isConfirmed: true,
+        id: { not: "assumption-1" },
+      },
+      select: { id: true },
+    });
+    expect(mockTx.$queryRaw.mock.invocationCallOrder[0]).toBeLessThan(
+      mockTx.assumption.findFirst.mock.invocationCallOrder[0] ?? 0,
+    );
+    expect(mockTx.assumption.findFirst.mock.invocationCallOrder[0]).toBeLessThan(
+      mockTx.assumption.update.mock.invocationCallOrder[0] ?? 0,
+    );
     expect(mockTx.assumption.update).toHaveBeenCalledWith({
       where: { id: "assumption-1" },
       data: { madeBy: "user", isConfirmed: true },
@@ -172,12 +195,61 @@ describe("assumption confirmation synchronization", () => {
 
     await assumptionService.createAssumption(request);
 
-    expect(mockCreate).toHaveBeenCalledWith({
-      issueId: "issue-1",
-      resultErrorId: "error-1",
-      madeBy: "user",
-      isConfirmed: true,
-      score: 1,
+    expect(mockTx.assumption.create).toHaveBeenCalledWith({
+      data: {
+        issueId: "issue-1",
+        resultErrorId: "error-1",
+        madeBy: "user",
+        isConfirmed: true,
+        score: 1,
+      },
     });
+    expect(mockTx.$queryRaw.mock.invocationCallOrder[0]).toBeLessThan(
+      mockTx.assumption.findFirst.mock.invocationCallOrder[0] ?? 0,
+    );
+    expect(mockTx.assumption.findFirst.mock.invocationCallOrder[0]).toBeLessThan(
+      mockTx.assumption.create.mock.invocationCallOrder[0] ?? 0,
+    );
+    expect(mockTx.result.update).not.toHaveBeenCalled();
+  });
+
+  it("rejects confirmation after the shared lock when another assumption is confirmed", async () => {
+    mockTx.assumption.findFirst.mockResolvedValue({ id: "assumption-2" });
+
+    await expect(
+      assumptionService.updateAssumption(
+        "assumption-1",
+        { madeBy: "user", isConfirmed: true },
+        "reviewer-1",
+      ),
+    ).rejects.toThrow(
+      "Result error with ID error-1 already has a confirmed assumption",
+    );
+
+    expect(mockTx.$queryRaw.mock.invocationCallOrder[0]).toBeLessThan(
+      mockTx.assumption.findFirst.mock.invocationCallOrder[0] ?? 0,
+    );
+    expect(mockTx.assumption.update).not.toHaveBeenCalled();
+  });
+
+  it("rejects confirmed generic creation after the shared lock when one already exists", async () => {
+    mockTx.assumption.findFirst.mockResolvedValue({ id: "assumption-2" });
+
+    await expect(
+      assumptionService.createAssumption({
+        issueId: "issue-1",
+        resultErrorId: "error-1",
+        madeBy: "user",
+        isConfirmed: true,
+        score: 1,
+      }),
+    ).rejects.toThrow(
+      "Result error with ID error-1 already has a confirmed assumption",
+    );
+
+    expect(mockTx.$queryRaw.mock.invocationCallOrder[0]).toBeLessThan(
+      mockTx.assumption.findFirst.mock.invocationCallOrder[0] ?? 0,
+    );
+    expect(mockTx.assumption.create).not.toHaveBeenCalled();
   });
 });
