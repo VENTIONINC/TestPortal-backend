@@ -1,6 +1,8 @@
 // Copyright 2026 VENSOLUTIONSGROUP LTD
 // SPDX-License-Identifier: Apache-2.0
 
+import type { Prisma } from "@prisma/client";
+
 import { assumptionModel } from "@/models/assumptionModel";
 import { dbClient } from "@/prisma/client";
 import { dashboardService } from "@/services/dashboardService";
@@ -15,6 +17,33 @@ interface AssumptionUpdateResult {
   action: "updated" | "deleted";
   assumption?: AssumptionWithRelations;
   assumptionId?: string; // UUID
+}
+
+async function lockResultErrorAndRejectDuplicateConfirmation(
+  tx: Prisma.TransactionClient,
+  resultErrorId: string,
+  assumptionId?: string,
+): Promise<void> {
+  await tx.$queryRaw`
+    SELECT "id"
+    FROM "ResultError"
+    WHERE "id" = ${resultErrorId}::uuid
+    FOR UPDATE
+  `;
+
+  const confirmedAssumption = await tx.assumption.findFirst({
+    where: {
+      resultErrorId,
+      isConfirmed: true,
+      ...(assumptionId && { id: { not: assumptionId } }),
+    },
+    select: { id: true },
+  });
+  if (confirmedAssumption) {
+    throw new Error(
+      `Result error with ID ${resultErrorId} already has a confirmed assumption`,
+    );
+  }
 }
 
 export const assumptionService = {
@@ -55,8 +84,17 @@ export const assumptionService = {
       throw new Error("Issue ID is required");
     }
 
-    const createdAssumption = await assumptionModel.create(processedAssumption);
-    return createdAssumption;
+    if (isConfirmed) {
+      return await dbClient.$transaction(async (tx) => {
+        await lockResultErrorAndRejectDuplicateConfirmation(
+          tx,
+          resultErrorId,
+        );
+        return await tx.assumption.create({ data: processedAssumption });
+      });
+    }
+
+    return await assumptionModel.create(processedAssumption);
   },
 
   async updateAssumption(
@@ -82,6 +120,21 @@ export const assumptionService = {
       }
 
       return await dbClient.$transaction(async (tx) => {
+        const assumption = await tx.assumption.findUnique({
+          where: { id: assumptionId },
+          select: { resultErrorId: true },
+        });
+        if (!assumption?.resultErrorId) {
+          throw new Error(
+            `Assumption with ID ${assumptionId} is not linked to a result`,
+          );
+        }
+
+        await lockResultErrorAndRejectDuplicateConfirmation(
+          tx,
+          assumption.resultErrorId,
+          assumptionId,
+        );
         const updatedAssumption = await tx.assumption.update({
           where: { id: assumptionId },
           data: updateData,

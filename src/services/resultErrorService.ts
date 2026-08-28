@@ -114,6 +114,52 @@ const validateAnalyzeErrorsParams = (
 };
 
 export const resultErrorService = {
+  async assignExistingIssue(
+    resultErrorId: string,
+    issueId: string,
+  ): Promise<{ assumption: PrismaAssumption }> {
+    if (!resultErrorId) throw new Error("Result error ID is required");
+    if (!issueId) throw new Error("Issue ID is required");
+
+    return await dbClient.$transaction(async (tx) => {
+      await tx.$queryRaw`
+        SELECT "id"
+        FROM "ResultError"
+        WHERE "id" = ${resultErrorId}::uuid
+        FOR UPDATE
+      `;
+      const resultError = await tx.resultError.findFirst({
+        where: { id: resultErrorId },
+        select: {
+          id: true,
+          assumptions: {
+            where: { isConfirmed: true },
+            take: 1,
+            select: { id: true },
+          },
+        },
+      });
+      if (!resultError) throw new Error(`Result error with ID ${resultErrorId} not found`);
+      if (resultError.assumptions.length > 0) {
+        throw new Error(`Result error with ID ${resultErrorId} already has a confirmed assumption`);
+      }
+
+      const issue = await tx.issue.findUnique({ where: { id: issueId }, select: { id: true } });
+      if (!issue) throw new Error(`Issue with ID ${issueId} not found`);
+
+      const assumption = await tx.assumption.create({
+        data: {
+          issueId: issue.id,
+          resultErrorId,
+          madeBy: "user",
+          isConfirmed: true,
+          score: 1,
+        },
+      });
+      return { assumption };
+    });
+  },
+
   async createIssue(
     resultErrorId: string,
     issueData: ResultErrorIssueCreateRequest,

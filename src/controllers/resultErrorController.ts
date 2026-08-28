@@ -10,7 +10,7 @@ import {
 import type { AuthenticatedRequest } from "@/middleware/authMiddleware";
 
 interface AssignIssueRequest {
-  assumptionId: string; // UUID
+  issueId: string; // UUID
 }
 
 interface BulkReviewRequest {
@@ -133,7 +133,7 @@ export const resultErrorController = {
   ): Promise<void> => {
     try {
       const { resultErrorId } = req.params;
-      const { assumptionId }: AssignIssueRequest = req.body;
+      const { issueId }: AssignIssueRequest = req.body;
 
       if (!resultErrorId) {
         res.status(400).json({
@@ -142,16 +142,16 @@ export const resultErrorController = {
         return;
       }
 
-      if (!assumptionId) {
+      if (!issueId) {
         res.status(400).json({
-          error: "Assumption ID is required",
+          error: "Issue ID is required",
         });
         return;
       }
 
-      const updatedRecord = await resultErrorService.assignIssue(
+      const updatedRecord = await resultErrorService.assignExistingIssue(
         resultErrorId,
-        assumptionId,
+        issueId,
       );
       res.status(200).json(updatedRecord);
     } catch (error) {

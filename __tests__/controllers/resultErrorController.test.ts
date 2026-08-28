@@ -91,6 +91,27 @@ describe("resultErrorController issue modal workflows", () => {
     expect(response.statusCode).toBe(401);
     expect(response.body).toEqual({ error: "User is not authenticated" });
   });
+
+  it("assigns an existing issue selected in the modal", async () => {
+    const assignExistingIssue = jest
+      .spyOn(
+        resultErrorService as unknown as Record<
+          "assignExistingIssue",
+          (...args: unknown[]) => Promise<unknown>
+        >,
+        "assignExistingIssue",
+      )
+      .mockResolvedValue({ assumption: { id: "assumption-1" } });
+
+    const response = await executeController(resultErrorController.assignIssue, {
+      method: "PATCH",
+      params: { resultErrorId: "error-1" },
+      body: { issueId: "issue-1" },
+    });
+
+    expect(assignExistingIssue).toHaveBeenCalledWith("error-1", "issue-1");
+    expect(response.statusCode).toBe(200);
+  });
 });
 
 describe("resultErrorController.analyzeErrors", () => {
