@@ -57,7 +57,7 @@ We need to implement the following test suites to verify logic and integrity.
 ### A. Unit Tests (`dashboardService.test.ts`)
 
 1.  **Aggregation Logic**: Mock `findMany` to return specific Executions/Results. Verify `refreshDailyStats` calculates correct sums (Pass + Fail + Skipped = Total).
-2.  **Issue Categorization**: Verify correct mapping from `analysisCategory` string (e.g. "INFRA" -> `issuesEnvironment`) to metric columns.
+2.  **Issue Categorization**: Verify correct mapping from the effective Result category (`analysisFeedbackCategory ?? analysisCategory`; e.g. `"INFRA"` -> `issuesEnvironment`) to metric columns. Human feedback takes precedence over AI analysis.
 3.  **Date Bucketing**: Verify `new Date()` logic handles UTC/Local time boundaries consistently (based on requirements).
 
 ### B. Integration Tests (Transaction & Concurrency)

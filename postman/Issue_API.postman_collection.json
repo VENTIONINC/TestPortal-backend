@@ -1,458 +1,140 @@
 {
   "info": {
     "name": "Issue API",
-    "description": "Complete Issue management API with v1 (public) and v2 (authenticated, serialized) endpoints. V2 endpoints include complete user information (createdBy/updatedBy objects) and comprehensive test scenarios.",
+    "description": "Authenticated V2 Issue API and Assign Issue modal workflow. Issue categories are lowercase persisted values; Result feedback is used for Result and Dashboard analytics.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
-  "variable": [],
   "auth": {
     "type": "bearer",
-    "bearer": [
-      {
-        "key": "token",
-        "value": "{{accessToken}}",
-        "type": "string"
-      }
-    ]
+    "bearer": [{ "key": "token", "value": "{{accessToken}}", "type": "string" }]
   },
-  "event": [
-    {
-      "listen": "prerequest",
-      "script": {
-        "type": "text/javascript",
-        "exec": [
-          "// Auto-refresh token if access token is expired",
-          "const accessToken = pm.environment.get('accessToken');",
-          "const refreshToken = pm.environment.get('refreshToken');",
-          "",
-          "if (refreshToken && accessToken) {",
-          "    try {",
-          "        const tokenPayload = JSON.parse(atob(accessToken.split('.')[1]));",
-          "        const currentTime = Math.floor(Date.now() / 1000);",
-          "        const timeUntilExpiry = tokenPayload.exp - currentTime;",
-          "        ",
-          "        if (timeUntilExpiry < 60) {",
-          "            console.log('Access token expiring soon, attempting refresh...');",
-          "            ",
-          "            const refreshRequest = {",
-          "                url: pm.environment.get('baseUrl') + '/users/refresh-token',",
-          "                method: 'POST',",
-          "                header: { 'Content-Type': 'application/json' },",
-          "                body: {",
-          "                    mode: 'raw',",
-          "                    raw: JSON.stringify({ refreshToken: refreshToken })",
-          "                }",
-          "            };",
-          "            ",
-          "            pm.sendRequest(refreshRequest, (err, res) => {",
-          "                if (!err && res.code === 200) {",
-          "                    const responseJson = res.json();",
-          "                    pm.environment.set('accessToken', responseJson.accessToken);",
-          "                    pm.environment.set('refreshToken', responseJson.refreshToken);",
-          "                    console.log('Token refreshed successfully');",
-          "                } else {",
-          "                    console.log('Token refresh failed, clearing tokens');",
-          "                    pm.environment.set('accessToken', '');",
-          "                    pm.environment.set('refreshToken', '');",
-          "                }",
-          "            });",
-          "        }",
-          "    } catch (e) {",
-          "        console.log('Error parsing access token:', e);",
-          "    }",
-          "}"
-        ]
-      }
-    }
-  ],
   "item": [
     {
       "name": "🔐 Setup Authentication",
-      "item": [
-        {
-          "name": "✅ User Login (Get Tokens)",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "url": {
-              "raw": "{{baseUrl}}{{V_2}}/users/login",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "{{V_2}}",
-                "users",
-                "login"
-              ]
-            },
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"email\": \"{{testEmail}}\",\n  \"password\": \"{{testPassword}}\"\n}"
-            }
+      "item": [{
+        "name": "User Login (Get Tokens)",
+        "request": {
+          "method": "POST",
+          "header": [{ "key": "Content-Type", "value": "application/json" }],
+          "url": "{{baseUrl}}{{V_2}}/users/login",
+          "body": { "mode": "raw", "raw": "{\n  \"email\": \"{{testEmail}}\",\n  \"password\": \"{{testPassword}}\"\n}" }
+        },
+        "event": [{
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Login succeeds', function () { pm.response.to.have.status(200); });",
+              "const body = pm.response.json();",
+              "pm.environment.set('accessToken', body.accessToken);",
+              "pm.environment.set('refreshToken', body.refreshToken);"
+            ]
           }
-        }
-      ]
+        }]
+      }]
     },
     {
-      "name": "📋 V1 Issues (Public - Raw DB Schema)",
+      "name": "📋 Issues (Authenticated V2)",
       "item": [
         {
-          "name": "✅ Get All Issues (Raw)",
-          "request": {
-            "auth": {
-              "type": "noauth"
-            },
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "{{baseUrl}}{{V_1}}/issues",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "{{V_1}}",
-                "issues"
-              ]
-            }
-          }
-        },
-        {
-          "name": "✅ Create Issue (Public - Raw Response)",
-          "request": {
-            "auth": {
-              "type": "noauth"
-            },
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "url": {
-              "raw": "{{baseUrl}}{{V_1}}/issues",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "{{V_1}}",
-                "issues"
-              ]
-            },
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"name\": \"Public API Test Issue\",\n  \"description\": \"Test issue created via public API\",\n  \"portal\": \"test-portal\",\n  \"service\": \"api-service\",\n  \"ticket\": \"TICKET-123\"\n}"
-            }
-          }
-        },
-        {
-          "name": "✅ Get Issue by ID (Raw Schema)",
-          "request": {
-            "auth": {
-              "type": "noauth"
-            },
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "{{baseUrl}}{{V_1}}/issues/{{issueId}}",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "{{V_1}}",
-                "issues",
-                "{{issueId}}"
-              ]
-            }
-          }
-        },
-        {
-          "name": "✅ Update Issue (Public - Raw Response)",
-          "request": {
-            "auth": {
-              "type": "noauth"
-            },
-            "method": "PATCH",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "url": {
-              "raw": "{{baseUrl}}{{V_1}}/issues/{{issueId}}",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "{{V_1}}",
-                "issues",
-                "{{issueId}}"
-              ]
-            },
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"name\": \"Updated Public Issue\",\n  \"description\": \"This issue was updated via public API\"\n}"
-            }
-          }
-        }
-      ]
-    },
-    {
-      "name": "🔒 V2 Issues (Authenticated - Serialized Schema)",
-      "item": [
-        {
-          "name": "✅ Get All Issues (Serialized with Users)",
+          "name": "Get All Issues (Persisted Category Filter)",
           "request": {
             "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "{{baseUrl}}{{V_2}}/issues",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "{{V_2}}",
-                "issues"
-              ]
-            }
+            "url": "{{baseUrl}}{{V_2}}/issues?projectId={{projectId}}&category=bug&page=1&limit=10"
           }
         },
         {
-          "name": "✅ Get All Issues with Stats (Serialized with Users)",
+          "name": "Get All Issues with Stats",
           "request": {
             "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "{{baseUrl}}{{V_2}}/issues/with-stats",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "{{V_2}}",
-                "issues",
-                "with-stats"
-              ]
-            }
+            "url": "{{baseUrl}}{{V_2}}/issues/with-stats?projectId={{projectId}}&statFrom=2026-08-01T00:00:00.000Z&statTo=2026-08-31T00:00:00.000Z"
           }
         },
         {
-          "name": "✅ Create Issue (With User Tracking)",
+          "name": "Create Issue (Lowercase Category)",
           "request": {
             "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "url": {
-              "raw": "{{baseUrl}}{{V_2}}/issues",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "{{V_2}}",
-                "issues"
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{baseUrl}}{{V_2}}/issues",
+            "body": { "mode": "raw", "raw": "{\n  \"projectId\": \"{{projectId}}\",\n  \"name\": \"Authenticated API Test Issue\",\n  \"category\": \"bug\",\n  \"description\": \"Test issue created through the authenticated API\",\n  \"portal\": \"secure-portal\",\n  \"service\": \"auth-service\",\n  \"ticket\": \"SECURE-456\"\n}" }
+          },
+          "event": [{
+            "listen": "test",
+            "script": {
+              "type": "text/javascript",
+              "exec": [
+                "pm.test('Issue is created', function () { pm.response.to.have.status(201); });",
+                "pm.environment.set('issueId', pm.response.json().id);"
               ]
-            },
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"name\": \"Authenticated API Test Issue\",\n  \"description\": \"Test issue created via authenticated API with user tracking\",\n  \"portal\": \"secure-portal\",\n  \"service\": \"auth-service\",\n  \"ticket\": \"SECURE-456\"\n}"
             }
-          }
+          }]
         },
         {
-          "name": "✅ Get Issue by ID (Serialized with Users)",
+          "name": "Get Issue by ID",
           "request": {
             "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "{{baseUrl}}{{V_2}}/issues/{{issueId}}",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "{{V_2}}",
-                "issues",
-                "{{issueId}}"
-              ]
-            }
+            "url": "{{baseUrl}}{{V_2}}/issues/{{issueId}}?projectId={{projectId}}"
           }
         },
         {
-          "name": "✅ Update Issue (With updatedBy Tracking)",
+          "name": "Update Issue Category",
           "request": {
             "method": "PATCH",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "url": {
-              "raw": "{{baseUrl}}{{V_2}}/issues/{{issueId}}",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "{{V_2}}",
-                "issues",
-                "{{issueId}}"
-              ]
-            },
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"name\": \"Updated Authenticated Issue\",\n  \"description\": \"This issue was updated via authenticated API with user tracking\"\n}"
-            }
-          }
-        },
-        {
-          "name": "✅ Test V2 Query Parameters",
-          "request": {
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "{{baseUrl}}{{V_2}}/issues?page=1&limit=10&name=Authenticated",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "{{V_2}}",
-                "issues"
-              ],
-              "query": [
-                {
-                  "key": "page",
-                  "value": "1"
-                },
-                {
-                  "key": "limit",
-                  "value": "10"
-                },
-                {
-                  "key": "name",
-                  "value": "Authenticated"
-                }
-              ]
-            }
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{baseUrl}}{{V_2}}/issues/{{issueId}}",
+            "body": { "mode": "raw", "raw": "{\n  \"category\": \"infra\",\n  \"description\": \"Updated persisted Issue category\"\n}" }
           }
         }
       ]
     },
     {
-      "name": "🧪 Test Scenarios",
+      "name": "🧪 Validation and Authentication Checks",
       "item": [
         {
-          "name": "❌ V2 Without Token (401)",
+          "name": "Issue List Without Token (401)",
           "request": {
-            "auth": {
-              "type": "noauth"
-            },
+            "auth": { "type": "noauth" },
             "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "{{baseUrl}}{{V_2}}/issues",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "{{V_2}}",
-                "issues"
-              ]
-            }
+            "url": "{{baseUrl}}{{V_2}}/issues?projectId={{projectId}}"
           }
         },
         {
-          "name": "❌ Invalid Issue ID (404)",
+          "name": "Create Issue with Missing Category (400)",
           "request": {
-            "auth": {
-              "type": "noauth"
-            },
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "{{baseUrl}}{{V_1}}/issues/999999",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "{{V_1}}",
-                "issues",
-                "999999"
-              ]
-            }
-          }
-        },
-        {
-          "name": "❌ Invalid Issue Data (400)",
-          "request": {
-            "auth": {
-              "type": "noauth"
-            },
             "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "url": {
-              "raw": "{{baseUrl}}{{V_1}}/issues",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "{{V_1}}",
-                "issues"
-              ]
-            },
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"description\": \"Missing required name field\"\n}"
-            }
-          }
-        },
-        {
-          "name": "✅ Schema Comparison Test",
-          "request": {
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "{{baseUrl}}/health",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "health"
-              ]
-            }
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{baseUrl}}{{V_2}}/issues",
+            "body": { "mode": "raw", "raw": "{\n  \"projectId\": \"{{projectId}}\",\n  \"name\": \"Invalid issue without category\"\n}" }
           }
         }
       ]
     },
     {
-      "name": "🧹 Cleanup",
+      "name": "🧩 Assign Issue Modal (Authenticated V2)",
       "item": [
         {
-          "name": "🗑️ Clear Variables",
+          "name": "Get Modal Context",
           "request": {
             "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "{{baseUrl}}/health",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "health"
-              ]
-            }
+            "url": "{{baseUrl}}{{V_2}}/result-errors/{{resultErrorId}}/modal-context?projectId={{projectId}}"
+          }
+        },
+        {
+          "name": "Create and Assign Confirmed Issue (Atomic)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{baseUrl}}{{V_2}}/result-errors/{{resultErrorId}}/issue",
+            "body": { "mode": "raw", "raw": "{\n  \"projectId\": \"{{projectId}}\",\n  \"name\": \"New confirmed issue\",\n  \"category\": \"performance\",\n  \"description\": \"Creates the Issue, confirmed assumption, and Result feedback together\"\n}" }
+          }
+        },
+        {
+          "name": "Edit Confirmed Issue (Atomic)",
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{baseUrl}}{{V_2}}/result-errors/{{resultErrorId}}/issue",
+            "body": { "mode": "raw", "raw": "{\n  \"projectId\": \"{{projectId}}\",\n  \"category\": \"script\",\n  \"description\": \"Synchronizes only this confirmed assignment's containing Result feedback\"\n}" }
           }
         }
       ]
