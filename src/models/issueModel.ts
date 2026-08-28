@@ -42,7 +42,7 @@ const buildWhereClause = (
 ): Prisma.IssueWhereInput => ({
   projectId,
   ...(category && { category }),
-  ...(name && { name: { contains: name } }),
+  ...(name && { name: { contains: name, mode: "insensitive" } }),
   ...(type && {
     assumptions: {
       some: {

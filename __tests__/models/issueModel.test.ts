@@ -82,7 +82,7 @@ describe("issueModel execution-type filtering", () => {
         where: {
           projectId: "project-1",
           category: "script",
-          name: { contains: "Login" },
+          name: { contains: "Login", mode: "insensitive" },
         },
       }),
     );
