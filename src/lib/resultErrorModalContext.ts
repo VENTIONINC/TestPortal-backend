@@ -13,6 +13,23 @@ export const RESULT_ERROR_MODAL_CONTEXT_LIMITS = {
 const withinUtf8Limit = (value: string, limit: number): boolean =>
   Buffer.byteLength(value, "utf8") <= limit;
 
+const ANSI_ESCAPE_CHARACTER = String.fromCharCode(0x1b);
+const ANSI_BELL_CHARACTER = String.fromCharCode(0x07);
+const ANSI_STRING_TERMINATOR = String.fromCharCode(0x9c);
+const ANSI_OSC_SEQUENCE = new RegExp(
+  `${ANSI_ESCAPE_CHARACTER}\\][^${ANSI_BELL_CHARACTER}${ANSI_ESCAPE_CHARACTER}]*?(?:${ANSI_BELL_CHARACTER}|${ANSI_ESCAPE_CHARACTER}\\\\|${ANSI_STRING_TERMINATOR})`,
+  "gu",
+);
+const ANSI_ESCAPE_SEQUENCE = new RegExp(
+  `[${ANSI_ESCAPE_CHARACTER}\\u009B][[\\]()#;?]*(?:(?:(?:\\d{1,4}(?:;\\d{0,4})*)?[\\dA-ORZcf-nqry=><~]))`,
+  "gu",
+);
+
+const stripAnsiEscapeSequences = (text: string): string =>
+  text
+    .replace(ANSI_OSC_SEQUENCE, "")
+    .replace(ANSI_ESCAPE_SEQUENCE, "");
+
 const countRepresentedLines = (text: string): number => {
   if (text.length === 0) {
     return 1;
@@ -56,25 +73,34 @@ export const normalizeResultErrorSourceSnippet = (
   const { path, text, startLine, failingLine } = candidate;
   if (
     typeof path !== "string" ||
-    typeof text !== "string" ||
+    typeof text !== "string"
+  ) {
+    return null;
+  }
+
+  const normalizedText = stripAnsiEscapeSequences(text);
+  if (
     !Number.isInteger(startLine) ||
     !Number.isInteger(failingLine) ||
     (startLine as number) < 1 ||
     (failingLine as number) < (startLine as number) ||
     !withinUtf8Limit(path, RESULT_ERROR_MODAL_CONTEXT_LIMITS.pathBytes) ||
-    !withinUtf8Limit(text, RESULT_ERROR_MODAL_CONTEXT_LIMITS.sourceSnippetBytes)
+    !withinUtf8Limit(
+      normalizedText,
+      RESULT_ERROR_MODAL_CONTEXT_LIMITS.sourceSnippetBytes,
+    )
   ) {
     return null;
   }
 
-  const representedLineCount = countRepresentedLines(text);
+  const representedLineCount = countRepresentedLines(normalizedText);
   if ((failingLine as number) >= (startLine as number) + representedLineCount) {
     return null;
   }
 
   return {
     path,
-    text,
+    text: normalizedText,
     startLine: startLine as number,
     failingLine: failingLine as number,
   };

@@ -61,6 +61,59 @@ describe("resultErrorModalContext", () => {
       );
     });
 
+    it("strips ANSI formatting while preserving snippet metadata and lines", () => {
+      expect(
+        normalizeResultErrorSourceSnippet({
+          path: "/function/api/buildings.request.ts",
+          text:
+            "\u001b[0m \u001b[90m45 |\u001b[39m if (!building) {\n\u001b[90m46 |\u001b[39m console.log(building);\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m \u001b[90m47 |\u001b[39m throw new Error('not found');",
+          startLine: 45,
+          failingLine: 47,
+        }),
+      ).toEqual({
+        path: "/function/api/buildings.request.ts",
+        text:
+          " 45 | if (!building) {\n46 | console.log(building);\n> 47 | throw new Error('not found');",
+        startLine: 45,
+        failingLine: 47,
+      });
+    });
+
+    it("strips OSC hyperlinks terminated by BEL and ST", () => {
+      expect(
+        normalizeResultErrorSourceSnippet({
+          path: "checkout.spec.ts",
+          text:
+            "await expect(\u001b]8;;https://example.test\u0007link\u001b]8;;\u0007).toBeVisible();\nconst next = \u001b]8;;https://example.test\u001b\\link\u001b]8;;\u001b\\;",
+          startLine: 1,
+          failingLine: 2,
+        }),
+      ).toEqual({
+        path: "checkout.spec.ts",
+        text: "await expect(link).toBeVisible();\nconst next = link;",
+        startLine: 1,
+        failingLine: 2,
+      });
+    });
+
+    it("applies the byte limit to cleaned snippet text", () => {
+      expect(
+        normalizeResultErrorSourceSnippet({
+          path: "checkout.spec.ts",
+          text: `${"\u001b[31m".repeat(
+            RESULT_ERROR_MODAL_CONTEXT_LIMITS.sourceSnippetBytes,
+          )}await submit.click();`,
+          startLine: 1,
+          failingLine: 1,
+        }),
+      ).toEqual({
+        path: "checkout.spec.ts",
+        text: "await submit.click();",
+        startLine: 1,
+        failingLine: 1,
+      });
+    });
+
     it("rejects failingLine values outside the represented line range", () => {
       expect(
         normalizeResultErrorSourceSnippet({
