@@ -18,7 +18,10 @@ import {
   type ErrorFormatterInput,
   type ErrorFormatterOutput,
 } from "@/schemas/errorFormatterSchemas";
-import { errorSuggestionSchema } from "@/schemas/errorSuggestionSchemas";
+import {
+  errorSuggestionSchema,
+  type ErrorSuggestionOutput,
+} from "@/schemas/errorSuggestionSchemas";
 import { resultService } from "@/services/resultService";
 import { testAnalysisService } from "@/services/testAnalysisService";
 import type { StructuredResultWithRelations } from "@/types";
@@ -69,7 +72,7 @@ export const errorFormatterService = {
   async suggestFromResult(
     resultId: string,
     projectId: string,
-  ): Promise<{ description: string }> {
+  ): Promise<ErrorSuggestionOutput> {
     try {
       if (!resultId) {
         throw new Error("Result ID is required");
@@ -120,6 +123,8 @@ export const errorFormatterService = {
       );
 
       return {
+        category: suggestion.category,
+        name: suggestion.name,
         description: suggestion.description,
       };
     } catch (error) {

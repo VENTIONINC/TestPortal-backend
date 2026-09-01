@@ -164,6 +164,7 @@ const ResultsStatsSchema = z
         id: z.string().uuid(),
         title: z.string(),
         count: z.number(),
+        category: z.enum(["bug", "infra", "performance", "script", "other"]),
         categorySummary: IssueCategorySummarySchema,
       }),
     ),

@@ -7,12 +7,14 @@ import {
 } from "@/models/issueModel";
 import {
   buildIssueCategorySummary,
+  isResultCategory,
 } from "@/lib/resultCategory";
 import type {
   IssueCategorySummary,
   PrismaIssue,
   PrismaIssueWithUsers,
   PrismaUser,
+  ResultCategory,
   SerializedIssue,
   SerializedIssueRead,
   SerializedIssuesResponse,
@@ -21,6 +23,7 @@ import type {
 
 interface GetAllIssuesParams {
   projectId: string;
+  category?: ResultCategory;
   name?: string;
   page?: number;
   limit?: number;
@@ -77,6 +80,7 @@ interface GetAllIssuesWithStatsV2Response {
 
 interface CreateIssueParams {
   name: string;
+  category: ResultCategory;
   description?: string;
   portal?: string;
   service?: string;
@@ -88,6 +92,7 @@ interface CreateIssueParams {
 
 interface UpdateIssueParams {
   name?: string;
+  category?: ResultCategory;
   description?: string;
   portal?: string;
   service?: string;
@@ -141,8 +146,11 @@ async function getResultsByIssueId(
   return groupResultsByIssueId(issueIds, linkedResults);
 }
 
-function getCategorySummary(results: readonly LinkedIssueResult[]) {
-  return buildIssueCategorySummary(results);
+function getCategorySummary(
+  results: readonly LinkedIssueResult[],
+  issueCategory: ResultCategory,
+) {
+  return buildIssueCategorySummary(results, issueCategory);
 }
 
 function getIssueStatistics(
@@ -172,10 +180,16 @@ export const issueService = {
   async getAllIssues(
     params: GetAllIssuesParams,
   ): Promise<GetAllIssuesResponse> {
-    const { projectId, name, page = 1, limit = 30 } = params;
-    const issues = await issueModel.findMany(projectId, name, page, limit);
+    const { projectId, category, name, page = 1, limit = 30 } = params;
+    const issues = await issueModel.findMany(
+      projectId,
+      category,
+      name,
+      page,
+      limit,
+    );
     const [totalIssues, resultsByIssueId] = await Promise.all([
-      issueModel.count(projectId, name),
+      issueModel.count(projectId, category, name),
       getResultsByIssueId(issues.map((issue) => issue.id)),
     ]);
 
@@ -184,6 +198,7 @@ export const issueService = {
         ...issue,
         categorySummary: getCategorySummary(
           resultsByIssueId.get(issue.id) ?? [],
+          issue.category as ResultCategory,
         ),
       })),
       total: totalIssues,
@@ -195,15 +210,16 @@ export const issueService = {
   async getAllIssuesV2(
     params: GetAllIssuesParams,
   ): Promise<SerializedIssuesResponse> {
-    const { projectId, name, page = 1, limit = 30 } = params;
+    const { projectId, category, name, page = 1, limit = 30 } = params;
     const issues = await issueModel.findManyWithUsers(
       projectId,
+      category,
       name,
       page,
       limit,
     );
     const [totalIssues, resultsByIssueId] = await Promise.all([
-      issueModel.count(projectId, name),
+      issueModel.count(projectId, category, name),
       getResultsByIssueId(issues.map((issue) => issue.id)),
     ]);
 
@@ -235,6 +251,7 @@ export const issueService = {
       ...issueRecord,
       categorySummary: getCategorySummary(
         resultsByIssueId.get(issueId) ?? [],
+        issueRecord.category as ResultCategory,
       ),
     };
   },
@@ -263,6 +280,11 @@ export const issueService = {
     if (!issueParams?.name) {
       throw new Error("Unable to create issue without name");
     }
+    if (!isResultCategory(issueParams.category)) {
+      throw new Error(
+        "Invalid issue category. Must be one of: bug, infra, performance, script, other",
+      );
+    }
 
     return await issueModel.create(issueParams);
   },
@@ -275,11 +297,19 @@ export const issueService = {
       throw new Error("Issue ID is required");
     }
 
-    const { name, description, portal, service, ticket, updatedById } =
+    const { name, category, description, portal, service, ticket, updatedById } =
       updateData;
     const cleanUpdateData: Partial<CreateIssueParams> = {};
 
     if (name) cleanUpdateData.name = name;
+    if (category !== undefined) {
+      if (!isResultCategory(category)) {
+        throw new Error(
+          "Invalid issue category. Must be one of: bug, infra, performance, script, other",
+        );
+      }
+      cleanUpdateData.category = category;
+    }
     if (description !== undefined) cleanUpdateData.description = description;
     if (portal !== undefined) cleanUpdateData.portal = portal;
     if (service !== undefined) cleanUpdateData.service = service;
@@ -307,6 +337,7 @@ export const issueService = {
   ): Promise<GetAllIssuesWithStatsResponse> {
     const {
       projectId,
+      category,
       name,
       page = 1,
       limit = 10,
@@ -314,9 +345,16 @@ export const issueService = {
       statTo,
       type,
     } = params;
-    const issues = await issueModel.findMany(projectId, name, page, limit, type);
+    const issues = await issueModel.findMany(
+      projectId,
+      category,
+      name,
+      page,
+      limit,
+      type,
+    );
     const [totalIssues, resultsByIssueId] = await Promise.all([
-      issueModel.count(projectId, name, type),
+      issueModel.count(projectId, category, name, type),
       getResultsByIssueId(
         issues.map((issue) => issue.id),
         statFrom,
@@ -330,7 +368,10 @@ export const issueService = {
         const results = resultsByIssueId.get(issue.id) ?? [];
         return {
           ...issue,
-          categorySummary: getCategorySummary(results),
+          categorySummary: getCategorySummary(
+            results,
+            issue.category as ResultCategory,
+          ),
           statistics: getIssueStatistics(results),
         };
       }),
@@ -345,6 +386,7 @@ export const issueService = {
   ): Promise<GetAllIssuesWithStatsV2Response> {
     const {
       projectId,
+      category,
       name,
       page = 1,
       limit = 10,
@@ -354,13 +396,14 @@ export const issueService = {
     } = params;
     const issues = await issueModel.findManyWithUsers(
       projectId,
+      category,
       name,
       page,
       limit,
       type,
     );
     const [totalIssues, resultsByIssueId] = await Promise.all([
-      issueModel.count(projectId, name, type),
+      issueModel.count(projectId, category, name, type),
       getResultsByIssueId(
         issues.map((issue) => issue.id),
         statFrom,
@@ -399,6 +442,7 @@ function serializeIssue(issue: PrismaIssueWithUsers): SerializedIssue {
     createdAt: issue.createdAt,
     updatedAt: issue.updatedAt,
     name: issue.name,
+    category: issue.category as ResultCategory,
     description: issue.description ?? null,
     portal: issue.portal ?? null,
     service: issue.service ?? null,
@@ -414,6 +458,9 @@ function serializeIssueRead(
 ): SerializedIssueRead {
   return {
     ...serializeIssue(issue),
-    categorySummary: getCategorySummary(results),
+    categorySummary: getCategorySummary(
+      results,
+      issue.category as ResultCategory,
+    ),
   };
 }

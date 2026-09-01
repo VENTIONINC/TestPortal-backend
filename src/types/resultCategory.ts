@@ -17,7 +17,7 @@ export interface ResultCategorySource {
 }
 
 export interface IssueCategorySummary {
-  displayCategory: ResultCategory | null;
+  displayCategory: ResultCategory;
   isMixed: boolean;
   distribution: ResultCategoryDistribution;
   uncategorizedCount: number;

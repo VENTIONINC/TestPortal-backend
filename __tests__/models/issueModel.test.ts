@@ -43,6 +43,7 @@ describe("issueModel execution-type filtering", () => {
     await issueModel.findManyWithUsers(
       "project-1",
       undefined,
+      undefined,
       2,
       10,
       "Release",
@@ -58,7 +59,7 @@ describe("issueModel execution-type filtering", () => {
   });
 
   it("counts only issues that have matching execution occurrences", async () => {
-    await issueModel.count("project-1", undefined, "Release");
+    await issueModel.count("project-1", undefined, undefined, "Release");
 
     expect(countMock).toHaveBeenCalledWith({
       where: { projectId: "project-1", ...occurrenceFilter },
@@ -70,6 +71,20 @@ describe("issueModel execution-type filtering", () => {
 
     expect(findManyMock).toHaveBeenCalledWith(
       expect.objectContaining({ where: { projectId: "project-1" } }),
+    );
+  });
+
+  it("filters by the persisted issue category", async () => {
+    await issueModel.findManyWithUsers("project-1", "script", "Login", 1, 5);
+
+    expect(findManyMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: {
+          projectId: "project-1",
+          category: "script",
+          name: { contains: "Login", mode: "insensitive" },
+        },
+      }),
     );
   });
 });

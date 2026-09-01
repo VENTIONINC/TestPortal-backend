@@ -2,10 +2,11 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { issueService } from "@/services/issueService";
-import type { PrismaIssue } from "@/types";
+import type { PrismaIssue, ResultCategory } from "@/types";
 
 interface IssueFilterParams {
   projectId: string;
+  category?: ResultCategory;
   name?: string;
   page?: number;
   limit?: number;
@@ -15,6 +16,7 @@ interface IssueFilterParams {
 
 interface CreateIssueParams {
   name: string;
+  category: ResultCategory;
   description?: string;
   portal?: string;
   service?: string;
@@ -24,6 +26,7 @@ interface CreateIssueParams {
 
 interface UpdateIssueParams {
   name?: string;
+  category?: ResultCategory;
   description?: string;
   portal?: string;
   service?: string;
@@ -32,9 +35,10 @@ interface UpdateIssueParams {
 
 export const mcpIssueHandler = {
   async getAllIssues(params: IssueFilterParams) {
-    const { projectId, name, page = 1, limit = 30 } = params;
+    const { projectId, category, name, page = 1, limit = 30 } = params;
 
     const issueParams: IssueFilterParams = { projectId };
+    if (category) issueParams.category = category;
     if (name) issueParams.name = name;
     if (page) issueParams.page = page;
     if (limit) issueParams.limit = limit;
@@ -47,6 +51,7 @@ export const mcpIssueHandler = {
   ) {
     const {
       projectId,
+      category,
       name,
       page = 1,
       limit = 30,
@@ -55,6 +60,7 @@ export const mcpIssueHandler = {
     } = params;
 
     const issueParams: IssueFilterParams = { projectId };
+    if (category) issueParams.category = category;
     if (name) issueParams.name = name;
     if (page) issueParams.page = page;
     if (limit) issueParams.limit = limit;

@@ -4,7 +4,7 @@
 import { generateOpenAPISpec } from "@/lib/openapi";
 
 describe("error formatter OpenAPI contract", () => {
-  it("documents optional canonical context and deprecated legacy alias without category response fields", () => {
+  it("documents formatter context and the complete result suggestion draft", () => {
     const spec = generateOpenAPISpec();
     const schemas = spec.components?.schemas ?? {};
     const requestJson = JSON.stringify(schemas.ErrorFormatterRequest);
@@ -35,6 +35,17 @@ describe("error formatter OpenAPI contract", () => {
     expect(requestJson).toContain('"other"');
     expect(responseJson).not.toContain('"original"');
     expect(responseJson).not.toContain('"category"');
-    expect(suggestionJson).not.toContain('"category"');
+    expect(schemas.ErrorSuggestionResponse).toMatchObject({
+      type: "object",
+      required: ["category", "name", "description"],
+      properties: {
+        category: {
+          enum: ["bug", "infra", "performance", "script", "other"],
+        },
+        name: { type: "string" },
+        description: { type: "string" },
+      },
+    });
+    expect(suggestionJson).toContain('"category"');
   });
 });

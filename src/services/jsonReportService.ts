@@ -12,6 +12,7 @@ import {
   type IdentifierStrategy,
 } from "@/lib/executionIdentifiers";
 import { normalizeJsonStringArray } from "@/lib/jsonPayloads";
+import { normalizeResultErrorModalContext } from "@/lib/resultErrorModalContext";
 import type {
   PrismaExecution,
   PrismaSpec,
@@ -82,6 +83,9 @@ interface TestResult {
   duration: number;
   startTime: string | Date;
   error?: ErrorData;
+  logs?: unknown;
+  sourceSnippet?: unknown;
+  generatedTestCase?: unknown;
   workerIndex: number;
 }
 
@@ -351,6 +355,7 @@ export const jsonReportService = {
 
       if (result.error) {
         const parsedError = parseStackTrace(result.error);
+        const modalContext = normalizeResultErrorModalContext(result);
         errorRecords.push({
           id: randomUUID(),
           type: parsedError.type,
@@ -362,6 +367,19 @@ export const jsonReportService = {
           receivedString: parsedError.receivedString,
           location: `${parsedError.location.file}:${parsedError.location.line}`,
           resultId,
+          ...(modalContext.rawLogs
+            ? { rawLogs: modalContext.rawLogs }
+            : {}),
+          ...(modalContext.sourceSnippet
+            ? {
+                sourceSnippet: {
+                  ...modalContext.sourceSnippet,
+                } as Prisma.InputJsonObject,
+              }
+            : {}),
+          ...(modalContext.generatedTestCase
+            ? { generatedTestCase: modalContext.generatedTestCase }
+            : {}),
         });
       }
     }
@@ -482,7 +500,11 @@ export const jsonReportService = {
 
     // Handle error data if present
     if (resultData.error) {
-      const errorRecord = await this._createErrorRecord(resultData.error, tx);
+      const errorRecord = await this._createErrorRecord(
+        resultData.error,
+        resultData,
+        tx,
+      );
       recordData.errors = {
         connect: {
           id: errorRecord.id,
@@ -503,6 +525,10 @@ export const jsonReportService = {
    */
   async _createErrorRecord(
     errorData: ErrorData,
+    modalContextInput: Pick<
+      TestResult,
+      "logs" | "sourceSnippet" | "generatedTestCase"
+    > = {},
     tx?: Prisma.TransactionClient,
   ): Promise<PrismaResultError> {
     const client = tx ?? dbClient;
@@ -517,6 +543,7 @@ export const jsonReportService = {
       receivedString,
       location,
     } = parsedError;
+    const modalContext = normalizeResultErrorModalContext(modalContextInput);
 
     const errorRecord = await client.resultError.create({
       data: {
@@ -528,6 +555,17 @@ export const jsonReportService = {
         expectedPattern,
         receivedString,
         location: `${location.file}:${location.line}`,
+        ...(modalContext.rawLogs ? { rawLogs: modalContext.rawLogs } : {}),
+        ...(modalContext.sourceSnippet
+          ? {
+              sourceSnippet: {
+                ...modalContext.sourceSnippet,
+              } as Prisma.InputJsonObject,
+            }
+          : {}),
+        ...(modalContext.generatedTestCase
+          ? { generatedTestCase: modalContext.generatedTestCase }
+          : {}),
       },
     });
 

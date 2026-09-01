@@ -18,6 +18,10 @@ export const SUPPORTED_RESULT_CATEGORIES = [
 
 const SUPPORTED_CATEGORY_SET = new Set<string>(SUPPORTED_RESULT_CATEGORIES);
 
+export function isResultCategory(value: unknown): value is ResultCategory {
+  return typeof value === "string" && SUPPORTED_CATEGORY_SET.has(value);
+}
+
 export function normalizeResultCategory(
   value: string | null | undefined,
 ): ResultCategory | null {
@@ -31,9 +35,7 @@ export function normalizeResultCategory(
     return "infra";
   }
 
-  return SUPPORTED_CATEGORY_SET.has(normalized)
-    ? (normalized as ResultCategory)
-    : null;
+  return isResultCategory(normalized) ? normalized : null;
 }
 
 export function getEffectiveResultCategory(
@@ -49,6 +51,7 @@ export function getEffectiveResultCategory(
 
 export function buildIssueCategorySummary(
   results: readonly ResultCategorySource[],
+  issueCategory: ResultCategory,
 ): IssueCategorySummary {
   const distribution: ResultCategoryDistribution = {
     bug: 0,
@@ -74,35 +77,9 @@ export function buildIssueCategorySummary(
     (category) => distribution[category] > 0,
   );
 
-  if (populatedCategories.length === 0) {
-    return {
-      displayCategory: null,
-      isMixed: false,
-      distribution,
-      uncategorizedCount,
-    };
-  }
-
-  if (populatedCategories.length === 1) {
-    return {
-      displayCategory: populatedCategories[0] ?? null,
-      isMixed: false,
-      distribution,
-      uncategorizedCount,
-    };
-  }
-
-  const highestCount = Math.max(
-    ...populatedCategories.map((category) => distribution[category]),
-  );
-  const dominantCategories = populatedCategories.filter(
-    (category) => distribution[category] === highestCount,
-  );
-
   return {
-    displayCategory:
-      dominantCategories.length === 1 ? (dominantCategories[0] ?? null) : null,
-    isMixed: true,
+    displayCategory: issueCategory,
+    isMixed: populatedCategories.length >= 2,
     distribution,
     uncategorizedCount,
   };

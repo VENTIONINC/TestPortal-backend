@@ -2,11 +2,16 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { dbClient } from "@/prisma/client";
-import type { PrismaIssue, PrismaIssueWithUsers } from "@/types";
+import type {
+  PrismaIssue,
+  PrismaIssueWithUsers,
+  ResultCategory,
+} from "@/types";
 import { Prisma } from "@prisma/client";
 
 interface CreateIssueData {
   name: string;
+  category: ResultCategory;
   description?: string;
   portal?: string;
   service?: string;
@@ -31,11 +36,13 @@ export interface LinkedIssueResult {
 
 const buildWhereClause = (
   projectId: string,
+  category?: ResultCategory,
   name?: string,
   type?: string,
 ): Prisma.IssueWhereInput => ({
   projectId,
-  ...(name && { name: { contains: name } }),
+  ...(category && { category }),
+  ...(name && { name: { contains: name, mode: "insensitive" } }),
   ...(type && {
     assumptions: {
       some: {
@@ -52,12 +59,13 @@ const buildWhereClause = (
 export const issueModel = {
   findMany: async (
     projectId: string,
+    category?: ResultCategory,
     name?: string,
     page = 1,
     limit = 30,
     type?: string,
   ): Promise<PrismaIssue[]> => {
-    const whereClause = buildWhereClause(projectId, name, type);
+    const whereClause = buildWhereClause(projectId, category, name, type);
 
     return await dbClient.issue.findMany({
       where: whereClause,
@@ -69,12 +77,13 @@ export const issueModel = {
 
   findManyWithUsers: async (
     projectId: string,
+    category?: ResultCategory,
     name?: string,
     page = 1,
     limit = 30,
     type?: string,
   ): Promise<PrismaIssueWithUsers[]> => {
-    const whereClause = buildWhereClause(projectId, name, type);
+    const whereClause = buildWhereClause(projectId, category, name, type);
 
     return (await dbClient.issue.findMany({
       where: whereClause,
@@ -90,10 +99,11 @@ export const issueModel = {
 
   count: async (
     projectId: string,
+    category?: ResultCategory,
     name?: string,
     type?: string,
   ): Promise<number> => {
-    const whereClause = buildWhereClause(projectId, name, type);
+    const whereClause = buildWhereClause(projectId, category, name, type);
 
     return await dbClient.issue.count({
       where: whereClause,

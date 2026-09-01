@@ -30,39 +30,45 @@ Tools are registered with the MCP server instance and can be invoked by clients 
 ### Issue Management
 
 #### `get-issues`
-- **Source File:** `src/mcp/tools/issues.js`
-- **Description:** Retrieve issues with optional name filtering, pagination, and a `categorySummary` derived from distinct linked results
+- **Source File:** `src/mcp/tools/issues.ts`
+- **Description:** Retrieve issues with persisted category filtering, optional name filtering, pagination, and a linked-result `categorySummary`
 - **Parameters:**
   - `projectId` (required): Project UUID
+  - `category` (optional): Persisted lowercase Issue category: `bug`, `infra`, `performance`, `script`, or `other`
   - `name` (optional): Filter by issue name
   - `page` (optional): Page number for pagination (default: 1)
   - `limit` (optional): Number of items per page (default: 30)
-- **Response:** Issues with pagination metadata and derived category summaries. Issue category filtering is no longer supported.
+- **Response:** Issues with pagination metadata, persisted `category`, and `categorySummary`. `categorySummary.displayCategory` is the persisted Issue category; its distribution describes distinct linked Result categories.
 
 #### `get-issue-by-id`
-- **Source File:** `src/mcp/tools/issues.js`
-- **Description:** Retrieve an issue with a `categorySummary` derived from linked result analysis and feedback
+- **Source File:** `src/mcp/tools/issues.ts`
+- **Description:** Retrieve an issue with its persisted category and a `categorySummary` for linked Result analytics
 - **Parameters:**
   - `issueId` (required): Unique identifier for the issue
   - `projectId` (required): Project UUID
-- **Response:** Detailed issue object with a derived category summary
+- **Response:** Detailed issue object with persisted `category` and `categorySummary`
 
 #### `create-issue`
-- **Source File:** `src/mcp/tools/issues.js`
-- **Description:** Create a new issue with name (required) and optional description, portal, service, and ticket information
+- **Source File:** `src/mcp/tools/issues.ts`
+- **Description:** Create a new issue with a required lowercase category
 - **Parameters:**
   - `name` (required): Issue name
+  - `category` (required): `bug`, `infra`, `performance`, `script`, or `other`
+  - `projectId` (required): Project UUID
   - `description` (optional): Issue description
   - `portal` (optional): Associated portal
   - `service` (optional): Associated service
   - `ticket` (optional): Related ticket information
 - **Response:** Created issue object with success message
 
-Issue creation and update do not accept a category. AI categories are stored in
-`Result.analysisCategory`; human corrections use
-`Result.analysisFeedbackCategory`, which takes precedence. Issue read tools
-summarize those effective result categories and explicitly report mixed and
-uncategorized linked results.
+`Issue.category` is canonical for Issue/Hypothesis display and is retained on
+Issue reads. Result and Dashboard analytics use the effective Result category:
+`Result.analysisFeedbackCategory ?? Result.analysisCategory`. In an Issue
+`categorySummary`, `displayCategory` comes from the Issue, while distribution,
+mixed state, and uncategorized count are calculated from distinct linked Results
+across all assumptions. MCP does not currently expose the atomic Assign Issue
+modal workflow; use the authenticated REST endpoints documented in the Issue
+Postman collection for that workflow.
 
 #### `get-mock-issues`
 - **Source File:** `src/mcp/tools/issues.js`
@@ -103,21 +109,22 @@ uncategorized linked results.
 ### Assumptions
 
 #### `create-assumption`
-- **Source File:** `src/mcp/tools/assumptions.js`
+- **Source File:** `src/mcp/tools/assumptions.ts`
 - **Description:** Create a new assumption with required issueId and resultErrorId, plus optional fields like description, hypothesis, and evidence
 - **Parameters:**
-  - `issueId` (required): Associated issue ID (number)
-  - `resultErrorId` (required): Associated result error ID (number)
+  - `issueId` (required): Associated Issue UUID
+  - `resultErrorId` (required): Associated ResultError UUID
   - `madeBy` (optional): Person who made the assumption
   - `isConfirmed` (optional): Whether assumption is confirmed (boolean)
   - `description` (optional): Assumption description
   - `hypothesis` (optional): Hypothesis text
   - `evidence` (optional): Supporting evidence
-- **Response:** Created assumption object with success message
+- **Response:** Created assumption object with success message. This generic
+  operation does not copy the linked Issue category to a Result.
 
 #### `update-assumption`
-- **Source File:** `src/mcp/tools/assumptions.js`
-- **Description:** Update an assumption by ID. Only real users can modify assumptions. If isConfirmed is false, the assumption will be deleted
+- **Source File:** `src/mcp/tools/assumptions.ts`
+- **Description:** Update an assumption by ID. Only real users can modify assumptions. Confirming synchronizes the linked Issue category to the containing Result's feedback category; setting `isConfirmed` to false deletes the assumption and preserves existing Result feedback.
 - **Parameters:**
   - `assumptionId` (required): Unique identifier for the assumption
   - `madeBy` (required): Person making the update
@@ -150,7 +157,7 @@ uncategorized linked results.
 ### Result Error Management
 
 #### `assign-issue-to-result-error`
-- **Source File:** `src/mcp/tools/result-errors.js`
+- **Source File:** `src/mcp/tools/result-errors.ts`
 - **Description:** Assign an issue to a result error by connecting it with an assumption ID
 - **Parameters:**
   - `resultErrorId` (required): Unique identifier for the result error

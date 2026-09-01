@@ -36,6 +36,8 @@ const ErrorSuggestionRequestSchema = z
 
 const ErrorSuggestionResponseSchema = z
   .object({
+    category: z.enum(["bug", "infra", "performance", "script", "other"]),
+    name: z.string(),
     description: z.string(),
   })
   .openapi("ErrorSuggestionResponse");
@@ -102,7 +104,7 @@ export function registerErrorFormatterRoutes(registry: OpenAPIRegistry) {
     method: "post",
     path: "/api/v2/error-formatter/result",
     description:
-      "Suggests an issue description and investigation steps based on a failed/flaky result (requires authentication)",
+      "Suggests an issue category, name, description, and investigation steps based on a failed/flaky result (requires authentication)",
     request: {
       body: {
         content: {

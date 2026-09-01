@@ -8,10 +8,11 @@ import {
   getIssueByIdSchema,
   createIssueSchema,
 } from "@/mcp/schemas/issueSchemas";
-import type { MCPToolResponse } from "@/types";
+import type { MCPToolResponse, ResultCategory } from "@/types";
 
 interface GetIssuesParams {
   projectId: string;
+  category?: ResultCategory;
   name?: string;
   page?: number;
   limit?: number;
@@ -26,6 +27,7 @@ interface GetIssueByIdParams {
 
 interface CreateIssueParams {
   name: string;
+  category: ResultCategory;
   description?: string;
   portal?: string;
   service?: string;
@@ -35,7 +37,7 @@ interface CreateIssueParams {
 
 export const getIssues = createMcpTool(
   "get-issues",
-  "Retrieve issues with derived category summaries, optional name filtering, and pagination. Categories come from linked result analysis and feedback. Requires projectId.",
+  "Retrieve issues with persisted category and optional category/name filtering, pagination, and linked-result category summaries. Requires projectId.",
   getIssuesSchema,
   async (params: GetIssuesParams): Promise<MCPToolResponse> => {
     const issues = await mcpIssueHandler.getAllIssues(params);
@@ -46,7 +48,7 @@ export const getIssues = createMcpTool(
 
 export const getIssuesWithStats = createMcpTool(
   "get-issues-with-stats",
-  "Retrieve issues with statistics and derived category summaries. Optional statFrom/statTo dates constrain both statistics and summaries. Requires projectId.",
+  "Retrieve issues with persisted category, statistics, and linked-result category summaries. Optional category and statFrom/statTo filters are supported. Requires projectId.",
   getIssuesSchema,
   async (params: GetIssuesParams): Promise<MCPToolResponse> => {
     const issues = await mcpIssueHandler.getAllIssuesWithStats(params);
@@ -57,7 +59,7 @@ export const getIssuesWithStats = createMcpTool(
 
 export const getIssueById = createMcpTool(
   "get-issue-by-id",
-  "Retrieve an issue with a category summary derived from its linked result analysis and feedback. Requires projectId.",
+  "Retrieve an issue with its persisted category and linked-result category summary. Requires projectId.",
   getIssueByIdSchema,
   async (params: GetIssueByIdParams): Promise<MCPToolResponse> => {
     const { issueId, projectId } = params;
@@ -69,7 +71,7 @@ export const getIssueById = createMcpTool(
 
 export const createIssue = createMcpTool(
   "create-issue",
-  "Create a new issue with name (required) and optional description, portal, service, and ticket information. Failure categories are corrected on results through analysis feedback.",
+  "Create a new issue with required name and lowercase category, plus optional description, portal, service, and ticket information.",
   createIssueSchema,
   async (params: CreateIssueParams): Promise<MCPToolResponse> => {
     const issue = await mcpIssueHandler.createIssue(params);

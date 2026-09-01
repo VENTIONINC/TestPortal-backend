@@ -3,7 +3,11 @@
 
 import { dbClient } from "@/prisma/client";
 import { buildIssueCategorySummary } from "@/lib/resultCategory";
-import type { ResultWithRelations, ResultsStats } from "@/types";
+import type {
+  ResultCategory,
+  ResultWithRelations,
+  ResultsStats,
+} from "@/types";
 import { Prisma } from "@prisma/client";
 
 export interface ResultFilters {
@@ -80,7 +84,7 @@ const resultStatsSelect = Prisma.validator<Prisma.ResultSelect>()({
       assumptions: {
         select: {
           id: true,
-          issue: { select: { id: true, name: true } },
+          issue: { select: { id: true, name: true, category: true } },
         },
       },
     },
@@ -698,7 +702,10 @@ export const resultModel = {
     const errorIds = new Set<string>();
     const assumptionIds = new Set<string>();
     const resultIds = new Set<string>();
-    const issueMap = new Map<string, string>();
+    const issueMap = new Map<
+      string,
+      { name: string; category: ResultCategory }
+    >();
 
     // Local tracking for errors and distinct results linked to each issue.
     const errorCounts = new Map<string, number>();
@@ -756,7 +763,12 @@ export const resultModel = {
           // Process issues
           if (assumption.issue) {
             const issue = assumption.issue;
-            if (!issueMap.has(issue.id)) issueMap.set(issue.id, issue.name);
+            if (!issueMap.has(issue.id)) {
+              issueMap.set(issue.id, {
+                name: issue.name,
+                category: issue.category as ResultCategory,
+              });
+            }
 
             const linkedResults =
               issueResults.get(issue.id) ??
@@ -802,14 +814,21 @@ export const resultModel = {
     stats.topIssues = Array.from(issueResults.entries())
       .sort((a, b) => b[1].size - a[1].size)
       .slice(0, 10)
-      .map(([issueId, linkedResults]) => ({
-        id: issueId,
-        title: issueMap.get(issueId) ?? "Unknown Issue Name",
-        count: linkedResults.size,
-        categorySummary: buildIssueCategorySummary(
-          Array.from(linkedResults.values()),
-        ),
-      }));
+      .map(([issueId, linkedResults]) => {
+        const issue = issueMap.get(issueId);
+        const category = issue?.category ?? "other";
+
+        return {
+          id: issueId,
+          title: issue?.name ?? "Unknown Issue Name",
+          count: linkedResults.size,
+          category,
+          categorySummary: buildIssueCategorySummary(
+            Array.from(linkedResults.values()),
+            category,
+          ),
+        };
+      });
 
     return stats;
   },

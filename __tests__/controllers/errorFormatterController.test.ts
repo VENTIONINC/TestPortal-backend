@@ -129,8 +129,10 @@ describe("errorFormatterController.suggestFromResult", () => {
     jest.clearAllMocks();
   });
 
-  it("returns only the result-based draft description", async () => {
+  it("returns the result-based category, name, and description draft", async () => {
     jest.spyOn(errorFormatterService, "suggestFromResult").mockResolvedValue({
+      category: "infra",
+      name: "Staging checkout timeout",
       description: "Actionable investigation steps",
     });
 
@@ -147,8 +149,9 @@ describe("errorFormatterController.suggestFromResult", () => {
 
     expect(res.statusCode).toBe(200);
     expect(res.body).toEqual({
+      category: "infra",
+      name: "Staging checkout timeout",
       description: "Actionable investigation steps",
     });
-    expect(res.body).not.toHaveProperty("category");
   });
 });

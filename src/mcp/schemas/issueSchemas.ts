@@ -4,6 +4,14 @@
 import { z } from "zod/v3";
 import type { MCPToolSchema } from "@/types";
 
+const IssueCategorySchema = z.enum([
+  "bug",
+  "infra",
+  "performance",
+  "script",
+  "other",
+]);
+
 /**
  * Schema for filtering and paginating issues
  */
@@ -11,6 +19,7 @@ export const getIssuesSchema: MCPToolSchema = {
   projectId: z
     .string()
     .describe("The UUID of the project to filter issues by (required)"),
+  category: IssueCategorySchema.optional(),
   name: z.string().optional(),
   page: z.string().default("1").optional(),
   limit: z.string().default("10").optional(),
@@ -33,6 +42,7 @@ export const getIssueByIdSchema: MCPToolSchema = {
  */
 export const createIssueSchema: MCPToolSchema = {
   name: z.string(),
+  category: IssueCategorySchema,
   description: z.string().optional(),
   portal: z.string().optional(),
   service: z.string().optional(),
