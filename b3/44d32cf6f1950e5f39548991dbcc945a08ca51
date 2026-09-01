@@ -1,0 +1,79 @@
+__tests__/mcp/mcpTestScenarioHandler.test.ts
+  s_3a21418ee94bc0::t_bb9c6353e80b38 1-208
+__tests__/mcp/mcpTransport.test.ts
+  s_3a21418ee94bc0::t_0b2e1651d1659e 1-56
+__tests__/mcp/serverRegistration.test.ts
+  s_3a21418ee94bc0::t_98c1b4e4c6a2a0 1-35
+__tests__/mcp/testScenarioMcpWorkflow.test.ts
+  s_3a21418ee94bc0::t_347a106b1f15da 1-601
+__tests__/mcp/testScenarioTools.test.ts
+  s_3a21418ee94bc0::t_fe6fed930d6ca0 1-178
+__tests__/services/testScenarioService.test.ts
+  s_827b2763c19169::t_289b7c1b649e5e 7,12,34,66-75,136-210
+docs/INSPECT_MCP_SERVER.md
+  s_3a21418ee94bc0::t_e16e22a164aa4d 8-13,25,38-78
+docs/MCP_TOOLS.md
+  s_827b2763c19169::t_389cd82ff36026 188-234,246,252
+openspec/changes/add-test-scenario-mcp-tools/.openspec.yaml
+  s_8e81f7739a44de::t_2fe422088bbc6a 1-2
+openspec/changes/add-test-scenario-mcp-tools/proposal.md
+  s_827b2763c19169::t_f565c9665acbd9 1-29
+package.json
+  s_3a21418ee94bc0::t_af26388f0d097e 23
+src/handlers/mcpTestScenarioHandler.ts
+  s_3a21418ee94bc0::t_d8c7dcd14af400 1-84
+src/mcp/schemas/testScenarioSchemas.ts
+  s_3a21418ee94bc0::t_840d99838fa18b 1-44
+src/mcp/server.ts
+  s_3a21418ee94bc0::t_312558a4b1578d 34-39,61,151-168
+src/models/testScenarioModel.ts
+  s_827b2763c19169::t_ec6b66ef5365f9 6,24-32,57-72
+src/services/testScenarioService.ts
+  s_827b2763c19169::t_0a682277f79fc7 13,82-102
+src/types/mcp.ts
+  s_827b2763c19169::t_dbfd855dcc6648 7,11-13
+src/types/testScenarios.ts
+  s_827b2763c19169::t_3f962d98e518b7 4-8,21-29,58-95
+__tests__/mcp/testScenarioSchemas.test.ts
+  s_3a21418ee94bc0::t_2114c1abe156ed 1-135
+__tests__/models/testScenarioModel.test.ts
+  s_3a21418ee94bc0::t_8ce9ac3bb68f94 9,114-150
+openspec/changes/add-test-scenario-mcp-tools/design.md
+  s_8e81f7739a44de::t_d7742f15c0ea92 1-92
+openspec/changes/add-test-scenario-mcp-tools/specs/test-scenario-mcp-tools/spec.md
+  s_8e81f7739a44de::t_7b9be219f4924e 1-111
+src/mcp/tools/test-scenarios.ts
+  s_3a21418ee94bc0::t_5709ad978b340d 1-62
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.18",
+  "base_commit_sha": "b344d32cf6f1950e5f39548991dbcc945a08ca51",
+  "prompts": {},
+  "sessions": {
+    "s_3a21418ee94bc0": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a05d43-8037-7d13-b2a5-fe5bdbdadaef",
+        "model": "gpt-5.6-luna"
+      },
+      "human_author": "Ihar Mikailau <ihar.mikailau@ventionteams.com>"
+    },
+    "s_827b2763c19169": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a05d34-026d-7420-a78e-1fd3c1d7ed2c",
+        "model": "gpt-5.6-sol"
+      },
+      "human_author": "Ihar Mikailau <ihar.mikailau@ventionteams.com>"
+    },
+    "s_8e81f7739a44de": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a0339c-0c8f-7773-a7f2-b130e3a2558f",
+        "model": "gpt-5.6-sol"
+      },
+      "human_author": "Ihar Mikailau <ihar.mikailau@ventionteams.com>"
+    }
+  }
+}
