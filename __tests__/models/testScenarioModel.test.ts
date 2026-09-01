@@ -6,7 +6,7 @@ import { jest } from "@jest/globals";
 import type { Prisma, TestScenario } from "@prisma/client";
 
 const createMock = jest.fn<() => Promise<TestScenario>>();
-const findManyMock = jest.fn<() => Promise<TestScenario[]>>();
+const findManyMock = jest.fn<(args: unknown) => Promise<TestScenario[]>>();
 const countMock = jest.fn<() => Promise<number>>();
 const findFirstMock = jest.fn<() => Promise<TestScenario | null>>();
 const updateMock = jest.fn<
@@ -109,6 +109,43 @@ describe("testScenarioModel", () => {
     expect(countMock).toHaveBeenCalledWith({
       where: { projectId: scenario.projectId },
     });
+  });
+
+  it("lists compact summaries without selecting Markdown", async () => {
+    await testScenarioModel.findManySummaries(scenario.projectId, 2, 10);
+
+    expect(findManyMock).toHaveBeenCalledWith({
+      where: { projectId: scenario.projectId },
+      select: {
+        id: true,
+        projectId: true,
+        createdById: true,
+        title: true,
+        createdAt: true,
+        updatedAt: true,
+      },
+      skip: 10,
+      take: 10,
+      orderBy: [{ createdAt: "desc" }, { id: "desc" }],
+    });
+
+    const select = findManyMock.mock.calls[0]?.[0] as {
+      select?: Record<string, boolean>;
+    };
+    expect(select.select).not.toHaveProperty("contentMd");
+  });
+
+  it("uses the project predicate and default pagination for summaries", async () => {
+    await testScenarioModel.findManySummaries(scenario.projectId);
+
+    expect(findManyMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: { projectId: scenario.projectId },
+        skip: 0,
+        take: 30,
+        orderBy: [{ createdAt: "desc" }, { id: "desc" }],
+      }),
+    );
   });
 
   it("looks up by the composite scenario and project identity", async () => {

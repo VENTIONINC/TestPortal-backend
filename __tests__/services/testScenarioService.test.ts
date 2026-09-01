@@ -4,10 +4,12 @@
 import "@/test-utils/testEnv";
 import { jest } from "@jest/globals";
 import type { TestScenario } from "@prisma/client";
+import type { TestScenarioSummary } from "@/types/testScenarios";
 
 const mockProjectExists = jest.fn<() => Promise<boolean>>();
 const mockCreate = jest.fn<() => Promise<TestScenario>>();
 const mockFindMany = jest.fn<() => Promise<TestScenario[]>>();
+const mockFindManySummaries = jest.fn<() => Promise<TestScenarioSummary[]>>();
 const mockCount = jest.fn<() => Promise<number>>();
 const mockFindById = jest.fn<() => Promise<TestScenario | null>>();
 const mockUpdate = jest.fn<
@@ -29,6 +31,7 @@ jest.mock("@/models/testScenarioModel", () => ({
   testScenarioModel: {
     create: mockCreate,
     findMany: mockFindMany,
+    findManySummaries: mockFindManySummaries,
     count: mockCount,
     findById: mockFindById,
     update: mockUpdate,
@@ -60,6 +63,16 @@ describe("testScenarioService", () => {
     mockProjectExists.mockResolvedValue(true);
     mockCreate.mockResolvedValue(scenario);
     mockFindMany.mockResolvedValue([scenario]);
+    mockFindManySummaries.mockResolvedValue([
+      {
+        id: scenario.id,
+        projectId: scenario.projectId,
+        createdById: scenario.createdById,
+        title: scenario.title,
+        createdAt: scenario.createdAt,
+        updatedAt: scenario.updatedAt,
+      },
+    ]);
     mockCount.mockResolvedValue(1);
     mockFindById.mockResolvedValue(scenario);
     mockUpdate.mockResolvedValue(scenario);
@@ -118,6 +131,81 @@ describe("testScenarioService", () => {
       limit: 30,
       totalPages: 3,
     });
+  });
+
+  it("lists compact summaries with default pagination", async () => {
+    const summary: TestScenarioSummary = {
+      id: scenario.id,
+      projectId: scenario.projectId,
+      createdById: scenario.createdById,
+      title: scenario.title,
+      createdAt: scenario.createdAt,
+      updatedAt: scenario.updatedAt,
+    };
+    mockFindManySummaries.mockResolvedValue([summary]);
+    mockCount.mockResolvedValue(1);
+
+    await expect(
+      testScenarioService.listScenarioSummaries({ projectId }),
+    ).resolves.toEqual({
+      scenarios: [summary],
+      total: 1,
+      page: 1,
+      limit: 30,
+      totalPages: 1,
+    });
+    expect(mockFindManySummaries).toHaveBeenCalledWith(projectId, 1, 30);
+    expect(mockCount).toHaveBeenCalledWith(projectId);
+  });
+
+  it("lists summaries with explicit pages and zero totals", async () => {
+    mockFindManySummaries.mockResolvedValue([]);
+    mockCount.mockResolvedValue(0);
+
+    await expect(
+      testScenarioService.listScenarioSummaries({
+        projectId: otherProjectId,
+        page: 4,
+        limit: 10,
+      }),
+    ).resolves.toEqual({
+      scenarios: [],
+      total: 0,
+      page: 4,
+      limit: 10,
+      totalPages: 0,
+    });
+    expect(mockFindManySummaries).toHaveBeenCalledWith(
+      otherProjectId,
+      4,
+      10,
+    );
+  });
+
+  it("rejects invalid summary pagination before querying", async () => {
+    await expect(
+      testScenarioService.listScenarioSummaries({
+        projectId,
+        page: 0,
+        limit: 30,
+      }),
+    ).rejects.toBeInstanceOf(TestScenarioValidationError);
+    await expect(
+      testScenarioService.listScenarioSummaries({
+        projectId,
+        page: 1.5,
+        limit: 30,
+      }),
+    ).rejects.toBeInstanceOf(TestScenarioValidationError);
+    await expect(
+      testScenarioService.listScenarioSummaries({
+        projectId,
+        page: 1,
+        limit: 101,
+      }),
+    ).rejects.toBeInstanceOf(TestScenarioValidationError);
+    expect(mockFindManySummaries).not.toHaveBeenCalled();
+    expect(mockCount).not.toHaveBeenCalled();
   });
 
   it("returns an empty page for an unknown project without disclosing records", async () => {

@@ -10,6 +10,7 @@ import {
   type ListTestScenariosParams,
   type TestScenarioListResponse,
   type TestScenarioResponse,
+  type TestScenarioSummaryListResponse,
   type UpdateTestScenarioParams,
 } from "@/types/testScenarios";
 
@@ -66,6 +67,27 @@ export const testScenarioService = {
 
     const [scenarios, total] = await Promise.all([
       testScenarioModel.findMany(params.projectId, page, limit),
+      testScenarioModel.count(params.projectId),
+    ]);
+
+    return {
+      scenarios,
+      total,
+      page,
+      limit,
+      totalPages: Math.ceil(total / limit),
+    };
+  },
+
+  async listScenarioSummaries(
+    params: ListTestScenariosParams,
+  ): Promise<TestScenarioSummaryListResponse> {
+    const page = params.page ?? DEFAULT_PAGE;
+    const limit = params.limit ?? DEFAULT_LIMIT;
+    validatePagination(page, limit);
+
+    const [scenarios, total] = await Promise.all([
+      testScenarioModel.findManySummaries(params.projectId, page, limit),
       testScenarioModel.count(params.projectId),
     ]);
 

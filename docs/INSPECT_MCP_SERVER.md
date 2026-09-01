@@ -5,6 +5,12 @@ This document outlines the steps to inspect the MCP server with the local MCP in
 ## Prerequisites
 
 Ensure you have the project set up and all dependencies installed.
+Build and start the production server before launching the inspector:
+
+```bash
+npm run build
+npm run server
+```
 
 ## Steps
 
@@ -16,7 +22,7 @@ Ensure you have the project set up and all dependencies installed.
     npm run inspector
     ```
 
-    This command will start a local server or tool that allows you to connect to the MCP server.
+    This command will start the inspector UI preconfigured for the local Streamable HTTP MCP endpoint.
 
 2.  **Configure the Connection:**
 
@@ -28,6 +34,47 @@ Ensure you have the project set up and all dependencies installed.
 3.  **Inspect:**
 
     After successful connection, you should be able to see the MCP server's tools, ongoing sessions, and other relevant information, allowing you to inspect its behavior.
+
+### Test Scenario Inspector Checks
+
+After connecting with a valid MCP bearer token:
+
+1. Open the tool list and verify these four tools are present:
+   `list-test-scenarios`, `get-test-scenario`, `update-test-scenario`, and
+   `delete-test-scenario`.
+2. Inspect each input schema and confirm project and scenario identifiers are
+   UUIDs. Confirm Result and Issue pagination fields are separate and bounded
+   from 1 through 100.
+3. Invoke the list tool with a project UUID and no pagination fields. Verify
+   the response text is JSON with page 1, limit 30, and summary records that
+   do not contain Markdown.
+4. Invoke the detail tool with the same project and a scenario UUID. Verify
+   the response contains raw Markdown plus separate `resultEvidence` and
+   `issueEvidence` pagination envelopes.
+5. For a disposable scenario, invoke the update tool with a title or Markdown
+   field, then invoke the delete tool and verify its explicit `deleted: true`
+   acknowledgement. Cross-project IDs should produce a standard MCP error.
+
+The tool-call JSON-RPC shape used by inspector-compatible clients is:
+
+```json
+{
+  "jsonrpc": "2.0",
+  "id": 2,
+  "method": "tools/call",
+  "params": {
+    "name": "list-test-scenarios",
+    "arguments": {
+      "projectId": "11111111-1111-1111-1111-111111111111",
+      "page": 1,
+      "limit": 30
+    }
+  }
+}
+```
+
+Replace the tool name and arguments to inspect detail, update, and delete
+operations. Do not use a production scenario for mutation checks.
 
 ## Connecting from an MCP Client
 

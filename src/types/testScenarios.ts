@@ -1,6 +1,11 @@
 // Copyright 2026 VENSOLUTIONSGROUP LTD
 // SPDX-License-Identifier: Apache-2.0
 
+import type {
+  TestScenarioIssuesResponse,
+  TestScenarioResultsResponse,
+} from "@/types/testScenarioIntegration";
+
 export interface TestScenarioResponse {
   id: string;
   projectId: string;
@@ -12,6 +17,15 @@ export interface TestScenarioResponse {
 }
 
 export type TestScenarioRecord = TestScenarioResponse;
+
+export interface TestScenarioSummary {
+  id: string;
+  projectId: string;
+  createdById: string;
+  title: string;
+  createdAt: Date;
+  updatedAt: Date;
+}
 
 export interface CreateTestScenarioParams {
   projectId: string;
@@ -39,6 +53,44 @@ export interface TestScenarioListResponse {
   page: number;
   limit: number;
   totalPages: number;
+}
+
+export interface TestScenarioSummaryListResponse {
+  scenarios: TestScenarioSummary[];
+  total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
+}
+
+export type TestScenarioMcpListParams = ListTestScenariosParams;
+
+export interface TestScenarioMcpGetParams {
+  scenarioId: string;
+  projectId: string;
+  resultPage?: number | undefined;
+  resultLimit?: number | undefined;
+  issuePage?: number | undefined;
+  issueLimit?: number | undefined;
+}
+
+export type TestScenarioMcpUpdateParams = UpdateTestScenarioParams;
+
+export interface TestScenarioMcpDeleteParams {
+  scenarioId: string;
+  projectId: string;
+}
+
+export interface TestScenarioMcpDetailResponse {
+  scenario: TestScenarioResponse;
+  resultEvidence: TestScenarioResultsResponse;
+  issueEvidence: TestScenarioIssuesResponse;
+}
+
+export interface TestScenarioMcpDeleteResponse {
+  scenarioId: string;
+  projectId: string;
+  deleted: true;
 }
 
 export class TestScenarioValidationError extends Error {

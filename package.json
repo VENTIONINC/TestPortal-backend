@@ -20,7 +20,7 @@
     "db:generate": "prisma generate",
     "studio": "npx prisma studio",
     "migrate": "npx prisma migrate dev --name commit",
-    "inspector": "npx @modelcontextprotocol/inspector node build/index.js",
+    "inspector": "npx @modelcontextprotocol/inspector --web --transport http --server-url http://localhost:3001/api/v2/mcp",
     "test": "jest --config jest.config.ts"
   },
   "author": "",
