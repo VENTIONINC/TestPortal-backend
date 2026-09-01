@@ -24,8 +24,8 @@ export const getErrorFormatterPrompt = () => `
 
   <!-- ===== TASK ===== -->
   <task>
-    Take the error name, description, and category provided and format them into 
-    clear, professional structured output. Make both the name and description 
-    more readable and actionable for developers and QA engineers.
+    Take the error name and description, using optional category context when supplied,
+    and format them into clear, professional structured output. Make both the name and
+    description more readable and actionable for developers and QA engineers.
   </task>
 `;

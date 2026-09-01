@@ -372,4 +372,42 @@ describe("ctrfService", () => {
       mockProjectId,
     );
   });
+
+  it("normalizes canonical CTRF modal enrichment metadata", () => {
+    const transformed = ctrfService.transformCtrfTest(
+      {
+        name: "failed checkout",
+        status: "failed",
+        duration: 100,
+        message: "checkout failed",
+        trace: "at checkout.spec.ts:12:3",
+        filePath: "checkout.spec.ts",
+        meta: {
+          logs: ["opening checkout", "submit failed"],
+          sourceSnippet: {
+            path: "checkout.spec.ts",
+            text: "await page.goto('/');\nawait checkout.open();\nawait submit.click();",
+            startLine: 10,
+            failingLine: 12,
+          },
+          generatedTestCase: "test('checkout', async () => {});",
+        },
+      },
+      Date.parse("2026-08-19T10:00:00Z"),
+      0,
+    );
+
+    expect(transformed.results[0]).toEqual(
+      expect.objectContaining({
+        logs: ["opening checkout", "submit failed"],
+        sourceSnippet: {
+          path: "checkout.spec.ts",
+          text: "await page.goto('/');\nawait checkout.open();\nawait submit.click();",
+          startLine: 10,
+          failingLine: 12,
+        },
+        generatedTestCase: "test('checkout', async () => {});",
+      }),
+    );
+  });
 });

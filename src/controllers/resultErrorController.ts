@@ -2,10 +2,15 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { Request, Response } from "express";
-import { resultErrorService } from "@/services/resultErrorService";
+import {
+  resultErrorService,
+  type ResultErrorIssueCreateRequest,
+  type ResultErrorIssueUpdateRequest,
+} from "@/services/resultErrorService";
+import type { AuthenticatedRequest } from "@/middleware/authMiddleware";
 
 interface AssignIssueRequest {
-  assumptionId: string; // UUID
+  issueId: string; // UUID
 }
 
 interface BulkReviewRequest {
@@ -38,13 +43,97 @@ const validateAnalyzeErrorsRequest = (
 };
 
 export const resultErrorController = {
+  createIssue: async (
+    req: Request<ResultErrorIdParams>,
+    res: Response,
+  ): Promise<void> => {
+    const reviewerId = (req as AuthenticatedRequest<ResultErrorIdParams>).user
+      ?.id;
+    if (!reviewerId) {
+      res.status(401).json({ error: "User is not authenticated" });
+      return;
+    }
+
+    try {
+      const workflow = await resultErrorService.createIssue(
+        req.params.resultErrorId,
+        req.body as ResultErrorIssueCreateRequest,
+        reviewerId,
+      );
+      res.status(201).json(workflow);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "";
+      res.status(message.includes("not found") ? 404 : 400).json({
+        error: message || "Failed to create and assign issue",
+      });
+    }
+  },
+
+  updateIssue: async (
+    req: Request<ResultErrorIdParams>,
+    res: Response,
+  ): Promise<void> => {
+    const reviewerId = (req as AuthenticatedRequest<ResultErrorIdParams>).user
+      ?.id;
+    if (!reviewerId) {
+      res.status(401).json({ error: "User is not authenticated" });
+      return;
+    }
+
+    try {
+      const workflow = await resultErrorService.updateIssue(
+        req.params.resultErrorId,
+        req.body as ResultErrorIssueUpdateRequest,
+        reviewerId,
+      );
+      res.status(200).json(workflow);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "";
+      res.status(message.includes("not found") ? 404 : 400).json({
+        error: message || "Failed to update confirmed issue",
+      });
+    }
+  },
+
+  getModalContext: async (
+    req: Request<ResultErrorIdParams>,
+    res: Response,
+  ): Promise<void> => {
+    const { resultErrorId } = req.params;
+    const { projectId } = req.query;
+
+    if (!resultErrorId) {
+      res.status(400).json({ error: "Result error ID is required" });
+      return;
+    }
+    if (typeof projectId !== "string" || !projectId) {
+      res.status(400).json({ error: "Project ID is required" });
+      return;
+    }
+
+    try {
+      const context = await resultErrorService.getModalContext(
+        resultErrorId,
+        projectId,
+      );
+      res.status(200).json(context);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "";
+      if (message.includes("not found")) {
+        res.status(404).json({ error: message });
+        return;
+      }
+      res.status(500).json({ error: "Failed to retrieve modal context" });
+    }
+  },
+
   assignIssue: async (
     req: Request<ResultErrorIdParams>,
     res: Response,
   ): Promise<void> => {
     try {
       const { resultErrorId } = req.params;
-      const { assumptionId }: AssignIssueRequest = req.body;
+      const { issueId }: AssignIssueRequest = req.body;
 
       if (!resultErrorId) {
         res.status(400).json({
@@ -53,16 +142,16 @@ export const resultErrorController = {
         return;
       }
 
-      if (!assumptionId) {
+      if (!issueId) {
         res.status(400).json({
-          error: "Assumption ID is required",
+          error: "Issue ID is required",
         });
         return;
       }
 
-      const updatedRecord = await resultErrorService.assignIssue(
+      const updatedRecord = await resultErrorService.assignExistingIssue(
         resultErrorId,
-        assumptionId,
+        issueId,
       );
       res.status(200).json(updatedRecord);
     } catch (error) {

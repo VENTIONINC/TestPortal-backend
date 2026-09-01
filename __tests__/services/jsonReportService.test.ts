@@ -449,4 +449,157 @@ describe("jsonReportService with optional runId", () => {
       }),
     );
   });
+
+  it("persists normalized modal enrichment for an enriched failed result", async () => {
+    const [testSpec] = mockTestData.tests;
+    if (!testSpec) {
+      throw new Error("Expected mock test data");
+    }
+
+    const enrichedReport = {
+      ...mockTestData,
+      runId: "enriched-run",
+      tests: [
+        {
+          ...testSpec,
+          results: [
+            {
+              retry: 0,
+              status: "failed",
+              duration: 1000,
+              startTime: "2025-05-14T10:30:00Z",
+              workerIndex: 0,
+              logs: ["browser started", "request failed"],
+              sourceSnippet: {
+                path: "test.spec.js",
+                text: "const actual = read();\nawait refresh();\nexpect(actual).toBe(expected);",
+                startLine: 8,
+                failingLine: 10,
+              },
+              generatedTestCase: "test('reproduces the failure', async () => {});",
+              error: {
+                message: "Error: expected true",
+                stack: "Error: expected true",
+                location: { file: "test.spec.js", line: 10 },
+              },
+            },
+          ],
+        },
+      ],
+    };
+
+    await jsonReportService.processReport(
+      enrichedReport,
+      "b4225bdf-9e2b-43f9-8f13-5bb6f5079176",
+    );
+
+    const createdError =
+      dbClient.resultError.createMany.mock.calls[0][0].data[0];
+    expect(createdError).toEqual(
+      expect.objectContaining({
+        rawLogs: ["browser started", "request failed"],
+        sourceSnippet: {
+          path: "test.spec.js",
+          text: "const actual = read();\nawait refresh();\nexpect(actual).toBe(expected);",
+          startLine: 8,
+          failingLine: 10,
+        },
+        generatedTestCase: "test('reproduces the failure', async () => {});",
+      }),
+    );
+  });
+
+  it("persists absent modal enrichment as null for a legacy failed result", async () => {
+    const [testSpec] = mockTestData.tests;
+    if (!testSpec) {
+      throw new Error("Expected mock test data");
+    }
+
+    await jsonReportService.processReport(
+      {
+        ...mockTestData,
+        runId: "legacy-run",
+        tests: [
+          {
+            ...testSpec,
+            results: [
+              {
+                retry: 0,
+                status: "failed",
+                duration: 1000,
+                startTime: "2025-05-14T10:30:00Z",
+                workerIndex: 0,
+                error: {
+                  message: "Error: expected true",
+                  stack: "Error: expected true",
+                  location: { file: "test.spec.js", line: 10 },
+                },
+              },
+            ],
+          },
+        ],
+      },
+      "b4225bdf-9e2b-43f9-8f13-5bb6f5079176",
+    );
+
+    const createdError =
+      dbClient.resultError.createMany.mock.calls[0][0].data[0];
+    expect(createdError).not.toHaveProperty("rawLogs");
+    expect(createdError).not.toHaveProperty("sourceSnippet");
+    expect(createdError).not.toHaveProperty("generatedTestCase");
+  });
+
+  it("discards invalid optional fields independently without rejecting the report", async () => {
+    const [testSpec] = mockTestData.tests;
+    if (!testSpec) {
+      throw new Error("Expected mock test data");
+    }
+    const oversizedLogs = "x".repeat(256 * 1024 + 1);
+    const reportWithInvalidEnrichment = {
+      ...mockTestData,
+      runId: "bounded-run",
+      tests: [
+        {
+          ...testSpec,
+          results: [
+            {
+              retry: 0,
+              status: "failed",
+              duration: 1000,
+              startTime: "2025-05-14T10:30:00Z",
+              workerIndex: 0,
+              logs: oversizedLogs,
+              sourceSnippet: {
+                path: "test.spec.js",
+                text: "line 10",
+                startLine: 10,
+                failingLine: 9,
+              },
+              generatedTestCase: "test('still retained', () => {});",
+              error: {
+                message: "Error: expected true",
+                stack: "Error: expected true",
+                location: { file: "test.spec.js", line: 10 },
+              },
+            },
+          ],
+        },
+      ],
+    };
+
+    await expect(
+      jsonReportService.processReport(
+        reportWithInvalidEnrichment,
+        "b4225bdf-9e2b-43f9-8f13-5bb6f5079176",
+      ),
+    ).resolves.toEqual(expect.objectContaining({ success: true }));
+
+    const createdError =
+      dbClient.resultError.createMany.mock.calls[0][0].data[0];
+    expect(createdError).not.toHaveProperty("rawLogs");
+    expect(createdError).not.toHaveProperty("sourceSnippet");
+    expect(createdError.generatedTestCase).toBe(
+      "test('still retained', () => {});",
+    );
+  });
 });

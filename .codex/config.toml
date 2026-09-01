@@ -1,6 +1,58 @@
-[features]
-multi_agent = true
+# The globally installed GitHub plugin exposes a much broader tool surface than
+# this repository needs. Disable it here and use the project-scoped MCP server
+# below instead.
 
-[agents]
-max_threads = 6
-max_depth = 1
+[apps.github]
+enabled = false
+
+[mcp_servers.github]
+url = "https://api.githubcopilot.com/mcp/"
+bearer_token_env_var = "GITHUB_PAT_TOKEN"
+enabled = false
+
+[mcp_servers.github_tp]
+url = "https://api.githubcopilot.com/mcp/"
+bearer_token_env_var = "GITHUB_PAT_TOKEN"
+enabled = true
+required = true
+default_tools_approval_mode = "auto"
+http_headers = { "X-MCP-Tools" = "get_me,get_file_contents,list_pull_requests,pull_request_read,search_pull_requests,create_pull_request,update_pull_request,add_issue_comment,add_reply_to_pull_request_comment,pull_request_review_write", "X-MCP-Lockdown" = "true" }
+enabled_tools = [
+  "get_me",
+  "get_file_contents",
+  "list_pull_requests",
+  "pull_request_read",
+  "search_pull_requests",
+  "create_pull_request",
+  "update_pull_request",
+  "add_issue_comment",
+  "add_reply_to_pull_request_comment",
+  "pull_request_review_write",
+]
+
+[mcp_servers.github_tp.tools.create_pull_request]
+approval_mode = "prompt"
+
+[mcp_servers.github_tp.tools.update_pull_request]
+approval_mode = "prompt"
+
+[mcp_servers.github_tp.tools.add_reply_to_pull_request_comment]
+approval_mode = "prompt"
+
+[mcp_servers.github_tp.tools.pull_request_review_write]
+approval_mode = "prompt"
+
+[mcp_servers.github_tp.tools.issue_read]
+approval_mode = "prompt"
+
+[mcp_servers.github_tp.tools.list_issues]
+approval_mode = "prompt"
+
+[mcp_servers.github_tp.tools.search_issues]
+approval_mode = "prompt"
+
+[mcp_servers.github_tp.tools.issue_write]
+approval_mode = "prompt"
+
+[mcp_servers.github_tp.tools.add_issue_comment]
+approval_mode = "prompt"

@@ -5,12 +5,28 @@ import { Request, Response } from "express";
 import { type AuthenticatedRequest } from "@/middleware/authMiddleware";
 import { issueService } from "@/services/issueService";
 import { buildIssueParams } from "@/lib/params-builder";
+import { isResultCategory } from "@/lib/resultCategory";
 
 import type { CreateIssueParams, UpdateIssueParams } from "@/types";
 
 type IssueIdParams = {
   issueId: string;
 };
+
+function rejectInvalidCategoryFilter(
+  category: string | undefined,
+  res: Response,
+): boolean {
+  if (!category || isResultCategory(category)) {
+    return false;
+  }
+
+  res.status(400).json({
+    error:
+      "Invalid category query parameter. Must be one of: bug, infra, performance, script, other",
+  });
+  return true;
+}
 
 export const issueController = {
   getAllIssues: async (req: Request, res: Response): Promise<void> => {
@@ -29,6 +45,7 @@ export const issueController = {
         });
         return;
       }
+      if (rejectInvalidCategoryFilter(category, res)) return;
 
       const params = buildIssueParams({
         projectId,
@@ -63,6 +80,7 @@ export const issueController = {
         });
         return;
       }
+      if (rejectInvalidCategoryFilter(category, res)) return;
 
       const params = buildIssueParams({
         projectId,
@@ -101,6 +119,7 @@ export const issueController = {
         });
         return;
       }
+      if (rejectInvalidCategoryFilter(category, res)) return;
 
       const params = buildIssueParams({
         projectId,
@@ -145,6 +164,7 @@ export const issueController = {
         });
         return;
       }
+      if (rejectInvalidCategoryFilter(category, res)) return;
 
       const params = buildIssueParams({
         projectId,

@@ -131,6 +131,9 @@ model ResultError {
   message         String
   callLog         Json?
   callStack       Json
+  rawLogs         Json?
+  sourceSnippet   Json?
+  generatedTestCase String?
   testAssertion   String?
   expectedPattern String?
   receivedString  String?

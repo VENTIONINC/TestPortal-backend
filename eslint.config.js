@@ -91,6 +91,8 @@ export default [
       "*.d.ts",
       "jest.config.ts",
       "jest.prompts.config.ts",
+      ".codex/**",
+      ".agents/skills/cartodex/scripts/scan-codebase.mjs",
     ],
   },
 ];
