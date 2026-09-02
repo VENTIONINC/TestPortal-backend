@@ -1,0 +1,19 @@
+src/mcp/schemas/issueSchemas.ts
+  s_223cbd193de0fd::t_8fb2ad89e475e2 5,18,33,43
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.18",
+  "base_commit_sha": "5443cbdbbcd0093481225040805f6194c5f906d2",
+  "prompts": {},
+  "sessions": {
+    "s_223cbd193de0fd": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a0618d-3f91-7fa0-bf0f-4f7b1eec3716",
+        "model": "unknown"
+      },
+      "human_author": "Ihar Mikailau <ihar.mikailau@ventionteams.com>"
+    }
+  }
+}
