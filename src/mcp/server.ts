@@ -1,7 +1,7 @@
 // Copyright 2026 VENSOLUTIONSGROUP LTD
 // SPDX-License-Identifier: Apache-2.0
 
-import { Router, Request, Response, NextFunction } from "express";
+import { Router, Response, NextFunction } from "express";
 import { randomUUID } from "node:crypto";
 import {
   McpServer,
@@ -9,7 +9,10 @@ import {
 } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/streamableHttp.js";
 import { isInitializeRequest } from "@modelcontextprotocol/sdk/types.js";
-import { authenticateMcpToken } from "@/mcp/middleware/auth";
+import {
+  authenticateMcpToken,
+  handleMcpSessionRequest,
+} from "@/mcp/middleware/auth";
 import { statusCheck } from "@/mcp/tools/status-check";
 import { currentTime } from "@/mcp/tools/current-time";
 import { getIssues, getIssueById, createIssue } from "@/mcp/tools/issues";
@@ -20,9 +23,10 @@ import {
 } from "@/mcp/tools/results";
 import {
   createAssumption,
-  updateAssumption,
+  createUpdateAssumptionTool,
   getAssumptionById,
 } from "@/mcp/tools/assumptions";
+import type { RequestWithMcpUser } from "@/mcp/middleware/auth";
 import { getExecutionById } from "@/mcp/tools/executions";
 import {
   assignIssue,
@@ -49,6 +53,7 @@ const router = Router();
 interface TransportEntry {
   transport: StreamableHTTPServerTransport;
   lastActive: number;
+  userId: string;
 }
 
 interface TransportStorage {
@@ -79,26 +84,39 @@ setInterval(() => {
 router.post(
   "/v2/mcp",
   authenticateMcpToken,
-  async (req: Request, res: Response): Promise<void> => {
+  async (req: RequestWithMcpUser, res: Response): Promise<void> => {
     try {
       const sessionId = req.headers["mcp-session-id"] as string | undefined;
       let transport: StreamableHTTPServerTransport;
 
       if (sessionId && transports[sessionId]) {
         const entry = transports[sessionId];
-        entry.lastActive = Date.now();
         transport = entry.transport;
-        await transport.handleRequest(req, res, req.body);
+        await handleMcpSessionRequest(entry.userId, req, res, async () => {
+          entry.lastActive = Date.now();
+          await transport.handleRequest(req, res, req.body);
+        });
         return;
       }
 
       if (!sessionId && isInitializeRequest(req.body)) {
+        const reviewedById = req.mcpUserId;
+        if (!reviewedById) {
+          res.status(401).json({
+            jsonrpc: "2.0",
+            error: { code: -32001, message: "MCP user is not authenticated" },
+            id: null,
+          });
+          return;
+        }
+
         transport = new StreamableHTTPServerTransport({
           sessionIdGenerator: () => randomUUID(),
           onsessioninitialized: (sessionId: string) => {
             transports[sessionId] = {
               transport,
               lastActive: Date.now(),
+              userId: reviewedById,
             };
           },
         });
@@ -133,7 +151,7 @@ router.post(
 
         // Assumption tools
         server.tool(...createAssumption);
-        server.tool(...updateAssumption);
+        server.tool(...createUpdateAssumptionTool(reviewedById));
         server.tool(...getAssumptionById);
 
         // Execution tools
@@ -281,7 +299,7 @@ router.post(
 );
 
 const handleSessionRequest = async (
-  req: Request,
+  req: RequestWithMcpUser,
   res: Response,
   next: NextFunction,
 ): Promise<void> => {
@@ -293,9 +311,11 @@ const handleSessionRequest = async (
     }
 
     const entry = transports[sessionId];
-    entry.lastActive = Date.now();
     const transport = entry.transport;
-    await transport.handleRequest(req, res);
+    await handleMcpSessionRequest(entry.userId, req, res, async () => {
+      entry.lastActive = Date.now();
+      await transport.handleRequest(req, res);
+    });
   } catch (error) {
     next(error);
   }

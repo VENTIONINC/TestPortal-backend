@@ -315,6 +315,23 @@ export const resultService = {
         throw new Error(`Result with ID ${resultId} not found`);
       }
 
+      if (updatedResult.execution) {
+        try {
+          await dashboardService.refreshDailyStats(
+            updatedResult.execution.projectId,
+            updatedResult.startTime,
+            updatedResult.execution.environment,
+            updatedResult.execution.type,
+            tx,
+          );
+        } catch (error) {
+          logger.error(
+            `Failed to refresh dashboard stats in updateAnalysisFeedback: ${error}`,
+          );
+          throw error;
+        }
+      }
+
       return updatedResult;
     });
 

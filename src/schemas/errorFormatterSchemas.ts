@@ -2,6 +2,25 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { z } from "zod";
+import type { ResultCategory } from "@/types/resultCategory";
+
+export const contextCategorySchema = z.enum([
+  "bug",
+  "infra",
+  "performance",
+  "script",
+  "other",
+]);
+
+export const errorFormatterRequestSchema = z.object({
+  name: z.string().min(1, "Name cannot be empty").max(100, "Name is too long"),
+  description: z
+    .string()
+    .min(1, "Description cannot be empty")
+    .max(2000, "Description is too long"),
+  contextCategory: contextCategorySchema.optional(),
+  category: z.string().max(50, "Category is too long").optional(),
+});
 
 /**
  * Zod schema for error formatter structured output
@@ -20,7 +39,7 @@ export const errorFormatterSchema = z.object({
 export interface ErrorFormatterInput {
   name: string;
   description: string;
-  category: string;
+  contextCategory?: ResultCategory;
 }
 
 /**

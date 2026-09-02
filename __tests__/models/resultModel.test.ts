@@ -243,3 +243,172 @@ describe("resultModel filtering", () => {
     expect(findManyMock).not.toHaveBeenCalled();
   });
 });
+
+describe("resultModel issue statistics", () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+    findManyMock.mockImplementation(() => Promise.resolve([]));
+  });
+
+  it("requests only the fields required to calculate statistics", async () => {
+    await resultModel.getStats({ projectId: "project-1" });
+
+    expect(findManyMock).toHaveBeenCalledTimes(1);
+    expect(findManyMock).toHaveBeenCalledWith({
+      where: {
+        spec: { projectId: "project-1" },
+        execution: { projectId: "project-1" },
+      },
+      select: {
+        id: true,
+        status: true,
+        analysisCategory: true,
+        analysisFeedbackCategory: true,
+        spec: { select: { id: true } },
+        execution: { select: { id: true } },
+        errors: {
+          select: {
+            id: true,
+            message: true,
+            assumptions: {
+              select: {
+                id: true,
+                issue: { select: { id: true, name: true, category: true } },
+              },
+            },
+          },
+        },
+      },
+    });
+
+  });
+
+  it("aggregates by issue ID and distinct linked result with derived summaries", async () => {
+    const issueA = {
+      id: "issue-a",
+      name: "Duplicate name",
+      category: "other",
+    };
+    const issueB = {
+      id: "issue-b",
+      name: "Duplicate name",
+      category: "infra",
+    };
+    const issueC = {
+      id: "issue-c",
+      name: "Dominant mixed",
+      category: "performance",
+    };
+    const issueD = {
+      id: "issue-d",
+      name: "Uncategorized",
+      category: "script",
+    };
+    const makeResult = (
+      id: string,
+      analysisCategory: string | null,
+      analysisFeedbackCategory: string | null,
+      assumptions: Array<{ id: string; issue: typeof issueA }>,
+    ) => ({
+      id,
+      status: "failed",
+      startTime: new Date("2026-07-28T10:00:00.000Z"),
+      analysisCategory,
+      analysisFeedbackCategory,
+      spec: {
+        id: `spec-${id}`,
+        key: id,
+        title: id,
+        file: `${id}.ts`,
+        tags: [],
+      },
+      execution: {
+        id: `execution-${id}`,
+        environment: "test",
+        type: "e2e",
+      },
+      errors: [
+        {
+          id: `error-${id}`,
+          message: "Failure",
+          assumptions,
+        },
+      ],
+    });
+    const results = [
+      makeResult("result-1", "bug", null, [
+        { id: "a-1", issue: issueA },
+        { id: "a-2", issue: issueA },
+        { id: "b-1", issue: issueB },
+        { id: "c-1", issue: issueC },
+      ]),
+      makeResult("result-2", "bug", "script", [
+        { id: "a-3", issue: issueA },
+        { id: "c-2", issue: issueC },
+      ]),
+      makeResult("result-3", null, null, [
+        { id: "d-1", issue: issueD },
+      ]),
+      makeResult("result-4", "SCRIPT", null, [
+        { id: "c-3", issue: issueC },
+      ]),
+    ];
+    (
+      findManyMock.mockResolvedValue as unknown as (value: unknown[]) => void
+    )(results);
+
+    const stats = await resultModel.getStats({ projectId: "project-1" });
+    const topA = stats.topIssues.find((issue) => issue.id === issueA.id);
+    const topB = stats.topIssues.find((issue) => issue.id === issueB.id);
+    const topC = stats.topIssues.find((issue) => issue.id === issueC.id);
+    const topD = stats.topIssues.find((issue) => issue.id === issueD.id);
+
+    expect(topA).toMatchObject({
+      title: "Duplicate name",
+      count: 2,
+      category: "other",
+      categorySummary: {
+        displayCategory: "other",
+        isMixed: true,
+        distribution: { bug: 1, infra: 0, performance: 0, script: 1, other: 0 },
+        uncategorizedCount: 0,
+      },
+    });
+    expect(topB).toMatchObject({
+      title: "Duplicate name",
+      count: 1,
+      category: "infra",
+      categorySummary: {
+        displayCategory: "infra",
+        isMixed: false,
+      },
+    });
+    expect(topC).toMatchObject({
+      count: 3,
+      category: "performance",
+      categorySummary: {
+        displayCategory: "performance",
+        isMixed: true,
+        distribution: { bug: 1, infra: 0, performance: 0, script: 2, other: 0 },
+      },
+    });
+    expect(topD).toMatchObject({
+      count: 1,
+      category: "script",
+      categorySummary: {
+        displayCategory: "script",
+        isMixed: false,
+        uncategorizedCount: 1,
+      },
+    });
+
+    for (const issue of stats.topIssues) {
+      const categorizedTotal = Object.values(
+        issue.categorySummary.distribution,
+      ).reduce((sum, count) => sum + count, 0);
+      expect(issue.count).toBe(
+        categorizedTotal + issue.categorySummary.uncategorizedCount,
+      );
+    }
+  });
+});
