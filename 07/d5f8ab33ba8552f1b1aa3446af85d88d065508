@@ -1,0 +1,127 @@
+.codex/config.toml
+  s_3251809c7ee206::t_71e6ae89a8f1df 5,7,14
+__tests__/controllers/testScenarioController.test.ts
+  s_3251809c7ee206::t_1f8c194db1409f 1-258
+__tests__/controllers/testScenarioIntegrationController.test.ts
+  s_3251809c7ee206::t_7c51d9f5b28e7a 1-191
+__tests__/lib/openapi/testScenarios.test.ts
+  s_3251809c7ee206::t_cc0209bc09b145 1-210
+__tests__/models/projectModel.test.ts
+  s_3251809c7ee206::t_7ee260890924e2 66-68,88-90,94-95,100,105,111
+__tests__/models/testScenarioEvidenceModel.test.ts
+  s_3251809c7ee206::t_0184ae655fe3da 1-116
+__tests__/models/testScenarioModel.test.ts
+  s_3251809c7ee206::t_4c130638beba0b 1-196
+__tests__/models/testScenarioSpecLinkModel.test.ts
+  s_3251809c7ee206::t_5ac103fe714010 1-103
+__tests__/prisma/testScenarioMigration.test.ts
+  s_3251809c7ee206::t_34fc773aa01991 1-86
+__tests__/routes/test-scenarios.test.ts
+  s_3251809c7ee206::t_c124d1160af0c4 1-145
+__tests__/schemas/testScenarioIntegrationSchemas.test.ts
+  s_3251809c7ee206::t_e77c489608834f 1-46
+__tests__/schemas/testScenarioSchemas.test.ts
+  s_3251809c7ee206::t_adade1550f706a 1-37
+__tests__/services/testScenarioIntegrationService.test.ts
+  s_3251809c7ee206::t_27554d0b0f2ca8 1-234
+__tests__/services/testScenarioService.test.ts
+  s_3251809c7ee206::t_c39715a253b1d1 1-279
+__tests__/test-scenarios/testScenarioIntegrationWorkflow.test.ts
+  s_3251809c7ee206::t_636c95ac695f19 1-393
+__tests__/test-scenarios/testScenarioWorkflow.test.ts
+  s_3251809c7ee206::t_064d03fba26c81 1-290
+eslint.config.js
+  s_3251809c7ee206::t_b85ec3c5d4ab72 90
+openspec/changes/add-markdown-test-scenarios/.openspec.yaml
+  s_3251809c7ee206::t_3f4868311468c4 1-2
+openspec/changes/add-markdown-test-scenarios/design.md
+  s_3251809c7ee206::t_201ab902d1fe24 1-110
+openspec/changes/add-markdown-test-scenarios/proposal.md
+  s_3251809c7ee206::t_2e53bda3f367e2 1-33
+openspec/changes/add-markdown-test-scenarios/specs/markdown-test-scenarios/spec.md
+  s_3251809c7ee206::t_bd2241d5aa55cb 1-119
+openspec/changes/add-markdown-test-scenarios/tasks.md
+  s_3251809c7ee206::t_0391d173fd09a6 1-54
+openspec/changes/edit-markdown-test-scenarios/.openspec.yaml
+  s_3251809c7ee206::t_3a949cba383cd7 1-2
+openspec/changes/edit-markdown-test-scenarios/design.md
+  s_3251809c7ee206::t_f2e54720ec582a 1-91
+openspec/changes/edit-markdown-test-scenarios/proposal.md
+  s_3251809c7ee206::t_9138964b4f014a 1-33
+openspec/changes/edit-markdown-test-scenarios/specs/markdown-test-scenario-editing/spec.md
+  s_3251809c7ee206::t_e41a8c55828def 1-115
+openspec/changes/edit-markdown-test-scenarios/tasks.md
+  s_3251809c7ee206::t_0b906de5476c88 1-40
+openspec/changes/integrate-test-scenarios-with-execution-evidence/.openspec.yaml
+  s_3251809c7ee206::t_8ade2502880003 1-2
+openspec/changes/integrate-test-scenarios-with-execution-evidence/design.md
+  s_3251809c7ee206::t_822511000da2e6 1-141
+openspec/changes/integrate-test-scenarios-with-execution-evidence/proposal.md
+  s_3251809c7ee206::t_e6190b37ab9326 1-37
+openspec/changes/integrate-test-scenarios-with-execution-evidence/specs/test-scenario-execution-evidence/spec.md
+  s_3251809c7ee206::t_7f7fe4ab20e0d5 1-144
+openspec/changes/integrate-test-scenarios-with-execution-evidence/tasks.md
+  s_3251809c7ee206::t_d121952adfe985 1-59
+prisma/migrations/20260824120000_add_test_scenarios/migration.sql
+  s_3251809c7ee206::t_59f3d4ee5326aa 1-27
+prisma/migrations/20260826120000_add_test_scenario_spec_links/migration.sql
+  s_3251809c7ee206::t_6ab2c3d2127042 1-22
+prisma/schema.prisma
+  s_3251809c7ee206::t_853f396564004f 46,92,126-127,148-149,163-165,186-190,219-248
+src/controllers/testScenarioController.ts
+  s_3251809c7ee206::t_a40fd9e6df40b7 1-322
+src/lib/openapi/index.ts
+  s_3251809c7ee206::t_382b1d7ecfa2e9 29,55,93-96
+src/lib/openapi/testScenarios.ts
+  s_3251809c7ee206::t_38927b8add5206 1-605
+src/models/issueModel.ts
+  s_3251809c7ee206::t_2fd3b003c047f0 113-177
+src/models/projectModel.ts
+  s_3251809c7ee206::t_38ab5ab70995fa 111-123,217-220,318-323,328,333
+src/models/resultModel.ts
+  s_3251809c7ee206::t_3cd132854cd596 525-580
+src/models/testScenarioModel.ts
+  s_3251809c7ee206::t_fa00ee9e01fcb8 1-110
+src/models/testScenarioSpecLinkModel.ts
+  s_3251809c7ee206::t_f534b43b97c300 1-86
+src/routes/index.ts
+  s_3251809c7ee206::t_183d5379588a9e 23,50
+src/routes/test-scenarios.ts
+  s_3251809c7ee206::t_e8b72656af7313 1-61
+src/schemas/index.ts
+  s_3251809c7ee206::t_2a938b7215e5f8 33-49
+src/schemas/testScenarioIntegrationSchemas.ts
+  s_3251809c7ee206::t_c5a6297a3826d4 1-70
+src/schemas/testScenarioSchemas.ts
+  s_3251809c7ee206::t_aea1c335810a58 1-67
+src/services/issueService.ts
+  s_3251809c7ee206::t_6ef2ff199ffdad 279-312
+src/services/resultService.ts
+  s_3251809c7ee206::t_bbcd3cd475ec7c 143-173
+src/services/testScenarioIntegrationService.ts
+  s_3251809c7ee206::t_6f44b7481d5f3a 1-261
+src/services/testScenarioService.ts
+  s_3251809c7ee206::t_3c706928da541c 1-170
+src/types/index.ts
+  s_3251809c7ee206::t_a472249f2e764d 12-13,102
+src/types/testScenarioIntegration.ts
+  s_3251809c7ee206::t_230a9ca2e3440d 1-92
+src/types/testScenarios.ts
+  s_3251809c7ee206::t_3819a97bc78b16 1-60
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.18",
+  "base_commit_sha": "07d5f8ab33ba8552f1b1aa3446af85d88d065508",
+  "prompts": {},
+  "sessions": {
+    "s_3251809c7ee206": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a067ac-1bce-7302-9cf5-f6dfb760ae5b",
+        "model": "gpt-5.6-luna"
+      },
+      "human_author": "Ihar Mikailau <ihar.mikailau@ventionteams.com>"
+    }
+  }
+}
