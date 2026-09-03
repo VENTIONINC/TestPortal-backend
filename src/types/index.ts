@@ -9,6 +9,8 @@ export * from "@/types/tests";
 export * from "@/types/ctrf";
 export * from "@/types/skills";
 export * from "@/types/resultCategory";
+export * from "@/types/testScenarios";
+export * from "@/types/testScenarioIntegration";
 
 // Express types extensions
 import type { Request } from "express";
@@ -97,3 +99,4 @@ export interface UserIntegrations {
   monitoringPortalEnabled?: boolean;
   analyzeEnabled?: boolean;
 }
+
