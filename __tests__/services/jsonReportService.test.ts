@@ -509,6 +509,42 @@ describe("jsonReportService with optional runId", () => {
     );
   });
 
+  it("persists every ordered error with diagnostics on its associated error", async () => {
+    const [testSpec] = mockTestData.tests;
+    if (!testSpec) throw new Error("Expected mock test data");
+
+    await jsonReportService.processReport(
+      {
+        ...mockTestData,
+        runId: "multiple-errors-run",
+        tests: [{
+          ...testSpec,
+          results: [{
+            retry: 0,
+            status: "failed",
+            duration: 1000,
+            startTime: "2025-05-14T10:30:00Z",
+            workerIndex: 0,
+            errors: [
+              { message: "primary", stack: "stack one", location: { file: "one.ts", line: 1 }, rawLogs: ["first"] },
+              { message: "secondary", stack: "stack two", location: { file: "two.ts", line: 2 }, generatedTestCase: "test('secondary', () => {});" },
+            ],
+          }],
+        }],
+      },
+      "b4225bdf-9e2b-43f9-8f13-5bb6f5079176",
+    );
+
+    const createdErrors = dbClient.resultError.createMany.mock.calls[0][0].data;
+    expect(createdErrors).toHaveLength(2);
+    expect(createdErrors.map((item: { resultId: string }) => item.resultId)).toEqual([
+      createdErrors[0].resultId,
+      createdErrors[0].resultId,
+    ]);
+    expect(createdErrors[0].rawLogs).toEqual(["first"]);
+    expect(createdErrors[1].generatedTestCase).toBe("test('secondary', () => {});");
+  });
+
   it("persists absent modal enrichment as null for a legacy failed result", async () => {
     const [testSpec] = mockTestData.tests;
     if (!testSpec) {
