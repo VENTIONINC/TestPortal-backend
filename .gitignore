@@ -57,6 +57,7 @@ typings/
 
 # dotenv environment constiables file
 .env
+.env.branch-*
 
 # next.js build output
 .next
@@ -66,6 +67,7 @@ prisma/prisma
 dev.db
 
 .tmp
+.worktrees/
 mocks/
 
 # TypeScript build output
@@ -81,6 +83,8 @@ mocks/
 
 # IDEs and editors
 .vscode/
+.idea/
 
 # Prompt testing datasets (generated files)
 __prompts-tests__/**/datasets/
+mocks/

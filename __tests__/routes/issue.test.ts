@@ -52,6 +52,8 @@ jest.mock("@/models/userModel", () => ({
           updatedAt: new Date(),
           name: data.name,
           email: data.email,
+          status: "active",
+          role: "member",
           passwordHash: data.passwordHash,
           cognitoUserId: null,
           mcpToken: null,
@@ -82,6 +84,8 @@ jest.mock("@/models/userModel", () => ({
 jest.mock("@/models/issueModel", () => ({
   issueModel: {
     findMany: jest.fn(() => Promise.resolve(issues)),
+    count: jest.fn(() => Promise.resolve(issues.length)),
+    findLinkedResults: jest.fn(() => Promise.resolve([])),
     findById: jest.fn((id: string) => {
       const issue = issues.find((i) => i.id === id);
       return Promise.resolve(issue ?? null);
@@ -92,7 +96,7 @@ jest.mock("@/models/issueModel", () => ({
         createdAt: new Date(),
         updatedAt: new Date(),
         name: data.name as string,
-        category: data.category as string,
+        category: data.category as PrismaIssue["category"],
         description: data.description ?? null,
         portal: data.portal ?? null,
         service: data.service ?? null,
@@ -136,6 +140,22 @@ describe("v2 issues auth flow", () => {
       body: { email: "test2@ventionteams.com", password: "password123" },
     });
 
+  it.each(["Bug", "environment", "unknown"])(
+    "rejects the invalid category filter %s",
+    async (category) => {
+      const response = await executeController(issueController.getAllIssues, {
+        method: "GET",
+        query: { projectId: "test-project-uuid", category },
+      });
+
+      expect(response.statusCode).toBe(400);
+      expect(response.body).toEqual({
+        error:
+          "Invalid category query parameter. Must be one of: bug, infra, performance, script, other",
+      });
+    },
+  );
+
   it("requires auth for creating issues and sets user references", async () => {
     const signupRes = await signup();
     expect(signupRes.statusCode).toBe(201);
@@ -149,7 +169,7 @@ describe("v2 issues auth flow", () => {
       issueController.createIssue,
       {
         method: "POST",
-        body: { name: "Issue1", category: "bug" },
+        body: { name: "Issue1" },
       },
     );
     expect(unauthRes.statusCode).toBe(401);
@@ -158,7 +178,11 @@ describe("v2 issues auth flow", () => {
       issueController.createIssue,
       {
         method: "POST",
-        body: { name: "Issue1", category: "bug", projectId: "test-project-uuid" },
+        body: {
+          name: "Issue1",
+          category: "bug",
+          projectId: "test-project-uuid",
+        },
         token,
       },
     );
@@ -166,5 +190,22 @@ describe("v2 issues auth flow", () => {
     const authBody = authRes.body;
     expect(authBody?.createdById).toBe(userId);
     expect(authBody?.updatedById).toBe(userId);
+    expect(authBody?.category).toBe("bug");
+  });
+
+  it("rejects authenticated issue creation without a category", async () => {
+    await signup();
+    const loginRes = await login();
+
+    const response = await executeProtectedController(
+      issueController.createIssue,
+      {
+        method: "POST",
+        body: { name: "Issue1", projectId: "test-project-uuid" },
+        token: loginRes.body.accessToken as string,
+      },
+    );
+
+    expect(response.statusCode).toBe(400);
   });
 });

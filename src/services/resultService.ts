@@ -28,7 +28,10 @@ const logger = getLogger("result-service");
 
 interface GetResultsResponse {
   results: StructuredResultWithRelations[];
+  rawResults: StructuredResultWithRelations[];
+  availableTags: string[];
   total: number;
+  rawTotal: number;
   page: number;
   totalPages: number;
 }
@@ -49,6 +52,7 @@ export const resultService = {
       issueName,
       from,
       to,
+      dates,
       page = 1,
       limit = 1000,
     } = params;
@@ -74,13 +78,38 @@ export const resultService = {
     if (issueName) filters.issueName = issueName;
     if (from) filters.from = from;
     if (to) filters.to = to;
+    if (dates) filters.dates = dates;
 
-    const results = await resultModel.findMany(filters, page, limit);
-    const totalResults = await resultModel.count(filters);
+    const availableTagsFilters: ResultFilters = { ...filters };
+    delete availableTagsFilters.tag;
+
+    const [results, totalResults, specTags] = await Promise.all([
+      resultModel.findMany(filters, page, limit),
+      resultModel.count(filters),
+      resultModel.findSpecTags(availableTagsFilters),
+    ]);
+
+    const availableTags = [
+      ...new Set(specTags.flatMap(normalizeJsonStringArray)),
+    ].sort((left, right) => left.localeCompare(right));
+
+    const specRecordIds = [
+      ...new Set(results.map((result) => result.spec.id)),
+    ];
+    const rawFilters: ResultFilters = { projectId, specRecordIds };
+    if (from) rawFilters.from = from;
+    if (to) rawFilters.to = to;
+
+    const rawResults = specRecordIds.length
+      ? await resultModel.findMany(rawFilters)
+      : [];
 
     return {
       results: results.map(normalizeResultPayload),
+      rawResults: rawResults.map(normalizeResultPayload),
+      availableTags,
       total: totalResults,
+      rawTotal: rawResults.length,
       page: Number(page),
       totalPages: Math.ceil(totalResults / limit),
     };
@@ -253,6 +282,23 @@ export const resultService = {
 
       if (!updatedResult) {
         throw new Error(`Result with ID ${resultId} not found`);
+      }
+
+      if (updatedResult.execution) {
+        try {
+          await dashboardService.refreshDailyStats(
+            updatedResult.execution.projectId,
+            updatedResult.startTime,
+            updatedResult.execution.environment,
+            updatedResult.execution.type,
+            tx,
+          );
+        } catch (error) {
+          logger.error(
+            `Failed to refresh dashboard stats in updateAnalysisFeedback: ${error}`,
+          );
+          throw error;
+        }
       }
 
       return updatedResult;

@@ -25,8 +25,13 @@ export const mcpAssumptionHandler = {
   async updateAssumption(
     assumptionId: string,
     updateData: Partial<UpdateAssumptionRequest>,
+    reviewedById: string,
   ): Promise<AssumptionUpdateResult> {
-    return await assumptionService.updateAssumption(assumptionId, updateData);
+    return await assumptionService.updateAssumption(
+      assumptionId,
+      updateData,
+      reviewedById,
+    );
   },
 
   async getAssumptionById(assumptionId: string, projectId: string): Promise<PrismaAssumption> {

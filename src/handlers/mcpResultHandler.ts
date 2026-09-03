@@ -11,7 +11,10 @@ import type {
 
 interface GetResultsResponse {
   results: StructuredResultWithRelations[];
+  rawResults: StructuredResultWithRelations[];
+  availableTags: string[];
   total: number;
+  rawTotal: number;
   page: number;
   totalPages: number;
 }
@@ -29,6 +32,7 @@ export const mcpResultHandler = {
       status,
       from,
       to,
+      dates,
       page = 1,
       limit = 1000,
     } = params ?? {};
@@ -51,6 +55,7 @@ export const mcpResultHandler = {
     if (status) resultParams.status = status;
     if (from) resultParams.from = from;
     if (to) resultParams.to = to;
+    if (dates) resultParams.dates = dates;
     if (page) resultParams.page = page;
     if (limit) resultParams.limit = limit;
 

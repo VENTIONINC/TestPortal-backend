@@ -106,7 +106,8 @@ export function generateOpenAPISpec() {
       },
       {
         name: "Authentication",
-        description: "User authentication endpoints (signup, login)",
+        description:
+          "Provider-neutral authentication endpoints for config discovery, signup, login, refresh, and logout",
       },
       {
         name: "Users",

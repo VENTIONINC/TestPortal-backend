@@ -87,7 +87,7 @@ export function buildInsightsPrompt(
 
   return insightsPromptTemplate.formatMessages({
     project: params.filters.project,
-    environment: params.filters.environment,
+    environment: "All environments",
     executionType: params.filters.executionType,
     periodStart: params.filters.periodStart,
     periodEnd: params.filters.periodEnd,

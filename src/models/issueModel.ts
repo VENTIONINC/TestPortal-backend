@@ -2,18 +2,16 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { dbClient } from "@/prisma/client";
-import type { PrismaIssue, PrismaIssueWithUsers } from "@/types";
+import type {
+  PrismaIssue,
+  PrismaIssueWithUsers,
+  ResultCategory,
+} from "@/types";
 import { Prisma } from "@prisma/client";
-
-interface IssueWhereInput {
-  category?: string;
-  name?: { contains: string };
-  projectId?: string;
-}
 
 interface CreateIssueData {
   name: string;
-  category: string;
+  category: ResultCategory;
   description?: string;
   portal?: string;
   service?: string;
@@ -23,17 +21,51 @@ interface CreateIssueData {
   updatedById?: string;
 }
 
+export interface LinkedIssueResult {
+  id: string;
+  startTime: Date;
+  specId: string;
+  analysisCategory: string | null;
+  analysisFeedbackCategory: string | null;
+  errors: Array<{
+    assumptions: Array<{
+      issueId: string;
+    }>;
+  }>;
+}
+
+const buildWhereClause = (
+  projectId: string,
+  category?: ResultCategory,
+  name?: string,
+  type?: string,
+): Prisma.IssueWhereInput => ({
+  projectId,
+  ...(category && { category }),
+  ...(name && { name: { contains: name, mode: "insensitive" } }),
+  ...(type && {
+    assumptions: {
+      some: {
+        resultError: {
+          result: {
+            execution: { type },
+          },
+        },
+      },
+    },
+  }),
+});
+
 export const issueModel = {
   findMany: async (
     projectId: string,
-    category?: string,
+    category?: ResultCategory,
     name?: string,
     page = 1,
     limit = 30,
+    type?: string,
   ): Promise<PrismaIssue[]> => {
-    const whereClause: IssueWhereInput = { projectId };
-    if (category) whereClause.category = category;
-    if (name) whereClause.name = { contains: name };
+    const whereClause = buildWhereClause(projectId, category, name, type);
 
     return await dbClient.issue.findMany({
       where: whereClause,
@@ -45,14 +77,13 @@ export const issueModel = {
 
   findManyWithUsers: async (
     projectId: string,
-    category?: string,
+    category?: ResultCategory,
     name?: string,
     page = 1,
     limit = 30,
+    type?: string,
   ): Promise<PrismaIssueWithUsers[]> => {
-    const whereClause: Prisma.IssueWhereInput = { projectId };
-    if (category) whereClause.category = category;
-    if (name) whereClause.name = { contains: name };
+    const whereClause = buildWhereClause(projectId, category, name, type);
 
     return (await dbClient.issue.findMany({
       where: whereClause,
@@ -68,12 +99,11 @@ export const issueModel = {
 
   count: async (
     projectId: string,
-    category?: string,
+    category?: ResultCategory,
     name?: string,
+    type?: string,
   ): Promise<number> => {
-    const whereClause: IssueWhereInput = { projectId };
-    if (category) whereClause.category = category;
-    if (name) whereClause.name = { contains: name };
+    const whereClause = buildWhereClause(projectId, category, name, type);
 
     return await dbClient.issue.count({
       where: whereClause,
@@ -106,6 +136,66 @@ export const issueModel = {
         updatedBy: true,
       },
     })) as PrismaIssueWithUsers | null;
+  },
+
+  findLinkedResults: async (
+    issueIds: string[],
+    statFrom?: string,
+    statTo?: string,
+    type?: string,
+  ): Promise<LinkedIssueResult[]> => {
+    if (issueIds.length === 0) {
+      return [];
+    }
+
+    const where: Prisma.ResultWhereInput = {
+      ...(type && { execution: { type } }),
+      errors: {
+        some: {
+          assumptions: {
+            some: {
+              issueId: { in: issueIds },
+            },
+          },
+        },
+      },
+    };
+
+    if (statFrom || statTo) {
+      where.startTime = {};
+      if (statFrom) {
+        where.startTime.gte = new Date(statFrom);
+      }
+      if (statTo) {
+        const endOfDay = new Date(statTo);
+        endOfDay.setHours(23, 59, 59, 999);
+        where.startTime.lte = endOfDay;
+      }
+    }
+
+    return await dbClient.result.findMany({
+      where,
+      orderBy: { startTime: "asc" },
+      select: {
+        id: true,
+        startTime: true,
+        specId: true,
+        analysisCategory: true,
+        analysisFeedbackCategory: true,
+        errors: {
+          select: {
+            assumptions: {
+              where: {
+                issueId: { in: issueIds },
+              },
+              select: {
+                issueId: true,
+              },
+            },
+          },
+        },
+      },
+    });
   },
 
   create: async (data: CreateIssueData): Promise<PrismaIssue> => {

@@ -43,6 +43,7 @@ A comprehensive Node.js Express server for managing test results with TypeScript
    DATABASE_URL="postgresql://postgres:postgres@localhost:5433/test_portal"
    PORT=3001
    NODE_ENV=development
+   AUTH_PROVIDER=local
    ```
 
 4. **Initialize Prisma and set up the database:**
@@ -62,24 +63,14 @@ A comprehensive Node.js Express server for managing test results with TypeScript
    npm run server
    ```
 
-6. **Seed the database** (optional, with server running):
-
-   **Option 1: Seed from JSON reports:**
+6. **Seed persisted skill packages** (optional):
 
    ```sh
    npm run seed
    ```
 
-   **Option 2: Migrate data from SQLite database:**
-
-   ```sh
-   npm run seed:migrate
-   ```
-
-   This will migrate all data from `prisma/dev.db` SQLite file to PostgreSQL, including:
-
-   - Issues, Executions, Specs, Results, Result Errors, and Assumptions
-   - Automatic sequence counter updates for proper ID generation
+   This command idempotently seeds the system skill packages. Container-based
+   deployments run the same seeder automatically at startup.
 
 7. **Verify installation:**
 
@@ -151,6 +142,14 @@ src/
 
 ## API Endpoints
 
+### Authentication
+
+- `GET /api/v2/auth/config` - Discover the active auth provider and capability flags
+- `POST /api/v2/auth/signup` - Sign up through the configured provider
+- `POST /api/v2/auth/login` - Login through the configured provider
+- `POST /api/v2/auth/refresh-token` - Exchange a refresh token for new internal JWTs
+- `POST /api/v2/auth/logout` - Logout through the configured provider
+
 ### Core Resources
 
 - `GET /api/v2/results` - Get test results with filtering
@@ -161,7 +160,8 @@ src/
 
 ### Analysis & Reports
 
-- `POST /api/v2/json-report` - Process test report JSON
+- `POST /api/v2/upload-json-report` - Upload a JSON test report using JWT authentication
+- `POST /api/v2/upload-json-report-api-key` - Upload a JSON test report using API key authentication
 - `POST /api/v2/result-errors/:id/review` - Analyze error patterns
 - `PUT /api/v2/result-errors/:id/assign` - Assign issue to error
 

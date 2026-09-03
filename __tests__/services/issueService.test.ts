@@ -3,320 +3,253 @@
 
 import "@/test-utils/testEnv";
 import { jest } from "@jest/globals";
-import type { PrismaIssue, PrismaUser } from "@/types";
+import { issueModel, type LinkedIssueResult } from "@/models/issueModel";
 import { issueService } from "@/services/issueService";
-import { IssueCategory } from "@/types/enums";
+import type { PrismaIssue, PrismaIssueWithUsers, PrismaUser } from "@/types";
 
-const users: PrismaUser[] = [];
-const issues: PrismaIssue[] = [];
+jest.mock("@/models/issueModel");
 
-const generateUserId = () => crypto.randomUUID();
-const generateIssueId = () => crypto.randomUUID();
+const mockIssueModel = issueModel as jest.Mocked<typeof issueModel>;
+const now = new Date("2026-07-28T10:00:00.000Z");
 
-const mockResultFindMany = jest.fn(async () => [] as unknown[]);
-
-jest.mock("@/models/userModel", () => ({
-  userModel: {
-    findById: jest.fn((id: string) => {
-      const user = users.find((u) => u.id === id);
-      return Promise.resolve(user ?? null);
-    }),
-    findByEmail: jest.fn((email: string) => {
-      const user = users.find((u) => u.email === email);
-      return Promise.resolve(user ?? null);
-    }),
-    create: jest.fn(
-      (data: { name: string; email: string; passwordHash: string }) => {
-        const user: PrismaUser = {
-          id: generateUserId(),
-          createdAt: new Date(),
-          updatedAt: new Date(),
-          name: data.name,
-          email: data.email,
-          passwordHash: data.passwordHash,
-          cognitoUserId: null,
-          mcpToken: null,
-          reportPortalUrl: null,
-          reportPortalEnabled: false,
-          monitoringPortalUrl: null,
-          monitoringPortalEnabled: false,
-          analyzeEnabled: false,
-        };
-        users.push(user);
-        return Promise.resolve(user);
-      },
-    ),
-  },
-}));
-
-jest.mock("@/models/issueModel", () => ({
-  issueModel: {
-    findMany: jest.fn(
-      (
-        projectId: string,
-        category?: string,
-        name?: string,
-        page = 1,
-        limit = 30,
-      ) => {
-        let filtered = issues.filter((issue) => issue.projectId === projectId);
-        if (category) {
-          filtered = filtered.filter((issue) =>
-            issue.category.toLowerCase().includes(category.toLowerCase()),
-          );
-        }
-        if (name) {
-          filtered = filtered.filter((issue) =>
-            issue.name.toLowerCase().includes(name.toLowerCase()),
-          );
-        }
-        const startIndex = (Number(page) - 1) * Number(limit);
-        const endIndex = startIndex + Number(limit);
-        return Promise.resolve(filtered.slice(startIndex, endIndex));
-      },
-    ),
-    findManyWithUsers: jest.fn(
-      (
-        projectId: string,
-        category?: string,
-        name?: string,
-        page = 1,
-        limit = 30,
-      ) => {
-        let filtered = issues.filter((issue) => issue.projectId === projectId);
-        if (category) {
-          filtered = filtered.filter((issue) =>
-            issue.category.toLowerCase().includes(category.toLowerCase()),
-          );
-        }
-        if (name) {
-          filtered = filtered.filter((issue) =>
-            issue.name.toLowerCase().includes(name.toLowerCase()),
-          );
-        }
-        const startIndex = (Number(page) - 1) * Number(limit);
-        const endIndex = startIndex + Number(limit);
-        return Promise.resolve(
-          filtered.slice(startIndex, endIndex).map((issue) => ({
-            ...issue,
-            createdBy: issue.createdById
-              ? (users.find((u) => u.id === issue.createdById) ?? null)
-              : null,
-            updatedBy: issue.updatedById
-              ? (users.find((u) => u.id === issue.updatedById) ?? null)
-              : null,
-          })),
-        );
-      },
-    ),
-    count: jest.fn((projectId: string, category?: string, name?: string) => {
-      let filtered = issues.filter((issue) => issue.projectId === projectId);
-      if (category) {
-        filtered = filtered.filter((issue) =>
-          issue.category.toLowerCase().includes(category.toLowerCase()),
-        );
-      }
-      if (name) {
-        filtered = filtered.filter((issue) =>
-          issue.name.toLowerCase().includes(name.toLowerCase()),
-        );
-      }
-      return Promise.resolve(filtered.length);
-    }),
-    findById: jest.fn((id: string, projectId: string) => {
-      const issue = issues.find(
-        (i) => i.id === id && i.projectId === projectId,
-      );
-      return Promise.resolve(issue ?? null);
-    }),
-    findByIdWithUsers: jest.fn((id: string, projectId: string) => {
-      const issue = issues.find(
-        (i) => i.id === id && i.projectId === projectId,
-      );
-      if (!issue) return Promise.resolve(null);
-      return Promise.resolve({
-        ...issue,
-        createdBy: issue.createdById
-          ? (users.find((u) => u.id === issue.createdById) ?? null)
-          : null,
-        updatedBy: issue.updatedById
-          ? (users.find((u) => u.id === issue.updatedById) ?? null)
-          : null,
-      });
-    }),
-    create: jest.fn((data: Partial<PrismaIssue>) => {
-      const issue: PrismaIssue = {
-        id: generateIssueId(),
-        createdAt: new Date(),
-        updatedAt: new Date(),
-        name: data.name as string,
-        category: data.category as string,
-        description: data.description ?? null,
-        portal: data.portal ?? null,
-        service: data.service ?? null,
-        ticket: data.ticket ?? null,
-        projectId: data.projectId ?? "test-project",
-        createdById: data.createdById ?? null,
-        updatedById: data.updatedById ?? null,
-      };
-      issues.push(issue);
-      return Promise.resolve(issue);
-    }),
-    update: jest.fn((id: string, data: Partial<PrismaIssue>) => {
-      const issue = issues.find((i) => i.id === id);
-      if (!issue) throw new Error("Issue not found");
-      Object.assign(issue, data, { updatedAt: new Date() });
-      return Promise.resolve(issue);
-    }),
-    delete: jest.fn((id: string) => {
-      const index = issues.findIndex((i) => i.id === id);
-      if (index === -1) throw new Error("Issue not found");
-      issues.splice(index, 1);
-      return Promise.resolve();
-    }),
-  },
-}));
-
-jest.mock("@/prisma/client", () => ({
-  dbClient: {
-    result: {
-      findMany: () => mockResultFindMany(),
-    },
-  },
-}));
-
-const addUser = (name: string, email: string): PrismaUser => {
-  const user: PrismaUser = {
-    id: generateUserId(),
-    name,
-    email,
-    passwordHash: "hash",
-    createdAt: new Date(),
-    updatedAt: new Date(),
-    cognitoUserId: null,
-    mcpToken: null,
-    reportPortalUrl: null,
-    reportPortalEnabled: false,
-    monitoringPortalUrl: null,
-    monitoringPortalEnabled: false,
-    analyzeEnabled: false,
-  };
-  users.push(user);
-  return user;
+const user: PrismaUser = {
+  id: "00000000-0000-4000-8000-000000000010",
+  createdAt: now,
+  updatedAt: now,
+  name: "Reviewer",
+  email: "reviewer@example.com",
+  status: "active",
+  role: "member",
+  passwordHash: null,
+  cognitoUserId: null,
+  mcpToken: null,
+  reportPortalUrl: null,
+  reportPortalEnabled: false,
+  monitoringPortalUrl: null,
+  monitoringPortalEnabled: false,
+  analyzeEnabled: false,
 };
 
-const createIssueRecord = async (
-  name: string,
-  category: string,
-  user: PrismaUser,
-): Promise<PrismaIssue> =>
-  issueService.createIssue({
+function makeIssue(
+  id: string,
+  name = `Issue ${id}`,
+  category: PrismaIssue["category"] = "other",
+): PrismaIssue {
+  return {
+    id,
+    createdAt: now,
+    updatedAt: now,
     name,
     category,
-    projectId: "test-project",
+    description: null,
+    portal: null,
+    service: null,
+    ticket: null,
+    projectId: "00000000-0000-4000-8000-000000000001",
     createdById: user.id,
     updatedById: user.id,
-  });
+  };
+}
 
-describe("Issue service V2 behaviours", () => {
-  let primaryUser: PrismaUser;
+function withUsers(issue: PrismaIssue): PrismaIssueWithUsers {
+  return {
+    ...issue,
+    createdBy: user,
+    updatedBy: user,
+  };
+}
 
-  beforeEach(async () => {
-    users.length = 0;
-    issues.length = 0;
-    mockResultFindMany.mockResolvedValue([]);
-    primaryUser = addUser("Primary User", "primary@ventionteams.com");
-  });
-
-  it("fetches issues with user relations", async () => {
-    await createIssueRecord("Login bug", "bug", primaryUser);
-
-    const result = await issueService.getAllIssuesV2({
-      projectId: "test-project",
-    });
-
-    expect(result.issues).toHaveLength(1);
-    const [firstIssue] = result.issues;
-    expect(firstIssue?.createdBy?.id).toBe(primaryUser.id);
-  });
-
-  it("supports filtering by category and name", async () => {
-    await createIssueRecord("Login bug", "bug", primaryUser);
-    await createIssueRecord("Signup bug", "bug", primaryUser);
-    await createIssueRecord("Perf issue", "performance", primaryUser);
-
-    const bugResult = await issueService.getAllIssuesV2({
-      projectId: "test-project",
-      category: IssueCategory.Bug,
-    });
-    expect(bugResult.issues).toHaveLength(2);
-
-    const nameResult = await issueService.getAllIssuesV2({
-      projectId: "test-project",
-      name: "Login",
-    });
-    expect(nameResult.issues).toHaveLength(1);
-    const [loginIssue] = nameResult.issues;
-    expect(loginIssue?.name).toBe("Login bug");
-  });
-
-  it("supports full CRUD workflow", async () => {
-    const created = await createIssueRecord("CRUD Issue", "test", primaryUser);
-
-    const fetched = await issueService.getIssueByIdV2(
-      created.id,
-      "test-project",
-    );
-    expect(fetched.name).toBe("CRUD Issue");
-
-    await issueService.updateIssue(created.id, {
-      name: "Updated CRUD Issue",
-      category: "updated",
-      updatedById: primaryUser.id,
-    });
-
-    const list = await issueService.getAllIssuesV2({
-      projectId: "test-project",
-    });
-    expect(list.issues[0]?.name).toBe("Updated CRUD Issue");
-  });
-
-  it("maintains user context across operations", async () => {
-    const secondUser = addUser("Second User", "second@ventionteams.com");
-
-    const created = await createIssueRecord(
-      "Ownership test",
-      "test",
-      primaryUser,
-    );
-    expect(created.createdById).toBe(primaryUser.id);
-
-    const updated = await issueService.updateIssue(created.id, {
-      description: "Updated by second user",
-      updatedById: secondUser.id,
-    });
-
-    expect(updated.updatedById).toBe(secondUser.id);
-    expect(updated.createdById).toBe(primaryUser.id);
-  });
-
-  it("returns statistics when requested", async () => {
-    await createIssueRecord("Stat Issue", "bug", primaryUser);
-    mockResultFindMany.mockResolvedValueOnce([
+function linkedResult(
+  id: string,
+  issueIds: string[],
+  analysisCategory: string | null,
+  analysisFeedbackCategory: string | null = null,
+  startTime = now,
+  specId = `spec-${id}`,
+): LinkedIssueResult {
+  return {
+    id,
+    startTime,
+    specId,
+    analysisCategory,
+    analysisFeedbackCategory,
+    errors: [
       {
-        startTime: new Date("2024-01-01T10:00:00Z"),
-        spec: { id: "spec-1" },
+        assumptions: issueIds.map((issueId) => ({ issueId })),
       },
-      {
-        startTime: new Date("2024-01-02T12:00:00Z"),
-        spec: { id: "spec-2" },
-      },
+    ],
+  };
+}
+
+describe("issueService", () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+    mockIssueModel.count.mockResolvedValue(0);
+    mockIssueModel.findMany.mockResolvedValue([]);
+    mockIssueModel.findManyWithUsers.mockResolvedValue([]);
+    mockIssueModel.findLinkedResults.mockResolvedValue([]);
+  });
+
+  it("returns serialized reads with derived summaries using one batched query", async () => {
+    const first = makeIssue("00000000-0000-4000-8000-000000000101", "Login");
+    const second = makeIssue(
+      "00000000-0000-4000-8000-000000000102",
+      "Checkout",
+      "script",
+    );
+    mockIssueModel.findManyWithUsers.mockResolvedValue([
+      withUsers(first),
+      withUsers(second),
+    ]);
+    mockIssueModel.count.mockResolvedValue(2);
+    mockIssueModel.findLinkedResults.mockResolvedValue([
+      linkedResult("result-1", [first.id], "bug"),
+      linkedResult("result-2", [first.id, second.id], "infra", "SCRIPT"),
     ]);
 
-    const result = await issueService.getAllIssuesWithStatsV2({
-      projectId: "test-project",
+    const response = await issueService.getAllIssuesV2({
+      projectId: first.projectId,
     });
 
-    expect(result.issues[0]?.statistics.occurrenceCount).toBe(2);
+    expect(mockIssueModel.findLinkedResults).toHaveBeenCalledTimes(1);
+    expect(mockIssueModel.findLinkedResults).toHaveBeenCalledWith(
+      [first.id, second.id],
+      undefined,
+      undefined,
+    );
+    expect(response.issues[0]).toMatchObject({
+      name: "Login",
+      category: "other",
+      categorySummary: {
+        displayCategory: "other",
+        isMixed: true,
+        distribution: { bug: 1, infra: 0, performance: 0, script: 1, other: 0 },
+      },
+      createdBy: { id: user.id },
+    });
+    expect(response.issues[1]?.categorySummary.displayCategory).toBe("script");
+    expect(response.issues[0]?.category).toBe("other");
+  });
+
+  it("forwards only supported issue list filters", async () => {
+    await issueService.getAllIssuesV2({
+      projectId: "project-1",
+      category: "script",
+      name: "Login",
+      page: 2,
+      limit: 5,
+    });
+
+    expect(mockIssueModel.findManyWithUsers).toHaveBeenCalledWith(
+      "project-1",
+      "script",
+      "Login",
+      2,
+      5,
+    );
+    expect(mockIssueModel.count).toHaveBeenCalledWith(
+      "project-1",
+      "script",
+      "Login",
+    );
+  });
+
+  it("adds a summary to issue detail reads", async () => {
+    const issue = makeIssue("00000000-0000-4000-8000-000000000103");
+    mockIssueModel.findByIdWithUsers.mockResolvedValue(withUsers(issue));
+    mockIssueModel.findLinkedResults.mockResolvedValue([
+      linkedResult("result-1", [issue.id], "environment"),
+    ]);
+
+    const response = await issueService.getIssueByIdV2(
+      issue.id,
+      issue.projectId,
+    );
+
+    expect(response.categorySummary.displayCategory).toBe("other");
+  });
+
+  it("uses the same date-filtered distinct result set for stats and summary", async () => {
+    const issue = makeIssue("00000000-0000-4000-8000-000000000104");
+    const firstTime = new Date("2026-07-01T10:00:00.000Z");
+    const secondTime = new Date("2026-07-02T10:00:00.000Z");
+    mockIssueModel.findManyWithUsers.mockResolvedValue([withUsers(issue)]);
+    mockIssueModel.count.mockResolvedValue(1);
+    mockIssueModel.findLinkedResults.mockResolvedValue([
+      linkedResult("result-1", [issue.id], "bug", null, firstTime, "spec-1"),
+      linkedResult(
+        "result-2",
+        [issue.id],
+        null,
+        null,
+        secondTime,
+        "spec-1",
+      ),
+    ]);
+
+    const response = await issueService.getAllIssuesWithStatsV2({
+      projectId: issue.projectId,
+      statFrom: "2026-07-01T00:00:00.000Z",
+      statTo: "2026-07-02T00:00:00.000Z",
+    });
+
+    expect(mockIssueModel.findLinkedResults).toHaveBeenCalledWith(
+      [issue.id],
+      "2026-07-01T00:00:00.000Z",
+      "2026-07-02T00:00:00.000Z",
+    );
+    expect(response.issues[0]).toMatchObject({
+      categorySummary: {
+        distribution: { bug: 1, infra: 0, performance: 0, script: 0, other: 0 },
+        uncategorizedCount: 1,
+      },
+      statistics: {
+        occurrenceCount: 2,
+        impactedTestsCount: 1,
+        firstOccurrence: firstTime,
+        lastOccurrence: secondTime,
+      },
+    });
+  });
+
+  it("requires category on create and forwards optional category updates", async () => {
+    const issue = makeIssue("00000000-0000-4000-8000-000000000105");
+    mockIssueModel.create.mockResolvedValue(issue);
+    mockIssueModel.update.mockResolvedValue({
+      ...issue,
+      name: "Updated",
+      category: "performance",
+    });
+
+    const created = await issueService.createIssue({
+      name: issue.name,
+      category: "other",
+      projectId: issue.projectId,
+    });
+    const updated = await issueService.updateIssue(issue.id, {
+      name: "Updated",
+      category: "performance",
+    });
+
+    expect(created.category).toBe("other");
+    expect(created).not.toHaveProperty("categorySummary");
+    expect(mockIssueModel.update).toHaveBeenCalledWith(
+      issue.id,
+      expect.objectContaining({ category: "performance" }),
+    );
+    expect(updated.category).toBe("performance");
+    expect(updated).not.toHaveProperty("categorySummary");
+  });
+
+  it("rejects missing or non-lowercase categories", async () => {
+    await expect(
+      issueService.createIssue({
+        name: "Missing category",
+        projectId: "project-1",
+      } as never),
+    ).rejects.toThrow("Invalid issue category");
+    await expect(
+      issueService.updateIssue("issue-1", { category: "Bug" } as never),
+    ).rejects.toThrow("Invalid issue category");
   });
 });

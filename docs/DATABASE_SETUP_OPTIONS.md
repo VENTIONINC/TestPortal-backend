@@ -32,7 +32,7 @@ npm run migrate  # Creates tables (including new metrics table)
 
 **Cons:**
 
-- **Empty Data**: The dashboard will be empty. You will need to run the seeder (`npm run seed`) and potentially generate more test traffic to verify the charts.
+- **Empty Data**: The dashboard will be empty. You will need to upload test reports or generate test traffic to verify the charts. The `npm run seed` command only seeds persisted system skill packages.
 - **Setup Overhead**: Requires managing a second database container.
 
 **Instructions**:
@@ -58,5 +58,7 @@ npm run migrate  # Creates tables (including new metrics table)
 3.  **Initialize**:
     ```bash
     npm run migrate  # Creates tables (including new ProjectMeta)
-    npm run seed     # Fills with dummy data
     ```
+
+    Upload test reports through `POST /api/v2/upload-json-report` or
+    `POST /api/v2/upload-json-report-api-key` to populate dashboard data.

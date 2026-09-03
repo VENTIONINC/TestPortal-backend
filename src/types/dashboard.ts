@@ -20,6 +20,7 @@ export interface DailyExecutionMetrics {
   passed: number;
   failed: number;
   skipped: number;
+  timedOut: number;
   duration: number; // Total duration in ms
   issues: DashboardIssueMetrics;
 }
@@ -41,7 +42,6 @@ export interface ExecutionSummary {
 
 export interface PdfExportFilters {
   project: string;
-  environment: string;
   executionType: string;
   periodStart: string;
   periodEnd: string;

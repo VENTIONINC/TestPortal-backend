@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import type { Response, Request } from "express";
+import { resolveExecutionTypeFilter } from "@/lib/params-builder";
 import { dashboardService } from "@/services/dashboardService";
 import type { DashboardGranularity } from "@/types/dashboard";
 import getLogger from "@/lib/logger";
@@ -14,18 +15,15 @@ type DashboardParams = {
 
 function parseDashboardParams(req: Request<DashboardParams>) {
   const { projectId } = req.params;
-  const { environment, period, type, granularity } = req.query;
+  const { period, type, granularity } = req.query;
 
   if (!projectId) {
     throw new Error("Project ID is required");
   }
 
-  if (!environment || typeof environment !== "string") {
-    throw new Error("Environment query parameter is required");
-  }
-
   const periodDays = parseInt(String(period ?? "30"), 10) || 30;
-  const executionType = typeof type === "string" ? type : undefined;
+  const executionType =
+    typeof type === "string" ? resolveExecutionTypeFilter(type) : undefined;
   const dataGranularity =
     typeof granularity === "string" &&
     ["daily", "weekly", "monthly"].includes(granularity)
@@ -36,7 +34,6 @@ function parseDashboardParams(req: Request<DashboardParams>) {
 
   return {
     projectId,
-    environment,
     periodDays,
     executionType,
     granularity: dataGranularity,
@@ -46,19 +43,18 @@ function parseDashboardParams(req: Request<DashboardParams>) {
 export const dashboardController = {
   /**
    * GET /api/v2/projects/:projectId/dashboard
-   * Query Params: environment (string), period (number of days, default 30), type (string, optional)
+   * Query Params: period (number of days, default 30), type (string, optional)
    */
   async getDashboard(
     req: Request<DashboardParams>,
     res: Response,
   ): Promise<void> {
     try {
-      const { projectId, environment, periodDays, executionType, granularity } =
+      const { projectId, periodDays, executionType, granularity } =
         parseDashboardParams(req);
 
       const dashboardData = await dashboardService.getDashboard(
         projectId,
-        environment,
         periodDays,
         executionType,
         granularity,
@@ -68,8 +64,7 @@ export const dashboardController = {
     } catch (error) {
       if (error instanceof Error) {
         if (
-          error.message === "Project ID is required" ||
-          error.message === "Environment query parameter is required"
+          error.message === "Project ID is required"
         ) {
           res.status(400).json({ error: error.message });
           return;

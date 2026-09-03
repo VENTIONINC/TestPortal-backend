@@ -3,9 +3,11 @@
 
 import { projectService } from "@/services/projectService";
 import { projectModel } from "@/models/projectModel";
+import { executionModel } from "@/models/executionModel";
 import { DEFAULT_PROJECT_CATEGORY_WEIGHTS } from "@/lib/projectCategoryWeights";
 
 jest.mock("@/models/projectModel");
+jest.mock("@/models/executionModel");
 
 describe("projectService", () => {
   beforeEach(() => {
@@ -83,6 +85,32 @@ describe("projectService", () => {
         script: 40,
         other: 50,
       });
+    });
+  });
+
+  describe("getExecutionTypes", () => {
+    it("returns selectable stored values in deterministic case-insensitive order", async () => {
+      (executionModel.findDistinctTypes as jest.Mock).mockResolvedValue([
+        "release",
+        "Nightly",
+        "ALL",
+        "",
+        "   ",
+        "ci",
+      ]);
+
+      await expect(projectService.getExecutionTypes("project-1")).resolves.toEqual([
+        "ci",
+        "Nightly",
+        "release",
+      ]);
+      expect(executionModel.findDistinctTypes).toHaveBeenCalledWith("project-1");
+    });
+
+    it("returns an empty list when the project has no selectable types", async () => {
+      (executionModel.findDistinctTypes as jest.Mock).mockResolvedValue([]);
+
+      await expect(projectService.getExecutionTypes("project-1")).resolves.toEqual([]);
     });
   });
 

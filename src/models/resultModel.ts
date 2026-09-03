@@ -2,13 +2,19 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { dbClient } from "@/prisma/client";
-import type { ResultWithRelations, ResultsStats } from "@/types";
+import { buildIssueCategorySummary } from "@/lib/resultCategory";
+import type {
+  ResultCategory,
+  ResultWithRelations,
+  ResultsStats,
+} from "@/types";
 import { Prisma } from "@prisma/client";
 
 export interface ResultFilters {
   projectId: string;
   tag?: string;
   specId?: string;
+  specRecordIds?: string[];
   specFile?: string;
   specName?: string;
   environment?: string;
@@ -19,6 +25,7 @@ export interface ResultFilters {
   issueName?: string;
   from?: string;
   to?: string;
+  dates?: string[];
 }
 
 export interface AnalysisExportFilters {
@@ -63,6 +70,55 @@ export interface AnalysisExportRow {
   };
 }
 
+const resultStatsSelect = Prisma.validator<Prisma.ResultSelect>()({
+  id: true,
+  status: true,
+  analysisCategory: true,
+  analysisFeedbackCategory: true,
+  spec: { select: { id: true } },
+  execution: { select: { id: true } },
+  errors: {
+    select: {
+      id: true,
+      message: true,
+      assumptions: {
+        select: {
+          id: true,
+          issue: { select: { id: true, name: true, category: true } },
+        },
+      },
+    },
+  },
+});
+
+type ResultStatsRow = Prisma.ResultGetPayload<{
+  select: typeof resultStatsSelect;
+}>;
+
+function applyTagFilter(specFilter: Prisma.SpecWhereInput, tag?: string) {
+  if (!tag) return;
+
+  const selectedTags = [
+    ...new Set(
+      tag
+        .split(",")
+        .map((value) => value.trim())
+        .filter(Boolean),
+    ),
+  ];
+
+  if (selectedTags.length === 1) {
+    const selectedTag = selectedTags[0];
+    if (selectedTag) {
+      specFilter.tags = { array_contains: [selectedTag] };
+    }
+  } else if (selectedTags.length > 1) {
+    specFilter.OR = selectedTags.map((selectedTag) => ({
+      tags: { array_contains: [selectedTag] },
+    }));
+  }
+}
+
 export const resultModel = {
   findById: async (
     id: number | string,
@@ -98,12 +154,13 @@ export const resultModel = {
   findMany: async (
     filters: ResultFilters,
     page = 1,
-    limit = 1000,
+    limit?: number,
   ): Promise<ResultWithRelations[]> => {
     const {
       projectId,
       tag,
       specId,
+      specRecordIds,
       specFile,
       specName,
       environment,
@@ -114,6 +171,7 @@ export const resultModel = {
       issueName,
       from,
       to,
+      dates,
     } = filters;
 
     let toDate: Date | undefined;
@@ -128,9 +186,10 @@ export const resultModel = {
     whereClause.spec = {};
     whereClause.spec.projectId = projectId;
     if (specId) whereClause.spec.key = specId;
+    if (specRecordIds) whereClause.spec.id = { in: specRecordIds };
     if (specFile) whereClause.spec.file = { contains: specFile };
     if (specName) whereClause.spec.title = { contains: specName };
-    if (tag) whereClause.spec.tags = { array_contains: [tag] };
+    applyTagFilter(whereClause.spec, tag);
 
     // Build execution filter (always include projectId)
     whereClause.execution = {};
@@ -242,10 +301,35 @@ export const resultModel = {
       if (toDate) whereClause.startTime.lte = toDate;
     }
 
+    if (dates?.length) {
+      const selectedDatesCondition: Prisma.ResultWhereInput = {
+        OR: dates.map((date) => {
+          const start = new Date(date);
+          const end = new Date(date);
+          end.setUTCDate(end.getUTCDate() + 1);
+
+          return { startTime: { gte: start, lt: end } };
+        }),
+      };
+      const existingAnd = whereClause.AND;
+      whereClause.AND = [
+        ...(Array.isArray(existingAnd)
+          ? existingAnd
+          : existingAnd
+            ? [existingAnd]
+            : []),
+        selectedDatesCondition,
+      ];
+    }
+
     return (await dbClient.result.findMany({
       where: whereClause,
-      skip: (page - 1) * limit,
-      take: Number(limit),
+      ...(limit === undefined
+        ? {}
+        : {
+            skip: (page - 1) * limit,
+            take: Number(limit),
+          }),
       orderBy: {
         startTime: "desc", // Most recent results first
       },
@@ -270,6 +354,7 @@ export const resultModel = {
       projectId,
       tag,
       specId,
+      specRecordIds,
       specFile,
       specName,
       environment,
@@ -280,6 +365,7 @@ export const resultModel = {
       issueName,
       from,
       to,
+      dates,
     } = filters;
 
     let toDate: Date | undefined;
@@ -294,9 +380,10 @@ export const resultModel = {
     whereClause.spec = {};
     whereClause.spec.projectId = projectId;
     if (specId) whereClause.spec.key = specId;
+    if (specRecordIds) whereClause.spec.id = { in: specRecordIds };
     if (specFile) whereClause.spec.file = { contains: specFile };
     if (specName) whereClause.spec.title = { contains: specName };
-    if (tag) whereClause.spec.tags = { array_contains: [tag] };
+    applyTagFilter(whereClause.spec, tag);
 
     // Build execution filter (always include projectId)
     whereClause.execution = {};
@@ -409,9 +496,91 @@ export const resultModel = {
       if (toDate) whereClause.startTime.lte = toDate;
     }
 
+    if (dates?.length) {
+      const selectedDatesCondition: Prisma.ResultWhereInput = {
+        OR: dates.map((date) => {
+          const start = new Date(date);
+          const end = new Date(date);
+          end.setUTCDate(end.getUTCDate() + 1);
+
+          return { startTime: { gte: start, lt: end } };
+        }),
+      };
+      const existingAnd = whereClause.AND;
+      whereClause.AND = [
+        ...(Array.isArray(existingAnd)
+          ? existingAnd
+          : existingAnd
+            ? [existingAnd]
+            : []),
+        selectedDatesCondition,
+      ];
+    }
+
     return await dbClient.result.count({
       where: whereClause,
     });
+  },
+
+  findSpecTags: async (filters: ResultFilters): Promise<Prisma.JsonValue[]> => {
+    const {
+      projectId,
+      tag,
+      specId,
+      specRecordIds,
+      specFile,
+      specName,
+      environment,
+      type,
+      status,
+      from,
+      to,
+      dates,
+    } = filters;
+    const specWhere: Prisma.SpecWhereInput = { projectId };
+    if (specId) specWhere.key = specId;
+    if (specRecordIds) specWhere.id = { in: specRecordIds };
+    if (specFile) specWhere.file = { contains: specFile };
+    if (specName) specWhere.title = { contains: specName };
+    applyTagFilter(specWhere, tag);
+
+    const resultWhere: Prisma.ResultWhereInput = {
+      execution: {
+        projectId,
+        ...(environment && { environment }),
+        ...(type && { type }),
+      },
+      ...(status && { status }),
+    };
+    if (from || to) {
+      const toDate = to ? new Date(to) : undefined;
+      toDate?.setDate(toDate.getDate() + 1);
+      resultWhere.startTime = {
+        ...(from && { gte: new Date(from) }),
+        ...(toDate && { lte: toDate }),
+      };
+    }
+    if (dates?.length) {
+      resultWhere.AND = [
+        {
+          OR: dates.map((date) => {
+            const start = new Date(date);
+            const end = new Date(date);
+            end.setUTCDate(end.getUTCDate() + 1);
+            return { startTime: { gte: start, lt: end } };
+          }),
+        },
+      ];
+    }
+
+    const rows = await dbClient.spec.findMany({
+      where: {
+        ...specWhere,
+        results: { some: resultWhere },
+      },
+      select: { tags: true },
+    });
+    return rows.map((row) => row.tags);
   },
 
   findForAnalysisExport: async (
@@ -521,56 +690,36 @@ export const resultModel = {
       whereClause.OR = dateRanges;
     }
 
-    // Single database query to get all results with relations
-    const results = await dbClient.result.findMany({
+    // Single database query to get all results with only the statistics fields.
+    const results: ResultStatsRow[] = await dbClient.result.findMany({
       where: whereClause,
-      include: {
-        spec: true,
-        execution: true,
-        errors: {
-          include: {
-            assumptions: {
-              include: {
-                issue: true,
-              },
-            },
-          },
-        },
-      },
+      select: resultStatsSelect,
     });
 
-    // Initialize tracking maps (same approach as frontend)
-    const specMap = new Map<
-      string,
-      {
-        id: string;
-        key: string;
-        title: string;
-        file: string;
-        tags: Prisma.JsonValue;
-      }
-    >();
-    const executionMap = new Map<
-      string,
-      { id: string; environment: string; type: string }
-    >();
-    const errorMap = new Map<string, { id: string; message: string | null }>();
-    const assumptionMap = new Map<
-      string,
-      { id: string; isConfirmed: boolean }
-    >();
-    const resultMap = new Map<
-      string,
-      { id: string; status: string; startTime: Date }
-    >();
+    // Track unique entity IDs and issue names for final counts.
+    const specIds = new Set<string>();
+    const executionIds = new Set<string>();
+    const errorIds = new Set<string>();
+    const assumptionIds = new Set<string>();
+    const resultIds = new Set<string>();
     const issueMap = new Map<
       string,
-      { id: string; name: string | null; category: string | null }
+      { name: string; category: ResultCategory }
     >();
 
-    // Local tracking for errors and issues (not stored in final stats)
+    // Local tracking for errors and distinct results linked to each issue.
     const errorCounts = new Map<string, number>();
-    const issueCounts = new Map<string, { count: number; category: string }>();
+    const issueResults = new Map<
+      string,
+      Map<
+        string,
+        {
+          id: string;
+          analysisCategory: string | null;
+          analysisFeedbackCategory: string | null;
+        }
+      >
+    >();
 
     // Initialize stats object
     const stats: ResultsStats = {
@@ -596,16 +745,13 @@ export const resultModel = {
       }
 
       // Track unique entities
-      if (!specMap.has(result.spec.id))
-        specMap.set(result.spec.id, result.spec);
-      if (!executionMap.has(result.execution.id))
-        executionMap.set(result.execution.id, result.execution);
-      if (!resultMap.has(result.id)) resultMap.set(result.id, result);
+      specIds.add(result.spec.id);
+      executionIds.add(result.execution.id);
+      resultIds.add(result.id);
 
       // Process errors and assumptions
       result.errors?.forEach((error) => {
-        const errorKey = error.id;
-        if (!errorMap.has(errorKey)) errorMap.set(errorKey, error);
+        errorIds.add(error.id);
 
         // Count error messages
         const errorMessage = error.message ?? "Unknown Error";
@@ -613,36 +759,45 @@ export const resultModel = {
 
         // Process assumptions
         error.assumptions?.forEach((assumption) => {
-          const assumptionKey = assumption.id;
-          if (!assumptionMap.has(assumptionKey))
-            assumptionMap.set(assumptionKey, assumption);
+          assumptionIds.add(assumption.id);
           // Process issues
           if (assumption.issue) {
             const issue = assumption.issue;
-            if (!issueMap.has(issue.id)) issueMap.set(issue.id, issue);
+            if (!issueMap.has(issue.id)) {
+              issueMap.set(issue.id, {
+                name: issue.name,
+                category: issue.category as ResultCategory,
+              });
+            }
 
-            // Count issue names
-            const issueName = issue.name ?? "Unknown Issue Name";
-            const current = issueCounts.get(issueName) ?? {
-              count: 0,
-              category: issue.category ?? "Other",
-            };
-            issueCounts.set(issueName, {
-              ...current,
-              count: current.count + 1,
+            const linkedResults =
+              issueResults.get(issue.id) ??
+              new Map<
+                string,
+                {
+                  id: string;
+                  analysisCategory: string | null;
+                  analysisFeedbackCategory: string | null;
+                }
+              >();
+            linkedResults.set(result.id, {
+              id: result.id,
+              analysisCategory: result.analysisCategory,
+              analysisFeedbackCategory: result.analysisFeedbackCategory,
             });
+            issueResults.set(issue.id, linkedResults);
           }
         });
       });
     }
 
     // Set final counts
-    stats.entityCounts.specs = specMap.size;
-    stats.entityCounts.results = resultMap.size;
-    stats.entityCounts.executions = executionMap.size;
+    stats.entityCounts.specs = specIds.size;
+    stats.entityCounts.results = resultIds.size;
+    stats.entityCounts.executions = executionIds.size;
     stats.entityCounts.issues = issueMap.size;
-    stats.entityCounts.errors = errorMap.size;
-    stats.entityCounts.assumptions = assumptionMap.size;
+    stats.entityCounts.errors = errorIds.size;
+    stats.entityCounts.assumptions = assumptionIds.size;
 
     // Calculate total status count
     stats.byStatusTotal = Object.values(stats.byStatus).reduce(
@@ -656,14 +811,24 @@ export const resultModel = {
       .slice(0, 10)
       .map(([title, count]) => ({ title, count }));
 
-    stats.topIssues = Array.from(issueCounts.entries())
-      .sort((a, b) => b[1].count - a[1].count)
+    stats.topIssues = Array.from(issueResults.entries())
+      .sort((a, b) => b[1].size - a[1].size)
       .slice(0, 10)
-      .map(([title, data]) => ({
-        title,
-        count: data.count,
-        category: data.category,
-      }));
+      .map(([issueId, linkedResults]) => {
+        const issue = issueMap.get(issueId);
+        const category = issue?.category ?? "other";
+
+        return {
+          id: issueId,
+          title: issue?.name ?? "Unknown Issue Name",
+          count: linkedResults.size,
+          category,
+          categorySummary: buildIssueCategorySummary(
+            Array.from(linkedResults.values()),
+            category,
+          ),
+        };
+      });
 
     return stats;
   },

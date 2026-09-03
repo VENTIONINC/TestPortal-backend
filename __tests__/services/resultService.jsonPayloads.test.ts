@@ -99,11 +99,14 @@ describe("resultService JSON payload normalization", () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
+    mockResultModel.findSpecTags.mockResolvedValue([]);
   });
 
   it("normalizes getResults payloads into array-shaped fields", async () => {
-    mockResultModel.findMany.mockResolvedValue([buildRawResult()]);
-    mockResultModel.count.mockResolvedValue(1);
+    mockResultModel.findMany
+      .mockResolvedValueOnce([buildRawResult()])
+      .mockResolvedValueOnce([buildRawResult()]);
+    mockResultModel.count.mockResolvedValueOnce(1);
 
     const response = await resultService.getResults({
       projectId: "project-1",
@@ -124,6 +127,128 @@ describe("resultService JSON payload normalization", () => {
           callStack: [],
         },
       ],
+    });
+    expect(response.rawResults[0]).toMatchObject({
+      spec: {
+        tags: ["smoke", "ui"],
+        annotations: ["owner:qa"],
+      },
+    });
+    expect(response.rawTotal).toBe(1);
+  });
+
+  it("limits raw results to unique specs from the filtered page", async () => {
+    const secondFilteredResult = buildRawResult();
+    secondFilteredResult.id = "result-2";
+    secondFilteredResult.specId = "spec-1";
+    mockResultModel.findMany
+      .mockResolvedValueOnce([buildRawResult(), secondFilteredResult])
+      .mockResolvedValueOnce([buildRawResult()]);
+    mockResultModel.count.mockResolvedValue(0);
+
+    await resultService.getResults({
+      projectId: "project-1",
+      from: "2026-07-01",
+      to: "2026-07-07",
+      dates: ["2026-07-02", "2026-07-04"],
+      status: "failed",
+      tag: "smoke",
+      page: 2,
+      limit: 25,
+    });
+
+    expect(mockResultModel.findMany).toHaveBeenNthCalledWith(
+      1,
+      {
+        projectId: "project-1",
+        from: "2026-07-01",
+        to: "2026-07-07",
+        dates: ["2026-07-02", "2026-07-04"],
+        status: "failed",
+        tag: "smoke",
+      },
+      2,
+      25,
+    );
+    expect(mockResultModel.findMany).toHaveBeenNthCalledWith(2, {
+      projectId: "project-1",
+      from: "2026-07-01",
+      to: "2026-07-07",
+      specRecordIds: ["spec-1"],
+    });
+    expect(mockResultModel.count).toHaveBeenCalledWith({
+      projectId: "project-1",
+      from: "2026-07-01",
+      to: "2026-07-07",
+      dates: ["2026-07-02", "2026-07-04"],
+      status: "failed",
+      tag: "smoke",
+    });
+    expect(mockResultModel.count).toHaveBeenCalledTimes(1);
+  });
+
+  it("skips the raw query when no cards match the filters", async () => {
+    mockResultModel.findMany.mockResolvedValue([]);
+    mockResultModel.count.mockResolvedValue(0);
+
+    const response = await resultService.getResults({
+      projectId: "project-1",
+      from: "2026-07-01",
+      to: "2026-07-07",
+      dates: ["2026-07-02"],
+      status: "failed",
+    });
+
+    expect(mockResultModel.findMany).toHaveBeenCalledTimes(1);
+    expect(mockResultModel.count).toHaveBeenCalledTimes(1);
+    expect(response.rawResults).toEqual([]);
+    expect(response.rawTotal).toBe(0);
+  });
+
+  it("returns normalized available tags from filters that exclude tag", async () => {
+    mockResultModel.findMany.mockResolvedValue([]);
+    mockResultModel.count.mockResolvedValue(0);
+    mockResultModel.findSpecTags.mockResolvedValue([
+      ["L2", "L1"],
+      '["L3","L1"]',
+      ["L4", 7],
+      { invalid: true },
+    ]);
+
+    const response = await resultService.getResults({
+      projectId: "project-1",
+      from: "2026-07-01",
+      to: "2026-07-07",
+      dates: ["2026-07-02"],
+      status: "failed",
+      reviewStatus: "completed",
+      errorMessage: "timeout",
+      issueName: "Checkout",
+      specFile: "checkout.spec.ts",
+      environment: "staging",
+      type: "e2e",
+      tag: "L1,L2",
+    });
+
+    expect(response).toMatchObject({
+      results: [],
+      rawResults: [],
+      availableTags: ["L1", "L2", "L3", "L4"],
+      total: 0,
+      rawTotal: 0,
+    });
+    expect(mockResultModel.findSpecTags).toHaveBeenCalledWith({
+      projectId: "project-1",
+      from: "2026-07-01",
+      to: "2026-07-07",
+      dates: ["2026-07-02"],
+      status: "failed",
+      reviewStatus: "completed",
+      errorMessage: "timeout",
+      issueName: "Checkout",
+      specFile: "checkout.spec.ts",
+      environment: "staging",
+      type: "e2e",
     });
   });
 

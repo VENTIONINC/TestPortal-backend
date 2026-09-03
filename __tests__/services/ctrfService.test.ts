@@ -6,11 +6,13 @@ import "@/test-utils/testEnv";
 import { ctrfService } from "@/services/ctrfService";
 import { jsonReportService } from "@/services/jsonReportService";
 import { testAnalysisService } from "@/services/testAnalysisService";
+import { dashboardService } from "@/services/dashboardService";
 import type { CTRFReport } from "@/types/ctrf";
 
 // Mock dependencies
 jest.mock("@/services/jsonReportService");
 jest.mock("@/services/testAnalysisService");
+jest.mock("@/services/dashboardService");
 jest.mock("@/lib/logger", () => ({
   __esModule: true,
   default: () => ({
@@ -21,21 +23,24 @@ jest.mock("@/lib/logger", () => ({
 }));
 
 // Mock Prisma client
-const mockTx = {
-  project: {
-    findUnique: jest.fn(),
-  },
-  result: {
-    findMany: jest.fn(),
-    update: jest.fn(),
-  },
-};
+jest.mock("@/prisma/client", () => {
+  const dbClient = {
+    project: {
+      findUnique: jest.fn(),
+    },
+    result: {
+      findMany: jest.fn(),
+      update: jest.fn(),
+    },
+    $transaction: jest.fn(),
+  };
 
-jest.mock("@/prisma/client", () => ({
-  dbClient: {
-    $transaction: jest.fn((callback) => callback(mockTx)),
-  },
-}));
+  dbClient.$transaction.mockImplementation((callback) => callback(dbClient));
+  return { dbClient };
+});
+
+const { dbClient: mockDbClient } = require("@/prisma/client");
+const mockTx = mockDbClient;
 
 describe("ctrfService", () => {
   const mockProjectId = "project-123";
@@ -73,6 +78,42 @@ describe("ctrfService", () => {
       executionId: "exec-123",
       specsProcessed: 1,
     });
+    (dashboardService.updateStats as jest.Mock).mockResolvedValue(undefined);
+  });
+
+  it("commits persistence before running analysis and dashboard work", async () => {
+    mockDbClient.project.findUnique.mockResolvedValue({
+      owner: { analyzeEnabled: false },
+    });
+
+    await ctrfService.processReport(mockReport, {
+      projectId: mockProjectId,
+    });
+
+    expect(mockDbClient.$transaction).not.toHaveBeenCalled();
+    expect(jsonReportService.processReport).toHaveBeenCalledWith(
+      expect.objectContaining({ runId: "build-1" }),
+      mockProjectId,
+    );
+    expect(dashboardService.updateStats).toHaveBeenCalledWith(
+      "exec-123",
+      mockProjectId,
+      mockDbClient,
+    );
+  });
+
+  it("does not run post-persistence work when the import transaction fails", async () => {
+    (jsonReportService.processReport as jest.Mock).mockRejectedValue(
+      new Error("batch insert failed"),
+    );
+
+    await expect(
+      ctrfService.processReport(mockReport, { projectId: mockProjectId }),
+    ).rejects.toThrow("batch insert failed");
+
+    expect(mockDbClient.project.findUnique).not.toHaveBeenCalled();
+    expect(testAnalysisService.analyzeStoredResults).not.toHaveBeenCalled();
+    expect(dashboardService.updateStats).not.toHaveBeenCalled();
   });
 
   it("should process report and skip analysis if disabled", async () => {
@@ -87,7 +128,6 @@ describe("ctrfService", () => {
     expect(jsonReportService.processReport).toHaveBeenCalledWith(
       expect.objectContaining({ runId: "build-1" }),
       mockProjectId,
-      mockTx,
     );
     expect(mockTx.project.findUnique).toHaveBeenCalledWith({
       where: { id: mockProjectId },
@@ -216,7 +256,158 @@ describe("ctrfService", () => {
         ]),
       }),
       mockProjectId,
-      mockTx,
+    );
+  });
+
+  it("should preserve distinct CTRF tests whose names share a TestNG case suffix", async () => {
+    const start = Date.parse("2026-05-27T12:46:18Z");
+    const reportWithSharedSuffix: CTRFReport = {
+      results: {
+        tool: { name: "testng", version: "7.0.0" },
+        summary: {
+          start,
+          stop: start + 1000,
+          tests: 2,
+          passed: 1,
+          failed: 1,
+          pending: 0,
+          skipped: 0,
+          other: 0,
+        },
+        tests: [
+          {
+            name: "VerifyCheckoutPageNavigationForLoggedInUser_RT_TS61TC01",
+            status: "passed",
+            duration: 100,
+            filePath:
+              "TestScriptRepository.checkout.VerifyCheckoutPageNavigationForLoggedInUser_RT_TS61TC01",
+          },
+          {
+            name: "VerifyErrorMessageForInvalidCreditCardNumber_RT_TS27TC01",
+            status: "failed",
+            duration: 200,
+            filePath:
+              "TestScriptRepository.checkout.VerifyErrorMessageForInvalidCreditCardNumber_RT_TS27TC01",
+            message: "Expected message",
+          },
+        ],
+        environment: {
+          buildNumber: "testng-build",
+          testEnvironment: "local",
+        },
+      },
+    };
+
+    mockTx.project.findUnique.mockResolvedValue({
+      owner: { analyzeEnabled: false },
+    });
+
+    await ctrfService.processReport(reportWithSharedSuffix, {
+      projectId: mockProjectId,
+    });
+
+    const [reportData] = (jsonReportService.processReport as jest.Mock).mock
+      .calls[0];
+    expect(reportData.tests).toEqual([
+      expect.objectContaining({
+        title: "VerifyCheckoutPageNavigationForLoggedInUser_RT_TS61TC01",
+        custom_id:
+          "TestScriptRepository.checkout.VerifyCheckoutPageNavigationForLoggedInUser_RT_TS61TC01::default::VerifyCheckoutPageNavigationForLoggedInUser_RT_TS61TC01",
+        results: [
+          expect.objectContaining({
+            startTime: new Date(start),
+          }),
+        ],
+      }),
+      expect.objectContaining({
+        title: "VerifyErrorMessageForInvalidCreditCardNumber_RT_TS27TC01",
+        custom_id:
+          "TestScriptRepository.checkout.VerifyErrorMessageForInvalidCreditCardNumber_RT_TS27TC01::default::VerifyErrorMessageForInvalidCreditCardNumber_RT_TS27TC01",
+        results: [
+          expect.objectContaining({
+            startTime: new Date(start + 1),
+          }),
+        ],
+      }),
+    ]);
+  });
+
+  it("should pass executionType from CTRF environment to report data", async () => {
+    const reportWithExecutionType: CTRFReport = {
+      ...mockReport,
+      results: {
+        ...mockReport.results,
+        environment: {
+          ...mockReport.results.environment,
+          executionType: "  release  ",
+        },
+      },
+    };
+
+    mockTx.project.findUnique.mockResolvedValue({
+      owner: { analyzeEnabled: false },
+    });
+
+    await ctrfService.processReport(reportWithExecutionType, {
+      projectId: mockProjectId,
+    });
+
+    expect(jsonReportService.processReport).toHaveBeenCalledWith(
+      expect.objectContaining({ executionType: "release" }),
+      mockProjectId,
+    );
+  });
+
+  it("should omit executionType when CTRF environment does not provide it", async () => {
+    mockTx.project.findUnique.mockResolvedValue({
+      owner: { analyzeEnabled: false },
+    });
+
+    await ctrfService.processReport(mockReport, {
+      projectId: mockProjectId,
+    });
+
+    expect(jsonReportService.processReport).toHaveBeenCalledWith(
+      expect.not.objectContaining({ executionType: expect.anything() }),
+      mockProjectId,
+    );
+  });
+
+  it("normalizes canonical CTRF modal enrichment metadata", () => {
+    const transformed = ctrfService.transformCtrfTest(
+      {
+        name: "failed checkout",
+        status: "failed",
+        duration: 100,
+        message: "checkout failed",
+        trace: "at checkout.spec.ts:12:3",
+        filePath: "checkout.spec.ts",
+        meta: {
+          logs: ["opening checkout", "submit failed"],
+          sourceSnippet: {
+            path: "checkout.spec.ts",
+            text: "await page.goto('/');\nawait checkout.open();\nawait submit.click();",
+            startLine: 10,
+            failingLine: 12,
+          },
+          generatedTestCase: "test('checkout', async () => {});",
+        },
+      },
+      Date.parse("2026-08-19T10:00:00Z"),
+      0,
+    );
+
+    expect(transformed.results[0]).toEqual(
+      expect.objectContaining({
+        logs: ["opening checkout", "submit failed"],
+        sourceSnippet: {
+          path: "checkout.spec.ts",
+          text: "await page.goto('/');\nawait checkout.open();\nawait submit.click();",
+          startLine: 10,
+          failingLine: 12,
+        },
+        generatedTestCase: "test('checkout', async () => {});",
+      }),
     );
   });
 });

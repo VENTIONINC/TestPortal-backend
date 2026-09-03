@@ -10,12 +10,13 @@
     "dev": "nodemon --exec tsx index.ts",
     "headers:add": "node scripts/add-license-headers.js",
     "new:file": "node scripts/new-file.js",
+    "bootstrap:admin": "tsx scripts/bootstrap-admin.ts",
+    "bootstrap:admin:prod": "node dist/scripts/bootstrap-admin.js",
     "server": "node dist/index.js",
     "type-check": "tsc --noEmit",
     "lint": "eslint .",
     "format": "prettier --write .",
-    "seed": "node prisma/seed/index.js",
-    "seed:migrate": "node prisma/seed/migrate-from-sqlite.js",
+    "seed": "tsx prisma/seed/index.ts",
     "db:generate": "prisma generate",
     "studio": "npx prisma studio",
     "migrate": "npx prisma migrate dev --name commit",
@@ -24,6 +25,9 @@
   },
   "author": "",
   "license": "Apache-2.0",
+  "engines": {
+    "node": ">=22.15.0"
+  },
   "dependencies": {
     "@asteasolutions/zod-to-openapi": "7.3.2",
     "@langchain/core": "1.1.45",
@@ -55,7 +59,6 @@
     "pdfkit": "0.17.2",
     "pg": "8.16.0",
     "prisma": "6.19.3",
-    "sqlite3": "6.0.1",
     "string-similarity": "4.0.4",
     "swagger-ui-express": "5.0.1",
     "zod": "3.25.76"

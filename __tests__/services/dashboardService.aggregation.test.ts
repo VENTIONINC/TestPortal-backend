@@ -6,6 +6,10 @@ import { jest } from "@jest/globals";
 import { dashboardService } from "@/services/dashboardService";
 import { dbClient } from "@/prisma/client";
 
+const mockDailyExecutionMetricFindMany =
+  dbClient.dailyExecutionMetric.findMany as jest.Mock;
+const mockExecutionFindMany = dbClient.execution.findMany as jest.Mock;
+
 // Mock generic logger
 jest.mock("@/lib/logger", () => ({
   __esModule: true,
@@ -31,7 +35,6 @@ jest.mock("@/prisma/client", () => ({
 
 describe("dashboardService Aggregation", () => {
   const projectId = "proj-agg-123";
-  const environment = "prod";
 
   beforeEach(() => {
     jest.clearAllMocks();
@@ -44,6 +47,7 @@ describe("dashboardService Aggregation", () => {
       passedTests: 8,
       failedTests: 2,
       skippedTests: 0,
+      timedOutTests: 1,
       totalDuration: 100,
       issuesBug: 1,
       issuesEnvironment: 1,
@@ -57,6 +61,7 @@ describe("dashboardService Aggregation", () => {
       passedTests: 9,
       failedTests: 1,
       skippedTests: 0,
+      timedOutTests: 2,
       totalDuration: 100,
       issuesBug: 0,
       issuesEnvironment: 1,
@@ -70,6 +75,7 @@ describe("dashboardService Aggregation", () => {
       passedTests: 15,
       failedTests: 5,
       skippedTests: 0,
+      timedOutTests: 3,
       totalDuration: 200,
       issuesBug: 5,
       issuesEnvironment: 0,
@@ -80,22 +86,19 @@ describe("dashboardService Aggregation", () => {
   ];
 
   it("should aggregate data by week correctly", async () => {
-    (dbClient.dailyExecutionMetric.findMany as any).mockResolvedValue(
-      mockDailyRows,
-    );
-    (dbClient.execution.findMany as any).mockResolvedValue([]);
+    mockDailyExecutionMetricFindMany.mockResolvedValue(mockDailyRows as never);
+    mockExecutionFindMany.mockResolvedValue([] as never);
 
     const result = await dashboardService.getDashboard(
       projectId,
-      environment,
       30,
       undefined,
       "weekly",
     );
 
     expect(result.summary.totalRuns).toBe(40);
-    expect(result.summary.failures).toBe(8);
-    expect(result.summary.passRate).toBe(80);
+    expect(result.summary.failures).toBe(14);
+    expect(result.summary.passRate).toBe(65);
 
     // Should have 2 entries: 2025-W01 and 2025-W02
     expect(result.history).toHaveLength(2);
@@ -107,6 +110,7 @@ describe("dashboardService Aggregation", () => {
       expect(week1.metrics.total).toBe(20);
       expect(week1.metrics.passed).toBe(17);
       expect(week1.metrics.failed).toBe(3);
+      expect(week1.metrics.timedOut).toBe(3);
     }
 
     const week2 = result.history.find((h) => h.date === "2025-W02");
@@ -116,26 +120,24 @@ describe("dashboardService Aggregation", () => {
       expect(week2.metrics.total).toBe(20);
       expect(week2.metrics.passed).toBe(15);
       expect(week2.metrics.failed).toBe(5);
+      expect(week2.metrics.timedOut).toBe(3);
     }
   });
 
   it("should aggregate data by month correctly", async () => {
-    (dbClient.dailyExecutionMetric.findMany as any).mockResolvedValue(
-      mockDailyRows,
-    );
-    (dbClient.execution.findMany as any).mockResolvedValue([]);
+    mockDailyExecutionMetricFindMany.mockResolvedValue(mockDailyRows as never);
+    mockExecutionFindMany.mockResolvedValue([] as never);
 
     const result = await dashboardService.getDashboard(
       projectId,
-      environment,
       30,
       undefined,
       "monthly",
     );
 
     expect(result.summary.totalRuns).toBe(40);
-    expect(result.summary.failures).toBe(8);
-    expect(result.summary.passRate).toBe(80);
+    expect(result.summary.failures).toBe(14);
+    expect(result.summary.passRate).toBe(65);
 
     // Should have 1 entry: 2025-01
     expect(result.history).toHaveLength(1);
@@ -147,18 +149,47 @@ describe("dashboardService Aggregation", () => {
       expect(result.history[0].metrics.total).toBe(40);
       expect(result.history[0].metrics.passed).toBe(32);
       expect(result.history[0].metrics.failed).toBe(8);
+      expect(result.history[0].metrics.timedOut).toBe(6);
     }
   });
 
-  it("should use explicit UTC date range when startDate and endDate are provided", async () => {
-    (dbClient.dailyExecutionMetric.findMany as any).mockResolvedValue([]);
+  it("counts skipped tests as non-failures while timed-out tests reduce pass rate", async () => {
+    (dbClient.dailyExecutionMetric.findMany as any).mockResolvedValue([
+      {
+        date: new Date("2025-01-01T00:00:00Z"),
+        totalTests: 10,
+        passedTests: 4,
+        failedTests: 2,
+        skippedTests: 3,
+        timedOutTests: 1,
+        totalDuration: 100,
+        issuesBug: 1,
+        issuesEnvironment: 0,
+        issuesScript: 0,
+        issuesPerformance: 0,
+        issuesOther: 0,
+      },
+    ]);
     (dbClient.execution.findMany as any).mockResolvedValue([]);
+
+    const result = await dashboardService.getDashboard(
+      projectId,
+      30,
+    );
+
+    expect(result.summary.failures).toBe(3);
+    expect(result.summary.passRate).toBe(57);
+    expect(result.history[0]?.metrics.timedOut).toBe(1);
+  });
+
+  it("should use explicit UTC date range when startDate and endDate are provided", async () => {
+    mockDailyExecutionMetricFindMany.mockResolvedValue([] as never);
+    mockExecutionFindMany.mockResolvedValue([] as never);
 
     await dashboardService.getDashboard(
       projectId,
-      environment,
       999,
-      undefined,
+      "Nightly",
       "daily",
       "2025-01-10",
       "2025-01-12",
@@ -166,27 +197,27 @@ describe("dashboardService Aggregation", () => {
 
     expect(dbClient.dailyExecutionMetric.findMany).toHaveBeenCalledWith(
       expect.objectContaining({
-        where: expect.objectContaining({
+        where: {
           projectId,
-          environment,
           date: {
             gte: new Date("2025-01-10T00:00:00.000Z"),
             lt: new Date("2025-01-13T00:00:00.000Z"),
           },
-        }),
+          type: "Nightly",
+        },
       }),
     );
 
     expect(dbClient.execution.findMany).toHaveBeenCalledWith(
       expect.objectContaining({
-        where: expect.objectContaining({
+        where: {
           projectId,
-          environment,
           startedAt: {
             gte: new Date("2025-01-10T00:00:00.000Z"),
             lt: new Date("2025-01-13T00:00:00.000Z"),
           },
-        }),
+          type: "Nightly",
+        },
       }),
     );
   });

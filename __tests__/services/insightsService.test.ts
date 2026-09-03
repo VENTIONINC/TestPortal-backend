@@ -46,7 +46,6 @@ describe("insightsService.generateInsights", () => {
   const params = {
     filters: {
       project: "ProjectA",
-      environment: "staging",
       executionType: "Nightly",
       periodStart: "2026-01-01",
       periodEnd: "2026-01-31",
@@ -67,6 +66,7 @@ describe("insightsService.generateInsights", () => {
             passed: 9,
             failed: 1,
             skipped: 0,
+            timedOut: 0,
             duration: 1000,
             issues: {
               bug: 3,
@@ -84,6 +84,7 @@ describe("insightsService.generateInsights", () => {
             passed: 12,
             failed: 2,
             skipped: 0,
+            timedOut: 0,
             duration: 1000,
             issues: {
               bug: 2,

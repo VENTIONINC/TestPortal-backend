@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import type { Prisma } from "@prisma/client";
+import type { ResultCategory } from "@/types/resultCategory";
 
 // Minimal Prisma model type definitions to allow compilation without the
 // generated client types. These mirror the fields defined in the Prisma
@@ -63,11 +64,21 @@ export interface PrismaResultError {
   message: string;
   callLog?: Prisma.JsonValue | null;
   callStack: Prisma.JsonValue;
+  rawLogs?: Prisma.JsonValue | null;
+  sourceSnippet?: Prisma.JsonValue | null;
+  generatedTestCase?: string | null;
   testAssertion?: string | null;
   expectedPattern?: string | null;
   receivedString?: string | null;
   location: string;
   resultId?: string | null; // UUID reference to Result
+}
+
+export interface ResultErrorSourceSnippet {
+  path: string;
+  text: string;
+  startLine: number;
+  failingLine: number;
 }
 
 export interface PrismaAssumption {
@@ -119,6 +130,8 @@ export interface PrismaUser {
   updatedAt: Date;
   name: string;
   email: string;
+  status: "pending" | "active" | "suspended";
+  role: "admin" | "member";
   passwordHash?: string | null;
   cognitoUserId?: string | null;
   mcpToken?: string | null;
@@ -169,9 +182,14 @@ export interface StructuredSpec extends Omit<PrismaSpec, "tags" | "annotations">
 }
 
 export interface StructuredResultError
-  extends Omit<PrismaResultError, "callLog" | "callStack"> {
+  extends Omit<
+    PrismaResultError,
+    "callLog" | "callStack" | "rawLogs" | "sourceSnippet"
+  > {
   callLog: string[];
   callStack: string[];
+  rawLogs: string[];
+  sourceSnippet: ResultErrorSourceSnippet | null;
 }
 
 export interface StructuredResultWithRelations extends PrismaResult {
@@ -285,7 +303,7 @@ export interface SerializedIssue {
   createdAt: Date;
   updatedAt: Date;
   name: string;
-  category: string;
+  category: ResultCategory;
   description?: string | null;
   portal?: string | null;
   service?: string | null;
@@ -294,8 +312,12 @@ export interface SerializedIssue {
   updatedBy?: SerializedUser | null;
 }
 
+export interface SerializedIssueRead extends SerializedIssue {
+  categorySummary: import("@/types/resultCategory").IssueCategorySummary;
+}
+
 export interface SerializedIssuesResponse {
-  issues: SerializedIssue[];
+  issues: SerializedIssueRead[];
   total: number;
   page: number;
   totalPages: number;

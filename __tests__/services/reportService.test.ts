@@ -13,7 +13,6 @@ import { pdfBuilderService } from "@/services/pdfBuilderService";
 describe("reportService.generatePdf", () => {
   const filters = {
     project: "ProjectA",
-    environment: "staging",
     executionType: "Nightly",
     periodStart: "2026-01-01",
     periodEnd: "2026-01-31",
@@ -35,6 +34,7 @@ describe("reportService.generatePdf", () => {
           passed: 9,
           failed: 1,
           skipped: 0,
+          timedOut: 0,
           duration: 1000,
           issues: {
             bug: 1,
@@ -82,7 +82,6 @@ describe("reportService.generatePdf", () => {
     expect(projectModel.findByName).toHaveBeenCalledWith("ProjectA");
     expect(dashboardService.getDashboard).toHaveBeenCalledWith(
       "project-1",
-      "staging",
       31,
       "Nightly",
       "daily",
@@ -152,7 +151,6 @@ describe("reportService.generatePdf", () => {
     );
     expect(dashboardService.getDashboard).toHaveBeenCalledWith(
       "92efb159-ccc7-43a0-8a1d-20eeea442824",
-      "staging",
       31,
       undefined,
       "daily",

@@ -20,7 +20,6 @@ jest.mock("@/lib/logger", () => ({
 describe("reportController.exportPdf", () => {
   const validParams = {
     project: "ProjectA",
-    environment: "staging",
     executionType: "Nightly",
     periodStart: "2026-01-01",
     periodEnd: "2026-01-31",
@@ -78,7 +77,7 @@ describe("reportController.exportPdf", () => {
 
     expect(headers["Content-Type"]).toBe("application/pdf");
     expect(headers["Content-Disposition"]).toContain(
-      'attachment; filename="ProjectA-staging-Nightly-2026-01-01_2026-01-31.pdf"',
+      'attachment; filename="ProjectA-Nightly-2026-01-01_2026-01-31.pdf"',
     );
     expect(pipe).toHaveBeenCalledWith(res);
     expect(end).toHaveBeenCalledTimes(1);
