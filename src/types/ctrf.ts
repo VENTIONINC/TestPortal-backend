@@ -31,10 +31,32 @@ export interface CTRFTest {
   type?: string;
   filePath?: string;
   retry?: number;
+  retries?: number;
+  retryAttempts?: CTRFRetryAttempt[];
   flaky?: boolean;
-  suite?: string;
+  suite?: string | string[];
   tags?: string[];
+  snippet?: string;
+  line?: number;
+  stdout?: string[];
+  stderr?: string[];
+  extra?: Record<string, unknown>;
   meta?: Record<string, unknown>;
+}
+
+export interface CTRFRetryAttempt {
+  attempt: number;
+  status: TestStatus;
+  duration?: number;
+  message?: string;
+  trace?: string;
+  line?: number;
+  snippet?: string;
+  stdout?: string[];
+  stderr?: string[];
+  start?: number;
+  stop?: number;
+  extra?: Record<string, unknown>;
 }
 
 export interface CTRFEnvironment {
@@ -59,5 +81,7 @@ export interface CTRFResults {
 }
 
 export interface CTRFReport {
+  reportFormat?: "CTRF";
+  specVersion?: "0.0.0";
   results: CTRFResults;
 }

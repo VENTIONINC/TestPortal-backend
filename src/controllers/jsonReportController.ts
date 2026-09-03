@@ -13,7 +13,7 @@ import type { AuthenticatedRequest } from "@/middleware/authMiddleware";
 import { dbClient } from "@/prisma/client";
 import getLogger from "@/lib/logger";
 import { dashboardService } from "@/services/dashboardService";
-import { normalizeResultErrorModalContext } from "@/lib/resultErrorModalContext";
+import { normalizePlaywrightAttempt } from "@/lib/playwrightDiagnostics";
 
 const logger = getLogger("json-report-controller");
 
@@ -238,49 +238,22 @@ export const jsonReportController = {
             result.allureReportLink ??
             "https://automation.qa.theguarantors.com/allure-report/index.html";
 
-          const outputLogs = [...(result.stdout ?? []), ...(result.stderr ?? [])]
-            .map((entry: unknown) =>
-              typeof entry === "string"
-                ? entry
-                : entry &&
-                    typeof entry === "object" &&
-                    typeof (entry as { text?: unknown }).text === "string"
-                  ? (entry as { text: string }).text
-                  : null,
-            )
-            .filter((entry: string | null): entry is string => entry !== null);
-          const errorLocation = result.error?.location;
-          const derivedSnippet =
-            typeof result.error?.snippet === "string" &&
-            typeof errorLocation?.file === "string" &&
-            Number.isInteger(errorLocation.line)
-              ? {
-                  path: errorLocation.file,
-                  text: result.error.snippet,
-                  startLine: Math.min(
-                    Number.isInteger(test.location?.line)
-                      ? test.location.line
-                      : errorLocation.line,
-                    errorLocation.line,
-                  ),
-                  failingLine: errorLocation.line,
-                }
-              : undefined;
-          const modalContext = normalizeResultErrorModalContext({
-            logs: result.logs ?? outputLogs,
-            sourceSnippet: result.sourceSnippet ?? derivedSnippet,
-            generatedTestCase: result.generatedTestCase,
+          const normalized = normalizePlaywrightAttempt(result, {
+            file: test.location?.file ?? "unknown",
+            line: Number.isInteger(test.location?.line) ? test.location.line : 1,
           });
+          const primary = normalized.errors[0];
 
           return {
             reportPortalLink,
             ...result,
-            ...(modalContext.rawLogs ? { logs: modalContext.rawLogs } : {}),
-            ...(modalContext.sourceSnippet
-              ? { sourceSnippet: modalContext.sourceSnippet }
+            ...normalized,
+            ...(primary?.rawLogs ? { logs: primary.rawLogs } : {}),
+            ...(primary?.sourceSnippet
+              ? { sourceSnippet: primary.sourceSnippet }
               : {}),
-            ...(modalContext.generatedTestCase
-              ? { generatedTestCase: modalContext.generatedTestCase }
+            ...(primary?.generatedTestCase
+              ? { generatedTestCase: primary.generatedTestCase }
               : {}),
           };
         });
@@ -324,7 +297,7 @@ export const jsonReportController = {
             projectName: t.projectName,
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             results: t.results.map((r: any) => {
-              const { /* errors, */ ...rest } = r;
+              const rest = { ...r };
               const maxSize = 10000;
 
               if (rest.error?.message?.length > maxSize) {
@@ -335,6 +308,18 @@ export const jsonReportController = {
                   rest.error.matcherResult.message =
                     rest.error.matcherResult.message.slice(0, maxSize);
                 }
+              }
+
+              if (Array.isArray(rest.errors)) {
+                rest.errors = rest.errors.map((error: { message?: string; stack?: string }) => ({
+                  ...error,
+                  ...(typeof error.message === "string"
+                    ? { message: error.message.slice(0, maxSize) }
+                    : {}),
+                  ...(typeof error.stack === "string"
+                    ? { stack: error.stack.slice(0, maxSize) }
+                    : {}),
+                }));
               }
 
               return rest;
