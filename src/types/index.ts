@@ -8,9 +8,9 @@ export * from "@/types/mcp";
 export * from "@/types/tests";
 export * from "@/types/ctrf";
 export * from "@/types/skills";
-export * from "@/types/resultCategory";
 export * from "@/types/testScenarios";
 export * from "@/types/testScenarioIntegration";
+export * from "@/types/resultCategory";
 
 // Express types extensions
 import type { Request } from "express";
