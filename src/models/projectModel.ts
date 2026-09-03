@@ -108,6 +108,19 @@ export const projectModel = {
     });
   },
 
+  async exists(
+    id: string,
+    tx?: Prisma.TransactionClient,
+  ): Promise<boolean> {
+    const client = tx ?? dbClient;
+    const project = await client.project.findUnique({
+      where: { id },
+      select: { id: true },
+    });
+
+    return project !== null;
+  },
+
   async create(
     data: {
       name: string;
@@ -201,9 +214,10 @@ export const projectModel = {
    * 4. Issues (references Project)
    * 5. Executions (references Project)
    * 6. Specs (references Project)
-   * 7. DailyExecutionMetric (references Project)
-   * 8. UploadApiKeys (references Project)
-   * 9. Project itself
+   * 7. TestScenarios (references Project)
+   * 8. DailyExecutionMetric (references Project)
+   * 9. UploadApiKeys (references Project)
+   * 10. Project itself
    */
   async deleteWithCascade(id: string): Promise<Project> {
     return await dbClient.$transaction(async (tx) => {
@@ -301,17 +315,22 @@ export const projectModel = {
         where: { projectId: id },
       });
 
-      // Step 7: Delete DailyExecutionMetric (references Project)
+      // Step 7: Delete TestScenarios (references Project)
+      await tx.testScenario.deleteMany({
+        where: { projectId: id },
+      });
+
+      // Step 8: Delete DailyExecutionMetric (references Project)
       await tx.dailyExecutionMetric.deleteMany({
         where: { projectId: id },
       });
 
-      // Step 8: Delete UploadApiKeys (references Project)
+      // Step 9: Delete UploadApiKeys (references Project)
       await tx.uploadApiKey.deleteMany({
         where: { projectId: id },
       });
 
-      // Step 9: Delete Project itself
+      // Step 10: Delete Project itself
       return await tx.project.delete({
         where: { id },
       });
