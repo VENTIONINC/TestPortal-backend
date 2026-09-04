@@ -1,0 +1,107 @@
+docs/INSPECT_MCP_SERVER.md
+  s_37bc189ff5e077::t_5ec957d76d4c25 49-51,53-59
+docs/MCP_TOOLS.md
+  s_37bc189ff5e077::t_337be625eeac7c 209,214,226,236-237
+openspec/changes/add-test-scenario-summaries/.openspec.yaml
+  s_886c05f2da06c3::t_45cc0746f9c26a 1-2
+src/lib/openapi/testScenarios.ts
+  s_fb5cb10e4cc804::t_3f280b977f84f0 16,25,27,29,32-60,67,74-81,109,241-245,340,463-464,514-515,552-553,638,655
+src/mcp/tools/test-scenarios.ts
+  s_37bc189ff5e077::t_0aa4cae064a502 22,33,44
+__tests__/controllers/testScenarioController.test.ts
+  s_f2ddcdbaaf593b::t_821ccaceb8afb9 10,15,49,62-75,82,101,112-125,127-129,181,236,245-249,259,276-291
+__tests__/lib/openapi/testScenarios.test.ts
+  s_f2ddcdbaaf593b::t_5518a0b80cdd16 47-48,59,63,65-67,69-70,82-126,152,155,159,164
+__tests__/mcp/mcpTestScenarioHandler.test.ts
+  s_f2ddcdbaaf593b::t_746609ef5e7e92 56,79,121,182-183,190-193
+__tests__/mcp/testScenarioMcpWorkflow.test.ts
+  s_f2ddcdbaaf593b::t_17c4a843537b7a 69,141,257-270,415-444,473,554-572
+__tests__/mcp/testScenarioSchemas.test.ts
+  s_f2ddcdbaaf593b::t_e531aef8e2a19d 101-114,131-144
+__tests__/mcp/testScenarioTools.test.ts
+  s_f2ddcdbaaf593b::t_879129e3a962b8 43,103
+__tests__/models/testScenarioModel.test.ts
+  s_f2ddcdbaaf593b::t_7699e2f5da7315 9,15,47,89,99,102-108,116,119-121,209-219
+__tests__/prisma/testScenarioMigration.test.ts
+  s_f2ddcdbaaf593b::t_771e88d5a4b02a 26-32,93-112
+__tests__/schemas/testScenarioSchemas.test.ts
+  s_f2ddcdbaaf593b::t_f80fb017397fcb 4-48,54-55,60-67,81-84
+__tests__/services/testScenarioService.test.ts
+  s_f2ddcdbaaf593b::t_db1cb7217269ad 18,54,70-75,101,106-138,153-154,163,180-185,193,210,231,238,245,256,265,315-338,410-423
+__tests__/test-scenarios/testScenarioWorkflow.test.ts
+  s_f2ddcdbaaf593b::t_695067a81dd0db 28,37,44,48-71,91,149,167,180-197,272-296
+docs/API_DOCUMENTATION.md
+  s_ece107861da71b::t_249381b81c68ec 110-123
+openspec/changes/add-test-scenario-summaries/design.md
+  s_886c05f2da06c3::t_a1bb6f162722b9 1-99
+openspec/changes/add-test-scenario-summaries/proposal.md
+  s_886c05f2da06c3::t_f8f715991f9d0c 1-32
+openspec/changes/add-test-scenario-summaries/specs/test-scenario-summaries/spec.md
+  s_886c05f2da06c3::t_c1ebeadd46c28f 1-125
+openspec/changes/add-test-scenario-summaries/tasks.md
+  s_f2ddcdbaaf593b::t_6c25d83b1f624a 1-43
+prisma/migrations/20260904120000_add_test_scenario_details/migration.sql
+  s_f2ddcdbaaf593b::t_0d359300bc5e36 1-2
+prisma/schema.prisma
+  s_f2ddcdbaaf593b::t_a332a181e1c337 225
+src/handlers/mcpTestScenarioHandler.ts
+  s_f2ddcdbaaf593b::t_2c7b0606992d0b 22
+src/mcp/schemas/testScenarioSchemas.ts
+  s_f2ddcdbaaf593b::t_4aeed0c354309d 36-42
+src/models/testScenarioModel.ts
+  s_f2ddcdbaaf593b::t_55869822ff4f02 13,19,31,34-40
+src/schemas/testScenarioSchemas.ts
+  s_f2ddcdbaaf593b::t_73c60c1861bde7 13-21,27,35-43,50
+src/services/testScenarioService.ts
+  s_f2ddcdbaaf593b::t_39a33fb34a571b 20-27,46,50,54-56,68,126-130,132,150-156,165
+src/types/testScenarios.ts
+  s_f2ddcdbaaf593b::t_29d293c6744021 15,22-27,33-34,44,52,69-70
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.18",
+  "base_commit_sha": "8ba1b5bce919db0a7ccbfc891f383085eb78f41f",
+  "prompts": {},
+  "sessions": {
+    "s_37bc189ff5e077": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a06c7e-de94-7b73-a4a7-15448f3ae5a7",
+        "model": "gpt-5.6-sol"
+      },
+      "human_author": "Ihar Mikailau <ihar.mikailau@ventionteams.com>"
+    },
+    "s_886c05f2da06c3": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a06c66-2d17-7fb2-9054-5d7fe385c56c",
+        "model": "gpt-5.6-sol"
+      },
+      "human_author": "Ihar Mikailau <ihar.mikailau@ventionteams.com>"
+    },
+    "s_ece107861da71b": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a06c97-b363-7030-95f5-b67551fc1a02",
+        "model": "unknown"
+      },
+      "human_author": "Ihar Mikailau <ihar.mikailau@ventionteams.com>"
+    },
+    "s_f2ddcdbaaf593b": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a06c73-c77c-74b1-a260-1c914b5c672f",
+        "model": "unknown"
+      },
+      "human_author": "Ihar Mikailau <ihar.mikailau@ventionteams.com>"
+    },
+    "s_fb5cb10e4cc804": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a06c50-e761-7663-afc0-e860a9f343b0",
+        "model": "gpt-5.6-luna"
+      },
+      "human_author": "Ihar Mikailau <ihar.mikailau@ventionteams.com>"
+    }
+  }
+}
