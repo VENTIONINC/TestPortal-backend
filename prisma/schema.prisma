@@ -222,6 +222,7 @@ model TestScenario {
   updatedAt   DateTime @updatedAt
   title       String
   contentMd   String   @db.Text
+  details     String?  @db.Text
   createdById String   @db.Uuid
 
   project   Project @relation(fields: [projectId], references: [id])

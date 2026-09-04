@@ -46,14 +46,17 @@ After connecting with a valid MCP bearer token:
    UUIDs. Confirm Result and Issue pagination fields are separate and bounded
    from 1 through 100.
 3. Invoke the list tool with a project UUID and no pagination fields. Verify
-   the response text is JSON with page 1, limit 30, and summary records that
-   do not contain Markdown.
+   the response text is JSON with page 1, limit 30, and lightweight summary
+   records containing `details` and a `createdBy` object with only `id`, `name`,
+   and `email`; summaries must not contain Markdown or other User fields.
 4. Invoke the detail tool with the same project and a scenario UUID. Verify
-   the response contains raw Markdown plus separate `resultEvidence` and
-   `issueEvidence` pagination envelopes.
-5. For a disposable scenario, invoke the update tool with a title or Markdown
-   field, then invoke the delete tool and verify its explicit `deleted: true`
-   acknowledgement. Cross-project IDs should produce a standard MCP error.
+   the response contains nullable `details`, raw Markdown plus separate
+   `resultEvidence` and `issueEvidence` pagination envelopes.
+5. For a disposable scenario, invoke the update tool with a title, Markdown,
+   or non-blank details field. Verify details are trimmed, `null` clears it,
+   and omitted fields are preserved. Then invoke the delete tool and verify
+   its explicit `deleted: true` acknowledgement. Cross-project IDs should
+   produce a standard MCP error.
 
 The tool-call JSON-RPC shape used by inspector-compatible clients is:
 

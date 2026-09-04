@@ -12,17 +12,26 @@ export interface TestScenarioResponse {
   createdById: string;
   title: string;
   contentMd: string;
+  details: string | null;
   createdAt: Date;
   updatedAt: Date;
 }
 
 export type TestScenarioRecord = TestScenarioResponse;
 
+export interface TestScenarioCreatorSummary {
+  id: string;
+  name: string;
+  email: string;
+}
+
 export interface TestScenarioSummary {
   id: string;
   projectId: string;
   createdById: string;
   title: string;
+  details: string | null;
+  createdBy: TestScenarioCreatorSummary;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -32,6 +41,7 @@ export interface CreateTestScenarioParams {
   title: string;
   contentMd: string;
   createdById: string;
+  details?: string | undefined;
 }
 
 export interface UpdateTestScenarioParams {
@@ -39,6 +49,7 @@ export interface UpdateTestScenarioParams {
   projectId: string;
   title?: string | undefined;
   contentMd?: string | undefined;
+  details?: string | null | undefined;
 }
 
 export interface ListTestScenariosParams {
@@ -48,20 +59,14 @@ export interface ListTestScenariosParams {
 }
 
 export interface TestScenarioListResponse {
-  scenarios: TestScenarioResponse[];
-  total: number;
-  page: number;
-  limit: number;
-  totalPages: number;
-}
-
-export interface TestScenarioSummaryListResponse {
   scenarios: TestScenarioSummary[];
   total: number;
   page: number;
   limit: number;
   totalPages: number;
 }
+
+export type TestScenarioSummaryListResponse = TestScenarioListResponse;
 
 export type TestScenarioMcpListParams = ListTestScenariosParams;
 

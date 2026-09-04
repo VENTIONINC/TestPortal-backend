@@ -19,7 +19,7 @@ import type {
 
 export const listTestScenarios = createMcpTool(
   "list-test-scenarios",
-  "List compact Test Scenario summaries for a project. Markdown is available from get-test-scenario.",
+  "List lightweight Test Scenario summaries for a project, including normalized details and safe creator id, name, and email. Markdown is available from get-test-scenario.",
   listTestScenariosSchema,
   async (params: TestScenarioMcpListParams): Promise<MCPToolResponse> => {
     const scenarios = await mcpTestScenarioHandler.listTestScenarios(params);
@@ -30,7 +30,7 @@ export const listTestScenarios = createMcpTool(
 
 export const getTestScenario = createMcpTool(
   "get-test-scenario",
-  "Retrieve a complete project-scoped Test Scenario with raw Markdown and independently paginated Result and observed-Issue evidence.",
+  "Retrieve a complete project-scoped Test Scenario with nullable details, raw Markdown, and independently paginated Result and observed-Issue evidence.",
   getTestScenarioSchema,
   async (params: TestScenarioMcpGetParams): Promise<MCPToolResponse> => {
     const scenario = await mcpTestScenarioHandler.getTestScenario(params);
@@ -41,7 +41,7 @@ export const getTestScenario = createMcpTool(
 
 export const updateTestScenario = createMcpTool(
   "update-test-scenario",
-  "Partially update a project-scoped Test Scenario title, Markdown, or both. At least one editable field is required.",
+  "Partially update a project-scoped Test Scenario title, Markdown, or plain-text details. At least one editable field is required; details are trimmed, null clears details, and omitted fields are preserved.",
   updateTestScenarioSchema,
   async (params: TestScenarioMcpUpdateParams): Promise<MCPToolResponse> => {
     const scenario = await mcpTestScenarioHandler.updateTestScenario(params);

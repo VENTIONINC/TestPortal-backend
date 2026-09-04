@@ -6,13 +6,13 @@ import { jest } from "@jest/globals";
 import type { Prisma, TestScenario } from "@prisma/client";
 
 const createMock = jest.fn<() => Promise<TestScenario>>();
-const findManyMock = jest.fn<(args: unknown) => Promise<TestScenario[]>>();
+const findManyMock = jest.fn<(args: unknown) => Promise<unknown[]>>();
 const countMock = jest.fn<() => Promise<number>>();
 const findFirstMock = jest.fn<() => Promise<TestScenario | null>>();
 const updateMock = jest.fn<
   (args: {
     where: { id: string };
-    data: { title?: string; contentMd?: string };
+    data: { title?: string; contentMd?: string; details?: string | null };
   }) => Promise<TestScenario>
 >();
 const deleteManyMock = jest.fn<() => Promise<{ count: number }>>();
@@ -44,6 +44,7 @@ const scenario: TestScenario = {
   createdById: "33333333-3333-3333-3333-333333333333",
   title: "Login",
   contentMd: "# Login",
+  details: null,
   createdAt: new Date("2026-01-01T00:00:00.000Z"),
   updatedAt: new Date("2026-01-01T00:00:00.000Z"),
 };
@@ -85,33 +86,7 @@ describe("testScenarioModel", () => {
     });
   });
 
-  it("lists by project with deterministic ordering and offset pagination", async () => {
-    await testScenarioModel.findMany(scenario.projectId, 3, 10);
-
-    expect(findManyMock).toHaveBeenCalledWith({
-      where: { projectId: scenario.projectId },
-      skip: 20,
-      take: 10,
-      orderBy: [{ createdAt: "desc" }, { id: "desc" }],
-    });
-  });
-
-  it("uses the same project predicate for list and count", async () => {
-    await testScenarioModel.findMany(scenario.projectId);
-    await testScenarioModel.count(scenario.projectId);
-
-    expect(findManyMock).toHaveBeenCalledWith({
-      where: { projectId: scenario.projectId },
-      skip: 0,
-      take: 30,
-      orderBy: [{ createdAt: "desc" }, { id: "desc" }],
-    });
-    expect(countMock).toHaveBeenCalledWith({
-      where: { projectId: scenario.projectId },
-    });
-  });
-
-  it("lists compact summaries without selecting Markdown", async () => {
+  it("lists exact summaries without selecting Markdown or sensitive creator fields", async () => {
     await testScenarioModel.findManySummaries(scenario.projectId, 2, 10);
 
     expect(findManyMock).toHaveBeenCalledWith({
@@ -121,8 +96,16 @@ describe("testScenarioModel", () => {
         projectId: true,
         createdById: true,
         title: true,
+        details: true,
         createdAt: true,
         updatedAt: true,
+        createdBy: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+          },
+        },
       },
       skip: 10,
       take: 10,
@@ -130,9 +113,12 @@ describe("testScenarioModel", () => {
     });
 
     const select = findManyMock.mock.calls[0]?.[0] as {
-      select?: Record<string, boolean>;
+      select?: Record<string, unknown>;
     };
     expect(select.select).not.toHaveProperty("contentMd");
+    expect(select.select?.createdBy).toEqual({
+      select: { id: true, name: true, email: true },
+    });
   });
 
   it("uses the project predicate and default pagination for summaries", async () => {
@@ -218,6 +204,17 @@ describe("testScenarioModel", () => {
       "title",
       "contentMd",
     ]);
+  });
+
+  it("passes nullable details updates while preserving omitted fields", async () => {
+    await testScenarioModel.update(scenario.id, scenario.projectId, {
+      details: null,
+    });
+
+    expect(updateMock).toHaveBeenCalledWith({
+      where: { id: scenario.id },
+      data: { details: null },
+    });
   });
 
   it("preserves omitted fields by passing only supplied authored data", async () => {

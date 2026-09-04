@@ -107,6 +107,20 @@ resources.
 the catalog-provided `downloadUrl` or directly to
 `GET /api/v2/skills/{id}/archive`.
 
+## Test Scenario Routes
+
+Test Scenario list responses are lightweight summaries. Each item contains
+`id`, `projectId`, `createdById`, `title`, nullable plain-text `details`, a
+`createdBy` object containing only `id`, `name`, and `email`, `createdAt`, and
+`updatedAt`; list items no longer contain `contentMd`.
+
+This is a breaking REST response change for dependent clients. Regenerate
+client types and hooks from the final `/api/openapi.json` document, and use
+`GET /api/v2/test-scenarios/{scenarioId}?projectId=...` when complete Markdown
+is required. Create, detail, and update responses continue to return exact
+`contentMd` and nullable `details`; details-only updates trim non-null values,
+accept `null` to clear them, and preserve omitted fields.
+
 ## Related Documentation
 
 - [How to Inspect the MCP Server](INSPECT_MCP_SERVER.md)

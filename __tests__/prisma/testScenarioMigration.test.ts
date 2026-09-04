@@ -23,6 +23,13 @@ describe("test-scenario persistence contract", () => {
     ),
     "utf8",
   );
+  const detailsMigration = readFileSync(
+    path.join(
+      process.cwd(),
+      "prisma/migrations/20260904120000_add_test_scenario_details/migration.sql",
+    ),
+    "utf8",
+  );
 
   it("defines a project-owned Markdown record with creator and timestamp fields", () => {
     expect(schema).toMatch(
@@ -81,6 +88,26 @@ describe("test-scenario persistence contract", () => {
     );
     expect(linkMigration).toContain(
       'CREATE INDEX "Assumption_resultErrorId_idx"',
+    );
+  });
+
+  it("adds nullable details without changing existing scenario relations", () => {
+    expect(schema).toMatch(
+      /model TestScenario \{[\s\S]*contentMd\s+String\s+@db\.Text[\s\S]*details\s+String\?\s+@db\.Text/,
+    );
+    expect(detailsMigration).toContain(
+      'ALTER TABLE "TestScenario" ADD COLUMN "details" TEXT;',
+    );
+    expect(detailsMigration).not.toContain("NOT NULL");
+    expect(detailsMigration).not.toContain("DEFAULT");
+    expect(detailsMigration).not.toContain("DROP");
+    expect(detailsMigration).not.toContain("FOREIGN KEY");
+    expect(detailsMigration).not.toContain("CREATE INDEX");
+    expect(migration).toContain(
+      'CONSTRAINT "TestScenario_projectId_fkey" FOREIGN KEY ("projectId")',
+    );
+    expect(migration).toContain(
+      'CONSTRAINT "TestScenario_createdById_fkey" FOREIGN KEY ("createdById")',
     );
   });
 });
