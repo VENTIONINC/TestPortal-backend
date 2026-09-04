@@ -206,12 +206,12 @@ returned using the standard MCP error response with `isError: true`.
 
 #### `list-test-scenarios`
 - **Source File:** `src/mcp/tools/test-scenarios.ts`
-- **Description:** List compact Test Scenario summaries for one project
+- **Description:** List lightweight Test Scenario summaries for one project
 - **Parameters:**
   - `projectId` (required): Project UUID
   - `page` (optional): Positive integer page number (default: 1)
   - `limit` (optional): Integer from 1 through 100 (default: 30)
-- **Response:** Pagination envelope containing `scenarios`, `total`, `page`, `limit`, and `totalPages`. Each summary contains `id`, `projectId`, `createdById`, `title`, `createdAt`, and `updatedAt`; Markdown is omitted.
+- **Response:** Pagination envelope containing `scenarios`, `total`, `page`, `limit`, and `totalPages`. Each summary contains exactly `id`, `projectId`, `createdById`, `title`, `details`, `createdBy`, `createdAt`, and `updatedAt`. `createdBy` contains only `id`, `name`, and `email`; `contentMd` and all other User fields are omitted from the list query and response.
 
 #### `get-test-scenario`
 - **Source File:** `src/mcp/tools/test-scenarios.ts`
@@ -223,7 +223,7 @@ returned using the standard MCP error response with `isError: true`.
   - `resultLimit` (optional): Result evidence limit from 1 through 100 (default: 30)
   - `issuePage` (optional): Positive integer observed-Issue evidence page (default: 1)
   - `issueLimit` (optional): Observed-Issue evidence limit from 1 through 100 (default: 30)
-- **Response:** `{ scenario, resultEvidence, issueEvidence }`. `scenario` includes the complete persisted record and exact `contentMd`. Each evidence envelope contains its scenario/project IDs, `linkedSpecCount`, collection, `total`, `page`, `limit`, and `totalPages`. Result evidence is derived from Results belonging to linked same-project Specs; Issue evidence is deduplicated from observed Issues.
+- **Response:** `{ scenario, resultEvidence, issueEvidence }`. `scenario` includes the complete persisted record, nullable `details`, and exact `contentMd`. Each evidence envelope contains its scenario/project IDs, `linkedSpecCount`, collection, `total`, `page`, `limit`, and `totalPages`. Result evidence is derived from Results belonging to linked same-project Specs; Issue evidence is deduplicated from observed Issues.
 
 #### `update-test-scenario`
 - **Source File:** `src/mcp/tools/test-scenarios.ts`
@@ -233,7 +233,8 @@ returned using the standard MCP error response with `isError: true`.
   - `projectId` (required): Owning project UUID
   - `title` (optional): Non-blank replacement title
   - `contentMd` (optional): Non-empty Markdown replacement
-- **Response:** The complete persisted Test Scenario. At least one editable field is required; supplied titles are trimmed and supplied Markdown is preserved exactly. Scenario metadata and project ownership cannot be changed.
+  - `details` (optional): Non-blank plain-text details; surrounding whitespace is trimmed, or `null` to clear it
+- **Response:** The complete persisted Test Scenario, including nullable `details` and exact `contentMd`. At least one editable field is required; omitted fields are preserved. Scenario metadata and project ownership cannot be changed.
 
 #### `delete-test-scenario`
 - **Source File:** `src/mcp/tools/test-scenarios.ts`

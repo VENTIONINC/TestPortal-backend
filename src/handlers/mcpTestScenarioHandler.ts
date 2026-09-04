@@ -19,7 +19,7 @@ export const mcpTestScenarioHandler = {
   async listTestScenarios(
     params: TestScenarioMcpListParams,
   ): Promise<TestScenarioSummaryListResponse> {
-    return await testScenarioService.listScenarioSummaries(params);
+    return await testScenarioService.listScenarios(params);
   },
 
   async getTestScenario(

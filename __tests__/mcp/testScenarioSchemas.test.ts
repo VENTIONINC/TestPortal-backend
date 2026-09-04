@@ -102,6 +102,20 @@ describe("Test Scenario MCP schemas", () => {
       updateTestScenarioSchema.safeParse({
         scenarioId,
         projectId,
+        details: "  Human-readable details  ",
+      }).success,
+    ).toBe(true);
+    expect(
+      updateTestScenarioSchema.safeParse({
+        scenarioId,
+        projectId,
+        details: null,
+      }).success,
+    ).toBe(true);
+    expect(
+      updateTestScenarioSchema.safeParse({
+        scenarioId,
+        projectId,
         title: "Updated title",
         contentMd: "# Exact Markdown\n",
       }).success,
@@ -112,6 +126,20 @@ describe("Test Scenario MCP schemas", () => {
         scenarioId,
         projectId,
         createdById: "33333333-3333-3333-3333-333333333333",
+      }).success,
+    ).toBe(false);
+    expect(
+      updateTestScenarioSchema.safeParse({
+        scenarioId,
+        projectId,
+        details: "   ",
+      }).success,
+    ).toBe(false);
+    expect(
+      updateTestScenarioSchema.safeParse({
+        scenarioId,
+        projectId,
+        details: 123,
       }).success,
     ).toBe(false);
   });
