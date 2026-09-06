@@ -44,6 +44,8 @@ describe("test-scenario OpenAPI contract", () => {
     const schemas = spec.components?.schemas ?? {};
 
     expect(schemas.TestScenario).toBeDefined();
+    expect(schemas.TestScenarioSummary).toBeDefined();
+    expect(schemas.TestScenarioCreatorSummary).toBeDefined();
     expect(schemas.CreateTestScenarioRequest).toBeDefined();
     expect(schemas.UpdateTestScenarioRequest).toBeDefined();
     expect(schemas.TestScenarioListResponse).toBeDefined();
@@ -54,11 +56,18 @@ describe("test-scenario OpenAPI contract", () => {
       properties?: Record<string, unknown>;
     };
     const createSchema = schemas.CreateTestScenarioRequest as {
+      additionalProperties?: boolean;
       properties?: Record<string, unknown>;
     };
     expect(scenarioSchema.required).toContain("createdById");
+    expect(scenarioSchema.required).toContain("details");
     expect(scenarioSchema.properties?.createdById).toBeDefined();
+    expect(scenarioSchema.properties?.details).toEqual({
+      type: ["string", "null"],
+    });
     expect(createSchema.properties?.createdById).toBeUndefined();
+    expect(createSchema.properties?.details).toBeDefined();
+    expect(createSchema.additionalProperties).toBe(false);
 
     const listResponse = schemas.TestScenarioListResponse as {
       properties?: Record<string, unknown>;
@@ -69,6 +78,51 @@ describe("test-scenario OpenAPI contract", () => {
       "page",
       "limit",
       "totalPages",
+    ]);
+    expect(listResponse.properties?.scenarios).toEqual({
+      items: { $ref: "#/components/schemas/TestScenarioSummary" },
+      type: "array",
+    });
+
+    const summarySchema = schemas.TestScenarioSummary as {
+      additionalProperties?: boolean;
+      required?: string[];
+      properties?: Record<string, unknown>;
+    };
+    expect(summarySchema.additionalProperties).toBe(false);
+    expect(summarySchema.required).toEqual([
+      "id",
+      "projectId",
+      "createdById",
+      "title",
+      "details",
+      "createdBy",
+      "createdAt",
+      "updatedAt",
+    ]);
+    expect(Object.keys(summarySchema.properties ?? {})).toEqual([
+      "id",
+      "projectId",
+      "createdById",
+      "title",
+      "details",
+      "createdBy",
+      "createdAt",
+      "updatedAt",
+    ]);
+    expect(summarySchema.properties?.contentMd).toBeUndefined();
+
+    const creatorSchema = schemas.TestScenarioCreatorSummary as {
+      additionalProperties?: boolean;
+      required?: string[];
+      properties?: Record<string, unknown>;
+    };
+    expect(creatorSchema.additionalProperties).toBe(false);
+    expect(creatorSchema.required).toEqual(["id", "name", "email"]);
+    expect(Object.keys(creatorSchema.properties ?? {})).toEqual([
+      "id",
+      "name",
+      "email",
     ]);
 
     const listQuery = schemas.TestScenarioListQuery as {
@@ -95,16 +149,19 @@ describe("test-scenario OpenAPI contract", () => {
     };
     const alternatives = updateSchema.oneOf ?? updateSchema.anyOf;
 
-    expect(alternatives).toHaveLength(2);
+    expect(alternatives).toHaveLength(3);
     expect(alternatives?.[0]?.additionalProperties).toBe(false);
     expect(alternatives?.[1]?.additionalProperties).toBe(false);
+    expect(alternatives?.[2]?.additionalProperties).toBe(false);
     expect(alternatives?.map((alternative) => alternative.required)).toEqual([
       ["title"],
       ["contentMd"],
+      ["details"],
     ]);
     for (const alternative of alternatives ?? []) {
       expect(Object.keys(alternative.properties ?? {}).sort()).toEqual([
         "contentMd",
+        "details",
         "title",
       ]);
       expect(alternative.properties?.projectId).toBeUndefined();

@@ -8,7 +8,6 @@ import type { TestScenarioSummary } from "@/types/testScenarios";
 
 const mockProjectExists = jest.fn<() => Promise<boolean>>();
 const mockCreate = jest.fn<() => Promise<TestScenario>>();
-const mockFindMany = jest.fn<() => Promise<TestScenario[]>>();
 const mockFindManySummaries = jest.fn<() => Promise<TestScenarioSummary[]>>();
 const mockCount = jest.fn<() => Promise<number>>();
 const mockFindById = jest.fn<() => Promise<TestScenario | null>>();
@@ -16,7 +15,7 @@ const mockUpdate = jest.fn<
   (
     scenarioId: string,
     projectId: string,
-    data: { title?: string; contentMd?: string },
+    data: { title?: string; contentMd?: string; details?: string | null },
   ) => Promise<TestScenario | null>
 >();
 const mockDelete = jest.fn<() => Promise<number>>();
@@ -30,7 +29,6 @@ jest.mock("@/models/projectModel", () => ({
 jest.mock("@/models/testScenarioModel", () => ({
   testScenarioModel: {
     create: mockCreate,
-    findMany: mockFindMany,
     findManySummaries: mockFindManySummaries,
     count: mockCount,
     findById: mockFindById,
@@ -53,6 +51,7 @@ const scenario: TestScenario = {
   createdById: "44444444-4444-4444-4444-444444444444",
   title: "Login",
   contentMd: "# Login\n\n```ts\n  const value = '✓';\n```\n",
+  details: null,
   createdAt: new Date("2026-01-01T00:00:00.000Z"),
   updatedAt: new Date("2026-01-01T00:00:00.000Z"),
 };
@@ -62,13 +61,18 @@ describe("testScenarioService", () => {
     jest.clearAllMocks();
     mockProjectExists.mockResolvedValue(true);
     mockCreate.mockResolvedValue(scenario);
-    mockFindMany.mockResolvedValue([scenario]);
     mockFindManySummaries.mockResolvedValue([
       {
         id: scenario.id,
         projectId: scenario.projectId,
         createdById: scenario.createdById,
         title: scenario.title,
+        details: scenario.details,
+        createdBy: {
+          id: scenario.createdById,
+          name: "Scenario Creator",
+          email: "creator@example.com",
+        },
         createdAt: scenario.createdAt,
         updatedAt: scenario.updatedAt,
       },
@@ -94,8 +98,42 @@ describe("testScenarioService", () => {
       title: "Scenario title",
       contentMd,
       createdById: scenario.createdById,
+      details: null,
     });
     expect(result).toBe(scenario);
+  });
+
+  it("trims populated details while preserving exact Markdown", async () => {
+    const contentMd = "  # Heading\n\n  exact ✓\n";
+
+    await testScenarioService.createScenario({
+      projectId,
+      title: "Scenario title",
+      contentMd,
+      createdById: scenario.createdById,
+      details: "  Human-readable details  ",
+    });
+
+    expect(mockCreate).toHaveBeenCalledWith({
+      projectId,
+      title: "Scenario title",
+      contentMd,
+      createdById: scenario.createdById,
+      details: "Human-readable details",
+    });
+  });
+
+  it("rejects blank creation details before persistence", async () => {
+    await expect(
+      testScenarioService.createScenario({
+        projectId,
+        title: "Scenario",
+        contentMd: "content",
+        createdById: scenario.createdById,
+        details: " \t\n ",
+      }),
+    ).rejects.toBeInstanceOf(TestScenarioValidationError);
+    expect(mockCreate).not.toHaveBeenCalled();
   });
 
   it("rejects creation for an unknown project before persistence", async () => {
@@ -112,8 +150,8 @@ describe("testScenarioService", () => {
     expect(mockCreate).not.toHaveBeenCalled();
   });
 
-  it("returns stable pagination metadata and forwards page offsets", async () => {
-    mockFindMany.mockResolvedValue([]);
+  it("returns stable summary pagination metadata and forwards page offsets", async () => {
+    mockFindManySummaries.mockResolvedValue([]);
     mockCount.mockResolvedValue(61);
 
     const result = await testScenarioService.listScenarios({
@@ -122,7 +160,7 @@ describe("testScenarioService", () => {
       limit: 30,
     });
 
-    expect(mockFindMany).toHaveBeenCalledWith(projectId, 3, 30);
+    expect(mockFindManySummaries).toHaveBeenCalledWith(projectId, 3, 30);
     expect(mockCount).toHaveBeenCalledWith(projectId);
     expect(result).toEqual({
       scenarios: [],
@@ -139,6 +177,12 @@ describe("testScenarioService", () => {
       projectId: scenario.projectId,
       createdById: scenario.createdById,
       title: scenario.title,
+      details: "Scenario details",
+      createdBy: {
+        id: scenario.createdById,
+        name: "Scenario Creator",
+        email: "creator@example.com",
+      },
       createdAt: scenario.createdAt,
       updatedAt: scenario.updatedAt,
     };
@@ -146,7 +190,7 @@ describe("testScenarioService", () => {
     mockCount.mockResolvedValue(1);
 
     await expect(
-      testScenarioService.listScenarioSummaries({ projectId }),
+      testScenarioService.listScenarios({ projectId }),
     ).resolves.toEqual({
       scenarios: [summary],
       total: 1,
@@ -163,7 +207,7 @@ describe("testScenarioService", () => {
     mockCount.mockResolvedValue(0);
 
     await expect(
-      testScenarioService.listScenarioSummaries({
+      testScenarioService.listScenarios({
         projectId: otherProjectId,
         page: 4,
         limit: 10,
@@ -184,21 +228,21 @@ describe("testScenarioService", () => {
 
   it("rejects invalid summary pagination before querying", async () => {
     await expect(
-      testScenarioService.listScenarioSummaries({
+      testScenarioService.listScenarios({
         projectId,
         page: 0,
         limit: 30,
       }),
     ).rejects.toBeInstanceOf(TestScenarioValidationError);
     await expect(
-      testScenarioService.listScenarioSummaries({
+      testScenarioService.listScenarios({
         projectId,
         page: 1.5,
         limit: 30,
       }),
     ).rejects.toBeInstanceOf(TestScenarioValidationError);
     await expect(
-      testScenarioService.listScenarioSummaries({
+      testScenarioService.listScenarios({
         projectId,
         page: 1,
         limit: 101,
@@ -209,7 +253,7 @@ describe("testScenarioService", () => {
   });
 
   it("returns an empty page for an unknown project without disclosing records", async () => {
-    mockFindMany.mockResolvedValue([]);
+    mockFindManySummaries.mockResolvedValue([]);
     mockCount.mockResolvedValue(0);
 
     const result = await testScenarioService.listScenarios({
@@ -218,7 +262,7 @@ describe("testScenarioService", () => {
 
     expect(result.scenarios).toEqual([]);
     expect(result.totalPages).toBe(0);
-    expect(mockFindMany).toHaveBeenCalledWith(otherProjectId, 1, 30);
+    expect(mockFindManySummaries).toHaveBeenCalledWith(otherProjectId, 1, 30);
   });
 
   it("classifies cross-project detail access as not found", async () => {
@@ -265,6 +309,30 @@ describe("testScenarioService", () => {
 
     expect(mockUpdate).toHaveBeenCalledWith(scenario.id, projectId, {
       contentMd,
+    });
+  });
+
+  it("updates only details after trimming and preserves omitted authored fields", async () => {
+    await testScenarioService.updateScenario({
+      scenarioId: scenario.id,
+      projectId,
+      details: "  Updated details  ",
+    });
+
+    expect(mockUpdate).toHaveBeenCalledWith(scenario.id, projectId, {
+      details: "Updated details",
+    });
+  });
+
+  it("clears details explicitly without changing omitted fields", async () => {
+    await testScenarioService.updateScenario({
+      scenarioId: scenario.id,
+      projectId,
+      details: null,
+    });
+
+    expect(mockUpdate).toHaveBeenCalledWith(scenario.id, projectId, {
+      details: null,
     });
   });
 
@@ -337,6 +405,20 @@ describe("testScenarioService", () => {
         scenarioId: scenario.id,
         projectId,
         contentMd: "",
+      }),
+    ).rejects.toBeInstanceOf(TestScenarioValidationError);
+    await expect(
+      testScenarioService.updateScenario({
+        scenarioId: scenario.id,
+        projectId,
+        details: "   ",
+      }),
+    ).rejects.toBeInstanceOf(TestScenarioValidationError);
+    await expect(
+      testScenarioService.updateScenario({
+        scenarioId: scenario.id,
+        projectId,
+        details: 123 as unknown as string,
       }),
     ).rejects.toBeInstanceOf(TestScenarioValidationError);
     expect(mockUpdate).not.toHaveBeenCalled();

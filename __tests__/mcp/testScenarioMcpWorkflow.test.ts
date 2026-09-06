@@ -66,7 +66,7 @@ const scenarioUpdateMock =
     (
       scenarioId: string,
       projectId: string,
-      data: { title?: string; contentMd?: string },
+      data: { title?: string; contentMd?: string; details?: string | null },
     ) => Promise<TestScenario | null>
   >();
 const scenarioDeleteMock =
@@ -138,6 +138,7 @@ const scenarioA: TestScenario = {
   createdById: "88888888-8888-8888-8888-888888888888",
   title: "Login",
   contentMd: "  # Login\n\n  exact Markdown ✓\n",
+  details: "Existing details",
   createdAt: new Date("2026-01-01T00:00:00.000Z"),
   updatedAt: new Date("2026-01-01T00:00:00.000Z"),
 };
@@ -253,7 +254,20 @@ describe("Test Scenario MCP workflow", () => {
               right.id.localeCompare(left.id),
           )
           .slice((page - 1) * limit, page * limit)
-          .map(({ contentMd: _contentMd, ...summary }) => summary),
+          .map((scenario) => ({
+            id: scenario.id,
+            projectId: scenario.projectId,
+            createdById: scenario.createdById,
+            title: scenario.title,
+            details: scenario.details,
+            createdBy: {
+              id: scenario.createdById,
+              name: "Scenario Creator",
+              email: "creator@example.com",
+            },
+            createdAt: scenario.createdAt,
+            updatedAt: scenario.updatedAt,
+          })),
     );
     scenarioCountMock.mockImplementation(
       async (projectId) =>
@@ -398,6 +412,36 @@ describe("Test Scenario MCP workflow", () => {
     expect(
       list.scenarios.every((scenario) => !Object.hasOwn(scenario, "contentMd")),
     ).toBe(true);
+    expect(Object.keys(list.scenarios[0] ?? {}).sort()).toEqual([
+      "createdAt",
+      "createdBy",
+      "createdById",
+      "details",
+      "id",
+      "projectId",
+      "title",
+      "updatedAt",
+    ]);
+    expect(list.scenarios[0]?.createdBy).toEqual({
+      id: scenarioA.createdById,
+      name: "Scenario Creator",
+      email: "creator@example.com",
+    });
+    expect(Object.keys(list.scenarios[0] ?? {}).sort()).toEqual([
+      "createdAt",
+      "createdBy",
+      "createdById",
+      "details",
+      "id",
+      "projectId",
+      "title",
+      "updatedAt",
+    ]);
+    expect(list.scenarios[0]?.createdBy).toEqual({
+      id: scenarioA.createdById,
+      name: "Scenario Creator",
+      email: "creator@example.com",
+    });
   });
 
   it("returns raw Markdown and linked deduplicated evidence with independent pages", async () => {
@@ -426,6 +470,7 @@ describe("Test Scenario MCP workflow", () => {
     };
 
     expect(detail.scenario.contentMd).toBe(scenarioA.contentMd);
+    expect(detail.scenario.details).toBe(scenarioA.details);
     expect(detail.resultEvidence).toMatchObject({
       linkedSpecCount: 2,
       page: 2,
@@ -505,6 +550,25 @@ describe("Test Scenario MCP workflow", () => {
       title: "Combined title",
       contentMd: "# Combined\n",
     });
+
+    const detailsUpdate = await invokeTool(updateTestScenario[3], {
+      scenarioId: scenarioAId,
+      projectId: projectA,
+      details: "  Updated details  ",
+    });
+    expect((detailsUpdate.data as TestScenario).details).toBe(
+      "Updated details",
+    );
+    expect((detailsUpdate.data as TestScenario).contentMd).toBe(
+      "# Combined\n",
+    );
+
+    const clearDetails = await invokeTool(updateTestScenario[3], {
+      scenarioId: scenarioAId,
+      projectId: projectA,
+      details: null,
+    });
+    expect((clearDetails.data as TestScenario).details).toBeNull();
 
     const beforeInvalid = {
       ...scenarios.find((scenario) => scenario.id === scenarioAId),

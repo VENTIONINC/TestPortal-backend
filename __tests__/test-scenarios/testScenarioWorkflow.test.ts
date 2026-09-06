@@ -25,6 +25,7 @@ jest.mock("@/models/testScenarioModel", () => ({
       title: string;
       contentMd: string;
       createdById: string;
+      details?: string | null;
     }) => {
       mockNextId += 1;
       const scenario: TestScenario = {
@@ -33,21 +34,41 @@ jest.mock("@/models/testScenarioModel", () => ({
         createdById: data.createdById,
         title: data.title,
         contentMd: data.contentMd,
+        details: data.details ?? null,
         createdAt: new Date("2026-01-01T00:00:00.000Z"),
         updatedAt: new Date("2026-01-01T00:00:00.000Z"),
       };
       mockScenarios.push(scenario);
       return Promise.resolve(scenario);
     }),
-    findMany: jest.fn(
+    findManySummaries: jest.fn(
       (projectId: string, pageInput?: number, limitInput?: number) => {
         const page = pageInput ?? 1;
         const limit = limitInput ?? 30;
-      const matching = mockScenarios
-        .filter((scenario) => scenario.projectId === projectId)
-        .sort((left, right) => right.id.localeCompare(left.id));
-      const start = (page - 1) * limit;
-      return Promise.resolve(matching.slice(start, start + limit));
+        const matching = mockScenarios
+          .filter((scenario) => scenario.projectId === projectId)
+          .sort(
+            (left, right) =>
+              right.createdAt.getTime() - left.createdAt.getTime() ||
+              right.id.localeCompare(left.id),
+          );
+        const start = (page - 1) * limit;
+        return Promise.resolve(
+          matching.slice(start, start + limit).map((scenario) => ({
+            id: scenario.id,
+            projectId: scenario.projectId,
+            createdById: scenario.createdById,
+            title: scenario.title,
+            details: scenario.details,
+            createdBy: {
+              id: scenario.createdById,
+              name: "Scenario Creator",
+              email: "creator@example.com",
+            },
+            createdAt: scenario.createdAt,
+            updatedAt: scenario.updatedAt,
+          })),
+        );
       },
     ),
     count: jest.fn((projectId: string) =>
@@ -67,7 +88,7 @@ jest.mock("@/models/testScenarioModel", () => ({
       (
         id: string,
         projectId: string,
-        data: { title?: string; contentMd?: string },
+        data: { title?: string; contentMd?: string; details?: string | null },
       ) => {
         const scenario = mockScenarios.find(
           (candidate) => candidate.id === id && candidate.projectId === projectId,
@@ -125,7 +146,7 @@ describe("test-scenario project-isolated workflow", () => {
         projectId: projectA,
         title: "  First  ",
         contentMd: exactMarkdown,
-        createdById: spoofedCreatorId,
+        details: "  First details  ",
       },
     });
     const second = await executeController(testScenarioController.create, {
@@ -143,6 +164,7 @@ describe("test-scenario project-isolated workflow", () => {
     expect((first.body as TestScenario).title).toBe("First");
     expect((first.body as TestScenario).createdById).toBe(creatorId);
     expect((first.body as TestScenario).createdById).not.toBe(spoofedCreatorId);
+    expect((first.body as TestScenario).details).toBe("First details");
     expect((first.body as TestScenario).contentMd).toBe(exactMarkdown);
 
     const pageOne = await executeController(testScenarioController.list, {
@@ -155,6 +177,24 @@ describe("test-scenario project-isolated workflow", () => {
       totalPages: 2,
     }));
     expect((pageOne.body as { scenarios: TestScenario[] }).scenarios).toHaveLength(1);
+    const summary = (pageOne.body as {
+      scenarios: Array<Record<string, unknown>>;
+    }).scenarios[0];
+    expect(Object.keys(summary ?? {}).sort()).toEqual([
+      "createdAt",
+      "createdBy",
+      "createdById",
+      "details",
+      "id",
+      "projectId",
+      "title",
+      "updatedAt",
+    ]);
+    expect(summary?.createdBy).toEqual({
+      id: creatorId,
+      name: "Scenario Creator",
+      email: "creator@example.com",
+    });
 
     const pageTwo = await executeController(testScenarioController.list, {
       query: { projectId: projectA, page: "2", limit: "1" },
@@ -228,6 +268,31 @@ describe("test-scenario project-isolated workflow", () => {
     expect(updatedScenario.updatedAt.getTime()).toBeGreaterThan(
       original.updatedAt.getTime(),
     );
+
+    const detailsUpdated = await executeController(
+      testScenarioController.update,
+      {
+        method: "PATCH",
+        params: { scenarioId: original.id },
+        query: { projectId: projectA },
+        body: { details: "  Revised details  " },
+      },
+    );
+    const detailsScenario = detailsUpdated.body as TestScenario;
+    expect(detailsUpdated.statusCode).toBe(200);
+    expect(detailsScenario.details).toBe("Revised details");
+    expect(detailsScenario.contentMd).toBe(exactMarkdown);
+    expect(detailsScenario.id).toBe(original.id);
+    expect(detailsScenario.createdById).toBe(original.createdById);
+
+    const cleared = await executeController(testScenarioController.update, {
+      method: "PATCH",
+      params: { scenarioId: original.id },
+      query: { projectId: projectA },
+      body: { details: null },
+    });
+    expect(cleared.statusCode).toBe(200);
+    expect((cleared.body as TestScenario).details).toBeNull();
 
     const detail = await executeController(testScenarioController.getById, {
       params: { scenarioId: original.id },

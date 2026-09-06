@@ -10,12 +10,21 @@ export const createTestScenarioSchema = z
     projectId: uuidSchema,
     title: z.string().trim().min(1, "Title is required"),
     contentMd: z.string().min(1, "contentMd is required"),
-  });
+    details: z.string().trim().min(1, "Details is required").optional(),
+  })
+  .strict();
+
+const updateTestScenarioDetailsSchema = z
+  .string()
+  .trim()
+  .min(1, "Details is required")
+  .nullable();
 
 const updateTestScenarioTitleSchema = z
   .object({
     title: z.string().trim().min(1, "Title is required"),
     contentMd: z.string().min(1, "contentMd is required").optional(),
+    details: updateTestScenarioDetailsSchema.optional(),
   })
   .strict();
 
@@ -23,12 +32,22 @@ const updateTestScenarioContentSchema = z
   .object({
     title: z.string().trim().min(1, "Title is required").optional(),
     contentMd: z.string().min(1, "contentMd is required"),
+    details: updateTestScenarioDetailsSchema.optional(),
+  })
+  .strict();
+
+const updateTestScenarioDetailsOnlySchema = z
+  .object({
+    title: z.string().trim().min(1, "Title is required").optional(),
+    contentMd: z.string().min(1, "contentMd is required").optional(),
+    details: updateTestScenarioDetailsSchema,
   })
   .strict();
 
 export const updateTestScenarioSchema = z.union([
   updateTestScenarioTitleSchema,
   updateTestScenarioContentSchema,
+  updateTestScenarioDetailsOnlySchema,
 ]);
 
 export const testScenarioProjectQuerySchema = z.object({

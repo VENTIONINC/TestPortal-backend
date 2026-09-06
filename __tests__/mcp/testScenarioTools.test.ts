@@ -40,6 +40,7 @@ const scenario: TestScenarioResponse = {
   createdById: "33333333-3333-3333-3333-333333333333",
   title: "Login",
   contentMd: "# Login\n\n  exact ✓\n",
+  details: null,
   createdAt: new Date("2026-01-01T00:00:00.000Z"),
   updatedAt: new Date("2026-01-01T00:00:00.000Z"),
 };
@@ -99,7 +100,7 @@ describe("Test Scenario MCP tools", () => {
     const updateResponse = (await updateTestScenario[3]({
       scenarioId,
       projectId,
-      contentMd: "# Exact",
+      details: "Updated details",
     })) as MCPToolResponse;
     const deleteResponse = (await deleteTestScenario[3]({
       scenarioId,

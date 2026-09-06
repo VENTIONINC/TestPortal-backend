@@ -33,6 +33,13 @@ export const updateTestScenarioSchema = z
     projectId: uuid().describe("The UUID of the project"),
     title: z.string().optional(),
     contentMd: z.string().optional(),
+    details: z
+      .string()
+      .trim()
+      .min(1)
+      .nullable()
+      .optional()
+      .describe("Plain-text details; trim surrounding whitespace or use null to clear"),
   })
   .strict() satisfies MCPToolSchema;
 

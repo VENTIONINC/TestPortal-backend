@@ -10,13 +10,20 @@ import {
   type ListTestScenariosParams,
   type TestScenarioListResponse,
   type TestScenarioResponse,
-  type TestScenarioSummaryListResponse,
   type UpdateTestScenarioParams,
 } from "@/types/testScenarios";
 
 const DEFAULT_PAGE = 1;
 const DEFAULT_LIMIT = 30;
 const MAX_LIMIT = 100;
+
+function normalizeDetails(details: unknown): string {
+  if (typeof details !== "string" || !details.trim()) {
+    throw new TestScenarioValidationError("Details is required");
+  }
+
+  return details.trim();
+}
 
 function validatePagination(page: number, limit: number): void {
   if (!Number.isInteger(page) || page < 1) {
@@ -36,13 +43,16 @@ export const testScenarioService = {
   async createScenario(
     params: CreateTestScenarioParams,
   ): Promise<TestScenarioResponse> {
-    if (!params.title.trim()) {
+    if (typeof params.title !== "string" || !params.title.trim()) {
       throw new TestScenarioValidationError("Title is required");
     }
 
-    if (params.contentMd.length === 0) {
+    if (typeof params.contentMd !== "string" || params.contentMd.length === 0) {
       throw new TestScenarioValidationError("contentMd is required");
     }
+
+    const details =
+      params.details === undefined ? null : normalizeDetails(params.details);
 
     if (!(await projectModel.exists(params.projectId))) {
       throw new TestScenarioNotFoundError(
@@ -55,33 +65,13 @@ export const testScenarioService = {
       title: params.title.trim(),
       contentMd: params.contentMd,
       createdById: params.createdById,
+      details,
     });
   },
 
   async listScenarios(
     params: ListTestScenariosParams,
   ): Promise<TestScenarioListResponse> {
-    const page = params.page ?? DEFAULT_PAGE;
-    const limit = params.limit ?? DEFAULT_LIMIT;
-    validatePagination(page, limit);
-
-    const [scenarios, total] = await Promise.all([
-      testScenarioModel.findMany(params.projectId, page, limit),
-      testScenarioModel.count(params.projectId),
-    ]);
-
-    return {
-      scenarios,
-      total,
-      page,
-      limit,
-      totalPages: Math.ceil(total / limit),
-    };
-  },
-
-  async listScenarioSummaries(
-    params: ListTestScenariosParams,
-  ): Promise<TestScenarioSummaryListResponse> {
     const page = params.page ?? DEFAULT_PAGE;
     const limit = params.limit ?? DEFAULT_LIMIT;
     validatePagination(page, limit);
@@ -133,9 +123,13 @@ export const testScenarioService = {
       throw new TestScenarioValidationError("Project ID is required");
     }
 
-    if (params.title === undefined && params.contentMd === undefined) {
+    if (
+      params.title === undefined &&
+      params.contentMd === undefined &&
+      params.details === undefined
+    ) {
       throw new TestScenarioValidationError(
-        "At least one of title or contentMd is required",
+        "At least one of title, contentMd, or details is required",
       );
     }
 
@@ -153,6 +147,13 @@ export const testScenarioService = {
       throw new TestScenarioValidationError("contentMd is required");
     }
 
+    const details =
+      params.details === undefined
+        ? undefined
+        : params.details === null
+          ? null
+          : normalizeDetails(params.details);
+
     const scenario = await testScenarioModel.update(
       params.scenarioId,
       params.projectId,
@@ -161,6 +162,7 @@ export const testScenarioService = {
         ...(params.contentMd !== undefined
           ? { contentMd: params.contentMd }
           : {}),
+        ...(details !== undefined ? { details } : {}),
       },
     );
 

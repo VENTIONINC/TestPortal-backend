@@ -13,6 +13,7 @@ const TestScenarioSchema = z
     createdById: z.string().uuid(),
     title: z.string(),
     contentMd: z.string(),
+    details: z.string().nullable(),
     createdAt: z.string(),
     updatedAt: z.string(),
   })
@@ -21,10 +22,41 @@ const TestScenarioSchema = z
 const CreateTestScenarioRequestSchema = z
   .object({
     projectId: z.string().uuid(),
-    title: z.string().min(1),
+    title: z.string().min(1).regex(/\S/),
     contentMd: z.string().min(1),
+    details: z.string().min(1).regex(/\S/).optional(),
   })
+  .strict()
   .openapi("CreateTestScenarioRequest");
+
+const TestScenarioCreatorSummarySchema = z
+  .object({
+    id: z.string().uuid(),
+    name: z.string(),
+    email: z.string(),
+  })
+  .strict()
+  .openapi("TestScenarioCreatorSummary");
+
+const TestScenarioSummarySchema = z
+  .object({
+    id: z.string().uuid(),
+    projectId: z.string().uuid(),
+    createdById: z.string().uuid(),
+    title: z.string(),
+    details: z.string().nullable(),
+    createdBy: TestScenarioCreatorSummarySchema,
+    createdAt: z.string(),
+    updatedAt: z.string(),
+  })
+  .strict()
+  .openapi("TestScenarioSummary");
+
+const UpdateTestScenarioDetailsSchema = z
+  .string()
+  .min(1)
+  .regex(/\S/)
+  .nullable();
 
 const UpdateTestScenarioRequestSchema = z
   .union([
@@ -32,12 +64,21 @@ const UpdateTestScenarioRequestSchema = z
       .object({
         title: z.string().min(1).regex(/\S/),
         contentMd: z.string().min(1).optional(),
+        details: UpdateTestScenarioDetailsSchema.optional(),
       })
       .strict(),
     z
       .object({
         title: z.string().min(1).regex(/\S/).optional(),
         contentMd: z.string().min(1),
+        details: UpdateTestScenarioDetailsSchema.optional(),
+      })
+      .strict(),
+    z
+      .object({
+        title: z.string().min(1).regex(/\S/).optional(),
+        contentMd: z.string().min(1).optional(),
+        details: UpdateTestScenarioDetailsSchema,
       })
       .strict(),
   ])
@@ -65,7 +106,7 @@ const TestScenarioListQuerySchema = z
 
 const TestScenarioListResponseSchema = z
   .object({
-    scenarios: z.array(TestScenarioSchema),
+    scenarios: z.array(TestScenarioSummarySchema),
     total: z.number().int().nonnegative(),
     page: z.number().int().positive(),
     limit: z.number().int().positive().max(100),
@@ -198,6 +239,11 @@ export function registerTestScenarioRoutes(registry: OpenAPIRegistry): void {
     CreateTestScenarioRequestSchema,
   );
   registry.register(
+    "TestScenarioCreatorSummary",
+    TestScenarioCreatorSummarySchema,
+  );
+  registry.register("TestScenarioSummary", TestScenarioSummarySchema);
+  registry.register(
     "UpdateTestScenarioRequest",
     UpdateTestScenarioRequestSchema,
   );
@@ -291,7 +337,7 @@ export function registerTestScenarioRoutes(registry: OpenAPIRegistry): void {
     method: "patch",
     path: "/api/v2/test-scenarios/{scenarioId}",
     description:
-      "Partially updates a test scenario within a project context. Omitted fields are preserved.",
+      "Partially updates a test scenario within a project context. At least one of title, Markdown, or plain-text details is required; omitted fields are preserved and details may be cleared with null.",
     request: {
       params: TestScenarioIdParamsSchema,
       query: TestScenarioProjectQuerySchema,
@@ -414,7 +460,8 @@ export function registerTestScenarioRoutes(registry: OpenAPIRegistry): void {
   registry.registerPath({
     method: "post",
     path: "/api/v2/test-scenarios",
-    description: "Creates a project-scoped Markdown test scenario.",
+    description:
+      "Creates a project-scoped Markdown test scenario with optional plain-text details.",
     request: {
       body: {
         required: true,
@@ -464,7 +511,8 @@ export function registerTestScenarioRoutes(registry: OpenAPIRegistry): void {
   registry.registerPath({
     method: "get",
     path: "/api/v2/test-scenarios",
-    description: "Lists project-scoped Markdown test scenarios.",
+    description:
+      "Lists lightweight project-scoped Test Scenario summaries without Markdown bodies.",
     request: {
       query: TestScenarioListQuerySchema,
     },
@@ -501,7 +549,8 @@ export function registerTestScenarioRoutes(registry: OpenAPIRegistry): void {
   registry.registerPath({
     method: "get",
     path: "/api/v2/test-scenarios/{scenarioId}",
-    description: "Retrieves a test scenario within a project context.",
+    description:
+      "Retrieves a complete test scenario, including nullable plain-text details and exact raw Markdown, within a project context.",
     request: {
       params: TestScenarioIdParamsSchema,
       query: TestScenarioProjectQuerySchema,
@@ -586,6 +635,7 @@ export function registerTestScenarioRoutes(registry: OpenAPIRegistry): void {
 
 export {
   CreateTestScenarioRequestSchema,
+  TestScenarioCreatorSummarySchema,
   UpdateTestScenarioRequestSchema,
   TestScenarioEvidenceQuerySchema,
   TestScenarioIdParamsSchema,
@@ -602,4 +652,5 @@ export {
   TestScenarioSpecLinkListResponseSchema,
   TestScenarioSpecLinkResponseSchema,
   TestScenarioSchema,
+  TestScenarioSummarySchema,
 };

@@ -53,7 +53,7 @@ const getIssuesMock =
 
 jest.mock("@/services/testScenarioService", () => ({
   testScenarioService: {
-    listScenarioSummaries: listSummariesMock,
+    listScenarios: listSummariesMock,
     getScenarioById: getScenarioMock,
     updateScenario: updateScenarioMock,
     deleteScenario: deleteScenarioMock,
@@ -76,6 +76,7 @@ const scenario: TestScenarioResponse = {
   createdById: "33333333-3333-3333-3333-333333333333",
   title: "Login",
   contentMd: "  # Login\n\n  exact ✓\n",
+  details: null,
   createdAt: new Date("2026-01-01T00:00:00.000Z"),
   updatedAt: new Date("2026-01-01T00:00:00.000Z"),
 };
@@ -117,7 +118,7 @@ describe("mcpTestScenarioHandler", () => {
     getIssuesMock.mockResolvedValue(issueEvidence);
   });
 
-  it("delegates list requests to the compact summary service", async () => {
+  it("delegates list requests to the shared summary service", async () => {
     const params: TestScenarioMcpListParams = {
       projectId,
       page: 2,
@@ -178,13 +179,18 @@ describe("mcpTestScenarioHandler", () => {
   it.each([
     [{ title: "  Updated title  " }, "title-only"],
     [{ contentMd: "\n  # Exact Markdown ✓\n" }, "Markdown-only"],
+    [{ details: "  Updated details  " }, "details-only"],
+    [{ details: null }, "clear-details"],
     [
       { title: "  Combined  ", contentMd: "# Combined\n\n  exact\n" },
       "combined",
     ],
   ])(
     "delegates %s updates without rewriting authored fields",
-    async (fields: { title?: string; contentMd?: string }, _label: string) => {
+    async (
+      fields: { title?: string; contentMd?: string; details?: string | null },
+      _label: string,
+    ) => {
       const params = {
         scenarioId,
         projectId,

@@ -10,11 +10,13 @@ export interface CreateTestScenarioData {
   title: string;
   contentMd: string;
   createdById: string;
+  details?: string | null;
 }
 
 export interface UpdateTestScenarioData {
   title?: string;
   contentMd?: string;
+  details?: string | null;
 }
 
 const projectWhere = (projectId: string): Prisma.TestScenarioWhereInput => ({
@@ -26,8 +28,16 @@ const summarySelect = {
   projectId: true,
   createdById: true,
   title: true,
+  details: true,
   createdAt: true,
   updatedAt: true,
+  createdBy: {
+    select: {
+      id: true,
+      name: true,
+      email: true,
+    },
+  },
 } satisfies Prisma.TestScenarioSelect;
 
 export const testScenarioModel = {
@@ -37,21 +47,6 @@ export const testScenarioModel = {
   ): Promise<TestScenario> {
     const client = tx ?? dbClient;
     return await client.testScenario.create({ data });
-  },
-
-  async findMany(
-    projectId: string,
-    page = 1,
-    limit = 30,
-    tx?: Prisma.TransactionClient,
-  ): Promise<TestScenario[]> {
-    const client = tx ?? dbClient;
-    return await client.testScenario.findMany({
-      where: projectWhere(projectId),
-      skip: (page - 1) * limit,
-      take: limit,
-      orderBy: [{ createdAt: "desc" }, { id: "desc" }],
-    });
   },
 
   async findManySummaries(

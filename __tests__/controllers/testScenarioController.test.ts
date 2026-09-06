@@ -7,11 +7,12 @@ import type { TestScenario } from "@prisma/client";
 import {
   executeController,
 } from "@/test-utils/httpMocks";
+import type { TestScenarioSummary } from "@/types/testScenarios";
 
 const createScenarioMock = jest.fn<() => Promise<TestScenario>>();
 const listScenariosMock = jest.fn<
   () => Promise<{
-    scenarios: TestScenario[];
+    scenarios: TestScenarioSummary[];
     total: number;
     page: number;
     limit: number;
@@ -45,6 +46,7 @@ const scenario: TestScenario = {
   createdById: "33333333-3333-3333-3333-333333333333",
   title: "Scenario",
   contentMd: "# Exact\n\n  Markdown ✓\n",
+  details: null,
   createdAt: new Date("2026-01-01T00:00:00.000Z"),
   updatedAt: new Date("2026-01-01T00:00:00.000Z"),
 };
@@ -57,13 +59,27 @@ const authenticatedUser = {
   createdAt: new Date("2026-01-01T00:00:00.000Z"),
   updatedAt: new Date("2026-01-01T00:00:00.000Z"),
 } as const;
+const summary: TestScenarioSummary = {
+  id: scenario.id,
+  projectId: scenario.projectId,
+  createdById: scenario.createdById,
+  title: scenario.title,
+  details: scenario.details,
+  createdBy: {
+    id: scenario.createdById,
+    name: authenticatedUser.name,
+    email: authenticatedUser.email,
+  },
+  createdAt: scenario.createdAt,
+  updatedAt: scenario.updatedAt,
+};
 
 describe("testScenarioController", () => {
   beforeEach(() => {
     jest.clearAllMocks();
     createScenarioMock.mockResolvedValue(scenario);
     listScenariosMock.mockResolvedValue({
-      scenarios: [scenario],
+      scenarios: [summary],
       total: 1,
       page: 1,
       limit: 30,
@@ -82,7 +98,7 @@ describe("testScenarioController", () => {
         projectId,
         title: "  Scenario  ",
         contentMd: scenario.contentMd,
-        createdById: "99999999-9999-9999-9999-999999999999",
+        details: "  Scenario details  ",
       },
     });
 
@@ -93,7 +109,24 @@ describe("testScenarioController", () => {
       title: "Scenario",
       contentMd: scenario.contentMd,
       createdById: authenticatedUser.id,
+      details: "Scenario details",
     });
+  });
+
+  it("rejects unsupported creator input", async () => {
+    const response = await executeController(testScenarioController.create, {
+      method: "POST",
+      user: authenticatedUser,
+      body: {
+        projectId,
+        title: "Scenario",
+        contentMd: "content",
+        createdById: "99999999-9999-9999-9999-999999999999",
+      },
+    });
+
+    expect(response.statusCode).toBe(400);
+    expect(createScenarioMock).not.toHaveBeenCalled();
   });
 
   it("requires an authenticated user before creating a scenario", async () => {
@@ -145,7 +178,7 @@ describe("testScenarioController", () => {
 
     expect(response.statusCode).toBe(200);
     expect(response.body).toEqual(expect.objectContaining({
-      scenarios: [scenario],
+      scenarios: [summary],
       page: 1,
       limit: 30,
     }));
@@ -200,6 +233,7 @@ describe("testScenarioController", () => {
       ...scenario,
       title: "Updated title",
       contentMd: "# Updated",
+      details: "Updated details",
       updatedAt: new Date("2026-01-02T00:00:00.000Z"),
     };
     updateScenarioMock.mockResolvedValue(updatedScenario);
@@ -208,7 +242,11 @@ describe("testScenarioController", () => {
       method: "PATCH",
       params: { scenarioId },
       query: { projectId },
-      body: { title: " Updated title ", contentMd: "# Updated" },
+      body: {
+        title: " Updated title ",
+        contentMd: "# Updated",
+        details: " Updated details ",
+      },
     });
 
     expect(response.statusCode).toBe(200);
@@ -218,6 +256,7 @@ describe("testScenarioController", () => {
       projectId,
       title: "Updated title",
       contentMd: "# Updated",
+      details: "Updated details",
     });
   });
 
@@ -232,6 +271,22 @@ describe("testScenarioController", () => {
     expect(response.statusCode).toBe(400);
     expect(response.body).toEqual(expect.objectContaining({ error: expect.any(String) }));
     expect(updateScenarioMock).not.toHaveBeenCalled();
+  });
+
+  it("passes an explicit null details update through to the service", async () => {
+    const response = await executeController(testScenarioController.update, {
+      method: "PATCH",
+      params: { scenarioId },
+      query: { projectId },
+      body: { details: null },
+    });
+
+    expect(response.statusCode).toBe(200);
+    expect(updateScenarioMock).toHaveBeenCalledWith({
+      scenarioId,
+      projectId,
+      details: null,
+    });
   });
 
   it("maps update not-found and unexpected errors", async () => {
