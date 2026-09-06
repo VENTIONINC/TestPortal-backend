@@ -115,11 +115,26 @@ Test Scenario list responses are lightweight summaries. Each item contains
 `updatedAt`; list items no longer contain `contentMd`.
 
 This is a breaking REST response change for dependent clients. Regenerate
-client types and hooks from the final `/api/openapi.json` document, and use
-`GET /api/v2/test-scenarios/{scenarioId}?projectId=...` when complete Markdown
-is required. Create, detail, and update responses continue to return exact
-`contentMd` and nullable `details`; details-only updates trim non-null values,
-accept `null` to clear them, and preserve omitted fields.
+client types and hooks from the final `/api/openapi.json` document. Create
+requests now use structured `objective`, `preconditions`, `testData`,
+`expectedResult`, `notes`, and optional initial `steps`; `contentMd`, its hash,
+and its format version are read-only detail fields. Details and structured text
+are trimmed and must be nonblank when supplied; PATCH accepts `null` for
+clearing nullable fields and preserves omitted fields.
+
+`POST /api/v2/test-scenarios` and `PATCH /api/v2/test-scenarios/{scenarioId}`
+return the complete scenario detail. Step edits are independent operations and
+require `projectId` query context:
+
+- `POST /api/v2/test-scenarios/{scenarioId}/steps` appends a step and returns 201.
+- `PATCH` or `DELETE /api/v2/test-scenarios/{scenarioId}/steps/{stepId}` edits or removes a stable-ID step and returns the updated detail.
+- `PUT /api/v2/test-scenarios/{scenarioId}/steps/order` accepts the complete current `stepIds` list and returns the updated detail.
+
+Every content mutation regenerates persisted Markdown atomically. The document
+uses LF endings, includes an explicit `_No steps defined._` section for empty
+scenarios, and is hashed with SHA-256. The migration intentionally removes
+existing development scenarios and scenario-to-Spec links; Specs, Results,
+Issues, projects, and users are preserved.
 
 ## Related Documentation
 

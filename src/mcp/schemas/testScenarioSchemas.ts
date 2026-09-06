@@ -31,17 +31,18 @@ export const updateTestScenarioSchema = z
   .object({
     scenarioId: uuid().describe("The UUID of the Test Scenario"),
     projectId: uuid().describe("The UUID of the project"),
-    title: z.string().optional(),
-    contentMd: z.string().optional(),
-    details: z
-      .string()
-      .trim()
-      .min(1)
-      .nullable()
-      .optional()
-      .describe("Plain-text details; trim surrounding whitespace or use null to clear"),
+    title: z.string().trim().min(1).optional(),
+    details: z.string().trim().min(1).nullable().optional(),
+    objective: z.string().trim().min(1).nullable().optional(),
+    preconditions: z.string().trim().min(1).nullable().optional(),
+    testData: z.string().trim().min(1).nullable().optional(),
+    expectedResult: z.string().trim().min(1).nullable().optional(),
+    notes: z.string().trim().min(1).nullable().optional(),
   })
-  .strict() satisfies MCPToolSchema;
+  .strict()
+  .refine((value) => Object.keys(value).some((key) => key !== "scenarioId" && key !== "projectId"), {
+    message: "At least one editable field is required",
+  }) satisfies MCPToolSchema;
 
 export const deleteTestScenarioSchema = z
   .object({

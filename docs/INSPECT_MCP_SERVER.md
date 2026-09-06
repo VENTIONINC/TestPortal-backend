@@ -50,13 +50,14 @@ After connecting with a valid MCP bearer token:
    records containing `details` and a `createdBy` object with only `id`, `name`,
    and `email`; summaries must not contain Markdown or other User fields.
 4. Invoke the detail tool with the same project and a scenario UUID. Verify
-   the response contains nullable `details`, raw Markdown plus separate
-   `resultEvidence` and `issueEvidence` pagination envelopes.
-5. For a disposable scenario, invoke the update tool with a title, Markdown,
-   or non-blank details field. Verify details are trimmed, `null` clears it,
-   and omitted fields are preserved. Then invoke the delete tool and verify
-   its explicit `deleted: true` acknowledgement. Cross-project IDs should
-   produce a standard MCP error.
+   the response contains structured fields, ordered steps, generated Markdown,
+   `contentMdHash`, `contentMdFormatVersion`, and separate `resultEvidence`
+   and `issueEvidence` pagination envelopes.
+5. For a disposable scenario, invoke the update tool with a structured title or
+   body field. Verify text is trimmed, `null` clears nullable fields, and
+   omitted fields are preserved. `contentMd` and `steps` must be rejected.
+   Then invoke the delete tool and verify its explicit `deleted: true`
+   acknowledgement. Cross-project IDs should produce a standard MCP error.
 
 The tool-call JSON-RPC shape used by inspector-compatible clients is:
 

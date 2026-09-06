@@ -339,7 +339,7 @@ describe("test scenario execution evidence workflow", () => {
     await testScenarioService.updateScenario({
       scenarioId: scenarioA,
       projectId: projectA,
-      contentMd: "# Updated Markdown",
+      notes: "Updated notes",
     });
 
     expect(scenarios).toEqual(snapshot.scenarios);

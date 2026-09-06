@@ -6,13 +6,28 @@ import type {
   TestScenarioResultsResponse,
 } from "@/types/testScenarioIntegration";
 
+export interface TestScenarioStepResponse {
+  id: string;
+  position: number;
+  action: string;
+  expectedResult: string | null;
+}
+
 export interface TestScenarioResponse {
   id: string;
   projectId: string;
   createdById: string;
   title: string;
-  contentMd: string;
   details: string | null;
+  objective: string | null;
+  preconditions: string | null;
+  testData: string | null;
+  expectedResult: string | null;
+  notes: string | null;
+  steps: TestScenarioStepResponse[];
+  contentMd: string;
+  contentMdHash: string;
+  contentMdFormatVersion: number;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -36,20 +51,65 @@ export interface TestScenarioSummary {
   updatedAt: Date;
 }
 
+export interface CreateTestScenarioStepInput {
+  action: string;
+  expectedResult?: string | undefined;
+}
+
 export interface CreateTestScenarioParams {
   projectId: string;
   title: string;
-  contentMd: string;
   createdById: string;
+  /** @deprecated Markdown is generated; transport schemas reject this field. */
+  contentMd?: string | undefined;
   details?: string | undefined;
+  objective?: string | undefined;
+  preconditions?: string | undefined;
+  testData?: string | undefined;
+  expectedResult?: string | undefined;
+  notes?: string | undefined;
+  steps?: CreateTestScenarioStepInput[] | undefined;
 }
 
 export interface UpdateTestScenarioParams {
   scenarioId: string;
   projectId: string;
-  title?: string | undefined;
+  /** @deprecated Markdown is generated; transport schemas reject this field. */
   contentMd?: string | undefined;
+  title?: string | undefined;
   details?: string | null | undefined;
+  objective?: string | null | undefined;
+  preconditions?: string | null | undefined;
+  testData?: string | null | undefined;
+  expectedResult?: string | null | undefined;
+  notes?: string | null | undefined;
+}
+
+export interface AppendTestScenarioStepParams {
+  scenarioId: string;
+  projectId: string;
+  action: string;
+  expectedResult?: string | undefined;
+}
+
+export interface UpdateTestScenarioStepParams {
+  scenarioId: string;
+  projectId: string;
+  stepId: string;
+  action?: string | undefined;
+  expectedResult?: string | null | undefined;
+}
+
+export interface DeleteTestScenarioStepParams {
+  scenarioId: string;
+  projectId: string;
+  stepId: string;
+}
+
+export interface ReorderTestScenarioStepsParams {
+  scenarioId: string;
+  projectId: string;
+  stepIds: string[];
 }
 
 export interface ListTestScenariosParams {

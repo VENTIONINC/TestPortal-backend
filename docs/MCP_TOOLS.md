@@ -215,7 +215,7 @@ returned using the standard MCP error response with `isError: true`.
 
 #### `get-test-scenario`
 - **Source File:** `src/mcp/tools/test-scenarios.ts`
-- **Description:** Retrieve complete scenario Markdown and linked execution evidence
+- **Description:** Retrieve complete structured scenario content, generated Markdown, and linked execution evidence
 - **Parameters:**
   - `scenarioId` (required): Test Scenario UUID
   - `projectId` (required): Owning project UUID
@@ -223,7 +223,7 @@ returned using the standard MCP error response with `isError: true`.
   - `resultLimit` (optional): Result evidence limit from 1 through 100 (default: 30)
   - `issuePage` (optional): Positive integer observed-Issue evidence page (default: 1)
   - `issueLimit` (optional): Observed-Issue evidence limit from 1 through 100 (default: 30)
-- **Response:** `{ scenario, resultEvidence, issueEvidence }`. `scenario` includes the complete persisted record, nullable `details`, and exact `contentMd`. Each evidence envelope contains its scenario/project IDs, `linkedSpecCount`, collection, `total`, `page`, `limit`, and `totalPages`. Result evidence is derived from Results belonging to linked same-project Specs; Issue evidence is deduplicated from observed Issues.
+- **Response:** `{ scenario, resultEvidence, issueEvidence }`. `scenario` includes nullable `details`, structured fields, ordered stable-ID `steps`, exact generated `contentMd`, `contentMdHash`, and `contentMdFormatVersion`. Each evidence envelope contains its scenario/project IDs, `linkedSpecCount`, collection, `total`, `page`, `limit`, and `totalPages`. Result evidence is derived from Results belonging to linked same-project Specs; Issue evidence is deduplicated from observed Issues.
 
 #### `update-test-scenario`
 - **Source File:** `src/mcp/tools/test-scenarios.ts`
@@ -231,10 +231,12 @@ returned using the standard MCP error response with `isError: true`.
 - **Parameters:**
   - `scenarioId` (required): Test Scenario UUID
   - `projectId` (required): Owning project UUID
-  - `title` (optional): Non-blank replacement title
-  - `contentMd` (optional): Non-empty Markdown replacement
-  - `details` (optional): Non-blank plain-text details; surrounding whitespace is trimmed, or `null` to clear it
-- **Response:** The complete persisted Test Scenario, including nullable `details` and exact `contentMd`. At least one editable field is required; omitted fields are preserved. Scenario metadata and project ownership cannot be changed.
+  - `title`, `details`, `objective`, `preconditions`, `testData`, `expectedResult`, or `notes` (optional): Structured field updates; text is trimmed and `null` clears nullable fields
+- **Response:** The complete persisted Test Scenario, including structured fields, ordered steps, exact generated `contentMd`, hash, and format version. At least one editable field is required; omitted fields are preserved. `contentMd`, projection metadata, and steps are rejected as inputs. Scenario metadata and project ownership cannot be changed.
+
+MCP intentionally has no Markdown import, scenario creation, or step mutation
+tools in this change. Use the authenticated REST step routes for step editing;
+MCP remains the generated-document reader and structured-field updater.
 
 #### `delete-test-scenario`
 - **Source File:** `src/mcp/tools/test-scenarios.ts`

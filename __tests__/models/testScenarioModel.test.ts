@@ -3,36 +3,51 @@
 
 import "@/test-utils/testEnv";
 import { jest } from "@jest/globals";
-import type { Prisma, TestScenario } from "@prisma/client";
+import type { Prisma, TestScenario, TestScenarioStep } from "@prisma/client";
 
-const createMock = jest.fn<() => Promise<TestScenario>>();
-const findManyMock = jest.fn<(args: unknown) => Promise<unknown[]>>();
-const countMock = jest.fn<() => Promise<number>>();
-const findFirstMock = jest.fn<() => Promise<TestScenario | null>>();
-const updateMock = jest.fn<
-  (args: {
-    where: { id: string };
-    data: { title?: string; contentMd?: string; details?: string | null };
-  }) => Promise<TestScenario>
->();
-const deleteManyMock = jest.fn<() => Promise<{ count: number }>>();
-const transactionMock = jest.fn<
-  (
-    callback: (tx: Prisma.TransactionClient) => Promise<TestScenario | null>,
-  ) => Promise<TestScenario | null>
->();
+const projectFindUniqueMock = jest.fn<() => Promise<unknown>>();
+const scenarioCreateMock = jest.fn<() => Promise<unknown>>();
+const scenarioFindFirstMock = jest.fn<() => Promise<unknown>>();
+const scenarioUpdateMock = jest.fn<() => Promise<unknown>>();
+const scenarioDeleteMock = jest.fn<() => Promise<unknown>>();
+const summaryFindManyMock = jest.fn<(args: unknown) => Promise<unknown>>();
+const countMock = jest.fn<() => Promise<unknown>>();
+const stepCreateManyMock = jest.fn<() => Promise<unknown>>();
+const stepCreateMock = jest.fn<() => Promise<unknown>>();
+const stepUpdateMock = jest.fn<() => Promise<unknown>>();
+const stepUpdateManyMock = jest.fn<() => Promise<unknown>>();
+const stepDeleteMock = jest.fn<() => Promise<unknown>>();
+const queryRawMock = jest.fn<() => Promise<unknown>>();
+const transactionMock = jest.fn<(callback: unknown) => Promise<unknown>>();
+
+const tx = {
+  project: { findUnique: projectFindUniqueMock },
+  testScenario: {
+    create: scenarioCreateMock,
+    findFirst: scenarioFindFirstMock,
+    update: scenarioUpdateMock,
+    delete: scenarioDeleteMock,
+    findMany: summaryFindManyMock,
+    count: countMock,
+  },
+  testScenarioStep: {
+    createMany: stepCreateManyMock,
+    create: stepCreateMock,
+    update: stepUpdateMock,
+    updateMany: stepUpdateManyMock,
+    delete: stepDeleteMock,
+  },
+  $queryRaw: queryRawMock,
+} as unknown as Prisma.TransactionClient;
 
 jest.mock("@/prisma/client", () => ({
   dbClient: {
-    testScenario: {
-      create: createMock,
-      findMany: findManyMock,
-      count: countMock,
-      findFirst: findFirstMock,
-      update: updateMock,
-      deleteMany: deleteManyMock,
-    },
     $transaction: transactionMock,
+    project: { findUnique: projectFindUniqueMock },
+    testScenario: {
+      findMany: summaryFindManyMock,
+      count: countMock,
+    },
   },
 }));
 
@@ -43,188 +58,111 @@ const scenario: TestScenario = {
   projectId: "22222222-2222-2222-2222-222222222222",
   createdById: "33333333-3333-3333-3333-333333333333",
   title: "Login",
-  contentMd: "# Login",
   details: null,
+  objective: "Verify login",
+  preconditions: null,
+  testData: null,
+  expectedResult: null,
+  notes: null,
+  contentMd: "# Login\n\n## Steps\n_No steps defined._\n",
+  contentMdHash: "a".repeat(64),
+  contentMdFormatVersion: 1,
   createdAt: new Date("2026-01-01T00:00:00.000Z"),
   updatedAt: new Date("2026-01-01T00:00:00.000Z"),
 };
+const step: TestScenarioStep = {
+  id: "44444444-4444-4444-4444-444444444444",
+  testScenarioId: scenario.id,
+  position: 0,
+  action: "Open login",
+  expectedResult: null,
+};
+const aggregate = { ...scenario, steps: [step] };
 
 describe("testScenarioModel", () => {
   beforeEach(() => {
     jest.clearAllMocks();
-    createMock.mockResolvedValue(scenario);
-    findManyMock.mockResolvedValue([scenario]);
-    countMock.mockResolvedValue(1);
-    findFirstMock.mockResolvedValue(scenario);
-    updateMock.mockResolvedValue(scenario);
-    deleteManyMock.mockResolvedValue({ count: 1 });
-    transactionMock.mockImplementation(async (callback) =>
-      callback({
-        testScenario: {
-          findFirst: findFirstMock,
-          update: updateMock,
-        },
-      } as unknown as Prisma.TransactionClient),
+    transactionMock.mockImplementation(async (callback: unknown) =>
+      (callback as (client: Prisma.TransactionClient) => Promise<unknown>)(tx),
     );
+    projectFindUniqueMock.mockResolvedValue({ id: scenario.projectId });
+    scenarioCreateMock.mockResolvedValue(scenario);
+    scenarioFindFirstMock.mockResolvedValue(aggregate);
+    scenarioUpdateMock.mockResolvedValue(scenario);
+    scenarioDeleteMock.mockResolvedValue(scenario);
+    queryRawMock.mockResolvedValue([{ id: scenario.id }]);
+    stepCreateManyMock.mockResolvedValue({ count: 1 });
+    stepCreateMock.mockResolvedValue(step);
+    stepUpdateMock.mockResolvedValue(step);
+    stepUpdateManyMock.mockResolvedValue({ count: 1 });
+    stepDeleteMock.mockResolvedValue(step);
+    summaryFindManyMock.mockResolvedValue([]);
+    countMock.mockResolvedValue(0);
   });
 
-  it("creates only the authored scenario fields", async () => {
-    await testScenarioModel.create({
+  it("creates structured fields, initial steps, and a generated projection atomically", async () => {
+    const result = await testScenarioModel.create({
       projectId: scenario.projectId,
-      title: scenario.title,
-      contentMd: scenario.contentMd,
       createdById: scenario.createdById,
+      title: scenario.title,
+      details: "Details",
+      steps: [{ action: step.action }],
     });
 
-    expect(createMock).toHaveBeenCalledWith({
-      data: {
+    expect(transactionMock).toHaveBeenCalled();
+    expect(scenarioCreateMock).toHaveBeenCalledWith({
+      data: expect.objectContaining({
         projectId: scenario.projectId,
         title: scenario.title,
-        contentMd: scenario.contentMd,
-        createdById: scenario.createdById,
-      },
+        details: "Details",
+        contentMdHash: expect.any(String),
+        contentMdFormatVersion: 1,
+      }),
     });
+    expect(stepCreateManyMock).toHaveBeenCalledWith({
+      data: [{
+        testScenarioId: scenario.id,
+        position: 0,
+        action: step.action,
+        expectedResult: null,
+      }],
+    });
+    expect(result?.steps[0]?.id).toBe(step.id);
   });
 
-  it("lists exact summaries without selecting Markdown or sensitive creator fields", async () => {
+  it("keeps summary selection lightweight", async () => {
     await testScenarioModel.findManySummaries(scenario.projectId, 2, 10);
-
-    expect(findManyMock).toHaveBeenCalledWith({
+    expect(summaryFindManyMock).toHaveBeenCalledWith(expect.objectContaining({
       where: { projectId: scenario.projectId },
-      select: {
-        id: true,
-        projectId: true,
-        createdById: true,
-        title: true,
-        details: true,
-        createdAt: true,
-        updatedAt: true,
-        createdBy: {
-          select: {
-            id: true,
-            name: true,
-            email: true,
-          },
-        },
-      },
       skip: 10,
       take: 10,
-      orderBy: [{ createdAt: "desc" }, { id: "desc" }],
-    });
-
-    const select = findManyMock.mock.calls[0]?.[0] as {
-      select?: Record<string, unknown>;
-    };
-    expect(select.select).not.toHaveProperty("contentMd");
-    expect(select.select?.createdBy).toEqual({
-      select: { id: true, name: true, email: true },
-    });
+    }));
+    const selection = (summaryFindManyMock.mock.calls[0]?.[0] as { select?: Record<string, unknown> } | undefined)?.select;
+    expect(selection).not.toHaveProperty("contentMd");
+    expect(selection).not.toHaveProperty("steps");
   });
 
-  it("uses the project predicate and default pagination for summaries", async () => {
-    await testScenarioModel.findManySummaries(scenario.projectId);
-
-    expect(findManyMock).toHaveBeenCalledWith(
-      expect.objectContaining({
-        where: { projectId: scenario.projectId },
-        skip: 0,
-        take: 30,
-        orderBy: [{ createdAt: "desc" }, { id: "desc" }],
-      }),
-    );
-  });
-
-  it("looks up by the composite scenario and project identity", async () => {
-    await testScenarioModel.findById(scenario.id, scenario.projectId);
-
-    expect(findFirstMock).toHaveBeenCalledWith({
-      where: { id: scenario.id, projectId: scenario.projectId },
-    });
-  });
-
-  it("deletes only the composite identity and returns the affected count", async () => {
-    const deletedCount = await testScenarioModel.delete(
+  it("locks the parent before updating fields and regenerates the projection", async () => {
+    const result = await testScenarioModel.update(
       scenario.id,
       scenario.projectId,
+      { notes: "Updated" },
     );
-
-    expect(deletedCount).toBe(1);
-    expect(deleteManyMock).toHaveBeenCalledWith({
-      where: { id: scenario.id, projectId: scenario.projectId },
-    });
-  });
-
-  it("updates only a scenario found in the requested project transaction", async () => {
-    const updated = { ...scenario, title: "Updated" };
-    updateMock.mockResolvedValue(updated);
-
-    await expect(
-      testScenarioModel.update(
-        scenario.id,
-        scenario.projectId,
-        { title: "Updated" },
-      ),
-    ).resolves.toBe(updated);
-
-    expect(transactionMock).toHaveBeenCalledTimes(1);
-    expect(findFirstMock).toHaveBeenCalledWith({
-      where: { id: scenario.id, projectId: scenario.projectId },
-    });
-    expect(updateMock).toHaveBeenCalledWith({
+    expect(queryRawMock).toHaveBeenCalled();
+    expect(scenarioUpdateMock).toHaveBeenCalledWith({
       where: { id: scenario.id },
-      data: { title: "Updated" },
+      data: { notes: "Updated" },
     });
+    expect(result?.contentMdHash).toHaveLength(64);
   });
 
-  it("returns null and does not mutate on a cross-project miss", async () => {
-    findFirstMock.mockResolvedValue(null);
-
-    await expect(
-      testScenarioModel.update(
-        scenario.id,
-        "99999999-9999-9999-9999-999999999999",
-        { contentMd: "# Unchanged" },
-      ),
-    ).resolves.toBeNull();
-
-    expect(updateMock).not.toHaveBeenCalled();
-  });
-
-  it("passes combined fields atomically and excludes immutable metadata", async () => {
-    await testScenarioModel.update(scenario.id, scenario.projectId, {
-      title: "Updated",
-      contentMd: "# Updated",
+  it("rejects stale reorder membership without changing steps", async () => {
+    const result = await testScenarioModel.reorderSteps({
+      scenarioId: scenario.id,
+      projectId: scenario.projectId,
+      stepIds: [],
     });
-
-    expect(updateMock).toHaveBeenCalledWith({
-      where: { id: scenario.id },
-      data: { title: "Updated", contentMd: "# Updated" },
-    });
-    expect(Object.keys(updateMock.mock.calls[0]?.[0]?.data ?? {})).toEqual([
-      "title",
-      "contentMd",
-    ]);
-  });
-
-  it("passes nullable details updates while preserving omitted fields", async () => {
-    await testScenarioModel.update(scenario.id, scenario.projectId, {
-      details: null,
-    });
-
-    expect(updateMock).toHaveBeenCalledWith({
-      where: { id: scenario.id },
-      data: { details: null },
-    });
-  });
-
-  it("preserves omitted fields by passing only supplied authored data", async () => {
-    await testScenarioModel.update(scenario.id, scenario.projectId, {
-      contentMd: "# Markdown only",
-    });
-
-    expect(updateMock).toHaveBeenCalledWith({
-      where: { id: scenario.id },
-      data: { contentMd: "# Markdown only" },
-    });
+    expect(result).toEqual({ kind: "invalid-order" });
+    expect(stepUpdateManyMock).not.toHaveBeenCalled();
   });
 });

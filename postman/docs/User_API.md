@@ -83,6 +83,29 @@ if (timeUntilExpiry < 60) {
 
 ## 🧪 Test Scenarios
 
+The backend's Test Scenario REST contract is structured. A create request uses
+`projectId`, a nonblank `title`, optional structured text fields, and optional
+initial steps; do not send `contentMd`, `contentMdHash`, or creator metadata.
+For example:
+
+```json
+{
+  "projectId": "11111111-1111-1111-1111-111111111111",
+  "title": "Login",
+  "objective": "Verify a user can log in",
+  "steps": [
+    { "action": "Open the login page", "expectedResult": "The form is visible" }
+  ]
+}
+```
+
+The response contains generated read-only `contentMd`, `contentMdHash`, and
+`contentMdFormatVersion`. Use the dedicated authenticated routes with the
+required `projectId` query parameter for append, partial edit, delete, and full
+stable-ID step reorder. PATCH scenario accepts structured fields only and
+rejects Markdown input; `null` clears nullable text and omitted fields remain
+unchanged.
+
 ### ✅ Success Cases
 - **Account Creation**: Valid user registration
 - **Authentication**: Login with correct credentials
@@ -234,4 +257,4 @@ This collection is maintained to match the latest API changes:
 - Enhanced error handling
 - Performance improvements
 
-**Last Updated**: Synchronized with API development 
+**Last Updated**: Synchronized with API development

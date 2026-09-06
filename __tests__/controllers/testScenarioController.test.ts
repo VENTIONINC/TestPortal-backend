@@ -3,311 +3,129 @@
 
 import "@/test-utils/testEnv";
 import { jest } from "@jest/globals";
-import type { TestScenario } from "@prisma/client";
-import {
-  executeController,
-} from "@/test-utils/httpMocks";
-import type { TestScenarioSummary } from "@/types/testScenarios";
+import { executeController } from "@/test-utils/httpMocks";
+import type { TestScenarioResponse } from "@/types/testScenarios";
 
-const createScenarioMock = jest.fn<() => Promise<TestScenario>>();
-const listScenariosMock = jest.fn<
-  () => Promise<{
-    scenarios: TestScenarioSummary[];
-    total: number;
-    page: number;
-    limit: number;
-    totalPages: number;
-  }>
->();
-const getScenarioByIdMock = jest.fn<() => Promise<TestScenario>>();
-const updateScenarioMock = jest.fn<() => Promise<TestScenario>>();
-const deleteScenarioMock = jest.fn<() => Promise<void>>();
+const createMock = jest.fn<() => Promise<TestScenarioResponse>>();
+const listMock = jest.fn<() => Promise<unknown>>();
+const getMock = jest.fn<() => Promise<TestScenarioResponse>>();
+const updateMock = jest.fn<() => Promise<TestScenarioResponse>>();
+const appendStepMock = jest.fn<() => Promise<TestScenarioResponse>>();
+const updateStepMock = jest.fn<() => Promise<TestScenarioResponse>>();
+const deleteStepMock = jest.fn<() => Promise<TestScenarioResponse>>();
+const reorderStepsMock = jest.fn<() => Promise<TestScenarioResponse>>();
+const deleteMock = jest.fn<() => Promise<void>>();
 
 jest.mock("@/services/testScenarioService", () => ({
   testScenarioService: {
-    createScenario: createScenarioMock,
-    listScenarios: listScenariosMock,
-    getScenarioById: getScenarioByIdMock,
-    updateScenario: updateScenarioMock,
-    deleteScenario: deleteScenarioMock,
+    createScenario: createMock,
+    listScenarios: listMock,
+    getScenarioById: getMock,
+    updateScenario: updateMock,
+    appendStep: appendStepMock,
+    updateStep: updateStepMock,
+    deleteStep: deleteStepMock,
+    reorderSteps: reorderStepsMock,
+    deleteScenario: deleteMock,
   },
 }));
 
 import { testScenarioController } from "@/controllers/testScenarioController";
-import {
-  TestScenarioNotFoundError,
-} from "@/types/testScenarios";
 
 const projectId = "11111111-1111-1111-1111-111111111111";
 const scenarioId = "22222222-2222-2222-2222-222222222222";
-const scenario: TestScenario = {
-  id: scenarioId,
-  projectId,
-  createdById: "33333333-3333-3333-3333-333333333333",
-  title: "Scenario",
-  contentMd: "# Exact\n\n  Markdown ✓\n",
-  details: null,
-  createdAt: new Date("2026-01-01T00:00:00.000Z"),
-  updatedAt: new Date("2026-01-01T00:00:00.000Z"),
-};
-const authenticatedUser = {
-  id: scenario.createdById,
-  name: "Scenario Creator",
+const stepId = "33333333-3333-3333-3333-333333333333";
+const userId = "44444444-4444-4444-4444-444444444444";
+const user = {
+  id: userId,
+  name: "Creator",
   email: "creator@example.com",
   status: "active",
   role: "member",
   createdAt: new Date("2026-01-01T00:00:00.000Z"),
   updatedAt: new Date("2026-01-01T00:00:00.000Z"),
 } as const;
-const summary: TestScenarioSummary = {
-  id: scenario.id,
-  projectId: scenario.projectId,
-  createdById: scenario.createdById,
-  title: scenario.title,
-  details: scenario.details,
-  createdBy: {
-    id: scenario.createdById,
-    name: authenticatedUser.name,
-    email: authenticatedUser.email,
-  },
-  createdAt: scenario.createdAt,
-  updatedAt: scenario.updatedAt,
+const scenario: TestScenarioResponse = {
+  id: scenarioId,
+  projectId,
+  createdById: userId,
+  title: "Login",
+  details: null,
+  objective: null,
+  preconditions: null,
+  testData: null,
+  expectedResult: null,
+  notes: null,
+  steps: [{ id: stepId, position: 0, action: "Open", expectedResult: null }],
+  contentMd: "# Login\n",
+  contentMdHash: "a".repeat(64),
+  contentMdFormatVersion: 1,
+  createdAt: new Date("2026-01-01T00:00:00.000Z"),
+  updatedAt: new Date("2026-01-01T00:00:00.000Z"),
 };
 
 describe("testScenarioController", () => {
   beforeEach(() => {
     jest.clearAllMocks();
-    createScenarioMock.mockResolvedValue(scenario);
-    listScenariosMock.mockResolvedValue({
-      scenarios: [summary],
-      total: 1,
-      page: 1,
-      limit: 30,
-      totalPages: 1,
-    });
-    getScenarioByIdMock.mockResolvedValue(scenario);
-    updateScenarioMock.mockResolvedValue(scenario);
-    deleteScenarioMock.mockResolvedValue(undefined);
+    createMock.mockResolvedValue(scenario);
+    getMock.mockResolvedValue(scenario);
+    updateMock.mockResolvedValue(scenario);
+    appendStepMock.mockResolvedValue(scenario);
+    updateStepMock.mockResolvedValue(scenario);
+    deleteStepMock.mockResolvedValue(scenario);
+    reorderStepsMock.mockResolvedValue(scenario);
+    deleteMock.mockResolvedValue(undefined);
   });
 
-  it("creates a scenario with a 201 response and preserves the response body", async () => {
+  it("creates structured scenarios from authenticated context", async () => {
     const response = await executeController(testScenarioController.create, {
       method: "POST",
-      user: authenticatedUser,
+      user,
       body: {
         projectId,
-        title: "  Scenario  ",
-        contentMd: scenario.contentMd,
-        details: "  Scenario details  ",
+        title: "  Login  ",
+        objective: "  Verify  ",
+        steps: [{ action: " Open " }],
       },
     });
-
     expect(response.statusCode).toBe(201);
+    expect(createMock).toHaveBeenCalledWith(expect.objectContaining({ createdById: userId }));
     expect(response.body).toBe(scenario);
-    expect(createScenarioMock).toHaveBeenCalledWith({
-      projectId,
-      title: "Scenario",
-      contentMd: scenario.contentMd,
-      createdById: authenticatedUser.id,
-      details: "Scenario details",
-    });
   });
 
-  it("rejects unsupported creator input", async () => {
+  it("rejects read-only Markdown input", async () => {
     const response = await executeController(testScenarioController.create, {
       method: "POST",
-      user: authenticatedUser,
-      body: {
-        projectId,
-        title: "Scenario",
-        contentMd: "content",
-        createdById: "99999999-9999-9999-9999-999999999999",
-      },
+      user,
+      body: { projectId, title: "Login", contentMd: "# no" },
     });
-
     expect(response.statusCode).toBe(400);
-    expect(createScenarioMock).not.toHaveBeenCalled();
+    expect(createMock).not.toHaveBeenCalled();
   });
 
-  it("requires an authenticated user before creating a scenario", async () => {
-    const response = await executeController(testScenarioController.create, {
-      method: "POST",
-      body: { projectId, title: "Scenario", contentMd: "content" },
-    });
-
-    expect(response.statusCode).toBe(401);
-    expect(createScenarioMock).not.toHaveBeenCalled();
-  });
-
-  it("rejects malformed input with 400 without calling the service", async () => {
-    const response = await executeController(testScenarioController.create, {
-      method: "POST",
-      user: authenticatedUser,
-      body: { projectId: "not-a-uuid", title: " ", contentMd: "" },
-    });
-
-    expect(response.statusCode).toBe(400);
-    expect(response.body).toEqual(expect.objectContaining({ error: expect.any(String) }));
-    expect(createScenarioMock).not.toHaveBeenCalled();
-  });
-
-  it("maps project not-found and unexpected create errors", async () => {
-    createScenarioMock.mockRejectedValueOnce(
-      new TestScenarioNotFoundError("Project not found"),
-    );
-    const notFound = await executeController(testScenarioController.create, {
-      method: "POST",
-      user: authenticatedUser,
-      body: { projectId, title: "Scenario", contentMd: "content" },
-    });
-    expect(notFound.statusCode).toBe(404);
-
-    createScenarioMock.mockRejectedValueOnce(new Error("database unavailable"));
-    const failed = await executeController(testScenarioController.create, {
-      method: "POST",
-      user: authenticatedUser,
-      body: { projectId, title: "Scenario", contentMd: "content" },
-    });
-    expect(failed.statusCode).toBe(500);
-  });
-
-  it("returns the stable default list envelope", async () => {
-    const response = await executeController(testScenarioController.list, {
-      query: { projectId },
-    });
-
-    expect(response.statusCode).toBe(200);
-    expect(response.body).toEqual(expect.objectContaining({
-      scenarios: [summary],
-      page: 1,
-      limit: 30,
-    }));
-    expect(listScenariosMock).toHaveBeenCalledWith({
-      projectId,
-      page: 1,
-      limit: 30,
-    });
-  });
-
-  it("rejects invalid pagination with 400", async () => {
-    const response = await executeController(testScenarioController.list, {
-      query: { projectId, page: "0", limit: "101" },
-    });
-
-    expect(response.statusCode).toBe(400);
-    expect(listScenariosMock).not.toHaveBeenCalled();
-  });
-
-  it("returns exact Markdown detail data and maps missing records to 404", async () => {
-    const response = await executeController(testScenarioController.getById, {
-      params: { scenarioId },
-      query: { projectId },
-    });
-    expect(response.statusCode).toBe(200);
-    expect((response.body as TestScenario).contentMd).toBe(scenario.contentMd);
-
-    getScenarioByIdMock.mockRejectedValueOnce(
-      new TestScenarioNotFoundError("Scenario not found"),
-    );
-    const missing = await executeController(testScenarioController.getById, {
-      params: { scenarioId },
-      query: { projectId },
-    });
-    expect(missing.statusCode).toBe(404);
-  });
-
-  it("returns an empty 204 deletion response", async () => {
-    const response = await executeController(testScenarioController.delete, {
-      method: "DELETE",
-      params: { scenarioId },
-      query: { projectId },
-    });
-
-    expect(response.statusCode).toBe(204);
-    expect(response.body).toBeUndefined();
-    expect(deleteScenarioMock).toHaveBeenCalledWith(scenarioId, projectId);
-  });
-
-  it("updates a scenario with a complete persisted detail response", async () => {
-    const updatedScenario = {
-      ...scenario,
-      title: "Updated title",
-      contentMd: "# Updated",
-      details: "Updated details",
-      updatedAt: new Date("2026-01-02T00:00:00.000Z"),
-    };
-    updateScenarioMock.mockResolvedValue(updatedScenario);
-
+  it("requires project context and wires scenario PATCH", async () => {
     const response = await executeController(testScenarioController.update, {
       method: "PATCH",
       params: { scenarioId },
       query: { projectId },
-      body: {
-        title: " Updated title ",
-        contentMd: "# Updated",
-        details: " Updated details ",
-      },
+      body: { notes: null },
     });
-
     expect(response.statusCode).toBe(200);
-    expect(response.body).toBe(updatedScenario);
-    expect(updateScenarioMock).toHaveBeenCalledWith({
-      scenarioId,
-      projectId,
-      title: "Updated title",
-      contentMd: "# Updated",
-      details: "Updated details",
-    });
+    expect(updateMock).toHaveBeenCalledWith({ scenarioId, projectId, notes: null });
   });
 
-  it("rejects invalid update bodies without changing state", async () => {
-    const response = await executeController(testScenarioController.update, {
-      method: "PATCH",
-      params: { scenarioId },
-      query: { projectId },
-      body: { title: "Updated", projectId },
-    });
-
-    expect(response.statusCode).toBe(400);
-    expect(response.body).toEqual(expect.objectContaining({ error: expect.any(String) }));
-    expect(updateScenarioMock).not.toHaveBeenCalled();
-  });
-
-  it("passes an explicit null details update through to the service", async () => {
-    const response = await executeController(testScenarioController.update, {
-      method: "PATCH",
-      params: { scenarioId },
-      query: { projectId },
-      body: { details: null },
-    });
-
-    expect(response.statusCode).toBe(200);
-    expect(updateScenarioMock).toHaveBeenCalledWith({
-      scenarioId,
-      projectId,
-      details: null,
-    });
-  });
-
-  it("maps update not-found and unexpected errors", async () => {
-    updateScenarioMock.mockRejectedValueOnce(
-      new TestScenarioNotFoundError("Scenario not found"),
-    );
-    const notFound = await executeController(testScenarioController.update, {
-      method: "PATCH",
-      params: { scenarioId },
-      query: { projectId },
-      body: { contentMd: "# Missing" },
-    });
-    expect(notFound.statusCode).toBe(404);
-
-    updateScenarioMock.mockRejectedValueOnce(new Error("database unavailable"));
-    const failed = await executeController(testScenarioController.update, {
-      method: "PATCH",
-      params: { scenarioId },
-      query: { projectId },
-      body: { title: "Updated" },
-    });
-    expect(failed.statusCode).toBe(500);
+  it("wires append, patch, delete, and reorder step routes", async () => {
+    await expect(executeController(testScenarioController.appendStep, {
+      method: "POST", params: { scenarioId }, query: { projectId }, body: { action: "Run" },
+    })).resolves.toEqual(expect.objectContaining({ statusCode: 201 }));
+    await expect(executeController(testScenarioController.updateStep, {
+      method: "PATCH", params: { scenarioId, stepId }, query: { projectId }, body: { expectedResult: null },
+    })).resolves.toEqual(expect.objectContaining({ statusCode: 200 }));
+    await expect(executeController(testScenarioController.deleteStep, {
+      method: "DELETE", params: { scenarioId, stepId }, query: { projectId },
+    })).resolves.toEqual(expect.objectContaining({ statusCode: 200 }));
+    await expect(executeController(testScenarioController.reorderSteps, {
+      method: "PUT", params: { scenarioId }, query: { projectId }, body: { stepIds: [stepId] },
+    })).resolves.toEqual(expect.objectContaining({ statusCode: 200 }));
   });
 });

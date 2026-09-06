@@ -18,6 +18,10 @@ const controllerMocks = {
   removeSpecLink: jest.fn<(req: Request, res: Response) => void>(),
   getResults: jest.fn<(req: Request, res: Response) => void>(),
   getIssues: jest.fn<(req: Request, res: Response) => void>(),
+  appendStep: jest.fn<(req: Request, res: Response) => void>(),
+  updateStep: jest.fn<(req: Request, res: Response) => void>(),
+  deleteStep: jest.fn<(req: Request, res: Response) => void>(),
+  reorderSteps: jest.fn<(req: Request, res: Response) => void>(),
   update: jest.fn<(req: Request, res: Response) => void>(),
   getById: jest.fn<(req: Request, res: Response) => void>(),
   delete: jest.fn<(req: Request, res: Response) => void>(),
@@ -67,11 +71,15 @@ describe("test-scenario routes", () => {
       "delete /v2/test-scenarios/:scenarioId/spec-links/:specId",
       "get /v2/test-scenarios/:scenarioId/results",
       "get /v2/test-scenarios/:scenarioId/issues",
+      "post /v2/test-scenarios/:scenarioId/steps",
+      "put /v2/test-scenarios/:scenarioId/steps/order",
+      "patch /v2/test-scenarios/:scenarioId/steps/:stepId",
+      "delete /v2/test-scenarios/:scenarioId/steps/:stepId",
       "patch /v2/test-scenarios/:scenarioId",
       "get /v2/test-scenarios/:scenarioId",
       "delete /v2/test-scenarios/:scenarioId",
     ]);
-    expect(routes.some((route) => route.startsWith("put "))).toBe(false);
+    expect(routes).toContain("put /v2/test-scenarios/:scenarioId/steps/order");
   });
 
   it("puts JWT authentication before every scenario controller", () => {
