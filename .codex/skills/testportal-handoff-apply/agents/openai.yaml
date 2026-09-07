@@ -1,0 +1,6 @@
+interface:
+  display_name: "TestPortal Apply Handoff"
+  short_description: "Start an issue or change apply phase"
+  default_prompt: "Use $testportal-handoff-apply with #84."
+policy:
+  allow_implicit_invocation: false
