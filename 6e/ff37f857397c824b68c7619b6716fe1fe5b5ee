@@ -1,0 +1,29 @@
+.codex/skills/testportal-handoff-apply/SKILL.md
+  s_598a5c1b40eb9c::t_48418f679bfb71 1-43
+.codex/skills/testportal-handoff-apply/agents/openai.yaml
+  s_598a5c1b40eb9c::t_643ae12ec55da8 1-6
+.codex/skills/testportal-handoff/SKILL.md
+  s_598a5c1b40eb9c::t_a5a7d2c51839a1 1-52
+.codex/skills/testportal-handoff/agents/openai.yaml
+  s_598a5c1b40eb9c::t_9b50aae5eaaea9 1-6
+.codex/skills/testportal-review/SKILL.md
+  s_598a5c1b40eb9c::t_6a752365152124 1-76
+.codex/skills/testportal-review/agents/openai.yaml
+  s_598a5c1b40eb9c::t_8d00e9f678326d 1-4
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.18",
+  "base_commit_sha": "6eff37f857397c824b68c7619b6716fe1fe5b5ee",
+  "prompts": {},
+  "sessions": {
+    "s_598a5c1b40eb9c": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a06c5b-e8fb-7a50-9906-20a13fed29b0",
+        "model": "unknown"
+      },
+      "human_author": "Ihar Mikailau <ihar.mikailau@ventionteams.com>"
+    }
+  }
+}
