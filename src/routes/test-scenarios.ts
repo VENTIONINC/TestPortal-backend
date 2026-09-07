@@ -42,6 +42,26 @@ router.get(
   authMiddleware,
   testScenarioController.getIssues,
 );
+router.post(
+  "/v2/test-scenarios/:scenarioId/steps",
+  authMiddleware,
+  testScenarioController.appendStep,
+);
+router.put(
+  "/v2/test-scenarios/:scenarioId/steps/order",
+  authMiddleware,
+  testScenarioController.reorderSteps,
+);
+router.patch(
+  "/v2/test-scenarios/:scenarioId/steps/:stepId",
+  authMiddleware,
+  testScenarioController.updateStep,
+);
+router.delete(
+  "/v2/test-scenarios/:scenarioId/steps/:stepId",
+  authMiddleware,
+  testScenarioController.deleteStep,
+);
 router.patch(
   "/v2/test-scenarios/:scenarioId",
   authMiddleware,

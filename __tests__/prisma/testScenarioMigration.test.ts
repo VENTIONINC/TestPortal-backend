@@ -30,6 +30,13 @@ describe("test-scenario persistence contract", () => {
     ),
     "utf8",
   );
+  const structuredMigration = readFileSync(
+    path.join(
+      process.cwd(),
+      "prisma/migrations/20260906120000_add_structured_test_scenario_authoring/migration.sql",
+    ),
+    "utf8",
+  );
 
   it("defines a project-owned Markdown record with creator and timestamp fields", () => {
     expect(schema).toMatch(
@@ -91,18 +98,22 @@ describe("test-scenario persistence contract", () => {
     );
   });
 
-  it("adds nullable details without changing existing scenario relations", () => {
+  it("defines nullable structured fields and generated projection metadata", () => {
     expect(schema).toMatch(
-      /model TestScenario \{[\s\S]*contentMd\s+String\s+@db\.Text[\s\S]*details\s+String\?\s+@db\.Text/,
+      /model TestScenario \{[\s\S]*details\s+String\?\s+@db\.Text[\s\S]*objective\s+String\?\s+@db\.Text[\s\S]*contentMd\s+String\s+@db\.Text[\s\S]*contentMdHash\s+String\s+@db\.Char\(64\)[\s\S]*contentMdFormatVersion\s+Int\s+@default\(1\)/,
     );
-    expect(detailsMigration).toContain(
-      'ALTER TABLE "TestScenario" ADD COLUMN "details" TEXT;',
+    expect(detailsMigration).toContain('ALTER TABLE "TestScenario" ADD COLUMN "details" TEXT;');
+    expect(structuredMigration.indexOf('DELETE FROM "TestScenarioSpecLink"')).toBeLessThan(
+      structuredMigration.indexOf('DELETE FROM "TestScenario"'),
     );
-    expect(detailsMigration).not.toContain("NOT NULL");
-    expect(detailsMigration).not.toContain("DEFAULT");
-    expect(detailsMigration).not.toContain("DROP");
-    expect(detailsMigration).not.toContain("FOREIGN KEY");
-    expect(detailsMigration).not.toContain("CREATE INDEX");
+    expect(structuredMigration).toContain('ADD COLUMN "contentMdHash" CHAR(64) NOT NULL');
+    expect(structuredMigration).toContain('ADD COLUMN "contentMdFormatVersion" INTEGER NOT NULL DEFAULT 1');
+    expect(structuredMigration).toContain('CREATE TABLE "TestScenarioStep"');
+    expect(structuredMigration).toContain('CHECK ("position" >= 0)');
+    expect(structuredMigration).toContain('CREATE UNIQUE INDEX "TestScenarioStep_testScenarioId_position_key"');
+    expect(structuredMigration).not.toContain('TestScenarioStep_testScenarioId_position_idx');
+    expect(schema).not.toContain('@@index([testScenarioId, position])');
+    expect(structuredMigration).toContain('ON DELETE CASCADE ON UPDATE CASCADE');
     expect(migration).toContain(
       'CONSTRAINT "TestScenario_projectId_fkey" FOREIGN KEY ("projectId")',
     );

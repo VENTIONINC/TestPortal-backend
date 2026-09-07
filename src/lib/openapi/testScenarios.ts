@@ -12,19 +12,49 @@ const TestScenarioSchema = z
     projectId: z.string().uuid(),
     createdById: z.string().uuid(),
     title: z.string(),
-    contentMd: z.string(),
     details: z.string().nullable(),
+    objective: z.string().nullable(),
+    preconditions: z.string().nullable(),
+    testData: z.string().nullable(),
+    expectedResult: z.string().nullable(),
+    notes: z.string().nullable(),
+    steps: z.array(
+      z
+        .object({
+          id: z.string().uuid(),
+          position: z.number().int().nonnegative(),
+          action: z.string(),
+          expectedResult: z.string().nullable(),
+        })
+        .strict(),
+    ),
+    contentMd: z.string(),
+    contentMdHash: z.string().length(64).regex(/^[a-f0-9]{64}$/),
+    contentMdFormatVersion: z.number().int().positive(),
     createdAt: z.string(),
     updatedAt: z.string(),
   })
   .openapi("TestScenario");
 
+const CreateTestScenarioStepSchema = z
+  .object({
+    action: z.string().min(1).regex(/\S/),
+    expectedResult: z.string().min(1).regex(/\S/).optional(),
+  })
+  .strict()
+  .openapi("CreateTestScenarioStep");
+
 const CreateTestScenarioRequestSchema = z
   .object({
     projectId: z.string().uuid(),
     title: z.string().min(1).regex(/\S/),
-    contentMd: z.string().min(1),
     details: z.string().min(1).regex(/\S/).optional(),
+    objective: z.string().min(1).regex(/\S/).optional(),
+    preconditions: z.string().min(1).regex(/\S/).optional(),
+    testData: z.string().min(1).regex(/\S/).optional(),
+    expectedResult: z.string().min(1).regex(/\S/).optional(),
+    notes: z.string().min(1).regex(/\S/).optional(),
+    steps: z.array(CreateTestScenarioStepSchema).default([]),
   })
   .strict()
   .openapi("CreateTestScenarioRequest");
@@ -52,43 +82,66 @@ const TestScenarioSummarySchema = z
   .strict()
   .openapi("TestScenarioSummary");
 
-const UpdateTestScenarioDetailsSchema = z
+const UpdateTestScenarioFieldSchema = z
   .string()
   .min(1)
   .regex(/\S/)
   .nullable();
 
+const updateTestScenarioFields = {
+  title: z.string().min(1).regex(/\S/).optional(),
+  details: UpdateTestScenarioFieldSchema.optional(),
+  objective: UpdateTestScenarioFieldSchema.optional(),
+  preconditions: UpdateTestScenarioFieldSchema.optional(),
+  testData: UpdateTestScenarioFieldSchema.optional(),
+  expectedResult: UpdateTestScenarioFieldSchema.optional(),
+  notes: UpdateTestScenarioFieldSchema.optional(),
+};
+
 const UpdateTestScenarioRequestSchema = z
-  .union([
-    z
-      .object({
-        title: z.string().min(1).regex(/\S/),
-        contentMd: z.string().min(1).optional(),
-        details: UpdateTestScenarioDetailsSchema.optional(),
-      })
-      .strict(),
-    z
-      .object({
-        title: z.string().min(1).regex(/\S/).optional(),
-        contentMd: z.string().min(1),
-        details: UpdateTestScenarioDetailsSchema.optional(),
-      })
-      .strict(),
-    z
-      .object({
-        title: z.string().min(1).regex(/\S/).optional(),
-        contentMd: z.string().min(1).optional(),
-        details: UpdateTestScenarioDetailsSchema,
-      })
-      .strict(),
-  ])
+  .object(updateTestScenarioFields)
+  .strict()
+  .refine((value) => Object.keys(value).length > 0, {
+    message: "At least one editable field is required",
+  })
   .openapi("UpdateTestScenarioRequest");
+
+const AppendTestScenarioStepRequestSchema = z
+  .object({
+    action: z.string().min(1).regex(/\S/),
+    expectedResult: z.string().min(1).regex(/\S/).optional(),
+  })
+  .strict()
+  .openapi("AppendTestScenarioStepRequest");
+
+const UpdateTestScenarioStepRequestSchema = z
+  .object({
+    action: z.string().min(1).regex(/\S/).optional(),
+    expectedResult: UpdateTestScenarioFieldSchema.optional(),
+  })
+  .strict()
+  .refine((value) => Object.keys(value).length > 0, {
+    message: "At least one step field is required",
+  })
+  .openapi("UpdateTestScenarioStepRequest");
+
+const ReorderTestScenarioStepsRequestSchema = z
+  .object({ stepIds: z.array(z.string().uuid()) })
+  .strict()
+  .openapi("ReorderTestScenarioStepsRequest");
 
 const TestScenarioIdParamsSchema = z
   .object({
     scenarioId: z.string().uuid(),
   })
   .openapi("TestScenarioIdParams");
+
+const TestScenarioStepParamsSchema = z
+  .object({
+    scenarioId: z.string().uuid(),
+    stepId: z.string().uuid(),
+  })
+  .openapi("TestScenarioStepParams");
 
 const TestScenarioProjectQuerySchema = z
   .object({
@@ -238,6 +291,7 @@ export function registerTestScenarioRoutes(registry: OpenAPIRegistry): void {
     "CreateTestScenarioRequest",
     CreateTestScenarioRequestSchema,
   );
+  registry.register("CreateTestScenarioStep", CreateTestScenarioStepSchema);
   registry.register(
     "TestScenarioCreatorSummary",
     TestScenarioCreatorSummarySchema,
@@ -247,7 +301,20 @@ export function registerTestScenarioRoutes(registry: OpenAPIRegistry): void {
     "UpdateTestScenarioRequest",
     UpdateTestScenarioRequestSchema,
   );
+  registry.register(
+    "AppendTestScenarioStepRequest",
+    AppendTestScenarioStepRequestSchema,
+  );
+  registry.register(
+    "UpdateTestScenarioStepRequest",
+    UpdateTestScenarioStepRequestSchema,
+  );
+  registry.register(
+    "ReorderTestScenarioStepsRequest",
+    ReorderTestScenarioStepsRequestSchema,
+  );
   registry.register("TestScenarioIdParams", TestScenarioIdParamsSchema);
+  registry.register("TestScenarioStepParams", TestScenarioStepParamsSchema);
   registry.register(
     "TestScenarioProjectQuery",
     TestScenarioProjectQuerySchema,
@@ -337,7 +404,7 @@ export function registerTestScenarioRoutes(registry: OpenAPIRegistry): void {
     method: "patch",
     path: "/api/v2/test-scenarios/{scenarioId}",
     description:
-      "Partially updates a test scenario within a project context. At least one of title, Markdown, or plain-text details is required; omitted fields are preserved and details may be cleared with null.",
+      "Partially updates structured Test Scenario fields within a project context. Omitted fields are preserved, nullable fields may be cleared, and generated Markdown and steps are read-only.",
     request: {
       params: TestScenarioIdParamsSchema,
       query: TestScenarioProjectQuerySchema,
@@ -357,6 +424,112 @@ export function registerTestScenarioRoutes(registry: OpenAPIRegistry): void {
         },
       },
       400: errorResponse("Invalid scenario, project, or update input"),
+      401: errorResponse("Unauthorized"),
+      404: errorResponse("Test scenario not found in the requested project"),
+      500: errorResponse("Internal server error"),
+    },
+    tags: ["Test Scenarios"],
+  });
+
+  registry.registerPath({
+    method: "post",
+    path: "/api/v2/test-scenarios/{scenarioId}/steps",
+    description: "Appends a stable-ID step and regenerates the scenario projection.",
+    request: {
+      params: TestScenarioIdParamsSchema,
+      query: TestScenarioProjectQuerySchema,
+      body: {
+        required: true,
+        content: {
+          "application/json": { schema: AppendTestScenarioStepRequestSchema },
+        },
+      },
+    },
+    security: [{ BearerAuth: [] }],
+    responses: {
+      201: {
+        description: "Step appended; complete scenario returned",
+        content: { "application/json": { schema: TestScenarioSchema } },
+      },
+      400: errorResponse("Invalid step or project context"),
+      401: errorResponse("Unauthorized"),
+      404: errorResponse("Test scenario not found in the requested project"),
+      500: errorResponse("Internal server error"),
+    },
+    tags: ["Test Scenarios"],
+  });
+
+  registry.registerPath({
+    method: "patch",
+    path: "/api/v2/test-scenarios/{scenarioId}/steps/{stepId}",
+    description: "Partially edits a project-scoped stable-ID step.",
+    request: {
+      params: TestScenarioStepParamsSchema,
+      query: TestScenarioProjectQuerySchema,
+      body: {
+        required: true,
+        content: {
+          "application/json": { schema: UpdateTestScenarioStepRequestSchema },
+        },
+      },
+    },
+    security: [{ BearerAuth: [] }],
+    responses: {
+      200: {
+        description: "Step updated; complete scenario returned",
+        content: { "application/json": { schema: TestScenarioSchema } },
+      },
+      400: errorResponse("Invalid step or project context"),
+      401: errorResponse("Unauthorized"),
+      404: errorResponse("Test scenario or step not found in the requested project"),
+      500: errorResponse("Internal server error"),
+    },
+    tags: ["Test Scenarios"],
+  });
+
+  registry.registerPath({
+    method: "delete",
+    path: "/api/v2/test-scenarios/{scenarioId}/steps/{stepId}",
+    description: "Deletes a step, compacts positions, and regenerates the projection.",
+    request: {
+      params: TestScenarioStepParamsSchema,
+      query: TestScenarioProjectQuerySchema,
+    },
+    security: [{ BearerAuth: [] }],
+    responses: {
+      200: {
+        description: "Step deleted; complete scenario returned",
+        content: { "application/json": { schema: TestScenarioSchema } },
+      },
+      400: errorResponse("Invalid step or project context"),
+      401: errorResponse("Unauthorized"),
+      404: errorResponse("Test scenario or step not found in the requested project"),
+      500: errorResponse("Internal server error"),
+    },
+    tags: ["Test Scenarios"],
+  });
+
+  registry.registerPath({
+    method: "put",
+    path: "/api/v2/test-scenarios/{scenarioId}/steps/order",
+    description: "Reorders all current steps using their complete stable-ID list.",
+    request: {
+      params: TestScenarioIdParamsSchema,
+      query: TestScenarioProjectQuerySchema,
+      body: {
+        required: true,
+        content: {
+          "application/json": { schema: ReorderTestScenarioStepsRequestSchema },
+        },
+      },
+    },
+    security: [{ BearerAuth: [] }],
+    responses: {
+      200: {
+        description: "Steps reordered; complete scenario returned",
+        content: { "application/json": { schema: TestScenarioSchema } },
+      },
+      400: errorResponse("stepIds must contain every current step exactly once"),
       401: errorResponse("Unauthorized"),
       404: errorResponse("Test scenario not found in the requested project"),
       500: errorResponse("Internal server error"),
@@ -461,7 +634,7 @@ export function registerTestScenarioRoutes(registry: OpenAPIRegistry): void {
     method: "post",
     path: "/api/v2/test-scenarios",
     description:
-      "Creates a project-scoped Markdown test scenario with optional plain-text details.",
+      "Creates a project-scoped structured Test Scenario with optional initial steps and generated Markdown.",
     request: {
       body: {
         required: true,
@@ -550,7 +723,7 @@ export function registerTestScenarioRoutes(registry: OpenAPIRegistry): void {
     method: "get",
     path: "/api/v2/test-scenarios/{scenarioId}",
     description:
-      "Retrieves a complete test scenario, including nullable plain-text details and exact raw Markdown, within a project context.",
+      "Retrieves a complete structured Test Scenario with ordered steps and exact persisted generated Markdown within a project context.",
     request: {
       params: TestScenarioIdParamsSchema,
       query: TestScenarioProjectQuerySchema,
@@ -635,10 +808,15 @@ export function registerTestScenarioRoutes(registry: OpenAPIRegistry): void {
 
 export {
   CreateTestScenarioRequestSchema,
+  CreateTestScenarioStepSchema,
   TestScenarioCreatorSummarySchema,
+  AppendTestScenarioStepRequestSchema,
+  UpdateTestScenarioStepRequestSchema,
+  ReorderTestScenarioStepsRequestSchema,
   UpdateTestScenarioRequestSchema,
   TestScenarioEvidenceQuerySchema,
   TestScenarioIdParamsSchema,
+  TestScenarioStepParamsSchema,
   TestScenarioIssuesResponseSchema,
   TestScenarioLinkedSpecSchema,
   TestScenarioListQuerySchema,

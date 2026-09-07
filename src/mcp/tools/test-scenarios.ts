@@ -30,7 +30,7 @@ export const listTestScenarios = createMcpTool(
 
 export const getTestScenario = createMcpTool(
   "get-test-scenario",
-  "Retrieve a complete project-scoped Test Scenario with nullable details, raw Markdown, and independently paginated Result and observed-Issue evidence.",
+  "Retrieve a complete project-scoped Test Scenario with structured fields, ordered steps, generated Markdown metadata, and independently paginated Result and observed-Issue evidence.",
   getTestScenarioSchema,
   async (params: TestScenarioMcpGetParams): Promise<MCPToolResponse> => {
     const scenario = await mcpTestScenarioHandler.getTestScenario(params);
@@ -41,7 +41,7 @@ export const getTestScenario = createMcpTool(
 
 export const updateTestScenario = createMcpTool(
   "update-test-scenario",
-  "Partially update a project-scoped Test Scenario title, Markdown, or plain-text details. At least one editable field is required; details are trimmed, null clears details, and omitted fields are preserved.",
+  "Partially update structured fields on a project-scoped Test Scenario. At least one editable field is required; optional fields are trimmed, null clears them, and omitted fields are preserved. Generated Markdown and steps are read-only here.",
   updateTestScenarioSchema,
   async (params: TestScenarioMcpUpdateParams): Promise<MCPToolResponse> => {
     const scenario = await mcpTestScenarioHandler.updateTestScenario(params);

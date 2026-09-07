@@ -4,11 +4,15 @@
 import type { Request, Response } from "express";
 import type { AuthenticatedRequest } from "@/middleware/authMiddleware";
 import {
+  appendTestScenarioStepSchema,
   createTestScenarioSchema,
+  reorderTestScenarioStepsSchema,
   testScenarioIdParamsSchema,
   testScenarioListQuerySchema,
   testScenarioProjectQuerySchema,
+  testScenarioStepParamsSchema,
   updateTestScenarioSchema,
+  updateTestScenarioStepSchema,
 } from "@/schemas/testScenarioSchemas";
 import {
   testScenarioEvidenceParamsSchema as integrationEvidenceParamsSchema,
@@ -162,6 +166,130 @@ export const testScenarioController = {
       res.status(200).json(scenario);
     } catch (error) {
       sendServiceError(res, error, "update test scenario");
+    }
+  },
+
+  async appendStep(
+    req: Request<{ scenarioId: string }>,
+    res: Response,
+  ): Promise<void> {
+    const params = testScenarioIdParamsSchema.safeParse(req.params);
+    const query = testScenarioProjectQuerySchema.safeParse(req.query);
+    const body = appendTestScenarioStepSchema.safeParse(req.body);
+    if (!params.success) {
+      sendValidationError(res, validationMessage(params.error));
+      return;
+    }
+    if (!query.success) {
+      sendValidationError(res, validationMessage(query.error));
+      return;
+    }
+    if (!body.success) {
+      sendValidationError(res, validationMessage(body.error));
+      return;
+    }
+
+    try {
+      const scenario = await testScenarioService.appendStep({
+        scenarioId: params.data.scenarioId,
+        projectId: query.data.projectId,
+        ...body.data,
+      });
+      res.status(201).json(scenario);
+    } catch (error) {
+      sendServiceError(res, error, "append test scenario step");
+    }
+  },
+
+  async updateStep(
+    req: Request<{ scenarioId: string; stepId: string }>,
+    res: Response,
+  ): Promise<void> {
+    const params = testScenarioStepParamsSchema.safeParse(req.params);
+    const query = testScenarioProjectQuerySchema.safeParse(req.query);
+    const body = updateTestScenarioStepSchema.safeParse(req.body);
+    if (!params.success) {
+      sendValidationError(res, validationMessage(params.error));
+      return;
+    }
+    if (!query.success) {
+      sendValidationError(res, validationMessage(query.error));
+      return;
+    }
+    if (!body.success) {
+      sendValidationError(res, validationMessage(body.error));
+      return;
+    }
+
+    try {
+      const scenario = await testScenarioService.updateStep({
+        scenarioId: params.data.scenarioId,
+        projectId: query.data.projectId,
+        stepId: params.data.stepId,
+        ...body.data,
+      });
+      res.status(200).json(scenario);
+    } catch (error) {
+      sendServiceError(res, error, "update test scenario step");
+    }
+  },
+
+  async deleteStep(
+    req: Request<{ scenarioId: string; stepId: string }>,
+    res: Response,
+  ): Promise<void> {
+    const params = testScenarioStepParamsSchema.safeParse(req.params);
+    const query = testScenarioProjectQuerySchema.safeParse(req.query);
+    if (!params.success) {
+      sendValidationError(res, validationMessage(params.error));
+      return;
+    }
+    if (!query.success) {
+      sendValidationError(res, validationMessage(query.error));
+      return;
+    }
+
+    try {
+      const scenario = await testScenarioService.deleteStep({
+        scenarioId: params.data.scenarioId,
+        projectId: query.data.projectId,
+        stepId: params.data.stepId,
+      });
+      res.status(200).json(scenario);
+    } catch (error) {
+      sendServiceError(res, error, "delete test scenario step");
+    }
+  },
+
+  async reorderSteps(
+    req: Request<{ scenarioId: string }>,
+    res: Response,
+  ): Promise<void> {
+    const params = testScenarioIdParamsSchema.safeParse(req.params);
+    const query = testScenarioProjectQuerySchema.safeParse(req.query);
+    const body = reorderTestScenarioStepsSchema.safeParse(req.body);
+    if (!params.success) {
+      sendValidationError(res, validationMessage(params.error));
+      return;
+    }
+    if (!query.success) {
+      sendValidationError(res, validationMessage(query.error));
+      return;
+    }
+    if (!body.success) {
+      sendValidationError(res, validationMessage(body.error));
+      return;
+    }
+
+    try {
+      const scenario = await testScenarioService.reorderSteps({
+        scenarioId: params.data.scenarioId,
+        projectId: query.data.projectId,
+        ...body.data,
+      });
+      res.status(200).json(scenario);
+    } catch (error) {
+      sendServiceError(res, error, "reorder test scenario steps");
     }
   },
 
