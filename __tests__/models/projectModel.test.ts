@@ -66,6 +66,9 @@ describe("projectModel", () => {
         testScenario: {
           deleteMany: mockResolved({ count: 1 }),
         },
+        manualTestRun: {
+          deleteMany: mockResolved({ count: 1 }),
+        },
         uploadApiKey: {
           deleteMany: mockResolved({ count: 0 }),
         },
@@ -86,6 +89,9 @@ describe("projectModel", () => {
         where: { projectId },
       });
       expect(mockTxClient.testScenario.deleteMany).toHaveBeenCalledWith({
+        where: { projectId },
+      });
+      expect(mockTxClient.manualTestRun.deleteMany).toHaveBeenCalledWith({
         where: { projectId },
       });
       const dailyMetricsDeleteOrder =

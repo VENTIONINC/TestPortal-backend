@@ -214,10 +214,11 @@ export const projectModel = {
    * 4. Issues (references Project)
    * 5. Executions (references Project)
    * 6. Specs (references Project)
-   * 7. TestScenarios (references Project)
-   * 8. DailyExecutionMetric (references Project)
-   * 9. UploadApiKeys (references Project)
-   * 10. Project itself
+   * 7. ManualTestRuns (references Project; steps cascade)
+   * 8. TestScenarios (references Project)
+   * 9. DailyExecutionMetric (references Project)
+   * 10. UploadApiKeys (references Project)
+   * 11. Project itself
    */
   async deleteWithCascade(id: string): Promise<Project> {
     return await dbClient.$transaction(async (tx) => {
@@ -315,22 +316,28 @@ export const projectModel = {
         where: { projectId: id },
       });
 
-      // Step 7: Delete TestScenarios (references Project)
+      // Step 7: Delete manual runs before scenarios and the project. Run steps
+      // cascade, while the explicit delete preserves the transaction boundary.
+      await tx.manualTestRun.deleteMany({
+        where: { projectId: id },
+      });
+
+      // Step 8: Delete TestScenarios (references Project)
       await tx.testScenario.deleteMany({
         where: { projectId: id },
       });
 
-      // Step 8: Delete DailyExecutionMetric (references Project)
+      // Step 9: Delete DailyExecutionMetric (references Project)
       await tx.dailyExecutionMetric.deleteMany({
         where: { projectId: id },
       });
 
-      // Step 9: Delete UploadApiKeys (references Project)
+      // Step 10: Delete UploadApiKeys (references Project)
       await tx.uploadApiKey.deleteMany({
         where: { projectId: id },
       });
 
-      // Step 10: Delete Project itself
+      // Step 11: Delete Project itself
       return await tx.project.delete({
         where: { id },
       });
