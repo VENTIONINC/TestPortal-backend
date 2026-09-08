@@ -770,22 +770,28 @@ export const resultModel = {
               });
             }
 
-            const linkedResults =
-              issueResults.get(issue.id) ??
-              new Map<
-                string,
-                {
-                  id: string;
-                  analysisCategory: string | null;
-                  analysisFeedbackCategory: string | null;
-                }
-              >();
-            linkedResults.set(result.id, {
-              id: result.id,
-              analysisCategory: result.analysisCategory,
-              analysisFeedbackCategory: result.analysisFeedbackCategory,
-            });
-            issueResults.set(issue.id, linkedResults);
+            const hasConfirmedFeedback =
+              result.analysisFeedbackCategory !== null &&
+              result.analysisFeedbackCategory !== undefined;
+
+            if (hasConfirmedFeedback) {
+              const linkedResults =
+                issueResults.get(issue.id) ??
+                new Map<
+                  string,
+                  {
+                    id: string;
+                    analysisCategory: string | null;
+                    analysisFeedbackCategory: string | null;
+                  }
+                >();
+              linkedResults.set(result.id, {
+                id: result.id,
+                analysisCategory: result.analysisCategory,
+                analysisFeedbackCategory: result.analysisFeedbackCategory,
+              });
+              issueResults.set(issue.id, linkedResults);
+            }
           }
         });
       });
