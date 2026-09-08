@@ -1,0 +1,93 @@
+openspec/changes/add-manual-test-runs/.openspec.yaml
+  s_c3829085ea7efd::t_a0313b4657ce83 1-2
+openspec/changes/add-manual-test-runs/design.md
+  s_c3829085ea7efd::t_1bd6df779db66d 1-96
+openspec/changes/add-manual-test-runs/proposal.md
+  s_c3829085ea7efd::t_35ca3b0a4c820d 1-34
+openspec/changes/add-manual-test-runs/specs/manual-test-run-history/spec.md
+  s_c3829085ea7efd::t_713ea331658692 1-99
+openspec/changes/add-manual-test-runs/specs/manual-test-run-snapshots/spec.md
+  s_c3829085ea7efd::t_b3e31f6ce1b6fb 1-58
+__tests__/controllers/manualTestRunController.test.ts
+  s_a23bc97ef36535::t_f27c8468ec117c 1-121
+__tests__/lib/openapi/manualTestRuns.test.ts
+  s_a23bc97ef36535::t_782f8b2309144c 1-60
+__tests__/manual-test-runs/manualTestRunPostgresIntegration.test.ts
+  s_a23bc97ef36535::t_79d9cd2710096c 1-646
+__tests__/models/manualTestRunModel.test.ts
+  s_a23bc97ef36535::t_4081191dd42117 1-200
+__tests__/models/projectModel.test.ts
+  s_a23bc97ef36535::t_9fc2d7b8d2f171 69-71,94-96
+__tests__/prisma/manualTestRunMigration.test.ts
+  s_a23bc97ef36535::t_965423f7904aab 1-54
+__tests__/routes/manual-test-runs.test.ts
+  s_a23bc97ef36535::t_d9956c08f4031a 1-105
+__tests__/schemas/manualTestRunSchemas.test.ts
+  s_a23bc97ef36535::t_53d77d3f61a234 1-86
+__tests__/services/manualTestRunService.test.ts
+  s_a23bc97ef36535::t_5f5109326be4fe 1-166
+docs/API_DOCUMENTATION.md
+  s_a23bc97ef36535::t_ef93d340f8aa91 139-187
+openspec/changes/add-manual-test-runs/specs/manual-test-run-execution/spec.md
+  s_c3829085ea7efd::t_ceacf20928d9f1 1-50
+openspec/changes/add-manual-test-runs/tasks.md
+  s_a23bc97ef36535::t_e0763f05555f85 1-43
+postman/Manual_Test_Runs_API.postman_collection.json
+  s_a23bc97ef36535::t_cbc42aae834a90 1-90
+postman/README.md
+  s_a23bc97ef36535::t_85d1d7d17530a6 39-47
+postman/docs/Manual_Test_Runs_API.md
+  s_a23bc97ef36535::t_1e61cace589e31 1-11
+prisma/migrations/20260908120000_add_manual_test_runs/migration.sql
+  s_a23bc97ef36535::t_04efcd88e72974 1-86
+prisma/schema.prisma
+  s_a23bc97ef36535::t_e5339fbddc1710 29-44,63,207,259,289-332
+src/controllers/manualTestRunController.ts
+  s_a23bc97ef36535::t_2d4006672d3903 1-245
+src/lib/openapi/index.ts
+  s_a23bc97ef36535::t_6e1855e7a1795a 30,57,99-103
+src/lib/openapi/manualTestRuns.ts
+  s_a23bc97ef36535::t_8d32eea8ccba4c 1-318
+src/models/manualTestRunModel.ts
+  s_a23bc97ef36535::t_9b2e25b57199f9 1-501
+src/models/projectModel.ts
+  s_a23bc97ef36535::t_3e48f0be852226 217-221,319-325,330,335,340
+src/routes/index.ts
+  s_a23bc97ef36535::t_4017b79afd1527 24,52
+src/routes/manual-test-runs.ts
+  s_a23bc97ef36535::t_3139d0527a043c 1-46
+src/schemas/index.ts
+  s_a23bc97ef36535::t_6230a88b6e8b46 50-51
+src/schemas/manualTestRunSchemas.ts
+  s_a23bc97ef36535::t_d80ca0888a8f60 1-153
+src/services/manualTestRunService.ts
+  s_a23bc97ef36535::t_e7972cce4eff57 1-336
+src/types/index.ts
+  s_a23bc97ef36535::t_276c9b6c02b5cb 13
+src/types/manualTestRuns.ts
+  s_a23bc97ef36535::t_d191bdbb673cb0 1-165
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.18",
+  "base_commit_sha": "95f2bb75edd5e38fc0c371766fcba7e32c8febbf",
+  "prompts": {},
+  "sessions": {
+    "s_a23bc97ef36535": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a08006-be49-7f62-a814-a1a532a0186c",
+        "model": "unknown"
+      },
+      "human_author": "Ihar Mikailau <ihar.mikailau@ventionteams.com>"
+    },
+    "s_c3829085ea7efd": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a07fe8-0de5-7ae1-a8b0-1fd82bb66adc",
+        "model": "gpt-6-astra"
+      },
+      "human_author": "Ihar Mikailau <ihar.mikailau@ventionteams.com>"
+    }
+  }
+}
