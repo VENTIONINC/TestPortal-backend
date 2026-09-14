@@ -23,6 +23,7 @@ export interface ResultFilters {
   reviewStatus?: string;
   errorMessage?: string;
   issueName?: string;
+  assumption?: "all" | "confirmed" | "not-confirmed";
   from?: string;
   to?: string;
   dates?: string[];
@@ -119,6 +120,38 @@ function applyTagFilter(specFilter: Prisma.SpecWhereInput, tag?: string) {
   }
 }
 
+function appendResultCondition(
+  whereClause: Prisma.ResultWhereInput,
+  condition: Prisma.ResultWhereInput,
+) {
+  const existingAnd = whereClause.AND;
+  whereClause.AND = [
+    ...(Array.isArray(existingAnd)
+      ? existingAnd
+      : existingAnd
+        ? [existingAnd]
+        : []),
+    condition,
+  ];
+}
+
+function buildAssumptionCondition(
+  assumption: NonNullable<ResultFilters["assumption"]>,
+): Prisma.ResultWhereInput {
+  return {
+    errors: {
+      some: {
+        assumptions: {
+          some:
+            assumption === "all"
+              ? {}
+              : { isConfirmed: assumption === "confirmed" },
+        },
+      },
+    },
+  };
+}
+
 export const resultModel = {
   findById: async (
     id: number | string,
@@ -169,6 +202,7 @@ export const resultModel = {
       reviewStatus,
       errorMessage,
       issueName,
+      assumption,
       from,
       to,
       dates,
@@ -199,18 +233,6 @@ export const resultModel = {
 
     // Add other filters
     if (status) whereClause.status = status;
-
-    // Error message filter
-    if (errorMessage) {
-      whereClause.errors = {
-        some: {
-          message: {
-            contains: errorMessage,
-            mode: "insensitive",
-          },
-        },
-      };
-    }
 
     // Review status filter
     if (reviewStatus) {
@@ -279,20 +301,33 @@ export const resultModel = {
     }
 
     if (issueName) {
-      whereClause.errors = {
-        some: {
-          assumptions: {
-            some: {
-              issue: {
-                name: {
-                  contains: issueName,
-                  mode: "insensitive",
+      appendResultCondition(whereClause, {
+        errors: {
+          some: {
+            assumptions: {
+              some: {
+                issue: {
+                  name: { contains: issueName, mode: "insensitive" },
                 },
               },
             },
           },
         },
-      };
+      });
+    }
+
+    if (assumption) {
+      appendResultCondition(whereClause, buildAssumptionCondition(assumption));
+    }
+
+    if (errorMessage) {
+      appendResultCondition(whereClause, {
+        errors: {
+          some: {
+            message: { contains: errorMessage, mode: "insensitive" },
+          },
+        },
+      });
     }
 
     if (from || to) {
@@ -363,6 +398,7 @@ export const resultModel = {
       reviewStatus,
       errorMessage,
       issueName,
+      assumption,
       from,
       to,
       dates,
@@ -393,18 +429,6 @@ export const resultModel = {
 
     // Add other filters
     if (status) whereClause.status = status;
-
-    // Error message filter
-    if (errorMessage) {
-      whereClause.errors = {
-        some: {
-          message: {
-            contains: errorMessage,
-            mode: "insensitive",
-          },
-        },
-      };
-    }
 
     // Review status filter
     if (reviewStatus) {
@@ -474,20 +498,33 @@ export const resultModel = {
 
     // Issue name filter
     if (issueName) {
-      whereClause.errors = {
-        some: {
-          assumptions: {
-            some: {
-              issue: {
-                name: {
-                  contains: issueName,
-                  mode: "insensitive",
+      appendResultCondition(whereClause, {
+        errors: {
+          some: {
+            assumptions: {
+              some: {
+                issue: {
+                  name: { contains: issueName, mode: "insensitive" },
                 },
               },
             },
           },
         },
-      };
+      });
+    }
+
+    if (assumption) {
+      appendResultCondition(whereClause, buildAssumptionCondition(assumption));
+    }
+
+    if (errorMessage) {
+      appendResultCondition(whereClause, {
+        errors: {
+          some: {
+            message: { contains: errorMessage, mode: "insensitive" },
+          },
+        },
+      });
     }
 
     if (from || to) {
@@ -533,6 +570,7 @@ export const resultModel = {
       environment,
       type,
       status,
+      assumption,
       from,
       to,
       dates,
@@ -571,6 +609,9 @@ export const resultModel = {
           }),
         },
       ];
+    }
+    if (assumption) {
+      appendResultCondition(resultWhere, buildAssumptionCondition(assumption));
     }
 
     const rows = await dbClient.spec.findMany({
