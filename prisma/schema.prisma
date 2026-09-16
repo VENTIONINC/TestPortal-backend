@@ -43,12 +43,12 @@ enum ManualTestRunStepStatus {
 }
 
 model Project {
-  id          String   @id @default(uuid()) @db.Uuid
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  name        String   @unique
-  description String?
-  isActive    Boolean  @default(true)
+  id              String   @id @default(uuid()) @db.Uuid
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  name            String   @unique
+  description     String?
+  isActive        Boolean  @default(true)
   categoryWeights Json?
 
   // Simple ownership
@@ -80,7 +80,7 @@ model Execution {
   provider    String   @default("Playwright")
 
   // Project relationship
-  project   Project @relation(fields: [projectId], references: [id])
+  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
   projectId String  @db.Uuid
 
   results Result[]
@@ -102,7 +102,7 @@ model Spec {
   annotations Json     @default("[]")
 
   // Project relationship
-  project   Project @relation(fields: [projectId], references: [id])
+  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
   projectId String  @db.Uuid
 
   results Result[]
@@ -116,52 +116,54 @@ model Spec {
 }
 
 model Result {
-  id                              String        @id @default(uuid()) @db.Uuid
-  createdAt                       DateTime      @default(now())
-  updatedAt                       DateTime      @updatedAt
-  reportPortalLink                String?
-  retry                           Int
-  status                          String
-  duration                        Int
-  startTime                       DateTime
-  errors                          ResultError[]
-  spec                            Spec          @relation(fields: [specId], references: [id])
-  specId                          String        @db.Uuid
-  execution                       Execution     @relation(fields: [executionId], references: [id])
-  executionId                     String        @db.Uuid
-  analysisStatus                  String? // "passed" | "failed"
-  analysisCategory                String? // "bug" | "infra" | "performance" | "script" | "other"
-  analysisConfidence              Int? // 1 to 5
-  analysisConclusion              String? // Brief explanation for the categorization decision
-  analysisErrorQuality            Int? // 1 to 5 (only for failed tests)
-  analysisErrorQualityConclusion  String? // Brief explanation for error quality rating (only for failed tests)
-  analysisReviewedAt              DateTime?
-  analysisReviewedById            String? @db.Uuid
-  analysisFeedbackCategory        String?
-  analysisFeedbackConfidence      Int?
-  analysisFeedbackConclusion      String?
+  id                             String        @id @default(uuid()) @db.Uuid
+  createdAt                      DateTime      @default(now())
+  updatedAt                      DateTime      @updatedAt
+  reportPortalLink               String?
+  retry                          Int
+  status                         String
+  duration                       Int
+  startTime                      DateTime
+  errors                         ResultError[]
+  spec                           Spec          @relation(fields: [specId], references: [id], onDelete: Cascade)
+  specId                         String        @db.Uuid
+  execution                      Execution     @relation(fields: [executionId], references: [id], onDelete: Cascade)
+  executionId                    String        @db.Uuid
+  analysisStatus                 String? // "passed" | "failed"
+  analysisCategory               String? // "bug" | "infra" | "performance" | "script" | "other"
+  analysisConfidence             Int? // 1 to 5
+  analysisConclusion             String? // Brief explanation for the categorization decision
+  analysisErrorQuality           Int? // 1 to 5 (only for failed tests)
+  analysisErrorQualityConclusion String? // Brief explanation for error quality rating (only for failed tests)
+  analysisReviewedAt             DateTime?
+  analysisReviewedById           String?       @db.Uuid
+  analysisFeedbackCategory       String?
+  analysisFeedbackConfidence     Int?
+  analysisFeedbackConclusion     String?
 
+  @@index([specId])
   @@index([specId, startTime])
+  @@index([executionId])
 }
 
 model ResultError {
-  id              String       @id @default(uuid()) @db.Uuid
-  createdAt       DateTime     @default(now())
-  updatedAt       DateTime     @updatedAt
-  type            String
-  message         String
-  callLog         Json?
-  callStack       Json
-  rawLogs         Json?
-  sourceSnippet   Json?
+  id                String       @id @default(uuid()) @db.Uuid
+  createdAt         DateTime     @default(now())
+  updatedAt         DateTime     @updatedAt
+  type              String
+  message           String
+  callLog           Json?
+  callStack         Json
+  rawLogs           Json?
+  sourceSnippet     Json?
   generatedTestCase String?
-  testAssertion   String?
-  expectedPattern String?
-  receivedString  String?
-  location        String
-  result          Result?      @relation(fields: [resultId], references: [id])
-  resultId        String?      @db.Uuid
-  assumptions     Assumption[]
+  testAssertion     String?
+  expectedPattern   String?
+  receivedString    String?
+  location          String
+  result            Result?      @relation(fields: [resultId], references: [id], onDelete: Cascade)
+  resultId          String?      @db.Uuid
+  assumptions       Assumption[]
 
   @@index([resultId])
 }
@@ -173,9 +175,9 @@ model Assumption {
   isConfirmed   Boolean
   score         Float
   madeBy        String
-  issue         Issue        @relation(fields: [issueId], references: [id])
+  issue         Issue        @relation(fields: [issueId], references: [id], onDelete: Cascade)
   issueId       String       @db.Uuid
-  resultError   ResultError? @relation(fields: [resultErrorId], references: [id])
+  resultError   ResultError? @relation(fields: [resultErrorId], references: [id], onDelete: Cascade)
   resultErrorId String?      @db.Uuid
 
   @@index([issueId])
@@ -183,21 +185,21 @@ model Assumption {
 }
 
 model User {
-  id                      String   @id @default(uuid()) @db.Uuid
-  createdAt               DateTime @default(now())
-  updatedAt               DateTime @updatedAt
+  id                      String     @id @default(uuid()) @db.Uuid
+  createdAt               DateTime   @default(now())
+  updatedAt               DateTime   @updatedAt
   name                    String
-  email                   String   @unique
+  email                   String     @unique
   status                  UserStatus @default(active)
   role                    UserRole   @default(member)
   passwordHash            String?
-  cognitoUserId           String?  @unique
-  mcpToken                String?  @unique
+  cognitoUserId           String?    @unique
+  mcpToken                String?    @unique
   reportPortalUrl         String?
-  reportPortalEnabled     Boolean  @default(false)
+  reportPortalEnabled     Boolean    @default(false)
   monitoringPortalUrl     String?
-  monitoringPortalEnabled Boolean  @default(false)
-  analyzeEnabled          Boolean  @default(false)
+  monitoringPortalEnabled Boolean    @default(false)
+  analyzeEnabled          Boolean    @default(false)
 
   // Project relationships
   projects             Project[]
@@ -220,13 +222,13 @@ model Issue {
   ticket      String?
 
   // Project relationship
-  project   Project @relation(fields: [projectId], references: [id])
+  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
   projectId String  @db.Uuid
 
-  createdBy   User?   @relation("IssuesCreated", fields: [createdById], references: [id])
-  createdById String? @db.Uuid
-  updatedBy   User?   @relation("IssuesUpdated", fields: [updatedById], references: [id])
-  updatedById String? @db.Uuid
+  createdBy   User?        @relation("IssuesCreated", fields: [createdById], references: [id])
+  createdById String?      @db.Uuid
+  updatedBy   User?        @relation("IssuesUpdated", fields: [updatedById], references: [id])
+  updatedById String?      @db.Uuid
   assumptions Assumption[]
 
   @@index([projectId])
@@ -250,7 +252,7 @@ model TestScenario {
   contentMdFormatVersion Int               @default(1)
   createdById           String             @db.Uuid
 
-  project   Project @relation(fields: [projectId], references: [id])
+  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
   projectId String  @db.Uuid
   createdBy User    @relation("TestScenarioCreatedBy", fields: [createdById], references: [id])
 
@@ -305,7 +307,7 @@ model ManualTestRun {
   scenarioNotes        String?             @db.Text
   notes                String?             @db.Text
 
-  project      Project             @relation(fields: [projectId], references: [id])
+  project      Project             @relation(fields: [projectId], references: [id], onDelete: Cascade)
   testScenario TestScenario?       @relation(fields: [testScenarioId], references: [id], onDelete: SetNull)
   executedBy   User?               @relation("ManualTestRunExecutedBy", fields: [executedById], references: [id], onDelete: SetNull)
   steps        ManualTestRunStep[]
@@ -338,7 +340,7 @@ model UploadApiKey {
   isActive  Boolean  @default(true)
 
   // Project relationship
-  project   Project @relation(fields: [projectId], references: [id])
+  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
   projectId String  @db.Uuid
 
   // Owner relationship
@@ -372,7 +374,7 @@ model DailyExecutionMetric {
   issuesPerformance Int @default(0)
   issuesOther       Int @default(0)
 
-  project Project @relation(fields: [projectId], references: [id])
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
 
   @@unique([projectId, environment, type, date])
   @@index([projectId, date])

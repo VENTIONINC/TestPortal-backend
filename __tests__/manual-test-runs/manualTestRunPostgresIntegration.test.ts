@@ -456,7 +456,7 @@ describePostgres("manual test run PostgreSQL integration", () => {
       `CREATE FUNCTION "${functionName}"() RETURNS trigger LANGUAGE plpgsql AS $$ BEGIN RAISE EXCEPTION 'forced project deletion failure'; END; $$`,
     );
     await dbClient.$executeRawUnsafe(
-      `CREATE TRIGGER "${triggerName}" BEFORE DELETE ON "Project" FOR EACH ROW EXECUTE FUNCTION "${functionName}"()`,
+      `CREATE TRIGGER "${triggerName}" AFTER DELETE ON "Project" FOR EACH ROW EXECUTE FUNCTION "${functionName}"()`,
     );
 
     try {
@@ -466,6 +466,9 @@ describePostgres("manual test run PostgreSQL integration", () => {
       expect(
         await dbClient.manualTestRun.findUnique({ where: { id: run.id } }),
       ).not.toBeNull();
+      expect(await dbClient.testScenario.findUnique({ where: { id: scenario.id } })).not.toBeNull();
+      expect(await dbClient.testScenarioStep.count({ where: { testScenarioId: scenario.id } })).toBe(1);
+      expect(await dbClient.manualTestRunStep.count({ where: { manualTestRunId: run.id } })).toBe(1);
       expect(
         await dbClient.project.findUnique({ where: { id: rollbackProjectId } }),
       ).not.toBeNull();
@@ -614,7 +617,9 @@ describePostgres("manual test run PostgreSQL integration", () => {
     }
   });
 
-  it("removes only a deleted project's runs and steps", async () => {
+  it("cascades only the deleted project's scenarios, runs, steps, and links", async () => {
+    const retainedScenario = await createScenario();
+    const retainedRun = await startRun(retainedScenario);
     const otherProjectId = randomUUID();
     await dbClient.project.create({
       data: {
@@ -637,7 +642,21 @@ describePostgres("manual test run PostgreSQL integration", () => {
     });
     if (!otherRun) throw new Error("Failed to create other run");
 
+    const spec = await dbClient.spec.create({
+      data: { projectId: otherProjectId, key: randomUUID(), title: "Linked spec", file: "cascade.spec.ts" },
+    });
+    await dbClient.testScenarioSpecLink.create({
+      data: { testScenarioId: otherScenario.id, specId: spec.id },
+    });
     await projectModel.deleteWithCascade(otherProjectId);
+    expect(await dbClient.testScenario.count({ where: { projectId: otherProjectId } })).toBe(0);
+    expect(await dbClient.testScenarioStep.count({ where: { testScenarioId: otherScenario.id } })).toBe(0);
+    expect(await dbClient.testScenarioSpecLink.count({ where: { testScenarioId: otherScenario.id } })).toBe(0);
+    expect(await dbClient.manualTestRunStep.count({ where: { manualTestRunId: otherRun.id } })).toBe(0);
+    expect(await dbClient.testScenario.findUnique({ where: { id: retainedScenario.id } })).not.toBeNull();
+    expect(await dbClient.testScenarioStep.count({ where: { testScenarioId: retainedScenario.id } })).toBe(retainedScenario.steps.length);
+    expect(await dbClient.manualTestRun.findUnique({ where: { id: retainedRun.id } })).not.toBeNull();
+    expect(await dbClient.manualTestRunStep.count({ where: { manualTestRunId: retainedRun.id } })).toBe(retainedRun.steps.length);
     expect(
       await dbClient.manualTestRun.findUnique({ where: { id: otherRun.id } }),
     ).toBeNull();

@@ -18,7 +18,7 @@ Exploration agreed to structured snapshots without stored contentMd, preservatio
 
 `ManualTestRunStep`: UUID id; required manualTestRunId (ON DELETE CASCADE); nonnegative integer position; required Text action; nullable Text expectedResult; step status enum; nullable Text notes; updatedAt. Enforce unique (manualTestRunId, position). Steps have no foreign key to source steps and cannot be added, reordered, removed, or rewritten through run APIs.
 
-Add reverse relations on Project, TestScenario, and User. Index runs by (projectId, startedAt, id), (projectId, sourceTestScenarioId, startedAt, id), and executedById. Use immutable startedAt/id for history ordering. Project deletion explicitly removes runs within its existing transaction, cascading run steps, before removing scenarios and the project.
+Add reverse relations on Project, TestScenario, and User. Index runs by (projectId, startedAt, id), (projectId, sourceTestScenarioId, startedAt, id), and executedById. Use immutable startedAt/id for history ordering. Project deletion uses PostgreSQL cascades to atomically remove scenarios, manual runs, and their dependent steps and links. Scenario and executor deletion still set nullable run references to null, preserving history while the project exists.
 
 Copy the exact stored structured text, including nulls, without renormalizing. No contentMd/hash/version columns: structured snapshots fully capture context, and no Markdown consumer is required. JSON snapshots were considered; typed columns and relational steps fit current Prisma/REST conventions and independent step outcomes.
 
@@ -89,7 +89,7 @@ This defines stable ordering for unchanged data, matching existing page/limit AP
 1. Add enums, tables, foreign keys, indexes, and SQL checks. Do not reset scenarios or other data and do not backfill historical runs.
 2. Verify all migrations on an empty isolated database and upgrade a populated pre-run database; confirm existing scenarios/steps/evidence remain unchanged.
 3. Generate Prisma, deploy migration and backend together, and publish OpenAPI for later client adoption. No live database migration during proposal.
-4. Rolling back application code leaves new tables intact; coordinate project deletion behavior because old code does not remove runs. Dropping run tables destroys history and requires explicit approval/backup planning; prefer a forward fix.
+4. Rolling back application code leaves new tables intact; retain the follow-up project cascade migration so project deletion also removes scenarios and runs. Dropping run tables destroys history and requires explicit approval/backup planning; prefer a forward fix.
 
 ## Open Questions
 

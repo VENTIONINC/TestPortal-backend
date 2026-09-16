@@ -365,42 +365,26 @@ describe("resultModel issue statistics", () => {
 
     expect(topA).toMatchObject({
       title: "Duplicate name",
-      count: 2,
+      count: 1,
       category: "other",
       categorySummary: {
         displayCategory: "other",
-        isMixed: true,
-        distribution: { bug: 1, infra: 0, performance: 0, script: 1, other: 0 },
+        isMixed: false,
+        distribution: { bug: 0, infra: 0, performance: 0, script: 1, other: 0 },
         uncategorizedCount: 0,
       },
     });
-    expect(topB).toMatchObject({
-      title: "Duplicate name",
-      count: 1,
-      category: "infra",
-      categorySummary: {
-        displayCategory: "infra",
-        isMixed: false,
-      },
-    });
+    expect(topB).toBeUndefined();
     expect(topC).toMatchObject({
-      count: 3,
+      count: 1,
       category: "performance",
       categorySummary: {
         displayCategory: "performance",
-        isMixed: true,
-        distribution: { bug: 1, infra: 0, performance: 0, script: 2, other: 0 },
-      },
-    });
-    expect(topD).toMatchObject({
-      count: 1,
-      category: "script",
-      categorySummary: {
-        displayCategory: "script",
         isMixed: false,
-        uncategorizedCount: 1,
+        distribution: { bug: 0, infra: 0, performance: 0, script: 1, other: 0 },
       },
     });
+    expect(topD).toBeUndefined();
 
     for (const issue of stats.topIssues) {
       const categorizedTotal = Object.values(
