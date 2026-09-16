@@ -410,4 +410,39 @@ describe("ctrfService", () => {
       }),
     );
   });
+
+  it("reconstructs retry attempts and ordered errors from the provider-neutral extension", () => {
+    const transformed = ctrfService.transformCtrfTest(
+      {
+        name: "failed checkout",
+        status: "failed",
+        duration: 20,
+        message: "primary",
+        trace: "one",
+        filePath: "checkout.spec.ts",
+        retries: 1,
+        retryAttempts: [{
+          attempt: 1,
+          status: "failed",
+          duration: 10,
+          message: "retry failure",
+          extra: { testPortal: { version: 1, errors: [{ index: 0, message: "retry failure", rawLogs: ["retry log"] }] } },
+        }],
+        extra: { testPortal: { version: 1, errors: [
+          { index: 0, message: "primary", stack: "one", rawLogs: ["new log"] },
+          { index: 1, message: "secondary", stack: "two", generatedTestCase: "generated" },
+        ] } },
+        meta: { logs: ["legacy loses"] },
+      },
+      Date.parse("2026-08-19T10:00:00Z"),
+      0,
+    );
+
+    expect(transformed.results).toHaveLength(2);
+    expect(transformed.results[0]).toMatchObject({ retry: 0, errors: [{ message: "retry failure", rawLogs: ["retry log"] }] });
+    expect(transformed.results[1]).toMatchObject({ retry: 1, errors: [
+      { message: "primary", stack: "one", rawLogs: ["new log"] },
+      { message: "secondary", stack: "two", generatedTestCase: "generated" },
+    ] });
+  });
 });

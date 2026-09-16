@@ -8,12 +8,31 @@
 import { z } from "zod/v3";
 import type { MCPToolSchema } from "@/types";
 
+const sourceSnippetSchema = z.object({
+  path: z.string(), text: z.string(), startLine: z.number().int().positive(), failingLine: z.number().int().positive(),
+});
+const testPortalErrorSchema = z.object({
+  index: z.number().int().nonnegative(), message: z.string().optional(), stack: z.string().optional(),
+  location: z.object({ file: z.string(), line: z.number().int(), column: z.number().int().optional() }).optional(),
+  rawLogs: z.array(z.string()).optional(), sourceSnippet: sourceSnippetSchema.optional(), generatedTestCase: z.string().optional(),
+});
+const testPortalExtraSchema = z.object({ version: z.literal(1), errors: z.array(testPortalErrorSchema) });
+const extraSchema = z.object({ testPortal: testPortalExtraSchema }).passthrough();
+const testStatusSchema = z.enum(["passed", "failed", "skipped", "pending", "other"]);
+const retryAttemptSchema = z.object({
+  attempt: z.number().int().positive(), status: testStatusSchema, duration: z.number().int().nonnegative().optional(),
+  message: z.string().optional(), trace: z.string().optional(), line: z.number().int().optional(), snippet: z.string().optional(),
+  stdout: z.array(z.string()).optional(), stderr: z.array(z.string()).optional(), start: z.number().int().optional(), stop: z.number().int().optional(), extra: extraSchema.optional(),
+});
+
 /**
  * Schema for processing CTRF reports
  */
 export const processCtrfReportSchema: MCPToolSchema = {
   projectId: z.string().describe("Project ID to associate the CTRF report with"),
   report: z.object({
+    reportFormat: z.literal("CTRF"),
+    specVersion: z.literal("0.0.0"),
     results: z.object({
       tool: z.object({
         name: z.string().describe("Test tool name (e.g., 'playwright', 'jest')"),
@@ -31,7 +50,7 @@ export const processCtrfReportSchema: MCPToolSchema = {
       }),
       tests: z.array(z.object({
         name: z.string().describe("Test name/title"),
-        status: z.enum(["passed", "failed", "skipped", "pending", "other"]).describe("Test status"),
+        status: testStatusSchema.describe("Test status"),
         duration: z.number().describe("Test duration in milliseconds"),
         start: z.number().optional().describe("Test start timestamp (Unix epoch)"),
         stop: z.number().optional().describe("Test end timestamp (Unix epoch)"),
@@ -40,10 +59,16 @@ export const processCtrfReportSchema: MCPToolSchema = {
         rawStatus: z.string().optional().describe("Original status from test framework"),
         type: z.string().optional().describe("Test type (e.g., 'unit', 'integration')"),
         filePath: z.string().optional().describe("Path to test file"),
-        retry: z.number().optional().describe("Retry attempt number"),
+        retries: z.number().int().nonnegative().optional().describe("Number of retries"),
+        retryAttempts: z.array(retryAttemptSchema).optional(),
         flaky: z.boolean().optional().describe("Whether test is flaky"),
-        suite: z.string().optional().describe("Test suite name"),
+        suite: z.array(z.string()).optional().describe("Test suite hierarchy"),
         tags: z.array(z.string()).optional().describe("Array of test tags"),
+        snippet: z.string().optional(),
+        line: z.number().int().optional(),
+        stdout: z.array(z.string()).optional(),
+        stderr: z.array(z.string()).optional(),
+        extra: extraSchema.optional(),
         meta: z.record(z.string(), z.any()).optional().describe("Custom test metadata"),
       })),
       environment: z.object({

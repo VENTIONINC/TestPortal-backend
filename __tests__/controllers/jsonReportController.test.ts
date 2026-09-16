@@ -62,6 +62,12 @@ describe("jsonReportController Playwright enrichment normalization", () => {
     expect(transformed.tests[0]?.results[0]).toEqual(
       expect.objectContaining({
         logs: ["browser started", "request failed"],
+        errors: [
+          expect.objectContaining({
+            message: "checkout failed",
+            rawLogs: ["browser started", "request failed"],
+          }),
+        ],
         sourceSnippet: {
           path: "checkout.spec.ts",
           text: "await page.goto('/');\nawait checkout.open();\nawait submit.click();",
