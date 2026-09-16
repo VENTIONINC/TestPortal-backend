@@ -1,0 +1,37 @@
+__tests__/models/projectModel.test.ts
+  s_e77bf0e1652866::t_a85bd8e1f6fad5 7,11-13,25,31-32,37
+prisma/migrations/20260907120000_cascade_project_deletion/migration.sql
+  s_e77bf0e1652866::t_154ef285bcaff5 1-48
+__tests__/prisma/testScenarioMigration.test.ts
+  s_b1d97c278d933d::t_b7f0af374b99ad 40-46,61-85
+prisma/schema.prisma
+  s_b1d97c278d933d::t_c9e3648efae639 30-35,66,88,111,113,128,132-140,142-148,160,162,170-172,174,178-179,181,183-184,206,209-212,236,279,313
+src/models/projectModel.ts
+  s_b1d97c278d933d::t_17da4862da1253 208,210-211
+src/services/projectService.ts
+  s_b1d97c278d933d::t_d30a0e1d7fc73e 122
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.18",
+  "base_commit_sha": "30facc948e70b49073db6273af99943509785660",
+  "prompts": {},
+  "sessions": {
+    "s_b1d97c278d933d": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a0aa6c-982e-7f61-9fba-a06082a10c18",
+        "model": "unknown"
+      },
+      "human_author": "Ihar Mikailau <ihar.mikailau@ventionteams.com>"
+    },
+    "s_e77bf0e1652866": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a0aa6f-daf8-7172-89fd-576b4f759008",
+        "model": "gpt-5.6-sol"
+      },
+      "human_author": "Ihar Mikailau <ihar.mikailau@ventionteams.com>"
+    }
+  }
+}
