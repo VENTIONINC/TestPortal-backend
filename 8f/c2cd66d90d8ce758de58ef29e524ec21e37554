@@ -1,0 +1,31 @@
+__tests__/manual-test-runs/manualTestRunPostgresIntegration.test.ts
+  s_20b8467942073f::t_d4de563b1e6045 459,469-471,620-622,645-650,652-659
+__tests__/models/projectModel.test.ts
+  s_20b8467942073f::t_4bc66b8873e651 7,11-13,25,31-32,37
+openspec/changes/add-manual-test-runs/design.md
+  s_20b8467942073f::t_0d3c06516ce3f9 21,92
+prisma/migrations/20260907120000_cascade_project_deletion/migration.sql
+  s_20b8467942073f::t_a95bc9b9e7fe26 1-48
+prisma/migrations/20260909120000_cascade_project_scenarios_and_manual_runs/migration.sql
+  s_20b8467942073f::t_e73d43f95cf773 1-8
+prisma/schema.prisma
+  s_20b8467942073f::t_b63280c474d8bb 46-51,83,105,119-142,144,146,150-158,160-166,178,180,188-190,192,196-197,199,201-202,225,228-231,255,310,343,377
+src/models/projectModel.ts
+  s_20b8467942073f::t_00cdc838af80ad 111,205,207-208
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.18",
+  "base_commit_sha": "8fc2cd66d90d8ce758de58ef29e524ec21e37554",
+  "prompts": {},
+  "sessions": {
+    "s_20b8467942073f": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a08198-c583-77a0-9046-77151d323f88",
+        "model": "gpt-6-astra"
+      },
+      "human_author": "Ihar Mikailau <ihar.mikailau@ventionteams.com>"
+    }
+  }
+}
