@@ -140,6 +140,37 @@ export const resultService = {
     return normalizeResultPayload(resultRecord);
   },
 
+  async getResultsBySpecRecordIds(params: {
+    projectId: string;
+    specRecordIds: string[];
+    page?: number;
+    limit?: number;
+  }): Promise<{
+    results: StructuredResultWithRelations[];
+    total: number;
+  }> {
+    if (!params.projectId) {
+      throw new Error("Project ID is required");
+    }
+
+    const page = params.page ?? 1;
+    const limit = params.limit ?? 30;
+    const [results, total] = await Promise.all([
+      resultModel.findManyBySpecRecordIds(
+        params.specRecordIds,
+        params.projectId,
+        page,
+        limit,
+      ),
+      resultModel.countBySpecRecordIds(params.specRecordIds, params.projectId),
+    ]);
+
+    return {
+      results: results.map(normalizeResultPayload),
+      total,
+    };
+  },
+
   async getResultsStats(params: GetResultsStatsParams): Promise<ResultsStats> {
     const { projectId, dates } = params;
 

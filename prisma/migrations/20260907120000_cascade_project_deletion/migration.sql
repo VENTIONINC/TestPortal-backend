@@ -7,6 +7,7 @@ ALTER TABLE "ResultError" DROP CONSTRAINT "ResultError_resultId_fkey";
 ALTER TABLE "Issue" DROP CONSTRAINT "Issue_projectId_fkey";
 ALTER TABLE "Assumption" DROP CONSTRAINT "Assumption_issueId_fkey";
 ALTER TABLE "Assumption" DROP CONSTRAINT "Assumption_resultErrorId_fkey";
+ALTER TABLE "TestScenario" DROP CONSTRAINT "TestScenario_projectId_fkey";
 ALTER TABLE "UploadApiKey" DROP CONSTRAINT "UploadApiKey_projectId_fkey";
 ALTER TABLE "DailyExecutionMetric" DROP CONSTRAINT "DailyExecutionMetric_projectId_fkey";
 
@@ -34,6 +35,9 @@ ALTER TABLE "Assumption"
 ALTER TABLE "Assumption"
   ADD CONSTRAINT "Assumption_resultErrorId_fkey"
   FOREIGN KEY ("resultErrorId") REFERENCES "ResultError"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE "TestScenario"
+  ADD CONSTRAINT "TestScenario_projectId_fkey"
+  FOREIGN KEY ("projectId") REFERENCES "Project"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 ALTER TABLE "UploadApiKey"
   ADD CONSTRAINT "UploadApiKey_projectId_fkey"
   FOREIGN KEY ("projectId") REFERENCES "Project"("id") ON DELETE CASCADE ON UPDATE CASCADE;
@@ -41,8 +45,4 @@ ALTER TABLE "DailyExecutionMetric"
   ADD CONSTRAINT "DailyExecutionMetric_projectId_fkey"
   FOREIGN KEY ("projectId") REFERENCES "Project"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
-CREATE INDEX "ResultError_resultId_idx" ON "ResultError"("resultId");
-CREATE INDEX "Assumption_issueId_idx" ON "Assumption"("issueId");
-CREATE INDEX "Assumption_resultErrorId_idx" ON "Assumption"("resultErrorId");
-CREATE INDEX "Result_specId_idx" ON "Result"("specId");
 CREATE INDEX "Result_executionId_idx" ON "Result"("executionId");

@@ -43,6 +43,7 @@ model Project {
   executions    Execution[]
   specs         Spec[]
   issues        Issue[]
+  testScenarios TestScenario[]
   uploadApiKeys UploadApiKey[]
   dailyMetrics  DailyExecutionMetric[]
 
@@ -88,6 +89,7 @@ model Spec {
   projectId String  @db.Uuid
 
   results Result[]
+  testScenarioLinks TestScenarioSpecLink[]
 
   // Unique key per project
   @@unique([projectId, key])
@@ -97,32 +99,32 @@ model Spec {
 }
 
 model Result {
-  id                             String        @id @default(uuid()) @db.Uuid
-  createdAt                      DateTime      @default(now())
-  updatedAt                      DateTime      @updatedAt
-  reportPortalLink               String?
-  retry                          Int
-  status                         String
-  duration                       Int
-  startTime                      DateTime
-  errors                         ResultError[]
-  spec                           Spec          @relation(fields: [specId], references: [id], onDelete: Cascade)
-  specId                         String        @db.Uuid
-  execution                      Execution     @relation(fields: [executionId], references: [id], onDelete: Cascade)
-  executionId                    String        @db.Uuid
-  analysisStatus                 String? // "passed" | "failed"
-  analysisCategory               String? // "bug" | "infra" | "performance" | "script" | "other"
-  analysisConfidence             Int? // 1 to 5
-  analysisConclusion             String? // Brief explanation for the categorization decision
-  analysisErrorQuality           Int? // 1 to 5 (only for failed tests)
-  analysisErrorQualityConclusion String? // Brief explanation for error quality rating (only for failed tests)
-  analysisReviewedAt             DateTime?
-  analysisReviewedById           String?       @db.Uuid
-  analysisFeedbackCategory       String?
-  analysisFeedbackConfidence     Int?
-  analysisFeedbackConclusion     String?
+  id                              String        @id @default(uuid()) @db.Uuid
+  createdAt                       DateTime      @default(now())
+  updatedAt                       DateTime      @updatedAt
+  reportPortalLink                String?
+  retry                           Int
+  status                          String
+  duration                        Int
+  startTime                       DateTime
+  errors                          ResultError[]
+  spec                            Spec          @relation(fields: [specId], references: [id], onDelete: Cascade)
+  specId                          String        @db.Uuid
+  execution                       Execution     @relation(fields: [executionId], references: [id], onDelete: Cascade)
+  executionId                     String        @db.Uuid
+  analysisStatus                  String? // "passed" | "failed"
+  analysisCategory                String? // "bug" | "infra" | "performance" | "script" | "other"
+  analysisConfidence              Int? // 1 to 5
+  analysisConclusion              String? // Brief explanation for the categorization decision
+  analysisErrorQuality            Int? // 1 to 5 (only for failed tests)
+  analysisErrorQualityConclusion  String? // Brief explanation for error quality rating (only for failed tests)
+  analysisReviewedAt              DateTime?
+  analysisReviewedById            String? @db.Uuid
+  analysisFeedbackCategory        String?
+  analysisFeedbackConfidence      Int?
+  analysisFeedbackConclusion      String?
 
-  @@index([specId])
+  @@index([specId, startTime])
   @@index([executionId])
 }
 
@@ -182,10 +184,11 @@ model User {
   analyzeEnabled          Boolean    @default(false)
 
   // Project relationships
-  projects      Project[]
-  issuesCreated Issue[]        @relation("IssuesCreated")
-  issuesUpdated Issue[]        @relation("IssuesUpdated")
-  uploadApiKeys UploadApiKey[]
+  projects             Project[]
+  issuesCreated        Issue[]        @relation("IssuesCreated")
+  issuesUpdated        Issue[]        @relation("IssuesUpdated")
+  testScenariosCreated TestScenario[] @relation("TestScenarioCreatedBy")
+  uploadApiKeys        UploadApiKey[]
 }
 
 model Issue {
@@ -212,6 +215,57 @@ model Issue {
   @@index([projectId])
   @@index([projectId, category])
   @@index([projectId, createdAt])
+}
+
+model TestScenario {
+  id                    String             @id @default(uuid()) @db.Uuid
+  createdAt             DateTime           @default(now())
+  updatedAt             DateTime           @updatedAt
+  title                 String
+  details               String?            @db.Text
+  objective             String?            @db.Text
+  preconditions         String?            @db.Text
+  testData              String?            @db.Text
+  expectedResult        String?            @db.Text
+  notes                 String?            @db.Text
+  contentMd             String             @db.Text
+  contentMdHash         String             @db.Char(64)
+  contentMdFormatVersion Int               @default(1)
+  createdById           String             @db.Uuid
+
+  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  projectId String  @db.Uuid
+  createdBy User    @relation("TestScenarioCreatedBy", fields: [createdById], references: [id])
+
+  specLinks TestScenarioSpecLink[]
+  steps     TestScenarioStep[]
+
+  @@index([projectId])
+  @@index([projectId, createdAt])
+  @@index([createdById])
+}
+
+model TestScenarioStep {
+  id             String       @id @default(uuid()) @db.Uuid
+  testScenarioId String       @db.Uuid
+  position       Int
+  action         String       @db.Text
+  expectedResult String?      @db.Text
+
+  testScenario TestScenario @relation(fields: [testScenarioId], references: [id], onDelete: Cascade)
+
+  @@unique([testScenarioId, position])
+}
+
+model TestScenarioSpecLink {
+  testScenarioId String @db.Uuid
+  specId         String @db.Uuid
+
+  testScenario TestScenario @relation(fields: [testScenarioId], references: [id], onDelete: Cascade)
+  spec         Spec         @relation(fields: [specId], references: [id], onDelete: Cascade)
+
+  @@id([testScenarioId, specId])
+  @@index([specId])
 }
 
 model UploadApiKey {

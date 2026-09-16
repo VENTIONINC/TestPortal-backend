@@ -108,6 +108,19 @@ export const projectModel = {
     });
   },
 
+  async exists(
+    id: string,
+    tx?: Prisma.TransactionClient,
+  ): Promise<boolean> {
+    const client = tx ?? dbClient;
+    const project = await client.project.findUnique({
+      where: { id },
+      select: { id: true },
+    });
+
+    return project !== null;
+  },
+
   async create(
     data: {
       name: string;

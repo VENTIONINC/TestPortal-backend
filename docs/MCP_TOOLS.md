@@ -198,6 +198,56 @@ Postman collection for that workflow.
 
 ---
 
+### Test Scenario Management
+
+All Test Scenario tools require the authenticated MCP transport and a
+project-scoped UUID. Service validation and project ownership errors are
+returned using the standard MCP error response with `isError: true`.
+
+#### `list-test-scenarios`
+- **Source File:** `src/mcp/tools/test-scenarios.ts`
+- **Description:** List lightweight Test Scenario summaries for one project
+- **Parameters:**
+  - `projectId` (required): Project UUID
+  - `page` (optional): Positive integer page number (default: 1)
+  - `limit` (optional): Integer from 1 through 100 (default: 30)
+- **Response:** Pagination envelope containing `scenarios`, `total`, `page`, `limit`, and `totalPages`. Each summary contains exactly `id`, `projectId`, `createdById`, `title`, `details`, `createdBy`, `createdAt`, and `updatedAt`. `createdBy` contains only `id`, `name`, and `email`; `contentMd` and all other User fields are omitted from the list query and response.
+
+#### `get-test-scenario`
+- **Source File:** `src/mcp/tools/test-scenarios.ts`
+- **Description:** Retrieve complete structured scenario content, generated Markdown, and linked execution evidence
+- **Parameters:**
+  - `scenarioId` (required): Test Scenario UUID
+  - `projectId` (required): Owning project UUID
+  - `resultPage` (optional): Positive integer Result evidence page (default: 1)
+  - `resultLimit` (optional): Result evidence limit from 1 through 100 (default: 30)
+  - `issuePage` (optional): Positive integer observed-Issue evidence page (default: 1)
+  - `issueLimit` (optional): Observed-Issue evidence limit from 1 through 100 (default: 30)
+- **Response:** `{ scenario, resultEvidence, issueEvidence }`. `scenario` includes nullable `details`, structured fields, ordered stable-ID `steps`, exact generated `contentMd`, `contentMdHash`, and `contentMdFormatVersion`. Each evidence envelope contains its scenario/project IDs, `linkedSpecCount`, collection, `total`, `page`, `limit`, and `totalPages`. Result evidence is derived from Results belonging to linked same-project Specs; Issue evidence is deduplicated from observed Issues.
+
+#### `update-test-scenario`
+- **Source File:** `src/mcp/tools/test-scenarios.ts`
+- **Description:** Partially update a project-scoped scenario
+- **Parameters:**
+  - `scenarioId` (required): Test Scenario UUID
+  - `projectId` (required): Owning project UUID
+  - `title`, `details`, `objective`, `preconditions`, `testData`, `expectedResult`, or `notes` (optional): Structured field updates; text is trimmed and `null` clears nullable fields
+- **Response:** The complete persisted Test Scenario, including structured fields, ordered steps, exact generated `contentMd`, hash, and format version. At least one editable field is required; omitted fields are preserved. `contentMd`, projection metadata, and steps are rejected as inputs. Scenario metadata and project ownership cannot be changed.
+
+MCP intentionally has no Markdown import, scenario creation, or step mutation
+tools in this change. Use the authenticated REST step routes for step editing;
+MCP remains the generated-document reader and structured-field updater.
+
+#### `delete-test-scenario`
+- **Source File:** `src/mcp/tools/test-scenarios.ts`
+- **Description:** Delete a project-scoped scenario and its association rows
+- **Parameters:**
+  - `scenarioId` (required): Test Scenario UUID
+  - `projectId` (required): Owning project UUID
+- **Response:** `{ "scenarioId": "...", "projectId": "...", "deleted": true }`. Linked Specs, Results, ResultErrors, Assumptions, and Issues are preserved.
+
+---
+
 ## Tool Categories
 
 The MCP tools are organized into the following functional categories:
@@ -209,6 +259,7 @@ The MCP tools are organized into the following functional categories:
 5. **Execution Details** - Retrieving detailed execution information
 6. **Result Error Management** - Handling and analyzing test result errors
 7. **Specifications** - Accessing test specification details
+8. **Test Scenario Management** - Listing, reading, editing, and deleting project-scoped Test Scenarios
 
 All tools return standardized responses using the `createSuccessResponse` helper, ensuring consistent formatting across the MCP interface.
 
