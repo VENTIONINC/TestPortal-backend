@@ -37,6 +37,13 @@ describe("test-scenario persistence contract", () => {
     ),
     "utf8",
   );
+  const cascadeMigration = readFileSync(
+    path.join(
+      process.cwd(),
+      "prisma/migrations/20260907120000_cascade_project_deletion/migration.sql",
+    ),
+    "utf8",
+  );
 
   it("defines a project-owned Markdown record with creator and timestamp fields", () => {
     expect(schema).toMatch(
@@ -49,6 +56,31 @@ describe("test-scenario persistence contract", () => {
     expect(schema).toContain(
       'createdBy User    @relation("TestScenarioCreatedBy"',
     );
+  });
+
+  it("cascades project deletion through scenarios without duplicating indexes", () => {
+    expect(schema).toContain(
+      'project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)',
+    );
+    expect(cascadeMigration).toContain(
+      'DROP CONSTRAINT "TestScenario_projectId_fkey"',
+    );
+    expect(cascadeMigration).toContain(
+      'FOREIGN KEY ("projectId") REFERENCES "Project"("id") ON DELETE CASCADE ON UPDATE CASCADE',
+    );
+    expect(cascadeMigration).toContain(
+      'CREATE INDEX "Result_executionId_idx"',
+    );
+    expect(cascadeMigration).not.toContain(
+      'CREATE INDEX "ResultError_resultId_idx"',
+    );
+    expect(cascadeMigration).not.toContain(
+      'CREATE INDEX "Assumption_issueId_idx"',
+    );
+    expect(cascadeMigration).not.toContain(
+      'CREATE INDEX "Assumption_resultErrorId_idx"',
+    );
+    expect(cascadeMigration).not.toContain('CREATE INDEX "Result_specId_idx"');
   });
 
   it("creates only the independent scenario table and project foreign key", () => {

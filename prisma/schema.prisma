@@ -116,32 +116,31 @@ model Spec {
 }
 
 model Result {
-  id                             String        @id @default(uuid()) @db.Uuid
-  createdAt                      DateTime      @default(now())
-  updatedAt                      DateTime      @updatedAt
-  reportPortalLink               String?
-  retry                          Int
-  status                         String
-  duration                       Int
-  startTime                      DateTime
-  errors                         ResultError[]
-  spec                           Spec          @relation(fields: [specId], references: [id], onDelete: Cascade)
-  specId                         String        @db.Uuid
-  execution                      Execution     @relation(fields: [executionId], references: [id], onDelete: Cascade)
-  executionId                    String        @db.Uuid
-  analysisStatus                 String? // "passed" | "failed"
-  analysisCategory               String? // "bug" | "infra" | "performance" | "script" | "other"
-  analysisConfidence             Int? // 1 to 5
-  analysisConclusion             String? // Brief explanation for the categorization decision
-  analysisErrorQuality           Int? // 1 to 5 (only for failed tests)
-  analysisErrorQualityConclusion String? // Brief explanation for error quality rating (only for failed tests)
-  analysisReviewedAt             DateTime?
-  analysisReviewedById           String?       @db.Uuid
-  analysisFeedbackCategory       String?
-  analysisFeedbackConfidence     Int?
-  analysisFeedbackConclusion     String?
+  id                              String        @id @default(uuid()) @db.Uuid
+  createdAt                       DateTime      @default(now())
+  updatedAt                       DateTime      @updatedAt
+  reportPortalLink                String?
+  retry                           Int
+  status                          String
+  duration                        Int
+  startTime                       DateTime
+  errors                          ResultError[]
+  spec                            Spec          @relation(fields: [specId], references: [id], onDelete: Cascade)
+  specId                          String        @db.Uuid
+  execution                       Execution     @relation(fields: [executionId], references: [id], onDelete: Cascade)
+  executionId                     String        @db.Uuid
+  analysisStatus                  String? // "passed" | "failed"
+  analysisCategory                String? // "bug" | "infra" | "performance" | "script" | "other"
+  analysisConfidence              Int? // 1 to 5
+  analysisConclusion              String? // Brief explanation for the categorization decision
+  analysisErrorQuality            Int? // 1 to 5 (only for failed tests)
+  analysisErrorQualityConclusion  String? // Brief explanation for error quality rating (only for failed tests)
+  analysisReviewedAt              DateTime?
+  analysisReviewedById            String? @db.Uuid
+  analysisFeedbackCategory        String?
+  analysisFeedbackConfidence      Int?
+  analysisFeedbackConclusion      String?
 
-  @@index([specId])
   @@index([specId, startTime])
   @@index([executionId])
 }
