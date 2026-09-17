@@ -1,0 +1,23 @@
+__tests__/prisma/manualTestRunMigration.test.ts
+  s_badad143dff14f::t_55b6a579d46d20 12
+__tests__/prisma/testScenarioMigration.test.ts
+  s_badad143dff14f::t_d35e02f6aa0391 15,22,29,36,43,119,122,125
+prisma/migrations/20260907120000_cascade_project_deletion/migration.sql
+  s_badad143dff14f::t_476c4e15cf8b5b 44-47
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.18",
+  "base_commit_sha": "66ffc6a0967890a1ebfffb6cd03c01c0b9e91610",
+  "prompts": {},
+  "sessions": {
+    "s_badad143dff14f": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a0af83-ac5e-7f81-bbee-785b9dc790ff",
+        "model": "gpt-5.6-sol"
+      },
+      "human_author": "Ihar Mikailau <ihar.mikailau@ventionteams.com>"
+    }
+  }
+}
