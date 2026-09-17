@@ -441,6 +441,16 @@ export function registerProjectRoutes(registry: OpenAPIRegistry) {
           .describe(
             "Aggregation level for history data (daily, weekly, monthly). Defaults to daily for short periods, weekly for long periods.",
           ),
+        dateFrom: z
+          .string()
+          .regex(/^\d{4}-\d{2}-\d{2}$/)
+          .optional()
+          .describe("Inclusive start date in YYYY-MM-DD format"),
+        dateTo: z
+          .string()
+          .regex(/^\d{4}-\d{2}-\d{2}$/)
+          .optional()
+          .describe("Inclusive end date in YYYY-MM-DD format"),
       }),
     },
     security: [{ BearerAuth: [] }],
