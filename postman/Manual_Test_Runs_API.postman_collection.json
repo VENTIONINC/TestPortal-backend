@@ -1,0 +1,90 @@
+{
+  "info": {
+    "name": "Test Portal - Manual Test Runs API",
+    "description": "Authenticated manual execution snapshots and project-scoped history.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:3001" },
+    { "key": "accessToken", "value": "" },
+    { "key": "projectId", "value": "" },
+    { "key": "scenarioId", "value": "" },
+    { "key": "runId", "value": "" },
+    { "key": "stepId", "value": "" }
+  ],
+  "item": [
+    {
+      "name": "Start manual run",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Authorization", "value": "Bearer {{accessToken}}" },
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "body": { "mode": "raw", "raw": "{\n  \"notes\": \"Started from Postman\"\n}" },
+        "url": { "raw": "{{baseUrl}}/api/v2/test-scenarios/{{scenarioId}}/manual-runs?projectId={{projectId}}", "host": ["{{baseUrl}}"], "path": ["api", "v2", "test-scenarios", "{{scenarioId}}", "manual-runs"], "query": [{ "key": "projectId", "value": "{{projectId}}" }] }
+      }
+    },
+    {
+      "name": "List scenario history",
+      "request": {
+        "method": "GET",
+        "header": [{ "key": "Authorization", "value": "Bearer {{accessToken}}" }],
+        "url": { "raw": "{{baseUrl}}/api/v2/test-scenarios/{{scenarioId}}/manual-runs?projectId={{projectId}}", "host": ["{{baseUrl}}"], "path": ["api", "v2", "test-scenarios", "{{scenarioId}}", "manual-runs"], "query": [{ "key": "projectId", "value": "{{projectId}}" }] }
+      }
+    },
+    {
+      "name": "List project history",
+      "request": {
+        "method": "GET",
+        "header": [{ "key": "Authorization", "value": "Bearer {{accessToken}}" }],
+        "url": { "raw": "{{baseUrl}}/api/v2/manual-test-runs?projectId={{projectId}}&status=in_progress", "host": ["{{baseUrl}}"], "path": ["api", "v2", "manual-test-runs"], "query": [{ "key": "projectId", "value": "{{projectId}}" }, { "key": "status", "value": "in_progress" }] }
+      }
+    },
+    {
+      "name": "Get manual run",
+      "request": {
+        "method": "GET",
+        "header": [{ "key": "Authorization", "value": "Bearer {{accessToken}}" }],
+        "url": { "raw": "{{baseUrl}}/api/v2/manual-test-runs/{{runId}}?projectId={{projectId}}", "host": ["{{baseUrl}}"], "path": ["api", "v2", "manual-test-runs", "{{runId}}"], "query": [{ "key": "projectId", "value": "{{projectId}}" }] }
+      }
+    },
+    {
+      "name": "Update copied step",
+      "request": {
+        "method": "PATCH",
+        "header": [
+          { "key": "Authorization", "value": "Bearer {{accessToken}}" },
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "body": { "mode": "raw", "raw": "{\n  \"status\": \"passed\",\n  \"notes\": \"Observed expected result\"\n}" },
+        "url": { "raw": "{{baseUrl}}/api/v2/manual-test-runs/{{runId}}/steps/{{stepId}}?projectId={{projectId}}", "host": ["{{baseUrl}}"], "path": ["api", "v2", "manual-test-runs", "{{runId}}", "steps", "{{stepId}}"], "query": [{ "key": "projectId", "value": "{{projectId}}" }] }
+      }
+    },
+    {
+      "name": "Update run notes",
+      "request": {
+        "method": "PATCH",
+        "header": [
+          { "key": "Authorization", "value": "Bearer {{accessToken}}" },
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "body": { "mode": "raw", "raw": "{\n  \"notes\": \"Ready for completion\"\n}" },
+        "url": { "raw": "{{baseUrl}}/api/v2/manual-test-runs/{{runId}}?projectId={{projectId}}", "host": ["{{baseUrl}}"], "path": ["api", "v2", "manual-test-runs", "{{runId}}"], "query": [{ "key": "projectId", "value": "{{projectId}}" }] }
+      }
+    },
+    {
+      "name": "Complete manual run",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Authorization", "value": "Bearer {{accessToken}}" },
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "body": { "mode": "raw", "raw": "{\n  \"status\": \"passed\",\n  \"notes\": \"Run completed\"\n}" },
+        "url": { "raw": "{{baseUrl}}/api/v2/manual-test-runs/{{runId}}/complete?projectId={{projectId}}", "host": ["{{baseUrl}}"], "path": ["api", "v2", "manual-test-runs", "{{runId}}", "complete"], "query": [{ "key": "projectId", "value": "{{projectId}}" }] }
+      }
+    }
+  ],
+  "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{accessToken}}", "type": "string" }] }
+}

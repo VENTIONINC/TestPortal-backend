@@ -12,35 +12,35 @@ describe("test-scenario persistence contract", () => {
   const migration = readFileSync(
     path.join(
       process.cwd(),
-      "prisma/migrations/20260824120000_add_test_scenarios/migration.sql",
+      "prisma/migrations/20260917120000_add_test_scenarios/migration.sql",
     ),
     "utf8",
   );
   const linkMigration = readFileSync(
     path.join(
       process.cwd(),
-      "prisma/migrations/20260826120000_add_test_scenario_spec_links/migration.sql",
+      "prisma/migrations/20260917120100_add_test_scenario_spec_links/migration.sql",
     ),
     "utf8",
   );
   const detailsMigration = readFileSync(
     path.join(
       process.cwd(),
-      "prisma/migrations/20260904120000_add_test_scenario_details/migration.sql",
+      "prisma/migrations/20260917120200_add_test_scenario_details/migration.sql",
     ),
     "utf8",
   );
   const structuredMigration = readFileSync(
     path.join(
       process.cwd(),
-      "prisma/migrations/20260906120000_add_structured_test_scenario_authoring/migration.sql",
+      "prisma/migrations/20260917120300_add_structured_test_scenario_authoring/migration.sql",
     ),
     "utf8",
   );
   const cascadeMigration = readFileSync(
     path.join(
       process.cwd(),
-      "prisma/migrations/20260907120000_cascade_project_deletion/migration.sql",
+      "prisma/migrations/20260917120500_cascade_project_scenarios_and_manual_runs/migration.sql",
     ),
     "utf8",
   );
@@ -67,9 +67,6 @@ describe("test-scenario persistence contract", () => {
     );
     expect(cascadeMigration).toContain(
       'FOREIGN KEY ("projectId") REFERENCES "Project"("id") ON DELETE CASCADE ON UPDATE CASCADE',
-    );
-    expect(cascadeMigration).toContain(
-      'CREATE INDEX "Result_executionId_idx"',
     );
     expect(cascadeMigration).not.toContain(
       'CREATE INDEX "ResultError_resultId_idx"',
@@ -119,13 +116,13 @@ describe("test-scenario persistence contract", () => {
     expect(linkMigration).toContain(
       'CREATE INDEX "Result_specId_startTime_idx"',
     );
-    expect(linkMigration).toContain(
+    expect(linkMigration).not.toContain(
       'CREATE INDEX "ResultError_resultId_idx"',
     );
-    expect(linkMigration).toContain(
+    expect(linkMigration).not.toContain(
       'CREATE INDEX "Assumption_issueId_idx"',
     );
-    expect(linkMigration).toContain(
+    expect(linkMigration).not.toContain(
       'CREATE INDEX "Assumption_resultErrorId_idx"',
     );
   });

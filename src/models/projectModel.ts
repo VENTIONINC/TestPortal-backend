@@ -108,10 +108,7 @@ export const projectModel = {
     });
   },
 
-  async exists(
-    id: string,
-    tx?: Prisma.TransactionClient,
-  ): Promise<boolean> {
+  async exists(id: string, tx?: Prisma.TransactionClient): Promise<boolean> {
     const client = tx ?? dbClient;
     const project = await client.project.findUnique({
       where: { id },
