@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import getLogger from "@/lib/logger";
+import { normalizeResultErrorModalContext } from "@/lib/resultErrorModalContext";
 import { dbClient } from "@/prisma/client";
 import type { CTRFReport, CTRFTest } from "@/types/ctrf";
 import type {
@@ -173,6 +174,11 @@ export const ctrfService = {
     fallbackStartTime: number,
     index: number,
   ) {
+    const modalContext = normalizeResultErrorModalContext({
+      logs: ctrfTest.meta?.logs,
+      sourceSnippet: ctrfTest.meta?.sourceSnippet,
+      generatedTestCase: ctrfTest.meta?.generatedTestCase,
+    });
     const results = [
       {
         retry: ctrfTest.retry ?? 0,
@@ -191,6 +197,13 @@ export const ctrfService = {
                 location: this.parseLocation(ctrfTest.filePath),
               },
             }
+          : {}),
+        ...(modalContext.rawLogs ? { logs: modalContext.rawLogs } : {}),
+        ...(modalContext.sourceSnippet
+          ? { sourceSnippet: modalContext.sourceSnippet }
+          : {}),
+        ...(modalContext.generatedTestCase
+          ? { generatedTestCase: modalContext.generatedTestCase }
           : {}),
         workerIndex: 0,
       },

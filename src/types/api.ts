@@ -52,6 +52,7 @@ export interface GetResultsParams extends PaginationParams {
   reviewStatus?: string;
   errorMessage?: string;
   issueName?: string;
+  assumption?: "all" | "confirmed" | "not-confirmed";
   from?: string;
   to?: string;
   dates?: string[];
@@ -59,6 +60,54 @@ export interface GetResultsParams extends PaginationParams {
 
 export interface GetResultByIdParams {
   resultId: string;
+}
+
+export interface ResultErrorModalAssignmentSummary {
+  id: string;
+  isConfirmed: boolean;
+  score: number;
+  madeBy: string;
+  issue: {
+    id: string;
+    name: string;
+    category: import("@/types/resultCategory").ResultCategory;
+    description: string | null;
+    portal: string | null;
+    service: string | null;
+    ticket: string | null;
+  };
+}
+
+export interface ResultErrorModalContext {
+  error: {
+    id: string;
+    type: string;
+    message: string;
+    callLog: string[];
+    callStack: string[];
+    logs: string[];
+    sourceSnippet: import("@/types/database").ResultErrorSourceSnippet | null;
+    generatedTestCase: string | null;
+    location: string;
+  };
+  result: {
+    id: string;
+    attempt: number;
+    status: string;
+    duration: number;
+    startTime: Date;
+    reportPortalLink: string | null;
+    category: "bug" | "infra" | "performance" | "script" | "other";
+    testTitle: string;
+    specPath: string;
+    specKey: string;
+    executionName: string;
+    environment: string;
+  };
+  assignments: {
+    confirmed: ResultErrorModalAssignmentSummary | null;
+    suggestions: ResultErrorModalAssignmentSummary[];
+  };
 }
 
 export interface GetResultsStatsParams {
@@ -144,7 +193,13 @@ export interface ResultsStats {
     assumptions: number;
   };
   topErrors: { title: string; count: number }[];
-  topIssues: { title: string; count: number; category: string }[];
+  topIssues: Array<{
+    id: string;
+    title: string;
+    count: number;
+    category: import("@/types/resultCategory").ResultCategory;
+    categorySummary: import("@/types/resultCategory").IssueCategorySummary;
+  }>;
 }
 
 // Assumption API Types

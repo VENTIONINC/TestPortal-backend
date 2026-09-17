@@ -8,6 +8,10 @@ import { z } from "zod";
  * Used by LangChain to generate actionable steps
  */
 export const errorSuggestionSchema = z.object({
+  category: z
+    .enum(["bug", "infra", "performance", "script", "other"])
+    .describe("Issue category inferred from the failure analysis"),
+  name: z.string().describe("Concise issue title describing the failure"),
   description: z
     .string()
     .describe(

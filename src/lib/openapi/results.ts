@@ -4,6 +4,7 @@
 import { OpenAPIRegistry } from "@asteasolutions/zod-to-openapi";
 import { z } from "./zod";
 import { ErrorResponseSchema } from "./common";
+import { IssueCategorySummarySchema } from "./issues";
 
 const ResultSpecSchema = z
   .object({
@@ -94,13 +95,11 @@ const ResultSchema = z
     analysisFeedbackCategory: z
       .enum(["bug", "infra", "performance", "script", "other"])
       .nullable()
-      .optional(),
-    analysisFeedbackConfidence: z
-      .number()
-      .min(1)
-      .max(5)
-      .nullable()
-      .optional(),
+      .optional()
+      .describe(
+        "Human category correction. When present, this is authoritative over analysisCategory.",
+      ),
+    analysisFeedbackConfidence: z.number().min(1).max(5).nullable().optional(),
     analysisFeedbackConclusion: z.string().nullable().optional(),
     spec: ResultSpecSchema,
     execution: ResultExecutionSchema,
@@ -115,7 +114,9 @@ const ResultsListResponseSchema = z
     results: z.array(ResultSchema),
     rawResults: z
       .array(ResultSchema)
-      .describe("Unfiltered period results for specs in the current results page"),
+      .describe(
+        "Unfiltered period results for specs in the current results page",
+      ),
     availableTags: z
       .array(z.string())
       .describe(
@@ -157,9 +158,11 @@ const ResultsStatsSchema = z
     ),
     topIssues: z.array(
       z.object({
+        id: z.string().uuid(),
         title: z.string(),
         count: z.number(),
-        category: z.string().describe("Failure category (bug, infra, script, performance, other)"),
+        category: z.enum(["bug", "infra", "performance", "script", "other"]),
+        categorySummary: IssueCategorySummarySchema,
       }),
     ),
   })
@@ -193,7 +196,9 @@ const UpdateResultAnalysisFeedbackRequestSchema = z
     analysisFeedbackCategory: z
       .enum(["bug", "infra", "performance", "script", "other"])
       .optional()
-      .describe("Manual reviewer category"),
+      .describe(
+        "Human category correction. This becomes the effective category instead of the AI analysisCategory while preserving the AI value.",
+      ),
     analysisFeedbackConfidence: z
       .number()
       .min(1)
@@ -242,6 +247,10 @@ export function registerResultRoutes(registry: OpenAPIRegistry) {
         reviewStatus: z.string().optional(),
         errorMessage: z.string().optional(),
         issueName: z.string().optional(),
+        assumption: z
+          .enum(["all", "confirmed", "not-confirmed"])
+          .optional()
+          .describe("Filter results by linked assumption confirmation status"),
         from: z.string().optional(),
         to: z.string().optional(),
         dates: z.array(z.string()).optional(),

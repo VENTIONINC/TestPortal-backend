@@ -3,6 +3,7 @@
 
 import { Request, Response } from "express";
 import { assumptionService } from "@/services/assumptionService";
+import type { AuthenticatedRequest } from "@/middleware/authMiddleware";
 import type { CreateAssumptionRequest, UpdateAssumptionRequest } from "@/types";
 
 type AssumptionIdParams = {
@@ -54,9 +55,17 @@ export const assumptionController = {
         return;
       }
 
+      const reviewerId = (req as AuthenticatedRequest<AssumptionIdParams>).user
+        ?.id;
+      if (!reviewerId) {
+        res.status(401).json({ error: "User is not authenticated" });
+        return;
+      }
+
       const result = await assumptionService.updateAssumption(
         assumptionId,
         updateData,
+        reviewerId,
       );
 
       if (result.action === "deleted") {

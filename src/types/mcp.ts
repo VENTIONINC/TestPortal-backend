@@ -62,7 +62,6 @@ export interface ErrorAnalysisOutput {
       issue: {
         id: string;
         name: string;
-        category: string;
       };
     }>;
   }>;

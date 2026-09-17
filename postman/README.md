@@ -19,11 +19,11 @@ Complete user management with authentication:
 **Documentation**: See `docs/User_API.md`
 
 ### 2. 📋 Issue API (`Issue_API.postman_collection.json`)
-Issue management with user tracking:
-- V1 (public) and V2 (authenticated) endpoints
-- Automatic createdBy/updatedBy tracking
-- CRUD operations for issues
-- Error handling and validation
+Authenticated V2 Issue management and Assign Issue modal workflow:
+- Required lowercase persisted Issue categories (`bug`, `infra`, `performance`, `script`, `other`)
+- Issue CRUD, persisted-category filtering, and category summaries
+- Atomic create-and-assign and confirmed-edit modal operations
+- Result feedback synchronization for the confirmed assignment
 
 **Documentation**: See `docs/Issue_API.md`
 
@@ -45,6 +45,8 @@ Create a Postman environment with these variables:
   "baseUrl": "http://localhost:3001",
   "testEmail": "test@example.com",
   "testPassword": "SecurePassword123!",
+  "projectId": "",
+  "resultErrorId": "",
   "mcpToken": ""
 }
 ```
@@ -67,7 +69,7 @@ Collections use different authentication patterns:
 
 ### For New API Development:
 1. **User API First** - Set up authentication
-2. **Feature APIs** - Test your specific endpoints  
+2. **Issue API** - Set `projectId`; for modal requests also set `resultErrorId`
 3. **MCP API** - Test Model Context Protocol endpoints
 4. **Integration Testing** - Run all collections together
 
@@ -129,6 +131,14 @@ When creating new collections:
 
 All APIs require JWT token authentication with enhanced features like user tracking.
 
+## 📌 Category Scope
+
+`Issue.category` is the canonical persisted category for Issue and Hypothesis
+display. Result and Dashboard analytics use the effective Result category,
+`analysisFeedbackCategory ?? analysisCategory`. The Issue collection documents
+the REST-only Assign Issue modal operations; those operations are not registered
+as MCP tools.
+
 ## 📈 Performance Testing
 
 Use collection runner for performance testing:
@@ -178,4 +188,4 @@ This folder is automatically updated when:
 - Authentication changes
 - Response schemas evolve
 
-**Last Updated**: Auto-generated with API changes 
+**Last Updated**: Auto-generated with API changes

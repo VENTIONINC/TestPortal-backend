@@ -1,12 +1,11 @@
 // Copyright 2026 VENSOLUTIONSGROUP LTD
 // SPDX-License-Identifier: Apache-2.0
 
-import { IssueCategory } from "@/types/enums";
 import type { GetResultsParams } from "@/types";
+import type { ResultCategory } from "@/types/resultCategory";
+import { isResultCategory } from "@/lib/resultCategory";
 
-export function resolveExecutionTypeFilter(
-  type?: string,
-): string | undefined {
+export function resolveExecutionTypeFilter(type?: string): string | undefined {
   if (!type || type === "all") {
     return undefined;
   }
@@ -17,7 +16,7 @@ export function resolveExecutionTypeFilter(
 export function buildIssueParams(query: Record<string, string | undefined>) {
   const params: {
     projectId: string;
-    category?: IssueCategory;
+    category?: ResultCategory;
     name?: string;
     page?: number;
     limit?: number;
@@ -26,7 +25,7 @@ export function buildIssueParams(query: Record<string, string | undefined>) {
     type?: string;
   } = { projectId: query.projectId ?? "" };
 
-  if (query.category) params.category = query.category as IssueCategory;
+  if (isResultCategory(query.category)) params.category = query.category;
   if (query.name) params.name = query.name;
   if (query.page) params.page = Number(query.page);
   if (query.limit) params.limit = Number(query.limit);
@@ -49,11 +48,15 @@ const RESULT_STRING_KEYS = [
   "reviewStatus",
   "errorMessage",
   "issueName",
+  "assumption",
   "from",
   "to",
 ] as const satisfies readonly (keyof GetResultsParams)[];
 
-const RESULT_NUMBER_KEYS = ["page", "limit"] as const satisfies readonly (keyof GetResultsParams)[];
+const RESULT_NUMBER_KEYS = [
+  "page",
+  "limit",
+] as const satisfies readonly (keyof GetResultsParams)[];
 
 export function buildResultParams(
   query: Record<string, string | string[] | undefined>,
@@ -77,6 +80,17 @@ export function buildResultParams(
       continue;
     }
 
+    if (key === "assumption") {
+      if (
+        value === "all" ||
+        value === "confirmed" ||
+        value === "not-confirmed"
+      ) {
+        params.assumption = value;
+      }
+      continue;
+    }
+
     params[key] = value;
   }
 
@@ -87,7 +101,9 @@ export function buildResultParams(
 
   const dates = query.dates;
   if (dates) {
-    params.dates = (Array.isArray(dates) ? dates : dates.split(",")).map((d) => d.trim());
+    params.dates = (Array.isArray(dates) ? dates : dates.split(",")).map((d) =>
+      d.trim(),
+    );
   }
 
   return params;

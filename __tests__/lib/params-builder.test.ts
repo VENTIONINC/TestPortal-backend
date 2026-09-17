@@ -4,6 +4,15 @@
 import { buildIssueParams, buildResultParams } from "@/lib/params-builder";
 
 describe("buildIssueParams", () => {
+  it("preserves an exact lowercase issue category", () => {
+    expect(
+      buildIssueParams({
+        projectId: "project-1",
+        category: "performance",
+      }),
+    ).toMatchObject({ projectId: "project-1", category: "performance" });
+  });
+
   it("preserves an exact execution type", () => {
     expect(
       buildIssueParams({
@@ -41,6 +50,27 @@ describe("buildResultParams", () => {
       buildResultParams({
         projectId: "project-1",
         type: "all",
+      }),
+    ).toEqual({ projectId: "project-1" });
+  });
+
+  it.each(["all", "confirmed", "not-confirmed"] as const)(
+    "preserves the supported assumption filter %s",
+    (assumption) => {
+      expect(
+        buildResultParams({
+          projectId: "project-1",
+          assumption,
+        }),
+      ).toMatchObject({ projectId: "project-1", assumption });
+    },
+  );
+
+  it("ignores unsupported assumption filter values", () => {
+    expect(
+      buildResultParams({
+        projectId: "project-1",
+        assumption: "pending",
       }),
     ).toEqual({ projectId: "project-1" });
   });

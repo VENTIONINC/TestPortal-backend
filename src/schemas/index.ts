@@ -8,6 +8,8 @@
 
 // Error Formatter schemas and types
 export {
+  contextCategorySchema,
+  errorFormatterRequestSchema,
   errorFormatterSchema,
   type ErrorFormatterInput,
   type ErrorFormatterOutput,

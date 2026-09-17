@@ -7,6 +7,16 @@ import { authMiddleware } from "@/middleware/authMiddleware";
 
 const router = Router();
 
+router.post(
+  "/v2/result-errors/:resultErrorId/issue",
+  authMiddleware,
+  resultErrorController.createIssue,
+);
+router.patch(
+  "/v2/result-errors/:resultErrorId/issue",
+  authMiddleware,
+  resultErrorController.updateIssue,
+);
 router.patch(
   "/v2/result-errors/:resultErrorId/assign-issue",
   authMiddleware,
@@ -26,6 +36,11 @@ router.post(
   "/v2/result-errors/analyze",
   authMiddleware,
   resultErrorController.analyzeErrors,
+);
+router.get(
+  "/v2/result-errors/:resultErrorId/modal-context",
+  authMiddleware,
+  resultErrorController.getModalContext,
 );
 router.get(
   "/v2/result-errors/:resultErrorId",

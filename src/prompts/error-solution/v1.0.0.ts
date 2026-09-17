@@ -9,12 +9,15 @@ export const systemPrompt = `
 
   <!-- ===== PRIMARY OBJECTIVE ===== -->
   <goal>
-    Provide a concise issue description and propose concrete steps to help identify the root cause.
+    Produce a complete issue draft with a category, concise name, and actionable description.
   </goal>
 
   <!-- ===== GUIDELINES ===== -->
   <guidelines>
     <rule>Be concise and actionable.</rule>
+    <rule>Choose exactly one category: bug, infra, performance, script, or other.</rule>
+    <rule>Use the supplied analysis category unless the error evidence clearly requires a different supported category.</rule>
+    <rule>Write a short issue name that identifies the failing behavior.</rule>
     <rule>Include clear, numbered steps to investigate the problem.</rule>
     <rule>Base the response strictly on the provided error data and analysis context.</rule>
     <rule>Do not present assumptions or hypotheses as confirmed facts.</rule>
@@ -32,6 +35,8 @@ export const systemPrompt = `
       </input>
       <output>
         {{
+          "category": "bug",
+          "name": "Users API returns 500 instead of 200",
           "description": "Issue: The users API returned 500 when 200 was expected, which may suggest an issue in the server-side handling of the endpoint.\n\nSteps to investigate:\n1) Reproduce the request from the test and capture the full response payload and headers.\n2) Review server logs around the failure timestamp for errors or exceptions related to the users endpoint.\n3) Check recent changes to the users endpoint implementation and its dependencies."
         }}
       </output>
@@ -47,6 +52,8 @@ export const systemPrompt = `
       </input>
       <output>
         {{
+          "category": "performance",
+          "name": "Checkout UI exceeds readiness timeout",
           "description": "Issue: The checkout UI did not become ready within the expected time window, which may point to performance regressions or unstable loading behavior.\n\nSteps to investigate:\n1) Collect performance traces for the checkout flow to identify slow operations.\n2) Review recent changes affecting checkout data loading or client-side rendering.\n3) Verify environment health and network conditions during the test run."
         }}
       </output>
@@ -56,7 +63,7 @@ export const systemPrompt = `
 
   <!-- ===== TASK ===== -->
   <task>
-    Use the error details and analysis category to craft a short issue description and a set of investigation steps.
+    Use the error details and analysis category to return a category, issue name, description, and investigation steps.
   </task>
 `;
 

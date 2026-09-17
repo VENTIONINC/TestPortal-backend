@@ -73,4 +73,18 @@ describe("issueModel execution-type filtering", () => {
       expect.objectContaining({ where: { projectId: "project-1" } }),
     );
   });
+
+  it("filters by the persisted issue category", async () => {
+    await issueModel.findManyWithUsers("project-1", "script", "Login", 1, 5);
+
+    expect(findManyMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: {
+          projectId: "project-1",
+          category: "script",
+          name: { contains: "Login", mode: "insensitive" },
+        },
+      }),
+    );
+  });
 });

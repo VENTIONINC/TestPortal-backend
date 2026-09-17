@@ -50,6 +50,7 @@ export const resultService = {
       reviewStatus,
       errorMessage,
       issueName,
+      assumption,
       from,
       to,
       dates,
@@ -76,6 +77,7 @@ export const resultService = {
     if (reviewStatus) filters.reviewStatus = reviewStatus;
     if (errorMessage) filters.errorMessage = errorMessage;
     if (issueName) filters.issueName = issueName;
+    if (assumption) filters.assumption = assumption;
     if (from) filters.from = from;
     if (to) filters.to = to;
     if (dates) filters.dates = dates;
@@ -282,6 +284,23 @@ export const resultService = {
 
       if (!updatedResult) {
         throw new Error(`Result with ID ${resultId} not found`);
+      }
+
+      if (updatedResult.execution) {
+        try {
+          await dashboardService.refreshDailyStats(
+            updatedResult.execution.projectId,
+            updatedResult.startTime,
+            updatedResult.execution.environment,
+            updatedResult.execution.type,
+            tx,
+          );
+        } catch (error) {
+          logger.error(
+            `Failed to refresh dashboard stats in updateAnalysisFeedback: ${error}`,
+          );
+          throw error;
+        }
       }
 
       return updatedResult;
