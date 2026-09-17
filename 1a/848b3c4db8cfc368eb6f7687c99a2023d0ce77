@@ -1,0 +1,21 @@
+prisma/migrations/20260907120000_cascade_project_deletion/migration.sql
+  s_e32ecb761bcf64::t_e720a6298131a2 10,38-40
+prisma/schema.prisma
+  s_e32ecb761bcf64::t_c248c03736561c 119-143
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.18",
+  "base_commit_sha": "1a848b3c4db8cfc368eb6f7687c99a2023d0ce77",
+  "prompts": {},
+  "sessions": {
+    "s_e32ecb761bcf64": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a0af46-1770-7b31-bece-338988533be3",
+        "model": "gpt-5.6-sol"
+      },
+      "human_author": "Ihar Mikailau <ihar.mikailau@ventionteams.com>"
+    }
+  }
+}
