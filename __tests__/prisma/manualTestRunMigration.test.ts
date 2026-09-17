@@ -9,7 +9,7 @@ describe("manual test run persistence contract", () => {
     readFileSync(path.join(process.cwd(), file), "utf8");
   const schema = read("prisma/schema.prisma");
   const migration = read(
-    "prisma/migrations/20260908120000_add_manual_test_runs/migration.sql",
+    "prisma/migrations/20260917120400_add_manual_test_runs/migration.sql",
   );
 
   it("defines independent run and step aggregates with nullable live relations", () => {
