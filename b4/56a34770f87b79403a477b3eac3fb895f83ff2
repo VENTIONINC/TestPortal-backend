@@ -1,0 +1,31 @@
+.codex/config.toml
+  s_14c02a55f46ae4::t_0e9b2fa3bae58f 1-5,8-9,17-19,27-44
+.docker/README.md
+  s_d2746bb04edf7f::t_df89ac8f933925 1-82
+.docker/mcp-profile.json
+  s_d2746bb04edf7f::t_686123f2d5227b 1-2022
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.18",
+  "base_commit_sha": "b456a34770f87b79403a477b3eac3fb895f83ff2",
+  "prompts": {},
+  "sessions": {
+    "s_14c02a55f46ae4": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a0aa93-7b3d-7991-9d7e-61c29f4bc0be",
+        "model": "gpt-5.6-sol"
+      },
+      "human_author": "Ihar Mikailau <ihar.mikailau@ventionteams.com>"
+    },
+    "s_d2746bb04edf7f": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a0aa8b-e128-72d1-8b65-83bb9edb7888",
+        "model": "gpt-5.6-sol"
+      },
+      "human_author": "Ihar Mikailau <ihar.mikailau@ventionteams.com>"
+    }
+  }
+}
