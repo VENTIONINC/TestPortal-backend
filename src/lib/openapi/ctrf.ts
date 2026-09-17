@@ -86,13 +86,17 @@ const CTRFReportRequestSchema = z
 const CTRFReportResponseSchema = z
   .object({
     success: z.boolean(),
+    message: z.string(),
     executionId: z
       .string()
       .uuid()
       .describe("Execution ID for the processed report"),
-    specsProcessed: z.number().describe("Number of test specs processed"),
-    analysis: z.array(z.any()).optional().openapi({
-      description: "Optional AI analysis results for test failures",
+    data: z.object({
+      specsProcessed: z.number().describe("Number of test specs processed"),
+      executionId: z
+        .string()
+        .uuid()
+        .describe("Database execution ID"),
     }),
   })
   .openapi("CTRFReportResponse");
@@ -141,7 +145,7 @@ export function registerCtrfRoutes(registry: OpenAPIRegistry) {
     },
     security: [{ BearerAuth: [] }],
     responses: {
-      201: {
+      200: {
         description: "CTRF report file processed successfully",
         content: {
           "application/json": {
@@ -150,8 +154,7 @@ export function registerCtrfRoutes(registry: OpenAPIRegistry) {
         },
       },
       400: {
-        description:
-          "Bad request - invalid file, missing projectId, or future execution timestamp validation failure",
+        description: "Bad request - Invalid file format, missing file, or missing projectId",
         content: {
           "application/json": {
             schema: ErrorResponseSchema,
@@ -202,7 +205,7 @@ export function registerCtrfRoutes(registry: OpenAPIRegistry) {
     },
     security: [{ ApiKeyAuth: [] }],
     responses: {
-      201: {
+      200: {
         description: "CTRF report file processed successfully",
         content: {
           "application/json": {
@@ -211,8 +214,7 @@ export function registerCtrfRoutes(registry: OpenAPIRegistry) {
         },
       },
       400: {
-        description:
-          "Bad request - invalid file, missing projectId, or future execution timestamp validation failure",
+        description: "Bad request - Invalid file format, missing file, or missing projectId",
         content: {
           "application/json": {
             schema: ErrorResponseSchema,

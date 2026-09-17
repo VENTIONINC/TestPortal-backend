@@ -5,7 +5,9 @@ import type { GetResultsParams } from "@/types";
 import type { ResultCategory } from "@/types/resultCategory";
 import { isResultCategory } from "@/lib/resultCategory";
 
-export function resolveExecutionTypeFilter(type?: string): string | undefined {
+export function resolveExecutionTypeFilter(
+  type?: string,
+): string | undefined {
   if (!type || type === "all") {
     return undefined;
   }
@@ -48,15 +50,11 @@ const RESULT_STRING_KEYS = [
   "reviewStatus",
   "errorMessage",
   "issueName",
-  "assumption",
   "from",
   "to",
 ] as const satisfies readonly (keyof GetResultsParams)[];
 
-const RESULT_NUMBER_KEYS = [
-  "page",
-  "limit",
-] as const satisfies readonly (keyof GetResultsParams)[];
+const RESULT_NUMBER_KEYS = ["page", "limit"] as const satisfies readonly (keyof GetResultsParams)[];
 
 export function buildResultParams(
   query: Record<string, string | string[] | undefined>,
@@ -80,17 +78,6 @@ export function buildResultParams(
       continue;
     }
 
-    if (key === "assumption") {
-      if (
-        value === "all" ||
-        value === "confirmed" ||
-        value === "not-confirmed"
-      ) {
-        params.assumption = value;
-      }
-      continue;
-    }
-
     params[key] = value;
   }
 
@@ -101,9 +88,7 @@ export function buildResultParams(
 
   const dates = query.dates;
   if (dates) {
-    params.dates = (Array.isArray(dates) ? dates : dates.split(",")).map((d) =>
-      d.trim(),
-    );
+    params.dates = (Array.isArray(dates) ? dates : dates.split(",")).map((d) => d.trim());
   }
 
   return params;

@@ -187,32 +187,6 @@ describe("resultService JSON payload normalization", () => {
     expect(mockResultModel.count).toHaveBeenCalledTimes(1);
   });
 
-  it("passes the assumption filter to the displayed results queries", async () => {
-    mockResultModel.findMany
-      .mockResolvedValueOnce([buildRawResult()])
-      .mockResolvedValueOnce([buildRawResult()]);
-    mockResultModel.count.mockResolvedValueOnce(1);
-
-    await resultService.getResults({
-      projectId: "project-1",
-      assumption: "confirmed",
-    });
-
-    const expectedFilters = {
-      projectId: "project-1",
-      assumption: "confirmed" as const,
-    };
-
-    expect(mockResultModel.findMany).toHaveBeenNthCalledWith(
-      1,
-      expectedFilters,
-      1,
-      1000,
-    );
-    expect(mockResultModel.count).toHaveBeenCalledWith(expectedFilters);
-    expect(mockResultModel.findSpecTags).toHaveBeenCalledWith(expectedFilters);
-  });
-
   it("skips the raw query when no cards match the filters", async () => {
     mockResultModel.findMany.mockResolvedValue([]);
     mockResultModel.count.mockResolvedValue(0);

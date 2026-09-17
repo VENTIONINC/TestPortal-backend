@@ -49,7 +49,6 @@ const mockTx = {
   issue: {
     create: jest.fn<(args: unknown) => Promise<unknown>>(),
     update: jest.fn<(args: unknown) => Promise<unknown>>(),
-    findUnique: jest.fn<(args: unknown) => Promise<unknown>>(),
   },
   assumption: {
     create: jest.fn<(args: unknown) => Promise<unknown>>(),
@@ -93,10 +92,6 @@ describe("resultErrorService issue modal workflows", () => {
       assumptions: [],
     });
     mockTx.issue.create.mockResolvedValue(createdIssue);
-    mockTx.issue.findUnique.mockResolvedValue({
-      id: "issue-1",
-      category: "bug",
-    });
     mockTx.assumption.create.mockResolvedValue(confirmedAssumption);
     mockTx.result.update.mockResolvedValue({
       id: "result-1",
@@ -340,75 +335,4 @@ describe("resultErrorService issue modal workflows", () => {
       expect(mockTransaction).not.toHaveBeenCalled();
     },
   );
-
-  it("assigns an existing issue with result feedback and dashboard refresh", async () => {
-    const response = await resultErrorService.assignExistingIssue(
-      "error-1",
-      "issue-1",
-      "user-1",
-    );
-
-    expect(mockTransaction).toHaveBeenCalledTimes(1);
-    expect(mockTx.$queryRaw).toHaveBeenCalledTimes(1);
-    expect(mockTx.issue.findUnique).toHaveBeenCalledWith({
-      where: { id: "issue-1" },
-      select: { id: true, category: true },
-    });
-    expect(mockTx.assumption.create).toHaveBeenCalledWith({
-      data: {
-        issueId: "issue-1",
-        resultErrorId: "error-1",
-        madeBy: "user",
-        isConfirmed: true,
-        score: 1,
-      },
-    });
-    expect(mockTx.result.update).toHaveBeenCalledWith({
-      where: { id: "result-1" },
-      data: {
-        analysisFeedbackCategory: "bug",
-        analysisReviewedAt: expect.any(Date),
-        analysisReviewedById: "user-1",
-      },
-      select: { id: true, analysisFeedbackCategory: true },
-    });
-    expect(mockRefreshDailyStats).toHaveBeenCalledWith(
-      "project-1",
-      reviewedAt,
-      "staging",
-      "e2e",
-      mockTx,
-    );
-    expect(response).toEqual({
-      assumption: confirmedAssumption,
-      result: { id: "result-1", analysisFeedbackCategory: "bug" },
-    });
-  });
-
-  it("rejects assign-existing when the result error already has a confirmed assumption", async () => {
-    mockTx.resultError.findFirst.mockResolvedValue({
-      id: "error-1",
-      result: resultContext,
-      assumptions: [{ id: "existing-confirmed" }],
-    });
-
-    await expect(
-      resultErrorService.assignExistingIssue("error-1", "issue-1", "user-1"),
-    ).rejects.toThrow(
-      "Result error with ID error-1 already has a confirmed assumption",
-    );
-    expect(mockTx.issue.findUnique).not.toHaveBeenCalled();
-    expect(mockTx.assumption.create).not.toHaveBeenCalled();
-    expect(mockTx.result.update).not.toHaveBeenCalled();
-  });
-
-  it("rejects assign-existing when the issue is not found", async () => {
-    mockTx.issue.findUnique.mockResolvedValue(null);
-
-    await expect(
-      resultErrorService.assignExistingIssue("error-1", "missing-issue", "user-1"),
-    ).rejects.toThrow("Issue with ID missing-issue not found");
-    expect(mockTx.assumption.create).not.toHaveBeenCalled();
-    expect(mockTx.result.update).not.toHaveBeenCalled();
-  });
 });

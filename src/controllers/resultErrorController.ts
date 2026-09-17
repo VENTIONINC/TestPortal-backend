@@ -131,13 +131,6 @@ export const resultErrorController = {
     req: Request<ResultErrorIdParams>,
     res: Response,
   ): Promise<void> => {
-    const reviewerId = (req as AuthenticatedRequest<ResultErrorIdParams>).user
-      ?.id;
-    if (!reviewerId) {
-      res.status(401).json({ error: "User is not authenticated" });
-      return;
-    }
-
     try {
       const { resultErrorId } = req.params;
       const { issueId }: AssignIssueRequest = req.body;
@@ -159,7 +152,6 @@ export const resultErrorController = {
       const updatedRecord = await resultErrorService.assignExistingIssue(
         resultErrorId,
         issueId,
-        reviewerId,
       );
       res.status(200).json(updatedRecord);
     } catch (error) {
