@@ -38,6 +38,12 @@ Ensure you have the required environment variable:
 export OPENAI_API_KEY="sk-..."
 ```
 
+TypeSafe classification tests additionally require:
+
+```bash
+export TYPESAFE_API_KEY="..."
+```
+
 ### 2. Generate Datasets
 
 Use the suite-specific generator:
@@ -56,6 +62,7 @@ Pass the project name to Jest via `--selectProjects`:
 ```bash
 npx jest --config jest.prompts.config.ts --testPathPattern=smoke\.test\.ts$ --selectProjects stored-results-analysis
 npx jest --config jest.prompts.config.ts --testPathPattern=smoke\.test\.ts$ --selectProjects error-solution
+npx jest --config jest.prompts.config.ts --testPathPattern=typesafe\.smoke\.test\.ts$ --selectProjects stored-results-analysis-typesafe
 ```
 
 **Regression tests**:
@@ -63,6 +70,7 @@ npx jest --config jest.prompts.config.ts --testPathPattern=smoke\.test\.ts$ --se
 ```bash
 npx jest --config jest.prompts.config.ts --testPathPattern=regression\.test\.ts$ --selectProjects stored-results-analysis
 npx jest --config jest.prompts.config.ts --testPathPattern=regression\.test\.ts$ --selectProjects error-solution
+npx jest --config jest.prompts.config.ts --testPathPattern=typesafe\.regression\.test\.ts$ --selectProjects stored-results-analysis-typesafe
 ```
 
 **All tests in a suite**:
@@ -78,6 +86,13 @@ npx jest --config jest.prompts.config.ts --selectProjects error-solution
 2. Export the factory in the suite’s `templates/<suite>/index.ts`.
 3. Regenerate datasets with the suite generator.
 4. Run smoke tests for the suite.
+
+## Local evaluation reports
+
+Stored-results analysis tests write timestamped JSON reports plus `latest.json`
+under `__prompts-tests__/stored-results-analysis/reports/<provider>/<suite>/`.
+Reports include model, duration, request count, token usage, accuracy, and per-case
+outputs. The reports directory is gitignored.
 
 ## Troubleshooting
 
@@ -96,3 +111,13 @@ Increase Jest timeout in test files:
 ```typescript
 jest.setTimeout(300_000); // 5 minutes
 ```
+
+## Alternative classification experiment (issue #111)
+
+The opt-in `stored-results-analysis-typesafe` project evaluates Jev category
+predictions using the shared datasets. It does not replace production analysis
+(prompt v1.2.0 with GPT-5.6 Luna). Its confidence and category probabilities do
+not provide the current conclusion or error-quality fields and are not a
+drop-in replacement for the full analysis contract. Persistence, confidence
+semantics, and partial-analysis behavior require design before integration.
+See https://github.com/VENTIONINC/TestPortal-backend/issues/111.
