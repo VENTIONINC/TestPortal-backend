@@ -6,7 +6,7 @@ import { z } from "zod";
 
 import { normalizeJsonArrayForText } from "@/lib/jsonPayloads";
 import getLogger from "@/lib/logger";
-import { getStoredResultsAnalysisPrompt } from "@/prompts/stored-results-analysis/v1.1.0";
+import { getStoredResultsAnalysisPrompt } from "@/prompts/stored-results-analysis/v1.2.0";
 import {
   testAnalysisSchema,
   type TestResultAnalysis,
@@ -115,8 +115,8 @@ export const testAnalysisService = {
       const userPrompt = JSON.stringify(essentialData);
 
       const model = new ChatOpenAI({
-        model: "gpt-4.1-mini",
-        temperature: 0,
+        model: "gpt-5.6-luna",
+        reasoning: { effort: "low" },
         maxTokens: 4000,
         maxRetries: 2,
       });
