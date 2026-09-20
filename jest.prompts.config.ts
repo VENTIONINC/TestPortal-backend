@@ -6,6 +6,12 @@ const config: JestConfigWithTsJest = {
     {
       ...baseConfig,
       testPathIgnorePatterns: ["/dist/"],
+      displayName: "error-similarity-typesafe",
+      testMatch: ["<rootDir>/__prompts-tests__/error-similarity/*.test.ts"],
+    },
+    {
+      ...baseConfig,
+      testPathIgnorePatterns: ["/dist/"],
       displayName: "stored-results-analysis",
       testMatch: [
         "<rootDir>/__prompts-tests__/stored-results-analysis/**/?(*.)test.ts",
