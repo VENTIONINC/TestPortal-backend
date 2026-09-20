@@ -5,10 +5,21 @@ const config: JestConfigWithTsJest = {
   projects: [
     {
       ...baseConfig,
-      testPathIgnorePatterns: ["/dist/"],
+      testPathIgnorePatterns: [
+        "/dist/",
+        "/typesafe\\.(smoke|regression)\\.test\\.ts$",
+      ],
       displayName: "stored-results-analysis",
       testMatch: [
         "<rootDir>/__prompts-tests__/stored-results-analysis/**/?(*.)test.ts",
+      ],
+    },
+    {
+      ...baseConfig,
+      testPathIgnorePatterns: ["/dist/"],
+      displayName: "stored-results-analysis-typesafe",
+      testMatch: [
+        "<rootDir>/__prompts-tests__/stored-results-analysis/**/typesafe.*.test.ts",
       ],
     },
     {
