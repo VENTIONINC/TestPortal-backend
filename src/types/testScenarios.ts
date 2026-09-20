@@ -112,10 +112,21 @@ export interface ReorderTestScenarioStepsParams {
   stepIds: string[];
 }
 
+export const TEST_SCENARIO_SORT_VALUES = [
+  "recently_created",
+  "recently_updated",
+  "title_asc",
+] as const;
+
+export type TestScenarioSort = (typeof TEST_SCENARIO_SORT_VALUES)[number];
+
 export interface ListTestScenariosParams {
   projectId: string;
   page?: number | undefined;
   limit?: number | undefined;
+  search?: string | undefined;
+  createdById?: string | undefined;
+  sort?: TestScenarioSort | undefined;
 }
 
 export interface TestScenarioListResponse {

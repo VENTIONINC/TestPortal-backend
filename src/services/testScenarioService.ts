@@ -11,6 +11,8 @@ import {
   type DeleteTestScenarioStepParams,
   type ListTestScenariosParams,
   type ReorderTestScenarioStepsParams,
+  TEST_SCENARIO_SORT_VALUES,
+  type TestScenarioSort,
   type TestScenarioListResponse,
   type TestScenarioResponse,
   type UpdateTestScenarioParams,
@@ -20,6 +22,8 @@ import {
 const DEFAULT_PAGE = 1;
 const DEFAULT_LIMIT = 30;
 const MAX_LIMIT = 100;
+const UUID_PATTERN =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const SCENARIO_FIELDS = [
   "title",
   "details",
@@ -31,7 +35,10 @@ const SCENARIO_FIELDS = [
 ] as const;
 const IDENTIFIER_FIELDS = ["scenarioId", "projectId"] as const;
 
-function requireIdentifier(value: unknown, label: string): asserts value is string {
+function requireIdentifier(
+  value: unknown,
+  label: string,
+): asserts value is string {
   if (typeof value !== "string" || !value.trim()) {
     throw new TestScenarioValidationError(`${label} is required`);
   }
@@ -51,10 +58,7 @@ function normalizeCreateOptional(value: unknown, label: string): string | null {
   return normalizeNonBlank(value, label);
 }
 
-function normalizeUpdateOptional(
-  value: unknown,
-  label: string,
-): string | null {
+function normalizeUpdateOptional(value: unknown, label: string): string | null {
   if (value === null) {
     return null;
   }
@@ -71,6 +75,39 @@ function validatePagination(page: number, limit: number): void {
       `limit must be a positive integer no greater than ${MAX_LIMIT}`,
     );
   }
+}
+
+function requireUuid(value: unknown, label: string): asserts value is string {
+  if (typeof value !== "string" || !UUID_PATTERN.test(value)) {
+    throw new TestScenarioValidationError(`${label} must be a valid UUID`);
+  }
+}
+
+function normalizeSearch(value: unknown): string | undefined {
+  if (value === undefined) {
+    return undefined;
+  }
+  if (typeof value !== "string") {
+    throw new TestScenarioValidationError("search must be a string");
+  }
+
+  const normalized = value.trim();
+  return normalized || undefined;
+}
+
+function normalizeSort(value: unknown): TestScenarioSort {
+  if (value === undefined) {
+    return "recently_created";
+  }
+  if (
+    typeof value !== "string" ||
+    !(TEST_SCENARIO_SORT_VALUES as readonly string[]).includes(value)
+  ) {
+    throw new TestScenarioValidationError(
+      `sort must be one of ${TEST_SCENARIO_SORT_VALUES.join(", ")}`,
+    );
+  }
+  return value as TestScenarioSort;
 }
 
 function validateKeys(
@@ -99,7 +136,9 @@ function validateCreateSteps(
 
   return steps.map((step, index) => {
     if (step === null || typeof step !== "object") {
-      throw new TestScenarioValidationError(`steps[${index}] must be an object`);
+      throw new TestScenarioValidationError(
+        `steps[${index}] must be an object`,
+      );
     }
     validateKeys(step as unknown as Record<string, unknown>, [
       "action",
@@ -145,7 +184,8 @@ export const testScenarioService = {
       preconditions:
         normalizeCreateOptional(params.preconditions, "Preconditions") ??
         undefined,
-      testData: normalizeCreateOptional(params.testData, "Test data") ?? undefined,
+      testData:
+        normalizeCreateOptional(params.testData, "Test data") ?? undefined,
       expectedResult:
         normalizeCreateOptional(params.expectedResult, "Expected result") ??
         undefined,
@@ -171,15 +211,34 @@ export const testScenarioService = {
   async listScenarios(
     params: ListTestScenariosParams,
   ): Promise<TestScenarioListResponse> {
+    validateKeys(params as unknown as Record<string, unknown>, [
+      "projectId",
+      "page",
+      "limit",
+      "search",
+      "createdById",
+      "sort",
+    ]);
     requireIdentifier(params.projectId, "Project ID");
     const page = params.page ?? DEFAULT_PAGE;
     const limit = params.limit ?? DEFAULT_LIMIT;
     validatePagination(page, limit);
+    const search = normalizeSearch(params.search);
+    if (params.createdById !== undefined) {
+      requireUuid(params.createdById, "Creator ID");
+    }
+    const sort = normalizeSort(params.sort);
 
-    const [scenarios, total] = await Promise.all([
-      testScenarioModel.findManySummaries(params.projectId, page, limit),
-      testScenarioModel.count(params.projectId),
-    ]);
+    const { scenarios, total } = await testScenarioModel.listSummaries({
+      projectId: params.projectId,
+      page,
+      limit,
+      ...(search !== undefined ? { search } : {}),
+      ...(params.createdById !== undefined
+        ? { createdById: params.createdById }
+        : {}),
+      sort,
+    });
 
     return {
       scenarios,

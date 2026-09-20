@@ -19,7 +19,7 @@ import type {
 
 export const listTestScenarios = createMcpTool(
   "list-test-scenarios",
-  "List lightweight Test Scenario summaries for a project, including normalized details and safe creator id, name, and email. Markdown is available from get-test-scenario.",
+  "List lightweight Test Scenario summaries for a project. Optional search is trimmed and matched case-insensitively as a literal substring against title only (not details, steps, or generated Markdown); createdById filters by the supplied creator User UUID and may identify any user; sort is recently_created (default), recently_updated, or title_asc. Filtering happens before pagination and totals count all matches. Search by scenarioKey is deferred until readable keys are introduced. Markdown is available from get-test-scenario.",
   listTestScenariosSchema,
   async (params: TestScenarioMcpListParams): Promise<MCPToolResponse> => {
     const scenarios = await mcpTestScenarioHandler.listTestScenarios(params);

@@ -5,6 +5,7 @@ import {
   appendTestScenarioStepSchema,
   createTestScenarioSchema,
   reorderTestScenarioStepsSchema,
+  testScenarioListQuerySchema,
   updateTestScenarioSchema,
   updateTestScenarioStepSchema,
 } from "@/schemas/testScenarioSchemas";
@@ -27,7 +28,9 @@ describe("structured Test Scenario schemas", () => {
       objective: "Verify login",
       steps: [{ action: "Open page", expectedResult: "Visible" }],
     });
-    expect(createTestScenarioSchema.parse({ projectId, title: "Login" }).steps).toEqual([]);
+    expect(
+      createTestScenarioSchema.parse({ projectId, title: "Login" }).steps,
+    ).toEqual([]);
   });
 
   it.each([
@@ -41,22 +44,72 @@ describe("structured Test Scenario schemas", () => {
   });
 
   it("requires a nonempty strict partial update and permits null clearing", () => {
-    expect(updateTestScenarioSchema.parse({ notes: null, title: " New " })).toEqual({
+    expect(
+      updateTestScenarioSchema.parse({ notes: null, title: " New " }),
+    ).toEqual({
       notes: null,
       title: "New",
     });
     expect(updateTestScenarioSchema.safeParse({}).success).toBe(false);
-    expect(updateTestScenarioSchema.safeParse({ contentMd: "# no" }).success).toBe(false);
-    expect(updateTestScenarioSchema.safeParse({ steps: [] }).success).toBe(false);
-    expect(updateTestScenarioSchema.safeParse({ title: null }).success).toBe(false);
+    expect(
+      updateTestScenarioSchema.safeParse({ contentMd: "# no" }).success,
+    ).toBe(false);
+    expect(updateTestScenarioSchema.safeParse({ steps: [] }).success).toBe(
+      false,
+    );
+    expect(updateTestScenarioSchema.safeParse({ title: null }).success).toBe(
+      false,
+    );
   });
 
   it("validates step append, patch, and complete ordering inputs", () => {
-    expect(appendTestScenarioStepSchema.parse({ action: "Run" })).toEqual({ action: "Run" });
-    expect(updateTestScenarioStepSchema.parse({ expectedResult: null })).toEqual({ expectedResult: null });
-    expect(reorderTestScenarioStepsSchema.parse({ stepIds: [stepId] })).toEqual({ stepIds: [stepId] });
+    expect(appendTestScenarioStepSchema.parse({ action: "Run" })).toEqual({
+      action: "Run",
+    });
+    expect(
+      updateTestScenarioStepSchema.parse({ expectedResult: null }),
+    ).toEqual({ expectedResult: null });
+    expect(reorderTestScenarioStepsSchema.parse({ stepIds: [stepId] })).toEqual(
+      { stepIds: [stepId] },
+    );
     expect(updateTestScenarioStepSchema.safeParse({}).success).toBe(false);
-    expect(appendTestScenarioStepSchema.safeParse({ action: "Run", position: 0 }).success).toBe(false);
-    expect(reorderTestScenarioStepsSchema.safeParse({ stepIds: ["bad"] }).success).toBe(false);
+    expect(
+      appendTestScenarioStepSchema.safeParse({ action: "Run", position: 0 })
+        .success,
+    ).toBe(false);
+    expect(
+      reorderTestScenarioStepsSchema.safeParse({ stepIds: ["bad"] }).success,
+    ).toBe(false);
+  });
+
+  it("defaults list options and rejects invalid list filters", () => {
+    expect(testScenarioListQuerySchema.parse({ projectId })).toEqual({
+      projectId,
+      page: 1,
+      limit: 30,
+      sort: "recently_created",
+    });
+    expect(
+      testScenarioListQuerySchema.parse({
+        projectId,
+        search: "  login  ",
+        createdById: stepId,
+        sort: "title_asc",
+      }),
+    ).toMatchObject({
+      search: "login",
+      createdById: stepId,
+      sort: "title_asc",
+    });
+    expect(
+      testScenarioListQuerySchema.safeParse({ projectId, search: 42 }).success,
+    ).toBe(false);
+    expect(
+      testScenarioListQuerySchema.safeParse({ projectId, createdById: "bad" })
+        .success,
+    ).toBe(false);
+    expect(
+      testScenarioListQuerySchema.safeParse({ projectId, sort: "bad" }).success,
+    ).toBe(false);
   });
 });
