@@ -3,17 +3,33 @@
 
 import "@/test-utils/testEnv";
 import { jest } from "@jest/globals";
-import type { TestScenarioSummary, TestScenarioResponse } from "@/types/testScenarios";
+import type {
+  TestScenarioSummary,
+  TestScenarioResponse,
+} from "@/types/testScenarios";
 
 const projectExistsMock = jest.fn<() => Promise<boolean>>();
-const createMock = jest.fn<(...args: never[]) => Promise<TestScenarioResponse | null>>();
-const findManySummariesMock = jest.fn<(...args: never[]) => Promise<TestScenarioSummary[]>>();
+const createMock =
+  jest.fn<(...args: never[]) => Promise<TestScenarioResponse | null>>();
+const listSummariesMock =
+  jest.fn<
+    (
+      ...args: never[]
+    ) => Promise<{ scenarios: TestScenarioSummary[]; total: number }>
+  >();
+const findManySummariesMock =
+  jest.fn<(...args: never[]) => Promise<TestScenarioSummary[]>>();
 const countMock = jest.fn<(...args: never[]) => Promise<number>>();
-const findByIdMock = jest.fn<(...args: never[]) => Promise<TestScenarioResponse | null>>();
-const updateMock = jest.fn<(...args: never[]) => Promise<TestScenarioResponse | null>>();
-const appendStepMock = jest.fn<(...args: never[]) => Promise<TestScenarioResponse | null>>();
-const updateStepMock = jest.fn<(...args: never[]) => Promise<TestScenarioResponse | null>>();
-const deleteStepMock = jest.fn<(...args: never[]) => Promise<TestScenarioResponse | null>>();
+const findByIdMock =
+  jest.fn<(...args: never[]) => Promise<TestScenarioResponse | null>>();
+const updateMock =
+  jest.fn<(...args: never[]) => Promise<TestScenarioResponse | null>>();
+const appendStepMock =
+  jest.fn<(...args: never[]) => Promise<TestScenarioResponse | null>>();
+const updateStepMock =
+  jest.fn<(...args: never[]) => Promise<TestScenarioResponse | null>>();
+const deleteStepMock =
+  jest.fn<(...args: never[]) => Promise<TestScenarioResponse | null>>();
 const reorderStepsMock = jest.fn<(...args: never[]) => Promise<unknown>>();
 const deleteMock = jest.fn<(...args: never[]) => Promise<number>>();
 
@@ -23,6 +39,7 @@ jest.mock("@/models/projectModel", () => ({
 jest.mock("@/models/testScenarioModel", () => ({
   testScenarioModel: {
     create: createMock,
+    listSummaries: listSummariesMock,
     findManySummaries: findManySummariesMock,
     count: countMock,
     findById: findByIdMock,
@@ -36,7 +53,10 @@ jest.mock("@/models/testScenarioModel", () => ({
 }));
 
 import { testScenarioService } from "@/services/testScenarioService";
-import { TestScenarioNotFoundError, TestScenarioValidationError } from "@/types/testScenarios";
+import {
+  TestScenarioNotFoundError,
+  TestScenarioValidationError,
+} from "@/types/testScenarios";
 
 const projectId = "11111111-1111-1111-1111-111111111111";
 const scenarioId = "22222222-2222-2222-2222-222222222222";
@@ -52,7 +72,9 @@ const scenario: TestScenarioResponse = {
   testData: null,
   expectedResult: null,
   notes: null,
-  steps: [{ id: stepId, position: 0, action: "Open login", expectedResult: null }],
+  steps: [
+    { id: stepId, position: 0, action: "Open login", expectedResult: null },
+  ],
   contentMd: "# Login\n",
   contentMdHash: "a".repeat(64),
   contentMdFormatVersion: 1,
@@ -65,6 +87,7 @@ describe("testScenarioService", () => {
     jest.clearAllMocks();
     projectExistsMock.mockResolvedValue(true);
     createMock.mockResolvedValue(scenario);
+    listSummariesMock.mockResolvedValue({ scenarios: [], total: 0 });
     findManySummariesMock.mockResolvedValue([]);
     countMock.mockResolvedValue(0);
     findByIdMock.mockResolvedValue(scenario);
@@ -119,6 +142,54 @@ describe("testScenarioService", () => {
     expect(createMock).not.toHaveBeenCalled();
   });
 
+  it("normalizes list filters and defaults sort before persistence", async () => {
+    await testScenarioService.listScenarios({
+      projectId,
+      page: 2,
+      limit: 10,
+      search: "  login  ",
+      createdById: scenario.createdById,
+    });
+
+    expect(listSummariesMock).toHaveBeenCalledWith({
+      projectId,
+      page: 2,
+      limit: 10,
+      search: "login",
+      createdById: scenario.createdById,
+      sort: "recently_created",
+    });
+  });
+
+  it.each([
+    { search: 42, message: "search" },
+    { createdById: "not-a-uuid", message: "Creator ID" },
+    { sort: "unsupported", message: "sort" },
+  ])(
+    "rejects invalid list option %#",
+    async ({ search, createdById, sort, message }) => {
+      await expect(
+        testScenarioService.listScenarios({
+          projectId,
+          ...(search !== undefined ? { search: search as never } : {}),
+          ...(createdById !== undefined ? { createdById } : {}),
+          ...(sort !== undefined ? { sort: sort as never } : {}),
+        }),
+      ).rejects.toThrow(message);
+      expect(listSummariesMock).not.toHaveBeenCalled();
+    },
+  );
+
+  it("treats blank search as omitted", async () => {
+    await testScenarioService.listScenarios({ projectId, search: " \t" });
+    expect(listSummariesMock).toHaveBeenCalledWith({
+      projectId,
+      page: 1,
+      limit: 30,
+      sort: "recently_created",
+    });
+  });
+
   it("clears nullable fields and preserves omitted fields on PATCH", async () => {
     await testScenarioService.updateScenario({
       scenarioId,
@@ -133,26 +204,76 @@ describe("testScenarioService", () => {
   });
 
   it("rejects empty, unknown, and read-only updates", async () => {
-    await expect(testScenarioService.updateScenario({ scenarioId, projectId })).rejects.toBeInstanceOf(TestScenarioValidationError);
-    await expect(testScenarioService.updateScenario({ scenarioId, projectId, contentMd: "# no" })).rejects.toBeInstanceOf(TestScenarioValidationError);
+    await expect(
+      testScenarioService.updateScenario({ scenarioId, projectId }),
+    ).rejects.toBeInstanceOf(TestScenarioValidationError);
+    await expect(
+      testScenarioService.updateScenario({
+        scenarioId,
+        projectId,
+        contentMd: "# no",
+      }),
+    ).rejects.toBeInstanceOf(TestScenarioValidationError);
     expect(updateMock).not.toHaveBeenCalled();
   });
 
   it("delegates step mutations and complete-order validation", async () => {
-    await testScenarioService.appendStep({ scenarioId, projectId, action: "  Submit  " });
-    await testScenarioService.updateStep({ scenarioId, projectId, stepId, expectedResult: null });
+    await testScenarioService.appendStep({
+      scenarioId,
+      projectId,
+      action: "  Submit  ",
+    });
+    await testScenarioService.updateStep({
+      scenarioId,
+      projectId,
+      stepId,
+      expectedResult: null,
+    });
     await testScenarioService.deleteStep({ scenarioId, projectId, stepId });
-    await testScenarioService.reorderSteps({ scenarioId, projectId, stepIds: [stepId] });
-    expect(appendStepMock).toHaveBeenCalledWith({ scenarioId, projectId, action: "Submit" });
-    expect(updateStepMock).toHaveBeenCalledWith({ scenarioId, projectId, stepId, expectedResult: null });
-    expect(deleteStepMock).toHaveBeenCalledWith({ scenarioId, projectId, stepId });
-    expect(reorderStepsMock).toHaveBeenCalledWith({ scenarioId, projectId, stepIds: [stepId] });
+    await testScenarioService.reorderSteps({
+      scenarioId,
+      projectId,
+      stepIds: [stepId],
+    });
+    expect(appendStepMock).toHaveBeenCalledWith({
+      scenarioId,
+      projectId,
+      action: "Submit",
+    });
+    expect(updateStepMock).toHaveBeenCalledWith({
+      scenarioId,
+      projectId,
+      stepId,
+      expectedResult: null,
+    });
+    expect(deleteStepMock).toHaveBeenCalledWith({
+      scenarioId,
+      projectId,
+      stepId,
+    });
+    expect(reorderStepsMock).toHaveBeenCalledWith({
+      scenarioId,
+      projectId,
+      stepIds: [stepId],
+    });
   });
 
   it("maps missing project and scenario to not-found errors", async () => {
     projectExistsMock.mockResolvedValue(false);
-    await expect(testScenarioService.createScenario({ projectId, createdById: scenario.createdById, title: "Login" })).rejects.toBeInstanceOf(TestScenarioNotFoundError);
+    await expect(
+      testScenarioService.createScenario({
+        projectId,
+        createdById: scenario.createdById,
+        title: "Login",
+      }),
+    ).rejects.toBeInstanceOf(TestScenarioNotFoundError);
     updateMock.mockResolvedValue(null);
-    await expect(testScenarioService.updateScenario({ scenarioId, projectId, title: "New" })).rejects.toBeInstanceOf(TestScenarioNotFoundError);
+    await expect(
+      testScenarioService.updateScenario({
+        scenarioId,
+        projectId,
+        title: "New",
+      }),
+    ).rejects.toBeInstanceOf(TestScenarioNotFoundError);
   });
 });

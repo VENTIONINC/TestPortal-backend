@@ -3,6 +3,7 @@
 
 import { z } from "zod/v3";
 import type { MCPToolSchema } from "@/types";
+import { TEST_SCENARIO_SORT_VALUES } from "@/types/testScenarios";
 
 const uuid = () => z.string().uuid();
 const page = () => z.number().int().min(1);
@@ -13,6 +14,21 @@ export const listTestScenariosSchema = z
     projectId: uuid().describe("The UUID of the project"),
     page: page().default(1),
     limit: limit().default(30),
+    search: z
+      .string()
+      .optional()
+      .describe(
+        "Optional case-insensitive literal substring matched against title only",
+      ),
+    createdById: uuid()
+      .optional()
+      .describe(
+        "Optional creator User UUID filter; may identify any user, not only the authenticated user",
+      ),
+    sort: z
+      .enum(TEST_SCENARIO_SORT_VALUES)
+      .default("recently_created")
+      .describe("Ordering: recently_created, recently_updated, or title_asc"),
   })
   .strict() satisfies MCPToolSchema;
 
@@ -40,9 +56,15 @@ export const updateTestScenarioSchema = z
     notes: z.string().trim().min(1).nullable().optional(),
   })
   .strict()
-  .refine((value) => Object.keys(value).some((key) => key !== "scenarioId" && key !== "projectId"), {
-    message: "At least one editable field is required",
-  }) satisfies MCPToolSchema;
+  .refine(
+    (value) =>
+      Object.keys(value).some(
+        (key) => key !== "scenarioId" && key !== "projectId",
+      ),
+    {
+      message: "At least one editable field is required",
+    },
+  ) satisfies MCPToolSchema;
 
 export const deleteTestScenarioSchema = z
   .object({

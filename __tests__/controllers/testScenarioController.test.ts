@@ -89,7 +89,9 @@ describe("testScenarioController", () => {
       },
     });
     expect(response.statusCode).toBe(201);
-    expect(createMock).toHaveBeenCalledWith(expect.objectContaining({ createdById: userId }));
+    expect(createMock).toHaveBeenCalledWith(
+      expect.objectContaining({ createdById: userId }),
+    );
     expect(response.body).toBe(scenario);
   });
 
@@ -103,6 +105,36 @@ describe("testScenarioController", () => {
     expect(createMock).not.toHaveBeenCalled();
   });
 
+  it("validates and forwards scenario list filters", async () => {
+    listMock.mockResolvedValue({
+      scenarios: [],
+      total: 0,
+      page: 1,
+      limit: 30,
+      totalPages: 0,
+    });
+
+    const response = await executeController(testScenarioController.list, {
+      method: "GET",
+      query: {
+        projectId,
+        search: "  login  ",
+        createdById: userId,
+        sort: "title_asc",
+      },
+    });
+
+    expect(response.statusCode).toBe(200);
+    expect(listMock).toHaveBeenCalledWith({
+      projectId,
+      page: 1,
+      limit: 30,
+      search: "login",
+      createdById: userId,
+      sort: "title_asc",
+    });
+  });
+
   it("requires project context and wires scenario PATCH", async () => {
     const response = await executeController(testScenarioController.update, {
       method: "PATCH",
@@ -111,21 +143,44 @@ describe("testScenarioController", () => {
       body: { notes: null },
     });
     expect(response.statusCode).toBe(200);
-    expect(updateMock).toHaveBeenCalledWith({ scenarioId, projectId, notes: null });
+    expect(updateMock).toHaveBeenCalledWith({
+      scenarioId,
+      projectId,
+      notes: null,
+    });
   });
 
   it("wires append, patch, delete, and reorder step routes", async () => {
-    await expect(executeController(testScenarioController.appendStep, {
-      method: "POST", params: { scenarioId }, query: { projectId }, body: { action: "Run" },
-    })).resolves.toEqual(expect.objectContaining({ statusCode: 201 }));
-    await expect(executeController(testScenarioController.updateStep, {
-      method: "PATCH", params: { scenarioId, stepId }, query: { projectId }, body: { expectedResult: null },
-    })).resolves.toEqual(expect.objectContaining({ statusCode: 200 }));
-    await expect(executeController(testScenarioController.deleteStep, {
-      method: "DELETE", params: { scenarioId, stepId }, query: { projectId },
-    })).resolves.toEqual(expect.objectContaining({ statusCode: 200 }));
-    await expect(executeController(testScenarioController.reorderSteps, {
-      method: "PUT", params: { scenarioId }, query: { projectId }, body: { stepIds: [stepId] },
-    })).resolves.toEqual(expect.objectContaining({ statusCode: 200 }));
+    await expect(
+      executeController(testScenarioController.appendStep, {
+        method: "POST",
+        params: { scenarioId },
+        query: { projectId },
+        body: { action: "Run" },
+      }),
+    ).resolves.toEqual(expect.objectContaining({ statusCode: 201 }));
+    await expect(
+      executeController(testScenarioController.updateStep, {
+        method: "PATCH",
+        params: { scenarioId, stepId },
+        query: { projectId },
+        body: { expectedResult: null },
+      }),
+    ).resolves.toEqual(expect.objectContaining({ statusCode: 200 }));
+    await expect(
+      executeController(testScenarioController.deleteStep, {
+        method: "DELETE",
+        params: { scenarioId, stepId },
+        query: { projectId },
+      }),
+    ).resolves.toEqual(expect.objectContaining({ statusCode: 200 }));
+    await expect(
+      executeController(testScenarioController.reorderSteps, {
+        method: "PUT",
+        params: { scenarioId },
+        query: { projectId },
+        body: { stepIds: [stepId] },
+      }),
+    ).resolves.toEqual(expect.objectContaining({ statusCode: 200 }));
   });
 });

@@ -28,6 +28,7 @@
     ```
 
 **Usage for Frontend Hook Generation:**
+
 - Use tools like `@rtk-query/codegen-openapi` or `openapi-typescript` to generate TypeScript types and API hooks
 - Example: `npx openapi-typescript http://localhost:3001/api/openapi.json --output ./types/api.ts`
 
@@ -121,6 +122,20 @@ requests now use structured `objective`, `preconditions`, `testData`,
 and its format version are read-only detail fields. Details and structured text
 are trimmed and must be nonblank when supplied; PATCH accepts `null` for
 clearing nullable fields and preserves omitted fields.
+
+`GET /api/v2/test-scenarios` accepts `page` (default `1`), `limit` (default
+`30`, maximum `100`), optional `search`, optional `createdById`, and optional
+`sort`. Search is trimmed and, when nonblank, performs a case-insensitive
+literal substring match against `title` only; `%`, `_`, and backslash are
+literal characters, and `details`, steps, and generated Markdown are not
+searched. `createdById` is a UUID filter that returns zero matches when no
+scenario was created by that user. Sort values are `recently_created` (the
+default: `createdAt DESC, id DESC`), `recently_updated` (`updatedAt DESC,
+id DESC`), and `title_asc` (`title ASC, id ASC` under the database collation).
+All filters apply before pagination, so `total` and `totalPages` describe the
+matching set; a client resolving a `Me` control must send the authenticated
+user's UUID. Search by `scenarioKey` remains deferred until readable keys are
+introduced.
 
 `POST /api/v2/test-scenarios` and `PATCH /api/v2/test-scenarios/{scenarioId}`
 return the complete scenario detail. Step edits are independent operations and
@@ -329,7 +344,7 @@ Both route paths are mounted under `/api`, producing the public endpoints
 
 - **Description:** Checks the status of the server and its connections (e.g., database).
 - **Response:**
-  - `200 OK`:  An object indicating the status. Example:
+  - `200 OK`: An object indicating the status. Example:
     ```json
     {
       "status": "ok",

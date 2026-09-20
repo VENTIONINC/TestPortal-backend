@@ -3,7 +3,8 @@
 
 import "@/test-utils/testEnv";
 import { jest } from "@jest/globals";
-import type { Prisma, TestScenario, TestScenarioStep } from "@prisma/client";
+import { Prisma } from "@prisma/client";
+import type { TestScenario, TestScenarioStep } from "@prisma/client";
 
 const projectFindUniqueMock = jest.fn<() => Promise<unknown>>();
 const scenarioCreateMock = jest.fn<() => Promise<unknown>>();
@@ -120,26 +121,69 @@ describe("testScenarioModel", () => {
       }),
     });
     expect(stepCreateManyMock).toHaveBeenCalledWith({
-      data: [{
-        testScenarioId: scenario.id,
-        position: 0,
-        action: step.action,
-        expectedResult: null,
-      }],
+      data: [
+        {
+          testScenarioId: scenario.id,
+          position: 0,
+          action: step.action,
+          expectedResult: null,
+        },
+      ],
     });
     expect(result?.steps[0]?.id).toBe(step.id);
   });
 
   it("keeps summary selection lightweight", async () => {
     await testScenarioModel.findManySummaries(scenario.projectId, 2, 10);
-    expect(summaryFindManyMock).toHaveBeenCalledWith(expect.objectContaining({
-      where: { projectId: scenario.projectId },
-      skip: 10,
-      take: 10,
-    }));
-    const selection = (summaryFindManyMock.mock.calls[0]?.[0] as { select?: Record<string, unknown> } | undefined)?.select;
+    expect(summaryFindManyMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: { projectId: scenario.projectId },
+        skip: 10,
+        take: 10,
+      }),
+    );
+    const selection = (
+      summaryFindManyMock.mock.calls[0]?.[0] as
+        | { select?: Record<string, unknown> }
+        | undefined
+    )?.select;
     expect(selection).not.toHaveProperty("contentMd");
     expect(selection).not.toHaveProperty("steps");
+  });
+
+  it("builds one literal project-scoped predicate and deterministic order", async () => {
+    summaryFindManyMock.mockResolvedValue([]);
+    countMock.mockResolvedValue(0);
+
+    await testScenarioModel.listSummaries({
+      projectId: scenario.projectId,
+      page: 2,
+      limit: 10,
+      search: "%_\\",
+      createdById: scenario.createdById,
+      sort: "title_asc",
+    });
+
+    const expectedWhere = {
+      projectId: scenario.projectId,
+      createdById: scenario.createdById,
+      title: {
+        contains: "\\%\\_\\\\",
+        mode: "insensitive",
+      },
+    };
+    expect(summaryFindManyMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: expectedWhere,
+        skip: 10,
+        take: 10,
+        orderBy: [{ title: "asc" }, { id: "asc" }],
+      }),
+    );
+    expect(countMock).toHaveBeenCalledWith({ where: expectedWhere });
+    expect(transactionMock).toHaveBeenCalledWith(expect.any(Function), {
+      isolationLevel: Prisma.TransactionIsolationLevel.RepeatableRead,
+    });
   });
 
   it("locks the parent before updating fields and regenerates the projection", async () => {

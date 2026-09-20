@@ -10,6 +10,7 @@ import {
   renderTestScenarioMarkdown,
 } from "@/lib/testScenarioMarkdown";
 import { testScenarioModel } from "@/models/testScenarioModel";
+import { testScenarioService } from "@/services/testScenarioService";
 import type {
   CreateTestScenarioParams,
   TestScenarioResponse,
@@ -23,6 +24,8 @@ const describePostgres = postgresIntegrationEnabled ? describe : describe.skip;
 const databaseUrl = process.env.DATABASE_URL ?? "";
 const userId = randomUUID();
 const projectId = randomUUID();
+const otherUserId = randomUUID();
+const otherProjectId = randomUUID();
 
 async function createScenario(
   data: Omit<CreateTestScenarioParams, "projectId" | "createdById">,
@@ -35,6 +38,24 @@ async function createScenario(
 
   if (!scenario) {
     throw new Error("Failed to create PostgreSQL integration scenario");
+  }
+
+  return scenario;
+}
+
+async function createScenarioFor(
+  scopedProjectId: string,
+  scopedUserId: string,
+  data: Omit<CreateTestScenarioParams, "projectId" | "createdById">,
+): Promise<TestScenarioResponse> {
+  const scenario = await testScenarioModel.create({
+    projectId: scopedProjectId,
+    createdById: scopedUserId,
+    ...data,
+  });
+
+  if (!scenario) {
+    throw new Error("Failed to create scoped PostgreSQL integration scenario");
   }
 
   return scenario;
@@ -71,19 +92,23 @@ async function expectProjectionConsistency(
   });
 
   expect(scenario.contentMd).toBe(expectedContent);
-  expect(scenario.contentMdHash).toBe(hashTestScenarioMarkdown(expectedContent));
+  expect(scenario.contentMdHash).toBe(
+    hashTestScenarioMarkdown(expectedContent),
+  );
   expect(scenario.contentMdFormatVersion).toBe(1);
   expect(persistedScenario?.contentMd).toBe(expectedContent);
   expect(persistedScenario?.contentMdHash).toBe(
     hashTestScenarioMarkdown(expectedContent),
   );
   expect(persistedScenario?.contentMdFormatVersion).toBe(1);
-  expect(persistedSteps.map(({ id, position, action, expectedResult }) => ({
-    id,
-    position,
-    action,
-    expectedResult,
-  }))).toEqual(scenario.steps);
+  expect(
+    persistedSteps.map(({ id, position, action, expectedResult }) => ({
+      id,
+      position,
+      action,
+      expectedResult,
+    })),
+  ).toEqual(scenario.steps);
 }
 
 describePostgres("test scenario PostgreSQL aggregate integration", () => {
@@ -101,6 +126,13 @@ describePostgres("test scenario PostgreSQL aggregate integration", () => {
         email: `test-scenario-postgres-${userId}@example.test`,
       },
     });
+    await dbClient.user.create({
+      data: {
+        id: otherUserId,
+        name: "Other Test Scenario PostgreSQL Integration",
+        email: `test-scenario-postgres-${otherUserId}@example.test`,
+      },
+    });
     await dbClient.project.create({
       data: {
         id: projectId,
@@ -108,22 +140,163 @@ describePostgres("test scenario PostgreSQL aggregate integration", () => {
         ownerId: userId,
       },
     });
+    await dbClient.project.create({
+      data: {
+        id: otherProjectId,
+        name: `Other Test Scenario PostgreSQL Integration ${otherProjectId}`,
+        ownerId: otherUserId,
+      },
+    });
   });
 
   beforeEach(async () => {
-    await dbClient.testScenario.deleteMany({ where: { projectId } });
+    await dbClient.testScenario.deleteMany({
+      where: { projectId: { in: [projectId, otherProjectId] } },
+    });
   });
 
   afterAll(async () => {
-    await dbClient.testScenario.deleteMany({ where: { projectId } });
-    await dbClient.project.deleteMany({ where: { id: projectId } });
-    await dbClient.user.deleteMany({ where: { id: userId } });
+    await dbClient.testScenario.deleteMany({
+      where: { projectId: { in: [projectId, otherProjectId] } },
+    });
+    await dbClient.project.deleteMany({
+      where: { id: { in: [projectId, otherProjectId] } },
+    });
+    await dbClient.user.deleteMany({
+      where: { id: { in: [userId, otherUserId] } },
+    });
     await dbClient.$disconnect();
+  });
+
+  it("filters literal titles within the project and paginates matching totals", async () => {
+    const literal = await createScenario({
+      title: "Login %_\\\\ markers",
+    });
+    const otherCreator = await createScenarioFor(projectId, otherUserId, {
+      title: "Login from another creator",
+    });
+    await createScenario({
+      title: "Mixed Case Checkout",
+      details: "login appears only in details",
+    });
+    await createScenario({
+      title: "Checkout action",
+      steps: [{ action: "Login is only in a step" }],
+    });
+    await createScenarioFor(otherProjectId, otherUserId, {
+      title: "Login foreign project",
+    });
+
+    const titleMatches = await testScenarioService.listScenarios({
+      projectId,
+      search: "  LOGIN  ",
+      page: 1,
+      limit: 1,
+    });
+    expect(titleMatches.total).toBe(2);
+    expect(titleMatches.totalPages).toBe(2);
+    expect(titleMatches.scenarios).toHaveLength(1);
+    expect(
+      titleMatches.scenarios.every(
+        ({ projectId: resultProjectId }) => resultProjectId === projectId,
+      ),
+    ).toBe(true);
+
+    const outOfRange = await testScenarioService.listScenarios({
+      projectId,
+      search: "login",
+      page: 3,
+      limit: 1,
+    });
+    expect(outOfRange.scenarios).toEqual([]);
+    expect(outOfRange.total).toBe(2);
+
+    const creatorMatches = await testScenarioService.listScenarios({
+      projectId,
+      search: "login",
+      createdById: otherUserId,
+    });
+    expect(creatorMatches.total).toBe(1);
+    expect(creatorMatches.scenarios[0]?.id).toBe(otherCreator.id);
+    expect(creatorMatches.scenarios[0]?.createdBy).toEqual({
+      id: otherUserId,
+      name: "Other Test Scenario PostgreSQL Integration",
+      email: `test-scenario-postgres-${otherUserId}@example.test`,
+    });
+
+    const literalMatches = await testScenarioService.listScenarios({
+      projectId,
+      search: "%_\\\\",
+    });
+    expect(literalMatches.total).toBe(1);
+    expect(literalMatches.scenarios[0]?.id).toBe(literal.id);
+
+    const summaryKeys = Object.keys(literalMatches.scenarios[0] ?? {}).sort();
+    expect(summaryKeys).toEqual([
+      "createdAt",
+      "createdBy",
+      "createdById",
+      "details",
+      "id",
+      "projectId",
+      "title",
+      "updatedAt",
+    ]);
+    expect(
+      Object.keys(literalMatches.scenarios[0]?.createdBy ?? {}).sort(),
+    ).toEqual(["email", "id", "name"]);
+  });
+
+  it("uses deterministic tie-breakers for every supported sort", async () => {
+    const first = await createScenario({ title: "Sort first" });
+    const second = await createScenario({ title: "Sort second" });
+    const sameTimestamp = new Date("2026-01-01T00:00:00.000Z");
+
+    await dbClient.testScenario.updateMany({
+      where: { id: { in: [first.id, second.id] } },
+      data: { createdAt: sameTimestamp, updatedAt: sameTimestamp },
+    });
+
+    const createdOrder = await testScenarioModel.listSummaries({
+      projectId,
+      search: "Sort",
+      sort: "recently_created",
+    });
+    expect(createdOrder.scenarios.map(({ id }) => id)).toEqual(
+      [first.id, second.id].sort().reverse(),
+    );
+
+    const updatedOrder = await testScenarioModel.listSummaries({
+      projectId,
+      search: "Sort",
+      sort: "recently_updated",
+    });
+    expect(updatedOrder.scenarios.map(({ id }) => id)).toEqual(
+      [first.id, second.id].sort().reverse(),
+    );
+
+    await dbClient.testScenario.updateMany({
+      where: { id: { in: [first.id, second.id] } },
+      data: { title: "Same sort title" },
+    });
+    const titleOrder = await testScenarioModel.listSummaries({
+      projectId,
+      search: "Same sort title",
+      sort: "title_asc",
+    });
+    expect(titleOrder.scenarios.map(({ id }) => id)).toEqual(
+      [first.id, second.id].sort(),
+    );
   });
 
   it("serializes concurrent appends into distinct dense positions", async () => {
     const scenario = await createScenario({ title: "Concurrent appends" });
-    const actions = ["Open login", "Enter credentials", "Submit form", "Verify dashboard"];
+    const actions = [
+      "Open login",
+      "Enter credentials",
+      "Submit form",
+      "Verify dashboard",
+    ];
 
     const appendResults = await Promise.all(
       actions.map((action) =>
@@ -139,10 +312,7 @@ describePostgres("test scenario PostgreSQL aggregate integration", () => {
     const finalScenario = await getScenario(scenario.id);
     expect(finalScenario.steps).toHaveLength(actions.length);
     expect(finalScenario.steps.map(({ position }) => position)).toEqual([
-      0,
-      1,
-      2,
-      3,
+      0, 1, 2, 3,
     ]);
     expect(new Set(finalScenario.steps.map(({ id }) => id)).size).toBe(
       actions.length,
@@ -156,11 +326,7 @@ describePostgres("test scenario PostgreSQL aggregate integration", () => {
   it("keeps append and reorder races lossless", async () => {
     const scenario = await createScenario({
       title: "Reorder versus append",
-      steps: [
-        { action: "First" },
-        { action: "Second" },
-        { action: "Third" },
-      ],
+      steps: [{ action: "First" }, { action: "Second" }, { action: "Third" }],
     });
     const requestedOrder = [...scenario.steps].reverse().map(({ id }) => id);
 
@@ -181,10 +347,7 @@ describePostgres("test scenario PostgreSQL aggregate integration", () => {
     expect(appendResult).not.toBeNull();
     const finalScenario = await getScenario(scenario.id);
     expect(finalScenario.steps.map(({ position }) => position)).toEqual([
-      0,
-      1,
-      2,
-      3,
+      0, 1, 2, 3,
     ]);
     expect(finalScenario.steps.map(({ action }) => action).sort()).toEqual(
       ["First", "Second", "Third", "Appended"].sort(),
@@ -223,7 +386,9 @@ describePostgres("test scenario PostgreSQL aggregate integration", () => {
     expect(reorderResult.kind).not.toBe("not-found");
     expect(deleteResult).not.toBeNull();
     const finalScenario = await getScenario(scenario.id);
-    expect(finalScenario.steps.map(({ id }) => id)).not.toContain(deletedStepId);
+    expect(finalScenario.steps.map(({ id }) => id)).not.toContain(
+      deletedStepId,
+    );
     expect(finalScenario.steps.map(({ action }) => action).sort()).toEqual(
       ["Keep first", "Keep last"].sort(),
     );

@@ -5,6 +5,7 @@ import { OpenAPIRegistry } from "@asteasolutions/zod-to-openapi";
 import { ErrorResponseSchema } from "./common";
 import { ResultSchema } from "./results";
 import { z } from "./zod";
+import { TEST_SCENARIO_SORT_VALUES } from "@/types/testScenarios";
 
 const TestScenarioSchema = z
   .object({
@@ -29,7 +30,10 @@ const TestScenarioSchema = z
         .strict(),
     ),
     contentMd: z.string(),
-    contentMdHash: z.string().length(64).regex(/^[a-f0-9]{64}$/),
+    contentMdHash: z
+      .string()
+      .length(64)
+      .regex(/^[a-f0-9]{64}$/),
     contentMdFormatVersion: z.number().int().positive(),
     createdAt: z.string(),
     updatedAt: z.string(),
@@ -82,11 +86,7 @@ const TestScenarioSummarySchema = z
   .strict()
   .openapi("TestScenarioSummary");
 
-const UpdateTestScenarioFieldSchema = z
-  .string()
-  .min(1)
-  .regex(/\S/)
-  .nullable();
+const UpdateTestScenarioFieldSchema = z.string().min(1).regex(/\S/).nullable();
 
 const updateTestScenarioFields = {
   title: z.string().min(1).regex(/\S/).optional(),
@@ -154,6 +154,25 @@ const TestScenarioListQuerySchema = z
     projectId: z.string().uuid(),
     page: z.number().int().min(1).default(1).optional(),
     limit: z.number().int().min(1).max(100).default(30).optional(),
+    search: z.string().trim().optional().openapi({
+      description:
+        "Optional surrounding whitespace is trimmed; the remaining value is matched as a case-insensitive literal substring of title only.",
+      example: "login",
+    }),
+    createdById: z.string().uuid().optional().openapi({
+      description:
+        "Optional creator User UUID filter. It may identify any user; a valid UUID with no matching scenarios returns an empty page.",
+      example: "33333333-3333-4333-8333-333333333333",
+    }),
+    sort: z
+      .enum(TEST_SCENARIO_SORT_VALUES)
+      .default("recently_created")
+      .optional()
+      .openapi({
+        description:
+          "Ordering: recently_created (createdAt DESC, id DESC), recently_updated (updatedAt DESC, id DESC), or title_asc (title ASC, id ASC).",
+        example: "title_asc",
+      }),
   })
   .openapi("TestScenarioListQuery");
 
@@ -315,27 +334,15 @@ export function registerTestScenarioRoutes(registry: OpenAPIRegistry): void {
   );
   registry.register("TestScenarioIdParams", TestScenarioIdParamsSchema);
   registry.register("TestScenarioStepParams", TestScenarioStepParamsSchema);
-  registry.register(
-    "TestScenarioProjectQuery",
-    TestScenarioProjectQuerySchema,
-  );
+  registry.register("TestScenarioProjectQuery", TestScenarioProjectQuerySchema);
   registry.register("TestScenarioListQuery", TestScenarioListQuerySchema);
-  registry.register(
-    "TestScenarioListResponse",
-    TestScenarioListResponseSchema,
-  );
-  registry.register(
-    "TestScenarioSpecLinkBody",
-    TestScenarioSpecLinkBodySchema,
-  );
+  registry.register("TestScenarioListResponse", TestScenarioListResponseSchema);
+  registry.register("TestScenarioSpecLinkBody", TestScenarioSpecLinkBodySchema);
   registry.register(
     "TestScenarioSpecLinkResponse",
     TestScenarioSpecLinkResponseSchema,
   );
-  registry.register(
-    "TestScenarioLinkedSpec",
-    TestScenarioLinkedSpecSchema,
-  );
+  registry.register("TestScenarioLinkedSpec", TestScenarioLinkedSpecSchema);
   registry.register(
     "TestScenarioSpecLinkListQuery",
     TestScenarioSpecLinkListQuerySchema,
@@ -344,7 +351,10 @@ export function registerTestScenarioRoutes(registry: OpenAPIRegistry): void {
     "TestScenarioSpecLinkDeleteParams",
     TestScenarioSpecLinkDeleteParamsSchema,
   );
-  registry.register("TestScenarioEvidenceQuery", TestScenarioEvidenceQuerySchema);
+  registry.register(
+    "TestScenarioEvidenceQuery",
+    TestScenarioEvidenceQuerySchema,
+  );
   registry.register(
     "TestScenarioSpecLinkListResponse",
     TestScenarioSpecLinkListResponseSchema,
@@ -434,7 +444,8 @@ export function registerTestScenarioRoutes(registry: OpenAPIRegistry): void {
   registry.registerPath({
     method: "post",
     path: "/api/v2/test-scenarios/{scenarioId}/steps",
-    description: "Appends a stable-ID step and regenerates the scenario projection.",
+    description:
+      "Appends a stable-ID step and regenerates the scenario projection.",
     request: {
       params: TestScenarioIdParamsSchema,
       query: TestScenarioProjectQuerySchema,
@@ -481,7 +492,9 @@ export function registerTestScenarioRoutes(registry: OpenAPIRegistry): void {
       },
       400: errorResponse("Invalid step or project context"),
       401: errorResponse("Unauthorized"),
-      404: errorResponse("Test scenario or step not found in the requested project"),
+      404: errorResponse(
+        "Test scenario or step not found in the requested project",
+      ),
       500: errorResponse("Internal server error"),
     },
     tags: ["Test Scenarios"],
@@ -490,7 +503,8 @@ export function registerTestScenarioRoutes(registry: OpenAPIRegistry): void {
   registry.registerPath({
     method: "delete",
     path: "/api/v2/test-scenarios/{scenarioId}/steps/{stepId}",
-    description: "Deletes a step, compacts positions, and regenerates the projection.",
+    description:
+      "Deletes a step, compacts positions, and regenerates the projection.",
     request: {
       params: TestScenarioStepParamsSchema,
       query: TestScenarioProjectQuerySchema,
@@ -503,7 +517,9 @@ export function registerTestScenarioRoutes(registry: OpenAPIRegistry): void {
       },
       400: errorResponse("Invalid step or project context"),
       401: errorResponse("Unauthorized"),
-      404: errorResponse("Test scenario or step not found in the requested project"),
+      404: errorResponse(
+        "Test scenario or step not found in the requested project",
+      ),
       500: errorResponse("Internal server error"),
     },
     tags: ["Test Scenarios"],
@@ -512,7 +528,8 @@ export function registerTestScenarioRoutes(registry: OpenAPIRegistry): void {
   registry.registerPath({
     method: "put",
     path: "/api/v2/test-scenarios/{scenarioId}/steps/order",
-    description: "Reorders all current steps using their complete stable-ID list.",
+    description:
+      "Reorders all current steps using their complete stable-ID list.",
     request: {
       params: TestScenarioIdParamsSchema,
       query: TestScenarioProjectQuerySchema,
@@ -529,7 +546,9 @@ export function registerTestScenarioRoutes(registry: OpenAPIRegistry): void {
         description: "Steps reordered; complete scenario returned",
         content: { "application/json": { schema: TestScenarioSchema } },
       },
-      400: errorResponse("stepIds must contain every current step exactly once"),
+      400: errorResponse(
+        "stepIds must contain every current step exactly once",
+      ),
       401: errorResponse("Unauthorized"),
       404: errorResponse("Test scenario not found in the requested project"),
       500: errorResponse("Internal server error"),
@@ -685,7 +704,7 @@ export function registerTestScenarioRoutes(registry: OpenAPIRegistry): void {
     method: "get",
     path: "/api/v2/test-scenarios",
     description:
-      "Lists lightweight project-scoped Test Scenario summaries without Markdown bodies.",
+      "Lists lightweight project-scoped Test Scenario summaries without Markdown bodies. Optional search is a trimmed, case-insensitive literal title substring; createdById filters by the supplied creator User UUID and may identify any user; sort defaults to recently_created. Filtering happens before pagination and total counts matching scenarios.",
     request: {
       query: TestScenarioListQuerySchema,
     },
@@ -698,7 +717,8 @@ export function registerTestScenarioRoutes(registry: OpenAPIRegistry): void {
         },
       },
       400: {
-        description: "Invalid project or pagination query",
+        description:
+          "Invalid project, pagination, search type, creator User UUID, or sort value",
         content: {
           "application/json": { schema: ErrorResponseSchema },
         },
