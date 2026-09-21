@@ -1,0 +1,47 @@
+__tests__/controllers/testScenarioController.test.ts
+  s_5c418767e5ce2b::t_549e7e6eb23513 92-94,108-137,146-150,154-184
+__tests__/mcp/testScenarioSchemas.test.ts
+  s_5c418767e5ce2b::t_9b44a20591bdf5 16-21,33-56,60-86
+__tests__/models/testScenarioModel.test.ts
+  s_5c418767e5ce2b::t_8b595bb3689c4a 6-7,124-131,138-149,154-188
+__tests__/schemas/testScenarioSchemas.test.ts
+  s_5c418767e5ce2b::t_253c67e09acd17 8,31-33,47-49,54-62,66-74,76-113
+__tests__/services/testScenarioService.test.ts
+  s_5c418767e5ce2b::t_b713454cc7dbd8 6-9,12-21,23-32,42,56-59,75-77,90,145-192,207-216,221-231,233-258,263-269,271-277
+__tests__/test-scenarios/testScenarioPostgresIntegration.test.ts
+  s_5c418767e5ce2b::t_bbff13f5f1216f 13,27-28,46-63,95-97,104-111,129-135,143-149,153-155,159-167,171-291,294-299,315,329,350,389-391
+docs/API_DOCUMENTATION.md
+  s_5c418767e5ce2b::t_83c0343597f1ab 31,126-139,347
+docs/MCP_TOOLS.md
+  s_5c418767e5ce2b::t_23f546f4ef4ff9 12,22,35,47,56,79,90,108,120,135,148,160,172,181,189,197,209,225,232-235,239,252,266,293
+openspec/changes/add-test-scenario-search/.openspec.yaml
+  s_9ec675c848cc25::t_040a60ab4dcf66 1-2
+openspec/changes/add-test-scenario-search/proposal.md
+  s_9ec675c848cc25::t_656fe17c032493 1-28
+openspec/changes/add-test-scenario-search/specs/test-scenario-summaries/spec.md
+  s_9ec675c848cc25::t_6860fc034b004b 1-91
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.18",
+  "base_commit_sha": "c7f1da8b361877fef9ba39b843fae2e67142f14a",
+  "prompts": {},
+  "sessions": {
+    "s_5c418767e5ce2b": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a0bfa9-5470-7bf0-bc0d-d85d8d0dd395",
+        "model": "gpt-5.6-luna"
+      },
+      "human_author": "Igor <hirzhek@gmail.com>"
+    },
+    "s_9ec675c848cc25": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a0bf98-dc05-7663-a9b9-936460e88799",
+        "model": "gpt-6-astra"
+      },
+      "human_author": "Igor <hirzhek@gmail.com>"
+    }
+  }
+}

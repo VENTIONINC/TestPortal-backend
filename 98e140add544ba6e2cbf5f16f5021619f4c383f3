@@ -1,0 +1,61 @@
+.agents/skills/typesafe-ai/LICENSE
+  s_77e15ccbc4e0ea::t_1815825aade835 1-21
+.agents/skills/typesafe-ai/SKILL.md
+  s_77e15ccbc4e0ea::t_aefdd37a6c65c2 1-149
+.env.example
+  s_77e15ccbc4e0ea::t_2aaebc9eddd23d 33
+.gitignore
+  s_77e15ccbc4e0ea::t_7857e47dd3c963 90
+__prompts-tests__/error-similarity/README.md
+  s_77e15ccbc4e0ea::t_25dc474b9d8068 1-53
+__prompts-tests__/error-similarity/comparison.test.ts
+  s_77e15ccbc4e0ea::t_7025b071256cd9 1-223
+__tests__/fixtures/errorSimilarity.ts
+  s_77e15ccbc4e0ea::t_3c06824deb5ee7 1-445
+__tests__/lib/error-analyzer.test.ts
+  s_77e15ccbc4e0ea::t_808c18cfff6865 4,7-16,18-29,31-34,39-40,45-46,48-50,53-55,61-62,66-311
+docs/evaluations/error-similarity/README.md
+  s_77e15ccbc4e0ea::t_9328125a9811fa 1-77
+docs/evaluations/error-similarity/expanded-37-cases.json
+  s_77e15ccbc4e0ea::t_37102f3b53f1d9 1-587
+docs/evaluations/error-similarity/fixtures-37-cases.json
+  s_77e15ccbc4e0ea::t_7e0d6742fbb813 1-2550
+docs/evaluations/error-similarity/initial-9-cases.json
+  s_77e15ccbc4e0ea::t_4a2728aa3b4584 1-153
+jest.config.ts
+  s_77e15ccbc4e0ea::t_923d47a6cc5db0 8
+jest.prompts.config.ts
+  s_77e15ccbc4e0ea::t_26ac6a2a5770bd 6-11
+openspec/changes/enable-jev-error-similarity/.openspec.yaml
+  s_77e15ccbc4e0ea::t_b7fe11cf58b84b 1-2
+openspec/changes/enable-jev-error-similarity/design.md
+  s_77e15ccbc4e0ea::t_cf016f52201078 1-40
+openspec/changes/enable-jev-error-similarity/proposal.md
+  s_77e15ccbc4e0ea::t_3c1594b5da2865 1-29
+openspec/changes/enable-jev-error-similarity/specs/configurable-error-similarity/spec.md
+  s_77e15ccbc4e0ea::t_c46bf63246e09b 1-91
+openspec/changes/enable-jev-error-similarity/tasks.md
+  s_77e15ccbc4e0ea::t_7275ff6139d362 1-30
+package-lock.json
+  s_77e15ccbc4e0ea::t_88d3aadcaaeeed 23,2700-2708
+package.json
+  s_77e15ccbc4e0ea::t_41c1956af5ab96 40
+skills-lock.json
+  s_77e15ccbc4e0ea::t_32039e7a96fb4f 1-11
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.18",
+  "base_commit_sha": "98e140add544ba6e2cbf5f16f5021619f4c383f3",
+  "prompts": {},
+  "sessions": {
+    "s_77e15ccbc4e0ea": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a0bebc-4cb1-7172-bdbe-ace3528224da",
+        "model": "gpt-6-astra"
+      },
+      "human_author": "Igor <hirzhek@gmail.com>"
+    }
+  }
+}

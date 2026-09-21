@@ -1,0 +1,61 @@
+__prompts-tests__/stored-results-analysis/runners/versions.ts
+  s_fe85380c6cd0c0::t_53db7792f197b7 10-14,20,26-31,35,37
+__prompts-tests__/stored-results-analysis/v1.1.0/regression.test.ts
+  s_fe85380c6cd0c0::t_84c5c3fe8cdc8c 14,16,23,35,37,39-74
+__prompts-tests__/stored-results-analysis/v1.1.0/smoke.test.ts
+  s_fe85380c6cd0c0::t_de565f32c66897 14,16,23,35,37,39-74
+__prompts-tests__/stored-results-analysis/v1.2.0/regression.test.ts
+  s_fe85380c6cd0c0::t_a6228de32a91f1 1-70
+__prompts-tests__/stored-results-analysis/v1.2.0/smoke.test.ts
+  s_fe85380c6cd0c0::t_01e1aaf23f492f 1-70
+__tests__/schemas/testAnalysisSchemas.test.ts
+  s_fe85380c6cd0c0::t_f31ee42f780c73 1-75
+src/prompts/stored-results-analysis/v1.2.0.ts
+  s_fe85380c6cd0c0::t_efad419a9d6f46 1-207
+.gitignore
+  s_fe85380c6cd0c0::t_2a31136d3f37d4 90
+__prompts-tests__/stored-results-analysis/generate-datasets.ts
+  s_fe85380c6cd0c0::t_a700d27a5a3332 53,56-57,69
+__prompts-tests__/stored-results-analysis/runners/evaluation-report.ts
+  s_fe85380c6cd0c0::t_2fbd4a1c04aa64 1-69
+__prompts-tests__/stored-results-analysis/runners/stored-results-analysis.ts
+  s_fe85380c6cd0c0::t_a3c54412504948 11,15,35-36,45-53,61-63,70,74-91,93-127,226-233
+__prompts-tests__/stored-results-analysis/runners/types.ts
+  s_fe85380c6cd0c0::t_70191be1621cb2 9,25-28
+__prompts-tests__/stored-results-analysis/v1.1.0/templates/stored-results-analysis/bug.application-error.ts
+  s_fe85380c6cd0c0::t_7f4dc011a25506 1-53
+__prompts-tests__/stored-results-analysis/v1.1.0/templates/stored-results-analysis/index.ts
+  s_fe85380c6cd0c0::t_031db235503fe7 10,12-14,16,18,26,28-30,32,34
+__prompts-tests__/stored-results-analysis/v1.1.0/templates/stored-results-analysis/infra.dns-tls.ts
+  s_fe85380c6cd0c0::t_8945b9290832ec 1-53
+__prompts-tests__/stored-results-analysis/v1.1.0/templates/stored-results-analysis/other.insufficient-context.ts
+  s_fe85380c6cd0c0::t_a907a9573dbba1 1-45
+__prompts-tests__/stored-results-analysis/v1.1.0/templates/stored-results-analysis/performance.resource-constraint.ts
+  s_fe85380c6cd0c0::t_2d15f04fa42760 1-53
+__prompts-tests__/stored-results-analysis/v1.1.0/templates/stored-results-analysis/performance.slow-response.ts
+  s_fe85380c6cd0c0::t_9c3149cd6cde32 1-54
+__prompts-tests__/stored-results-analysis/v1.1.0/templates/stored-results-analysis/script.fixture-setup.ts
+  s_fe85380c6cd0c0::t_6f02c43e76a466 1-53
+__prompts-tests__/stored-results-analysis/v1.2.0/luna-low.test.ts
+  s_fe85380c6cd0c0::t_6f3f42136c7f53 1-74
+src/schemas/testAnalysisSchemas.ts
+  s_fe85380c6cd0c0::t_e9016b54581830 7,17-24,49,78-107,114,116-119
+src/services/testAnalysisService.ts
+  s_fe85380c6cd0c0::t_43acd140cfe10f 9,118-119
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.18",
+  "base_commit_sha": "166fa6c21f4824faf624a944a72d79e65257bc74",
+  "prompts": {},
+  "sessions": {
+    "s_fe85380c6cd0c0": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a0be65-2a44-7a71-9ad9-fe12cbd75b2e",
+        "model": "gpt-5.6-sol"
+      },
+      "human_author": "Igor <hirzhek@gmail.com>"
+    }
+  }
+}

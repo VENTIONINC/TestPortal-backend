@@ -1,0 +1,29 @@
+__prompts-tests__/error-formatter/README.md
+  s_60f67e7c1bfbb0::t_1f089ef8efe3b2 1-25
+__prompts-tests__/error-formatter/baseline.test.ts
+  s_60f67e7c1bfbb0::t_0cde3c51e446d3 1-202
+__tests__/services/errorFormatterService.test.ts
+  s_60f67e7c1bfbb0::t_2ba71948cef619 234-268
+jest.prompts.config.ts
+  s_60f67e7c1bfbb0::t_8f595f15ad4972 6-11
+src/prompts/error-formatter/v1.1.0.ts
+  s_60f67e7c1bfbb0::t_a959c9b718755f 1-38
+src/services/errorFormatterService.ts
+  s_60f67e7c1bfbb0::t_5a620f1256a616 11
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.18",
+  "base_commit_sha": "300c33c41f6f59129b9cba53ac92a28f885b6b59",
+  "prompts": {},
+  "sessions": {
+    "s_60f67e7c1bfbb0": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a0bec4-b4b1-7330-b577-a659effe1748",
+        "model": "gpt-6-astra"
+      },
+      "human_author": "Igor <hirzhek@gmail.com>"
+    }
+  }
+}
