@@ -1,0 +1,19 @@
+README.md
+  s_cbb368511ef5dd::t_0c9fdedbc8937e 1,3,5,7,9-14,16,18,20-25,27-35,37,39,41-42,44,46-51,53,55,57-62,64,66,68,70,72-75,77,79,81,84,86-88,90,92,94-96,98,100-103,106,108-110,112,114,116,118-125,127,129,131-142,144,146,148,150-153,155,157,159,163
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.18",
+  "base_commit_sha": "64599b3419d7ecee89c1b354cc59ac38e62f7fb7",
+  "prompts": {},
+  "sessions": {
+    "s_cbb368511ef5dd": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a0c3fb-aa33-7ac0-a12a-2fe6a5f23d89",
+        "model": "gpt-6-astra"
+      },
+      "human_author": "Ihar Mikailau <ihar.mikailau@ventionteams.com>"
+    }
+  }
+}
