@@ -136,6 +136,32 @@ scenarios, and is hashed with SHA-256. The migration intentionally removes
 existing development scenarios and scenario-to-Spec links; Specs, Results,
 Issues, projects, and users are preserved.
 
+## Result Detail Route
+
+`GET /api/v2/results/{resultId}?projectId=...` requires bearer authentication
+and returns the existing Result detail fields plus `relatedTestScenarios`.
+Each related scenario contains its `id`, `title`, nullable `details`, and the
+current generated Markdown in the `contentMd` JSON string field. For example,
+the added portion of a Result response is:
+
+```json
+{
+  "relatedTestScenarios": [
+    {
+      "id": "11111111-1111-4111-8111-111111111111",
+      "title": "Checkout",
+      "details": "Purchase flow",
+      "contentMd": "# Checkout\n\n## Details\nPurchase flow\n\n## Steps\n_No steps defined._\n"
+    }
+  ]
+}
+```
+
+The array is empty when the Result's Spec has no linked scenarios. It reflects
+current same-project scenario links and content for every Result status, ordered
+by scenario creation time descending and then ID descending. The Markdown is
+part of the JSON response; this endpoint does not return a `.md` file.
+
 ## Manual Test Run Routes
 
 Manual runs are separate from automated `Result` records. Starting a run

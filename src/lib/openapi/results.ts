@@ -114,6 +114,22 @@ const ResultSchema = z
   })
   .openapi("Result");
 
+const RelatedTestScenarioSummarySchema = z
+  .object({
+    id: z.string().uuid(),
+    title: z.string(),
+    details: z.string().nullable(),
+    contentMd: z
+      .string()
+      .describe("Current generated Test Scenario Markdown returned as JSON text"),
+  })
+  .strict()
+  .openapi("RelatedTestScenarioSummary");
+
+const ResultDetailSchema = ResultSchema.extend({
+  relatedTestScenarios: z.array(RelatedTestScenarioSummarySchema),
+}).openapi("ResultDetail");
+
 const ResultsListResponseSchema = z
   .object({
     results: z.array(ResultSchema),
@@ -217,6 +233,11 @@ const UpdateResultAnalysisFeedbackRequestSchema = z
 
 export function registerResultRoutes(registry: OpenAPIRegistry) {
   registry.register("Result", ResultSchema);
+  registry.register(
+    "RelatedTestScenarioSummary",
+    RelatedTestScenarioSummarySchema,
+  );
+  registry.register("ResultDetail", ResultDetailSchema);
   registry.register("ResultSpec", ResultSpecSchema);
   registry.register("ResultExecution", ResultExecutionSchema);
   registry.register("ResultNestedError", ResultErrorSchema);
@@ -315,7 +336,7 @@ export function registerResultRoutes(registry: OpenAPIRegistry) {
         description: "Result details",
         content: {
           "application/json": {
-            schema: ResultSchema,
+            schema: ResultDetailSchema,
           },
         },
       },
@@ -603,6 +624,7 @@ export function registerResultRoutes(registry: OpenAPIRegistry) {
 
 export {
   ResultSchema,
+  ResultDetailSchema,
   ResultsStatsSchema,
   UpdateResultAnalysisRequestSchema,
   UpdateResultAnalysisFeedbackRequestSchema,
