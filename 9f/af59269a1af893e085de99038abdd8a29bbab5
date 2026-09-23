@@ -1,0 +1,65 @@
+openspec/changes/expose-related-test-scenarios-in-result-details/.openspec.yaml
+  s_0869e86e8ab139::t_0d03f3cfbfd288 1-2
+openspec/changes/expose-related-test-scenarios-in-result-details/design.md
+  s_34ad2d04936fdc::t_90c493e17fcf80 1-42
+openspec/changes/expose-related-test-scenarios-in-result-details/proposal.md
+  s_34ad2d04936fdc::t_0f96fabea408b8 1-25
+openspec/changes/expose-related-test-scenarios-in-result-details/specs/test-scenario-execution-evidence/spec.md
+  s_34ad2d04936fdc::t_da67200bff6651 1-41
+src/controllers/resultController.ts
+  s_34ad2d04936fdc::t_808365b0d96b2b 133
+__tests__/controllers/resultController.detail.test.ts
+  s_0869e86e8ab139::t_2485b119ddd40e 1-82
+__tests__/lib/openapi/results.test.ts
+  s_0869e86e8ab139::t_f6c64fb0fd50c0 1-99
+__tests__/models/testScenarioSpecLinkModel.test.ts
+  s_0869e86e8ab139::t_d8903582c48779 94-138
+__tests__/services/resultService.jsonPayloads.test.ts
+  s_0869e86e8ab139::t_efa929de6cbd40 7,9,12,19-21,111-194
+__tests__/test-scenarios/resultScenarioDetailPostgresIntegration.test.ts
+  s_0869e86e8ab139::t_030c6cb163cf13 1-215
+docs/API_DOCUMENTATION.md
+  s_0869e86e8ab139::t_3bb39a1a2f6cf6 139-164
+openspec/changes/expose-related-test-scenarios-in-result-details/tasks.md
+  s_0869e86e8ab139::t_c63dbcd74d9c21 1-17
+src/lib/openapi/results.ts
+  s_0869e86e8ab139::t_ed7a5cd6247635 117-132,236-240,339,627
+src/models/testScenarioSpecLinkModel.ts
+  s_0869e86e8ab139::t_07e8924b8982ad 10,75-110
+src/services/resultService.ts
+  s_3dffcc626f39eb::t_57b4446b9dee5f 10,24,41-69,153-154,156-167
+src/types/testScenarios.ts
+  s_0869e86e8ab139::t_a86277a5f6839a 54-60
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.18",
+  "base_commit_sha": "9faf59269a1af893e085de99038abdd8a29bbab5",
+  "prompts": {},
+  "sessions": {
+    "s_0869e86e8ab139": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a0c475-c895-7572-8bd7-e9f2e5feca83",
+        "model": "gpt-6-sol"
+      },
+      "human_author": "Ihar Mikailau <ihar.mikailau@ventionteams.com>"
+    },
+    "s_34ad2d04936fdc": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a0cec7-11d1-7632-8d23-96159d4176fe",
+        "model": "gpt-6-luna"
+      },
+      "human_author": "Ihar Mikailau <ihar.mikailau@ventionteams.com>"
+    },
+    "s_3dffcc626f39eb": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a0cec5-4463-75a2-909a-11c8e20e2576",
+        "model": "unknown"
+      },
+      "human_author": "Ihar Mikailau <ihar.mikailau@ventionteams.com>"
+    }
+  }
+}
