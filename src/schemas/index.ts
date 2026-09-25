@@ -47,3 +47,5 @@ export {
   type TestScenarioSpecLinkParams,
   type TestScenarioSpecLinkQuery,
 } from "./testScenarioIntegrationSchemas";
+
+export * from "./manualTestRunSchemas";

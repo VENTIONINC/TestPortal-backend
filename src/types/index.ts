@@ -10,6 +10,7 @@ export * from "@/types/ctrf";
 export * from "@/types/skills";
 export * from "@/types/testScenarios";
 export * from "@/types/testScenarioIntegration";
+export * from "@/types/manualTestRuns";
 export * from "@/types/resultCategory";
 
 // Express types extensions
@@ -99,4 +100,3 @@ export interface UserIntegrations {
   monitoringPortalEnabled?: boolean;
   analyzeEnabled?: boolean;
 }
-
