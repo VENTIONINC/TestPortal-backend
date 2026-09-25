@@ -26,6 +26,22 @@ enum SkillSource {
   custom
 }
 
+enum ManualTestRunStatus {
+  in_progress
+  passed
+  failed
+  blocked
+  skipped
+}
+
+enum ManualTestRunStepStatus {
+  not_started
+  passed
+  failed
+  blocked
+  skipped
+}
+
 model Project {
   id              String   @id @default(uuid()) @db.Uuid
   createdAt       DateTime @default(now())
@@ -43,6 +59,8 @@ model Project {
   executions    Execution[]
   specs         Spec[]
   issues        Issue[]
+  testScenarios TestScenario[]
+  manualTestRuns ManualTestRun[]
   uploadApiKeys UploadApiKey[]
   dailyMetrics  DailyExecutionMetric[]
 
@@ -88,6 +106,7 @@ model Spec {
   projectId String  @db.Uuid
 
   results Result[]
+  testScenarioLinks TestScenarioSpecLink[]
 
   // Unique key per project
   @@unique([projectId, key])
@@ -97,32 +116,32 @@ model Spec {
 }
 
 model Result {
-  id                             String        @id @default(uuid()) @db.Uuid
-  createdAt                      DateTime      @default(now())
-  updatedAt                      DateTime      @updatedAt
-  reportPortalLink               String?
-  retry                          Int
-  status                         String
-  duration                       Int
-  startTime                      DateTime
-  errors                         ResultError[]
-  spec                           Spec          @relation(fields: [specId], references: [id], onDelete: Cascade)
-  specId                         String        @db.Uuid
-  execution                      Execution     @relation(fields: [executionId], references: [id], onDelete: Cascade)
-  executionId                    String        @db.Uuid
-  analysisStatus                 String? // "passed" | "failed"
-  analysisCategory               String? // "bug" | "infra" | "performance" | "script" | "other"
-  analysisConfidence             Int? // 1 to 5
-  analysisConclusion             String? // Brief explanation for the categorization decision
-  analysisErrorQuality           Int? // 1 to 5 (only for failed tests)
-  analysisErrorQualityConclusion String? // Brief explanation for error quality rating (only for failed tests)
-  analysisReviewedAt             DateTime?
-  analysisReviewedById           String?       @db.Uuid
-  analysisFeedbackCategory       String?
-  analysisFeedbackConfidence     Int?
-  analysisFeedbackConclusion     String?
+  id                              String        @id @default(uuid()) @db.Uuid
+  createdAt                       DateTime      @default(now())
+  updatedAt                       DateTime      @updatedAt
+  reportPortalLink                String?
+  retry                           Int
+  status                          String
+  duration                        Int
+  startTime                       DateTime
+  errors                          ResultError[]
+  spec                            Spec          @relation(fields: [specId], references: [id], onDelete: Cascade)
+  specId                          String        @db.Uuid
+  execution                       Execution     @relation(fields: [executionId], references: [id], onDelete: Cascade)
+  executionId                     String        @db.Uuid
+  analysisStatus                  String? // "passed" | "failed"
+  analysisCategory                String? // "bug" | "infra" | "performance" | "script" | "other"
+  analysisConfidence              Int? // 1 to 5
+  analysisConclusion              String? // Brief explanation for the categorization decision
+  analysisErrorQuality            Int? // 1 to 5 (only for failed tests)
+  analysisErrorQualityConclusion  String? // Brief explanation for error quality rating (only for failed tests)
+  analysisReviewedAt              DateTime?
+  analysisReviewedById            String? @db.Uuid
+  analysisFeedbackCategory        String?
+  analysisFeedbackConfidence      Int?
+  analysisFeedbackConclusion      String?
 
-  @@index([specId])
+  @@index([specId, startTime])
   @@index([executionId])
 }
 
@@ -182,10 +201,12 @@ model User {
   analyzeEnabled          Boolean    @default(false)
 
   // Project relationships
-  projects      Project[]
-  issuesCreated Issue[]        @relation("IssuesCreated")
-  issuesUpdated Issue[]        @relation("IssuesUpdated")
-  uploadApiKeys UploadApiKey[]
+  projects             Project[]
+  issuesCreated        Issue[]        @relation("IssuesCreated")
+  issuesUpdated        Issue[]        @relation("IssuesUpdated")
+  testScenariosCreated TestScenario[] @relation("TestScenarioCreatedBy")
+  manualTestRunsExecuted ManualTestRun[] @relation("ManualTestRunExecutedBy")
+  uploadApiKeys        UploadApiKey[]
 }
 
 model Issue {
@@ -212,6 +233,102 @@ model Issue {
   @@index([projectId])
   @@index([projectId, category])
   @@index([projectId, createdAt])
+}
+
+model TestScenario {
+  id                    String             @id @default(uuid()) @db.Uuid
+  createdAt             DateTime           @default(now())
+  updatedAt             DateTime           @updatedAt
+  title                 String
+  details               String?            @db.Text
+  objective             String?            @db.Text
+  preconditions         String?            @db.Text
+  testData              String?            @db.Text
+  expectedResult        String?            @db.Text
+  notes                 String?            @db.Text
+  contentMd             String             @db.Text
+  contentMdHash         String             @db.Char(64)
+  contentMdFormatVersion Int               @default(1)
+  createdById           String             @db.Uuid
+
+  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  projectId String  @db.Uuid
+  createdBy User    @relation("TestScenarioCreatedBy", fields: [createdById], references: [id])
+
+  specLinks TestScenarioSpecLink[]
+  steps     TestScenarioStep[]
+  manualTestRuns ManualTestRun[]
+
+  @@index([projectId])
+  @@index([projectId, createdAt])
+  @@index([createdById])
+}
+
+model TestScenarioStep {
+  id             String       @id @default(uuid()) @db.Uuid
+  testScenarioId String       @db.Uuid
+  position       Int
+  action         String       @db.Text
+  expectedResult String?      @db.Text
+
+  testScenario TestScenario @relation(fields: [testScenarioId], references: [id], onDelete: Cascade)
+
+  @@unique([testScenarioId, position])
+}
+
+model TestScenarioSpecLink {
+  testScenarioId String @db.Uuid
+  specId         String @db.Uuid
+
+  testScenario TestScenario @relation(fields: [testScenarioId], references: [id], onDelete: Cascade)
+  spec         Spec         @relation(fields: [specId], references: [id], onDelete: Cascade)
+
+  @@id([testScenarioId, specId])
+  @@index([specId])
+}
+
+model ManualTestRun {
+  id                   String              @id @default(uuid()) @db.Uuid
+  projectId            String              @db.Uuid
+  testScenarioId       String?             @db.Uuid
+  sourceTestScenarioId String              @db.Uuid
+  executedById         String?             @db.Uuid
+  status               ManualTestRunStatus @default(in_progress)
+  startedAt            DateTime            @default(now())
+  updatedAt            DateTime            @updatedAt
+  completedAt          DateTime?
+  title                String
+  details              String?             @db.Text
+  objective            String?             @db.Text
+  preconditions        String?             @db.Text
+  testData             String?             @db.Text
+  expectedResult       String?             @db.Text
+  scenarioNotes        String?             @db.Text
+  notes                String?             @db.Text
+
+  project      Project             @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  testScenario TestScenario?       @relation(fields: [testScenarioId], references: [id], onDelete: SetNull)
+  executedBy   User?               @relation("ManualTestRunExecutedBy", fields: [executedById], references: [id], onDelete: SetNull)
+  steps        ManualTestRunStep[]
+
+  @@index([projectId, startedAt, id])
+  @@index([projectId, sourceTestScenarioId, startedAt, id])
+  @@index([executedById])
+}
+
+model ManualTestRunStep {
+  id              String                  @id @default(uuid()) @db.Uuid
+  manualTestRunId String                  @db.Uuid
+  position        Int
+  action          String                  @db.Text
+  expectedResult  String?                 @db.Text
+  status          ManualTestRunStepStatus @default(not_started)
+  notes           String?                 @db.Text
+  updatedAt       DateTime                @updatedAt
+
+  manualTestRun ManualTestRun @relation(fields: [manualTestRunId], references: [id], onDelete: Cascade)
+
+  @@unique([manualTestRunId, position])
 }
 
 model UploadApiKey {

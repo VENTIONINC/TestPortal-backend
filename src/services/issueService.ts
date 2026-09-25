@@ -276,6 +276,40 @@ export const issueService = {
     );
   },
 
+  async getObservedIssuesBySpecRecordIds(params: {
+    projectId: string;
+    specRecordIds: string[];
+    page?: number;
+    limit?: number;
+  }): Promise<{
+    issues: SerializedIssue[];
+    total: number;
+  }> {
+    if (!params.projectId) {
+      throw new Error("Project ID is required");
+    }
+
+    const page = params.page ?? 1;
+    const limit = params.limit ?? 30;
+    const [issues, total] = await Promise.all([
+      issueModel.findObservedBySpecRecordIds(
+        params.specRecordIds,
+        params.projectId,
+        page,
+        limit,
+      ),
+      issueModel.countObservedBySpecRecordIds(
+        params.specRecordIds,
+        params.projectId,
+      ),
+    ]);
+
+    return {
+      issues: issues.map(serializeIssue),
+      total,
+    };
+  },
+
   async createIssue(issueParams: CreateIssueParams): Promise<PrismaIssue> {
     if (!issueParams?.name) {
       throw new Error("Unable to create issue without name");

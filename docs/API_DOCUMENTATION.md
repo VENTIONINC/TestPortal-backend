@@ -107,6 +107,110 @@ resources.
 the catalog-provided `downloadUrl` or directly to
 `GET /api/v2/skills/{id}/archive`.
 
+## Test Scenario Routes
+
+Test Scenario list responses are lightweight summaries. Each item contains
+`id`, `projectId`, `createdById`, `title`, nullable plain-text `details`, a
+`createdBy` object containing only `id`, `name`, and `email`, `createdAt`, and
+`updatedAt`; list items no longer contain `contentMd`.
+
+This is a breaking REST response change for dependent clients. Regenerate
+client types and hooks from the final `/api/openapi.json` document. Create
+requests now use structured `objective`, `preconditions`, `testData`,
+`expectedResult`, `notes`, and optional initial `steps`; `contentMd`, its hash,
+and its format version are read-only detail fields. Details and structured text
+are trimmed and must be nonblank when supplied; PATCH accepts `null` for
+clearing nullable fields and preserves omitted fields.
+
+`POST /api/v2/test-scenarios` and `PATCH /api/v2/test-scenarios/{scenarioId}`
+return the complete scenario detail. Step edits are independent operations and
+require `projectId` query context:
+
+- `POST /api/v2/test-scenarios/{scenarioId}/steps` appends a step and returns 201.
+- `PATCH` or `DELETE /api/v2/test-scenarios/{scenarioId}/steps/{stepId}` edits or removes a stable-ID step and returns the updated detail.
+- `PUT /api/v2/test-scenarios/{scenarioId}/steps/order` accepts the complete current `stepIds` list and returns the updated detail.
+
+Every content mutation regenerates persisted Markdown atomically. The document
+uses LF endings, includes an explicit `_No steps defined._` section for empty
+scenarios, and is hashed with SHA-256. The migration intentionally removes
+existing development scenarios and scenario-to-Spec links; Specs, Results,
+Issues, projects, and users are preserved.
+
+## Result Detail Route
+
+`GET /api/v2/results/{resultId}?projectId=...` requires bearer authentication
+and returns the existing Result detail fields plus `relatedTestScenarios`.
+Each related scenario contains its `id`, `title`, nullable `details`, and the
+current generated Markdown in the `contentMd` JSON string field. For example,
+the added portion of a Result response is:
+
+```json
+{
+  "relatedTestScenarios": [
+    {
+      "id": "11111111-1111-4111-8111-111111111111",
+      "title": "Checkout",
+      "details": "Purchase flow",
+      "contentMd": "# Checkout\n\n## Details\nPurchase flow\n\n## Steps\n_No steps defined._\n"
+    }
+  ]
+}
+```
+
+The array is empty when the Result's Spec has no linked scenarios. It reflects
+current same-project scenario links and content for every Result status, ordered
+by scenario creation time descending and then ID descending. The Markdown is
+part of the JSON response; this endpoint does not return a `.md` file.
+
+## Manual Test Run Routes
+
+Manual runs are separate from automated `Result` records. Starting a run
+captures the structured scenario fields and ordered steps as an independent
+snapshot; later scenario edits do not rewrite that run. Runs do not store
+Markdown, attachments, or automated evidence.
+
+All routes require a JWT and a UUID `projectId` query parameter. The executor,
+source provenance, and timestamps are server-owned. The seven operations are:
+
+- `POST /api/v2/test-scenarios/{scenarioId}/manual-runs` starts a run and accepts
+  an optional `{ "notes": "..." }` body (an empty body/object is valid).
+- `GET /api/v2/test-scenarios/{scenarioId}/manual-runs` lists history for a live
+  project-scoped scenario.
+- `GET /api/v2/manual-test-runs` lists project history, including runs whose
+  source scenario was later deleted.
+- `GET /api/v2/manual-test-runs/{runId}` retrieves the full snapshot and steps.
+- `PATCH /api/v2/manual-test-runs/{runId}` updates execution notes or selects
+  the overall status.
+- `PATCH /api/v2/manual-test-runs/{runId}/steps/{stepId}` updates one copied
+  step's status or notes.
+- `POST /api/v2/manual-test-runs/{runId}/complete` completes a run with one of
+  `passed`, `failed`, `blocked`, or `skipped`.
+
+Run statuses are `in_progress`, `passed`, `failed`, `blocked`, and `skipped`;
+step statuses additionally include `not_started`. Notes are trimmed when
+provided, `null` clears them, and omission preserves the existing value.
+Completed runs are immutable and cannot be reopened. A passing nonempty run
+requires at least one passed step and every step to be passed or skipped;
+failed, blocked, skipped, and zero-step runs may complete without inferring
+step outcomes. Completion returns `409` when those rules are not satisfied.
+
+History supports `page` (default `1`, positive), `limit` (default `30`, maximum
+`100`), one `status`, and optional `startedFrom` (inclusive) and `startedBefore`
+(exclusive) RFC 3339 timestamps with an explicit timezone. Project history
+also supports one `testScenarioId` filter against immutable source provenance.
+Bounds and filters are combined before pagination; offset pages are stable only
+when the underlying data is unchanged. Scenario history derives the scenario
+filter from its path and rejects a redundant `testScenarioId` query parameter.
+
+Example completion request:
+
+```json
+{
+  "status": "passed",
+  "notes": "Verified in the staging environment"
+}
+```
+
 ## Related Documentation
 
 - [How to Inspect the MCP Server](INSPECT_MCP_SERVER.md)

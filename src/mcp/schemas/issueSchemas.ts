@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { z } from "zod/v3";
-import type { MCPToolSchema } from "@/types";
+import type { MCPToolSchemaShape } from "@/types";
 
 const IssueCategorySchema = z.enum([
   "bug",
@@ -15,7 +15,7 @@ const IssueCategorySchema = z.enum([
 /**
  * Schema for filtering and paginating issues
  */
-export const getIssuesSchema: MCPToolSchema = {
+export const getIssuesSchema: MCPToolSchemaShape = {
   projectId: z
     .string()
     .describe("The UUID of the project to filter issues by (required)"),
@@ -30,7 +30,7 @@ export const getIssuesSchema: MCPToolSchema = {
 /**
  * Schema for getting a specific issue by ID
  */
-export const getIssueByIdSchema: MCPToolSchema = {
+export const getIssueByIdSchema: MCPToolSchemaShape = {
   issueId: z.string().describe("The UUID of the issue to retrieve"),
   projectId: z
     .string()
@@ -40,7 +40,7 @@ export const getIssueByIdSchema: MCPToolSchema = {
 /**
  * Schema for creating a new issue
  */
-export const createIssueSchema: MCPToolSchema = {
+export const createIssueSchema: MCPToolSchemaShape = {
   name: z.string(),
   category: IssueCategorySchema,
   description: z.string().optional(),
