@@ -7,6 +7,7 @@ import type {
   TestScenarioSpecLink,
 } from "@prisma/client";
 import { dbClient } from "@/prisma/client";
+import type { RelatedTestScenarioSummary } from "@/types/testScenarios";
 
 export type TestScenarioSpecLinkWithSpec = TestScenarioSpecLink & {
   spec: Spec;
@@ -69,6 +70,42 @@ export const testScenarioSpecLinkModel = {
     });
 
     return links.map(({ specId }) => specId);
+  },
+
+  async findLinkedTestScenarios(
+    specId: string,
+    projectId: string,
+  ): Promise<RelatedTestScenarioSummary[]> {
+    const links = await dbClient.testScenarioSpecLink.findMany({
+      where: {
+        specId,
+        spec: { projectId },
+        testScenario: { projectId },
+      },
+      select: {
+        testScenario: {
+          select: {
+            id: true,
+            title: true,
+            details: true,
+            contentMd: true,
+          },
+        },
+      },
+      orderBy: [
+        { testScenario: { createdAt: "desc" } },
+        { testScenario: { id: "desc" } },
+      ],
+    });
+
+    const uniqueScenarios = new Map<string, RelatedTestScenarioSummary>();
+    for (const { testScenario } of links) {
+      if (!uniqueScenarios.has(testScenario.id)) {
+        uniqueScenarios.set(testScenario.id, testScenario);
+      }
+    }
+
+    return [...uniqueScenarios.values()];
   },
 
   async delete(

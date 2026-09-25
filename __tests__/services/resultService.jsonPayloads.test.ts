@@ -4,15 +4,21 @@
 import "@/test-utils/testEnv";
 import { jest } from "@jest/globals";
 import { resultModel } from "@/models/resultModel";
+import { testScenarioSpecLinkModel } from "@/models/testScenarioSpecLinkModel";
 import { resultService } from "@/services/resultService";
+import { normalizeResultPayload } from "@/lib/jsonPayloads";
 
 jest.mock("@/models/resultModel");
+jest.mock("@/models/testScenarioSpecLinkModel");
 
 jest.mock("@/prisma/client", () => ({
   dbClient: {},
 }));
 
 const mockResultModel = resultModel as jest.Mocked<typeof resultModel>;
+const mockTestScenarioSpecLinkModel = testScenarioSpecLinkModel as jest.Mocked<
+  typeof testScenarioSpecLinkModel
+>;
 
 describe("resultService JSON payload normalization", () => {
   const now = new Date("2025-01-01T10:00:00Z");
@@ -100,6 +106,90 @@ describe("resultService JSON payload normalization", () => {
   beforeEach(() => {
     jest.clearAllMocks();
     mockResultModel.findSpecTags.mockResolvedValue([]);
+  });
+
+  it.each(["passed", "failed", "skipped", "timedOut", "flaky"])(
+    "returns current related scenario summaries for %s Results without changing Result fields",
+    async (status) => {
+      const rawResult = buildRawResult();
+      rawResult.status = status;
+      const scenarios = [
+        { id: "scenario-1", title: "Checkout", details: "Payment flow", contentMd: "# Checkout\n" },
+        { id: "scenario-2", title: "Refund", details: null, contentMd: "# Refund\n" },
+      ];
+      mockResultModel.findById.mockResolvedValueOnce(rawResult);
+      mockTestScenarioSpecLinkModel.findLinkedTestScenarios.mockResolvedValueOnce(
+        scenarios,
+      );
+
+      const detail = await resultService.getResultDetailById(
+        "result-1",
+        "project-1",
+      );
+
+      expect(detail).toEqual({
+        ...normalizeResultPayload(rawResult),
+        relatedTestScenarios: scenarios,
+      });
+      expect(
+        Object.keys(detail.relatedTestScenarios[0] ?? {}).sort(),
+      ).toEqual(["contentMd", "details", "id", "title"]);
+      expect(mockTestScenarioSpecLinkModel.findLinkedTestScenarios).toHaveBeenCalledWith(
+        "spec-1",
+        "project-1",
+      );
+    },
+  );
+
+  it("returns an empty related scenario array when there are no links", async () => {
+    const rawResult = buildRawResult();
+    mockResultModel.findById.mockResolvedValueOnce(rawResult);
+    mockTestScenarioSpecLinkModel.findLinkedTestScenarios.mockResolvedValueOnce(
+      [],
+    );
+
+    await expect(
+      resultService.getResultDetailById("result-1", "project-1"),
+    ).resolves.toMatchObject({ relatedTestScenarios: [] });
+  });
+
+  it("returns a single lightweight related scenario summary", async () => {
+    const rawResult = buildRawResult();
+    const scenarios = [
+      { id: "scenario-1", title: "Checkout", details: null, contentMd: "# Checkout\n" },
+    ];
+    mockResultModel.findById.mockResolvedValueOnce(rawResult);
+    mockTestScenarioSpecLinkModel.findLinkedTestScenarios.mockResolvedValueOnce(
+      scenarios,
+    );
+
+    await expect(
+      resultService.getResultDetailById("result-1", "project-1"),
+    ).resolves.toMatchObject({ relatedTestScenarios: scenarios });
+  });
+
+  it("does not query scenarios when the Result is not found", async () => {
+    mockResultModel.findById.mockResolvedValueOnce(null);
+
+    await expect(
+      resultService.getResultDetailById("missing-result", "project-1"),
+    ).rejects.toThrow("Result with ID missing-result not found");
+    expect(
+      mockTestScenarioSpecLinkModel.findLinkedTestScenarios,
+    ).not.toHaveBeenCalled();
+  });
+
+  it("keeps generic Result reads free of related scenario data", async () => {
+    const rawResult = buildRawResult();
+    mockResultModel.findById.mockResolvedValueOnce(rawResult);
+
+    const result = await resultService.getResultById("result-1", "project-1");
+
+    expect(result).toEqual(normalizeResultPayload(rawResult));
+    expect(result).not.toHaveProperty("relatedTestScenarios");
+    expect(
+      mockTestScenarioSpecLinkModel.findLinkedTestScenarios,
+    ).not.toHaveBeenCalled();
   });
 
   it("normalizes getResults payloads into array-shaped fields", async () => {

@@ -7,6 +7,7 @@ import {
   type AnalysisExportFilters,
   type AnalysisExportRow,
 } from "@/models/resultModel";
+import { testScenarioSpecLinkModel } from "@/models/testScenarioSpecLinkModel";
 import {
   normalizeJsonStringArray,
   normalizeResultPayload,
@@ -20,6 +21,7 @@ import type {
   ResultsStats,
   StructuredResultWithRelations,
 } from "@/types";
+import type { RelatedTestScenarioSummary } from "@/types/testScenarios";
 import { dashboardService } from "@/services/dashboardService";
 import getLogger from "@/lib/logger";
 import { dbClient } from "@/prisma/client";
@@ -34,6 +36,35 @@ interface GetResultsResponse {
   rawTotal: number;
   page: number;
   totalPages: number;
+}
+
+interface ResultDetailResponse extends StructuredResultWithRelations {
+  relatedTestScenarios: RelatedTestScenarioSummary[];
+}
+
+async function getNormalizedResultById(
+  resultId: number | string,
+  projectId: string,
+): Promise<StructuredResultWithRelations> {
+  if (!resultId) {
+    throw new Error("Result ID is required");
+  }
+
+  if (!projectId) {
+    throw new Error("Project ID is required");
+  }
+
+  const resultRecord = await resultModel.findById(
+    resultId,
+    projectId,
+    dbClient,
+  );
+
+  if (!resultRecord) {
+    throw new Error(`Result with ID ${resultId} not found`);
+  }
+
+  return normalizeResultPayload(resultRecord);
 }
 
 export const resultService = {
@@ -119,25 +150,21 @@ export const resultService = {
     resultId: number | string,
     projectId: string,
   ): Promise<StructuredResultWithRelations> {
-    if (!resultId) {
-      throw new Error("Result ID is required");
-    }
+    return await getNormalizedResultById(resultId, projectId);
+  },
 
-    if (!projectId) {
-      throw new Error("Project ID is required");
-    }
+  async getResultDetailById(
+    resultId: number | string,
+    projectId: string,
+  ): Promise<ResultDetailResponse> {
+    const result = await getNormalizedResultById(resultId, projectId);
+    const relatedTestScenarios =
+      await testScenarioSpecLinkModel.findLinkedTestScenarios(
+        result.spec.id,
+        projectId,
+      );
 
-    const resultRecord = await resultModel.findById(
-      resultId,
-      projectId,
-      dbClient,
-    );
-
-    if (!resultRecord) {
-      throw new Error(`Result with ID ${resultId} not found`);
-    }
-
-    return normalizeResultPayload(resultRecord);
+    return { ...result, relatedTestScenarios };
   },
 
   async getResultsBySpecRecordIds(params: {
