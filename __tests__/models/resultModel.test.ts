@@ -25,9 +25,9 @@ import { resultModel } from "@/models/resultModel";
 describe("resultModel filtering", () => {
   beforeEach(() => {
     jest.clearAllMocks();
-    (
-      findManyMock.mockResolvedValue as unknown as (value: unknown[]) => void
-    )([]);
+    (findManyMock.mockResolvedValue as unknown as (value: unknown[]) => void)(
+      [],
+    );
     (countMock.mockResolvedValue as unknown as (value: number) => void)(0);
     (
       specFindManyMock.mockResolvedValue as unknown as (
@@ -208,6 +208,121 @@ describe("resultModel filtering", () => {
     );
   });
 
+  it.each([
+    ["all", { some: {} }],
+    ["confirmed", { some: { isConfirmed: true } }],
+    ["not-confirmed", { some: { isConfirmed: false } }],
+  ] as const)(
+    "filters findMany by assumption mode %s",
+    async (assumption, expected) => {
+      await resultModel.findMany(
+        {
+          projectId: "project-1",
+          assumption,
+        },
+        1,
+        25,
+      );
+
+      expect(findManyMock).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: expect.objectContaining({
+            AND: expect.arrayContaining([
+              {
+                errors: {
+                  some: {
+                    assumptions: expected,
+                  },
+                },
+              },
+            ]),
+          }),
+        }),
+      );
+    },
+  );
+
+  it("does not add an assumption condition when the filter is absent", async () => {
+    await resultModel.findMany({ projectId: "project-1" });
+
+    expect(findManyMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: expect.not.objectContaining({
+          errors: {
+            some: {
+              assumptions: expect.anything(),
+            },
+          },
+        }),
+      }),
+    );
+  });
+
+  it("keeps issue name and assumption filters as independent result conditions", async () => {
+    await resultModel.findMany({
+      projectId: "project-1",
+      issueName: "Checkout",
+      assumption: "confirmed",
+    });
+
+    expect(findManyMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: expect.objectContaining({
+          AND: expect.arrayContaining([
+            {
+              errors: {
+                some: {
+                  assumptions: {
+                    some: {
+                      issue: {
+                        name: { contains: "Checkout", mode: "insensitive" },
+                      },
+                    },
+                  },
+                },
+              },
+            },
+            {
+              errors: {
+                some: {
+                  assumptions: {
+                    some: { isConfirmed: true },
+                  },
+                },
+              },
+            },
+          ]),
+        }),
+      }),
+    );
+  });
+
+  it.each(["all", "confirmed", "not-confirmed"] as const)(
+    "applies assumption mode %s to count",
+    async (assumption) => {
+      await resultModel.count({ projectId: "project-1", assumption });
+
+      expect(countMock).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: expect.objectContaining({
+            AND: expect.arrayContaining([
+              {
+                errors: {
+                  some: {
+                    assumptions:
+                      assumption === "all"
+                        ? { some: {} }
+                        : { some: { isConfirmed: assumption === "confirmed" } },
+                  },
+                },
+              },
+            ]),
+          }),
+        }),
+      );
+    },
+  );
+
   it("selects tags from matching specs without loading matching results", async () => {
     await resultModel.findSpecTags({
       projectId: "project-1",
@@ -241,6 +356,35 @@ describe("resultModel filtering", () => {
       },
     });
     expect(findManyMock).not.toHaveBeenCalled();
+  });
+
+  it("applies the assumption filter when selecting available tags", async () => {
+    await resultModel.findSpecTags({
+      projectId: "project-1",
+      assumption: "not-confirmed",
+    });
+
+    expect(specFindManyMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: expect.objectContaining({
+          results: {
+            some: expect.objectContaining({
+              AND: [
+                {
+                  errors: {
+                    some: {
+                      assumptions: {
+                        some: { isConfirmed: false },
+                      },
+                    },
+                  },
+                },
+              ],
+            }),
+          },
+        }),
+      }),
+    );
   });
 });
 
@@ -280,7 +424,6 @@ describe("resultModel issue statistics", () => {
         },
       },
     });
-
   });
 
   it("aggregates by issue ID and distinct linked result with derived summaries", async () => {
@@ -346,16 +489,12 @@ describe("resultModel issue statistics", () => {
         { id: "a-3", issue: issueA },
         { id: "c-2", issue: issueC },
       ]),
-      makeResult("result-3", null, null, [
-        { id: "d-1", issue: issueD },
-      ]),
-      makeResult("result-4", "SCRIPT", null, [
-        { id: "c-3", issue: issueC },
-      ]),
+      makeResult("result-3", null, null, [{ id: "d-1", issue: issueD }]),
+      makeResult("result-4", "SCRIPT", null, [{ id: "c-3", issue: issueC }]),
     ];
-    (
-      findManyMock.mockResolvedValue as unknown as (value: unknown[]) => void
-    )(results);
+    (findManyMock.mockResolvedValue as unknown as (value: unknown[]) => void)(
+      results,
+    );
 
     const stats = await resultModel.getStats({ projectId: "project-1" });
     const topA = stats.topIssues.find((issue) => issue.id === issueA.id);
