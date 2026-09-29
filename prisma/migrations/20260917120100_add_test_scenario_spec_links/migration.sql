@@ -17,6 +17,3 @@ ALTER TABLE "TestScenarioSpecLink"
     FOREIGN KEY ("specId") REFERENCES "Spec"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 CREATE INDEX "Result_specId_startTime_idx" ON "Result"("specId", "startTime");
-CREATE INDEX "ResultError_resultId_idx" ON "ResultError"("resultId");
-CREATE INDEX "Assumption_issueId_idx" ON "Assumption"("issueId");
-CREATE INDEX "Assumption_resultErrorId_idx" ON "Assumption"("resultErrorId");

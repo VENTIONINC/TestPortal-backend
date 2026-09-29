@@ -51,6 +51,13 @@ export interface TestScenarioSummary {
   updatedAt: Date;
 }
 
+export interface RelatedTestScenarioSummary {
+  id: string;
+  title: string;
+  details: string | null;
+  contentMd: string;
+}
+
 export interface CreateTestScenarioStepInput {
   action: string;
   expectedResult?: string | undefined;

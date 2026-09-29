@@ -27,6 +27,7 @@ import { registerUploadApiKeyRoutes } from "./uploadApiKey";
 import { registerAnalysisExportRoutes } from "./analysisExport";
 import { registerPdfExportRoutes } from "./pdfExport";
 import { registerTestScenarioRoutes } from "./testScenarios";
+import { registerManualTestRunRoutes } from "./manualTestRuns";
 import "./zod";
 
 export function generateOpenAPISpec() {
@@ -53,6 +54,7 @@ export function generateOpenAPISpec() {
   registerAnalysisExportRoutes(registry);
   registerPdfExportRoutes(registry);
   registerTestScenarioRoutes(registry);
+  registerManualTestRunRoutes(registry);
 
   const generator = new OpenApiGeneratorV31(registry.definitions);
 
@@ -93,6 +95,11 @@ export function generateOpenAPISpec() {
       {
         name: "Test Scenarios",
         description: "Project-scoped authored Markdown test scenario endpoints",
+      },
+      {
+        name: "Manual Test Runs",
+        description:
+          "Authenticated project-scoped manual execution snapshots and history",
       },
       {
         name: "Assumptions",

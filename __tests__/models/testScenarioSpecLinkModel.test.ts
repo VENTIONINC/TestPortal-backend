@@ -91,6 +91,51 @@ describe("testScenarioSpecLinkModel", () => {
     });
   });
 
+  it("lists lightweight same-project scenarios in deterministic order", async () => {
+    findManyMock.mockResolvedValueOnce([
+      { testScenario: { id: "scenario-new", title: "New", details: null, contentMd: "# New\n" } },
+      { testScenario: { id: "scenario-old", title: "Old", details: "Details", contentMd: "# Old\n" } },
+      { testScenario: { id: "scenario-new", title: "New", details: null, contentMd: "# New\n" } },
+    ]);
+
+    await expect(
+      testScenarioSpecLinkModel.findLinkedTestScenarios("spec-1", "project-1"),
+    ).resolves.toEqual([
+      { id: "scenario-new", title: "New", details: null, contentMd: "# New\n" },
+      { id: "scenario-old", title: "Old", details: "Details", contentMd: "# Old\n" },
+    ]);
+
+    expect(findManyMock).toHaveBeenCalledWith({
+      where: {
+        specId: "spec-1",
+        spec: { projectId: "project-1" },
+        testScenario: { projectId: "project-1" },
+      },
+      select: {
+        testScenario: {
+          select: {
+            id: true,
+            title: true,
+            details: true,
+            contentMd: true,
+          },
+        },
+      },
+      orderBy: [
+        { testScenario: { createdAt: "desc" } },
+        { testScenario: { id: "desc" } },
+      ],
+    });
+  });
+
+  it("returns an empty list when the Spec has no scenario links", async () => {
+    findManyMock.mockResolvedValueOnce([]);
+
+    await expect(
+      testScenarioSpecLinkModel.findLinkedTestScenarios("spec-1", "project-1"),
+    ).resolves.toEqual([]);
+  });
+
   it("deletes only the association and reports whether it existed", async () => {
     await expect(
       testScenarioSpecLinkModel.delete("scenario-1", "spec-1"),

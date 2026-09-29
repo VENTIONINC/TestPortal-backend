@@ -21,6 +21,7 @@ import upload from "@/routes/upload";
 import analysisExport from "@/routes/analysis-export";
 import reports from "@/routes/reports";
 import testScenarios from "@/routes/test-scenarios";
+import manualTestRuns from "@/routes/manual-test-runs";
 import mcp from "@/mcp/server";
 
 const router = Router();
@@ -48,6 +49,7 @@ router.use(ctrf);
 router.use(upload);
 router.use(reports);
 router.use(testScenarios);
+router.use(manualTestRuns);
 router.use(mcp);
 
 export default router;
