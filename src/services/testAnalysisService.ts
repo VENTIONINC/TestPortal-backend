@@ -4,6 +4,7 @@
 import { ChatOpenAI } from "@langchain/openai";
 import { z } from "zod";
 
+import { getProductionAiSettings, toChatOpenAIOptions } from "@/config/serverAiConfig";
 import { normalizeJsonArrayForText } from "@/lib/jsonPayloads";
 import getLogger from "@/lib/logger";
 import { getStoredResultsAnalysisPrompt } from "@/prompts/stored-results-analysis/v1.1.0";
@@ -114,12 +115,9 @@ export const testAnalysisService = {
       const systemPrompt = getStoredResultsAnalysisPrompt(essentialData.length);
       const userPrompt = JSON.stringify(essentialData);
 
-      const model = new ChatOpenAI({
-        model: "gpt-4.1-mini",
-        temperature: 0,
-        maxTokens: 4000,
-        maxRetries: 2,
-      });
+      const model = new ChatOpenAI(
+        toChatOpenAIOptions(getProductionAiSettings("storedResultsAnalysis")),
+      );
 
       const structuredModel = model.withStructuredOutput<
         z.infer<typeof testAnalysisSchema>

@@ -5,9 +5,12 @@ import cors from "cors";
 import parseCookie from "cookie-parser";
 import helmet from "helmet";
 
+import { initializeProductionAiConfiguration } from "@/config/serverAiConfig";
 import getLogger from "@/lib/logger";
 import { errorHandler } from "@/middleware/error-handler";
 import routes from "@/routes/index";
+
+initializeProductionAiConfiguration();
 
 const logger = getLogger("server");
 const loggingMiddleware = (
@@ -51,4 +54,3 @@ const PORT: number = parseInt(process.env.PORT ?? "3001", 10);
 app.listen(PORT, () => {
   console.log(`Running on Port ${PORT}`);
 });
-

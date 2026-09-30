@@ -25,10 +25,11 @@ describe("Prompt Evaluation - Regression Tests (error-solution v1.0.0)", () => {
       fs.readFileSync(datasetPath, "utf8"),
     ) as TestCase[];
 
-    const { failures } = await runEval({
+    const { failures, metadata } = await runEval({
       cases,
       version: DEFAULT_VERSION,
     });
+    console.info("Evaluation configuration:", JSON.stringify(metadata));
 
     if (failures.length > 0) {
       console.error("\n❌ Validation Failures:");

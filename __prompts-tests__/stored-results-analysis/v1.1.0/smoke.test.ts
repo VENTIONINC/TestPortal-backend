@@ -30,10 +30,11 @@ describe("Prompt Evaluation - Smoke Tests (v1.1.0)", () => {
     ) as TestCase[];
 
     // Run evaluation
-    const { failures } = await runEval({
+    const { failures, metadata } = await runEval({
       cases,
       version: DEFAULT_VERSION,
     });
+    console.info("Evaluation configuration:", JSON.stringify(metadata));
 
     // Log failures for debugging
     if (failures.length > 0) {
