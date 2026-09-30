@@ -1,0 +1,41 @@
+.codex/skills/openspec-apply-change/SKILL.md
+  s_4de586c9d28d08::t_56a4b97d85bf13 3-4,10,15-28,37,39,47,61-63,66-68,72-86,94-96,117,157,188-189,191-195
+.codex/skills/openspec-archive-change/SKILL.md
+  s_4de586c9d28d08::t_d866f0b0f82e8b 3-4,10,15-29,34,36-39,41,44-71,79-80,82,84,89-102,106,109,113-116,119-124,126,129-156,160,162,165,169,172,186,191-192,194,198,203-204,206-210
+.codex/skills/openspec-explore/SKILL.md
+  s_4de586c9d28d08::t_d28cc6b913974f 3-4,10,15,19-31,45-68,93-106,109-111,132,135-148,156-164,169-172,180-189,220,223-230,242-262,269,294-296,299-301,304-306,319,336,346,350-351
+.codex/skills/openspec-propose/SKILL.md
+  s_4de586c9d28d08::t_2bfb012af2e313 3-4,10,15-17,19,23-25,29-41,46,48,55-81,86-92,98-99,101,103,117-118,120-126,130,132-138,141,144,153-155,159-160,169-172
+.codex/skills/openspec-sync-specs/SKILL.md
+  s_4de586c9d28d08::t_5d2b10c11f7335 1-290
+.codex/skills/openspec-update-change/SKILL.md
+  s_4de586c9d28d08::t_76341e69cf55bf 1-109
+openspec/changes/migrate-openai-to-server-ai-config/.openspec.yaml
+  s_4de586c9d28d08::t_dff11453de0ff1 1-2
+openspec/changes/migrate-openai-to-server-ai-config/design.md
+  s_4de586c9d28d08::t_430aaa6e1b4b03 1-90
+openspec/changes/migrate-openai-to-server-ai-config/proposal.md
+  s_4de586c9d28d08::t_7549730bc40ed2 1-33
+openspec/changes/migrate-openai-to-server-ai-config/specs/ai-evaluation-configuration/spec.md
+  s_4de586c9d28d08::t_abae87256eea16 1-51
+openspec/changes/migrate-openai-to-server-ai-config/specs/server-ai-configuration/spec.md
+  s_4de586c9d28d08::t_81800979f0bd65 1-85
+openspec/changes/migrate-openai-to-server-ai-config/tasks.md
+  s_4de586c9d28d08::t_a299297e85f0c5 1-26
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.18",
+  "base_commit_sha": "caa42d8a6cf8e00da918a5dca82904041cdf6cfb",
+  "prompts": {},
+  "sessions": {
+    "s_4de586c9d28d08": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a0f3b8-c3e6-7351-944e-c5bf9301a583",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Igor <hirzhek@gmail.com>"
+    }
+  }
+}
