@@ -127,6 +127,18 @@ describe("manualTestRunService", () => {
     });
   });
 
+  it("normalizes editable run labels and captured-label history filters", async () => {
+    await manualTestRunService.startRun({ projectId, scenarioId, executedById: executorId, runKey: " Run 1 " });
+    expect(modelMocks.createFromScenario).toHaveBeenCalledWith({
+      projectId, scenarioId, executedById: executorId, notes: undefined, runKey: "Run 1",
+    });
+    await manualTestRunService.updateRun({ projectId, runId, runKey: null });
+    expect(modelMocks.updateRun).toHaveBeenCalledWith({ projectId, runId, runKey: null });
+    await manualTestRunService.listRuns({ projectId, sourceScenarioKey: " R1 " });
+    expect(modelMocks.findHistory).toHaveBeenCalledWith(expect.objectContaining({ sourceScenarioKey: "R1" }));
+    await expect(manualTestRunService.listRuns({ projectId, scenarioId, sourceScenarioKey: "R1" })).rejects.toBeInstanceOf(ManualTestRunValidationError);
+  });
+
   it("rejects empty, unknown, malformed, and immutable writes before persistence", async () => {
     await expect(
       manualTestRunService.updateRun({ projectId, runId }),

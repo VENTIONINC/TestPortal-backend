@@ -36,6 +36,7 @@ const scenario: TestScenarioResponse = {
   projectId: projectA,
   createdById: userId,
   title: "Login",
+  scenarioKey: null,
   details: null,
   objective: "Verify login",
   preconditions: null,

@@ -111,7 +111,7 @@ the catalog-provided `downloadUrl` or directly to
 ## Test Scenario Routes
 
 Test Scenario list responses are lightweight summaries. Each item contains
-`id`, `projectId`, `createdById`, `title`, nullable plain-text `details`, a
+`id`, `projectId`, `createdById`, `title`, nullable `scenarioKey`, nullable plain-text `details`, a
 `createdBy` object containing only `id`, `name`, and `email`, `createdAt`, and
 `updatedAt`; list items no longer contain `contentMd`.
 
@@ -121,7 +121,11 @@ requests now use structured `objective`, `preconditions`, `testData`,
 `expectedResult`, `notes`, and optional initial `steps`; `contentMd`, its hash,
 and its format version are read-only detail fields. Details and structured text
 are trimmed and must be nonblank when supplied; PATCH accepts `null` for
-clearing nullable fields and preserves omitted fields.
+clearing nullable fields and preserves omitted fields. `scenarioKey` is an
+optional editable single-line label up to 100 characters; it is trimmed, may
+be cleared with `null`, and may be duplicated. UUIDs remain scenario
+identifiers. A key-only PATCH preserves generated Markdown, its hash, and its
+format version.
 
 `GET /api/v2/test-scenarios` accepts `page` (default `1`), `limit` (default
 `30`, maximum `100`), optional `search`, optional `createdById`, and optional
@@ -151,6 +155,34 @@ scenarios, and is hashed with SHA-256. The migration intentionally removes
 existing development scenarios and scenario-to-Spec links; Specs, Results,
 Issues, projects, and users are preserved.
 
+## Result Detail Route
+
+`GET /api/v2/results/{resultId}?projectId=...` requires bearer authentication
+and returns the existing Result detail fields plus `relatedTestScenarios`.
+Each related scenario contains its `id`, `title`, nullable `scenarioKey`,
+nullable `details`, and the current generated Markdown in the `contentMd` JSON
+string field. For example,
+the added portion of a Result response is:
+
+```json
+{
+  "relatedTestScenarios": [
+    {
+      "id": "11111111-1111-4111-8111-111111111111",
+      "title": "Checkout",
+      "scenarioKey": "PAY-1",
+      "details": "Purchase flow",
+      "contentMd": "# Checkout\n\n## Details\nPurchase flow\n\n## Steps\n_No steps defined._\n"
+    }
+  ]
+}
+```
+
+The array is empty when the Result's Spec has no linked scenarios. It reflects
+current same-project scenario links and content for every Result status, ordered
+by scenario creation time descending and then ID descending. The Markdown is
+part of the JSON response; this endpoint does not return a `.md` file.
+
 ## Manual Test Run Routes
 
 Manual runs are separate from automated `Result` records. Starting a run
@@ -162,14 +194,14 @@ All routes require a JWT and a UUID `projectId` query parameter. The executor,
 source provenance, and timestamps are server-owned. The seven operations are:
 
 - `POST /api/v2/test-scenarios/{scenarioId}/manual-runs` starts a run and accepts
-  an optional `{ "notes": "..." }` body (an empty body/object is valid).
+  optional `notes` and `runKey` fields (an empty body/object is valid).
 - `GET /api/v2/test-scenarios/{scenarioId}/manual-runs` lists history for a live
   project-scoped scenario.
 - `GET /api/v2/manual-test-runs` lists project history, including runs whose
   source scenario was later deleted.
 - `GET /api/v2/manual-test-runs/{runId}` retrieves the full snapshot and steps.
-- `PATCH /api/v2/manual-test-runs/{runId}` updates execution notes or selects
-  the overall status.
+- `PATCH /api/v2/manual-test-runs/{runId}` updates `runKey`, execution notes,
+  or the overall status.
 - `PATCH /api/v2/manual-test-runs/{runId}/steps/{stepId}` updates one copied
   step's status or notes.
 - `POST /api/v2/manual-test-runs/{runId}/complete` completes a run with one of
@@ -178,7 +210,13 @@ source provenance, and timestamps are server-owned. The seven operations are:
 Run statuses are `in_progress`, `passed`, `failed`, `blocked`, and `skipped`;
 step statuses additionally include `not_started`. Notes are trimmed when
 provided, `null` clears them, and omission preserves the existing value.
-Completed runs are immutable and cannot be reopened. A passing nonempty run
+`runKey` is an optional editable single-line label up to 100 characters. It is
+trimmed, may be cleared with `null`, and may be duplicated. Each run also
+stores nullable `sourceScenarioKey`, captured from the scenario at start and
+unchanged by later rename, clear, or deletion. Both labels are metadata; UUIDs
+remain entity identifiers. Completed runs permit `runKey`-only PATCH; adding
+`notes` or `status` returns `409` without partial mutation. Other execution
+mutations remain blocked and runs cannot be reopened. A passing nonempty run
 requires at least one passed step and every step to be passed or skipped;
 failed, blocked, skipped, and zero-step runs may complete without inferring
 step outcomes. Completion returns `409` when those rules are not satisfied.
@@ -187,6 +225,9 @@ History supports `page` (default `1`, positive), `limit` (default `30`, maximum
 `100`), one `status`, and optional `startedFrom` (inclusive) and `startedBefore`
 (exclusive) RFC 3339 timestamps with an explicit timezone. Project history
 also supports one `testScenarioId` filter against immutable source provenance.
+It also accepts `sourceScenarioKey` for exact, case-sensitive filtering against
+the captured label. Duplicate labels intentionally match runs from multiple
+scenarios; use `testScenarioId` when one source scenario is required.
 Bounds and filters are combined before pagination; offset pages are stable only
 when the underlying data is unchanged. Scenario history derives the scenario
 filter from its path and rejects a redundant `testScenarioId` query parameter.

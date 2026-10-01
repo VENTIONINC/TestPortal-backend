@@ -62,6 +62,15 @@ describe("structured Test Scenario schemas", () => {
     );
   });
 
+  it("accepts trimmed nullable labels and rejects blank, multiline, and oversized labels", () => {
+    expect(createTestScenarioSchema.parse({ projectId, title: "Login", scenarioKey: " R1 " }).scenarioKey).toBe("R1");
+    expect(updateTestScenarioSchema.parse({ scenarioKey: null })).toEqual({ scenarioKey: null });
+    for (const scenarioKey of ["  ", "R1\nR2", "x".repeat(101)]) {
+      expect(createTestScenarioSchema.safeParse({ projectId, title: "Login", scenarioKey }).success).toBe(false);
+      expect(updateTestScenarioSchema.safeParse({ scenarioKey }).success).toBe(false);
+    }
+  });
+
   it("validates step append, patch, and complete ordering inputs", () => {
     expect(appendTestScenarioStepSchema.parse({ action: "Run" })).toEqual({
       action: "Run",

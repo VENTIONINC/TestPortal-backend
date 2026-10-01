@@ -81,6 +81,9 @@ export const manualTestRunController = {
         ...(Object.prototype.hasOwnProperty.call(body.data, "notes")
           ? { notes: body.data.notes }
           : {}),
+        ...(Object.prototype.hasOwnProperty.call(body.data, "runKey")
+          ? { runKey: body.data.runKey }
+          : {}),
       });
       res.status(201).json(run);
     } catch (error) {

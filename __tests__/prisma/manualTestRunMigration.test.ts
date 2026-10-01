@@ -11,6 +11,9 @@ describe("manual test run persistence contract", () => {
   const migration = read(
     "prisma/migrations/20260917120400_add_manual_test_runs/migration.sql",
   );
+  const keysMigration = read(
+    "prisma/migrations/20260917120600_add_editable_test_management_keys/migration.sql",
+  );
 
   it("defines independent run and step aggregates with nullable live relations", () => {
     expect(schema).toContain("enum ManualTestRunStatus");
@@ -40,6 +43,18 @@ describe("manual test run persistence contract", () => {
       'CREATE INDEX "ManualTestRun_projectId_sourceTestScenarioId_startedAt_id_idx"',
     );
     expect(migration).not.toContain("DELETE FROM");
+  });
+
+  it("adds nullable nonunique management labels and a captured-key history index", () => {
+    expect(schema).toContain("scenarioKey           String?            @db.VarChar(100)");
+    expect(schema).toContain("runKey               String?             @db.VarChar(100)");
+    expect(schema).toContain("sourceScenarioKey    String?             @db.VarChar(100)");
+    expect(keysMigration).toContain('ADD COLUMN "scenarioKey" VARCHAR(100)');
+    expect(keysMigration).toContain('ADD COLUMN "runKey" VARCHAR(100)');
+    expect(keysMigration).toContain('ADD COLUMN "sourceScenarioKey" VARCHAR(100)');
+    expect(keysMigration).toContain('CREATE INDEX "ManualTestRun_projectId_sourceScenarioKey_startedAt_id_idx"');
+    expect(keysMigration).not.toContain("UNIQUE");
+    expect(keysMigration).not.toContain("UPDATE ");
   });
 
 });

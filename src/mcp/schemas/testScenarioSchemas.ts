@@ -48,6 +48,14 @@ export const updateTestScenarioSchema = z
     scenarioId: uuid().describe("The UUID of the Test Scenario"),
     projectId: uuid().describe("The UUID of the project"),
     title: z.string().trim().min(1).optional(),
+    scenarioKey: z
+      .string()
+      .trim()
+      .min(1)
+      .max(100)
+      .regex(/^[^\r\n]+$/)
+      .nullable()
+      .optional(),
     details: z.string().trim().min(1).nullable().optional(),
     objective: z.string().trim().min(1).nullable().optional(),
     preconditions: z.string().trim().min(1).nullable().optional(),

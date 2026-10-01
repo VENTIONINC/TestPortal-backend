@@ -18,6 +18,7 @@ export interface TestScenarioResponse {
   projectId: string;
   createdById: string;
   title: string;
+  scenarioKey: string | null;
   details: string | null;
   objective: string | null;
   preconditions: string | null;
@@ -45,10 +46,19 @@ export interface TestScenarioSummary {
   projectId: string;
   createdById: string;
   title: string;
+  scenarioKey: string | null;
   details: string | null;
   createdBy: TestScenarioCreatorSummary;
   createdAt: Date;
   updatedAt: Date;
+}
+
+export interface RelatedTestScenarioSummary {
+  id: string;
+  title: string;
+  scenarioKey: string | null;
+  details: string | null;
+  contentMd: string;
 }
 
 export interface CreateTestScenarioStepInput {
@@ -59,6 +69,7 @@ export interface CreateTestScenarioStepInput {
 export interface CreateTestScenarioParams {
   projectId: string;
   title: string;
+  scenarioKey?: string | null | undefined;
   createdById: string;
   /** @deprecated Markdown is generated; transport schemas reject this field. */
   contentMd?: string | undefined;
@@ -77,6 +88,7 @@ export interface UpdateTestScenarioParams {
   /** @deprecated Markdown is generated; transport schemas reject this field. */
   contentMd?: string | undefined;
   title?: string | undefined;
+  scenarioKey?: string | null | undefined;
   details?: string | null | undefined;
   objective?: string | null | undefined;
   preconditions?: string | null | undefined;

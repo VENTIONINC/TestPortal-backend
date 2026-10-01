@@ -7,6 +7,10 @@ import {
   MANUAL_TEST_RUN_STEP_STATUSES,
   MANUAL_TEST_RUN_TERMINAL_STATUSES,
 } from "@/types/manualTestRuns";
+import {
+  editableTestManagementKeySchema,
+  testManagementKeyFilterSchema,
+} from "@/schemas/testManagementKeySchemas";
 
 const uuidSchema = z.string().uuid("Must be a valid UUID");
 const nonBlankText = z.string().trim().min(1, "Value must not be blank");
@@ -61,6 +65,7 @@ function withDateRangeValidation<T extends z.AnyZodObject>(schema: T): T {
 export const manualTestRunStartSchema = z
   .object({
     notes: notesSchema.optional(),
+    runKey: editableTestManagementKeySchema.optional(),
   })
   .strict();
 
@@ -90,6 +95,7 @@ export const manualTestRunHistoryQuerySchema = withDateRangeValidation(
       startedFrom: timestampSchema.optional(),
       startedBefore: timestampSchema.optional(),
       testScenarioId: uuidSchema.optional(),
+      sourceScenarioKey: testManagementKeyFilterSchema.optional(),
       status: runStatusSchema.optional(),
     })
     .strict(),
@@ -112,6 +118,7 @@ export const manualTestRunUpdateSchema = z
   .object({
     status: runStatusSchema.optional(),
     notes: notesSchema.optional(),
+    runKey: editableTestManagementKeySchema.optional(),
   })
   .strict()
   .refine((value) => Object.keys(value).length > 0, {

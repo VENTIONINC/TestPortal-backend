@@ -52,6 +52,8 @@ export interface ManualTestRunResponse {
   id: string;
   projectId: string;
   sourceTestScenarioId: string;
+  runKey: string | null;
+  sourceScenarioKey: string | null;
   testScenarioId: string | null;
   executedById: string | null;
   executedBy: ManualTestRunExecutor | null;
@@ -74,6 +76,8 @@ export interface ManualTestRunSummary {
   id: string;
   projectId: string;
   sourceTestScenarioId: string;
+  runKey: string | null;
+  sourceScenarioKey: string | null;
   testScenarioId: string | null;
   executedById: string | null;
   executedBy: ManualTestRunExecutor | null;
@@ -97,6 +101,7 @@ export interface StartManualTestRunParams {
   scenarioId: string;
   executedById: string;
   notes?: string | null | undefined;
+  runKey?: string | null | undefined;
 }
 
 export interface GetManualTestRunParams {
@@ -108,6 +113,7 @@ export interface ListManualTestRunsParams {
   projectId: string;
   scenarioId?: string | undefined;
   testScenarioId?: string | undefined;
+  sourceScenarioKey?: string | undefined;
   page?: number | undefined;
   limit?: number | undefined;
   startedFrom?: string | undefined;
@@ -120,6 +126,7 @@ export interface UpdateManualTestRunParams {
   runId: string;
   status?: ManualTestRunStatus | undefined;
   notes?: string | null | undefined;
+  runKey?: string | null | undefined;
 }
 
 export interface UpdateManualTestRunStepParams {

@@ -43,6 +43,7 @@ const summarySelect = {
   projectId: true,
   createdById: true,
   title: true,
+  scenarioKey: true,
   details: true,
   createdAt: true,
   updatedAt: true,
@@ -104,6 +105,7 @@ function toResponse(scenario: ScenarioAggregate): TestScenarioResponse {
     projectId: scenario.projectId,
     createdById: scenario.createdById,
     title: scenario.title,
+    scenarioKey: scenario.scenarioKey,
     details: scenario.details,
     objective: scenario.objective,
     preconditions: scenario.preconditions,
@@ -230,6 +232,7 @@ function contentCreateData(
   return {
     projectId: data.projectId,
     title: data.title,
+    scenarioKey: data.scenarioKey ?? null,
     details: data.details ?? null,
     objective: data.objective ?? null,
     preconditions: data.preconditions ?? null,
@@ -380,6 +383,7 @@ export const testScenarioModel = {
       projectId,
       async (client, scenario) => {
         const updateData: Prisma.TestScenarioUpdateInput = {
+          ...(data.scenarioKey !== undefined ? { scenarioKey: data.scenarioKey } : {}),
           ...(data.title !== undefined ? { title: data.title } : {}),
           ...(data.details !== undefined ? { details: data.details } : {}),
           ...(data.objective !== undefined
@@ -398,6 +402,13 @@ export const testScenarioModel = {
           where: { id: scenario.id },
           data: updateData,
         });
+        const contentFields: readonly (keyof UpdateTestScenarioData)[] = [
+          "title", "details", "objective", "preconditions", "testData", "expectedResult", "notes",
+        ];
+        if (!contentFields.some((field) => data[field] !== undefined)) {
+          const updated = await findAggregate(client, id, projectId);
+          return updated ? toResponse(updated) : null;
+        }
         return await refreshProjection(client, id, projectId);
       },
       tx,
