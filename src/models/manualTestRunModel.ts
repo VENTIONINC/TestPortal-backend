@@ -23,6 +23,8 @@ const detailSelect = {
   id: true,
   projectId: true,
   sourceTestScenarioId: true,
+  runKey: true,
+  sourceScenarioKey: true,
   testScenarioId: true,
   executedById: true,
   status: true,
@@ -62,6 +64,8 @@ const summarySelect = {
   id: true,
   projectId: true,
   sourceTestScenarioId: true,
+  runKey: true,
+  sourceScenarioKey: true,
   testScenarioId: true,
   executedById: true,
   status: true,
@@ -174,6 +178,7 @@ async function completeLocked(
   runId: string,
   status: Exclude<ManualTestRunStatus, "in_progress">,
   notes: string | null | undefined,
+  runKey: string | null | undefined,
 ): Promise<DetailRecord> {
   const steps = await client.manualTestRunStep.findMany({
     where: { manualTestRunId: runId },
@@ -200,6 +205,7 @@ async function completeLocked(
     where: { id: runId },
     data: {
       status,
+      ...(runKey !== undefined ? { runKey } : {}),
       completedAt: now,
       updatedAt: now,
       ...(notes !== undefined ? { notes } : {}),
@@ -252,6 +258,7 @@ export const manualTestRunModel = {
         select: {
           id: true,
           title: true,
+          scenarioKey: true,
           details: true,
           objective: true,
           preconditions: true,
@@ -279,6 +286,8 @@ export const manualTestRunModel = {
           testScenario: { connect: { id: scenario.id } },
           executedBy: { connect: { id: params.executedById } },
           sourceTestScenarioId: scenario.id,
+          sourceScenarioKey: scenario.scenarioKey,
+          runKey: params.runKey ?? null,
           status: ManualTestRunStatus.in_progress,
           startedAt: now,
           updatedAt: now,
@@ -358,6 +367,9 @@ export const manualTestRunModel = {
             ? { sourceTestScenarioId }
             : {}),
           ...(params.status ? { status: params.status } : {}),
+          ...(params.sourceScenarioKey !== undefined
+            ? { sourceScenarioKey: params.sourceScenarioKey }
+            : {}),
           ...(params.startedFrom || params.startedBefore
             ? {
                 startedAt: {
@@ -409,6 +421,17 @@ export const manualTestRunModel = {
       if (!run) {
         return null;
       }
+      const hasRunKey = Object.prototype.hasOwnProperty.call(params, "runKey");
+      const hasExecutionFields = params.status !== undefined || params.notes !== undefined;
+      if (run.status !== ManualTestRunStatus.in_progress && hasRunKey && !hasExecutionFields) {
+        const now = new Date();
+        await client.manualTestRun.update({
+          where: { id: run.id },
+          data: { runKey: params.runKey ?? null, updatedAt: now },
+        });
+        const detail = await findDetail(client, run.id, params.projectId);
+        return detail ? mapDetail(detail) : null;
+      }
       if (run.status !== ManualTestRunStatus.in_progress) {
         throw new ManualTestRunConflictError("Completed manual test runs are immutable");
       }
@@ -422,6 +445,7 @@ export const manualTestRunModel = {
           run.id,
           params.status,
           params.notes,
+          params.runKey,
         ).then(mapDetail);
       }
 
@@ -429,6 +453,7 @@ export const manualTestRunModel = {
       await client.manualTestRun.update({
         where: { id: run.id },
         data: {
+          ...(hasRunKey ? { runKey: params.runKey ?? null } : {}),
           ...(params.notes !== undefined ? { notes: params.notes } : {}),
           updatedAt: now,
         },
@@ -495,6 +520,7 @@ export const manualTestRunModel = {
         run.id,
         params.status,
         params.notes,
+        undefined,
       ).then(mapDetail);
     });
   },

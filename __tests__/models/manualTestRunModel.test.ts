@@ -90,6 +90,7 @@ describe("manualTestRunModel", () => {
     tx.testScenario.findFirst.mockResolvedValue({
       id: scenarioId,
       title: "Login",
+      scenarioKey: "R1",
       details: "Details",
       objective: "Verify login",
       preconditions: null,
@@ -120,6 +121,8 @@ describe("manualTestRunModel", () => {
       expect.objectContaining({
         data: expect.objectContaining({
           sourceTestScenarioId: scenarioId,
+          sourceScenarioKey: "R1",
+          runKey: null,
           title: "Login",
           details: "Details",
           scenarioNotes: "Keep evidence",
@@ -136,6 +139,39 @@ describe("manualTestRunModel", () => {
         }),
       }),
     );
+  });
+
+  it("captures a null source label and never resolves it from a later source edit", async () => {
+    const tx = createTransactionClient();
+    tx.$queryRaw
+      .mockResolvedValueOnce([{ id: projectId }])
+      .mockResolvedValueOnce([{ id: scenarioId }])
+      .mockResolvedValueOnce([{ id: executorId }]);
+    tx.testScenario.findFirst.mockResolvedValue({
+      id: scenarioId,
+      title: "Login",
+      scenarioKey: null,
+      details: null,
+      objective: null,
+      preconditions: null,
+      testData: null,
+      expectedResult: null,
+      notes: null,
+      steps: [],
+    });
+    tx.manualTestRun.create.mockResolvedValue({ ...detail, runKey: null, sourceScenarioKey: null });
+    transactionMock.mockImplementation(async (callback: unknown) =>
+      await (callback as (client: Prisma.TransactionClient) => Promise<unknown>)(tx as unknown as Prisma.TransactionClient),
+    );
+
+    await manualTestRunModel.createFromScenario({ projectId, scenarioId, executedById: executorId });
+
+    expect(tx.manualTestRun.create).toHaveBeenCalledWith(expect.objectContaining({
+      data: expect.objectContaining({ sourceScenarioKey: null, runKey: null }),
+    }));
+    expect(tx.testScenario.findFirst).toHaveBeenCalledWith(expect.objectContaining({
+      select: expect.objectContaining({ scenarioKey: true }),
+    }));
   });
 
   it("rejects an invalid passing completion before mutating the run", async () => {
@@ -160,6 +196,21 @@ describe("manualTestRunModel", () => {
         status: "passed",
       }),
     ).rejects.toThrow("A run can be marked passed");
+    expect(tx.manualTestRun.update).not.toHaveBeenCalled();
+  });
+
+  it("rolls back a submitted key when the same PATCH cannot complete the run", async () => {
+    const tx = createTransactionClient();
+    tx.$queryRaw.mockResolvedValue([{ id: runId }]);
+    tx.manualTestRun.findUnique.mockResolvedValue({ id: runId, status: "in_progress" });
+    tx.manualTestRunStep.findMany.mockResolvedValue([{ status: "not_started" }]);
+    transactionMock.mockImplementation(async (callback: unknown) =>
+      await (callback as (client: Prisma.TransactionClient) => Promise<unknown>)(tx as unknown as Prisma.TransactionClient),
+    );
+
+    await expect(manualTestRunModel.updateRun({
+      projectId, runId, runKey: "Review", status: "passed", notes: "Done",
+    })).rejects.toThrow("A run can be marked passed");
     expect(tx.manualTestRun.update).not.toHaveBeenCalled();
   });
 
@@ -196,5 +247,102 @@ describe("manualTestRunModel", () => {
         }),
       }),
     );
+  });
+
+  it("allows completed-run label-only edits while preserving execution fields", async () => {
+    const tx = createTransactionClient();
+    tx.$queryRaw.mockResolvedValue([{ id: runId }]);
+    tx.manualTestRun.findUnique.mockResolvedValue({ id: runId, status: "passed" });
+    tx.manualTestRun.findFirst.mockResolvedValue({ ...detail, status: "passed", runKey: "Review" });
+    transactionMock.mockImplementation(async (callback: unknown) =>
+      await (callback as (client: Prisma.TransactionClient) => Promise<unknown>)(tx as unknown as Prisma.TransactionClient),
+    );
+
+    await manualTestRunModel.updateRun({ projectId, runId, runKey: "Review" });
+
+    expect(tx.manualTestRun.update).toHaveBeenCalledWith({
+      where: { id: runId },
+      data: { runKey: "Review", updatedAt: expect.any(Date) },
+    });
+  });
+
+  it("returns the captured source label without reading the current source", async () => {
+    const tx = createTransactionClient();
+    tx.manualTestRun.findFirst.mockResolvedValue({ ...detail, sourceScenarioKey: "R1" });
+    transactionMock.mockImplementation(async (callback: unknown) =>
+      await (callback as (client: Prisma.TransactionClient) => Promise<unknown>)(tx as unknown as Prisma.TransactionClient),
+    );
+
+    const result = await manualTestRunModel.findById(runId, projectId);
+
+    expect(result?.sourceScenarioKey).toBe("R1");
+    expect(tx.testScenario.findFirst).not.toHaveBeenCalled();
+  });
+
+  it("rejects completed-run label edits combined with execution fields atomically", async () => {
+    const tx = createTransactionClient();
+    tx.$queryRaw.mockResolvedValue([{ id: runId }]);
+    tx.manualTestRun.findUnique.mockResolvedValue({ id: runId, status: "passed" });
+    transactionMock.mockImplementation(async (callback: unknown) =>
+      await (callback as (client: Prisma.TransactionClient) => Promise<unknown>)(tx as unknown as Prisma.TransactionClient),
+    );
+
+    await expect(manualTestRunModel.updateRun({ projectId, runId, runKey: "Review", notes: null })).rejects.toThrow("immutable");
+    expect(tx.manualTestRun.update).not.toHaveBeenCalled();
+  });
+
+  it("filters history by the captured label using the same predicate for rows and count", async () => {
+    const tx = createTransactionClient();
+    tx.project.findUnique.mockResolvedValue({ id: projectId });
+    tx.manualTestRun.findMany.mockResolvedValue([]);
+    tx.manualTestRun.count.mockResolvedValue(0);
+    transactionMock.mockImplementation(async (callback: unknown) =>
+      await (callback as (client: Prisma.TransactionClient) => Promise<unknown>)(tx as unknown as Prisma.TransactionClient),
+    );
+
+    await manualTestRunModel.findHistory({ projectId, sourceScenarioKey: "R1", status: "passed" });
+
+    const expectedWhere = { projectId, sourceScenarioKey: "R1", status: "passed" };
+    expect(tx.manualTestRun.findMany).toHaveBeenCalledWith(expect.objectContaining({ where: expectedWhere }));
+    expect(tx.manualTestRun.count).toHaveBeenCalledWith({ where: expectedWhere });
+  });
+
+  it("combines case-preserved key, UUID, status, and date predicates before pagination", async () => {
+    const tx = createTransactionClient();
+    tx.project.findUnique.mockResolvedValue({ id: projectId });
+    tx.manualTestRun.findMany.mockResolvedValue([]);
+    tx.manualTestRun.count.mockResolvedValue(0);
+    transactionMock.mockImplementation(async (callback: unknown) =>
+      await (callback as (client: Prisma.TransactionClient) => Promise<unknown>)(tx as unknown as Prisma.TransactionClient),
+    );
+    const startedFrom = "2026-01-01T00:00:00Z";
+    const startedBefore = "2026-02-01T00:00:00Z";
+
+    await manualTestRunModel.findHistory({
+      projectId, sourceScenarioKey: "r1", testScenarioId: scenarioId,
+      status: "passed", startedFrom, startedBefore, page: 2, limit: 10,
+    });
+
+    const where = {
+      projectId,
+      sourceTestScenarioId: scenarioId,
+      sourceScenarioKey: "r1",
+      status: "passed",
+      startedAt: { gte: new Date(startedFrom), lt: new Date(startedBefore) },
+    };
+    expect(tx.manualTestRun.findMany).toHaveBeenCalledWith(expect.objectContaining({ where, skip: 10, take: 10 }));
+    expect(tx.manualTestRun.count).toHaveBeenCalledWith({ where });
+    expect(tx.testScenario.findFirst).not.toHaveBeenCalled();
+  });
+
+  it("does not update a run label outside the requested project", async () => {
+    const tx = createTransactionClient();
+    tx.$queryRaw.mockResolvedValue([]);
+    transactionMock.mockImplementation(async (callback: unknown) =>
+      await (callback as (client: Prisma.TransactionClient) => Promise<unknown>)(tx as unknown as Prisma.TransactionClient),
+    );
+
+    await expect(manualTestRunModel.updateRun({ projectId, runId, runKey: "R2" })).resolves.toBeNull();
+    expect(tx.manualTestRun.update).not.toHaveBeenCalled();
   });
 });

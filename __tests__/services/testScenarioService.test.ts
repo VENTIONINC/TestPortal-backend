@@ -46,6 +46,7 @@ const scenario: TestScenarioResponse = {
   projectId,
   createdById: "44444444-4444-4444-4444-444444444444",
   title: "Login",
+  scenarioKey: null,
   details: null,
   objective: "Verify login",
   preconditions: null,
@@ -89,6 +90,7 @@ describe("testScenarioService", () => {
       projectId,
       createdById: scenario.createdById,
       title: "Login",
+      scenarioKey: null,
       details: "Details",
       objective: "Objective",
       preconditions: undefined,
@@ -130,6 +132,41 @@ describe("testScenarioService", () => {
       notes: null,
       objective: "Updated objective",
     });
+  });
+
+  it("normalizes optional labels on create and key-only edits", async () => {
+    await testScenarioService.createScenario({
+      projectId,
+      createdById: scenario.createdById,
+      title: "Login",
+      scenarioKey: "  R1  ",
+    });
+    expect(createMock).toHaveBeenCalledWith(expect.objectContaining({ scenarioKey: "R1" }));
+
+    await testScenarioService.updateScenario({ scenarioId, projectId, scenarioKey: " R2 " });
+    expect(updateMock).toHaveBeenCalledWith(scenarioId, projectId, { scenarioKey: "R2" });
+    await testScenarioService.updateScenario({ scenarioId, projectId, scenarioKey: null });
+    expect(updateMock).toHaveBeenLastCalledWith(scenarioId, projectId, { scenarioKey: null });
+  });
+
+  it("allows duplicate scenario labels", async () => {
+    await testScenarioService.createScenario({ projectId, createdById: scenario.createdById, title: "First", scenarioKey: "R1" });
+    await testScenarioService.createScenario({ projectId, createdById: scenario.createdById, title: "Second", scenarioKey: "R1" });
+    expect(createMock).toHaveBeenCalledTimes(2);
+  });
+
+  it("rejects malformed scenario labels before persistence", async () => {
+    for (const scenarioKey of [" ", "R1\nR2", "x".repeat(101)]) {
+      await expect(testScenarioService.createScenario({
+        projectId,
+        createdById: scenario.createdById,
+        title: "Login",
+        scenarioKey,
+      })).rejects.toBeInstanceOf(TestScenarioValidationError);
+      await expect(testScenarioService.updateScenario({ scenarioId, projectId, scenarioKey })).rejects.toBeInstanceOf(TestScenarioValidationError);
+    }
+    expect(createMock).not.toHaveBeenCalled();
+    expect(updateMock).not.toHaveBeenCalled();
   });
 
   it("rejects empty, unknown, and read-only updates", async () => {

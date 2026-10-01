@@ -39,6 +39,7 @@ const scenario: TestScenarioResponse = {
   projectId,
   createdById: "33333333-3333-3333-3333-333333333333",
   title: "Login",
+  scenarioKey: null,
   contentMd: "# Login\n\n  exact ✓\n",
   details: null,
   objective: null,

@@ -21,6 +21,7 @@ const DEFAULT_PAGE = 1;
 const DEFAULT_LIMIT = 30;
 const MAX_LIMIT = 100;
 const SCENARIO_FIELDS = [
+  "scenarioKey",
   "title",
   "details",
   "objective",
@@ -59,6 +60,18 @@ function normalizeUpdateOptional(
     return null;
   }
   return normalizeNonBlank(value, label);
+}
+
+function normalizeKey(value: unknown, label: string): string | null {
+  if (value === null) return null;
+  if (typeof value !== "string") {
+    throw new TestScenarioValidationError(`${label} must be a string or null`);
+  }
+  const normalized = value.trim();
+  if (!normalized || normalized.length > 100 || /[\r\n]/.test(normalized)) {
+    throw new TestScenarioValidationError(`${label} must be a nonblank single-line value of at most 100 characters`);
+  }
+  return normalized;
 }
 
 function validatePagination(page: number, limit: number): void {
@@ -139,6 +152,7 @@ export const testScenarioService = {
       projectId: params.projectId,
       createdById: params.createdById,
       title: normalizeNonBlank(params.title, "Title"),
+      scenarioKey: params.scenarioKey === undefined ? null : normalizeKey(params.scenarioKey, "Scenario key"),
       details: normalizeCreateOptional(params.details, "Details") ?? undefined,
       objective:
         normalizeCreateOptional(params.objective, "Objective") ?? undefined,
@@ -226,6 +240,8 @@ export const testScenarioService = {
     for (const field of supplied) {
       if (field === "title") {
         data.title = normalizeNonBlank(params.title, "Title");
+      } else if (field === "scenarioKey") {
+        data.scenarioKey = normalizeKey(params.scenarioKey, "Scenario key");
       } else {
         data[field] = normalizeUpdateOptional(params[field], field);
       }

@@ -37,6 +37,7 @@ const scenario: TestScenarioResponse = {
   projectId,
   createdById: "33333333-3333-3333-3333-333333333333",
   title: "Login",
+  scenarioKey: null,
   details: null,
   objective: "Verify login",
   preconditions: null,
@@ -103,6 +104,7 @@ describe("Test Scenario MCP workflow", () => {
       projectId,
       objective: "  New objective  ",
       notes: null,
+      scenarioKey: "R2",
     });
     expect(data).toEqual(expect.objectContaining({ id: scenario.id, contentMd: scenario.contentMd }));
     expect(scenarioUpdateMock).toHaveBeenCalledWith({
@@ -110,7 +112,13 @@ describe("Test Scenario MCP workflow", () => {
       projectId,
       objective: "  New objective  ",
       notes: null,
+      scenarioKey: "R2",
     });
+  });
+
+  it("forwards a key-only edit through the existing MCP update tool", async () => {
+    await invoke(updateTestScenario[3], { scenarioId, projectId, scenarioKey: "R3" });
+    expect(scenarioUpdateMock).toHaveBeenCalledWith({ scenarioId, projectId, scenarioKey: "R3" });
   });
 
   it("surfaces shared service errors as MCP errors", async () => {

@@ -59,6 +59,23 @@ function normalizeNotes(
   return value.trim();
 }
 
+function normalizeKey(
+  value: unknown,
+  label: string,
+): string | null | undefined {
+  if (value === undefined || value === null) return value;
+  if (typeof value !== "string") {
+    throw new ManualTestRunValidationError(`${label} must be a string or null`);
+  }
+  const normalized = value.trim();
+  if (!normalized || normalized.length > 100 || /[\r\n]/.test(normalized)) {
+    throw new ManualTestRunValidationError(
+      `${label} must be a nonblank single-line value of at most 100 characters`,
+    );
+  }
+  return normalized;
+}
+
 function isRunStatus(value: unknown): value is (typeof MANUAL_TEST_RUN_STATUSES)[number] {
   return (
     typeof value === "string" &&
@@ -147,6 +164,7 @@ function validateListParams(params: ListManualTestRunsParams): void {
     "projectId",
     "scenarioId",
     "testScenarioId",
+    "sourceScenarioKey",
     "page",
     "limit",
     "startedFrom",
@@ -160,9 +178,15 @@ function validateListParams(params: ListManualTestRunsParams): void {
   if (params.testScenarioId !== undefined) {
     requireUuid(params.testScenarioId, "Test scenario filter");
   }
+  normalizeKey(params.sourceScenarioKey, "Source scenario key");
   if (params.scenarioId !== undefined && params.testScenarioId !== undefined) {
     throw new ManualTestRunValidationError(
       "testScenarioId cannot be supplied for nested scenario history",
+    );
+  }
+  if (params.scenarioId !== undefined && params.sourceScenarioKey !== undefined) {
+    throw new ManualTestRunValidationError(
+      "sourceScenarioKey cannot be supplied for nested scenario history",
     );
   }
   const page = params.page ?? DEFAULT_PAGE;
@@ -183,17 +207,20 @@ export const manualTestRunService = {
       "scenarioId",
       "executedById",
       "notes",
+      "runKey",
     ]);
     requireUuid(params.projectId, "Project ID");
     requireUuid(params.scenarioId, "Scenario ID");
     requireUuid(params.executedById, "Executor ID");
     const notes = normalizeNotes(params.notes);
+    const runKey = params.runKey === undefined ? undefined : normalizeKey(params.runKey, "Run key");
 
     const run = await manualTestRunModel.createFromScenario({
       projectId: params.projectId,
       scenarioId: params.scenarioId,
       executedById: params.executedById,
       notes,
+      ...(runKey !== undefined ? { runKey } : {}),
     });
     if (!run) {
       throw new ManualTestRunNotFoundError(
@@ -219,7 +246,12 @@ export const manualTestRunService = {
 
   async listRuns(params: ListManualTestRunsParams): Promise<ManualTestRunPage> {
     validateListParams(params);
-    const result = await manualTestRunModel.findHistory(params);
+    const result = await manualTestRunModel.findHistory({
+      ...params,
+      ...(params.sourceScenarioKey !== undefined
+        ? { sourceScenarioKey: params.sourceScenarioKey.trim() }
+        : {}),
+    });
     if (result.missingScope === "project") {
       throw scopeNotFound("project", params.projectId);
     }
@@ -240,10 +272,11 @@ export const manualTestRunService = {
       "runId",
       "status",
       "notes",
+      "runKey",
     ]);
     requireUuid(params.projectId, "Project ID");
     requireUuid(params.runId, "Run ID");
-    if (!hasOwn(params, "status") && !hasOwn(params, "notes")) {
+    if (!hasOwn(params, "status") && !hasOwn(params, "notes") && !hasOwn(params, "runKey")) {
       throw new ManualTestRunValidationError(
         "At least one editable field is required",
       );
@@ -252,11 +285,13 @@ export const manualTestRunService = {
       throw new ManualTestRunValidationError("status is not a valid run status");
     }
     const notes = normalizeNotes(params.notes);
+    const runKey = hasOwn(params, "runKey") ? normalizeKey(params.runKey, "Run key") : undefined;
     const run = await manualTestRunModel.updateRun({
       projectId: params.projectId,
       runId: params.runId,
       ...(params.status !== undefined ? { status: params.status } : {}),
       ...(hasOwn(params, "notes") ? { notes } : {}),
+      ...(hasOwn(params, "runKey") ? { runKey } : {}),
     });
     if (!run) {
       throw runNotFound(params.runId);

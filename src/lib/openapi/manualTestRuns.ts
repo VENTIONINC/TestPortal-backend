@@ -41,6 +41,8 @@ const ManualTestRunSchema = z
     id: z.string().uuid().openapi({ readOnly: true }),
     projectId: z.string().uuid().openapi({ readOnly: true }),
     sourceTestScenarioId: z.string().uuid().openapi({ readOnly: true }),
+    runKey: z.string().max(100).nullable().openapi({ description: "Editable nonunique label; UUIDs remain entity identifiers" }),
+    sourceScenarioKey: z.string().max(100).nullable().openapi({ readOnly: true, description: "Scenario label captured when the run started" }),
     testScenarioId: z.string().uuid().nullable().openapi({ readOnly: true }),
     executedById: z.string().uuid().nullable().openapi({ readOnly: true }),
     executedBy: ManualTestRunExecutorSchema,
@@ -66,6 +68,8 @@ const ManualTestRunSummarySchema = z
     id: z.string().uuid().openapi({ readOnly: true }),
     projectId: z.string().uuid().openapi({ readOnly: true }),
     sourceTestScenarioId: z.string().uuid().openapi({ readOnly: true }),
+    runKey: z.string().max(100).nullable().openapi({ description: "Editable nonunique label; UUIDs remain entity identifiers" }),
+    sourceScenarioKey: z.string().max(100).nullable().openapi({ readOnly: true, description: "Scenario label captured when the run started" }),
     testScenarioId: z.string().uuid().nullable().openapi({ readOnly: true }),
     executedById: z.string().uuid().nullable().openapi({ readOnly: true }),
     executedBy: ManualTestRunExecutorSchema,
@@ -117,6 +121,7 @@ const ManualTestRunHistoryQuerySchema = z
     startedFrom: z.string().describe(dateDescription).optional(),
     startedBefore: z.string().describe(dateDescription).optional(),
     testScenarioId: z.string().uuid().describe("Immutable source scenario UUID").optional(),
+    sourceScenarioKey: z.string().trim().min(1).max(100).regex(/^[^\r\n]+$/).describe("Exact, case-sensitive captured source label; duplicate labels match multiple scenarios").optional(),
     status: ManualTestRunStatusSchema.optional(),
   })
   .strict()
@@ -137,6 +142,7 @@ const ManualTestRunScenarioHistoryQuerySchema = z
 const ManualTestRunStartRequestSchema = z
   .object({
     notes: z.string().min(1).regex(/\S/).nullable().optional(),
+    runKey: z.string().trim().min(1).max(100).regex(/^[^\r\n]+$/).nullable().optional(),
   })
   .strict()
   .openapi("ManualTestRunStartRequest");
@@ -145,6 +151,7 @@ const ManualTestRunUpdateRequestSchema = z
   .object({
     status: ManualTestRunStatusSchema.optional(),
     notes: z.string().min(1).regex(/\S/).nullable().optional(),
+    runKey: z.string().trim().min(1).max(100).regex(/^[^\r\n]+$/).nullable().optional(),
   })
   .strict()
   .openapi("ManualTestRunUpdateRequest");
@@ -207,7 +214,7 @@ export function registerManualTestRunRoutes(registry: OpenAPIRegistry): void {
     method: "post",
     path: "/api/v2/test-scenarios/{scenarioId}/manual-runs",
     description:
-      "Starts an authenticated manual run by atomically capturing the structured scenario and ordered steps. The executor and timestamps are server-owned.",
+    "Starts an authenticated manual run by atomically capturing the structured scenario and ordered steps. The executor and timestamps are server-owned.",
     request: {
       params: ScenarioIdParamsSchema,
       query: ProjectIdQuerySchema,
@@ -267,7 +274,7 @@ export function registerManualTestRunRoutes(registry: OpenAPIRegistry): void {
     method: "patch",
     path: "/api/v2/manual-test-runs/{runId}",
     description:
-      "Updates active run notes or explicitly selects the overall outcome. A terminal status completes the run atomically; completed runs cannot be edited or reopened.",
+      "Updates active run labels, notes, or outcome atomically. A terminal status completes the run; completed runs allow runKey-only edits while execution fields remain frozen. Labels are nonunique, and UUIDs identify entities.",
     request: {
       params: RunIdParamsSchema,
       query: ProjectIdQuerySchema,

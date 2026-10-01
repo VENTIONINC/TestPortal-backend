@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { z } from "zod";
+import { editableTestManagementKeySchema } from "@/schemas/testManagementKeySchemas";
 
 const uuidSchema = z.string().uuid("Must be a valid UUID");
 const nonBlankText = z.string().trim().min(1, "Value must not be blank");
@@ -17,6 +18,7 @@ export const createTestScenarioSchema = z
   .object({
     projectId: uuidSchema,
     title: nonBlankText,
+    scenarioKey: editableTestManagementKeySchema.optional(),
     details: nonBlankText.optional(),
     objective: nonBlankText.optional(),
     preconditions: nonBlankText.optional(),
@@ -32,6 +34,7 @@ const updateFieldSchema = nonBlankText.nullable();
 export const updateTestScenarioSchema = z
   .object({
     title: nonBlankText.optional(),
+    scenarioKey: editableTestManagementKeySchema.optional(),
     details: updateFieldSchema.optional(),
     objective: updateFieldSchema.optional(),
     preconditions: updateFieldSchema.optional(),

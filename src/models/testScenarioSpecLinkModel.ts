@@ -87,6 +87,7 @@ export const testScenarioSpecLinkModel = {
           select: {
             id: true,
             title: true,
+            scenarioKey: true,
             details: true,
             contentMd: true,
           },

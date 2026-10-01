@@ -99,12 +99,7 @@ const ResultSchema = z
       .describe(
         "Human category correction. When present, this is authoritative over analysisCategory.",
       ),
-    analysisFeedbackConfidence: z
-      .number()
-      .min(1)
-      .max(5)
-      .nullable()
-      .optional(),
+    analysisFeedbackConfidence: z.number().min(1).max(5).nullable().optional(),
     analysisFeedbackConclusion: z.string().nullable().optional(),
     spec: ResultSpecSchema,
     execution: ResultExecutionSchema,
@@ -118,6 +113,7 @@ const RelatedTestScenarioSummarySchema = z
   .object({
     id: z.string().uuid(),
     title: z.string(),
+    scenarioKey: z.string().max(100).nullable(),
     details: z.string().nullable(),
     contentMd: z
       .string()
@@ -135,7 +131,9 @@ const ResultsListResponseSchema = z
     results: z.array(ResultSchema),
     rawResults: z
       .array(ResultSchema)
-      .describe("Unfiltered period results for specs in the current results page"),
+      .describe(
+        "Unfiltered period results for specs in the current results page",
+      ),
     availableTags: z
       .array(z.string())
       .describe(
@@ -271,6 +269,10 @@ export function registerResultRoutes(registry: OpenAPIRegistry) {
         reviewStatus: z.string().optional(),
         errorMessage: z.string().optional(),
         issueName: z.string().optional(),
+        assumption: z
+          .enum(["all", "confirmed", "not-confirmed"])
+          .optional()
+          .describe("Filter results by linked assumption confirmation status"),
         from: z.string().optional(),
         to: z.string().optional(),
         dates: z.array(z.string()).optional(),

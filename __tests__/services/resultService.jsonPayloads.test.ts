@@ -114,8 +114,8 @@ describe("resultService JSON payload normalization", () => {
       const rawResult = buildRawResult();
       rawResult.status = status;
       const scenarios = [
-        { id: "scenario-1", title: "Checkout", details: "Payment flow", contentMd: "# Checkout\n" },
-        { id: "scenario-2", title: "Refund", details: null, contentMd: "# Refund\n" },
+        { id: "scenario-1", title: "Checkout", scenarioKey: null, details: "Payment flow", contentMd: "# Checkout\n" },
+        { id: "scenario-2", title: "Refund", scenarioKey: null, details: null, contentMd: "# Refund\n" },
       ];
       mockResultModel.findById.mockResolvedValueOnce(rawResult);
       mockTestScenarioSpecLinkModel.findLinkedTestScenarios.mockResolvedValueOnce(
@@ -133,7 +133,7 @@ describe("resultService JSON payload normalization", () => {
       });
       expect(
         Object.keys(detail.relatedTestScenarios[0] ?? {}).sort(),
-      ).toEqual(["contentMd", "details", "id", "title"]);
+      ).toEqual(["contentMd", "details", "id", "scenarioKey", "title"]);
       expect(mockTestScenarioSpecLinkModel.findLinkedTestScenarios).toHaveBeenCalledWith(
         "spec-1",
         "project-1",
@@ -156,7 +156,7 @@ describe("resultService JSON payload normalization", () => {
   it("returns a single lightweight related scenario summary", async () => {
     const rawResult = buildRawResult();
     const scenarios = [
-      { id: "scenario-1", title: "Checkout", details: null, contentMd: "# Checkout\n" },
+      { id: "scenario-1", title: "Checkout", scenarioKey: null, details: null, contentMd: "# Checkout\n" },
     ];
     mockResultModel.findById.mockResolvedValueOnce(rawResult);
     mockTestScenarioSpecLinkModel.findLinkedTestScenarios.mockResolvedValueOnce(
@@ -275,6 +275,32 @@ describe("resultService JSON payload normalization", () => {
       tag: "smoke",
     });
     expect(mockResultModel.count).toHaveBeenCalledTimes(1);
+  });
+
+  it("passes the assumption filter to the displayed results queries", async () => {
+    mockResultModel.findMany
+      .mockResolvedValueOnce([buildRawResult()])
+      .mockResolvedValueOnce([buildRawResult()]);
+    mockResultModel.count.mockResolvedValueOnce(1);
+
+    await resultService.getResults({
+      projectId: "project-1",
+      assumption: "confirmed",
+    });
+
+    const expectedFilters = {
+      projectId: "project-1",
+      assumption: "confirmed" as const,
+    };
+
+    expect(mockResultModel.findMany).toHaveBeenNthCalledWith(
+      1,
+      expectedFilters,
+      1,
+      1000,
+    );
+    expect(mockResultModel.count).toHaveBeenCalledWith(expectedFilters);
+    expect(mockResultModel.findSpecTags).toHaveBeenCalledWith(expectedFilters);
   });
 
   it("skips the raw query when no cards match the filters", async () => {

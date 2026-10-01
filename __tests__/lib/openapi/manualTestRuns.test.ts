@@ -47,6 +47,8 @@ describe("manual test run OpenAPI contract", () => {
     expect(run.properties?.testScenarioId?.type).toEqual(["string", "null"]);
     expect(executor.type).toEqual(["object", "null"]);
     expect(run.properties?.sourceTestScenarioId?.readOnly).toBe(true);
+    expect(run.properties?.runKey?.type).toEqual(["string", "null"]);
+    expect(run.properties?.sourceScenarioKey?.readOnly).toBe(true);
     expect(summary.properties?.steps).toBeUndefined();
     expect(summary.properties?.notes).toBeUndefined();
     expect(status.enum).toEqual([
