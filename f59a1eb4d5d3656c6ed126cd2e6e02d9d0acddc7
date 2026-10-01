@@ -1,0 +1,29 @@
+openspec/changes/migrate-openai-to-server-ai-config/design.md
+  s_984d65285d292f::t_b3e2494a327830 11,19,21,30-33,42,46,48,57,61,65,67,69,73,79,85,88,90
+openspec/changes/migrate-openai-to-server-ai-config/proposal.md
+  s_984d65285d292f::t_26591a1461ad29 9,13,21-22,31
+openspec/changes/migrate-openai-to-server-ai-config/specs/ai-evaluation-configuration/spec.md
+  s_984d65285d292f::t_2193732eca12c8 10,20-21,25,31-38,40
+openspec/changes/migrate-openai-to-server-ai-config/specs/server-ai-configuration/spec.md
+  s_984d65285d292f::t_4a93761929603e 5,10,21,25,31-32,34-36,38-44,46-52,55,85,87-89
+openspec/changes/migrate-openai-to-server-ai-config/tasks.md
+  s_984d65285d292f::t_0da57a2191414d 3-4,28-39
+AI_CONFIGURATION_FLOW.md
+  s_984d65285d292f::t_eda62c546c1d71 1-29
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.18",
+  "base_commit_sha": "f59a1eb4d5d3656c6ed126cd2e6e02d9d0acddc7",
+  "prompts": {},
+  "sessions": {
+    "s_984d65285d292f": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a0f634-d5d6-7443-b1e0-115c332a34bc",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Igor <hirzhek@gmail.com>"
+    }
+  }
+}
