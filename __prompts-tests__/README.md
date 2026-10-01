@@ -38,7 +38,7 @@ Ensure you have the required environment variable:
 export OPENAI_API_KEY="sk-..."
 ```
 
-Evaluations load `config/ai/evaluation.baseline.json` independently from production. Set `AI_EVAL_CONFIG_PATH` to select another validated version 1 configuration; relative paths resolve from the working directory. Runner `model` and `temperature` overrides take precedence over file settings. Evaluation reports print suite, operation, prompt version, configuration source/profile, requested model, reasoning effort, and effective generation settings. They do not print credentials, prompt contents, or reasoning traces. Missing credentials fail before provider invocation with an `OPENAI_API_KEY` message.
+Evaluations load `config/ai/evaluation.baseline.json` independently from production. Set `AI_EVAL_CONFIG_PATH` to select a complete replacement version 1 configuration; custom relative paths resolve from the working directory, while the shipped baseline resolves from the application root. Runner `model` and `temperature` overrides take precedence over file settings. Evaluation reports print suite, operation, prompt version, configuration source (`evaluation-baseline` or `custom`), profile, requested model, reasoning effort, and effective generation settings. They do not print credentials, prompt contents, or reasoning traces. Live Jest suites load `.env` and report as skipped when `OPENAI_API_KEY` is absent or blank, before reading datasets or invoking OpenAI. Mocked unit tests remain runnable without a real key. Direct runner calls still fail before provider invocation with an `OPENAI_API_KEY` message.
 
 ### 2. Generate Datasets
 

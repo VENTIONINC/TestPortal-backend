@@ -97,7 +97,7 @@ export async function runEval(options: RunEvalOptions): Promise<EvalResult> {
       operation: settings.operation,
       promptVersion: version.version,
       configurationVersion: settings.version,
-      configurationSource: settings.source === "legacy-defaults" ? "baseline" : settings.source,
+      configurationSource: settings.source === "custom" ? "custom" : "evaluation-baseline",
       profile: settings.profile,
       provider: settings.provider,
       requestedModel: settings.model,

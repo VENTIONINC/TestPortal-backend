@@ -12,6 +12,7 @@ AI services hardcode OpenAI clients and model choices despite having different g
 - Validate configuration structure, references, model capabilities, and explicitly configured parameters; publish a matching JSON Schema for editor support.
 - Load the shipped configuration when no nonempty custom path is supplied. Custom files replace it entirely; neither source falls back to hardcoded settings. Missing or invalid files and missing credentials fail startup.
 - Give prompt evaluations separate versioned configuration, shared configuration validation, and effective configuration metadata without inheriting production settings.
+- Skip live Jest prompt suites when OpenAI credentials are absent; keep placeholder credentials confined to mocked unit tests and retain credential errors for direct runner calls.
 - Document runtime file availability, restart requirements, and configuration usage.
 
 ## Capabilities

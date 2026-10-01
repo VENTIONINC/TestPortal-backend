@@ -54,6 +54,15 @@ Evaluations SHALL use shared configuration validation and resolution while retai
 - **WHEN** an evaluation provider response is incomplete or violates its selected schema
 - **THEN** it SHALL be rejected as a provider/contract failure rather than accepted as a successful evaluation response
 
-#### Scenario: Missing evaluation credentials
-- **WHEN** a run is initialized without required OpenAI credentials
+#### Scenario: Missing credentials for live prompt tests
+- **WHEN** a live Jest prompt suite is selected without a nonblank `OPENAI_API_KEY` after loading environment configuration
+- **THEN** it SHALL report the suite as skipped before reading datasets or invoking the provider
+- **AND** test setup SHALL NOT supply placeholder credentials to live suites or prevent dotenv from loading a real key
+
+#### Scenario: Direct runner lacks credentials
+- **WHEN** an evaluation runner is called directly without required OpenAI credentials
 - **THEN** it SHALL fail before provider invocation with a credential-name error that excludes secret values
+
+#### Scenario: Mocked unit tests
+- **WHEN** unit tests mock provider invocation
+- **THEN** they SHALL remain runnable without real OpenAI credentials, with any placeholder credentials confined to unit-test setup

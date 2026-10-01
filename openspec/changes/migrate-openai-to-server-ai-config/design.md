@@ -62,6 +62,8 @@ Explicit unsupported settings fail validation. An omitted temperature remains ab
 
 ### 4. Independent evaluations
 
+Live Jest prompt suites load dotenv and use `describe.skip` when `OPENAI_API_KEY` is absent or blank, before reading datasets or invoking OpenAI. Their Jest setup does not inherit the unit-test placeholder key. Mocked unit tests remain runnable with a unit-only placeholder. Direct evaluation runner calls retain explicit missing-credential errors; a skipped suite never produces a successful evaluation result.
+
 Use a checked-in evaluation baseline selected independently of production. The evaluation baseline file owns model `gpt-4.1-mini`, temperatures 0.1/0.3, output limits 4000/600, retries 2, and no reasoning override. Keep cache disabled as evaluation-runner behavior, not as a generation-settings fallback.
 
 Keep runner model/temperature overrides with precedence: runner override, selected evaluation file. There is no suite-default settings layer. Revalidate the resulting settings. Runners still construct `ChatOpenAI`, invoke it, and validate suite expectations directly; only settings resolution is shared.

@@ -6,7 +6,7 @@ This guide explains how to deploy the Test Portal Backend to AWS ECS using the
 
 ## AI model configuration
 
-The backend can load a server-wide AI configuration file using `AI_CONFIG_PATH`. In ECS, provide the credential-free JSON through the task's mounted/config provisioning mechanism and set the environment variable to its container path. Continue injecting `OPENAI_API_KEY` as a secret. Changing either the file or the path requires a new task deployment because settings are loaded once before the service listens. See [AI_CONFIGURATION.md](AI_CONFIGURATION.md) for the complete schema and defaults.
+The backend loads its shipped server-wide AI configuration automatically. In ECS, provide a complete replacement JSON through the task's mounted/config provisioning mechanism only when needed, then set `AI_CONFIG_PATH` to its container path. Inject `OPENAI_API_KEY` as a secret for both shipped and custom configurations. Changing the file or path requires a new task deployment because settings are loaded once before the service listens. See [AI_CONFIGURATION.md](AI_CONFIGURATION.md) for the complete schema and shipped settings.
 
 ## Overview
 

@@ -29,7 +29,7 @@ export interface EvalMetadata {
   operation: string;
   promptVersion: string;
   configurationVersion: 1;
-  configurationSource: "baseline" | "explicit-file";
+  configurationSource: "evaluation-baseline" | "custom";
   profile: string;
   provider: "openai";
   requestedModel: string;

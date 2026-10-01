@@ -1,7 +1,7 @@
 // Copyright 2026 VENSOLUTIONSGROUP LTD
 // SPDX-License-Identifier: Apache-2.0
 
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import path from "node:path";
 
 import { z } from "zod";
@@ -20,8 +20,8 @@ const operationSchema = z
   .object({
     profile: z.string().min(1),
     temperature: z.number().min(0).max(2).optional(),
-    maxOutputTokens: z.number().int().min(1).max(128_000).optional(),
-    maxRetries: z.number().int().min(0).max(10).optional(),
+    maxOutputTokens: z.number().int().min(1).max(128_000),
+    maxRetries: z.number().int().min(0).max(10),
     timeoutMs: z.number().int().min(1).max(600_000).optional(),
   })
   .strict();
@@ -49,7 +49,7 @@ export type AiOperation =
 export type EvaluationOperation =
   | "storedResultsAnalysis"
   | "solutionSuggestion";
-export type ConfigurationSource = "legacy-defaults" | "explicit-file" | "baseline";
+export type ConfigurationSource = "shipped-production" | "evaluation-baseline" | "custom";
 
 export interface ResolvedAiSettings {
   operation: string;
@@ -65,18 +65,6 @@ export interface ResolvedAiSettings {
   timeoutMs?: number;
   cache?: false;
 }
-
-const operationDefaults: Record<AiOperation, Omit<ResolvedAiSettings, "operation" | "version" | "source" | "profile" | "provider" | "model">> = {
-  storedResultsAnalysis: { temperature: 0, maxOutputTokens: 4000, maxRetries: 2 },
-  errorFormatting: { temperature: 0.7, maxOutputTokens: 500, maxRetries: 2 },
-  solutionSuggestion: { temperature: 0.3, maxOutputTokens: 700, maxRetries: 2 },
-  dashboardInsights: { temperature: 0.2, maxOutputTokens: 400, maxRetries: 1 },
-};
-
-const evaluationDefaults: Record<EvaluationOperation, Omit<ResolvedAiSettings, "operation" | "version" | "source" | "profile" | "provider" | "model">> = {
-  storedResultsAnalysis: { temperature: 0.1, maxOutputTokens: 4000, maxRetries: 2, cache: false },
-  solutionSuggestion: { temperature: 0.3, maxOutputTokens: 600, maxRetries: 2, cache: false },
-};
 
 const supportedModels = {
   "gpt-4.1-mini": { reasoningEfforts: [], temperatureEfforts: null, maxOutputTokens: 32_768 },
@@ -102,23 +90,17 @@ export interface LoadedAiConfiguration {
   kind: "production" | "evaluation";
 }
 
-const cloneLegacyConfig = (kind: LoadConfigurationOptions["kind"]): AiConfiguration => {
-  const profiles: AiConfiguration["profiles"] = {
-    legacy: { provider: "openai", model: "gpt-4.1-mini" },
-  };
-  const operations: AiConfiguration["operations"] = {};
-  const defaults = kind === "production" ? operationDefaults : evaluationDefaults;
-
-  for (const [operation, settings] of Object.entries(defaults)) {
-    operations[operation] = {
-      profile: "legacy",
-      temperature: settings.temperature,
-      maxOutputTokens: settings.maxOutputTokens,
-      maxRetries: settings.maxRetries,
-    };
+const getApplicationRoot = (): string => {
+  const moduleDirectory = typeof __dirname === "string"
+    ? __dirname
+    : path.dirname(process.argv[1] ?? process.cwd());
+  let directory = moduleDirectory;
+  while (!existsSync(path.join(directory, "package.json"))) {
+    const parent = path.dirname(directory);
+    if (parent === directory) throw new Error("Unable to locate the application root for bundled AI configuration");
+    directory = parent;
   }
-
-  return { version: 1, profiles, operations };
+  return directory;
 };
 
 const formatValidationError = (error: z.ZodError): string =>
@@ -166,11 +148,12 @@ const validateReferencesAndCapabilities = (config: AiConfiguration): void => {
 
 export function loadAiConfiguration({ pathValue, kind, env = process.env }: LoadConfigurationOptions): LoadedAiConfiguration {
   const selectedPath = pathValue?.trim();
-  if (!selectedPath) {
-    return { config: cloneLegacyConfig(kind), source: kind === "production" ? "legacy-defaults" : "baseline", kind };
-  }
-
-  const absolutePath = path.resolve(process.cwd(), selectedPath);
+  const absolutePath = selectedPath
+    ? path.resolve(process.cwd(), selectedPath)
+    : path.resolve(getApplicationRoot(), "config/ai", kind === "production" ? "server.json" : "evaluation.baseline.json");
+  const source: ConfigurationSource = selectedPath
+    ? "custom"
+    : kind === "production" ? "shipped-production" : "evaluation-baseline";
   let contents: string;
   try {
     contents = readFileSync(absolutePath, "utf8");
@@ -209,10 +192,10 @@ export function loadAiConfiguration({ pathValue, kind, env = process.env }: Load
   }
 
   if (kind === "production" && !env.OPENAI_API_KEY?.trim()) {
-    throw new Error("AI_CONFIG_PATH requires the OPENAI_API_KEY environment variable");
+    throw new Error("Server AI configuration requires the OPENAI_API_KEY environment variable");
   }
 
-  return { config: parsed.data, source: "explicit-file", kind };
+  return { config: parsed.data, source, kind };
 }
 
 export function resolveAiSettings(
@@ -233,22 +216,18 @@ export function resolveAiSettings(
     throw new Error(`AI configuration profile ${mapping.profile} is missing`);
   }
 
-  const defaults = loaded.kind === "production"
-    ? operationDefaults[operation as AiOperation]
-    : evaluationDefaults[operation as EvaluationOperation];
   const model = overrides.model ?? profile.model;
   const modelCapabilities = supportedModels[model as keyof typeof supportedModels];
   if (!modelCapabilities) throw new Error(`Unsupported OpenAI model: ${model}`);
   const reasoning = profile.reasoning;
-  const temperature = overrides.temperature ?? mapping.temperature ??
-    (isTemperatureSupported(model, reasoning?.effort) ? defaults.temperature : undefined);
+  const temperature = overrides.temperature ?? mapping.temperature;
   if (reasoning && !modelCapabilities.reasoningEfforts.includes(reasoning.effort as never)) {
     throw new Error(`Unsupported reasoning effort for OpenAI model ${model}`);
   }
   if (temperature !== undefined && !isTemperatureSupported(model, reasoning?.effort)) {
     throw new Error(`Temperature is not supported for OpenAI model ${model} with the selected reasoning settings`);
   }
-  const maxOutputTokens = mapping.maxOutputTokens ?? defaults.maxOutputTokens;
+  const maxOutputTokens = mapping.maxOutputTokens;
   if (maxOutputTokens > modelCapabilities.maxOutputTokens) {
     throw new Error(`maxOutputTokens exceeds the ${model} output limit`);
   }
@@ -263,9 +242,9 @@ export function resolveAiSettings(
     ...(reasoning ? { reasoning } : {}),
     ...(temperature === undefined ? {} : { temperature }),
     maxOutputTokens,
-    maxRetries: mapping.maxRetries ?? defaults.maxRetries,
+    maxRetries: mapping.maxRetries,
     ...(mapping.timeoutMs === undefined ? {} : { timeoutMs: mapping.timeoutMs }),
-    ...(defaults.cache === false ? { cache: false as const } : {}),
+    ...(loaded.kind === "evaluation" ? { cache: false as const } : {}),
   };
 }
 
@@ -303,12 +282,11 @@ export function getProductionAiSettings(operation: AiOperation): ResolvedAiSetti
 
 export function loadEvaluationAiConfiguration(env = process.env): LoadedAiConfiguration {
   const selectedPath = env.AI_EVAL_CONFIG_PATH?.trim();
-  const loaded = loadAiConfiguration({
-    pathValue: selectedPath || path.resolve(process.cwd(), "config/ai/evaluation.baseline.json"),
+  return loadAiConfiguration({
+    ...(selectedPath === undefined || selectedPath.length === 0 ? {} : { pathValue: selectedPath }),
     kind: "evaluation",
     env,
   });
-  return selectedPath ? loaded : { ...loaded, source: "baseline" };
 }
 
 export function assertEvaluationCredentials(env = process.env): void {

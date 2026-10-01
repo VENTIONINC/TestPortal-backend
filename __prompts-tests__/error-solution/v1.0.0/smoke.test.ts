@@ -5,7 +5,7 @@
  * Smoke tests for error solution prompt
  */
 
-import "../../testEnv";
+import { hasOpenAiCredentials } from "../../testEnv";
 import fs from "node:fs";
 import path from "node:path";
 import { runEval } from "../runners/error-solution";
@@ -17,7 +17,7 @@ const datasetPath = path.join(
   "__prompts-tests__/error-solution/datasets/error-solution/smoke.json",
 );
 
-describe("Prompt Evaluation - Smoke Tests (error-solution v1.0.0)", () => {
+(hasOpenAiCredentials ? describe : describe.skip)("Prompt Evaluation - Smoke Tests (error-solution v1.0.0)", () => {
   jest.setTimeout(120_000);
 
   it("should satisfy contract and expectations", async () => {

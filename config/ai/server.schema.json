@@ -42,7 +42,7 @@
     "operation": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["profile"],
+      "required": ["profile", "maxOutputTokens", "maxRetries"],
       "properties": {
         "profile": { "type": "string", "minLength": 1 },
         "temperature": { "type": "number", "minimum": 0, "maximum": 2 },

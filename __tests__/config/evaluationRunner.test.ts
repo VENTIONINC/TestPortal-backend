@@ -39,8 +39,8 @@ describe("prompt evaluation configuration", () => {
         suggestion: { provider: "openai", model: "gpt-4.1-mini" },
       },
       operations: {
-        storedResultsAnalysis: { profile: "analysis", maxOutputTokens: 9000 },
-        solutionSuggestion: { profile: "suggestion", temperature: 0.6, maxOutputTokens: 900 },
+        storedResultsAnalysis: { profile: "analysis", maxOutputTokens: 9000, maxRetries: 2 },
+        solutionSuggestion: { profile: "suggestion", temperature: 0.6, maxOutputTokens: 900, maxRetries: 2 },
       },
     }));
     originalKey = process.env.OPENAI_API_KEY;
@@ -73,12 +73,29 @@ describe("prompt evaluation configuration", () => {
     expect(result.metadata).toMatchObject({
       suite: "stored-results-analysis",
       operation: "storedResultsAnalysis",
-      configurationSource: "explicit-file",
+      configurationSource: "custom",
       requestedModel: "gpt-5.1",
       generationSettings: { temperature: 0.4, maxOutputTokens: 9000, maxRetries: 2, cache: false },
     });
     expect(JSON.stringify(result.metadata)).not.toContain("test-key");
     expect(JSON.stringify(result.metadata)).not.toContain("reasoning trace");
+  });
+
+  it("fails on missing credentials or an unreadable selected file before provider construction", async () => {
+    delete process.env.OPENAI_API_KEY;
+    await expect(runStoredResultsEval({ cases: [], version: storedVersion })).rejects.toThrow("OPENAI_API_KEY");
+    expect(chatOpenAIMock).not.toHaveBeenCalled();
+
+    process.env.OPENAI_API_KEY = "test-key";
+    process.env.AI_EVAL_CONFIG_PATH = path.join(tempDir, "missing.json");
+    await expect(runStoredResultsEval({ cases: [], version: storedVersion })).rejects.toThrow("Unable to read AI configuration");
+    expect(chatOpenAIMock).not.toHaveBeenCalled();
+  });
+
+  it("fails on an invalid selected evaluation file before provider construction", async () => {
+    writeFileSync(configPath, "{");
+    await expect(runStoredResultsEval({ cases: [], version: storedVersion })).rejects.toThrow("Invalid JSON");
+    expect(chatOpenAIMock).not.toHaveBeenCalled();
   });
 
   it.each([-1, 3, Number.NaN, Number.POSITIVE_INFINITY])(

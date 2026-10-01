@@ -5,11 +5,6 @@
     "default": {
       "provider": "openai",
       "model": "gpt-4.1-mini"
-    },
-    "reasoning": {
-      "provider": "openai",
-      "model": "gpt-5.1",
-      "reasoning": { "effort": "medium" }
     }
   },
   "operations": {
