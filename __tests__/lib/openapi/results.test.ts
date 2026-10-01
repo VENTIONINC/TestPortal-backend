@@ -63,11 +63,12 @@ describe("Result OpenAPI contract", () => {
     ).toBe(
       "#/components/schemas/RelatedTestScenarioSummary",
     );
-    expect(summary.required).toEqual(["id", "title", "details", "contentMd"]);
+    expect(summary.required).toEqual(["id", "title", "scenarioKey", "details", "contentMd"]);
     expect(Object.keys(summary.properties ?? {}).sort()).toEqual([
       "contentMd",
       "details",
       "id",
+      "scenarioKey",
       "title",
     ]);
     expect(summary.properties?.contentMd?.type).toBe("string");

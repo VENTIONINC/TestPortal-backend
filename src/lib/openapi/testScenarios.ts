@@ -12,6 +12,7 @@ const TestScenarioSchema = z
     projectId: z.string().uuid(),
     createdById: z.string().uuid(),
     title: z.string(),
+    scenarioKey: z.string().max(100).nullable(),
     details: z.string().nullable(),
     objective: z.string().nullable(),
     preconditions: z.string().nullable(),
@@ -48,6 +49,7 @@ const CreateTestScenarioRequestSchema = z
   .object({
     projectId: z.string().uuid(),
     title: z.string().min(1).regex(/\S/),
+    scenarioKey: z.string().trim().min(1).max(100).regex(/^[^\r\n]+$/).nullable().optional(),
     details: z.string().min(1).regex(/\S/).optional(),
     objective: z.string().min(1).regex(/\S/).optional(),
     preconditions: z.string().min(1).regex(/\S/).optional(),
@@ -74,6 +76,7 @@ const TestScenarioSummarySchema = z
     projectId: z.string().uuid(),
     createdById: z.string().uuid(),
     title: z.string(),
+    scenarioKey: z.string().max(100).nullable(),
     details: z.string().nullable(),
     createdBy: TestScenarioCreatorSummarySchema,
     createdAt: z.string(),
@@ -90,6 +93,7 @@ const UpdateTestScenarioFieldSchema = z
 
 const updateTestScenarioFields = {
   title: z.string().min(1).regex(/\S/).optional(),
+  scenarioKey: z.string().trim().min(1).max(100).regex(/^[^\r\n]+$/).nullable().optional(),
   details: UpdateTestScenarioFieldSchema.optional(),
   objective: UpdateTestScenarioFieldSchema.optional(),
   preconditions: UpdateTestScenarioFieldSchema.optional(),

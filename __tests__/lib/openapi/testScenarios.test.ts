@@ -52,6 +52,10 @@ describe("structured Test Scenario OpenAPI contract", () => {
     expect(update.properties?.steps).toBeUndefined();
     expect(update.additionalProperties).toBe(false);
     expect(summary.properties?.contentMd).toBeUndefined();
+    expect(scenario.properties?.scenarioKey).toBeDefined();
+    expect(summary.properties?.scenarioKey).toBeDefined();
+    expect(create.properties?.scenarioKey).toBeDefined();
+    expect(update.properties?.scenarioKey).toBeDefined();
     expect(summary.properties?.steps).toBeUndefined();
   });
 

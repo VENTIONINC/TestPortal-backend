@@ -240,6 +240,7 @@ model TestScenario {
   createdAt             DateTime           @default(now())
   updatedAt             DateTime           @updatedAt
   title                 String
+  scenarioKey           String?            @db.VarChar(100)
   details               String?            @db.Text
   objective             String?            @db.Text
   preconditions         String?            @db.Text
@@ -292,6 +293,8 @@ model ManualTestRun {
   projectId            String              @db.Uuid
   testScenarioId       String?             @db.Uuid
   sourceTestScenarioId String              @db.Uuid
+  runKey               String?             @db.VarChar(100)
+  sourceScenarioKey    String?             @db.VarChar(100)
   executedById         String?             @db.Uuid
   status               ManualTestRunStatus @default(in_progress)
   startedAt            DateTime            @default(now())
@@ -313,6 +316,7 @@ model ManualTestRun {
 
   @@index([projectId, startedAt, id])
   @@index([projectId, sourceTestScenarioId, startedAt, id])
+  @@index([projectId, sourceScenarioKey, startedAt, id])
   @@index([executedById])
 }
 

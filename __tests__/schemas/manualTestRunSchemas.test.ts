@@ -20,6 +20,21 @@ describe("manual test run request schemas", () => {
     });
   });
 
+  it("accepts editable run labels and exact source-label filters", () => {
+    expect(manualTestRunStartSchema.parse({ runKey: " Review " })).toEqual({ runKey: "Review" });
+    expect(manualTestRunUpdateSchema.parse({ runKey: null })).toEqual({ runKey: null });
+    expect(manualTestRunHistoryQuerySchema.parse({ projectId, sourceScenarioKey: " R1 " }).sourceScenarioKey).toBe("R1");
+    for (const runKey of ["  ", "R1\nR2", "x".repeat(101)]) {
+      expect(manualTestRunStartSchema.safeParse({ runKey }).success).toBe(false);
+      expect(manualTestRunUpdateSchema.safeParse({ runKey }).success).toBe(false);
+    }
+    for (const sourceScenarioKey of [" ", "R1\nR2", "x".repeat(101), ["R1", "R2"]]) {
+      expect(manualTestRunHistoryQuerySchema.safeParse({ projectId, sourceScenarioKey }).success).toBe(false);
+    }
+    expect(manualTestRunStartSchema.safeParse({ sourceScenarioKey: "R1" }).success).toBe(false);
+    expect(manualTestRunUpdateSchema.safeParse({ sourceScenarioKey: "R1" }).success).toBe(false);
+  });
+
   it("rejects client-owned identity, snapshot, and unknown fields", () => {
     expect(
       manualTestRunStartSchema.safeParse({ executedById: projectId }).success,

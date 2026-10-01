@@ -113,6 +113,7 @@ const RelatedTestScenarioSummarySchema = z
   .object({
     id: z.string().uuid(),
     title: z.string(),
+    scenarioKey: z.string().max(100).nullable(),
     details: z.string().nullable(),
     contentMd: z
       .string()

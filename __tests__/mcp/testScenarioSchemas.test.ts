@@ -30,6 +30,8 @@ describe("structured Test Scenario MCP schemas", () => {
     expect(updateTestScenarioSchema.safeParse({ scenarioId, projectId }).success).toBe(false);
     expect(updateTestScenarioSchema.safeParse({ scenarioId, projectId, contentMd: "# forbidden" }).success).toBe(false);
     expect(updateTestScenarioSchema.safeParse({ scenarioId, projectId, steps: [] }).success).toBe(false);
+    expect(updateTestScenarioSchema.parse({ scenarioId, projectId, scenarioKey: " R2 " }).scenarioKey).toBe("R2");
+    expect(updateTestScenarioSchema.safeParse({ scenarioId, projectId, scenarioKey: "R1\nR2" }).success).toBe(false);
   });
 
   it("rejects invalid identifiers, pagination, and obsolete creator inputs", () => {

@@ -58,6 +58,7 @@ const scenario: TestScenario = {
   projectId: "22222222-2222-2222-2222-222222222222",
   createdById: "33333333-3333-3333-3333-333333333333",
   title: "Login",
+  scenarioKey: null,
   details: null,
   objective: "Verify login",
   preconditions: null,
@@ -154,6 +155,28 @@ describe("testScenarioModel", () => {
       data: { notes: "Updated" },
     });
     expect(result?.contentMdHash).toHaveLength(64);
+  });
+
+  it("updates only the key without regenerating the Markdown projection", async () => {
+    const result = await testScenarioModel.update(
+      scenario.id,
+      scenario.projectId,
+      { scenarioKey: "R2" },
+    );
+    expect(scenarioUpdateMock).toHaveBeenCalledTimes(1);
+    expect(scenarioUpdateMock).toHaveBeenCalledWith({
+      where: { id: scenario.id },
+      data: { scenarioKey: "R2" },
+    });
+    expect(result?.contentMd).toBe(scenario.contentMd);
+    expect(result?.contentMdHash).toBe(scenario.contentMdHash);
+    expect(result?.contentMdFormatVersion).toBe(scenario.contentMdFormatVersion);
+  });
+
+  it("does not update a scenario key outside the requested project", async () => {
+    queryRawMock.mockResolvedValueOnce([]);
+    await expect(testScenarioModel.update(scenario.id, "99999999-9999-4999-8999-999999999999", { scenarioKey: "R2" })).resolves.toBeNull();
+    expect(scenarioUpdateMock).not.toHaveBeenCalled();
   });
 
   it("rejects stale reorder membership without changing steps", async () => {

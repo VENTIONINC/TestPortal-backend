@@ -93,16 +93,16 @@ describe("testScenarioSpecLinkModel", () => {
 
   it("lists lightweight same-project scenarios in deterministic order", async () => {
     findManyMock.mockResolvedValueOnce([
-      { testScenario: { id: "scenario-new", title: "New", details: null, contentMd: "# New\n" } },
-      { testScenario: { id: "scenario-old", title: "Old", details: "Details", contentMd: "# Old\n" } },
-      { testScenario: { id: "scenario-new", title: "New", details: null, contentMd: "# New\n" } },
+      { testScenario: { id: "scenario-new", title: "New", scenarioKey: null, details: null, contentMd: "# New\n" } },
+      { testScenario: { id: "scenario-old", title: "Old", scenarioKey: null, details: "Details", contentMd: "# Old\n" } },
+      { testScenario: { id: "scenario-new", title: "New", scenarioKey: null, details: null, contentMd: "# New\n" } },
     ]);
 
     await expect(
       testScenarioSpecLinkModel.findLinkedTestScenarios("spec-1", "project-1"),
     ).resolves.toEqual([
-      { id: "scenario-new", title: "New", details: null, contentMd: "# New\n" },
-      { id: "scenario-old", title: "Old", details: "Details", contentMd: "# Old\n" },
+      { id: "scenario-new", title: "New", scenarioKey: null, details: null, contentMd: "# New\n" },
+      { id: "scenario-old", title: "Old", scenarioKey: null, details: "Details", contentMd: "# Old\n" },
     ]);
 
     expect(findManyMock).toHaveBeenCalledWith({
@@ -116,6 +116,7 @@ describe("testScenarioSpecLinkModel", () => {
           select: {
             id: true,
             title: true,
+            scenarioKey: true,
             details: true,
             contentMd: true,
           },
