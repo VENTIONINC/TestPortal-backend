@@ -1,5 +1,7 @@
 # Tasks
 
+The completed tasks below record the earlier implementation. Section 5 tracks the agreed shipped-configuration revision; those tasks remain pending until implementation and verification are complete.
+
 ## 1. Configuration extraction
 
 - [x] 1.1 Add a small configuration module with versioned Zod schema, JSON loader, operation mappings, and legacy defaults; verify malformed files, unknown fields, invalid values/references, path resolution, and all four exact defaults with focused Jest tests.
@@ -23,4 +25,15 @@
 
 - [x] 4.1 Update environment/deployment documentation and minimally package credential-free examples in Docker; verify documented paths exist in the runtime image and configuration files validate.
 - [x] 4.2 Run focused config/service/evaluation tests followed by `npm run type-check`, `npm run lint`, `npm test`, and `npm run build`; verify required checks pass and new supported files carry license headers.
-- [x] 4.3 Run `openspec validate migrate-openai-to-server-ai-config --strict`; verify artifacts consistently describe configuration extraction and no implementation task is marked complete after reset.
+- [x] 4.3 Run `openspec validate migrate-openai-to-server-ai-config --strict`; verify artifacts consistently describe configuration extraction and implementation task status reflects the current implementation.
+
+
+## 5. Required shipped configuration revision
+
+- [ ] 5.1 Promote the production configuration to `config/ai/server.json`; select it for unset/blank `AI_CONFIG_PATH`, and keep evaluation selection independent through its shipped baseline. Resolve bundled files from the application root in development and built runtime; verify custom relative paths still resolve from cwd.
+- [ ] 5.2 Remove hardcoded production/evaluation generation defaults and legacy cloning/source metadata. Resolve settings only from the selected file plus validated evaluation runner overrides; custom files replace shipped files without merging. Preserve evaluation cache behavior and existing service invocation/error handling.
+- [ ] 5.3 Require `maxOutputTokens` and `maxRetries` for every operation in runtime validation and editor JSON Schema; update examples accordingly. Leave omitted temperature, reasoning, and timeout absent; verify model compatibility and required-field errors.
+- [ ] 5.4 Require production credentials for shipped and custom files before accepting requests. Verify missing/unreadable/invalid selected files and missing credentials fail initialization without another file or hardcoded fallback.
+- [ ] 5.5 Update configuration/deployment/environment documentation and evaluation reporting metadata for shipped versus custom sources. Verify Docker includes the shipped production file and independent evaluation baseline, and automatically selects the production file without a path override.
+- [ ] 5.6 Add focused regression coverage for unset/blank paths, bundled paths independent of cwd, custom replacement, required settings, omitted optional settings, evaluation override precedence/isolation, selected-file failures, credential failures, and preserved dashboard error/timeout fallback.
+- [ ] 5.7 Run focused tests, `npm run type-check`, `npm run lint`, `npm test`, and `npm run build`; run `openspec validate migrate-openai-to-server-ai-config --strict` and confirm artifacts and implementation match the revised flow.

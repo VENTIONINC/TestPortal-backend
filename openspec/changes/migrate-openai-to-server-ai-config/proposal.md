@@ -6,11 +6,11 @@ AI services hardcode OpenAI clients and model choices despite having different g
 
 ## What Changes
 
-- Add versioned JSON configuration selected by `AI_CONFIG_PATH`, with named provider/model/reasoning profiles and mappings for the four current AI operations.
+- Add required, shipped versioned JSON configuration, optionally replaced by a custom file selected through `AI_CONFIG_PATH`, with named provider/model/reasoning profiles and mappings for the four current AI operations.
 - Keep credentials in environment variables and load configuration once before the server accepts requests.
 - Extract a small configuration loader and operation-settings resolver. Existing services keep their direct `ChatOpenAI` calls, prompts, structured-output handling, and failure behavior.
 - Validate configuration structure, references, model capabilities, and explicitly configured parameters; publish a matching JSON Schema for editor support.
-- Preserve legacy operation settings when no configuration file is supplied, including deployments without AI credentials. Explicit configuration errors fail startup rather than falling back.
+- Load the shipped configuration when no nonempty custom path is supplied. Custom files replace it entirely; neither source falls back to hardcoded settings. Missing or invalid files and missing credentials fail startup.
 - Give prompt evaluations separate versioned configuration, shared configuration validation, and effective configuration metadata without inheriting production settings.
 - Document runtime file availability, restart requirements, and configuration usage.
 
@@ -18,8 +18,8 @@ AI services hardcode OpenAI clients and model choices despite having different g
 
 ### New Capabilities
 
-- `server-ai-configuration`: Validated, server-wide model profiles, operation settings, compatibility defaults, and OpenAI operation settings.
-- `ai-evaluation-configuration`: Independent evaluation profiles, legacy evaluation defaults, and effective configuration metadata.
+- `server-ai-configuration`: Validated, server-wide model profiles, operation settings, shipped baseline settings, and OpenAI operation settings.
+- `ai-evaluation-configuration`: Independent evaluation profiles, file-owned evaluation baseline settings, and effective configuration metadata.
 
 ### Modified Capabilities
 
@@ -28,6 +28,6 @@ None. Existing specifications do not describe AI provider configuration.
 ## Impact
 
 - Affects startup/configuration, `testAnalysisService`, `errorFormatterService`, `insightsService`, the two prompt evaluation runners, and their tests.
-- Adds configuration examples, JSON Schema, and environment/deployment documentation; ensures documented sample configuration is available in the production image.
+- Adds configuration examples, JSON Schema, and environment/deployment documentation; ensures the required shipped configuration is available and selected automatically in the production image.
 - Keeps the installed `@langchain/openai` integration and introduces no provider framework; no database migration or REST/MCP contract change is intended.
 - Anthropic, Azure OpenAI, AWS Bedrock, OpenRouter, user/project settings, hot reload, and new AI features remain follow-up work.

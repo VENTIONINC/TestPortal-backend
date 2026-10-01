@@ -2,12 +2,12 @@
 
 ## Purpose
 
-Allow server operators to configure models and generation settings for each AI operation while preserving legacy deployment behavior and response contracts.
+Allow server operators to configure models and generation settings for each AI operation using required shipped configuration while preserving response contracts.
 
 ## ADDED Requirements
 
 ### Requirement: Server configuration profiles and operation mappings
-The system SHALL accept a version 1 JSON configuration selected by `AI_CONFIG_PATH`, containing named OpenAI model profiles and mappings for stored-results analysis, error formatting, solution suggestions, and dashboard insights. Credentials SHALL remain in environment variables. Configuration SHALL be server-wide and SHALL NOT be selectable through user or request data.
+The system SHALL accept a version 1 JSON configuration loaded from the shipped `config/ai/server.json` unless a nonempty `AI_CONFIG_PATH` selects a complete custom replacement, containing named OpenAI model profiles and mappings for stored-results analysis, error formatting, solution suggestions, and dashboard insights. Credentials SHALL remain in environment variables. Each operation mapping SHALL require a profile reference, `maxOutputTokens`, and `maxRetries`. Optional temperature, reasoning, and timeout SHALL remain absent when omitted, without injecting application defaults. Custom configuration SHALL NOT merge with the shipped file. Configuration SHALL be server-wide and SHALL NOT be selectable through user or request data.
 
 #### Scenario: Operations select different models
 - **WHEN** analysis and formatting reference different valid profiles
@@ -18,33 +18,41 @@ The system SHALL accept a version 1 JSON configuration selected by `AI_CONFIG_PA
 - **THEN** each operation SHALL use its own limit without changing the shared model or reasoning configuration
 
 ### Requirement: Configuration validation and initialization
-The system SHALL load and validate supplied configuration before accepting requests and SHALL reject invalid JSON, unsupported versions/providers/models, unknown fields, invalid numeric settings, and unresolved profile references. Relative paths SHALL resolve against the working directory. Configuration SHALL remain fixed until restart.
+The system SHALL load and validate the selected shipped or custom configuration before accepting requests and SHALL reject invalid JSON, unsupported versions/providers/models, unknown fields, invalid numeric settings, and unresolved profile references. Custom relative paths SHALL resolve against the working directory. Bundled paths SHALL resolve against the application root in development and built runtime, independently of the working directory. Configuration SHALL remain fixed until restart.
 
 #### Scenario: Invalid explicit configuration
 - **WHEN** a supplied configuration is unreadable or contains an invalid profile reference
-- **THEN** startup SHALL fail with a field/path-specific error and SHALL NOT use legacy defaults instead
+- **THEN** startup SHALL fail with a field/path-specific error and SHALL NOT use the shipped file or hardcoded settings instead
 
 #### Scenario: File changes after startup
 - **WHEN** an operator edits the file after successful initialization
 - **THEN** running operations SHALL continue using the initialized configuration until restart
 
-### Requirement: Legacy defaults and credentials
-When no nonempty configuration path is supplied, the system SHALL retain OpenAI `gpt-4.1-mini`, no reasoning override, and existing operation-specific temperatures, output limits, retries, and insights deadline. Explicit file configuration SHALL require the selected provider's credentials at startup. Legacy startup SHALL remain possible without AI credentials, with credentials checked before any AI invocation.
+### Requirement: Shipped configuration and startup credentials
+When `AI_CONFIG_PATH` is unset or blank, the system SHALL load the shipped production file. That file SHALL contain the baseline model and generation settings; the loader and resolver SHALL NOT duplicate these settings as hardcoded defaults. Both shipped and custom configurations SHALL require the selected provider's credentials at startup.
 
-#### Scenario: Existing deployment with no AI key
-- **WHEN** the server starts without `AI_CONFIG_PATH` or `OPENAI_API_KEY`
-- **THEN** startup SHALL succeed and any attempted AI invocation SHALL fail clearly through its existing error or fallback behavior before sending a provider request
+#### Scenario: Shipped production configuration
+- **WHEN** the server starts with an unset or blank `AI_CONFIG_PATH` and valid required credentials
+- **THEN** it SHALL load the shipped file containing OpenAI `gpt-4.1-mini`, no reasoning override, temperatures 0, 0.7, 0.3, and 0.2; output limits 4000, 500, 700, and 400; and retries 2, 2, 2, and 1 for analysis, formatting, suggestion, and insights respectively
 
-#### Scenario: Explicit configuration lacks credentials
-- **WHEN** a valid file is supplied without the required `OPENAI_API_KEY`
+#### Scenario: Custom replacement configuration
+- **WHEN** a nonempty `AI_CONFIG_PATH` selects a valid complete file
+- **THEN** all operations SHALL use that file without inheriting settings from the shipped file
+
+#### Scenario: Shipped file unavailable or invalid
+- **WHEN** no custom path is supplied and the shipped file is missing, unreadable, or invalid
+- **THEN** startup SHALL fail with a clear file or field error without using hardcoded settings
+
+#### Scenario: Required generation settings omitted
+- **WHEN** either selected file omits an operation's `maxOutputTokens` or `maxRetries`
+- **THEN** startup SHALL fail with a field-specific error without inheriting baseline values
+
+#### Scenario: Configuration lacks credentials
+- **WHEN** either a shipped or custom configuration is selected without the required `OPENAI_API_KEY`
 - **THEN** startup SHALL fail with an actionable credential-name error without revealing secrets
 
-#### Scenario: Legacy generation settings
-- **WHEN** no configuration file is supplied
-- **THEN** analysis, formatting, suggestion, and insights SHALL retain temperatures 0, 0.7, 0.3, and 0.2; output limits 4000, 500, 700, and 400; retries 2, 2, 2, and 1; and the insights eight-second deadline
-
 ### Requirement: Model-aware parameter validation
-The system SHALL validate supported model identifiers, reasoning effort values, generation bounds, and API compatibility. Explicitly unsupported settings SHALL be rejected. Inherited temperature defaults SHALL be omitted when prohibited by the selected model/reasoning combination. Documented reasoning generation limits SHALL account for both reasoning and final response tokens.
+The system SHALL validate supported model identifiers, reasoning effort values, generation bounds, and API compatibility. Explicitly unsupported settings SHALL be rejected. Omitted temperature SHALL remain absent in the effective settings for every supported model. Documented reasoning generation limits SHALL account for both reasoning and final response tokens.
 
 #### Scenario: Reasoning requested on a non-reasoning model
 - **WHEN** a profile configures reasoning effort for `gpt-4.1-mini`
@@ -74,11 +82,11 @@ All four operations SHALL honor their resolved configuration and preserve their 
 - **THEN** the preliminary analysis SHALL use the analysis mapping and the suggestion SHALL use the suggestion mapping
 
 ### Requirement: Configuration documentation and secret protection
-The system SHALL provide editor JSON Schema and credential-free examples matching its versioned configuration structure. Deployment documentation SHALL explain file provisioning, defaults, credentials, supported model combinations, and restart behavior. Configuration errors and metadata SHALL NOT disclose credentials or entire configuration/environment payloads.
+The system SHALL provide editor JSON Schema and required credential-free shipped configuration and examples matching its versioned configuration structure. Deployment documentation SHALL explain file provisioning, defaults, credentials, supported model combinations, and restart behavior. Configuration errors and metadata SHALL NOT disclose credentials or entire configuration/environment payloads.
 
-#### Scenario: Example file used in production image
-- **WHEN** an operator follows the documented image example and selects its bundled config path
-- **THEN** the file SHALL exist in the runtime image and be valid under the published schema
+#### Scenario: Shipped file used in production image
+- **WHEN** the production image starts without a custom config path and with required credentials
+- **THEN** the shipped production file SHALL exist in the runtime image, validate under the published schema, and be selected automatically
 
 #### Scenario: Secret or unknown field supplied in JSON
 - **WHEN** a JSON profile contains an API key field or another unknown field
