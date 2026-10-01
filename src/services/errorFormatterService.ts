@@ -36,8 +36,10 @@ export const errorFormatterService = {
       logger.info("Formatting error message with LangChain");
 
       const model = new ChatOpenAI({
-        model: "gpt-4.1-mini",
-        temperature: 0.7,
+        model: "gpt-6-luna",
+        useResponsesApi: true,
+        // LangChain 1.4.5 drops typed reasoning settings for GPT-6 models.
+        modelKwargs: { reasoning: { effort: "none" } },
         maxTokens: 500,
         maxRetries: 2,
       });

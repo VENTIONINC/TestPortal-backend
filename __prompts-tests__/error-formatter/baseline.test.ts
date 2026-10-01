@@ -31,7 +31,18 @@ jest.mock("@langchain/openai", () => {
     ...actual,
     usageEntries,
     ChatOpenAI: jest.fn((options: ConstructorParameters<typeof actual.ChatOpenAI>[0]) => {
-      if (process.env.ERROR_FORMATTER_MODEL !== "gpt-5.6-luna") {
+      if (process.env.ERROR_FORMATTER_MODEL === "gpt-4.1-mini") {
+        const baselineOptions = { ...options };
+        delete baselineOptions.modelKwargs;
+        return new actual.ChatOpenAI({
+          ...baselineOptions,
+          callbacks,
+          model: "gpt-4.1-mini",
+          useResponsesApi: false,
+          temperature: 0.7,
+        });
+      }
+      if (process.env.ERROR_FORMATTER_MODEL !== "gpt-6-luna") {
         return new actual.ChatOpenAI({ ...options, callbacks });
       }
       const lunaOptions = { ...options };
@@ -39,8 +50,12 @@ jest.mock("@langchain/openai", () => {
       return new actual.ChatOpenAI({
         ...lunaOptions,
         callbacks,
-        model: "gpt-5.6-luna",
-        reasoning: { effort: process.env.ERROR_FORMATTER_REASONING === "low" ? "low" : "none" },
+        model: "gpt-6-luna",
+        useResponsesApi: true,
+        // LangChain 1.4.5 drops typed reasoning settings for GPT-6 models.
+        modelKwargs: {
+          reasoning: { effort: process.env.ERROR_FORMATTER_REASONING === "low" ? "low" : "none" },
+        },
       });
     }),
   };
@@ -128,12 +143,12 @@ const cases: Case[] = [
   },
 ];
 
-const evaluationModel = process.env.ERROR_FORMATTER_MODEL ?? "gpt-4.1-mini";
+const evaluationModel = process.env.ERROR_FORMATTER_MODEL ?? "gpt-6-luna";
 const reasoningEffort = process.env.ERROR_FORMATTER_REASONING ?? "none";
 if (!["none", "low"].includes(reasoningEffort)) {
   throw new Error(`Unsupported ERROR_FORMATTER_REASONING: ${reasoningEffort}`);
 }
-if (!["gpt-4.1-mini", "gpt-5.6-luna"].includes(evaluationModel)) {
+if (!["gpt-4.1-mini", "gpt-6-luna"].includes(evaluationModel)) {
   throw new Error(`Unsupported ERROR_FORMATTER_MODEL: ${evaluationModel}`);
 }
 
@@ -156,9 +171,9 @@ describe(`error formatter: ${evaluationModel}`, () => {
         {
           model: evaluationModel,
           promptVersion: "v1.1.0",
-          ...(evaluationModel === "gpt-5.6-luna"
-            ? { reasoningEffort }
-            : { temperature: 0.7 }),
+          ...(evaluationModel === "gpt-6-luna"
+            ? { reasoningEffort, api: "responses" }
+            : { temperature: 0.7, api: "chat-completions" }),
           maxTokens: 500,
           usageEntries,
           // These checks cover factual anchors, not a complete semantic quality judgment.

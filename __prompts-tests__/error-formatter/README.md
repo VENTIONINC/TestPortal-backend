@@ -6,17 +6,17 @@ Run the current production formatter against six fixed synthetic cases:
 npx jest --config jest.prompts.config.ts --selectProjects error-formatter --runInBand
 ```
 
-Requires `OPENAI_API_KEY` in the environment or `.env` and makes six paid API calls (plus any provider retries). The production service currently uses GPT-4.1 mini, temperature 0.7 and a 500-token limit. No database is used. No dataset generation is needed.
+Requires `OPENAI_API_KEY` in the environment or `.env` and makes six paid API calls (plus any provider retries). The production formatter uses GPT-6 Luna through the Responses API, reasoning `none`, no explicit temperature, and a 500-token limit. No database is used. No dataset generation is needed.
 
-To compare Luna using the same production method, prompts, cases and checks:
+To compare the previous model using the same production method, prompts, cases and checks:
 
 ```bash
-ERROR_FORMATTER_MODEL=gpt-5.6-luna npx jest --config jest.prompts.config.ts --selectProjects error-formatter --runInBand
+ERROR_FORMATTER_MODEL=gpt-4.1-mini npx jest --config jest.prompts.config.ts --selectProjects error-formatter --runInBand
 ```
 
-The test-only constructor wrapper selects the real Luna client with reasoning `none` and no explicit temperature. The 500-token limit is unchanged. Production code is unaffected; reports record the selected settings.
+The test-only constructor wrapper selects GPT-4.1 Mini through Chat Completions with temperature 0.7 for this comparison. The 500-token limit is unchanged. Reports record the selected settings. Production GPT-6 reasoning is passed through `modelKwargs` because LangChain 1.4.5 does not recognize GPT-6 reasoning models.
 
-Add `ERROR_FORMATTER_REASONING=low` to the Luna command to evaluate low reasoning with the same 500-token limit. Supported efforts are `none` (default) and `low`.
+Set `ERROR_FORMATTER_MODEL=gpt-6-luna ERROR_FORMATTER_REASONING=low` to evaluate low reasoning with the same 500-token limit. Supported efforts are `none` (production default) and `low`.
 
 Reports also capture actual LangChain/OpenAI `usage_metadata` through an observation-only callback, both per case (`usage`) and per run (`usageEntries`). Input tokens include cached input; output tokens include reasoning tokens. Do not add either subset again when calculating totals. Missing usage fails a test instead of being treated as zero. These are reported completed-call usage figures, not an account invoice.
 
