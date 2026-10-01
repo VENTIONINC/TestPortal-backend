@@ -1,0 +1,85 @@
+__prompts-tests__/README.md
+  s_efb8127749afd1::t_148fc90b8cac39 41
+__prompts-tests__/error-solution/v1.0.0/regression.test.ts
+  s_efb8127749afd1::t_d734454c6f4a7b 8,20
+__prompts-tests__/error-solution/v1.0.0/smoke.test.ts
+  s_efb8127749afd1::t_91b888add45a03 8,20
+__prompts-tests__/stored-results-analysis/v1.1.0/regression.test.ts
+  s_efb8127749afd1::t_bf40af85274ff5 11,23
+__prompts-tests__/stored-results-analysis/v1.1.0/smoke.test.ts
+  s_efb8127749afd1::t_380878a819bf31 11,23
+__prompts-tests__/testEnv.ts
+  s_efb8127749afd1::t_c0822565d2f314 14-15
+__tests__/config/promptTestEnvironment.test.ts
+  s_efb8127749afd1::t_f531b58faa9880 1-58
+docs/AI_CONFIGURATION.md
+  s_efb8127749afd1::t_a0b31b83692c56 3,5,7,11,13,26-28
+jest.prompts.config.ts
+  s_efb8127749afd1::t_cf5e51f2d55d27 8,17
+openspec/changes/migrate-openai-to-server-ai-config/design.md
+  s_5d5858c618a472::t_bdf29c787c8fc3 65-66
+openspec/changes/migrate-openai-to-server-ai-config/proposal.md
+  s_5d5858c618a472::t_0222c97cee8575 15
+openspec/changes/migrate-openai-to-server-ai-config/specs/ai-evaluation-configuration/spec.md
+  s_5d5858c618a472::t_97c003c852f09a 57-63,65-68
+__prompts-tests__/error-solution/runners/error-solution.ts
+  s_76d04347131572::t_b3357412db42ab 100
+__prompts-tests__/error-solution/runners/types.ts
+  s_76d04347131572::t_ab359d76cfedf9 22
+__prompts-tests__/stored-results-analysis/runners/stored-results-analysis.ts
+  s_76d04347131572::t_f010623523b3af 182
+__prompts-tests__/stored-results-analysis/runners/types.ts
+  s_76d04347131572::t_db2f0b0ba84966 32
+__tests__/config/evaluationRunner.test.ts
+  s_76d04347131572::t_ef92709fd5d444 42-43,76,82-98
+__tests__/config/serverAiConfig.test.ts
+  s_76d04347131572::t_9ac61886f84344 34-36,52,54-57,61-90,98-101,113,115,123-126,146-149,167-169,171-174,177-197,202,220,223,229,237-240
+config/ai/server.example.json
+  s_76d04347131572::t_f907a49e0e8b5a 5,16-19
+config/ai/server.json
+  s_76d04347131572::t_4d8ada7a1699e3 1-16
+config/ai/server.schema.json
+  s_76d04347131572::t_ceb82b716d4430 45
+docs/DEPLOY_ECS.md
+  s_76d04347131572::t_46fe0d33d7f2d8 9
+docs/DOCKER.md
+  s_76d04347131572::t_556e6cf05627c8 7
+openspec/changes/migrate-openai-to-server-ai-config/tasks.md
+  s_efb8127749afd1::t_46680df93af95d 33-44
+src/config/serverAiConfig.ts
+  s_76d04347131572::t_efb08c3df9f7a9 4,23-24,52,93-101,103,151-156,195,198,223,230,245,247,285-286
+src/test-utils/testEnv.ts
+  s_76d04347131572::t_584d9284cb8f26 6
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.18",
+  "base_commit_sha": "7857e5d91c3b1b474de5c1be5d335f66a36aa10c",
+  "prompts": {},
+  "sessions": {
+    "s_5d5858c618a472": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a0f6ba-dafe-7423-ac4b-1a21bbf40c36",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Ihar Mikailau <ihar.mikailau@ventionteams.com>"
+    },
+    "s_76d04347131572": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a0f6a8-a285-7953-ad89-ac42fd90fc6d",
+        "model": "unknown"
+      },
+      "human_author": "Ihar Mikailau <ihar.mikailau@ventionteams.com>"
+    },
+    "s_efb8127749afd1": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a0f6bc-41a8-78e0-8918-6c534ec4aae0",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Ihar Mikailau <ihar.mikailau@ventionteams.com>"
+    }
+  }
+}

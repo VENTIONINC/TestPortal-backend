@@ -1,0 +1,155 @@
+__prompts-tests__/stored-results-analysis/reports/openai/regression/2026-09-29T11-50-10-288Z.json
+  s_2e74dbc965ef61::t_628752108575dc 1-884
+__prompts-tests__/stored-results-analysis/reports/openai/regression/latest.json
+  s_2e74dbc965ef61::t_775f9a3837e57c 1-884
+__tests__/services/manualTestRunService.test.ts
+  s_c7b4d8ba859be8::t_4a5126388a1f4b 130-141
+openspec/changes/add-editable-test-management-keys/.openspec.yaml
+  s_5c8c3111da6940::t_622e9ae9d09031 1-2
+prisma/migrations/20260917120600_add_editable_test_management_keys/migration.sql
+  s_5b21c2bd9dcbcb::t_c58e87e6f83727 1-9
+prisma/schema.prisma
+  s_5b21c2bd9dcbcb::t_27f87ba1bfe1fe 243,296-297,319
+src/types/manualTestRuns.ts
+  s_5b21c2bd9dcbcb::t_5815bdad875092 55-56,79-80,104,116,129
+src/types/testScenarios.ts
+  s_5b21c2bd9dcbcb::t_2af7e4d0ad1754 21,49,59,72,91
+.codex/skills/testportal-create-issue/SKILL.md
+  s_0869e86e8ab139::t_e1583a91d61c3d 1-56
+.codex/skills/testportal-create-issue/agents/openai.yaml
+  s_0869e86e8ab139::t_69295d21088caf 1-4
+__tests__/controllers/testScenarioController.test.ts
+  s_316297aaa4305f::t_498875c075c75a 53
+__tests__/lib/evaluationCost.test.ts
+  s_2e74dbc965ef61::t_489b01f53ddc65 1-55
+__tests__/lib/openapi/manualTestRuns.test.ts
+  s_316297aaa4305f::t_3de7a8e8610b00 50-51
+__tests__/lib/openapi/results.test.ts
+  s_316297aaa4305f::t_07c0608e433f58 66,71
+__tests__/lib/openapi/testScenarios.test.ts
+  s_316297aaa4305f::t_d1954fad105ae2 55-58
+__tests__/mcp/mcpTestScenarioHandler.test.ts
+  s_316297aaa4305f::t_5985a6c216cf1e 78
+__tests__/mcp/testScenarioMcpWorkflow.test.ts
+  s_316297aaa4305f::t_80c5a214feebc8 40,107,115,119-123
+__tests__/mcp/testScenarioSchemas.test.ts
+  s_316297aaa4305f::t_bcd7ceda94fa85 33-34
+__tests__/mcp/testScenarioTools.test.ts
+  s_316297aaa4305f::t_3e4f345f7b0681 42
+__tests__/models/manualTestRunModel.test.ts
+  s_316297aaa4305f::t_23702e887f4f19 93,124-125,144-176,202-216,251-347
+__tests__/models/testScenarioModel.test.ts
+  s_316297aaa4305f::t_00e115e38f3fbe 61,160-181
+__tests__/models/testScenarioSpecLinkModel.test.ts
+  s_316297aaa4305f::t_d128e40f9ce226 96-98,104-105,119
+__tests__/prisma/manualTestRunMigration.test.ts
+  s_316297aaa4305f::t_5ed51ec3cddd7e 14-16,48-59
+__tests__/schemas/manualTestRunSchemas.test.ts
+  s_316297aaa4305f::t_945730011afa0e 23-37
+__tests__/schemas/testScenarioSchemas.test.ts
+  s_316297aaa4305f::t_d3e8c28da7f652 54-62
+__tests__/services/resultService.jsonPayloads.test.ts
+  s_316297aaa4305f::t_71ca95a3b4b861 117-118,136,159
+__tests__/services/testScenarioService.test.ts
+  s_316297aaa4305f::t_bf0e37ffbc7ce2 49,93,137-171
+__tests__/test-scenarios/testScenarioWorkflow.test.ts
+  s_316297aaa4305f::t_a50f97ae53b161 39
+docs/API_DOCUMENTATION.md
+  s_316297aaa4305f::t_b8751db4413e4b 113,123-127,147-149,158,182,188-189,198-204,213-215
+openspec/changes/add-editable-test-management-keys/design.md
+  s_5c8c3111da6940::t_218154b76bbb95 1-65
+openspec/changes/add-editable-test-management-keys/proposal.md
+  s_5c8c3111da6940::t_2a4baffc3d86fb 1-28
+openspec/changes/add-editable-test-management-keys/specs/manual-test-run-execution/spec.md
+  s_5c8c3111da6940::t_97e9fe21ed179a 1-32
+openspec/changes/add-editable-test-management-keys/specs/test-management-key-labels/spec.md
+  s_5c8c3111da6940::t_98003d1a4e7eb0 1-117
+openspec/changes/add-editable-test-management-keys/tasks.md
+  s_316297aaa4305f::t_f1dca5fe43f8cd 1-32
+postman/docs/Manual_Test_Runs_API.md
+  s_316297aaa4305f::t_4619e5dfa84acd 8-13
+postman/docs/User_API.md
+  s_316297aaa4305f::t_3cd2d1b178e735 87,95,107
+src/controllers/manualTestRunController.ts
+  s_316297aaa4305f::t_3ecb8ca757f710 84-86
+src/lib/openapi/manualTestRuns.ts
+  s_316297aaa4305f::t_49ee3c16d34436 44-45,71-72,124,145,154,217,277
+src/lib/openapi/results.ts
+  s_316297aaa4305f::t_ab6502656cf391 116
+src/lib/openapi/testScenarios.ts
+  s_316297aaa4305f::t_30c01432d34b99 15,52,79,96
+src/mcp/schemas/testScenarioSchemas.ts
+  s_316297aaa4305f::t_bdd19662926058 35-42
+src/models/manualTestRunModel.ts
+  s_316297aaa4305f::t_b4846be2262455 26-27,67-68,181,208,261,289-290,370-372,424-434,448,456,523
+src/models/testScenarioModel.ts
+  s_316297aaa4305f::t_30fdd8274e2229 45,64,190,314,331-337
+src/models/testScenarioSpecLinkModel.ts
+  s_316297aaa4305f::t_f8c407d468fb31 90
+src/schemas/manualTestRunSchemas.ts
+  s_316297aaa4305f::t_3af180c1818692 10-13,68,98,121
+src/schemas/testManagementKeySchemas.ts
+  s_316297aaa4305f::t_296c94119ca657 1-20
+src/schemas/testScenarioSchemas.ts
+  s_316297aaa4305f::t_b229c55f2886a2 5,21,37
+src/services/manualTestRunService.ts
+  s_316297aaa4305f::t_84313d11efe68b 62-78,167,181,187-191,210,216,223,249-254,275,279,288,294
+src/services/testScenarioService.ts
+  s_316297aaa4305f::t_3abcafe385aaf2 24,65-76,155,243-244
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.18",
+  "base_commit_sha": "a8d7ae7225bec74a359cb7bf2516c44c0cc26e7f",
+  "prompts": {},
+  "sessions": {
+    "s_0869e86e8ab139": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a0c475-c895-7572-8bd7-e9f2e5feca83",
+        "model": "unknown"
+      },
+      "human_author": "Ihar Mikailau <ihar.mikailau@ventionteams.com>"
+    },
+    "s_2e74dbc965ef61": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a0ec85-7129-75d3-ac51-e6a952daa97d",
+        "model": "gpt-6-sol"
+      },
+      "human_author": "Ihar Mikailau <ihar.mikailau@ventionteams.com>"
+    },
+    "s_316297aaa4305f": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a0f2a8-83ef-7433-a97f-e8b849783bdf",
+        "model": "unknown"
+      },
+      "human_author": "Ihar Mikailau <ihar.mikailau@ventionteams.com>"
+    },
+    "s_5b21c2bd9dcbcb": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a0f292-492d-72c3-879e-1f9b0b63f4c3",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Ihar Mikailau <ihar.mikailau@ventionteams.com>"
+    },
+    "s_5c8c3111da6940": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a0f295-5852-71a1-913f-9f4143e99508",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Ihar Mikailau <ihar.mikailau@ventionteams.com>"
+    },
+    "s_c7b4d8ba859be8": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a0f2ad-a859-7831-8458-ac91865e9a24",
+        "model": "gpt-6-luna"
+      },
+      "human_author": "Ihar Mikailau <ihar.mikailau@ventionteams.com>"
+    }
+  }
+}
