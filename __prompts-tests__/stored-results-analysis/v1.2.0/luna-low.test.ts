@@ -16,7 +16,7 @@ const datasetPath = path.join(
 );
 const version = PROMPT_VERSIONS["v1.2.0"];
 
-describe("Prompt Evaluation - GPT-5.6 Luna low reasoning", () => {
+describe("Prompt Evaluation - GPT-6 Luna low reasoning", () => {
   jest.setTimeout(300_000);
 
   it("classifies the regression dataset", async () => {
@@ -26,7 +26,8 @@ describe("Prompt Evaluation - GPT-5.6 Luna low reasoning", () => {
     const result = await runEval({
       cases,
       version,
-      model: "gpt-5.6-luna",
+      model: "gpt-6-luna",
+      useResponsesApi: true,
       reasoningEffort: "low",
     });
     const byId = new Map(
@@ -61,7 +62,7 @@ describe("Prompt Evaluation - GPT-5.6 Luna low reasoning", () => {
     });
 
     console.log(
-      `GPT-5.6 Luna low: ${correctCount}/${cases.length}, ${result.durationMs}ms, usage=${JSON.stringify(result.usage)}`,
+      `GPT-6 Luna low: ${correctCount}/${cases.length}, ${result.durationMs}ms, usage=${JSON.stringify(result.usage)}`,
     );
     console.log(`OpenAI report: ${reportPaths.archivedPath}`);
 

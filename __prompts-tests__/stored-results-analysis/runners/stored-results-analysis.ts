@@ -34,6 +34,7 @@ export interface RunEvalOptions {
   temperature?: number;
   batchSize?: number;
   reasoningEffort?: "low" | "medium" | "high";
+  useResponsesApi?: boolean;
 }
 
 /**
@@ -49,17 +50,22 @@ export async function runEval(options: RunEvalOptions): Promise<EvalResult> {
     temperature = 0.1,
     batchSize = 25,
     reasoningEffort,
+    useResponsesApi = false,
   } = options;
   const startedAt = Date.now();
 
   // Setup LLM with structured output using version-specific schema
   const llm = new ChatOpenAI({
     model,
+    useResponsesApi,
     maxTokens: 4000,
     maxRetries: 2,
     cache: false,
     ...(reasoningEffort
-      ? { reasoning: { effort: reasoningEffort } }
+      ? useResponsesApi
+        // Preserve reasoning for models not recognized by LangChain 1.4.5.
+        ? { modelKwargs: { reasoning: { effort: reasoningEffort } } }
+        : { reasoning: { effort: reasoningEffort } }
       : { temperature }),
   });
 

@@ -115,8 +115,10 @@ export const testAnalysisService = {
       const userPrompt = JSON.stringify(essentialData);
 
       const model = new ChatOpenAI({
-        model: "gpt-5.6-luna",
-        reasoning: { effort: "low" },
+        model: "gpt-6-luna",
+        useResponsesApi: true,
+        // LangChain 1.4.5 drops typed reasoning settings for GPT-6 models.
+        modelKwargs: { reasoning: { effort: "low" } },
         maxTokens: 4000,
         maxRetries: 2,
       });
