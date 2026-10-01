@@ -1,0 +1,23 @@
+__prompts-tests__/stored-results-analysis/runners/stored-results-analysis.ts
+  s_290bda026f0186::t_15985e19129513 37,53,60,65-68
+src/services/testAnalysisService.ts
+  s_290bda026f0186::t_0997f0212cba3f 118-121
+__prompts-tests__/stored-results-analysis/v1.2.0/luna-low.test.ts
+  s_290bda026f0186::t_8fd53d0810407a 19,29-30,65
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.18",
+  "base_commit_sha": "4df2d3d94f9ecb8fa4444dbb60250e311fd75544",
+  "prompts": {},
+  "sessions": {
+    "s_290bda026f0186": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a0f8d7-8a0f-70a0-b90f-33263d62c484",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Igor <hirzhek@gmail.com>"
+    }
+  }
+}
