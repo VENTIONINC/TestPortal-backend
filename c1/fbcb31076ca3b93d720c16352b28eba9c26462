@@ -1,0 +1,23 @@
+__prompts-tests__/error-formatter/README.md
+  s_290bda026f0186::t_13974c1baf35da 9,11,14,17,19
+__prompts-tests__/error-formatter/baseline.test.ts
+  s_290bda026f0186::t_6cc3c4c3a02c84 34-45,53-58,146,151,174-176
+src/services/errorFormatterService.ts
+  s_290bda026f0186::t_1fb52d6eb80fcd 39-42
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.18",
+  "base_commit_sha": "c1fbcb31076ca3b93d720c16352b28eba9c26462",
+  "prompts": {},
+  "sessions": {
+    "s_290bda026f0186": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a0f8d7-8a0f-70a0-b90f-33263d62c484",
+        "model": "unknown"
+      },
+      "human_author": "Igor <hirzhek@gmail.com>"
+    }
+  }
+}
