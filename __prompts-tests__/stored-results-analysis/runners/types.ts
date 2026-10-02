@@ -6,6 +6,8 @@
  */
 
 import type { TestAnalysisResponse } from "@/schemas/testAnalysisSchemas";
+import type { PromptModelSettings } from "@/config/promptModels";
+import type { EvaluationTokenUsage } from "./evaluation-report";
 
 /**
  * Represents a single validation failure
@@ -21,4 +23,9 @@ export interface EvalFailure {
 export interface EvalResult {
   response: TestAnalysisResponse;
   failures: EvalFailure[];
+  model: string;
+  settings: PromptModelSettings;
+  requestCount: number;
+  durationMs: number;
+  usage: EvaluationTokenUsage | null;
 }
