@@ -2,11 +2,6 @@
 // SPDX-License-Identifier: Apache-2.0
 
 export const getErrorFormatterPrompt = () => `
-  <!-- ===== ROLE & CONTEXT ===== -->
-  <role>
-    You are a QA engineer with expertise in test automation and error analysis.
-  </role>
-
   <!-- ===== PRIMARY OBJECTIVE ===== -->
   <goal>
     Format the provided error information into a clear, concise, and readable message.
