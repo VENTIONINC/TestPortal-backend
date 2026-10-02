@@ -21,7 +21,11 @@
     "studio": "npx prisma studio",
     "migrate": "npx prisma migrate dev --name commit",
     "inspector": "npx @modelcontextprotocol/inspector --web --transport http --server-url http://localhost:3001/api/v2/mcp",
-    "test": "jest --config jest.config.ts"
+    "test": "jest --config jest.main.config.ts",
+    "test:unit": "jest --config jest.main.config.ts --selectProjects unit",
+    "test:contract": "jest --config jest.main.config.ts --selectProjects contract",
+    "test:integration": "node scripts/run-integration-tests.mjs",
+    "test:e2e": "jest --config jest.main.config.ts --selectProjects e2e --runInBand --passWithNoTests"
   },
   "author": "",
   "license": "Apache-2.0",

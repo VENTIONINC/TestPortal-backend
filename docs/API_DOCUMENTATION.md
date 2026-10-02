@@ -138,8 +138,9 @@ default: `createdAt DESC, id DESC`), `recently_updated` (`updatedAt DESC,
 id DESC`), and `title_asc` (`title ASC, id ASC` under the database collation).
 All filters apply before pagination, so `total` and `totalPages` describe the
 matching set; a client resolving a `Me` control must send the authenticated
-user's UUID. Search by `scenarioKey` remains deferred until readable keys are
-introduced.
+user's UUID. Search is a case-insensitive literal substring over `title` or
+`scenarioKey`; `%`, `_`, and backslash are literal characters. Details, other
+authored fields, and generated Markdown are not searched.
 
 `POST /api/v2/test-scenarios` and `PATCH /api/v2/test-scenarios/{scenarioId}`
 return the complete scenario detail. Step edits are independent operations and

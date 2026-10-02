@@ -11,7 +11,7 @@ import { testScenarioIntegrationService } from "@/services/testScenarioIntegrati
 import type { RelatedTestScenarioSummary } from "@/types/testScenarios";
 
 // Run explicitly against an isolated PostgreSQL database with:
-// RUN_POSTGRES_INTEGRATION_TESTS=1 DATABASE_URL="..." npm test -- --runInBand __tests__/test-scenarios/resultScenarioDetailPostgresIntegration.test.ts
+// TEST_DATABASE_URL="..." npm run test:integration -- --runTestsByPath __tests__/test-scenarios/resultScenarioDetailPostgresIntegration.test.ts
 const postgresIntegrationEnabled =
   process.env.RUN_POSTGRES_INTEGRATION_TESTS === "1";
 const describePostgres = postgresIntegrationEnabled ? describe : describe.skip;

@@ -18,7 +18,7 @@ export const listTestScenariosSchema = z
       .string()
       .optional()
       .describe(
-        "Optional case-insensitive literal substring matched against title only",
+        "Optional case-insensitive literal substring matched against title or scenarioKey; surrounding whitespace is trimmed by the service",
       ),
     createdById: uuid()
       .optional()
@@ -28,7 +28,9 @@ export const listTestScenariosSchema = z
     sort: z
       .enum(TEST_SCENARIO_SORT_VALUES)
       .default("recently_created")
-      .describe("Ordering: recently_created, recently_updated, or title_asc"),
+      .describe(
+        "Ordering: recently_created (default, createdAt DESC then id DESC), recently_updated (updatedAt DESC then id DESC), or title_asc (title ASC then id ASC under database collation)",
+      ),
   })
   .strict() satisfies MCPToolSchema;
 

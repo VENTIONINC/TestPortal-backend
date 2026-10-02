@@ -73,10 +73,20 @@ function summaryWhere(
     ...(params.createdById ? { createdById: params.createdById } : {}),
     ...(params.search
       ? {
-          title: {
-            contains: escapeLikePattern(params.search),
-            mode: "insensitive",
-          },
+          OR: [
+            {
+              title: {
+                contains: escapeLikePattern(params.search),
+                mode: "insensitive",
+              },
+            },
+            {
+              scenarioKey: {
+                contains: escapeLikePattern(params.search),
+                mode: "insensitive",
+              },
+            },
+          ],
         }
       : {}),
   };

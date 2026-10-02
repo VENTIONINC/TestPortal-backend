@@ -17,7 +17,7 @@ import type {
 } from "@/types/testScenarios";
 
 // Run explicitly against an isolated PostgreSQL database with:
-// RUN_POSTGRES_INTEGRATION_TESTS=1 DATABASE_URL="..." npm test -- --runInBand __tests__/test-scenarios/testScenarioPostgresIntegration.test.ts
+// TEST_DATABASE_URL="..." npm run test:integration -- --runTestsByPath __tests__/test-scenarios/testScenarioPostgresIntegration.test.ts
 const postgresIntegrationEnabled =
   process.env.RUN_POSTGRES_INTEGRATION_TESTS === "1";
 const describePostgres = postgresIntegrationEnabled ? describe : describe.skip;
@@ -239,12 +239,88 @@ describePostgres("test scenario PostgreSQL aggregate integration", () => {
       "details",
       "id",
       "projectId",
+      "scenarioKey",
       "title",
       "updatedAt",
     ]);
     expect(
       Object.keys(literalMatches.scenarios[0]?.createdBy ?? {}).sort(),
     ).toEqual(["email", "id", "name"]);
+  });
+
+  it("searches keys literally and case-insensitively without duplicating overlapping matches", async () => {
+    const keyOnly = await createScenario({
+      title: "Payment history",
+      scenarioKey: "PAY-Case-42",
+    });
+    const overlap = await createScenario({
+      title: "Checkout DUP-42 flow",
+      scenarioKey: "DUP-42",
+    });
+    const duplicateKey = await createScenarioFor(projectId, otherUserId, {
+      title: "Refund flow",
+      scenarioKey: "DUP-42",
+    });
+    const specialKey = await createScenario({
+      title: "Special key lookup",
+      scenarioKey: "R%_\\\\-alpha",
+    });
+    await createScenarioFor(otherProjectId, otherUserId, {
+      title: "Foreign duplicate key",
+      scenarioKey: "DUP-42",
+    });
+    const nullKey = await createScenario({
+      title: "Null-key registration",
+      scenarioKey: null,
+    });
+    await createScenario({
+      title: "Billing details only",
+      details: "PAY-Case-42 appears only in details",
+    });
+
+    const keyMatches = await testScenarioService.listScenarios({
+      projectId,
+      search: "pay-case",
+    });
+    expect(keyMatches.total).toBe(1);
+    expect(keyMatches.scenarios[0]?.id).toBe(keyOnly.id);
+
+    const duplicateMatches = await testScenarioService.listScenarios({
+      projectId,
+      search: "dup-42",
+    });
+    expect(duplicateMatches.total).toBe(2);
+    expect(duplicateMatches.scenarios.map(({ id }) => id).sort()).toEqual(
+      [overlap.id, duplicateKey.id].sort(),
+    );
+
+    const creatorMatches = await testScenarioService.listScenarios({
+      projectId,
+      search: "DUP-42",
+      createdById: otherUserId,
+    });
+    expect(creatorMatches.total).toBe(1);
+    expect(creatorMatches.scenarios[0]?.id).toBe(duplicateKey.id);
+
+    const literalKeyMatches = await testScenarioService.listScenarios({
+      projectId,
+      search: "R%_\\\\",
+    });
+    expect(literalKeyMatches.total).toBe(1);
+    expect(literalKeyMatches.scenarios[0]?.id).toBe(specialKey.id);
+
+    const nullKeyTitleMatch = await testScenarioService.listScenarios({
+      projectId,
+      search: "NULL-KEY",
+    });
+    expect(nullKeyTitleMatch.total).toBe(1);
+    expect(nullKeyTitleMatch.scenarios[0]?.id).toBe(nullKey.id);
+
+    const detailsOnly = await testScenarioService.listScenarios({
+      projectId,
+      search: "PAY-Case-42 appears only in details",
+    });
+    expect(detailsOnly.total).toBe(0);
   });
 
   it("uses deterministic tie-breakers for every supported sort", async () => {

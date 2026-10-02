@@ -29,6 +29,22 @@ describe("structured Test Scenario MCP schemas", () => {
     });
   });
 
+  it("accepts title/key search options and the documented sort values", () => {
+    expect(
+      listTestScenariosSchema.parse({
+        projectId,
+        search: "PAY-42",
+        createdById: scenarioId,
+        sort: "recently_updated",
+      }),
+    ).toMatchObject({
+      projectId,
+      search: "PAY-42",
+      createdById: scenarioId,
+      sort: "recently_updated",
+    });
+  });
+
   it("accepts structured update fields and nullable clearing", () => {
     expect(
       updateTestScenarioSchema.parse({ scenarioId, projectId, notes: null }),

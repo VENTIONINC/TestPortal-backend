@@ -7,11 +7,14 @@ import type { MCPToolResponse } from "@/types";
 import type {
   TestScenarioMcpDeleteResponse,
   TestScenarioMcpDetailResponse,
+  TestScenarioMcpListParams,
   TestScenarioSummaryListResponse,
   TestScenarioResponse,
 } from "@/types/testScenarios";
 
-const listMock = jest.fn<() => Promise<TestScenarioSummaryListResponse>>();
+const listMock = jest.fn<
+  (params: TestScenarioMcpListParams) => Promise<TestScenarioSummaryListResponse>
+>();
 const getMock = jest.fn<() => Promise<TestScenarioMcpDetailResponse>>();
 const updateMock = jest.fn<() => Promise<TestScenarioResponse>>();
 const deleteMock = jest.fn<() => Promise<TestScenarioMcpDeleteResponse>>();
@@ -134,6 +137,21 @@ describe("Test Scenario MCP tools", () => {
       projectId,
       deleted: true,
     });
+  });
+
+  it("forwards all catalog filters to the shared MCP list path", async () => {
+    const params: TestScenarioMcpListParams = {
+      projectId,
+      page: 2,
+      limit: 10,
+      search: "PAY-42",
+      createdById: "33333333-3333-3333-3333-333333333333",
+      sort: "title_asc",
+    };
+
+    await listTestScenarios[3](params);
+
+    expect(listMock).toHaveBeenCalledWith(params);
   });
 
   it.each([

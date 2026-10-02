@@ -160,7 +160,7 @@ const TestScenarioListQuerySchema = z
     limit: z.number().int().min(1).max(100).default(30).optional(),
     search: z.string().trim().optional().openapi({
       description:
-        "Optional surrounding whitespace is trimmed; the remaining value is matched as a case-insensitive literal substring of title only.",
+        "Optional surrounding whitespace is trimmed; the remaining value is matched as a case-insensitive literal substring of title or scenarioKey. Percent, underscore, and backslash are literal; details and other authored fields are not searched.",
       example: "login",
     }),
     createdById: z.string().uuid().optional().openapi({
@@ -708,7 +708,7 @@ export function registerTestScenarioRoutes(registry: OpenAPIRegistry): void {
     method: "get",
     path: "/api/v2/test-scenarios",
     description:
-      "Lists lightweight project-scoped Test Scenario summaries without Markdown bodies. Optional search is a trimmed, case-insensitive literal title substring; createdById filters by the supplied creator User UUID and may identify any user; sort defaults to recently_created. Filtering happens before pagination and total counts matching scenarios.",
+      "Lists lightweight project-scoped Test Scenario summaries without Markdown bodies. Optional search is a trimmed, case-insensitive literal substring of title or scenarioKey; details and other authored fields are not searched, and percent, underscore, and backslash are literal. createdById filters by the supplied creator User UUID and may identify any user; sort defaults to recently_created. Filtering happens before pagination and total counts matching scenarios.",
     request: {
       query: TestScenarioListQuerySchema,
     },

@@ -26,12 +26,25 @@ The shared summary path SHALL preserve the existing project predicate, paginatio
 ## ADDED Requirements
 
 ### Requirement: Scenario summaries support literal text search
-REST and MCP listing SHALL accept optional string `search`, trim surrounding whitespace, and match the entire remaining value as a case-insensitive literal substring of `title` only. Omitted, empty, or whitespace-only search SHALL impose no text filter. Search SHALL NOT include `details`, other authored fields or generated Markdown.
+REST and MCP listing SHALL accept optional string `search`, trim surrounding whitespace, and match the entire remaining value as a case-insensitive literal substring of either `title` or `scenarioKey`. A scenario matching both fields SHALL appear only once; null keys SHALL contribute no match and duplicate keys SHALL remain valid. Omitted, empty, or whitespace-only search SHALL impose no text filter. Search SHALL NOT include `details`, other authored fields or generated Markdown.
 
 #### Scenario: Search matches title
 - **WHEN** a query differs in case from a substring of a scenario title
 - **THEN** the scenario is eligible for the filtered list
 - **AND** the value of details does not affect whether the title matches
+
+#### Scenario: Search matches a key
+- **WHEN** a query differs in case from a substring of a scenario key and does not occur in its title
+- **THEN** the scenario is eligible for the filtered list
+
+#### Scenario: Null keys preserve title matching
+- **WHEN** a scenario has a null key and its title matches the search
+- **THEN** the scenario is eligible for the filtered list
+
+#### Scenario: Duplicate keys and overlapping matches
+- **WHEN** multiple scenarios share a matching key and one also matches by title
+- **THEN** each matching scenario appears once
+- **AND** totals count scenarios rather than matching fields
 
 #### Scenario: Clear search
 - **WHEN** the client supplies empty or whitespace-only search
@@ -42,7 +55,7 @@ REST and MCP listing SHALL accept optional string `search`, trim surrounding whi
 - **THEN** these characters are matched literally rather than interpreted as wildcard syntax
 
 #### Scenario: Noncatalog fields do not match
-- **WHEN** search occurs only in details, a scenario step, objective, or generated Markdown and not in title
+- **WHEN** search occurs only in details, a scenario step, objective, or generated Markdown and not in title or scenarioKey
 - **THEN** that scenario does not match the text filter
 
 ### Requirement: Scenario summaries support creator filtering
@@ -75,7 +88,7 @@ REST and MCP listing SHALL accept `sort` with values `recently_created`, `recent
 - **THEN** the order equals the existing default, including ID descending for equal creation timestamps
 
 ### Requirement: Catalog query options have aligned validated transport contracts
-OpenAPI and the MCP list tool SHALL document the new options, defaults, accepted values, literal search semantics, and matching pagination totals. Equivalent REST and MCP requests SHALL produce equivalent lightweight summaries and totals. Existing summary fields and safe creator selection SHALL remain unchanged. Invalid new parameter types, invalid creator UUIDs, and unsupported sort values SHALL be rejected rather than silently ignored.
+OpenAPI and the MCP list tool SHALL document the new options, defaults, accepted values, literal search semantics, and matching pagination totals. Equivalent REST and MCP requests SHALL produce equivalent lightweight summaries and totals. The lightweight summary SHALL retain nullable `scenarioKey` and safe creator selection. Invalid new parameter types, invalid creator UUIDs, and unsupported sort values SHALL be rejected rather than silently ignored.
 
 #### Scenario: Invalid options are rejected
 - **WHEN** a client supplies a non-string search, malformed creator UUID, or unsupported sort value
@@ -88,4 +101,4 @@ OpenAPI and the MCP list tool SHALL document the new options, defaults, accepted
 
 #### Scenario: Contract discovery
 - **WHEN** a client inspects OpenAPI or the MCP list tool schema and description
-- **THEN** it can discover `search`, `createdById`, and the three supported `sort` values with their defaults and semantics
+- **THEN** it can discover `search`, `createdById`, and the three supported `sort` values with their defaults and semantics, including title/key matching and the exclusion of Details

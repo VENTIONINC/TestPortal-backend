@@ -168,10 +168,20 @@ describe("testScenarioModel", () => {
     const expectedWhere = {
       projectId: scenario.projectId,
       createdById: scenario.createdById,
-      title: {
-        contains: "\\%\\_\\\\",
-        mode: "insensitive",
-      },
+      OR: [
+        {
+          title: {
+            contains: "\\%\\_\\\\",
+            mode: "insensitive",
+          },
+        },
+        {
+          scenarioKey: {
+            contains: "\\%\\_\\\\",
+            mode: "insensitive",
+          },
+        },
+      ],
     };
     expect(summaryFindManyMock).toHaveBeenCalledWith(
       expect.objectContaining({
