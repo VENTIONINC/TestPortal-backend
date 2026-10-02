@@ -9,7 +9,7 @@ import { getProductionAiSettings, toChatOpenAIOptions } from "@/config/serverAiC
 import { normalizeJsonArrayForText } from "@/lib/jsonPayloads";
 import getLogger from "@/lib/logger";
 import { getEffectiveResultCategory } from "@/lib/resultCategory";
-import { getErrorFormatterPrompt } from "@/prompts/error-formatter/v1.0.0";
+import { getErrorFormatterPrompt } from "@/prompts/error-formatter/v1.1.0";
 import {
   systemPrompt as errorSolutionSystemPrompt,
   userPrompt as errorSolutionUserPrompt,

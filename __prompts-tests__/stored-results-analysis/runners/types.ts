@@ -6,6 +6,8 @@
  */
 
 import type { TestAnalysisResponse } from "@/schemas/testAnalysisSchemas";
+import type { ResolvedAiSettings } from "@/config/serverAiConfig";
+import type { EvaluationTokenUsage } from "./evaluation-report";
 
 /**
  * Represents a single validation failure
@@ -22,6 +24,11 @@ export interface EvalResult {
   response: TestAnalysisResponse;
   failures: EvalFailure[];
   metadata: EvalMetadata;
+  model: string;
+  settings: ResolvedAiSettings;
+  requestCount: number;
+  durationMs: number;
+  usage: EvaluationTokenUsage | null;
 }
 
 export interface EvalMetadata {

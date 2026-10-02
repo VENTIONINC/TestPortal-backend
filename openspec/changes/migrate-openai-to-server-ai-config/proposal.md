@@ -12,6 +12,7 @@ AI services hardcode OpenAI clients and model choices despite having different g
 - Validate configuration structure, references, model capabilities, and explicitly configured parameters; publish a matching JSON Schema for editor support.
 - Load the shipped configuration when no nonempty custom path is supplied. Custom files replace it entirely; neither source falls back to hardcoded settings. Missing or invalid files and missing credentials fail startup.
 - Give prompt evaluations separate versioned configuration, shared configuration validation, and effective configuration metadata without inheriting production settings.
+- Preserve the merged #106/#107 model choices in shipped production and independent evaluation profiles: GPT-6 Luna low for classification and Luna none for error formatting. Solution suggestions and insights remain GPT-4.1 mini.
 - Skip live Jest prompt suites when OpenAI credentials are absent; keep placeholder credentials confined to mocked unit tests and retain credential errors for direct runner calls.
 - Document runtime file availability, restart requirements, and configuration usage.
 
@@ -28,7 +29,7 @@ None. Existing specifications do not describe AI provider configuration.
 
 ## Impact
 
-- Affects startup/configuration, `testAnalysisService`, `errorFormatterService`, `insightsService`, the two prompt evaluation runners, and their tests.
+- Affects startup/configuration, `testAnalysisService`, `errorFormatterService`, `insightsService`, the classification, error-formatter, and solution evaluation suites, and their tests.
 - Adds configuration examples, JSON Schema, and environment/deployment documentation; ensures the required shipped configuration is available and selected automatically in the production image.
 - Keeps the installed `@langchain/openai` integration and introduces no provider framework; no database migration or REST/MCP contract change is intended.
 - Anthropic, Azure OpenAI, AWS Bedrock, OpenRouter, user/project settings, hot reload, and new AI features remain follow-up work.

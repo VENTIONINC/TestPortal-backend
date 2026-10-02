@@ -7,7 +7,7 @@ import { z } from "zod";
 import { getProductionAiSettings, toChatOpenAIOptions } from "@/config/serverAiConfig";
 import { normalizeJsonArrayForText } from "@/lib/jsonPayloads";
 import getLogger from "@/lib/logger";
-import { getStoredResultsAnalysisPrompt } from "@/prompts/stored-results-analysis/v1.1.0";
+import { getStoredResultsAnalysisPrompt } from "@/prompts/stored-results-analysis/v1.2.0";
 import {
   testAnalysisSchema,
   type TestResultAnalysis,

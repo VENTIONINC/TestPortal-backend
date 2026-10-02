@@ -50,11 +50,11 @@ function generate(countPerTemplate: number): TestCase[] {
 const outDir = path.resolve(__dirname, "datasets", "stored-results-analysis");
 ensureDir(outDir);
 
-// Generate smoke dataset: 1 variant per template (4 total)
+// Generate smoke dataset: 1 variant per template (10 total)
 const smoke = generate(1);
 
-// Generate regression dataset: 10 variants per template (40 total)
-const regression = generate(10);
+// Generate regression dataset: 5 variants per template (50 total)
+const regression = generate(5);
 
 // Write datasets to files
 writeJson(path.join(outDir, "smoke.json"), smoke);
@@ -66,6 +66,6 @@ console.log(
   `   📄 Smoke: ${smoke.length} cases (${templateFactories.length} templates × 1 variant)`,
 );
 console.log(
-  `   📄 Regression: ${regression.length} cases (${templateFactories.length} templates × 10 variants)`,
+  `   📄 Regression: ${regression.length} cases (${templateFactories.length} templates × 5 variants)`,
 );
 console.log(`   📁 Location: ${outDir}`);

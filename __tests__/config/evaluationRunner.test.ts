@@ -7,7 +7,7 @@ import path from "node:path";
 
 import { jest } from "@jest/globals";
 import { runEval as runStoredResultsEval } from "../../__prompts-tests__/stored-results-analysis/runners/stored-results-analysis";
-import { DEFAULT_VERSION as storedVersion } from "../../__prompts-tests__/stored-results-analysis/runners/versions";
+import { PROMPT_VERSIONS } from "../../__prompts-tests__/stored-results-analysis/runners/versions";
 import { runEval as runErrorSolutionEval } from "../../__prompts-tests__/error-solution/runners/error-solution";
 import { DEFAULT_VERSION as solutionVersion } from "../../__prompts-tests__/error-solution/runners/versions";
 
@@ -62,7 +62,7 @@ describe("prompt evaluation configuration", () => {
   it("applies runner overrides over file settings and reports safe effective metadata", async () => {
     const result = await runStoredResultsEval({
       cases: [],
-      version: storedVersion,
+      version: PROMPT_VERSIONS["v1.1.0"],
       model: "gpt-5.1",
       temperature: 0.4,
     });
@@ -83,18 +83,18 @@ describe("prompt evaluation configuration", () => {
 
   it("fails on missing credentials or an unreadable selected file before provider construction", async () => {
     delete process.env.OPENAI_API_KEY;
-    await expect(runStoredResultsEval({ cases: [], version: storedVersion })).rejects.toThrow("OPENAI_API_KEY");
+    await expect(runStoredResultsEval({ cases: [], version: PROMPT_VERSIONS["v1.1.0"] })).rejects.toThrow("OPENAI_API_KEY");
     expect(chatOpenAIMock).not.toHaveBeenCalled();
 
     process.env.OPENAI_API_KEY = "test-key";
     process.env.AI_EVAL_CONFIG_PATH = path.join(tempDir, "missing.json");
-    await expect(runStoredResultsEval({ cases: [], version: storedVersion })).rejects.toThrow("Unable to read AI configuration");
+    await expect(runStoredResultsEval({ cases: [], version: PROMPT_VERSIONS["v1.1.0"] })).rejects.toThrow("Unable to read AI configuration");
     expect(chatOpenAIMock).not.toHaveBeenCalled();
   });
 
   it("fails on an invalid selected evaluation file before provider construction", async () => {
     writeFileSync(configPath, "{");
-    await expect(runStoredResultsEval({ cases: [], version: storedVersion })).rejects.toThrow("Invalid JSON");
+    await expect(runStoredResultsEval({ cases: [], version: PROMPT_VERSIONS["v1.1.0"] })).rejects.toThrow("Invalid JSON");
     expect(chatOpenAIMock).not.toHaveBeenCalled();
   });
 
@@ -103,7 +103,7 @@ describe("prompt evaluation configuration", () => {
     async (temperature) => {
       await expect(runStoredResultsEval({
         cases: [],
-        version: storedVersion,
+        version: PROMPT_VERSIONS["v1.1.0"],
         temperature,
       })).rejects.toThrow("Invalid runner override temperature");
       expect(chatOpenAIMock).not.toHaveBeenCalled();

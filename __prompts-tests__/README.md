@@ -15,6 +15,7 @@ This framework enables:
 
 ```
 __prompts-tests__/
+├── helpers/                  # Shared usage collection and report writing
 ├── <suite>/
 │   ├── generate-datasets.ts
 │   ├── datasets/
@@ -98,3 +99,20 @@ Increase Jest timeout in test files:
 ```typescript
 jest.setTimeout(300_000); // 5 minutes
 ```
+
+## Classification and formatting evaluations
+
+Stored-results analysis uses one smoke suite and one regression suite, each
+parameterized over prompt v1.1.0 and v1.2.0. Model settings come from the independent
+`config/ai/evaluation.baseline.json` configuration. Its classification profile uses GPT-6 Luna, Responses API, low
+reasoning, and a 4000-token output limit. Use `AI_EVAL_CONFIG_PATH` for profile
+comparisons; the runner also supports validated model/temperature overrides; a separate model-specific test file is unnecessary.
+
+Error formatting has its own diagnostic-preservation suite; see
+[its evaluation guide](error-formatter/README.md). Its independent evaluation profile defaults to GPT-6 Luna with reasoning none and a 500-token
+output limit. Solution suggestions and dashboard insights retain their existing
+models.
+
+Both suites share token accounting and timestamped JSON report writing. Reports
+include effective model settings, operation, profile, and configuration source. Cached input and reasoning tokens are subsets
+of input and output tokens respectively, and are not added to totals again.

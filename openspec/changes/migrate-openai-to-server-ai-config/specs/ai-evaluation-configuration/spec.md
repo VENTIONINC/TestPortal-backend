@@ -7,7 +7,7 @@ Keep prompt evaluations reproducible through independent model configuration and
 ## ADDED Requirements
 
 ### Requirement: Independent versioned evaluation configuration
-Evaluation runs SHALL use their own version 1 profile configuration selected by `AI_EVAL_CONFIG_PATH` or a checked-in baseline, with mappings for stored-results analysis and solution suggestions. They SHALL NOT inherit production configuration or require server initialization. Missing, unreadable, or invalid selected evaluation files SHALL fail before provider invocation without another file or hardcoded settings fallback. Unset or blank `AI_EVAL_CONFIG_PATH` SHALL select the shipped baseline relative to the application root. Custom files SHALL replace the baseline entirely without merging.
+Evaluation runs SHALL use their own version 1 profile configuration selected by `AI_EVAL_CONFIG_PATH` or a checked-in baseline, with mappings for stored-results analysis, error formatting, and solution suggestions. They SHALL NOT inherit production configuration or require server initialization. Missing, unreadable, or invalid selected evaluation files SHALL fail before provider invocation without another file or hardcoded settings fallback. Unset or blank `AI_EVAL_CONFIG_PATH` SHALL select the shipped baseline relative to the application root. Custom files SHALL replace the baseline entirely without merging.
 
 #### Scenario: Production configuration changes
 - **WHEN** `AI_CONFIG_PATH` selects a different model or even an unreadable production file
@@ -18,7 +18,7 @@ Evaluation runs SHALL use their own version 1 profile configuration selected by 
 - **THEN** evaluation requests SHALL use that profile without changing production behavior
 
 ### Requirement: File-owned evaluation baseline and explicit overrides
-The shipped evaluation baseline file SHALL contain OpenAI `gpt-4.1-mini`, no reasoning override, stored-results temperature 0.1 and output limit 4000, solution-suggestion temperature 0.3 and output limit 600, and two retries. All evaluation mappings SHALL require `maxOutputTokens` and `maxRetries`. Omitted temperature and reasoning SHALL remain absent without application defaults. Disabled cache SHALL remain evaluation-runner behavior. Existing runner model/temperature overrides SHALL remain supported, take precedence over evaluation file settings, and undergo the same capability validation.
+The shipped evaluation baseline file SHALL contain OpenAI `gpt-6-luna` low for stored-results analysis with output limit 4000 and Luna none for error formatting with output limit 500, both without explicit temperature. Solution suggestions SHALL retain `gpt-4.1-mini`, no reasoning override, temperature 0.3, and output limit 600. All mappings SHALL use two retries. All evaluation mappings SHALL require `maxOutputTokens` and `maxRetries`. Omitted temperature and reasoning SHALL remain absent without application defaults. Disabled cache SHALL remain evaluation-runner behavior. Existing runner model/temperature overrides SHALL remain supported, take precedence over evaluation file settings, and undergo the same capability validation.
 
 #### Scenario: Baseline evaluation
 - **WHEN** an existing suite runs without an explicit evaluation path or runner overrides

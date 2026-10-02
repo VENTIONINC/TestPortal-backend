@@ -7,6 +7,13 @@ const config: JestConfigWithTsJest = {
       ...baseConfig,
       setupFiles: [],
       testPathIgnorePatterns: ["/dist/"],
+      displayName: "error-formatter",
+      testMatch: ["<rootDir>/__prompts-tests__/error-formatter/*.test.ts"],
+    },
+    {
+      ...baseConfig,
+      setupFiles: [],
+      testPathIgnorePatterns: ["/dist/"],
       displayName: "stored-results-analysis",
       testMatch: [
         "<rootDir>/__prompts-tests__/stored-results-analysis/**/?(*.)test.ts",

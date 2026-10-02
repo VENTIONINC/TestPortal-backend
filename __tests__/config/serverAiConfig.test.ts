@@ -42,11 +42,27 @@ describe("server AI configuration", () => {
     ].map(({ model, temperature, maxOutputTokens, maxRetries }) => ({
       model, temperature, maxOutputTokens, maxRetries,
     }))).toEqual([
-      { model: "gpt-4.1-mini", temperature: 0, maxOutputTokens: 4000, maxRetries: 2 },
-      { model: "gpt-4.1-mini", temperature: 0.7, maxOutputTokens: 500, maxRetries: 2 },
+      { model: "gpt-6-luna", temperature: undefined, maxOutputTokens: 4000, maxRetries: 2 },
+      { model: "gpt-6-luna", temperature: undefined, maxOutputTokens: 500, maxRetries: 2 },
       { model: "gpt-4.1-mini", temperature: 0.3, maxOutputTokens: 700, maxRetries: 2 },
       { model: "gpt-4.1-mini", temperature: 0.2, maxOutputTokens: 400, maxRetries: 1 },
     ]);
+  });
+
+  it("preserves Luna reasoning and Responses options in production and evaluation", () => {
+    for (const loaded of [loadAiConfiguration({ kind: "production", env: { OPENAI_API_KEY: "present" } }), loadEvaluationAiConfiguration({})]) {
+      for (const [operation, effort, limit] of [
+        ["storedResultsAnalysis", "low", 4000],
+        ["errorFormatting", "none", 500],
+      ] as const) {
+        expect(toChatOpenAIOptions(resolveAiSettings(loaded, operation))).toEqual({
+          model: "gpt-6-luna", useResponsesApi: true,
+          modelKwargs: { reasoning: { effort } }, maxTokens: limit, maxRetries: 2,
+          ...(loaded.kind === "evaluation" ? { cache: false } : {}),
+        });
+      }
+      expect(() => resolveAiSettings(loaded, "storedResultsAnalysis", { temperature: 0 })).toThrow("Temperature is not supported");
+    }
   });
 
   it("loads a complete custom file using cwd-relative paths and replaces the shipped settings", () => {
@@ -80,7 +96,7 @@ describe("server AI configuration", () => {
       expect(blankProduction.source).toBe("shipped-production");
       expect(evaluation.source).toBe("evaluation-baseline");
       expect(resolveAiSettings(blankProduction, "storedResultsAnalysis")).toMatchObject({
-        temperature: 0, maxOutputTokens: 4000, maxRetries: 2,
+        reasoning: { effort: "low" }, maxOutputTokens: 4000, maxRetries: 2,
       });
       expect(resolveAiSettings(evaluation, "solutionSuggestion")).toMatchObject({
         temperature: 0.3, maxOutputTokens: 600, maxRetries: 2,
@@ -201,7 +217,7 @@ describe("server AI configuration", () => {
     const evaluation = loadEvaluationAiConfiguration({ AI_CONFIG_PATH: "/does/not/exist" });
     expect(evaluation.source).toBe("evaluation-baseline");
     expect(resolveAiSettings(evaluation, "storedResultsAnalysis")).toMatchObject({
-      model: "gpt-4.1-mini", temperature: 0.1, maxOutputTokens: 4000, maxRetries: 2, cache: false,
+      model: "gpt-6-luna", reasoning: { effort: "low" }, maxOutputTokens: 4000, maxRetries: 2, cache: false,
     });
     expect(resolveAiSettings(evaluation, "solutionSuggestion")).toMatchObject({
       temperature: 0.3, maxOutputTokens: 600, maxRetries: 2, cache: false,

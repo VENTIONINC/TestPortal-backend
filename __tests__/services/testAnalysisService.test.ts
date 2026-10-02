@@ -38,7 +38,7 @@ describe("testAnalysisService.analyzeStoredResults", () => {
     }]);
 
     expect(openAiMocks.__mocks__.chatOpenAIMock).toHaveBeenCalledWith({
-      model: "gpt-4.1-mini", temperature: 0, maxTokens: 4000, maxRetries: 2,
+      model: "gpt-6-luna", useResponsesApi: true, modelKwargs: { reasoning: { effort: "low" } }, maxTokens: 4000, maxRetries: 2,
     });
     expect(result.get("result-1")).toMatchObject({
       id: "result-1", category: "bug", confidence: 4,

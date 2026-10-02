@@ -231,6 +231,41 @@ describe("errorFormatterService.suggestFromResult", () => {
     ).rejects.toThrow("Result ID is required");
   });
 
+  it("formats multiline details without adding absent category context", async () => {
+    const output = {
+      name: "Readable timeout",
+      description: "Timeout at checkout",
+    };
+    invokeMock.mockResolvedValueOnce(output);
+    const input = {
+      name: "checkout timeout",
+      description: "Timeout 12000ms\n at tests/checkout.ts:42:7",
+    };
+
+    await expect(
+      errorFormatterService.formatErrorMessage(input),
+    ).resolves.toEqual(output);
+    expect(invokeMock).toHaveBeenCalledWith([
+      expect.objectContaining({ role: "system" }),
+      {
+        role: "user",
+        content: `Name: ${input.name}\nDescription: ${input.description}`,
+      },
+    ]);
+    expect(resultService.getResultById).not.toHaveBeenCalled();
+    expect(testAnalysisService.analyzeStoredResults).not.toHaveBeenCalled();
+  });
+
+  it("returns the formatter error contract when the model fails", async () => {
+    invokeMock.mockRejectedValueOnce(new Error("Provider unavailable"));
+    await expect(
+      errorFormatterService.formatErrorMessage({
+        name: "Failure",
+        description: "Details",
+      }),
+    ).rejects.toThrow("Failed to format error message");
+  });
+
   it("throws when projectId is missing", async () => {
     await expect(
       errorFormatterService.suggestFromResult("result-1", ""),

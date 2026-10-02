@@ -17,7 +17,7 @@
         "required": ["provider", "model"],
         "properties": {
           "provider": { "const": "openai" },
-          "model": { "enum": ["gpt-4.1-mini", "gpt-5.1"] },
+          "model": { "enum": ["gpt-4.1-mini", "gpt-5.1", "gpt-6-luna"] },
           "reasoning": {
             "type": "object",
             "additionalProperties": false,

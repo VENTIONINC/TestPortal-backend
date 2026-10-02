@@ -5,10 +5,38 @@
     "evaluation": {
       "provider": "openai",
       "model": "gpt-4.1-mini"
+    },
+    "classification": {
+      "provider": "openai",
+      "model": "gpt-6-luna",
+      "reasoning": {
+        "effort": "low"
+      }
+    },
+    "formatter": {
+      "provider": "openai",
+      "model": "gpt-6-luna",
+      "reasoning": {
+        "effort": "none"
+      }
     }
   },
   "operations": {
-    "storedResultsAnalysis": { "profile": "evaluation", "temperature": 0.1, "maxOutputTokens": 4000, "maxRetries": 2 },
-    "solutionSuggestion": { "profile": "evaluation", "temperature": 0.3, "maxOutputTokens": 600, "maxRetries": 2 }
+    "storedResultsAnalysis": {
+      "profile": "classification",
+      "maxOutputTokens": 4000,
+      "maxRetries": 2
+    },
+    "solutionSuggestion": {
+      "profile": "evaluation",
+      "temperature": 0.3,
+      "maxOutputTokens": 600,
+      "maxRetries": 2
+    },
+    "errorFormatting": {
+      "profile": "formatter",
+      "maxOutputTokens": 500,
+      "maxRetries": 2
+    }
   }
 }

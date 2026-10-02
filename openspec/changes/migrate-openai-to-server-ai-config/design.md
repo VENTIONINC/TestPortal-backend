@@ -49,22 +49,22 @@ Both shipped and custom production configurations require `OPENAI_API_KEY` at st
 
 | Operation | Temperature | maxOutputTokens | maxRetries |
 | --- | --- | --- | --- |
-| storedResultsAnalysis | 0 | 4000 | 2 |
-| errorFormatting | 0.7 | 500 | 2 |
+| storedResultsAnalysis | omitted (Luna low) | 4000 | 2 |
+| errorFormatting | omitted (Luna none) | 500 | 2 |
 | solutionSuggestion | 0.3 | 700 | 2 |
 | dashboardInsights | 0.2 | 400 | 1 |
 
-The shipped production file contains the table above and selects `gpt-4.1-mini`, with no reasoning override and no new SDK timeout. These values are not duplicated as resolver defaults in code. Missing required operation fields fail validation. Omitted temperature, reasoning, or timeout remains absent from constructor options; provider/SDK behavior applies for omitted optional parameters. Preserve the dashboard's existing eight-second overall deadline and fallback text.
+The shipped production file contains the table above and preserves the merged #106/#107 choices: `gpt-6-luna` with low reasoning for classification and none reasoning for formatting. Suggestions and insights keep `gpt-4.1-mini` without reasoning overrides. No new SDK timeout is introduced. These values are not duplicated as resolver defaults in code. Missing required operation fields fail validation. Omitted temperature, reasoning, or timeout remains absent from constructor options; provider/SDK behavior applies for omitted optional parameters. Preserve the dashboard's existing eight-second overall deadline and fallback text.
 
-Use a small OpenAI-specific supported-model table inside configuration validation for initially verified `gpt-4.1-mini` and `gpt-5.1` identifiers. It only describes settings needed by this change: effort values, temperature compatibility, applicable generation limits, and whether the existing SDK needs a Responses option. It is not a provider registry or structured-output strategy framework. Verify supported identifiers/options against current official docs and the installed SDK during implementation; reject unknown models rather than guess their capabilities.
+Use a small OpenAI-specific supported-model table inside configuration validation for verified `gpt-4.1-mini`, `gpt-5.1`, and `gpt-6-luna` identifiers. It only describes settings needed by this change: effort values, temperature compatibility, applicable generation limits, and whether the existing SDK needs a Responses option. It is not a provider registry or structured-output strategy framework. Verify supported identifiers/options against current official docs and the installed SDK during implementation; reject unknown models rather than guess their capabilities.
 
-Explicit unsupported settings fail validation. An omitted temperature remains absent for every model; reject an explicit temperature when the model/effort combination prohibits it. Reasoning token ceilings include reasoning and visible output, so examples/docs explain budget allocation without new response/fallback policies. A supported model means configuration/SDK compatibility, not evaluated quality.
+Explicit unsupported settings fail validation. An omitted temperature remains absent for every model; reject an explicit temperature when the model/effort combination prohibits it. Reasoning token ceilings include reasoning and visible output, so examples/docs explain budget allocation without new response/fallback policies. A supported model means configuration/SDK compatibility, not evaluated quality. Luna uses the Responses API and passes reasoning through `modelKwargs` because LangChain 1.4.5 does not recognize GPT-6 reasoning models.
 
 ### 4. Independent evaluations
 
 Live Jest prompt suites load dotenv and use `describe.skip` when `OPENAI_API_KEY` is absent or blank, before reading datasets or invoking OpenAI. Their Jest setup does not inherit the unit-test placeholder key. Mocked unit tests remain runnable with a unit-only placeholder. Direct evaluation runner calls retain explicit missing-credential errors; a skipped suite never produces a successful evaluation result.
 
-Use a checked-in evaluation baseline selected independently of production. The evaluation baseline file owns model `gpt-4.1-mini`, temperatures 0.1/0.3, output limits 4000/600, retries 2, and no reasoning override. Keep cache disabled as evaluation-runner behavior, not as a generation-settings fallback.
+Use a checked-in evaluation baseline selected independently of production. The evaluation baseline file owns Luna low for classification (4000 output tokens), Luna none for formatting (500), and GPT-4.1 mini for suggestions (temperature 0.3, 600 output tokens), all with two retries. It does not read production settings. Formatting evaluations reuse the production method with independently resolved evaluation settings. Keep cache disabled as evaluation-runner behavior, not as a generation-settings fallback.
 
 Keep runner model/temperature overrides with precedence: runner override, selected evaluation file. There is no suite-default settings layer. Revalidate the resulting settings. Runners still construct `ChatOpenAI`, invoke it, and validate suite expectations directly; only settings resolution is shared.
 

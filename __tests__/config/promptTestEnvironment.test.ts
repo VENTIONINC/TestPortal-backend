@@ -49,8 +49,8 @@ describe("live prompt test credentials", () => {
     expect(loadCredentialFlag()).toBe(true);
   });
 
-  it("does not inherit the unit-test placeholder setup in either live project", () => {
-    expect(promptConfig.projects).toHaveLength(2);
+  it("does not inherit the unit-test placeholder setup in every live project", () => {
+    expect(promptConfig.projects).toHaveLength(3);
     for (const project of promptConfig.projects ?? []) {
       expect(project).toMatchObject({ setupFiles: [] });
     }

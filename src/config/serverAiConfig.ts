@@ -47,6 +47,7 @@ export type AiOperation =
   | "solutionSuggestion"
   | "dashboardInsights";
 export type EvaluationOperation =
+  | "errorFormatting"
   | "storedResultsAnalysis"
   | "solutionSuggestion";
 export type ConfigurationSource = "shipped-production" | "evaluation-baseline" | "custom";
@@ -68,6 +69,7 @@ export interface ResolvedAiSettings {
 
 const supportedModels = {
   "gpt-4.1-mini": { reasoningEfforts: [], temperatureEfforts: null, maxOutputTokens: 32_768 },
+  "gpt-6-luna": { reasoningEfforts: ["none", "low", "medium", "high"], temperatureEfforts: ["none"], maxOutputTokens: 128_000 },
   "gpt-5.1": { reasoningEfforts: ["none", "low", "medium", "high"], temperatureEfforts: ["none"], maxOutputTokens: 128_000 },
 } as const;
 
@@ -75,7 +77,7 @@ function isTemperatureSupported(model: string, effort?: string): boolean {
   const modelCapabilities = supportedModels[model as keyof typeof supportedModels];
   if (!modelCapabilities) return false;
   return modelCapabilities.temperatureEfforts === null ||
-    modelCapabilities.temperatureEfforts.includes((effort ?? "none") as never);
+    modelCapabilities.temperatureEfforts.includes((effort ?? (model === "gpt-6-luna" ? "medium" : "none")) as never);
 }
 
 type LoadConfigurationOptions = {
@@ -176,7 +178,7 @@ export function loadAiConfiguration({ pathValue, kind, env = process.env }: Load
   validateReferencesAndCapabilities(parsed.data);
   const allowedOperations = kind === "production"
     ? ["storedResultsAnalysis", "errorFormatting", "solutionSuggestion", "dashboardInsights"]
-    : ["storedResultsAnalysis", "solutionSuggestion"];
+    : ["storedResultsAnalysis", "errorFormatting", "solutionSuggestion"];
   for (const operation of Object.keys(parsed.data.operations)) {
     if (!allowedOperations.includes(operation)) {
       throw new Error(`Invalid AI configuration: operations.${operation} is not supported`);
@@ -255,7 +257,13 @@ export function toChatOpenAIOptions(settings: ResolvedAiSettings) {
     maxTokens: settings.maxOutputTokens,
     maxRetries: settings.maxRetries,
     ...(settings.timeoutMs === undefined ? {} : { timeout: settings.timeoutMs }),
-    ...(settings.reasoning ? { reasoning: settings.reasoning } : {}),
+    ...(settings.model === "gpt-6-luna"
+      ? {
+          useResponsesApi: true,
+          // LangChain 1.4.5 does not recognize GPT-6 reasoning models.
+          ...(settings.reasoning ? { modelKwargs: { reasoning: settings.reasoning } } : {}),
+        }
+      : settings.reasoning ? { reasoning: settings.reasoning } : {}),
     ...(settings.cache === false ? { cache: false } : {}),
   };
 }

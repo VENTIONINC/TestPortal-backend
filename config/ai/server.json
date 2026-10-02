@@ -5,12 +5,44 @@
     "default": {
       "provider": "openai",
       "model": "gpt-4.1-mini"
+    },
+    "classification": {
+      "provider": "openai",
+      "model": "gpt-6-luna",
+      "reasoning": {
+        "effort": "low"
+      }
+    },
+    "formatter": {
+      "provider": "openai",
+      "model": "gpt-6-luna",
+      "reasoning": {
+        "effort": "none"
+      }
     }
   },
   "operations": {
-    "storedResultsAnalysis": { "profile": "default", "temperature": 0, "maxOutputTokens": 4000, "maxRetries": 2 },
-    "errorFormatting": { "profile": "default", "temperature": 0.7, "maxOutputTokens": 500, "maxRetries": 2 },
-    "solutionSuggestion": { "profile": "default", "temperature": 0.3, "maxOutputTokens": 700, "maxRetries": 2 },
-    "dashboardInsights": { "profile": "default", "temperature": 0.2, "maxOutputTokens": 400, "maxRetries": 1 }
+    "storedResultsAnalysis": {
+      "profile": "classification",
+      "maxOutputTokens": 4000,
+      "maxRetries": 2
+    },
+    "errorFormatting": {
+      "profile": "formatter",
+      "maxOutputTokens": 500,
+      "maxRetries": 2
+    },
+    "solutionSuggestion": {
+      "profile": "default",
+      "temperature": 0.3,
+      "maxOutputTokens": 700,
+      "maxRetries": 2
+    },
+    "dashboardInsights": {
+      "profile": "default",
+      "temperature": 0.2,
+      "maxOutputTokens": 400,
+      "maxRetries": 1
+    }
   }
 }

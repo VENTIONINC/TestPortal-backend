@@ -33,7 +33,7 @@ When `AI_CONFIG_PATH` is unset or blank, the system SHALL load the shipped produ
 
 #### Scenario: Shipped production configuration
 - **WHEN** the server starts with an unset or blank `AI_CONFIG_PATH` and valid required credentials
-- **THEN** it SHALL load the shipped file containing OpenAI `gpt-4.1-mini`, no reasoning override, temperatures 0, 0.7, 0.3, and 0.2; output limits 4000, 500, 700, and 400; and retries 2, 2, 2, and 1 for analysis, formatting, suggestion, and insights respectively
+- **THEN** it SHALL load the shipped file containing OpenAI `gpt-6-luna` with low reasoning for analysis and none reasoning for formatting, both without explicit temperature; suggestions and insights SHALL retain `gpt-4.1-mini` without reasoning override and temperatures 0.3 and 0.2; output limits 4000, 500, 700, and 400; and retries 2, 2, 2, and 1 for analysis, formatting, suggestion, and insights respectively
 
 #### Scenario: Custom replacement configuration
 - **WHEN** a nonempty `AI_CONFIG_PATH` selects a valid complete file
