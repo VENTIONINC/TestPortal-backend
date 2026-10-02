@@ -15,6 +15,7 @@ This framework enables:
 
 ```
 __prompts-tests__/
+├── helpers/                  # Shared usage collection and report writing
 ├── <suite>/
 │   ├── generate-datasets.ts
 │   ├── datasets/
@@ -96,3 +97,21 @@ Increase Jest timeout in test files:
 ```typescript
 jest.setTimeout(300_000); // 5 minutes
 ```
+
+## Classification and formatting evaluations
+
+Stored-results analysis uses one smoke suite and one regression suite, each
+parameterized over prompt v1.1.0 and v1.2.0. Model settings default to the same
+settings used by production classification: GPT-6 Luna, Responses API, low
+reasoning, and a 4000-token output limit. The runner supports explicit settings
+for comparisons; a separate model-specific test file is unnecessary.
+
+Error formatting has its own diagnostic-preservation suite; see
+[its evaluation guide](error-formatter/README.md). It uses the production
+formatter settings by default: GPT-6 Luna with reasoning none and a 500-token
+output limit. Solution suggestions and dashboard insights retain their existing
+models.
+
+Both suites share token accounting and timestamped JSON report writing. Reports
+include effective model settings. Cached input and reasoning tokens are subsets
+of input and output tokens respectively, and are not added to totals again.

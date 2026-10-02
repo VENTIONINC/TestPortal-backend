@@ -9,10 +9,15 @@
 import { ChatOpenAI } from "@langchain/openai";
 import { z } from "zod";
 import type { UsageMetadata } from "@langchain/core/messages";
+import {
+  getPromptModelOptions,
+  storedResultsAnalysisConfig,
+  type PromptModelSettings,
+} from "@/config/promptModels";
+import { sumTokenUsage } from "../../helpers/evaluation";
 import type { TestAnalysisResponse } from "@/schemas/testAnalysisSchemas";
 import type { TestCase } from "../v1.1.0/templates/types";
 import type { EvalResult, EvalFailure } from "./types";
-import type { EvaluationTokenUsage } from "./evaluation-report";
 
 /**
  * Prompt version configuration
@@ -33,7 +38,7 @@ export interface RunEvalOptions {
   model?: string;
   temperature?: number;
   batchSize?: number;
-  reasoningEffort?: "low" | "medium" | "high";
+  reasoningEffort?: PromptModelSettings["reasoningEffort"];
   useResponsesApi?: boolean;
 }
 
@@ -46,27 +51,28 @@ export async function runEval(options: RunEvalOptions): Promise<EvalResult> {
   const {
     cases,
     version,
-    model = "gpt-4.1-mini",
+    model = storedResultsAnalysisConfig.model,
     temperature = 0.1,
     batchSize = 25,
-    reasoningEffort,
-    useResponsesApi = false,
+    reasoningEffort = model === storedResultsAnalysisConfig.model
+      ? storedResultsAnalysisConfig.reasoningEffort
+      : undefined,
+    useResponsesApi = model === storedResultsAnalysisConfig.model
+      ? storedResultsAnalysisConfig.useResponsesApi
+      : false,
   } = options;
   const startedAt = Date.now();
 
-  // Setup LLM with structured output using version-specific schema
-  const llm = new ChatOpenAI({
+  const settings: PromptModelSettings = {
     model,
     useResponsesApi,
-    maxTokens: 4000,
-    maxRetries: 2,
+    maxTokens: storedResultsAnalysisConfig.maxTokens,
+    maxRetries: storedResultsAnalysisConfig.maxRetries,
+    ...(reasoningEffort !== undefined ? { reasoningEffort } : { temperature }),
+  };
+  const llm = new ChatOpenAI({
+    ...getPromptModelOptions(settings),
     cache: false,
-    ...(reasoningEffort
-      ? useResponsesApi
-        // Preserve reasoning for models not recognized by LangChain 1.4.5.
-        ? { modelKwargs: { reasoning: { effort: reasoningEffort } } }
-        : { reasoning: { effort: reasoningEffort } }
-      : { temperature }),
   });
 
   const structuredModel = llm.withStructuredOutput<TestAnalysisResponse>(
@@ -106,29 +112,7 @@ export async function runEval(options: RunEvalOptions): Promise<EvalResult> {
   const response: TestAnalysisResponse = {
     results: batchResponses.flatMap((batch) => batch.response.results),
   };
-  const usageEntries = batchResponses.map((batch) => batch.usage);
-  const usage: EvaluationTokenUsage | null = usageEntries.every(Boolean)
-    ? usageEntries.reduce<EvaluationTokenUsage>(
-        (total, entry) => ({
-          inputTokens: total.inputTokens + (entry?.input_tokens ?? 0),
-          outputTokens: total.outputTokens + (entry?.output_tokens ?? 0),
-          totalTokens: total.totalTokens + (entry?.total_tokens ?? 0),
-          cachedInputTokens:
-            (total.cachedInputTokens ?? 0) +
-            (entry?.input_token_details?.cache_read ?? 0),
-          reasoningTokens:
-            (total.reasoningTokens ?? 0) +
-            (entry?.output_token_details?.reasoning ?? 0),
-        }),
-        {
-          inputTokens: 0,
-          outputTokens: 0,
-          totalTokens: 0,
-          cachedInputTokens: 0,
-          reasoningTokens: 0,
-        },
-      )
-    : null;
+  const usage = sumTokenUsage(batchResponses.map((batch) => batch.usage));
 
   // Contract validation: Combined response length must match input length
   if (response.results.length !== cases.length) {
@@ -233,6 +217,7 @@ export async function runEval(options: RunEvalOptions): Promise<EvalResult> {
     response,
     failures,
     model,
+    settings,
     requestCount: batches.length,
     durationMs: Date.now() - startedAt,
     usage,

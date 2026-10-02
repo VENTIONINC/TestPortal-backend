@@ -2,10 +2,18 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import "../testEnv";
-import fs from "node:fs";
 import path from "node:path";
-import type { AIMessage, UsageMetadata } from "@langchain/core/messages";
-import type { LLMResult } from "@langchain/core/outputs";
+import type { UsageMetadata } from "@langchain/core/messages";
+
+import {
+  errorFormatterConfig,
+  getPromptModelOptions,
+  type PromptModelSettings,
+} from "@/config/promptModels";
+import {
+  sumTokenUsage,
+  writePromptEvaluationReport,
+} from "../helpers/evaluation";
 
 import { errorFormatterService } from "@/services/errorFormatterService";
 import {
@@ -15,49 +23,34 @@ import {
 
 // Keep the production formatter and real OpenAI call; isolate unrelated DB services.
 jest.mock("@langchain/openai", () => {
-  const actual = jest.requireActual<typeof import("@langchain/openai")>("@langchain/openai");
-  const usageEntries: Array<UsageMetadata | null> = [];
-  const callbacks = [{
-    handleLLMEnd(result: LLMResult) {
-      for (const generations of result.generations) {
-        const generation = generations[0];
-        const message = generation && "message" in generation
-          ? generation.message as AIMessage : undefined;
-        usageEntries.push(message?.usage_metadata ?? null);
-      }
-    },
-  }];
+  const actual =
+    jest.requireActual<typeof import("@langchain/openai")>("@langchain/openai");
+  const { createUsageCollector } = jest.requireActual<
+    typeof import("../helpers/evaluation")
+  >("../helpers/evaluation");
+  const { usageEntries, callbacks } = createUsageCollector();
   return {
     ...actual,
     usageEntries,
-    ChatOpenAI: jest.fn((options: ConstructorParameters<typeof actual.ChatOpenAI>[0]) => {
-      if (process.env.ERROR_FORMATTER_MODEL === "gpt-4.1-mini") {
-        const baselineOptions = { ...options };
-        delete baselineOptions.modelKwargs;
+    ChatOpenAI: jest.fn(
+      (options: ConstructorParameters<typeof actual.ChatOpenAI>[0]) => {
+        if (
+          !process.env.ERROR_FORMATTER_MODEL &&
+          !process.env.ERROR_FORMATTER_REASONING
+        ) {
+          return new actual.ChatOpenAI({ ...options, callbacks });
+        }
+        const selectedOptions = { ...options };
+        delete selectedOptions.temperature;
+        delete selectedOptions.reasoning;
+        delete selectedOptions.modelKwargs;
         return new actual.ChatOpenAI({
-          ...baselineOptions,
+          ...selectedOptions,
+          ...getPromptModelOptions(getFormatterEvaluationSettings()),
           callbacks,
-          model: "gpt-4.1-mini",
-          useResponsesApi: false,
-          temperature: 0.7,
         });
-      }
-      if (process.env.ERROR_FORMATTER_MODEL !== "gpt-6-luna") {
-        return new actual.ChatOpenAI({ ...options, callbacks });
-      }
-      const lunaOptions = { ...options };
-      delete lunaOptions.temperature;
-      return new actual.ChatOpenAI({
-        ...lunaOptions,
-        callbacks,
-        model: "gpt-6-luna",
-        useResponsesApi: true,
-        // LangChain 1.4.5 drops typed reasoning settings for GPT-6 models.
-        modelKwargs: {
-          reasoning: { effort: process.env.ERROR_FORMATTER_REASONING === "low" ? "low" : "none" },
-        },
-      });
-    }),
+      },
+    ),
   };
 });
 jest.mock("@/services/resultService", () => ({ resultService: {} }));
@@ -90,7 +83,10 @@ const cases: Case[] = [
         "Timeout 12000ms exceeded waiting for selector #checkout-submit.",
       contextCategory: "performance",
     },
-    required: [/#checkout-submit/, /12,?000\s*(?:ms|milliseconds)|12\s*seconds/i],
+    required: [
+      /#checkout-submit/,
+      /12,?000\s*(?:ms|milliseconds)|12\s*seconds/i,
+    ],
   },
   {
     name: "preserves DNS error and host",
@@ -143,16 +139,33 @@ const cases: Case[] = [
   },
 ];
 
-const evaluationModel = process.env.ERROR_FORMATTER_MODEL ?? "gpt-6-luna";
-const reasoningEffort = process.env.ERROR_FORMATTER_REASONING ?? "none";
-if (!["none", "low"].includes(reasoningEffort)) {
-  throw new Error(`Unsupported ERROR_FORMATTER_REASONING: ${reasoningEffort}`);
-}
-if (!["gpt-4.1-mini", "gpt-6-luna"].includes(evaluationModel)) {
-  throw new Error(`Unsupported ERROR_FORMATTER_MODEL: ${evaluationModel}`);
+function getFormatterEvaluationSettings(): PromptModelSettings {
+  const model = process.env.ERROR_FORMATTER_MODEL ?? errorFormatterConfig.model;
+  const reasoningEffort =
+    process.env.ERROR_FORMATTER_REASONING ??
+    errorFormatterConfig.reasoningEffort;
+  if (reasoningEffort !== "none" && reasoningEffort !== "low") {
+    throw new Error(
+      `Unsupported ERROR_FORMATTER_REASONING: ${reasoningEffort}`,
+    );
+  }
+  if (model !== "gpt-4.1-mini" && model !== errorFormatterConfig.model) {
+    throw new Error(`Unsupported ERROR_FORMATTER_MODEL: ${model}`);
+  }
+  const { reasoningEffort: _defaultReasoning, ...defaults } =
+    errorFormatterConfig;
+  return {
+    ...defaults,
+    model,
+    ...(model === "gpt-4.1-mini"
+      ? { useResponsesApi: false, temperature: 0.7 }
+      : { reasoningEffort }),
+  };
 }
 
-describe(`error formatter: ${evaluationModel}`, () => {
+const settings = getFormatterEvaluationSettings();
+
+describe(`error formatter: ${settings.model}`, () => {
   jest.setTimeout(120_000);
   const records: Array<Record<string, unknown>> = [];
   const { usageEntries } = jest.requireMock<{
@@ -160,35 +173,25 @@ describe(`error formatter: ${evaluationModel}`, () => {
   }>("@langchain/openai");
 
   afterAll(() => {
-    const directory = path.resolve("__prompts-tests__/error-formatter/reports");
-    fs.mkdirSync(directory, { recursive: true });
-    fs.writeFileSync(
-      path.join(
-        directory,
-        `${new Date().toISOString().replace(/:/g, "-")}.json`,
-      ),
-      JSON.stringify(
-        {
-          model: evaluationModel,
-          promptVersion: "v1.1.0",
-          ...(evaluationModel === "gpt-6-luna"
-            ? { reasoningEffort, api: "responses" }
-            : { temperature: 0.7, api: "chat-completions" }),
-          maxTokens: 500,
-          usageEntries,
-          // These checks cover factual anchors, not a complete semantic quality judgment.
-          reviewRubric: [
-            "No invented facts or confirmed root causes",
-            "Expected and actual values retain their roles",
-            "Readable concise wording",
-            "Actionable advice grounded in input",
-          ],
-          records,
-        },
-        null,
-        2,
-      ),
+    const report = writePromptEvaluationReport(
+      path.resolve("__prompts-tests__/error-formatter/reports"),
+      {
+        model: settings.model,
+        promptVersion: "v1.1.0",
+        settings,
+        usage: sumTokenUsage(usageEntries),
+        usageEntries,
+        // These checks cover factual anchors, not a complete semantic quality judgment.
+        reviewRubric: [
+          "No invented facts or confirmed root causes",
+          "Expected and actual values retain their roles",
+          "Readable concise wording",
+          "Actionable advice grounded in input",
+        ],
+        records,
+      },
     );
+    console.log(`OpenAI formatter report: ${report.archivedPath}`);
   });
 
   it.each(cases)("$name", async (testCase) => {

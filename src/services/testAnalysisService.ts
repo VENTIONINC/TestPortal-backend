@@ -4,6 +4,10 @@
 import { ChatOpenAI } from "@langchain/openai";
 import { z } from "zod";
 
+import {
+  getPromptModelOptions,
+  storedResultsAnalysisConfig,
+} from "@/config/promptModels";
 import { normalizeJsonArrayForText } from "@/lib/jsonPayloads";
 import getLogger from "@/lib/logger";
 import { getStoredResultsAnalysisPrompt } from "@/prompts/stored-results-analysis/v1.2.0";
@@ -114,14 +118,9 @@ export const testAnalysisService = {
       const systemPrompt = getStoredResultsAnalysisPrompt(essentialData.length);
       const userPrompt = JSON.stringify(essentialData);
 
-      const model = new ChatOpenAI({
-        model: "gpt-6-luna",
-        useResponsesApi: true,
-        // LangChain 1.4.5 drops typed reasoning settings for GPT-6 models.
-        modelKwargs: { reasoning: { effort: "low" } },
-        maxTokens: 4000,
-        maxRetries: 2,
-      });
+      const model = new ChatOpenAI(
+        getPromptModelOptions(storedResultsAnalysisConfig),
+      );
 
       const structuredModel = model.withStructuredOutput<
         z.infer<typeof testAnalysisSchema>

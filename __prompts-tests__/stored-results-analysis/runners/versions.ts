@@ -29,9 +29,3 @@ export const PROMPT_VERSIONS = {
     schema: testAnalysisSchemaV1_2_0,
   },
 } satisfies Record<string, PromptVersion>;
-
-/**
- * Default version for backward compatibility
- * Points to current production version (v1.2.0)
- */
-export const DEFAULT_VERSION: PromptVersion = PROMPT_VERSIONS["v1.2.0"];

@@ -5,6 +5,10 @@ import { ChatPromptTemplate } from "@langchain/core/prompts";
 import { ChatOpenAI } from "@langchain/openai";
 import { z } from "zod";
 
+import {
+  errorFormatterConfig,
+  getPromptModelOptions,
+} from "@/config/promptModels";
 import { normalizeJsonArrayForText } from "@/lib/jsonPayloads";
 import getLogger from "@/lib/logger";
 import { getEffectiveResultCategory } from "@/lib/resultCategory";
@@ -35,14 +39,7 @@ export const errorFormatterService = {
     try {
       logger.info("Formatting error message with LangChain");
 
-      const model = new ChatOpenAI({
-        model: "gpt-6-luna",
-        useResponsesApi: true,
-        // LangChain 1.4.5 drops typed reasoning settings for GPT-6 models.
-        modelKwargs: { reasoning: { effort: "none" } },
-        maxTokens: 500,
-        maxRetries: 2,
-      });
+      const model = new ChatOpenAI(getPromptModelOptions(errorFormatterConfig));
 
       const structuredModel = model.withStructuredOutput<
         z.infer<typeof errorFormatterSchema>
