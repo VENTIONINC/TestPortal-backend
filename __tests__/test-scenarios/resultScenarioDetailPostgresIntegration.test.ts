@@ -158,6 +158,7 @@ describePostgres("Result detail related Test Scenario PostgreSQL lifecycle", () 
       {
         id: originalScenario.id,
         title: "Original scenario",
+        scenarioKey: null,
         details: "Original details",
         contentMd: originalScenario.contentMd,
       },
@@ -175,6 +176,7 @@ describePostgres("Result detail related Test Scenario PostgreSQL lifecycle", () 
       {
         id: originalScenario.id,
         title: "Edited scenario",
+        scenarioKey: null,
         details: "Current details",
         contentMd: editedScenario.contentMd,
       },
@@ -192,7 +194,13 @@ describePostgres("Result detail related Test Scenario PostgreSQL lifecycle", () 
         right.id.localeCompare(left.id),
     );
     await expect(requestRelatedScenarios()).resolves.toEqual(
-      orderedScenarios.map(({ id, title, details, contentMd }) => ({ id, title, details, contentMd })),
+      orderedScenarios.map(({ id, title, scenarioKey, details, contentMd }) => ({
+        id,
+        title,
+        scenarioKey,
+        details,
+        contentMd,
+      })),
     );
 
     await testScenarioIntegrationService.removeSpecLink({
@@ -201,7 +209,13 @@ describePostgres("Result detail related Test Scenario PostgreSQL lifecycle", () 
       projectId,
     });
     await expect(requestRelatedScenarios()).resolves.toEqual([
-      { id: secondScenario.id, title: "Second scenario", details: null, contentMd: secondScenario.contentMd },
+      {
+        id: secondScenario.id,
+        title: "Second scenario",
+        scenarioKey: null,
+        details: null,
+        contentMd: secondScenario.contentMd,
+      },
     ]);
 
     await testScenarioModel.delete(secondScenario.id, projectId);
