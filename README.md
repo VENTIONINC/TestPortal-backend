@@ -86,7 +86,11 @@ npm run dev
 npm run type-check
 
 # Unit tests
-npm test # runs Jest via ts-jest
+npm test # runs all configured Jest projects via ts-jest
+npm run test:unit
+npm run test:contract
+TEST_DATABASE_URL="..." npm run test:integration
+npm run test:e2e
 
 # Build for production
 npm run build
@@ -106,6 +110,9 @@ docker-compose up -d postgres     # Start PostgreSQL
 docker-compose down               # Stop all services
 docker-compose logs postgres      # View PostgreSQL logs
 ```
+
+See [docs/TESTING.md](docs/TESTING.md) for test categories and isolated
+integration-test setup.
 
 ## Prompt Tests
 

@@ -1,0 +1,4 @@
+interface:
+  display_name: "TestPortal Backend Review"
+  short_description: "Review backend changes against code and criteria"
+  default_prompt: "Use $testportal-review to review the current TestPortal backend changes against applicable rules and acceptance criteria."
