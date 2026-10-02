@@ -1,0 +1,53 @@
+openspec/changes/add-test-scenario-search/proposal.md
+  s_5d078bc1eac805::t_62016908a56691 8,12,26
+openspec/changes/add-test-scenario-search/specs/test-scenario-summaries/spec.md
+  s_5d078bc1eac805::t_887c86bd93c3bd 29,36-48,58,91,104
+__tests__/lib/openapi/testScenarios.test.ts
+  s_478ceef37ca57c::t_5dbaa4eede3681 62-76
+__tests__/mcp/testScenarioSchemas.test.ts
+  s_478ceef37ca57c::t_51febd6f61650c 32-47
+__tests__/mcp/testScenarioTools.test.ts
+  s_478ceef37ca57c::t_98f1404dbe8456 10,15-17,142-156
+__tests__/models/testScenarioModel.test.ts
+  s_478ceef37ca57c::t_c0195c507b6a81 171-184
+docs/API_DOCUMENTATION.md
+  s_478ceef37ca57c::t_da81e49bf3da7d 141-143
+docs/MCP_TOOLS.md
+  s_478ceef37ca57c::t_0fe21d655e1066 232,235-236,249,259
+openspec/changes/add-test-scenario-search/design.md
+  s_478ceef37ca57c::t_8ee9387a85005c 3,5,11,23,29,31,35,48,50-52
+openspec/changes/add-test-scenario-search/tasks.md
+  s_478ceef37ca57c::t_1ad096d61d7f1d 8,14-15,19-22
+src/lib/openapi/testScenarios.ts
+  s_478ceef37ca57c::t_e044ec6c20965d 163,711
+src/mcp/schemas/testScenarioSchemas.ts
+  s_478ceef37ca57c::t_83b0172f0bf315 21,31-33
+src/mcp/tools/test-scenarios.ts
+  s_478ceef37ca57c::t_95b32516b81c69 22
+src/models/testScenarioModel.ts
+  s_478ceef37ca57c::t_479175e341565f 76-89
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.18",
+  "base_commit_sha": "a81c70f49d396fab276fd1edf31194c310c326dd",
+  "prompts": {},
+  "sessions": {
+    "s_478ceef37ca57c": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a0f73f-83b5-79d2-ad21-8ccc333d761c",
+        "model": "unknown"
+      },
+      "human_author": "Ihar Mikailau <ihar.mikailau@ventionteams.com>"
+    },
+    "s_5d078bc1eac805": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a0f6d8-0084-7060-a05d-ee06c3afde73",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Ihar Mikailau <ihar.mikailau@ventionteams.com>"
+    }
+  }
+}
