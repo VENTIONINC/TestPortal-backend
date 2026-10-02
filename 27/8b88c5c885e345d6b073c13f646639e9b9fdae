@@ -1,0 +1,163 @@
+.gitignore
+  s_1a63ecb2443eff::t_4e4e8a69c5b2b9 90
+__prompts-tests__/README.md
+  s_1a63ecb2443eff::t_3ec333000ae391 18,102-118
+__prompts-tests__/error-formatter/README.md
+  s_1a63ecb2443eff::t_24ef87bef2cbbb 1-19
+__prompts-tests__/error-formatter/baseline.test.ts
+  s_1a63ecb2443eff::t_c635667de65892 1-200
+__prompts-tests__/helpers/evaluation.ts
+  s_1a63ecb2443eff::t_721b92723bae48 1-75
+__prompts-tests__/stored-results-analysis/generate-datasets.ts
+  s_1a63ecb2443eff::t_59de7e7d17084c 53,56-57,69
+__prompts-tests__/stored-results-analysis/regression.test.ts
+  s_1a63ecb2443eff::t_c12fea3470d9d2 1-17
+__prompts-tests__/stored-results-analysis/runners/compare-versions.ts
+  s_1a63ecb2443eff::t_cbe6f9cc3232ee 11-15,53
+__prompts-tests__/stored-results-analysis/runners/dataset-evaluation.ts
+  s_1a63ecb2443eff::t_eb760fdbdbbd67 1-61
+__prompts-tests__/stored-results-analysis/runners/evaluation-report.ts
+  s_1a63ecb2443eff::t_62e7adedfaf357 6-52
+__prompts-tests__/stored-results-analysis/runners/stored-results-analysis.ts
+  s_1a63ecb2443eff::t_32b8c7163b4ebe 11-12,41,50-52,67,71-100,102,204-208
+__prompts-tests__/stored-results-analysis/runners/types.ts
+  s_1a63ecb2443eff::t_a1862620d0d196 9-10,27-31
+__prompts-tests__/stored-results-analysis/runners/versions.ts
+  s_1a63ecb2443eff::t_1805ea6b26af64 10-14,20,26-31
+__prompts-tests__/stored-results-analysis/smoke.test.ts
+  s_1a63ecb2443eff::t_3c0bdc5f598059 1-17
+__prompts-tests__/stored-results-analysis/v1.1.0/templates/stored-results-analysis/bug.application-error.ts
+  s_1a63ecb2443eff::t_4481a6be608592 1-53
+__prompts-tests__/stored-results-analysis/v1.1.0/templates/stored-results-analysis/index.ts
+  s_1a63ecb2443eff::t_a0e76256ee7a62 10,12-14,16,18,26,28-30,32,34
+__prompts-tests__/stored-results-analysis/v1.1.0/templates/stored-results-analysis/infra.dns-tls.ts
+  s_1a63ecb2443eff::t_d4e6e917830b64 1-53
+__prompts-tests__/stored-results-analysis/v1.1.0/templates/stored-results-analysis/other.insufficient-context.ts
+  s_1a63ecb2443eff::t_1968c41784eb0f 1-45
+__prompts-tests__/stored-results-analysis/v1.1.0/templates/stored-results-analysis/performance.resource-constraint.ts
+  s_1a63ecb2443eff::t_e0e5d376b98422 1-53
+__prompts-tests__/stored-results-analysis/v1.1.0/templates/stored-results-analysis/performance.slow-response.ts
+  s_1a63ecb2443eff::t_6847b0bbfc4af9 1-54
+__prompts-tests__/stored-results-analysis/v1.1.0/templates/stored-results-analysis/script.fixture-setup.ts
+  s_1a63ecb2443eff::t_30f5b79bcaa703 1-53
+__tests__/config/evaluationRunner.test.ts
+  s_1a63ecb2443eff::t_8bd56c9930318a 10,65,86,91,97,106
+__tests__/config/promptTestEnvironment.test.ts
+  s_1a63ecb2443eff::t_9cc8fd62ecf979 52-53
+__tests__/config/serverAiConfig.test.ts
+  s_1a63ecb2443eff::t_2b036c52822931 45-46,52-67,99,220
+__tests__/controllers/dashboardController.test.ts
+  s_1a63ecb2443eff::t_b3af951532aad4 49-50,78-108,111-146
+__tests__/controllers/reportUploadControllers.test.ts
+  s_1a63ecb2443eff::t_6b7f8293cdc635 1-57
+__tests__/controllers/resultErrorController.test.ts
+  s_1a63ecb2443eff::t_8d283abc2b9b44 104-107,113,116-120,122-136
+__tests__/lib/openapi/reportUploads.test.ts
+  s_1a63ecb2443eff::t_05492e2f08da34 1-56
+__tests__/lib/params-builder.test.ts
+  s_1a63ecb2443eff::t_16299797a13b72 56-76
+__tests__/lib/reportTimestampWarnings.test.ts
+  s_1a63ecb2443eff::t_a58a3c25655d2b 1-89
+__tests__/models/projectModel.test.ts
+  s_1a63ecb2443eff::t_7f886afaed3c17 7,11-13,25,31-32,37
+__tests__/models/resultModel.test.ts
+  s_1a63ecb2443eff::t_314aa36ace08b5 28-30,211-325,360-388,492-493,495-497,507,512-513,516,518,523,526
+__tests__/prompts/evaluation.test.ts
+  s_1a63ecb2443eff::t_9170dc111383af 4-28,30,32-39,41-45
+__tests__/schemas/testAnalysisSchemas.test.ts
+  s_1a63ecb2443eff::t_f2bf8dbaa199cc 1-75
+__tests__/services/ctrfService.test.ts
+  s_1a63ecb2443eff::t_5d6ab3129bb543 11,106,108,113,377-428
+__tests__/services/errorFormatterService.test.ts
+  s_1a63ecb2443eff::t_87051ad1eb1a46 234-268
+__tests__/services/jsonReportService.test.ts
+  s_1a63ecb2443eff::t_6e3477680836ad 453-485
+__tests__/services/resultErrorIssueWorkflow.test.ts
+  s_1a63ecb2443eff::t_1f0fa4f185e80f 52,96-99,343-413
+__tests__/services/resultService.jsonPayloads.test.ts
+  s_1a63ecb2443eff::t_4e916dc177caf5 190-215
+__tests__/services/testAnalysisService.test.ts
+  s_1a63ecb2443eff::t_6ec5b5a5516fd3 41
+config/ai/evaluation.baseline.json
+  s_1a63ecb2443eff::t_68a5d4f4472a3f 8-21,25-40
+config/ai/server.json
+  s_1a63ecb2443eff::t_8953f85dbebb2d 8-21,25-46
+config/ai/server.schema.json
+  s_1a63ecb2443eff::t_82a5f64c62e0ac 20
+docs/AI_CONFIGURATION.md
+  s_1a63ecb2443eff::t_af86bb3cd9082b 15-16,20,26
+jest.prompts.config.ts
+  s_1a63ecb2443eff::t_bdbd7ac11796a9 6-12
+openspec/changes/migrate-openai-to-server-ai-config/design.md
+  s_1a63ecb2443eff::t_b3064e4cf2a8ca 52-53,57,59,61,67
+openspec/changes/migrate-openai-to-server-ai-config/proposal.md
+  s_1a63ecb2443eff::t_8275010424cbe5 15,32
+openspec/changes/migrate-openai-to-server-ai-config/specs/ai-evaluation-configuration/spec.md
+  s_1a63ecb2443eff::t_a2d7fe5d0dcdfd 10,21
+openspec/changes/migrate-openai-to-server-ai-config/specs/server-ai-configuration/spec.md
+  s_1a63ecb2443eff::t_3f41fa0a0df2a0 36
+prisma/migrations/20260907120000_cascade_project_deletion/migration.sql
+  s_1a63ecb2443eff::t_41011953edd901 1-48
+prisma/schema.prisma
+  s_1a63ecb2443eff::t_d7b96965a1b3d4 30-35,65,87,100-126,130-138,140-148,158,160,162-164,168-170,172,176-177,179,181-182,203,206-209,225,259
+src/config/serverAiConfig.ts
+  s_1a63ecb2443eff::t_53703d0c326b92 50,72,80,181,260-266
+src/controllers/ctrfController.ts
+  s_1a63ecb2443eff::t_d0cb83495352df 10-13,79-82,107-110
+src/controllers/dashboardController.ts
+  s_1a63ecb2443eff::t_a440002fce1283 16-30,33,39-51,68-69,76-77,84,92-93,100-102
+src/controllers/jsonReportController.ts
+  s_1a63ecb2443eff::t_861c5abbe9d7fd 16-19,191-194,220-223
+src/controllers/resultErrorController.ts
+  s_1a63ecb2443eff::t_6d1f285bed7dc4 134-140,162
+src/lib/openapi/ctrf.ts
+  s_1a63ecb2443eff::t_4435ccdbb9538d 93-95,144,153-154,205,214-215
+src/lib/openapi/projects.ts
+  s_1a63ecb2443eff::t_726e2fceb27d4c 444-453
+src/lib/openapi/reports.ts
+  s_1a63ecb2443eff::t_5773a109ac16a8 138-139,189-190
+src/lib/openapi/results.ts
+  s_1a63ecb2443eff::t_c6550220d67be2 102,117-119,250-253
+src/lib/params-builder.ts
+  s_1a63ecb2443eff::t_cc3d628f127555 8,51,56-59,83-93,104-106
+src/lib/reportTimestampWarnings.ts
+  s_1a63ecb2443eff::t_3a7757fbe4c018 1-101
+src/models/projectModel.ts
+  s_1a63ecb2443eff::t_35b69a897aa619 195,197-198
+src/models/resultModel.ts
+  s_1a63ecb2443eff::t_28ce802eb057f7 26,123-154,205,304-310,316-330,401,501-507,513-527,573,613-615,814-835
+src/prompts/error-formatter/v1.1.0.ts
+  s_1a63ecb2443eff::t_a9b0c96b8f971f 1-33
+src/prompts/stored-results-analysis/v1.2.0.ts
+  s_1a63ecb2443eff::t_e92c6182e14b67 1-207
+src/schemas/testAnalysisSchemas.ts
+  s_1a63ecb2443eff::t_7885c4bb026266 7,17-24,49,78-107,114,116-119
+src/services/errorFormatterService.ts
+  s_1a63ecb2443eff::t_a5db664162f96e 12
+src/services/jsonReportService.ts
+  s_1a63ecb2443eff::t_c6370f19e27632 15,118-119
+src/services/resultErrorService.ts
+  s_1a63ecb2443eff::t_89092533f1482d 120-124,127,145-157,160-162,167-170,172-174,185-198
+src/services/resultService.ts
+  s_1a63ecb2443eff::t_a663c0109125da 53,80
+src/services/testAnalysisService.ts
+  s_1a63ecb2443eff::t_dc85527fa173a3 10
+src/types/api.ts
+  s_1a63ecb2443eff::t_9c03a0b2e143dc 55
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.18",
+  "base_commit_sha": "278b88c5c885e345d6b073c13f646639e9b9fdae",
+  "prompts": {},
+  "sessions": {
+    "s_1a63ecb2443eff": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a0fbf0-f3c2-7e20-8f7b-f5c743c0e086",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Ihar Mikailau <ihar.mikailau@ventionteams.com>"
+    }
+  }
+}
