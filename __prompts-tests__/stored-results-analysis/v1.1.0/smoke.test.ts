@@ -8,7 +8,7 @@
  * Usage: npm run test:prompts:smoke
  */
 
-import "../../testEnv"; // Load environment variables
+import { hasOpenAiCredentials } from "../../testEnv"; // Load environment variables
 import fs from "node:fs";
 import path from "node:path";
 import { runEval } from "../runners/stored-results-analysis";
@@ -20,7 +20,7 @@ const datasetPath = path.join(
   "__prompts-tests__/stored-results-analysis/datasets/stored-results-analysis/smoke.json",
 );
 
-describe("Prompt Evaluation - Smoke Tests (v1.1.0)", () => {
+(hasOpenAiCredentials ? describe : describe.skip)("Prompt Evaluation - Smoke Tests (v1.1.0)", () => {
   jest.setTimeout(120_000); // 2 minutes timeout
 
   it("should satisfy contract and expectations", async () => {
@@ -30,10 +30,11 @@ describe("Prompt Evaluation - Smoke Tests (v1.1.0)", () => {
     ) as TestCase[];
 
     // Run evaluation
-    const { failures } = await runEval({
+    const { failures, metadata } = await runEval({
       cases,
       version: DEFAULT_VERSION,
     });
+    console.info("Evaluation configuration:", JSON.stringify(metadata));
 
     // Log failures for debugging
     if (failures.length > 0) {

@@ -8,6 +8,12 @@
 
 import { ChatOpenAI } from "@langchain/openai";
 import { z } from "zod";
+import {
+  assertEvaluationCredentials,
+  loadEvaluationAiConfiguration,
+  resolveAiSettings,
+  toChatOpenAIOptions,
+} from "@/config/serverAiConfig";
 import type { TestAnalysisResponse } from "@/schemas/testAnalysisSchemas";
 import type { TestCase } from "../v1.1.0/templates/types";
 import type { EvalResult, EvalFailure } from "./types";
@@ -38,20 +44,20 @@ export interface RunEvalOptions {
  * @returns Evaluation result with LLM response and validation failures
  */
 export async function runEval(options: RunEvalOptions): Promise<EvalResult> {
-  const { cases, version, model = "gpt-4.1-mini", temperature = 0.1 } = options;
+  const { cases, version, model, temperature } = options;
+  assertEvaluationCredentials();
+  const configuration = loadEvaluationAiConfiguration();
+  const settings = resolveAiSettings(configuration, "storedResultsAnalysis", {
+    ...(model === undefined ? {} : { model }),
+    ...(temperature === undefined ? {} : { temperature }),
+  });
 
   // Prepare prompt and input using version-specific prompt
   const systemPrompt = version.getPrompt(cases.length);
   const userPrompt = JSON.stringify(cases.map((c) => c.input));
 
   // Setup LLM with structured output using version-specific schema
-  const llm = new ChatOpenAI({
-    model,
-    temperature,
-    maxTokens: 4000,
-    maxRetries: 2,
-    cache: false,
-  });
+  const llm = new ChatOpenAI(toChatOpenAIOptions(settings));
 
   const structuredModel = llm.withStructuredOutput<TestAnalysisResponse>(
     version.schema,
@@ -165,5 +171,26 @@ export async function runEval(options: RunEvalOptions): Promise<EvalResult> {
     }
   }
 
-  return { response, failures };
+  return {
+    response,
+    failures,
+    metadata: {
+      suite: "stored-results-analysis",
+      operation: settings.operation,
+      promptVersion: version.version,
+      configurationVersion: settings.version,
+      configurationSource: settings.source === "custom" ? "custom" : "evaluation-baseline",
+      profile: settings.profile,
+      provider: settings.provider,
+      requestedModel: settings.model,
+      ...(settings.reasoning ? { reasoning: settings.reasoning } : {}),
+      generationSettings: {
+        ...(settings.temperature === undefined ? {} : { temperature: settings.temperature }),
+        maxOutputTokens: settings.maxOutputTokens,
+        maxRetries: settings.maxRetries,
+        ...(settings.timeoutMs === undefined ? {} : { timeoutMs: settings.timeoutMs }),
+        ...(settings.cache === false ? { cache: false as const } : {}),
+      },
+    },
+  };
 }
