@@ -3,6 +3,7 @@
 
 import { z } from "zod";
 import { editableTestManagementKeySchema } from "@/schemas/testManagementKeySchemas";
+import { TEST_SCENARIO_SORT_VALUES } from "@/types/testScenarios";
 
 const uuidSchema = z.string().uuid("Must be a valid UUID");
 const nonBlankText = z.string().trim().min(1, "Value must not be blank");
@@ -96,6 +97,9 @@ export const testScenarioListQuerySchema = z.object({
   projectId: uuidSchema,
   page: positiveIntegerQuerySchema(1),
   limit: positiveIntegerQuerySchema(30, 100),
+  search: z.string().trim().optional(),
+  createdById: uuidSchema.optional(),
+  sort: z.enum(TEST_SCENARIO_SORT_VALUES).default("recently_created"),
 });
 
 export type CreateTestScenarioInput = z.infer<typeof createTestScenarioSchema>;
@@ -113,7 +117,7 @@ export type TestScenarioProjectQuery = z.infer<
   typeof testScenarioProjectQuerySchema
 >;
 export type TestScenarioIdParams = z.infer<typeof testScenarioIdParamsSchema>;
-export type TestScenarioStepParams = z.infer<typeof testScenarioStepParamsSchema>;
-export type TestScenarioListQuery = z.infer<
-  typeof testScenarioListQuerySchema
+export type TestScenarioStepParams = z.infer<
+  typeof testScenarioStepParamsSchema
 >;
+export type TestScenarioListQuery = z.infer<typeof testScenarioListQuerySchema>;

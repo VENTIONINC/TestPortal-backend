@@ -59,6 +59,21 @@ describe("structured Test Scenario OpenAPI contract", () => {
     expect(summary.properties?.steps).toBeUndefined();
   });
 
+  it("documents title and key search on the REST catalog operation", () => {
+    const operation = generateOpenAPISpec().paths?.["/api/v2/test-scenarios"]?.get;
+    const description = operation?.description ?? "";
+    const querySchema = generateOpenAPISpec().components?.schemas
+      ?.TestScenarioListQuery as { properties?: Record<string, { description?: string }> };
+
+    expect(description).toContain("title or scenarioKey");
+    expect(querySchema.properties?.search?.description).toContain(
+      "title or scenarioKey",
+    );
+    expect(querySchema.properties?.search?.description).toContain(
+      "backslash are literal",
+    );
+  });
+
   it("preserves integration evidence operations and deletion envelopes", () => {
     const paths = generateOpenAPISpec().paths ?? {};
     for (const operation of [

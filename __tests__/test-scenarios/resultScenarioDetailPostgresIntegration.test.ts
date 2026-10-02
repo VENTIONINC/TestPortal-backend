@@ -11,7 +11,7 @@ import { testScenarioIntegrationService } from "@/services/testScenarioIntegrati
 import type { RelatedTestScenarioSummary } from "@/types/testScenarios";
 
 // Run explicitly against an isolated PostgreSQL database with:
-// RUN_POSTGRES_INTEGRATION_TESTS=1 DATABASE_URL="..." npm test -- --runInBand __tests__/test-scenarios/resultScenarioDetailPostgresIntegration.test.ts
+// TEST_DATABASE_URL="..." npm run test:integration -- --runTestsByPath __tests__/test-scenarios/resultScenarioDetailPostgresIntegration.test.ts
 const postgresIntegrationEnabled =
   process.env.RUN_POSTGRES_INTEGRATION_TESTS === "1";
 const describePostgres = postgresIntegrationEnabled ? describe : describe.skip;
@@ -158,6 +158,7 @@ describePostgres("Result detail related Test Scenario PostgreSQL lifecycle", () 
       {
         id: originalScenario.id,
         title: "Original scenario",
+        scenarioKey: null,
         details: "Original details",
         contentMd: originalScenario.contentMd,
       },
@@ -175,6 +176,7 @@ describePostgres("Result detail related Test Scenario PostgreSQL lifecycle", () 
       {
         id: originalScenario.id,
         title: "Edited scenario",
+        scenarioKey: null,
         details: "Current details",
         contentMd: editedScenario.contentMd,
       },
@@ -192,7 +194,13 @@ describePostgres("Result detail related Test Scenario PostgreSQL lifecycle", () 
         right.id.localeCompare(left.id),
     );
     await expect(requestRelatedScenarios()).resolves.toEqual(
-      orderedScenarios.map(({ id, title, details, contentMd }) => ({ id, title, details, contentMd })),
+      orderedScenarios.map(({ id, title, scenarioKey, details, contentMd }) => ({
+        id,
+        title,
+        scenarioKey,
+        details,
+        contentMd,
+      })),
     );
 
     await testScenarioIntegrationService.removeSpecLink({
@@ -201,7 +209,13 @@ describePostgres("Result detail related Test Scenario PostgreSQL lifecycle", () 
       projectId,
     });
     await expect(requestRelatedScenarios()).resolves.toEqual([
-      { id: secondScenario.id, title: "Second scenario", details: null, contentMd: secondScenario.contentMd },
+      {
+        id: secondScenario.id,
+        title: "Second scenario",
+        scenarioKey: null,
+        details: null,
+        contentMd: secondScenario.contentMd,
+      },
     ]);
 
     await testScenarioModel.delete(secondScenario.id, projectId);

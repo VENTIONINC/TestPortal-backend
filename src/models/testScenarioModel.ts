@@ -2,16 +2,17 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { Prisma } from "@prisma/client";
-import type {
-  TestScenario,
-  TestScenarioStep,
-} from "@prisma/client";
+import type { TestScenario, TestScenarioStep } from "@prisma/client";
 import { dbClient } from "@/prisma/client";
 import {
   hashTestScenarioMarkdown,
   renderTestScenarioMarkdown,
   TEST_SCENARIO_MARKDOWN_FORMAT_VERSION,
 } from "@/lib/testScenarioMarkdown";
+import type {
+  ListTestScenariosParams,
+  TestScenarioSort,
+} from "@/types/testScenarios";
 import type {
   AppendTestScenarioStepParams,
   CreateTestScenarioParams,
@@ -54,6 +55,59 @@ const summarySelect = {
     },
   },
 } satisfies Prisma.TestScenarioSelect;
+
+type SummaryListParams = Pick<
+  ListTestScenariosParams,
+  "projectId" | "page" | "limit" | "search" | "createdById" | "sort"
+>;
+
+function escapeLikePattern(value: string): string {
+  return value.replace(/[\\%_]/g, (character) => `\\${character}`);
+}
+
+function summaryWhere(
+  params: SummaryListParams,
+): Prisma.TestScenarioWhereInput {
+  return {
+    projectId: params.projectId,
+    ...(params.createdById ? { createdById: params.createdById } : {}),
+    ...(params.search
+      ? {
+          OR: [
+            {
+              title: {
+                contains: escapeLikePattern(params.search),
+                mode: "insensitive",
+              },
+            },
+            {
+              scenarioKey: {
+                contains: escapeLikePattern(params.search),
+                mode: "insensitive",
+              },
+            },
+          ],
+        }
+      : {}),
+  };
+}
+
+function summaryOrderBy(
+  sort: TestScenarioSort = "recently_created",
+): Prisma.TestScenarioOrderByWithRelationInput[] {
+  switch (sort) {
+    case "recently_updated":
+      return [{ updatedAt: "desc" }, { id: "desc" }];
+    case "title_asc":
+      return [{ title: "asc" }, { id: "asc" }];
+    case "recently_created":
+      return [{ createdAt: "desc" }, { id: "desc" }];
+    default: {
+      const exhaustiveSort: never = sort;
+      return exhaustiveSort;
+    }
+  }
+}
 
 function toResponse(scenario: ScenarioAggregate): TestScenarioResponse {
   return {
@@ -166,7 +220,8 @@ async function compactSteps(
     return;
   }
 
-  const offset = Math.max(...steps.map((step) => step.position), 0) + steps.length + 1;
+  const offset =
+    Math.max(...steps.map((step) => step.position), 0) + steps.length + 1;
   await client.testScenarioStep.updateMany({
     where: { testScenarioId: scenarioId },
     data: { position: { increment: offset } },
@@ -265,12 +320,39 @@ export const testScenarioModel = {
   ): Promise<TestScenarioSummary[]> {
     const client = tx ?? dbClient;
     return await client.testScenario.findMany({
-      where: { projectId },
+      where: summaryWhere({ projectId, page, limit }),
       select: summarySelect,
       skip: (page - 1) * limit,
       take: limit,
-      orderBy: [{ createdAt: "desc" }, { id: "desc" }],
+      orderBy: summaryOrderBy(),
     });
+  },
+
+  async listSummaries(
+    params: SummaryListParams,
+  ): Promise<{ scenarios: TestScenarioSummary[]; total: number }> {
+    const page = params.page ?? 1;
+    const limit = params.limit ?? 30;
+    const where = summaryWhere(params);
+    const orderBy = summaryOrderBy(params.sort);
+
+    return await dbClient.$transaction(
+      async (transaction) => {
+        const [scenarios, total] = await Promise.all([
+          transaction.testScenario.findMany({
+            where,
+            select: summarySelect,
+            skip: (page - 1) * limit,
+            take: limit,
+            orderBy,
+          }),
+          transaction.testScenario.count({ where }),
+        ]);
+
+        return { scenarios, total };
+      },
+      { isolationLevel: Prisma.TransactionIsolationLevel.RepeatableRead },
+    );
   },
 
   async count(
@@ -314,7 +396,9 @@ export const testScenarioModel = {
           ...(data.scenarioKey !== undefined ? { scenarioKey: data.scenarioKey } : {}),
           ...(data.title !== undefined ? { title: data.title } : {}),
           ...(data.details !== undefined ? { details: data.details } : {}),
-          ...(data.objective !== undefined ? { objective: data.objective } : {}),
+          ...(data.objective !== undefined
+            ? { objective: data.objective }
+            : {}),
           ...(data.preconditions !== undefined
             ? { preconditions: data.preconditions }
             : {}),
@@ -361,7 +445,11 @@ export const testScenarioModel = {
             expectedResult: params.expectedResult ?? null,
           },
         });
-        return await refreshProjection(client, params.scenarioId, params.projectId);
+        return await refreshProjection(
+          client,
+          params.scenarioId,
+          params.projectId,
+        );
       },
       tx,
     );
@@ -389,7 +477,11 @@ export const testScenarioModel = {
               : {}),
           },
         });
-        return await refreshProjection(client, params.scenarioId, params.projectId);
+        return await refreshProjection(
+          client,
+          params.scenarioId,
+          params.projectId,
+        );
       },
       tx,
     );
@@ -414,7 +506,11 @@ export const testScenarioModel = {
           scenario.id,
           scenario.steps.filter(({ id }) => id !== step.id),
         );
-        return await refreshProjection(client, params.scenarioId, params.projectId);
+        return await refreshProjection(
+          client,
+          params.scenarioId,
+          params.projectId,
+        );
       },
       tx,
     );
@@ -440,7 +536,8 @@ export const testScenarioModel = {
         }
 
         const orderedSteps = requestedIds.map(
-          (id) => scenario.steps.find((step) => step.id === id) as TestScenarioStep,
+          (id) =>
+            scenario.steps.find((step) => step.id === id) as TestScenarioStep,
         );
         await compactSteps(client, scenario.id, orderedSteps);
         return {
