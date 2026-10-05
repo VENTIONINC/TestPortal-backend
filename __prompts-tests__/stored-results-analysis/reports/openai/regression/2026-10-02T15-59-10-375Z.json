@@ -1,0 +1,904 @@
+{
+  "schemaVersion": 1,
+  "createdAt": "2026-10-02T15:59:10.375Z",
+  "provider": "openai",
+  "model": "gpt-6-luna",
+  "settings": {
+    "operation": "storedResultsAnalysis",
+    "version": 1,
+    "source": "evaluation-baseline",
+    "profile": "classification",
+    "provider": "openai",
+    "model": "gpt-6-luna",
+    "reasoning": {
+      "effort": "low"
+    },
+    "maxOutputTokens": 4000,
+    "maxRetries": 2,
+    "cache": false
+  },
+  "metadata": {
+    "suite": "stored-results-analysis",
+    "operation": "storedResultsAnalysis",
+    "promptVersion": "v1.1.0",
+    "configurationVersion": 1,
+    "configurationSource": "evaluation-baseline",
+    "profile": "classification",
+    "provider": "openai",
+    "requestedModel": "gpt-6-luna",
+    "reasoning": {
+      "effort": "low"
+    },
+    "generationSettings": {
+      "maxOutputTokens": 4000,
+      "maxRetries": 2,
+      "cache": false
+    }
+  },
+  "promptVersion": "v1.1.0",
+  "suite": "regression",
+  "requestCount": 2,
+  "durationMs": 26820,
+  "caseCount": 50,
+  "correctCount": 50,
+  "accuracy": 1,
+  "usage": {
+    "inputTokens": 12007,
+    "outputTokens": 5083,
+    "totalTokens": 17090,
+    "cachedInputTokens": 3294,
+    "reasoningTokens": 50
+  },
+  "cases": [
+    {
+      "id": "00000000-0000-4000-8000-000000000000",
+      "name": "infra: connect ETIMEDOUT #0",
+      "expected": "infra",
+      "actual": "infra",
+      "correct": true,
+      "confidence": 5,
+      "details": {
+        "id": "00000000-0000-4000-8000-000000000000",
+        "status": "flaky",
+        "category": "infra",
+        "confidence": 5,
+        "conclusion": "The test encountered `connect ETIMEDOUT` while connecting to `10.0.0.1:443`, an explicit network connectivity failure. This points to infrastructure rather than an application assertion or response-time issue.",
+        "errorQuality": null,
+        "errorQualityConclusion": null
+      }
+    },
+    {
+      "id": "00000000-0000-4000-8000-000000000001",
+      "name": "infra: connect ETIMEDOUT #1",
+      "expected": "infra",
+      "actual": "infra",
+      "correct": true,
+      "confidence": 5,
+      "details": {
+        "id": "00000000-0000-4000-8000-000000000001",
+        "status": "failed",
+        "category": "infra",
+        "confidence": 5,
+        "conclusion": "The connection to `api.internal:443` failed with `ETIMEDOUT`, an explicit network error. This indicates an infrastructure or service-availability problem.",
+        "errorQuality": 4,
+        "errorQualityConclusion": "The message identifies the network error code and destination, with a connection stack trace and test location."
+      }
+    },
+    {
+      "id": "00000000-0000-4000-8000-000000000002",
+      "name": "infra: connect ETIMEDOUT #2",
+      "expected": "infra",
+      "actual": "infra",
+      "correct": true,
+      "confidence": 5,
+      "details": {
+        "id": "00000000-0000-4000-8000-000000000002",
+        "status": "failed",
+        "category": "infra",
+        "confidence": 5,
+        "conclusion": "The connection to `192.168.1.100:8080` failed with `ETIMEDOUT`, an explicit network error. This indicates an infrastructure or service-availability problem.",
+        "errorQuality": 4,
+        "errorQualityConclusion": "The error includes a specific code, destination, stack trace, and test location, providing useful diagnostic context."
+      }
+    },
+    {
+      "id": "00000000-0000-4000-8000-000000000003",
+      "name": "infra: connect ETIMEDOUT #3",
+      "expected": "infra",
+      "actual": "infra",
+      "correct": true,
+      "confidence": 5,
+      "details": {
+        "id": "00000000-0000-4000-8000-000000000003",
+        "status": "flaky",
+        "category": "infra",
+        "confidence": 5,
+        "conclusion": "The test encountered `connect ETIMEDOUT` while connecting to `10.0.0.1:443`, an explicit network connectivity failure. This points to infrastructure rather than an application assertion or response-time issue.",
+        "errorQuality": null,
+        "errorQualityConclusion": null
+      }
+    },
+    {
+      "id": "00000000-0000-4000-8000-000000000004",
+      "name": "infra: connect ETIMEDOUT #4",
+      "expected": "infra",
+      "actual": "infra",
+      "correct": true,
+      "confidence": 5,
+      "details": {
+        "id": "00000000-0000-4000-8000-000000000004",
+        "status": "failed",
+        "category": "infra",
+        "confidence": 5,
+        "conclusion": "The connection to `api.internal:443` failed with `ETIMEDOUT`, an explicit network error. This indicates an infrastructure or service-availability problem.",
+        "errorQuality": 4,
+        "errorQualityConclusion": "The message identifies the network error code and destination, with a connection stack trace and test location."
+      }
+    },
+    {
+      "id": "00000000-0000-4000-8000-000000005000",
+      "name": "infra: DNS or TLS failure #0",
+      "expected": "infra",
+      "actual": "infra",
+      "correct": true,
+      "confidence": 5,
+      "details": {
+        "id": "00000000-0000-4000-8000-000000005000",
+        "status": "flaky",
+        "category": "infra",
+        "confidence": 5,
+        "conclusion": "DNS resolution failed with `ENOTFOUND` for `catalog.internal`, an explicit name-resolution error. This indicates an infrastructure or DNS configuration issue.",
+        "errorQuality": null,
+        "errorQualityConclusion": null
+      }
+    },
+    {
+      "id": "00000000-0000-4000-8000-000000005001",
+      "name": "infra: DNS or TLS failure #1",
+      "expected": "infra",
+      "actual": "infra",
+      "correct": true,
+      "confidence": 5,
+      "details": {
+        "id": "00000000-0000-4000-8000-000000005001",
+        "status": "failed",
+        "category": "infra",
+        "confidence": 5,
+        "conclusion": "The TLS connection failed because the first certificate could not be verified. This is an explicit certificate-validation issue and falls under infrastructure.",
+        "errorQuality": 4,
+        "errorQualityConclusion": "The message clearly identifies a certificate-verification failure and includes a TLS stack frame and test location."
+      }
+    },
+    {
+      "id": "00000000-0000-4000-8000-000000005002",
+      "name": "infra: DNS or TLS failure #2",
+      "expected": "infra",
+      "actual": "infra",
+      "correct": true,
+      "confidence": 5,
+      "details": {
+        "id": "00000000-0000-4000-8000-000000005002",
+        "status": "failed",
+        "category": "infra",
+        "confidence": 5,
+        "conclusion": "The connection failed because the certificate has expired, with the explicit code `CERT_HAS_EXPIRED`. This is an infrastructure or certificate-management issue, not an application assertion failure.",
+        "errorQuality": 4,
+        "errorQualityConclusion": "The error states the specific certificate problem and code, with a stack frame and test location, though the trace does not identify the certificate itself."
+      }
+    },
+    {
+      "id": "00000000-0000-4000-8000-000000005003",
+      "name": "infra: DNS or TLS failure #3",
+      "expected": "infra",
+      "actual": "infra",
+      "correct": true,
+      "confidence": 5,
+      "details": {
+        "id": "00000000-0000-4000-8000-000000005003",
+        "status": "flaky",
+        "category": "infra",
+        "confidence": 5,
+        "conclusion": "DNS resolution failed with `ENOTFOUND` for `catalog.internal`, an explicit name-resolution error. This indicates an infrastructure or DNS configuration issue.",
+        "errorQuality": null,
+        "errorQualityConclusion": null
+      }
+    },
+    {
+      "id": "00000000-0000-4000-8000-000000005004",
+      "name": "infra: DNS or TLS failure #4",
+      "expected": "infra",
+      "actual": "infra",
+      "correct": true,
+      "confidence": 5,
+      "details": {
+        "id": "00000000-0000-4000-8000-000000005004",
+        "status": "failed",
+        "category": "infra",
+        "confidence": 5,
+        "conclusion": "The TLS connection failed because the first certificate could not be verified. This is an explicit certificate-validation issue and falls under infrastructure.",
+        "errorQuality": 4,
+        "errorQualityConclusion": "The message clearly identifies a certificate-verification failure and includes a stack frame and test location."
+      }
+    },
+    {
+      "id": "00000000-0000-4000-8000-000000001000",
+      "name": "bug: assertion expected/actual mismatch #0",
+      "expected": "bug",
+      "actual": "bug",
+      "correct": true,
+      "confidence": 5,
+      "details": {
+        "id": "00000000-0000-4000-8000-000000001000",
+        "status": "failed",
+        "category": "bug",
+        "confidence": 5,
+        "conclusion": "The assertion expected `Welcome, Admin!` but received `Welcome, User!`, a clear expected-versus-actual mismatch. This points to an application behavior or user-role defect.",
+        "errorQuality": 5,
+        "errorQualityConclusion": "The error provides both expected and actual values, plus a stack trace and precise source location."
+      }
+    },
+    {
+      "id": "00000000-0000-4000-8000-000000001001",
+      "name": "bug: assertion expected/actual mismatch #1",
+      "expected": "bug",
+      "actual": "bug",
+      "correct": true,
+      "confidence": 4,
+      "details": {
+        "id": "00000000-0000-4000-8000-000000001001",
+        "status": "failed",
+        "category": "bug",
+        "confidence": 4,
+        "conclusion": "The assertion expected `false` but received `true`, showing a direct mismatch in the dashboard stats behavior. This supports an application defect, although the message does not explain the intended condition.",
+        "errorQuality": 4,
+        "errorQualityConclusion": "The assertion gives expected and actual values and includes a stack trace and source location, but lacks context about the condition being checked."
+      }
+    },
+    {
+      "id": "00000000-0000-4000-8000-000000001002",
+      "name": "bug: assertion expected/actual mismatch #2",
+      "expected": "bug",
+      "actual": "bug",
+      "correct": true,
+      "confidence": 5,
+      "details": {
+        "id": "00000000-0000-4000-8000-000000001002",
+        "status": "failed",
+        "category": "bug",
+        "confidence": 5,
+        "conclusion": "The test expected an array length of 5 but received 3, a clear data/result mismatch in the checkout flow. This points to an application defect in the purchase result or its data.",
+        "errorQuality": 4,
+        "errorQualityConclusion": "The message gives the expected and actual array lengths and includes a stack trace and precise location."
+      }
+    },
+    {
+      "id": "00000000-0000-4000-8000-000000001003",
+      "name": "bug: assertion expected/actual mismatch #3",
+      "expected": "bug",
+      "actual": "bug",
+      "correct": true,
+      "confidence": 4,
+      "details": {
+        "id": "00000000-0000-4000-8000-000000001003",
+        "status": "failed",
+        "category": "bug",
+        "confidence": 4,
+        "conclusion": "The test expected HTTP 200 but received 404, a clear response mismatch. With no network error indicated, this suggests an application endpoint or routing defect.",
+        "errorQuality": 4,
+        "errorQualityConclusion": "The expected and actual status codes are explicit, and the error includes a stack trace and test location."
+      }
+    },
+    {
+      "id": "00000000-0000-4000-8000-000000001004",
+      "name": "bug: assertion expected/actual mismatch #4",
+      "expected": "bug",
+      "actual": "bug",
+      "correct": true,
+      "confidence": 5,
+      "details": {
+        "id": "00000000-0000-4000-8000-000000001004",
+        "status": "failed",
+        "category": "bug",
+        "confidence": 5,
+        "conclusion": "The assertion expected `Welcome, Admin!` but received `Welcome, User!`, a clear expected-versus-actual mismatch. This points to an application behavior or user-role defect.",
+        "errorQuality": 5,
+        "errorQualityConclusion": "The error provides both expected and actual values, plus a stack trace and precise source location."
+      }
+    },
+    {
+      "id": "00000000-0000-4000-8000-000000004000",
+      "name": "bug: application exception #0",
+      "expected": "bug",
+      "actual": "bug",
+      "correct": true,
+      "confidence": 5,
+      "details": {
+        "id": "00000000-0000-4000-8000-000000004000",
+        "status": "failed",
+        "category": "bug",
+        "confidence": 5,
+        "conclusion": "The API returned HTTP 500 instead of 201 and reports a `NullPointerException` in `OrderService.create`. This is direct evidence of an application logic defect.",
+        "errorQuality": 5,
+        "errorQualityConclusion": "The message identifies the expected and actual HTTP outcome and the specific exception and service method, with stack trace and test location."
+      }
+    },
+    {
+      "id": "00000000-0000-4000-8000-000000004001",
+      "name": "bug: application exception #1",
+      "expected": "bug",
+      "actual": "bug",
+      "correct": true,
+      "confidence": 5,
+      "details": {
+        "id": "00000000-0000-4000-8000-000000004001",
+        "status": "failed",
+        "category": "bug",
+        "confidence": 5,
+        "conclusion": "`ProfileController.update` raised a `TypeError` because it attempted to read `email` from an undefined value. This indicates an application logic defect in profile handling.",
+        "errorQuality": 5,
+        "errorQualityConclusion": "The message identifies the runtime error, missing property, affected controller method, stack trace, and test location."
+      }
+    },
+    {
+      "id": "00000000-0000-4000-8000-000000004002",
+      "name": "bug: application exception #2",
+      "expected": "bug",
+      "actual": "bug",
+      "correct": true,
+      "confidence": 5,
+      "details": {
+        "id": "00000000-0000-4000-8000-000000004002",
+        "status": "failed",
+        "category": "bug",
+        "confidence": 5,
+        "conclusion": "The invoice total was expected to be 119.99 but the API returned 109.99, a clear calculation mismatch. This points to a defect in invoice-total logic.",
+        "errorQuality": 5,
+        "errorQualityConclusion": "The error gives exact expected and actual totals and identifies the calculation method and source location."
+      }
+    },
+    {
+      "id": "00000000-0000-4000-8000-000000004003",
+      "name": "bug: application exception #3",
+      "expected": "bug",
+      "actual": "bug",
+      "correct": true,
+      "confidence": 5,
+      "details": {
+        "id": "00000000-0000-4000-8000-000000004003",
+        "status": "failed",
+        "category": "bug",
+        "confidence": 5,
+        "conclusion": "The API returned HTTP 500 instead of 201 and reports a `NullPointerException` in `OrderService.create`. This is direct evidence of an application logic defect.",
+        "errorQuality": 5,
+        "errorQualityConclusion": "The message identifies the expected and actual HTTP outcome and the specific exception and service method, with stack trace and test location."
+      }
+    },
+    {
+      "id": "00000000-0000-4000-8000-000000004004",
+      "name": "bug: application exception #4",
+      "expected": "bug",
+      "actual": "bug",
+      "correct": true,
+      "confidence": 5,
+      "details": {
+        "id": "00000000-0000-4000-8000-000000004004",
+        "status": "failed",
+        "category": "bug",
+        "confidence": 5,
+        "conclusion": "`ProfileController.update` raised a `TypeError` because it attempted to read `email` from an undefined value. This indicates an application logic defect in profile handling.",
+        "errorQuality": 5,
+        "errorQualityConclusion": "The message identifies the runtime error, missing property, affected controller method, stack trace, and test location."
+      }
+    },
+    {
+      "id": "00000000-0000-4000-8000-000000006000",
+      "name": "performance: response exceeded wait threshold #0",
+      "expected": "performance",
+      "actual": "performance",
+      "correct": true,
+      "confidence": 4,
+      "details": {
+        "id": "00000000-0000-4000-8000-000000006000",
+        "status": "flaky",
+        "category": "performance",
+        "confidence": 4,
+        "conclusion": "The flaky run exceeded the 15,000 ms wait while search results were rendering, with no network error code reported. This is consistent with intermittent slowness or a wait timeout rather than a clear deterministic application mismatch.",
+        "errorQuality": null,
+        "errorQualityConclusion": null
+      }
+    },
+    {
+      "id": "00000000-0000-4000-8000-000000006001",
+      "name": "performance: response exceeded wait threshold #1",
+      "expected": "performance",
+      "actual": "performance",
+      "correct": true,
+      "confidence": 5,
+      "details": {
+        "id": "00000000-0000-4000-8000-000000006001",
+        "status": "failed",
+        "category": "performance",
+        "confidence": 5,
+        "conclusion": "The report took 30,421 ms, exceeding the 10,000 ms service-level threshold. The explicit response-time overrun indicates a performance issue.",
+        "errorQuality": 4,
+        "errorQualityConclusion": "The error quantifies the observed response time and threshold and includes the waiting method and test location."
+      }
+    },
+    {
+      "id": "00000000-0000-4000-8000-000000006002",
+      "name": "performance: response exceeded wait threshold #2",
+      "expected": "performance",
+      "actual": "performance",
+      "correct": true,
+      "confidence": 4,
+      "details": {
+        "id": "00000000-0000-4000-8000-000000006002",
+        "status": "flaky",
+        "category": "performance",
+        "confidence": 4,
+        "conclusion": "The test timed out after 45,000 ms waiting for dashboard metrics, with no network error code reported. This points to intermittent slowness or a wait timeout, though the exact cause is not established.",
+        "errorQuality": null,
+        "errorQualityConclusion": null
+      }
+    },
+    {
+      "id": "00000000-0000-4000-8000-000000006003",
+      "name": "performance: response exceeded wait threshold #3",
+      "expected": "performance",
+      "actual": "performance",
+      "correct": true,
+      "confidence": 4,
+      "details": {
+        "id": "00000000-0000-4000-8000-000000006003",
+        "status": "failed",
+        "category": "performance",
+        "confidence": 4,
+        "conclusion": "The test exceeded its 15,000 ms wait while search results were rendering, and no network error code is present. This is consistent with a performance-related timeout, though the evidence does not distinguish slow application response from a test wait issue.",
+        "errorQuality": 4,
+        "errorQualityConclusion": "The message specifies the timeout duration and awaited behavior, and provides a stack trace and test location."
+      }
+    },
+    {
+      "id": "00000000-0000-4000-8000-000000006004",
+      "name": "performance: response exceeded wait threshold #4",
+      "expected": "performance",
+      "actual": "performance",
+      "correct": true,
+      "confidence": 5,
+      "details": {
+        "id": "00000000-0000-4000-8000-000000006004",
+        "status": "flaky",
+        "category": "performance",
+        "confidence": 5,
+        "conclusion": "The response took 30,421 ms against a 10,000 ms service-level threshold, explicitly showing a slow response. This supports a performance classification; the flaky status is consistent with intermittent latency.",
+        "errorQuality": null,
+        "errorQualityConclusion": null
+      }
+    },
+    {
+      "id": "00000000-0000-4000-8000-000000007000",
+      "name": "performance: runtime resource constraint #0",
+      "expected": "performance",
+      "actual": "performance",
+      "correct": true,
+      "confidence": 4,
+      "details": {
+        "id": "00000000-0000-4000-8000-000000007000",
+        "status": "failed",
+        "category": "performance",
+        "confidence": 4,
+        "conclusion": "Report generation failed after 58 seconds with a JavaScript heap out-of-memory error in `ReportBuilder.render`. The explicit memory exhaustion during a large-report workload points to a resource/performance limitation.",
+        "errorQuality": 4,
+        "errorQualityConclusion": "The message identifies the exhausted resource and operation, with a source stack location and test location; it does not include memory usage or a fuller diagnostic trace."
+      }
+    },
+    {
+      "id": "00000000-0000-4000-8000-000000007001",
+      "name": "performance: runtime resource constraint #1",
+      "expected": "performance",
+      "actual": "performance",
+      "correct": true,
+      "confidence": 4,
+      "details": {
+        "id": "00000000-0000-4000-8000-000000007001",
+        "status": "failed",
+        "category": "performance",
+        "confidence": 4,
+        "conclusion": "The concurrent-query test failed after the worker pool was exhausted and the request remained queued for 90 seconds. This indicates a capacity or throughput limitation rather than a reported network error.",
+        "errorQuality": 4,
+        "errorQualityConclusion": "The error clearly states the worker-pool exhaustion and queue duration, and includes source and test locations."
+      }
+    },
+    {
+      "id": "00000000-0000-4000-8000-000000007002",
+      "name": "performance: runtime resource constraint #2",
+      "expected": "performance",
+      "actual": "performance",
+      "correct": true,
+      "confidence": 4,
+      "details": {
+        "id": "00000000-0000-4000-8000-000000007002",
+        "status": "failed",
+        "category": "performance",
+        "confidence": 4,
+        "conclusion": "The browser process was killed after exceeding its memory limit while rendering the gallery. The explicit resource-limit evidence points to a memory/performance constraint.",
+        "errorQuality": 4,
+        "errorQualityConclusion": "The message specifies the exceeded memory limit and the operation involved, with stack and test locations, though it lacks memory measurements or a full process diagnostic."
+      }
+    },
+    {
+      "id": "00000000-0000-4000-8000-000000007003",
+      "name": "performance: runtime resource constraint #3",
+      "expected": "performance",
+      "actual": "performance",
+      "correct": true,
+      "confidence": 4,
+      "details": {
+        "id": "00000000-0000-4000-8000-000000007003",
+        "status": "failed",
+        "category": "performance",
+        "confidence": 4,
+        "conclusion": "Report generation failed after 58 seconds with a JavaScript heap out-of-memory error in `ReportBuilder.render`. The explicit memory exhaustion during a large-report workload points to a resource/performance limitation.",
+        "errorQuality": 4,
+        "errorQualityConclusion": "The message identifies the exhausted resource and operation, with a source stack location and test location; it does not include memory usage or a fuller diagnostic trace."
+      }
+    },
+    {
+      "id": "00000000-0000-4000-8000-000000007004",
+      "name": "performance: runtime resource constraint #4",
+      "expected": "performance",
+      "actual": "performance",
+      "correct": true,
+      "confidence": 4,
+      "details": {
+        "id": "00000000-0000-4000-8000-000000007004",
+        "status": "failed",
+        "category": "performance",
+        "confidence": 4,
+        "conclusion": "The concurrent-query test failed after the worker pool was exhausted and the request remained queued for 90 seconds. This indicates a capacity or throughput limitation rather than a reported network error.",
+        "errorQuality": 4,
+        "errorQualityConclusion": "The error clearly states the worker-pool exhaustion and queue duration, and includes source and test locations."
+      }
+    },
+    {
+      "id": "00000000-0000-4000-8000-000000002000",
+      "name": "script: selector not found #0",
+      "expected": "script",
+      "actual": "script",
+      "correct": true,
+      "confidence": 3,
+      "details": {
+        "id": "00000000-0000-4000-8000-000000002000",
+        "status": "flaky",
+        "category": "script",
+        "confidence": 3,
+        "conclusion": "The retried flaky test reports that locator `#user-card` was not found, which directly indicates a locator or test synchronization issue under the categorization rules. The result does not establish whether the element was absent because of application behavior or timing, so the exact cause remains uncertain.",
+        "errorQuality": null,
+        "errorQualityConclusion": null
+      }
+    },
+    {
+      "id": "00000000-0000-4000-8000-000000002001",
+      "name": "script: selector not found #1",
+      "expected": "script",
+      "actual": "script",
+      "correct": true,
+      "confidence": 4,
+      "details": {
+        "id": "00000000-0000-4000-8000-000000002001",
+        "status": "failed",
+        "category": "script",
+        "confidence": 4,
+        "conclusion": "The test failed because no node matched selector `[data-testid='user-card']`. This is a clear locator-not-found failure, categorized as a test automation issue under the given rules.",
+        "errorQuality": 4,
+        "errorQualityConclusion": "The error names the missing selector and provides stack and test locations, making the failure actionable; it does not provide additional page-state diagnostics."
+      }
+    },
+    {
+      "id": "00000000-0000-4000-8000-000000002002",
+      "name": "script: selector not found #2",
+      "expected": "script",
+      "actual": "script",
+      "correct": true,
+      "confidence": 4,
+      "details": {
+        "id": "00000000-0000-4000-8000-000000002002",
+        "status": "failed",
+        "category": "script",
+        "confidence": 4,
+        "conclusion": "The test reports that selector `.profile-avatar` was not found in the DOM. This is explicit locator failure evidence and therefore falls under test automation issues.",
+        "errorQuality": 4,
+        "errorQualityConclusion": "The message identifies the missing selector and includes source and test locations, but offers no further DOM or page-state context."
+      }
+    },
+    {
+      "id": "00000000-0000-4000-8000-000000002003",
+      "name": "script: selector not found #3",
+      "expected": "script",
+      "actual": "script",
+      "correct": true,
+      "confidence": 4,
+      "details": {
+        "id": "00000000-0000-4000-8000-000000002003",
+        "status": "failed",
+        "category": "script",
+        "confidence": 4,
+        "conclusion": "The test failed because element `[data-cy='settings-form']` was not found in the DOM. The explicit missing-element message indicates a locator or test synchronization issue.",
+        "errorQuality": 4,
+        "errorQualityConclusion": "The missing selector and error locations are specific and useful, though the trace does not explain why the element was absent."
+      }
+    },
+    {
+      "id": "00000000-0000-4000-8000-000000002004",
+      "name": "script: selector not found #4",
+      "expected": "script",
+      "actual": "script",
+      "correct": true,
+      "confidence": 3,
+      "details": {
+        "id": "00000000-0000-4000-8000-000000002004",
+        "status": "flaky",
+        "category": "script",
+        "confidence": 3,
+        "conclusion": "The retried flaky result says locator `#user-card` was not found, which is direct evidence of a selector or test synchronization problem. The available data does not clarify whether timing or application state caused the element to be absent.",
+        "errorQuality": null,
+        "errorQualityConclusion": null
+      }
+    },
+    {
+      "id": "00000000-0000-4000-8000-000000008000",
+      "name": "script: invalid fixture or test setup #0",
+      "expected": "script",
+      "actual": "script",
+      "correct": true,
+      "confidence": 5,
+      "details": {
+        "id": "00000000-0000-4000-8000-000000008000",
+        "status": "failed",
+        "category": "script",
+        "confidence": 5,
+        "conclusion": "The test framework reports an unknown fixture, `adminSession`, referenced by the test. This is a definitive test setup/framework configuration error, not an application failure.",
+        "errorQuality": 4,
+        "errorQualityConclusion": "The message identifies the missing fixture and gives framework stack and test locations, providing clear diagnostic context."
+      }
+    },
+    {
+      "id": "00000000-0000-4000-8000-000000008001",
+      "name": "script: invalid fixture or test setup #1",
+      "expected": "script",
+      "actual": "script",
+      "correct": true,
+      "confidence": 4,
+      "details": {
+        "id": "00000000-0000-4000-8000-000000008001",
+        "status": "failed",
+        "category": "script",
+        "confidence": 4,
+        "conclusion": "The `beforeEach` setup did not create the required `orderId` test data. This directly indicates invalid or incomplete test setup rather than an application assertion failure.",
+        "errorQuality": 4,
+        "errorQualityConclusion": "The error names the missing test data and provides helper and test locations, though it does not explain why setup failed to create it."
+      }
+    },
+    {
+      "id": "00000000-0000-4000-8000-000000008002",
+      "name": "script: invalid fixture or test setup #2",
+      "expected": "script",
+      "actual": "script",
+      "correct": true,
+      "confidence": 4,
+      "details": {
+        "id": "00000000-0000-4000-8000-000000008002",
+        "status": "failed",
+        "category": "script",
+        "confidence": 4,
+        "conclusion": "The upload test could not find fixture file `./fixtures/invoice.pdf` (`ENOENT`). This is a test asset/setup problem, categorized as a script issue rather than a network or application defect.",
+        "errorQuality": 4,
+        "errorQualityConclusion": "The message provides the exact missing file path and stack and test locations, making the setup problem easy to investigate."
+      }
+    },
+    {
+      "id": "00000000-0000-4000-8000-000000008003",
+      "name": "script: invalid fixture or test setup #3",
+      "expected": "script",
+      "actual": "script",
+      "correct": true,
+      "confidence": 5,
+      "details": {
+        "id": "00000000-0000-4000-8000-000000008003",
+        "status": "failed",
+        "category": "script",
+        "confidence": 5,
+        "conclusion": "The test framework reports an unknown fixture, `adminSession`, referenced by the test. This is a definitive test setup/framework configuration error, not an application failure.",
+        "errorQuality": 4,
+        "errorQualityConclusion": "The message identifies the missing fixture and gives framework stack and test locations, providing clear diagnostic context."
+      }
+    },
+    {
+      "id": "00000000-0000-4000-8000-000000008004",
+      "name": "script: invalid fixture or test setup #4",
+      "expected": "script",
+      "actual": "script",
+      "correct": true,
+      "confidence": 4,
+      "details": {
+        "id": "00000000-0000-4000-8000-000000008004",
+        "status": "failed",
+        "category": "script",
+        "confidence": 4,
+        "conclusion": "The `beforeEach` setup did not create the required `orderId` test data. This directly indicates invalid or incomplete test setup rather than an application assertion failure.",
+        "errorQuality": 4,
+        "errorQualityConclusion": "The error names the missing test data and provides helper and test locations, though it does not explain why setup failed to create it."
+      }
+    },
+    {
+      "id": "00000000-0000-4000-8000-000000003000",
+      "name": "other: generic error no stack #0",
+      "expected": "other",
+      "actual": "other",
+      "correct": true,
+      "confidence": 1,
+      "details": {
+        "id": "00000000-0000-4000-8000-000000003000",
+        "status": "failed",
+        "category": "other",
+        "confidence": 1,
+        "conclusion": "The only diagnostic is the generic message “Test failed,” with no stack trace or error location. There is not enough evidence to assign the failure to infrastructure, performance, script, or an application bug.",
+        "errorQuality": 1,
+        "errorQualityConclusion": "Very poor diagnostic quality: the message is generic and has no stack trace or error location."
+      }
+    },
+    {
+      "id": "00000000-0000-4000-8000-000000003001",
+      "name": "other: generic error no stack #1",
+      "expected": "other",
+      "actual": "other",
+      "correct": true,
+      "confidence": 1,
+      "details": {
+        "id": "00000000-0000-4000-8000-000000003001",
+        "status": "failed",
+        "category": "other",
+        "confidence": 1,
+        "conclusion": "The only diagnostic is the generic message “Test failed,” with no stack trace or error location. There is not enough evidence to assign the failure to infrastructure, performance, script, or an application bug.",
+        "errorQuality": 1,
+        "errorQualityConclusion": "Very poor diagnostic quality: the message is generic and has no stack trace or error location."
+      }
+    },
+    {
+      "id": "00000000-0000-4000-8000-000000003002",
+      "name": "other: generic error no stack #2",
+      "expected": "other",
+      "actual": "other",
+      "correct": true,
+      "confidence": 1,
+      "details": {
+        "id": "00000000-0000-4000-8000-000000003002",
+        "status": "failed",
+        "category": "other",
+        "confidence": 1,
+        "conclusion": "The only diagnostic is the generic message “Test failed,” with no stack trace or error location. There is not enough evidence to assign the failure to infrastructure, performance, script, or an application bug.",
+        "errorQuality": 1,
+        "errorQualityConclusion": "Very poor diagnostic quality: the message is generic and has no stack trace or error location."
+      }
+    },
+    {
+      "id": "00000000-0000-4000-8000-000000003003",
+      "name": "other: generic error no stack #3",
+      "expected": "other",
+      "actual": "other",
+      "correct": true,
+      "confidence": 1,
+      "details": {
+        "id": "00000000-0000-4000-8000-000000003003",
+        "status": "failed",
+        "category": "other",
+        "confidence": 1,
+        "conclusion": "The only diagnostic is the generic message “Test failed,” with no stack trace or error location. There is not enough evidence to assign the failure to infrastructure, performance, script, or an application bug.",
+        "errorQuality": 1,
+        "errorQualityConclusion": "Very poor diagnostic quality: the message is generic and has no stack trace or error location."
+      }
+    },
+    {
+      "id": "00000000-0000-4000-8000-000000003004",
+      "name": "other: generic error no stack #4",
+      "expected": "other",
+      "actual": "other",
+      "correct": true,
+      "confidence": 1,
+      "details": {
+        "id": "00000000-0000-4000-8000-000000003004",
+        "status": "failed",
+        "category": "other",
+        "confidence": 1,
+        "conclusion": "The only diagnostic is the generic message “Test failed,” with no stack trace or error location. There is not enough evidence to assign the failure to infrastructure, performance, script, or an application bug.",
+        "errorQuality": 1,
+        "errorQualityConclusion": "Very poor diagnostic quality: the message is generic and has no stack trace or error location."
+      }
+    },
+    {
+      "id": "00000000-0000-4000-8000-000000009000",
+      "name": "other: unknown failure without diagnostic evidence #0",
+      "expected": "other",
+      "actual": "other",
+      "correct": true,
+      "confidence": 2,
+      "details": {
+        "id": "00000000-0000-4000-8000-000000009000",
+        "status": "failed",
+        "category": "other",
+        "confidence": 2,
+        "conclusion": "The error reports only “Operation unsuccessful” with code `UNKNOWN`, and provides no stack trace or location. Since the code does not identify a network failure or another clear root cause, the available evidence is insufficient to classify it more specifically.",
+        "errorQuality": 2,
+        "errorQualityConclusion": "The message includes a generic operation failure and an unspecified code, but has no stack trace, location, or actionable underlying detail."
+      }
+    },
+    {
+      "id": "00000000-0000-4000-8000-000000009001",
+      "name": "other: unknown failure without diagnostic evidence #1",
+      "expected": "other",
+      "actual": "other",
+      "correct": true,
+      "confidence": 2,
+      "details": {
+        "id": "00000000-0000-4000-8000-000000009001",
+        "status": "failed",
+        "category": "other",
+        "confidence": 2,
+        "conclusion": "The message says the background task ended unexpectedly but provides no stack trace or error location. It does not establish whether the cause was an application defect, infrastructure problem, or test issue, so the root cause remains unclear.",
+        "errorQuality": 2,
+        "errorQualityConclusion": "The message describes an unexpected task termination but provides no task diagnostics, stack trace, or location to investigate the cause."
+      }
+    },
+    {
+      "id": "00000000-0000-4000-8000-000000009002",
+      "name": "other: unknown failure without diagnostic evidence #2",
+      "expected": "other",
+      "actual": "other",
+      "correct": true,
+      "confidence": 1,
+      "details": {
+        "id": "00000000-0000-4000-8000-000000009002",
+        "status": "failed",
+        "category": "other",
+        "confidence": 1,
+        "conclusion": "The error explicitly says there are no additional diagnostics, and no stack trace or location is provided. The evidence is too generic to identify a specific root-cause category.",
+        "errorQuality": 1,
+        "errorQualityConclusion": "Very poor error quality: the message acknowledges missing diagnostics and includes no stack trace or error location."
+      }
+    },
+    {
+      "id": "00000000-0000-4000-8000-000000009003",
+      "name": "other: unknown failure without diagnostic evidence #3",
+      "expected": "other",
+      "actual": "other",
+      "correct": true,
+      "confidence": 2,
+      "details": {
+        "id": "00000000-0000-4000-8000-000000009003",
+        "status": "failed",
+        "category": "other",
+        "confidence": 2,
+        "conclusion": "The error reports only “Operation unsuccessful” with code `UNKNOWN`, and provides no stack trace or location. Since the code does not identify a network failure or another clear root cause, the available evidence is insufficient to classify it more specifically.",
+        "errorQuality": 2,
+        "errorQualityConclusion": "The message includes a generic operation failure and an unspecified code, but has no stack trace, location, or actionable underlying detail."
+      }
+    },
+    {
+      "id": "00000000-0000-4000-8000-000000009004",
+      "name": "other: unknown failure without diagnostic evidence #4",
+      "expected": "other",
+      "actual": "other",
+      "correct": true,
+      "confidence": 2,
+      "details": {
+        "id": "00000000-0000-4000-8000-000000009004",
+        "status": "failed",
+        "category": "other",
+        "confidence": 2,
+        "conclusion": "The message says the background task ended unexpectedly but provides no stack trace or error location. It does not establish whether the cause was an application defect, infrastructure problem, or test issue, so the root cause remains unclear.",
+        "errorQuality": 2,
+        "errorQualityConclusion": "The message describes an unexpected task termination but provides no task diagnostics, stack trace, or location to investigate the cause."
+      }
+    }
+  ]
+}

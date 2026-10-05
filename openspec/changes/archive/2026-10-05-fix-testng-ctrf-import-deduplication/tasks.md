@@ -26,5 +26,6 @@
 - [x] 4.1 Run focused Jest tests for CTRF and JSON report services.
 - [x] 4.2 Run TypeScript type-check.
 - [x] 4.3 Run ESLint and confirm no new lint errors are introduced.
-- [ ] 4.4 Run full `npm test`.
-- [ ] 4.5 Run `npm run build`.
+- [x] 4.4 Run full `npm test`.
+- [x] 4.5 Run `npm run build`.
+

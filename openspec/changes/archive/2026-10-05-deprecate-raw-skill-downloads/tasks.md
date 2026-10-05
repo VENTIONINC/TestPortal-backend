@@ -15,4 +15,5 @@
 - [x] 3.1 Update service tests to assert catalog download URLs target archives and remove raw Markdown download coverage.
 - [x] 3.2 Update controller and route tests to assert the archive response remains available, the raw Markdown download route is absent, and detail content remains readable.
 - [x] 3.3 Update OpenAPI tests or snapshots to confirm the removed route is absent and the retained endpoints describe the new semantics.
-- [ ] 3.4 Run the relevant skills test suite, `npm run type-check`, `npm run lint`, `npm test`, and `npm run build`.
+- [x] 3.4 Run the relevant skills test suite, `npm run type-check`, `npm run lint`, `npm test`, and `npm run build`.
+

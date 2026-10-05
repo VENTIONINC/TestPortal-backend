@@ -1,0 +1,251 @@
+{
+  "schemaVersion": 1,
+  "createdAt": "2026-10-02T12:03:34.142Z",
+  "model": "gpt-6-luna",
+  "promptVersion": "v1.1.0",
+  "settings": {
+    "model": "gpt-6-luna",
+    "useResponsesApi": true,
+    "maxTokens": 500,
+    "maxRetries": 2,
+    "reasoningEffort": "low"
+  },
+  "usage": {
+    "inputTokens": 2139,
+    "outputTokens": 339,
+    "totalTokens": 2478,
+    "cachedInputTokens": 0,
+    "reasoningTokens": 0
+  },
+  "usageEntries": [
+    {
+      "input_tokens": 353,
+      "output_tokens": 49,
+      "total_tokens": 402,
+      "input_token_details": {
+        "cache_read": 0
+      },
+      "output_token_details": {
+        "reasoning": 0
+      }
+    },
+    {
+      "input_tokens": 354,
+      "output_tokens": 54,
+      "total_tokens": 408,
+      "input_token_details": {
+        "cache_read": 0
+      },
+      "output_token_details": {
+        "reasoning": 0
+      }
+    },
+    {
+      "input_tokens": 351,
+      "output_tokens": 55,
+      "total_tokens": 406,
+      "input_token_details": {
+        "cache_read": 0
+      },
+      "output_token_details": {
+        "reasoning": 0
+      }
+    },
+    {
+      "input_tokens": 365,
+      "output_tokens": 71,
+      "total_tokens": 436,
+      "input_token_details": {
+        "cache_read": 0
+      },
+      "output_token_details": {
+        "reasoning": 0
+      }
+    },
+    {
+      "input_tokens": 358,
+      "output_tokens": 59,
+      "total_tokens": 417,
+      "input_token_details": {
+        "cache_read": 0
+      },
+      "output_token_details": {
+        "reasoning": 0
+      }
+    },
+    {
+      "input_tokens": 358,
+      "output_tokens": 51,
+      "total_tokens": 409,
+      "input_token_details": {
+        "cache_read": 0
+      },
+      "output_token_details": {
+        "reasoning": 0
+      }
+    }
+  ],
+  "reviewRubric": [
+    "No invented facts or confirmed root causes",
+    "Expected and actual values retain their roles",
+    "Readable concise wording",
+    "Actionable advice grounded in input"
+  ],
+  "records": [
+    {
+      "name": "preserves expected and actual HTTP status without category context",
+      "input": {
+        "name": "users api fail",
+        "description": "GET /api/users: expected HTTP 200, received HTTP 503."
+      },
+      "output": {
+        "name": "Users API Returned HTTP 503",
+        "description": "GET /api/users returned HTTP 503; expected HTTP 200. Investigate the service or endpoint availability, then retry the request."
+      },
+      "durationMs": 1648,
+      "usage": [
+        {
+          "input_tokens": 353,
+          "output_tokens": 49,
+          "total_tokens": 402,
+          "input_token_details": {
+            "cache_read": 0
+          },
+          "output_token_details": {
+            "reasoning": 0
+          }
+        }
+      ]
+    },
+    {
+      "name": "preserves timeout and selector",
+      "input": {
+        "name": "checkout timeout",
+        "description": "Timeout 12000ms exceeded waiting for selector #checkout-submit.",
+        "contextCategory": "performance"
+      },
+      "output": {
+        "name": "Checkout Submit Selector Timeout",
+        "description": "Performance timeout: exceeded 12000 ms while waiting for the `#checkout-submit` selector. Check whether the checkout submit element is rendered and available within the expected time."
+      },
+      "durationMs": 2010,
+      "usage": [
+        {
+          "input_tokens": 354,
+          "output_tokens": 54,
+          "total_tokens": 408,
+          "input_token_details": {
+            "cache_read": 0
+          },
+          "output_token_details": {
+            "reasoning": 0
+          }
+        }
+      ]
+    },
+    {
+      "name": "preserves DNS error and host",
+      "input": {
+        "name": "network fail",
+        "description": "getaddrinfo ENOTFOUND payments.internal.test",
+        "contextCategory": "infra"
+      },
+      "output": {
+        "name": "Network Hostname Resolution Failure",
+        "description": "DNS lookup failed for `payments.internal.test` with `getaddrinfo ENOTFOUND`. Verify that the hostname is correct and that DNS or network configuration can resolve it."
+      },
+      "durationMs": 1840,
+      "usage": [
+        {
+          "input_tokens": 351,
+          "output_tokens": 55,
+          "total_tokens": 406,
+          "input_token_details": {
+            "cache_read": 0
+          },
+          "output_token_details": {
+            "reasoning": 0
+          }
+        }
+      ]
+    },
+    {
+      "name": "preserves source location and exception",
+      "input": {
+        "name": "fixture broke",
+        "description": "TypeError: Cannot read properties of undefined (reading 'token')\n at tests/fixtures/auth.ts:42:7",
+        "contextCategory": "script"
+      },
+      "output": {
+        "name": "Authentication Fixture TypeError: Undefined Value Accessed",
+        "description": "The authentication fixture encountered a TypeError while reading `token` from an undefined value. Check the value used at `tests/fixtures/auth.ts:42:7` and ensure it is defined before accessing its `token` property."
+      },
+      "durationMs": 1990,
+      "usage": [
+        {
+          "input_tokens": 365,
+          "output_tokens": 71,
+          "total_tokens": 436,
+          "input_token_details": {
+            "cache_read": 0
+          },
+          "output_token_details": {
+            "reasoning": 0
+          }
+        }
+      ]
+    },
+    {
+      "name": "preserves assertion values",
+      "input": {
+        "name": "cart total wrong",
+        "description": "Expected cart total 19.99 EUR, received 29.99 EUR.",
+        "contextCategory": "bug"
+      },
+      "output": {
+        "name": "Incorrect Cart Total",
+        "description": "The cart total does not match the expected amount: expected 19.99 EUR, but received 29.99 EUR. Check the cart total calculation and the items or fees included in the total."
+      },
+      "durationMs": 2693,
+      "usage": [
+        {
+          "input_tokens": 358,
+          "output_tokens": 59,
+          "total_tokens": 417,
+          "input_token_details": {
+            "cache_read": 0
+          },
+          "output_token_details": {
+            "reasoning": 0
+          }
+        }
+      ]
+    },
+    {
+      "name": "preserves explicit uncertainty",
+      "input": {
+        "name": "unknown failure",
+        "description": "Operation failed. No stack trace or diagnostic details are available. Root cause is unknown.",
+        "contextCategory": "other"
+      },
+      "output": {
+        "name": "Operation Failed — Cause Unknown",
+        "description": "The operation failed, but no stack trace or diagnostic details are available to identify the root cause. Gather logs or other diagnostic information and retry the operation."
+      },
+      "durationMs": 1914,
+      "usage": [
+        {
+          "input_tokens": 358,
+          "output_tokens": 51,
+          "total_tokens": 409,
+          "input_token_details": {
+            "cache_read": 0
+          },
+          "output_token_details": {
+            "reasoning": 0
+          }
+        }
+      ]
+    }
+  ]
+}

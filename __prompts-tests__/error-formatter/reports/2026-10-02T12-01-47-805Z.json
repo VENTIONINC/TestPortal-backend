@@ -1,0 +1,275 @@
+{
+  "schemaVersion": 1,
+  "createdAt": "2026-10-02T12:01:47.805Z",
+  "model": "gpt-4.1-mini",
+  "promptVersion": "v1.1.0",
+  "settings": {
+    "model": "gpt-4.1-mini",
+    "useResponsesApi": false,
+    "maxTokens": 500,
+    "maxRetries": 2,
+    "temperature": 0.7
+  },
+  "usage": {
+    "inputTokens": 2175,
+    "outputTokens": 451,
+    "totalTokens": 2626,
+    "cachedInputTokens": 0,
+    "reasoningTokens": 0
+  },
+  "usageEntries": [
+    {
+      "output_tokens": 73,
+      "input_tokens": 359,
+      "total_tokens": 432,
+      "input_token_details": {
+        "audio": 0,
+        "cache_read": 0
+      },
+      "output_token_details": {
+        "audio": 0,
+        "reasoning": 0
+      }
+    },
+    {
+      "output_tokens": 76,
+      "input_tokens": 360,
+      "total_tokens": 436,
+      "input_token_details": {
+        "audio": 0,
+        "cache_read": 0
+      },
+      "output_token_details": {
+        "audio": 0,
+        "reasoning": 0
+      }
+    },
+    {
+      "output_tokens": 99,
+      "input_tokens": 357,
+      "total_tokens": 456,
+      "input_token_details": {
+        "audio": 0,
+        "cache_read": 0
+      },
+      "output_token_details": {
+        "audio": 0,
+        "reasoning": 0
+      }
+    },
+    {
+      "output_tokens": 89,
+      "input_tokens": 371,
+      "total_tokens": 460,
+      "input_token_details": {
+        "audio": 0,
+        "cache_read": 0
+      },
+      "output_token_details": {
+        "audio": 0,
+        "reasoning": 0
+      }
+    },
+    {
+      "output_tokens": 66,
+      "input_tokens": 364,
+      "total_tokens": 430,
+      "input_token_details": {
+        "audio": 0,
+        "cache_read": 0
+      },
+      "output_token_details": {
+        "audio": 0,
+        "reasoning": 0
+      }
+    },
+    {
+      "output_tokens": 48,
+      "input_tokens": 364,
+      "total_tokens": 412,
+      "input_token_details": {
+        "audio": 0,
+        "cache_read": 0
+      },
+      "output_token_details": {
+        "audio": 0,
+        "reasoning": 0
+      }
+    }
+  ],
+  "reviewRubric": [
+    "No invented facts or confirmed root causes",
+    "Expected and actual values retain their roles",
+    "Readable concise wording",
+    "Actionable advice grounded in input"
+  ],
+  "records": [
+    {
+      "name": "preserves expected and actual HTTP status without category context",
+      "input": {
+        "name": "users api fail",
+        "description": "GET /api/users: expected HTTP 200, received HTTP 503."
+      },
+      "output": {
+        "name": "Users API Request Failed with HTTP 503",
+        "description": "The GET request to /api/users expected an HTTP 200 OK response but received an HTTP 503 Service Unavailable status instead. This indicates the users API endpoint is currently unavailable or experiencing issues. Please verify the API server status and check for any service outages or deployment problems affecting this endpoint."
+      },
+      "durationMs": 1846,
+      "usage": [
+        {
+          "output_tokens": 73,
+          "input_tokens": 359,
+          "total_tokens": 432,
+          "input_token_details": {
+            "audio": 0,
+            "cache_read": 0
+          },
+          "output_token_details": {
+            "audio": 0,
+            "reasoning": 0
+          }
+        }
+      ]
+    },
+    {
+      "name": "preserves timeout and selector",
+      "input": {
+        "name": "checkout timeout",
+        "description": "Timeout 12000ms exceeded waiting for selector #checkout-submit.",
+        "contextCategory": "performance"
+      },
+      "output": {
+        "name": "Checkout Submit Button Timeout",
+        "description": "The test exceeded the 12000ms timeout while waiting for the selector '#checkout-submit' to appear. This may indicate a performance issue causing the checkout button to load slowly or not at all. Investigate possible UI delays, network latency, or rendering problems that could prevent the selector from being available within the expected time frame."
+      },
+      "durationMs": 1895,
+      "usage": [
+        {
+          "output_tokens": 76,
+          "input_tokens": 360,
+          "total_tokens": 436,
+          "input_token_details": {
+            "audio": 0,
+            "cache_read": 0
+          },
+          "output_token_details": {
+            "audio": 0,
+            "reasoning": 0
+          }
+        }
+      ]
+    },
+    {
+      "name": "preserves DNS error and host",
+      "input": {
+        "name": "network fail",
+        "description": "getaddrinfo ENOTFOUND payments.internal.test",
+        "contextCategory": "infra"
+      },
+      "output": {
+        "name": "Network Failure - DNS Resolution Error (ENOTFOUND)",
+        "description": "The system failed to resolve the hostname 'payments.internal.test' due to a DNS lookup error (getaddrinfo ENOTFOUND). This indicates that the domain name could not be found in the DNS. Please verify that the hostname is correct, ensure that the DNS servers are reachable, and check if the network infrastructure or internal DNS configuration allows resolution of this domain, especially within the 'infra' context environment."
+      },
+      "durationMs": 1571,
+      "usage": [
+        {
+          "output_tokens": 99,
+          "input_tokens": 357,
+          "total_tokens": 456,
+          "input_token_details": {
+            "audio": 0,
+            "cache_read": 0
+          },
+          "output_token_details": {
+            "audio": 0,
+            "reasoning": 0
+          }
+        }
+      ]
+    },
+    {
+      "name": "preserves source location and exception",
+      "input": {
+        "name": "fixture broke",
+        "description": "TypeError: Cannot read properties of undefined (reading 'token')\n at tests/fixtures/auth.ts:42:7",
+        "contextCategory": "script"
+      },
+      "output": {
+        "name": "TypeError: Cannot Read Property 'token' of Undefined in Fixture",
+        "description": "A TypeError occurred in the fixture script at tests/fixtures/auth.ts on line 42, column 7. The error message indicates that the code attempted to access the 'token' property of an undefined object. Please verify that the object from which 'token' is being read is properly initialized and defined before this line to prevent this error."
+      },
+      "durationMs": 1379,
+      "usage": [
+        {
+          "output_tokens": 89,
+          "input_tokens": 371,
+          "total_tokens": 460,
+          "input_token_details": {
+            "audio": 0,
+            "cache_read": 0
+          },
+          "output_token_details": {
+            "audio": 0,
+            "reasoning": 0
+          }
+        }
+      ]
+    },
+    {
+      "name": "preserves assertion values",
+      "input": {
+        "name": "cart total wrong",
+        "description": "Expected cart total 19.99 EUR, received 29.99 EUR.",
+        "contextCategory": "bug"
+      },
+      "output": {
+        "name": "Cart Total Mismatch Error",
+        "description": "The cart total amount is incorrect. The system expected a total of 19.99 EUR, but the actual received total was 29.99 EUR. Please verify the calculation logic for cart totals and check for any discrepancies in item prices, discounts, or currency conversions."
+      },
+      "durationMs": 1498,
+      "usage": [
+        {
+          "output_tokens": 66,
+          "input_tokens": 364,
+          "total_tokens": 430,
+          "input_token_details": {
+            "audio": 0,
+            "cache_read": 0
+          },
+          "output_token_details": {
+            "audio": 0,
+            "reasoning": 0
+          }
+        }
+      ]
+    },
+    {
+      "name": "preserves explicit uncertainty",
+      "input": {
+        "name": "unknown failure",
+        "description": "Operation failed. No stack trace or diagnostic details are available. Root cause is unknown.",
+        "contextCategory": "other"
+      },
+      "output": {
+        "name": "Unknown Failure with No Diagnostic Information",
+        "description": "The operation failed without providing any stack trace or diagnostic details. The root cause of this failure is unknown. Further investigation or additional logging may be required to identify the underlying issue."
+      },
+      "durationMs": 1466,
+      "usage": [
+        {
+          "output_tokens": 48,
+          "input_tokens": 364,
+          "total_tokens": 412,
+          "input_token_details": {
+            "audio": 0,
+            "cache_read": 0
+          },
+          "output_token_details": {
+            "audio": 0,
+            "reasoning": 0
+          }
+        }
+      ]
+    }
+  ]
+}
