@@ -129,6 +129,12 @@ export interface UpdateManualTestRunParams {
   runKey?: string | null | undefined;
 }
 
+export interface ReassignManualTestRunExecutorParams {
+  projectId: string;
+  runId: string;
+  executedById: string;
+}
+
 export interface UpdateManualTestRunStepParams {
   projectId: string;
   runId: string;

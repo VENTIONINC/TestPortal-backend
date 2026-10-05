@@ -21,6 +21,7 @@ const modelMocks = {
   updateRun: jest.fn<() => Promise<ManualTestRunResponse | null>>(),
   updateStep: jest.fn<() => Promise<ManualTestRunResponse | null>>(),
   complete: jest.fn<() => Promise<ManualTestRunResponse | null>>(),
+  reassignExecutor: jest.fn<() => Promise<ManualTestRunResponse | null>>(),
 };
 
 jest.mock("@/models/manualTestRunModel", () => ({
@@ -83,6 +84,20 @@ describe("manualTestRunService", () => {
     modelMocks.updateRun.mockResolvedValue(run);
     modelMocks.updateStep.mockResolvedValue(run);
     modelMocks.complete.mockResolvedValue(run);
+    modelMocks.reassignExecutor.mockResolvedValue(run);
+  });
+
+  it("validates reassignment identifiers and delegates without execution fields", async () => {
+    await manualTestRunService.reassignExecutor({ projectId, runId, executedById: executorId });
+    expect(modelMocks.reassignExecutor).toHaveBeenCalledWith({ projectId, runId, executedById: executorId });
+
+    await expect(manualTestRunService.reassignExecutor({ projectId, runId, executedById: "bad" })).rejects.toBeInstanceOf(ManualTestRunValidationError);
+    await expect(manualTestRunService.reassignExecutor({ projectId, runId, executedById: executorId, notes: "tamper" } as never)).rejects.toBeInstanceOf(ManualTestRunValidationError);
+  });
+
+  it("maps a scoped reassignment miss to not found", async () => {
+    modelMocks.reassignExecutor.mockResolvedValue(null);
+    await expect(manualTestRunService.reassignExecutor({ projectId, runId, executedById: executorId })).rejects.toBeInstanceOf(ManualTestRunNotFoundError);
   });
 
   it("normalizes start notes and attributes the authenticated executor", async () => {

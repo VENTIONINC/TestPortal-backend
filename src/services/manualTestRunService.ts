@@ -16,6 +16,7 @@ import {
   type StartManualTestRunParams,
   type UpdateManualTestRunParams,
   type UpdateManualTestRunStepParams,
+  type ReassignManualTestRunExecutorParams,
 } from "@/types/manualTestRuns";
 
 const DEFAULT_PAGE = 1;
@@ -199,6 +200,23 @@ function validateListParams(params: ListManualTestRunsParams): void {
 }
 
 export const manualTestRunService = {
+  async reassignExecutor(
+    params: ReassignManualTestRunExecutorParams,
+  ): Promise<ManualTestRunResponse> {
+    validateKeys(params as unknown as Record<string, unknown>, [
+      "projectId",
+      "runId",
+      "executedById",
+    ]);
+    requireUuid(params.projectId, "Project ID");
+    requireUuid(params.runId, "Run ID");
+    requireUuid(params.executedById, "Executor ID");
+
+    const run = await manualTestRunModel.reassignExecutor(params);
+    if (!run) throw runNotFound(params.runId);
+    return run;
+  },
+
   async startRun(
     params: StartManualTestRunParams,
   ): Promise<ManualTestRunResponse> {
