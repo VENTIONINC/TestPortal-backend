@@ -1,6 +1,6 @@
 # Tasks
 
-The completed tasks below record the earlier implementation. Section 5 tracks the agreed shipped-configuration revision; those tasks remain pending until implementation and verification are complete.
+The completed tasks below record implementation and verification, including the shipped-configuration revision in section 5. Final review aligned the evaluation baseline with production settings and removed the duplicate example configuration; custom configuration starts from a copy of `server.json`.
 
 ## 1. Configuration extraction
 
@@ -42,3 +42,9 @@ The completed tasks below record the earlier implementation. Section 5 tracks th
 
 - [x] 6.1 Skip live Jest prompt suites without nonblank credentials after dotenv loading, before dataset reads or provider invocation. Exclude unit-test placeholder setup from live suites and retain direct runner credential validation.
 - [x] 6.2 Document skip behavior and verify absent/blank credentials skip all live suites, dotenv credentials select suites for execution, and mocked unit checks remain runnable; run type-check, lint, tests, build, and strict OpenSpec validation.
+
+## Final archive verification
+
+On 2026-10-05, type-check, lint, build, and strict change validation passed. All 72 unit-test suites (511 tests) passed. Lint reported two existing warnings in dashboard aggregation tests. The full test suite required local HTTP listener access outside the sandbox. Live paid prompt evaluations were not run as part of archiving.
+
+Both synchronized AI main specs passed strict validation. Repository-wide spec validation reports existing missing Purpose sections in `contribution-guidance`, `file-header-scaffolding`, and `repository-licensing`; these unrelated specs were left unchanged.

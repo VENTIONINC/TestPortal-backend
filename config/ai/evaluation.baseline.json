@@ -2,7 +2,7 @@
   "$schema": "./server.schema.json",
   "version": 1,
   "profiles": {
-    "evaluation": {
+    "default": {
       "provider": "openai",
       "model": "gpt-4.1-mini"
     },
@@ -28,9 +28,9 @@
       "maxRetries": 2
     },
     "solutionSuggestion": {
-      "profile": "evaluation",
+      "profile": "default",
       "temperature": 0.3,
-      "maxOutputTokens": 600,
+      "maxOutputTokens": 700,
       "maxRetries": 2
     },
     "errorFormatting": {

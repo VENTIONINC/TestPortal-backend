@@ -49,6 +49,18 @@ describe("server AI configuration", () => {
     ]);
   });
 
+  it("matches shipped production generation settings for evaluated operations", () => {
+    const production = loadAiConfiguration({ kind: "production", env: { OPENAI_API_KEY: "present" } });
+    const evaluation = loadEvaluationAiConfiguration({});
+
+    for (const operation of ["storedResultsAnalysis", "errorFormatting", "solutionSuggestion"] as const) {
+      expect(toChatOpenAIOptions(resolveAiSettings(evaluation, operation))).toEqual({
+        ...toChatOpenAIOptions(resolveAiSettings(production, operation)),
+        cache: false,
+      });
+    }
+  });
+
   it("preserves Luna reasoning and Responses options in production and evaluation", () => {
     for (const loaded of [loadAiConfiguration({ kind: "production", env: { OPENAI_API_KEY: "present" } }), loadEvaluationAiConfiguration({})]) {
       for (const [operation, effort, limit] of [
@@ -99,7 +111,7 @@ describe("server AI configuration", () => {
         reasoning: { effort: "low" }, maxOutputTokens: 4000, maxRetries: 2,
       });
       expect(resolveAiSettings(evaluation, "solutionSuggestion")).toMatchObject({
-        temperature: 0.3, maxOutputTokens: 600, maxRetries: 2,
+        temperature: 0.3, maxOutputTokens: 700, maxRetries: 2,
       });
     } finally {
       process.chdir(previousCwd);
@@ -220,15 +232,15 @@ describe("server AI configuration", () => {
       model: "gpt-6-luna", reasoning: { effort: "low" }, maxOutputTokens: 4000, maxRetries: 2, cache: false,
     });
     expect(resolveAiSettings(evaluation, "solutionSuggestion")).toMatchObject({
-      temperature: 0.3, maxOutputTokens: 600, maxRetries: 2, cache: false,
+      temperature: 0.3, maxOutputTokens: 700, maxRetries: 2, cache: false,
     });
     expect(() => assertEvaluationCredentials({})).toThrow("OPENAI_API_KEY");
     expect(() => assertEvaluationCredentials({ OPENAI_API_KEY: "present" })).not.toThrow();
   });
 
-  it("keeps the published examples valid against runtime validation", () => {
-    for (const example of ["server.example.json", "evaluation.baseline.json"]) {
-      const parsed = JSON.parse(readFileSync(path.resolve("config/ai", example), "utf8")) as unknown;
+  it("keeps the shipped configuration files valid against runtime validation", () => {
+    for (const filename of ["server.json", "evaluation.baseline.json"]) {
+      const parsed = JSON.parse(readFileSync(path.resolve("config/ai", filename), "utf8")) as unknown;
       expect(aiConfigurationSchema.safeParse(parsed).success).toBe(true);
     }
     const schema = JSON.parse(readFileSync("config/ai/server.schema.json", "utf8")) as {

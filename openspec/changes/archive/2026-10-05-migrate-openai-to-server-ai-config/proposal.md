@@ -30,6 +30,6 @@ None. Existing specifications do not describe AI provider configuration.
 ## Impact
 
 - Affects startup/configuration, `testAnalysisService`, `errorFormatterService`, `insightsService`, the classification, error-formatter, and solution evaluation suites, and their tests.
-- Adds configuration examples, JSON Schema, and environment/deployment documentation; ensures the required shipped configuration is available and selected automatically in the production image.
+- Adds shipped configuration files, JSON Schema, and environment/deployment documentation; ensures the required shipped configuration is available and selected automatically in the production image.
 - Keeps the installed `@langchain/openai` integration and introduces no provider framework; no database migration or REST/MCP contract change is intended.
 - Anthropic, Azure OpenAI, AWS Bedrock, OpenRouter, user/project settings, hot reload, and new AI features remain follow-up work.

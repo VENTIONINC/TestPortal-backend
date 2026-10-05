@@ -4,7 +4,7 @@
 
 See proposal.md and issue #118 for motivation. Four operations construct `ChatOpenAI` directly: stored-results analysis, error formatting, solution suggestions, and dashboard insights. Each already owns its prompts, output handling, generation settings, and errors. Dashboard insights has an eight-second fallback deadline.
 
-The two evaluation runners also construct `ChatOpenAI`. Their defaults differ from production: analysis evaluations use temperature 0.1 rather than 0, and suggestion evaluations allow 600 output tokens rather than 700.
+The two evaluation runners also construct `ChatOpenAI`. Their shipped model and generation settings match the corresponding production operations; evaluation files remain independent for explicit experiments.
 
 ## Goals / Non-Goals
 
@@ -18,7 +18,7 @@ The two evaluation runners also construct `ChatOpenAI`. Their defaults differ fr
 
 Production uses `AI_CONFIG_PATH`; evaluations use `AI_EVAL_CONFIG_PATH`. Relative paths resolve against the process working directory. Unset or blank production paths select the shipped `config/ai/server.json`; unset or blank evaluation paths select `config/ai/evaluation.baseline.json`. A nonempty path selects a custom file that replaces the corresponding shipped file entirely, without merging. Missing, unreadable, or invalid files from either source fail clearly instead of falling back to another file or hardcoded settings. Custom relative paths resolve against the process working directory; bundled paths resolve against the application root so selection works independently of the launch directory in development and built runtime. Read once during initialization; changes require a restart. Credentials remain in `OPENAI_API_KEY`, never JSON.
 
-Version 1 uses strict Zod validation with named profiles containing `provider: "openai"`, `model`, and optional `reasoning: { effort }`. Operation mappings contain `profile`, required `maxOutputTokens` and `maxRetries`, plus optional `temperature` and SDK `timeoutMs`. Production requires all four mappings; evaluation configuration requires the two existing suites. Reject unknown fields, unresolved profile references, and invalid numeric values. Supply an editor JSON Schema and credential-free examples; a focused parity test is sufficient, without a new schema-generation CLI/build pipeline.
+Version 1 uses strict Zod validation with named profiles containing `provider: "openai"`, `model`, and optional `reasoning: { effort }`. Operation mappings contain `profile`, required `maxOutputTokens` and `maxRetries`, plus optional `temperature` and SDK `timeoutMs`. Production requires all four mappings; evaluation configuration requires the three evaluated operations. Reject unknown fields, unresolved profile references, and invalid numeric values. Supply an editor JSON Schema and credential-free shipped files; a focused parity test is sufficient, without a new schema-generation CLI/build pipeline.
 
 ```json
 {
@@ -64,7 +64,7 @@ Explicit unsupported settings fail validation. An omitted temperature remains ab
 
 Live Jest prompt suites load dotenv and use `describe.skip` when `OPENAI_API_KEY` is absent or blank, before reading datasets or invoking OpenAI. Their Jest setup does not inherit the unit-test placeholder key. Mocked unit tests remain runnable with a unit-only placeholder. Direct evaluation runner calls retain explicit missing-credential errors; a skipped suite never produces a successful evaluation result.
 
-Use a checked-in evaluation baseline selected independently of production. The evaluation baseline file owns Luna low for classification (4000 output tokens), Luna none for formatting (500), and GPT-4.1 mini for suggestions (temperature 0.3, 600 output tokens), all with two retries. It does not read production settings. Formatting evaluations reuse the production method with independently resolved evaluation settings. Keep cache disabled as evaluation-runner behavior, not as a generation-settings fallback.
+Use a checked-in evaluation baseline selected independently of production. The evaluation baseline file owns Luna low for classification (4000 output tokens), Luna none for formatting (500), and GPT-4.1 mini for suggestions (temperature 0.3, 700 output tokens), all with two retries. Its model and generation settings match the shipped production configuration for the evaluated operations, with regression coverage preventing drift. It does not read production settings. Formatting evaluations reuse the production method with independently resolved evaluation settings. Keep cache disabled as evaluation-runner behavior, not as a generation-settings fallback.
 
 Keep runner model/temperature overrides with precedence: runner override, selected evaluation file. There is no suite-default settings layer. Revalidate the resulting settings. Runners still construct `ChatOpenAI`, invoke it, and validate suite expectations directly; only settings resolution is shared.
 
@@ -72,13 +72,13 @@ Identify configuration source as shipped production file, evaluation baseline fi
 
 ### 5. Documentation and runtime files
 
-Ship the required credential-free production configuration at `config/ai/server.json`, the independent evaluation baseline, and editor schemas under `config/ai`. Keep examples valid under the same schema. Copy these files into the production image and verify automatic bundled selection without environment path overrides. Document mounted/ECS config-file provisioning, environment variables, supported settings, evaluation isolation, and restarts. Do not introduce a new dependency or tooling pipeline solely for packaging examples.
+Ship the required credential-free production configuration at `config/ai/server.json`, the independent evaluation baseline, and editor schemas under `config/ai`. Use a copy of `server.json` as the custom configuration template instead of shipping a duplicate example file. Copy these files into the production image and verify automatic bundled selection without environment path overrides. Document mounted/ECS config-file provisioning, environment variables, supported settings, evaluation isolation, and restarts. Do not introduce a new dependency or tooling pipeline solely for packaging examples.
 
 ## Risks / Trade-offs
 
 - Model settings change → Keep a small verified OpenAI settings table and test invalid combinations; extend it when needed.
 - Reasoning budgets can exhaust output limits → Document their total-token meaning and appropriate examples; preserve current service handling.
-- Production and evaluation baselines differ → Keep independent shipped files and test exact file-owned settings.
+- Production and evaluation settings drift → Keep independently selectable shipped files and test parity for evaluated operations.
 - Configuration is read before dotenv → Initialize explicitly after env loading and test startup ordering.
 - Editor schema drifts → Add a focused parity/example check against runtime validation.
 
@@ -89,4 +89,4 @@ Ship the required credential-free production configuration at `config/ai/server.
 3. Document examples, environment selection, and runtime-file provisioning.
 4. Deploy with the shipped production file and required credentials; no config path override is needed. Select a complete custom file only when needed, then restart.
 
-Removing `AI_CONFIG_PATH` and restarting restores the shipped production file, while retaining credential requirements. To restore previous shipped settings, redeploy the previous version or select a valid complete configuration with those settings. No database migration is involved. The earlier implementation exists; the file-owned configuration delta is tracked by pending tasks.
+Removing `AI_CONFIG_PATH` and restarting restores the shipped production file, while retaining credential requirements. To restore previous shipped settings, redeploy the previous version or select a valid complete configuration with those settings. No database migration is involved. The implementation and shipped-configuration revision are complete.

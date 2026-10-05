@@ -82,7 +82,7 @@ All four operations SHALL honor their resolved configuration and preserve their 
 - **THEN** the preliminary analysis SHALL use the analysis mapping and the suggestion SHALL use the suggestion mapping
 
 ### Requirement: Configuration documentation and secret protection
-The system SHALL provide editor JSON Schema and required credential-free shipped configuration and examples matching its versioned configuration structure. Deployment documentation SHALL explain file provisioning, defaults, credentials, supported model combinations, and restart behavior. Configuration errors and metadata SHALL NOT disclose credentials or entire configuration/environment payloads.
+The system SHALL provide editor JSON Schema and required credential-free shipped configuration matching its versioned configuration structure. Custom configuration documentation SHALL use a copy of `config/ai/server.json` as its starting point. Deployment documentation SHALL explain file provisioning, defaults, credentials, supported model combinations, and restart behavior. Configuration errors and metadata SHALL NOT disclose credentials or entire configuration/environment payloads.
 
 #### Scenario: Shipped file used in production image
 - **WHEN** the production image starts without a custom config path and with required credentials
