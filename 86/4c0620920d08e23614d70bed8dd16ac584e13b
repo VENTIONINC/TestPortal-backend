@@ -1,0 +1,65 @@
+.agents/skills/cartodex/agents/openai.yaml
+  s_7b2f488b9c26ec::t_50ad3b71a17edd 1-2
+.agents/skills/openspec-apply-change/agents/openai.yaml
+  s_7b2f488b9c26ec::t_9ce4b45fd29690 1-2
+.agents/skills/openspec-archive-change/agents/openai.yaml
+  s_7b2f488b9c26ec::t_eee32b4f48a910 1-2
+.agents/skills/openspec-explore/agents/openai.yaml
+  s_7b2f488b9c26ec::t_415235ddf6cae6 1-2
+.agents/skills/openspec-propose/agents/openai.yaml
+  s_7b2f488b9c26ec::t_bff0f965dee061 1-2
+.agents/skills/openspec-sync-specs/agents/openai.yaml
+  s_7b2f488b9c26ec::t_d7fab62fc3426b 1-2
+.codex/skills/auth-security-review/SKILL.md
+  s_7b2f488b9c26ec::t_fb9718e21267d7 3
+.codex/skills/auth-security-review/agents/openai.yaml
+  s_7b2f488b9c26ec::t_7eb1faa3ab3249 1-2
+.codex/skills/backend-behavior-review/agents/openai.yaml
+  s_7b2f488b9c26ec::t_9dfa86c7c5a732 1-2
+.codex/skills/backend-code-review/agents/openai.yaml
+  s_7b2f488b9c26ec::t_ba67bf0a3fdf52 1-2
+.codex/skills/create-branch-db/agents/openai.yaml
+  s_7b2f488b9c26ec::t_561fd5fde769d6 5-7
+.codex/skills/docker-runtime-debugging/agents/openai.yaml
+  s_7b2f488b9c26ec::t_6b3229918b0896 1-2
+.codex/skills/jest-test-patterns/SKILL.md
+  s_7b2f488b9c26ec::t_415b6ff7593660 3
+.codex/skills/jest-test-patterns/agents/openai.yaml
+  s_7b2f488b9c26ec::t_bd49e4523fce02 1-2
+.codex/skills/mcp-tool-contract-review/SKILL.md
+  s_7b2f488b9c26ec::t_09ddf76e0e8798 3
+.codex/skills/mcp-tool-contract-review/agents/openai.yaml
+  s_7b2f488b9c26ec::t_a8fde1ec2be374 1-2
+.codex/skills/mvc-boundary-review/SKILL.md
+  s_7b2f488b9c26ec::t_081b35deb561b1 3
+.codex/skills/mvc-boundary-review/agents/openai.yaml
+  s_7b2f488b9c26ec::t_b322b306ac8063 1-2
+.codex/skills/openapi-contract-update/SKILL.md
+  s_7b2f488b9c26ec::t_4d35c25d102d22 3
+.codex/skills/openapi-contract-update/agents/openai.yaml
+  s_7b2f488b9c26ec::t_12e74841323a50 1-2
+.codex/skills/prisma-migration-review/SKILL.md
+  s_7b2f488b9c26ec::t_39b5a47edc404e 3
+.codex/skills/prisma-migration-review/agents/openai.yaml
+  s_7b2f488b9c26ec::t_ecdf47dadf193e 1-2
+.codex/skills/prompts-testing/agents/openai.yaml
+  s_7b2f488b9c26ec::t_af4efe854c713b 1-2
+.codex/skills/release/agents/openai.yaml
+  s_7b2f488b9c26ec::t_72a031770d6913 1-2
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.18",
+  "base_commit_sha": "864c0620920d08e23614d70bed8dd16ac584e13b",
+  "prompts": {},
+  "sessions": {
+    "s_7b2f488b9c26ec": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a10bc6-7514-7a00-adcb-62e74a02b3a0",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Ihar Mikailau <ihar.mikailau@ventionteams.com>"
+    }
+  }
+}
