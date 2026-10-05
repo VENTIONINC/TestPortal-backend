@@ -175,6 +175,7 @@ src/
 - [API Documentation](docs/API_DOCUMENTATION.md)
 - [How to Inspect the MCP Server](docs/INSPECT_MCP_SERVER.md)
 - [MCP Tools Documentation](docs/MCP_TOOLS.md)
+- [Codex Docker MCP Setup](docs/CODEX_MCP_SETUP.md)
 - [Docker Deployment Guide](docs/DOCKER.md)
 - [Release Guide](docs/RELEASE.md)
 - [Contributing Guide](CONTRIBUTING.md)

@@ -88,3 +88,6 @@ mocks/
 # Prompt testing datasets (generated files)
 __prompts-tests__/**/datasets/
 mocks/
+
+# Generated prompt evaluation reports
+__prompts-tests__/**/reports/

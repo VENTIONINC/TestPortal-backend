@@ -1,11 +1,15 @@
 ---
 name: auth-security-review
-description: Review authentication, authorization, token handling, validation boundaries, and API hardening in the test-portal backend. Use for auth-sensitive changes, JWT or refresh-token work, middleware updates, CORS/header changes, and defensive security review.
+description: Deprecated review skill; use backend-code-review. Review authentication, authorization, token handling, validation boundaries, and API hardening in the test-portal backend. Use for auth-sensitive changes, JWT or refresh-token work, middleware updates, CORS/header changes, and defensive security review.
 ---
 
 # Auth Security Review
 
-Use this skill when a change touches authentication, authorization, session or token handling, request validation, security headers, CORS, secrets, or trust boundaries.
+## Deprecated
+
+Review guidance has been merged into [backend-code-review](../backend-code-review/SKILL.md).
+Use that skill for new reviews. This file and its references are retained for compatibility;
+the checklists below are historical guidance, not an additional review dependency.
 
 ## Review Focus
 
