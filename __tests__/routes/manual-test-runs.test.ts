@@ -15,6 +15,7 @@ const controllerMocks = {
   update: jest.fn<(req: Request, res: Response) => void>(),
   updateStep: jest.fn<(req: Request, res: Response) => void>(),
   complete: jest.fn<(req: Request, res: Response) => void>(),
+  reassignExecutor: jest.fn<(req: Request, res: Response) => void>(),
 };
 
 jest.mock("@/middleware/authMiddleware", () => ({
@@ -39,7 +40,7 @@ const routeLayers = (): RouteLayer[] =>
   (router as unknown as { stack: RouteLayer[] }).stack;
 
 describe("manual test run routes", () => {
-  it("registers all seven operations", () => {
+  it("registers all eight operations", () => {
     const routes = routeLayers()
       .filter((layer) => layer.route)
       .map((layer) => {
@@ -53,6 +54,7 @@ describe("manual test run routes", () => {
       "get /v2/test-scenarios/:scenarioId/manual-runs",
       "get /v2/manual-test-runs",
       "get /v2/manual-test-runs/:runId",
+      "patch /v2/manual-test-runs/:runId/executor",
       "patch /v2/manual-test-runs/:runId",
       "patch /v2/manual-test-runs/:runId/steps/:stepId",
       "post /v2/manual-test-runs/:runId/complete",
@@ -78,6 +80,7 @@ describe("manual test run routes", () => {
       ],
       ["get /v2/manual-test-runs", controllerMocks.listByProject],
       ["get /v2/manual-test-runs/:runId", controllerMocks.getById],
+      ["patch /v2/manual-test-runs/:runId/executor", controllerMocks.reassignExecutor],
       ["patch /v2/manual-test-runs/:runId", controllerMocks.update],
       [
         "patch /v2/manual-test-runs/:runId/steps/:stepId",

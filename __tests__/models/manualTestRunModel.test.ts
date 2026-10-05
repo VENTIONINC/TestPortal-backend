@@ -141,6 +141,87 @@ describe("manualTestRunModel", () => {
     );
   });
 
+  it.each(["in_progress", "passed", "failed", "blocked", "skipped"] as const)(
+    "reassigns an executor on a %s run without updating execution fields",
+    async (status) => {
+      const tx = createTransactionClient();
+      tx.$queryRaw
+        .mockResolvedValueOnce([{ id: runId }])
+        .mockResolvedValueOnce([{ id: executorId, status: "active" }]);
+      tx.manualTestRun.findFirst.mockResolvedValue({ ...detail, status });
+      transactionMock.mockImplementation(async (callback: unknown) =>
+        await (callback as (client: Prisma.TransactionClient) => Promise<unknown>)(
+          tx as unknown as Prisma.TransactionClient,
+        ),
+      );
+
+      const result = await manualTestRunModel.reassignExecutor({
+        projectId,
+        runId,
+        executedById: executorId,
+      });
+
+      expect(result).toEqual({ ...detail, status });
+      expect(tx.$queryRaw).toHaveBeenCalledTimes(2);
+      expect(tx.manualTestRun.update).toHaveBeenCalledWith({
+        where: { id: runId },
+        data: expect.objectContaining({ executedById: executorId, updatedAt: expect.any(Date) }),
+      });
+      const updateCall = tx.manualTestRun.update.mock.calls[0]?.[0];
+      if (!updateCall) throw new Error("Expected executor update call");
+      const updateData = (updateCall as unknown as { data: object }).data;
+      expect(Object.keys(updateData).sort()).toEqual(["executedById", "updatedAt"]);
+    },
+  );
+
+  it("rejects an inactive reassignment target without updating the run", async () => {
+    const tx = createTransactionClient();
+    tx.$queryRaw
+      .mockResolvedValueOnce([{ id: runId }])
+      .mockResolvedValueOnce([{ id: executorId, status: "suspended" }]);
+    transactionMock.mockImplementation(async (callback: unknown) =>
+      await (callback as (client: Prisma.TransactionClient) => Promise<unknown>)(
+        tx as unknown as Prisma.TransactionClient,
+      ),
+    );
+
+    await expect(
+      manualTestRunModel.reassignExecutor({ projectId, runId, executedById: executorId }),
+    ).rejects.toThrow("Executor must be an active user");
+    expect(tx.manualTestRun.update).not.toHaveBeenCalled();
+  });
+
+  it("rejects a missing reassignment target without updating the run", async () => {
+    const tx = createTransactionClient();
+    tx.$queryRaw.mockResolvedValueOnce([{ id: runId }]).mockResolvedValueOnce([]);
+    transactionMock.mockImplementation(async (callback: unknown) =>
+      await (callback as (client: Prisma.TransactionClient) => Promise<unknown>)(
+        tx as unknown as Prisma.TransactionClient,
+      ),
+    );
+
+    await expect(
+      manualTestRunModel.reassignExecutor({ projectId, runId, executedById: executorId }),
+    ).rejects.toThrow("Executor must be an active user");
+    expect(tx.manualTestRun.update).not.toHaveBeenCalled();
+  });
+
+  it("does not resolve or update a run outside the requested project", async () => {
+    const tx = createTransactionClient();
+    tx.$queryRaw.mockResolvedValueOnce([]);
+    transactionMock.mockImplementation(async (callback: unknown) =>
+      await (callback as (client: Prisma.TransactionClient) => Promise<unknown>)(
+        tx as unknown as Prisma.TransactionClient,
+      ),
+    );
+
+    await expect(
+      manualTestRunModel.reassignExecutor({ projectId, runId, executedById: executorId }),
+    ).resolves.toBeNull();
+    expect(tx.$queryRaw).toHaveBeenCalledTimes(1);
+    expect(tx.manualTestRun.update).not.toHaveBeenCalled();
+  });
+
   it("captures a null source label and never resolves it from a later source edit", async () => {
     const tx = createTransactionClient();
     tx.$queryRaw

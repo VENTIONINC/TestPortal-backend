@@ -125,6 +125,10 @@ export const manualTestRunUpdateSchema = z
     message: "At least one editable field is required",
   });
 
+export const manualTestRunExecutorReassignmentSchema = z
+  .object({ executedById: uuidSchema })
+  .strict();
+
 export const manualTestRunStepUpdateSchema = z
   .object({
     status: stepStatusSchema.optional(),
@@ -151,6 +155,9 @@ export type ManualTestRunScenarioHistoryQuery = z.infer<
 >;
 export type ManualTestRunUpdateInput = z.infer<
   typeof manualTestRunUpdateSchema
+>;
+export type ManualTestRunExecutorReassignmentInput = z.infer<
+  typeof manualTestRunExecutorReassignmentSchema
 >;
 export type ManualTestRunStepUpdateInput = z.infer<
   typeof manualTestRunStepUpdateSchema

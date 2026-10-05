@@ -7,6 +7,7 @@ import {
   manualTestRunCompleteSchema,
   manualTestRunHistoryQuerySchema,
   manualTestRunIdParamsSchema,
+  manualTestRunExecutorReassignmentSchema,
   manualTestRunProjectQuerySchema,
   manualTestRunScenarioHistoryQuerySchema,
   manualTestRunScenarioParamsSchema,
@@ -49,6 +50,38 @@ function sendServiceError(res: Response, error: unknown, operation: string): voi
 }
 
 export const manualTestRunController = {
+  async reassignExecutor(
+    req: Request<{ runId: string }>,
+    res: Response,
+  ): Promise<void> {
+    const params = manualTestRunIdParamsSchema.safeParse(req.params);
+    const query = manualTestRunProjectQuerySchema.safeParse(req.query);
+    const body = manualTestRunExecutorReassignmentSchema.safeParse(req.body ?? {});
+    if (!params.success) {
+      sendValidationError(res, validationMessage(params.error));
+      return;
+    }
+    if (!query.success) {
+      sendValidationError(res, validationMessage(query.error));
+      return;
+    }
+    if (!body.success) {
+      sendValidationError(res, validationMessage(body.error));
+      return;
+    }
+
+    try {
+      const run = await manualTestRunService.reassignExecutor({
+        projectId: query.data.projectId,
+        runId: params.data.runId,
+        executedById: body.data.executedById,
+      });
+      res.status(200).json(run);
+    } catch (error) {
+      sendServiceError(res, error, "reassign manual test run executor");
+    }
+  },
+
   async start(
     req: AuthenticatedRequest<{ scenarioId: string }>,
     res: Response,

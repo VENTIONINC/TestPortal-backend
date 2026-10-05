@@ -9,6 +9,7 @@ import {
 import { dbClient } from "@/prisma/client";
 import {
   ManualTestRunConflictError,
+  ManualTestRunValidationError,
   type CompleteManualTestRunParams,
   type ListManualTestRunsParams,
   type ManualTestRunPage,
@@ -16,6 +17,7 @@ import {
   type ManualTestRunSummary,
   type StartManualTestRunParams,
   type UpdateManualTestRunParams,
+  type ReassignManualTestRunExecutorParams,
   type UpdateManualTestRunStepParams,
 } from "@/types/manualTestRuns";
 
@@ -236,6 +238,40 @@ export interface ManualTestRunHistoryResult {
 }
 
 export const manualTestRunModel = {
+  async reassignExecutor(
+    params: ReassignManualTestRunExecutorParams,
+  ): Promise<ManualTestRunResponse | null> {
+    return await inTransaction(
+      undefined,
+      async (client) => {
+        const runRows = await client.$queryRaw<Array<{ id: string }>>`
+          SELECT "id" FROM "ManualTestRun"
+          WHERE "id" = ${params.runId}::uuid AND "projectId" = ${params.projectId}::uuid
+          FOR UPDATE
+        `;
+        if (runRows.length === 0) return null;
+
+        const users = await client.$queryRaw<Array<{ id: string; status: string }>>`
+          SELECT "id", "status" FROM "User"
+          WHERE "id" = ${params.executedById}::uuid
+          FOR UPDATE
+        `;
+        if (users[0]?.status !== "active") {
+          throw new ManualTestRunValidationError(
+            "Executor must be an active user",
+          );
+        }
+
+        await client.manualTestRun.update({
+          where: { id: params.runId },
+          data: { executedById: params.executedById, updatedAt: new Date() },
+        });
+        const detail = await findDetail(client, params.runId, params.projectId);
+        return detail ? mapDetail(detail) : null;
+      },
+    );
+  },
+
   async createFromScenario(
     params: StartManualTestRunParams,
     tx?: Prisma.TransactionClient,

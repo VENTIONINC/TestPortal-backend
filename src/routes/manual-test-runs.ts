@@ -28,6 +28,11 @@ router.get(
   manualTestRunController.getById,
 );
 router.patch(
+  "/v2/manual-test-runs/:runId/executor",
+  authMiddleware,
+  manualTestRunController.reassignExecutor,
+);
+router.patch(
   "/v2/manual-test-runs/:runId",
   authMiddleware,
   manualTestRunController.update,

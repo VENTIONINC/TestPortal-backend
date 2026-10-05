@@ -4,13 +4,14 @@
 import { generateOpenAPISpec } from "@/lib/openapi";
 
 describe("manual test run OpenAPI contract", () => {
-  it("publishes all seven authenticated operations", () => {
+  it("publishes all eight authenticated operations", () => {
     const paths = generateOpenAPISpec().paths ?? {};
     const expected = [
       ["/api/v2/test-scenarios/{scenarioId}/manual-runs", "post"],
       ["/api/v2/test-scenarios/{scenarioId}/manual-runs", "get"],
       ["/api/v2/manual-test-runs", "get"],
       ["/api/v2/manual-test-runs/{runId}", "get"],
+      ["/api/v2/manual-test-runs/{runId}/executor", "patch"],
       ["/api/v2/manual-test-runs/{runId}", "patch"],
       ["/api/v2/manual-test-runs/{runId}/steps/{stepId}", "patch"],
       ["/api/v2/manual-test-runs/{runId}/complete", "post"],
@@ -24,7 +25,11 @@ describe("manual test run OpenAPI contract", () => {
       expect(operation?.responses?.["400"]).toBeDefined();
       expect(operation?.responses?.["401"]).toBeDefined();
       expect(operation?.responses?.["404"]).toBeDefined();
-      expect(operation?.responses?.["409"]).toBeDefined();
+      if (path.endsWith("/executor")) {
+        expect(operation?.responses?.["400"]).toBeDefined();
+      } else {
+        expect(operation?.responses?.["409"]).toBeDefined();
+      }
     }
   });
 

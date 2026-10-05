@@ -156,6 +156,11 @@ const ManualTestRunUpdateRequestSchema = z
   .strict()
   .openapi("ManualTestRunUpdateRequest");
 
+const ManualTestRunExecutorReassignmentRequestSchema = z
+  .object({ executedById: z.string().uuid() })
+  .strict()
+  .openapi("ManualTestRunExecutorReassignmentRequest");
+
 const ManualTestRunStepUpdateRequestSchema = z
   .object({
     status: ManualTestRunStepStatusSchema.optional(),
@@ -201,6 +206,10 @@ export function registerManualTestRunRoutes(registry: OpenAPIRegistry): void {
   );
   registry.register("ManualTestRunStartRequest", ManualTestRunStartRequestSchema);
   registry.register("ManualTestRunUpdateRequest", ManualTestRunUpdateRequestSchema);
+  registry.register(
+    "ManualTestRunExecutorReassignmentRequest",
+    ManualTestRunExecutorReassignmentRequestSchema,
+  );
   registry.register(
     "ManualTestRunStepUpdateRequest",
     ManualTestRunStepUpdateRequestSchema,
@@ -267,6 +276,38 @@ export function registerManualTestRunRoutes(registry: OpenAPIRegistry): void {
     request: { params: RunIdParamsSchema, query: ProjectIdQuerySchema },
     security: [{ BearerAuth: [] }],
     responses: { 200: { description: "Manual test run detail", content: { "application/json": { schema: ManualTestRunSchema } } }, ...commonErrors },
+    tags: ["Manual Test Runs"],
+  });
+
+  registry.registerPath({
+    method: "patch",
+    path: "/api/v2/manual-test-runs/{runId}/executor",
+    description:
+      "Assigns an active user as Executor without changing execution data. Available for runs in any status to any authenticated active user; project-scoped and does not enforce Executor-only edit authorization.",
+    request: {
+      params: RunIdParamsSchema,
+      query: ProjectIdQuerySchema,
+      body: {
+        required: true,
+        content: {
+          "application/json": {
+            schema: ManualTestRunExecutorReassignmentRequestSchema,
+          },
+        },
+      },
+    },
+    security: [{ BearerAuth: [] }],
+    responses: {
+      200: {
+        description: "Reassigned run with authoritative Executor identity",
+        content: { "application/json": { schema: ManualTestRunSchema } },
+      },
+      400: errorResponse("Invalid request or target user is missing or inactive"),
+      401: errorResponse("Unauthorized"),
+      403: errorResponse("Forbidden by the existing authentication lifecycle"),
+      404: errorResponse("The run was not found in the requested project"),
+      500: errorResponse("Internal server error"),
+    },
     tags: ["Manual Test Runs"],
   });
 
