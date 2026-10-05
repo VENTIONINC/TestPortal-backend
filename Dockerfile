@@ -48,6 +48,9 @@ COPY --from=builder /app/src/assets/pdf ./src/assets/pdf
 # Copy skill artifacts served by the skills hub
 COPY --from=builder /app/src/skills ./src/skills
 
+# Credential-free AI configuration examples and editor schema
+COPY --from=builder /app/config/ai ./config/ai
+
 # Copy generated Prisma Client
 COPY --from=builder /app/node_modules/.prisma ./node_modules/.prisma
 

@@ -5,12 +5,14 @@ const config: JestConfigWithTsJest = {
   projects: [
     {
       ...baseConfig,
+      setupFiles: [],
       testPathIgnorePatterns: ["/dist/"],
       displayName: "error-formatter",
       testMatch: ["<rootDir>/__prompts-tests__/error-formatter/*.test.ts"],
     },
     {
       ...baseConfig,
+      setupFiles: [],
       testPathIgnorePatterns: ["/dist/"],
       displayName: "stored-results-analysis",
       testMatch: [
@@ -19,6 +21,7 @@ const config: JestConfigWithTsJest = {
     },
     {
       ...baseConfig,
+      setupFiles: [],
       testPathIgnorePatterns: ["/dist/"],
       displayName: "error-solution",
       testMatch: ["<rootDir>/__prompts-tests__/error-solution/**/?(*.)test.ts"],

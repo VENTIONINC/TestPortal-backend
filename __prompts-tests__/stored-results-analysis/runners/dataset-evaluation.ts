@@ -40,6 +40,7 @@ export async function runDatasetEvaluation(
     provider: "openai",
     model: result.model,
     settings: result.settings,
+    metadata: result.metadata,
     promptVersion: version.version,
     suite,
     requestCount: result.requestCount,

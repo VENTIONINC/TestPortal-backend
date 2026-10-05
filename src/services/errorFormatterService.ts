@@ -5,10 +5,7 @@ import { ChatPromptTemplate } from "@langchain/core/prompts";
 import { ChatOpenAI } from "@langchain/openai";
 import { z } from "zod";
 
-import {
-  errorFormatterConfig,
-  getPromptModelOptions,
-} from "@/config/promptModels";
+import { getProductionAiSettings, toChatOpenAIOptions } from "@/config/serverAiConfig";
 import { normalizeJsonArrayForText } from "@/lib/jsonPayloads";
 import getLogger from "@/lib/logger";
 import { getEffectiveResultCategory } from "@/lib/resultCategory";
@@ -39,7 +36,9 @@ export const errorFormatterService = {
     try {
       logger.info("Formatting error message with LangChain");
 
-      const model = new ChatOpenAI(getPromptModelOptions(errorFormatterConfig));
+      const model = new ChatOpenAI(
+        toChatOpenAIOptions(getProductionAiSettings("errorFormatting")),
+      );
 
       const structuredModel = model.withStructuredOutput<
         z.infer<typeof errorFormatterSchema>
@@ -94,12 +93,9 @@ export const errorFormatterService = {
 
       const analysis = await resolveResultAnalysis(result);
 
-      const model = new ChatOpenAI({
-        model: "gpt-4.1-mini",
-        temperature: 0.3,
-        maxTokens: 700,
-        maxRetries: 2,
-      });
+      const model = new ChatOpenAI(
+        toChatOpenAIOptions(getProductionAiSettings("solutionSuggestion")),
+      );
 
       const structuredModel = model.withStructuredOutput<
         z.infer<typeof errorSuggestionSchema>

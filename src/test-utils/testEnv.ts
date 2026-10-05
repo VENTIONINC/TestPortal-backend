@@ -3,3 +3,4 @@
 
 process.env.JWT_SECRET ??= "test-secret";
 process.env.AUTH_PROVIDER ??= "local";
+process.env.OPENAI_API_KEY ??= "test-key";

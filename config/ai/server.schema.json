@@ -1,0 +1,55 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://testportal.example/schemas/server-ai-config-v1.json",
+  "title": "TestPortal server AI configuration",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["version", "profiles", "operations"],
+  "properties": {
+    "$schema": { "type": "string" },
+    "version": { "const": 1 },
+    "profiles": {
+      "type": "object",
+      "minProperties": 1,
+      "additionalProperties": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["provider", "model"],
+        "properties": {
+          "provider": { "const": "openai" },
+          "model": { "enum": ["gpt-4.1-mini", "gpt-5.1", "gpt-6-luna"] },
+          "reasoning": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["effort"],
+            "properties": { "effort": { "enum": ["none", "low", "medium", "high"] } }
+          }
+        }
+      }
+    },
+    "operations": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "storedResultsAnalysis": { "$ref": "#/$defs/operation" },
+        "errorFormatting": { "$ref": "#/$defs/operation" },
+        "solutionSuggestion": { "$ref": "#/$defs/operation" },
+        "dashboardInsights": { "$ref": "#/$defs/operation" }
+      }
+    }
+  },
+  "$defs": {
+    "operation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["profile", "maxOutputTokens", "maxRetries"],
+      "properties": {
+        "profile": { "type": "string", "minLength": 1 },
+        "temperature": { "type": "number", "minimum": 0, "maximum": 2 },
+        "maxOutputTokens": { "type": "integer", "minimum": 1, "maximum": 128000 },
+        "maxRetries": { "type": "integer", "minimum": 0, "maximum": 10 },
+        "timeoutMs": { "type": "integer", "minimum": 1, "maximum": 600000 }
+      }
+    }
+  }
+}

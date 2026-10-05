@@ -11,6 +11,12 @@ import {
 } from "@langchain/core/prompts";
 import { SystemMessage } from "@langchain/core/messages";
 import { ChatOpenAI } from "@langchain/openai";
+import {
+  assertEvaluationCredentials,
+  loadEvaluationAiConfiguration,
+  resolveAiSettings,
+  toChatOpenAIOptions,
+} from "@/config/serverAiConfig";
 import type { ErrorSuggestionOutput } from "@/schemas/errorSuggestionSchemas";
 import type { TestCase } from "../v1.0.0/templates/types";
 import type { EvalFailure, EvalResult } from "./types";
@@ -27,15 +33,15 @@ const stepRegex = /(?:^|\n)\s*\d+[).]/g;
 const stepsHeadingRegex = /steps to identify|steps to reproduce|steps:/i;
 
 export async function runEval(options: RunEvalOptions): Promise<EvalResult> {
-  const { cases, version, model = "gpt-4.1-mini", temperature = 0.3 } = options;
-
-  const llm = new ChatOpenAI({
-    model,
-    temperature,
-    maxTokens: 600,
-    maxRetries: 2,
-    cache: false,
+  const { cases, version, model, temperature } = options;
+  assertEvaluationCredentials();
+  const configuration = loadEvaluationAiConfiguration();
+  const settings = resolveAiSettings(configuration, "solutionSuggestion", {
+    ...(model === undefined ? {} : { model }),
+    ...(temperature === undefined ? {} : { temperature }),
   });
+
+  const llm = new ChatOpenAI(toChatOpenAIOptions(settings));
 
   const structuredModel = llm.withStructuredOutput<ErrorSuggestionOutput>(
     version.schema,
@@ -83,5 +89,26 @@ export async function runEval(options: RunEvalOptions): Promise<EvalResult> {
     }
   }
 
-  return { responses, failures };
+  return {
+    responses,
+    failures,
+    metadata: {
+      suite: "error-solution",
+      operation: settings.operation,
+      promptVersion: version.version,
+      configurationVersion: settings.version,
+      configurationSource: settings.source === "custom" ? "custom" : "evaluation-baseline",
+      profile: settings.profile,
+      provider: settings.provider,
+      requestedModel: settings.model,
+      ...(settings.reasoning ? { reasoning: settings.reasoning } : {}),
+      generationSettings: {
+        ...(settings.temperature === undefined ? {} : { temperature: settings.temperature }),
+        maxOutputTokens: settings.maxOutputTokens,
+        maxRetries: settings.maxRetries,
+        ...(settings.timeoutMs === undefined ? {} : { timeoutMs: settings.timeoutMs }),
+        ...(settings.cache === false ? { cache: false as const } : {}),
+      },
+    },
+  };
 }
