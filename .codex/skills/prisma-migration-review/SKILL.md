@@ -1,15 +1,9 @@
 ---
 name: prisma-migration-review
-description: Deprecated review skill; use backend-code-review. Review Prisma schema, migrations, query shape, indexes, and PostgreSQL performance concerns in the test-portal backend. Use for persistence changes, relation changes, slow queries, pagination, and migration safety.
+description: Review Prisma schema, migrations, query shape, indexes, and PostgreSQL performance concerns in the test-portal backend. Use for persistence changes, relation changes, slow queries, pagination, and migration safety.
 ---
 
 # Prisma Migration Review
-
-## Deprecated
-
-Review guidance has been merged into [backend-code-review](../backend-code-review/SKILL.md).
-Use that skill for new reviews. This file and its references are retained for compatibility;
-the checklists below are historical guidance, not an additional review dependency.
 
 ## Review Focus
 

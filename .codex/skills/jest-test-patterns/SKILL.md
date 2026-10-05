@@ -1,18 +1,11 @@
 ---
 name: jest-test-patterns
-description: Review guidance deprecated in favor of backend-code-review; authoring and updates remain supported. Add, improve, or review Jest tests for the test-portal backend. Use for controller, service, model, route, MCP handler, and regression coverage work.
+description: Add, improve, or review Jest tests for the test-portal backend. Use for controller, service, model, route, MCP handler, and regression coverage work.
 ---
 
 # Jest Test Patterns
 
 Use this skill when writing or reviewing tests in this backend.
-
-## Deprecated Review Guidance
-
-Review checks have been merged into [backend-code-review](../backend-code-review/SKILL.md).
-Use that skill for new reviews; it does not load this skill. Authoring and update procedures here
-remain available when explicitly requested. Existing review material and references are retained
-for compatibility, not as an additional review dependency.
 
 ## Project Context
 

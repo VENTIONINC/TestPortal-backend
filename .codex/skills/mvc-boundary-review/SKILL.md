@@ -1,15 +1,9 @@
 ---
 name: mvc-boundary-review
-description: Deprecated review skill; use backend-code-review. Review MVC layering, service boundaries, REST/MCP reuse, and architectural consistency in the test-portal backend. Use before or after changes that add endpoints, handlers, services, models, or shared abstractions.
+description: Review MVC layering, service boundaries, REST/MCP reuse, and architectural consistency in the test-portal backend. Use before or after changes that add endpoints, handlers, services, models, or shared abstractions.
 ---
 
 # MVC Boundary Review
-
-## Deprecated
-
-Review guidance has been merged into [backend-code-review](../backend-code-review/SKILL.md).
-Use that skill for new reviews. This file and its references are retained for compatibility;
-the checklists below are historical guidance, not an additional review dependency.
 
 ## Repository Shape
 

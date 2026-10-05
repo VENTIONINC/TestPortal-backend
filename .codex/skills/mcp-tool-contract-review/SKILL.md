@@ -1,18 +1,11 @@
 ---
 name: mcp-tool-contract-review
-description: Review guidance deprecated in favor of backend-code-review; authoring and updates remain supported. Review or update MCP tool contracts, schemas, handlers, helper usage, and alignment with REST/service behavior in the test-portal backend.
+description: Review or update MCP tool contracts, schemas, handlers, helper usage, and alignment with REST/service behavior in the test-portal backend.
 ---
 
 # MCP Tool Contract Review
 
 Use this skill when adding, changing, or reviewing MCP tools, MCP schemas, handlers, or shared behavior between MCP and REST endpoints.
-
-## Deprecated Review Guidance
-
-Review checks have been merged into [backend-code-review](../backend-code-review/SKILL.md).
-Use that skill for new reviews; it does not load this skill. Authoring and update procedures here
-remain available when explicitly requested. Existing review material and references are retained
-for compatibility, not as an additional review dependency.
 
 ## Repository Shape
 

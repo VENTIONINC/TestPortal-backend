@@ -1,18 +1,11 @@
 ---
 name: openapi-contract-update
-description: Review guidance deprecated in favor of backend-code-review; authoring and updates remain supported. Update or review OpenAPI, Zod, REST schema, and MCP contract alignment for the test-portal backend. Use when endpoint behavior, request/response schemas, route docs, or auth documentation changes.
+description: Update or review OpenAPI, Zod, REST schema, and MCP contract alignment for the test-portal backend. Use when endpoint behavior, request/response schemas, route docs, or auth documentation changes.
 ---
 
 # OpenAPI Contract Update
 
 Use this skill when a change affects REST endpoint behavior, request or response DTOs, Zod schemas, OpenAPI route registration, authentication documentation, or overlapping MCP contracts.
-
-## Deprecated Review Guidance
-
-Review checks have been merged into [backend-code-review](../backend-code-review/SKILL.md).
-Use that skill for new reviews; it does not load this skill. Authoring and update procedures here
-remain available when explicitly requested. Existing review material and references are retained
-for compatibility, not as an additional review dependency.
 
 ## Focus Areas
 
