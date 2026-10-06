@@ -8,6 +8,7 @@ import { jsonReportService } from "@/services/jsonReportService";
 import { testAnalysisService } from "@/services/testAnalysisService";
 import { dashboardService } from "@/services/dashboardService";
 import type { CTRFReport } from "@/types/ctrf";
+import { validateReportTimestamps } from "@/lib/reportTimestampWarnings";
 
 // Mock dependencies
 jest.mock("@/services/jsonReportService");
@@ -102,14 +103,14 @@ describe("ctrfService", () => {
     );
   });
 
-  it("does not run post-persistence work when the import transaction fails", async () => {
+  it("does not run analysis or dashboard work when timestamp validation fails", async () => {
     (jsonReportService.processReport as jest.Mock).mockRejectedValue(
-      new Error("batch insert failed"),
+      new Error("Future test execution timestamps were detected"),
     );
 
     await expect(
       ctrfService.processReport(mockReport, { projectId: mockProjectId }),
-    ).rejects.toThrow("batch insert failed");
+    ).rejects.toThrow("Future test execution timestamps were detected");
 
     expect(mockDbClient.project.findUnique).not.toHaveBeenCalled();
     expect(testAnalysisService.analyzeStoredResults).not.toHaveBeenCalled();
@@ -373,6 +374,58 @@ describe("ctrfService", () => {
     );
   });
 
+  it("should expose explicit CTRF summary and test start times to validation", () => {
+    const now = new Date("2026-08-14T12:00:00.000Z");
+    const futureStart = Date.parse("2026-08-14T12:30:00.000Z");
+    const baseTest = mockReport.results.tests[0];
+    if (!baseTest) {
+      throw new Error("Expected mock CTRF test");
+    }
+    const report: CTRFReport = {
+      ...mockReport,
+      results: {
+        ...mockReport.results,
+        summary: {
+          ...mockReport.results.summary,
+          start: futureStart,
+        },
+        tests: [
+          {
+            ...baseTest,
+            start: futureStart + 60_000,
+          },
+        ],
+      },
+    };
+
+    const transformed = ctrfService.transformCtrfToReportData(report);
+
+    expect(() => validateReportTimestamps(transformed, now)).toThrow(
+      "2 timestamps exceed the allowed 10-minute tolerance. Maximum deviation: 31m.",
+    );
+  });
+
+  it("should expose the CTRF summary start used as a test fallback to validation", () => {
+    const now = new Date("2026-08-14T12:00:00.000Z");
+    const futureStart = Date.parse("2026-08-14T12:45:00.000Z");
+    const report: CTRFReport = {
+      ...mockReport,
+      results: {
+        ...mockReport.results,
+        summary: {
+          ...mockReport.results.summary,
+          start: futureStart,
+        },
+      },
+    };
+
+    const transformed = ctrfService.transformCtrfToReportData(report);
+
+    expect(() => validateReportTimestamps(transformed, now)).toThrow(
+      "2 timestamps exceed the allowed 10-minute tolerance. Maximum deviation: 45m.",
+    );
+  });
+
   it("normalizes canonical CTRF modal enrichment metadata", () => {
     const transformed = ctrfService.transformCtrfTest(
       {
@@ -409,5 +462,40 @@ describe("ctrfService", () => {
         generatedTestCase: "test('checkout', async () => {});",
       }),
     );
+  });
+
+  it("reconstructs retry attempts and ordered errors from the provider-neutral extension", () => {
+    const transformed = ctrfService.transformCtrfTest(
+      {
+        name: "failed checkout",
+        status: "failed",
+        duration: 20,
+        message: "primary",
+        trace: "one",
+        filePath: "checkout.spec.ts",
+        retries: 1,
+        retryAttempts: [{
+          attempt: 1,
+          status: "failed",
+          duration: 10,
+          message: "retry failure",
+          extra: { testPortal: { version: 1, errors: [{ index: 0, message: "retry failure", rawLogs: ["retry log"] }] } },
+        }],
+        extra: { testPortal: { version: 1, errors: [
+          { index: 0, message: "primary", stack: "one", rawLogs: ["new log"] },
+          { index: 1, message: "secondary", stack: "two", generatedTestCase: "generated" },
+        ] } },
+        meta: { logs: ["legacy loses"] },
+      },
+      Date.parse("2026-08-19T10:00:00Z"),
+      0,
+    );
+
+    expect(transformed.results).toHaveLength(2);
+    expect(transformed.results[0]).toMatchObject({ retry: 0, errors: [{ message: "retry failure", rawLogs: ["retry log"] }] });
+    expect(transformed.results[1]).toMatchObject({ retry: 1, errors: [
+      { message: "primary", stack: "one", rawLogs: ["new log"] },
+      { message: "secondary", stack: "two", generatedTestCase: "generated" },
+    ] });
   });
 });

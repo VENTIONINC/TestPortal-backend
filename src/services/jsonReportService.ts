@@ -12,6 +12,7 @@ import {
   type IdentifierStrategy,
 } from "@/lib/executionIdentifiers";
 import { normalizeJsonStringArray } from "@/lib/jsonPayloads";
+import { validateReportTimestamps } from "@/lib/reportTimestampWarnings";
 import { normalizeResultErrorModalContext } from "@/lib/resultErrorModalContext";
 import type {
   PrismaExecution,
@@ -36,7 +37,7 @@ interface ResultCreateInput {
   analysisErrorQualityConclusion?: string;
   spec: { connect: { id: string } }; // UUID reference to Spec
   execution: { connect: { id: string } }; // UUID reference to Execution
-  errors?: { connect: { id: string } }; // UUID reference to ResultError
+  errors?: { connect: Array<{ id: string }> }; // UUID references to ResultError
 }
 
 const logger = getLogger("json-report-service");
@@ -83,6 +84,7 @@ interface TestResult {
   duration: number;
   startTime: string | Date;
   error?: ErrorData;
+  errors?: ErrorData[];
   logs?: unknown;
   sourceSnippet?: unknown;
   generatedTestCase?: unknown;
@@ -93,7 +95,14 @@ interface ErrorData {
   message: string;
   stack: string;
   location: { file: string; line: number };
+  rawLogs?: unknown;
+  logs?: unknown;
+  sourceSnippet?: unknown;
+  generatedTestCase?: unknown;
 }
+
+const getOrderedErrors = (result: TestResult): ErrorData[] =>
+  result.errors?.length ? result.errors : result.error ? [result.error] : [];
 
 export interface ProcessReportResult {
   success: boolean;
@@ -113,6 +122,8 @@ export const jsonReportService = {
     if (!reportData) {
       throw new Error("Report data is required");
     }
+
+    validateReportTimestamps(reportData);
 
     const {
       runId,
@@ -353,9 +364,16 @@ export const jsonReportService = {
         executionId: executionRecord.id,
       });
 
-      if (result.error) {
-        const parsedError = parseStackTrace(result.error);
-        const modalContext = normalizeResultErrorModalContext(result);
+      for (const [errorIndex, error] of getOrderedErrors(result).entries()) {
+        const parsedError = parseStackTrace(error);
+        const modalContext = normalizeResultErrorModalContext({
+          logs: error.rawLogs ?? error.logs ?? (errorIndex === 0 ? result.logs : undefined),
+          sourceSnippet:
+            error.sourceSnippet ?? (errorIndex === 0 ? result.sourceSnippet : undefined),
+          generatedTestCase:
+            error.generatedTestCase ??
+            (errorIndex === 0 ? result.generatedTestCase : undefined),
+        });
         errorRecords.push({
           id: randomUUID(),
           type: parsedError.type,
@@ -499,16 +517,26 @@ export const jsonReportService = {
     };
 
     // Handle error data if present
-    if (resultData.error) {
-      const errorRecord = await this._createErrorRecord(
-        resultData.error,
-        resultData,
-        tx,
+    const orderedErrors = getOrderedErrors(resultData);
+    if (orderedErrors.length > 0) {
+      const errorRecords = await Promise.all(
+        orderedErrors.map((error, index) =>
+          this._createErrorRecord(
+            error,
+            {
+              logs: error.rawLogs ?? error.logs ?? (index === 0 ? resultData.logs : undefined),
+              sourceSnippet:
+                error.sourceSnippet ?? (index === 0 ? resultData.sourceSnippet : undefined),
+              generatedTestCase:
+                error.generatedTestCase ??
+                (index === 0 ? resultData.generatedTestCase : undefined),
+            },
+            tx,
+          ),
+        ),
       );
       recordData.errors = {
-        connect: {
-          id: errorRecord.id,
-        },
+        connect: errorRecords.map(({ id }) => ({ id })),
       };
     }
 
