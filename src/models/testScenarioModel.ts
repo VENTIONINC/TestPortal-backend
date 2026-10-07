@@ -47,6 +47,8 @@ const summarySelect = {
   details: true,
   createdAt: true,
   updatedAt: true,
+  folderId: true,
+  folder: { select: { name: true } },
   createdBy: {
     select: {
       id: true,
@@ -58,8 +60,8 @@ const summarySelect = {
 
 type SummaryListParams = Pick<
   ListTestScenariosParams,
-  "projectId" | "page" | "limit" | "search" | "createdById" | "sort"
->;
+  "projectId" | "page" | "limit" | "search" | "createdById" | "sort" | "folderId" | "includeDescendants" | "suiteId"
+> & { _folderIds?: string[] };
 
 function escapeLikePattern(value: string): string {
   return value.replace(/[\\%_]/g, (character) => `\\${character}`);
@@ -68,9 +70,14 @@ function escapeLikePattern(value: string): string {
 function summaryWhere(
   params: SummaryListParams,
 ): Prisma.TestScenarioWhereInput {
+  const organization: Prisma.TestScenarioWhereInput[] = [];
+  if (params.folderId === "unfiled") organization.push({ folderId: null });
+  else if (params.folderId) organization.push({ folderId: { in: params._folderIds ?? [params.folderId] } } as Prisma.TestScenarioWhereInput);
+  if (params.suiteId) organization.push({ suiteMemberships: { some: { suiteId: params.suiteId } } });
   return {
     projectId: params.projectId,
     ...(params.createdById ? { createdById: params.createdById } : {}),
+    ...(organization.length ? { AND: organization } : {}),
     ...(params.search
       ? {
           OR: [
@@ -113,6 +120,7 @@ function toResponse(scenario: ScenarioAggregate): TestScenarioResponse {
   return {
     id: scenario.id,
     projectId: scenario.projectId,
+    folderId: scenario.folderId,
     createdById: scenario.createdById,
     title: scenario.title,
     scenarioKey: scenario.scenarioKey,
@@ -241,6 +249,7 @@ function contentCreateData(
 ): Prisma.TestScenarioUncheckedCreateInput {
   return {
     projectId: data.projectId,
+    folderId: data.folderId ?? null,
     title: data.title,
     scenarioKey: data.scenarioKey ?? null,
     details: data.details ?? null,
@@ -333,11 +342,26 @@ export const testScenarioModel = {
   ): Promise<{ scenarios: TestScenarioSummary[]; total: number }> {
     const page = params.page ?? 1;
     const limit = params.limit ?? 30;
-    const where = summaryWhere(params);
     const orderBy = summaryOrderBy(params.sort);
 
     return await dbClient.$transaction(
       async (transaction) => {
+        const scoped: SummaryListParams = { ...params };
+        if (params.folderId && params.folderId !== "unfiled") {
+          if (params.includeDescendants === false) scoped._folderIds = [params.folderId];
+          else {
+            const rows = await transaction.$queryRaw<Array<{ id: string }>>(Prisma.sql`
+              WITH RECURSIVE folders AS (
+                SELECT "id" FROM "TestScenarioFolder" WHERE "id" = ${params.folderId}::uuid AND "projectId" = ${params.projectId}::uuid
+                UNION ALL SELECT child."id" FROM "TestScenarioFolder" child JOIN folders parent ON child."parentId" = parent."id" WHERE child."projectId" = ${params.projectId}::uuid
+              ) SELECT "id" FROM folders
+            `);
+            if (!rows.length) throw new Error("Folder not found");
+            scoped._folderIds = rows.map(({ id }) => id);
+          }
+        }
+        if (params.suiteId && !(await transaction.testSuite.findFirst({ where: { id: params.suiteId, projectId: params.projectId }, select: { id: true } }))) throw new Error("Suite not found");
+        const where = summaryWhere(scoped);
         const [scenarios, total] = await Promise.all([
           transaction.testScenario.findMany({
             where,
@@ -345,7 +369,7 @@ export const testScenarioModel = {
             skip: (page - 1) * limit,
             take: limit,
             orderBy,
-          }),
+          }).then((rows) => rows.map(({ folder, ...row }) => ({ ...row, folderName: folder?.name ?? null, matchedSuiteId: params.suiteId ?? null }))),
           transaction.testScenario.count({ where }),
         ]);
 
@@ -353,6 +377,14 @@ export const testScenarioModel = {
       },
       { isolationLevel: Prisma.TransactionIsolationLevel.RepeatableRead },
     );
+  },
+
+  async folderBelongsToProject(folderId: string, projectId: string): Promise<boolean> {
+    return (await dbClient.testScenarioFolder.findFirst({ where: { id: folderId, projectId }, select: { id: true } })) !== null;
+  },
+
+  async suiteBelongsToProject(suiteId: string, projectId: string): Promise<boolean> {
+    return (await dbClient.testSuite.findFirst({ where: { id: suiteId, projectId }, select: { id: true } })) !== null;
   },
 
   async count(
@@ -407,6 +439,7 @@ export const testScenarioModel = {
             ? { expectedResult: data.expectedResult }
             : {}),
           ...(data.notes !== undefined ? { notes: data.notes } : {}),
+          ...(data.folderId !== undefined ? { folder: data.folderId ? { connect: { id: data.folderId } } : { disconnect: true } } : {}),
         };
         await client.testScenario.update({
           where: { id: scenario.id },

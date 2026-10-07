@@ -16,6 +16,7 @@ export interface TestScenarioStepResponse {
 export interface TestScenarioResponse {
   id: string;
   projectId: string;
+  folderId?: string | null;
   createdById: string;
   title: string;
   scenarioKey: string | null;
@@ -51,6 +52,9 @@ export interface TestScenarioSummary {
   createdBy: TestScenarioCreatorSummary;
   createdAt: Date;
   updatedAt: Date;
+  folderId?: string | null;
+  folderName?: string | null;
+  matchedSuiteId?: string | null;
 }
 
 export interface RelatedTestScenarioSummary {
@@ -71,6 +75,7 @@ export interface CreateTestScenarioParams {
   title: string;
   scenarioKey?: string | null | undefined;
   createdById: string;
+  folderId?: string | null | undefined;
   /** @deprecated Markdown is generated; transport schemas reject this field. */
   contentMd?: string | undefined;
   details?: string | undefined;
@@ -85,6 +90,7 @@ export interface CreateTestScenarioParams {
 export interface UpdateTestScenarioParams {
   scenarioId: string;
   projectId: string;
+  folderId?: string | null | undefined;
   /** @deprecated Markdown is generated; transport schemas reject this field. */
   contentMd?: string | undefined;
   title?: string | undefined;
@@ -139,6 +145,9 @@ export interface ListTestScenariosParams {
   search?: string | undefined;
   createdById?: string | undefined;
   sort?: TestScenarioSort | undefined;
+  folderId?: string | undefined;
+  includeDescendants?: boolean | undefined;
+  suiteId?: string | undefined;
 }
 
 export interface TestScenarioListResponse {

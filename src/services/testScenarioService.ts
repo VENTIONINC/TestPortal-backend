@@ -180,7 +180,9 @@ export const testScenarioService = {
     validateKeys(params as unknown as Record<string, unknown>, [
       "projectId",
       "title",
+      "folderId",
       "createdById",
+      "folderId",
       ...SCENARIO_FIELDS.filter((field) => field !== "title"),
       "steps",
     ]);
@@ -190,6 +192,7 @@ export const testScenarioService = {
     const data: CreateTestScenarioParams = {
       projectId: params.projectId,
       createdById: params.createdById,
+      folderId: params.folderId ?? null,
       title: normalizeNonBlank(params.title, "Title"),
       scenarioKey: params.scenarioKey === undefined ? null : normalizeKey(params.scenarioKey, "Scenario key"),
       details: normalizeCreateOptional(params.details, "Details") ?? undefined,
@@ -212,6 +215,9 @@ export const testScenarioService = {
         `Project with id '${data.projectId}' not found`,
       );
     }
+    if (data.folderId && !(await testScenarioModel.folderBelongsToProject(data.folderId, data.projectId))) {
+      throw new TestScenarioNotFoundError("Folder not found");
+    }
 
     const scenario = await testScenarioModel.create(data);
     if (!scenario) {
@@ -232,6 +238,9 @@ export const testScenarioService = {
       "search",
       "createdById",
       "sort",
+      "folderId",
+      "includeDescendants",
+      "suiteId",
     ]);
     requireIdentifier(params.projectId, "Project ID");
     const page = params.page ?? DEFAULT_PAGE;
@@ -242,6 +251,12 @@ export const testScenarioService = {
       requireUuid(params.createdById, "Creator ID");
     }
     const sort = normalizeSort(params.sort);
+    if (params.folderId && params.folderId !== "unfiled" && !(await testScenarioModel.folderBelongsToProject(params.folderId, params.projectId))) {
+      throw new TestScenarioNotFoundError("Folder not found");
+    }
+    if (params.suiteId && !(await testScenarioModel.suiteBelongsToProject(params.suiteId, params.projectId))) {
+      throw new TestScenarioNotFoundError("Suite not found");
+    }
 
     const { scenarios, total } = await testScenarioModel.listSummaries({
       projectId: params.projectId,
@@ -252,6 +267,9 @@ export const testScenarioService = {
         ? { createdById: params.createdById }
         : {}),
       sort,
+      ...(params.folderId !== undefined ? { folderId: params.folderId } : {}),
+      ...(params.includeDescendants !== undefined ? { includeDescendants: params.includeDescendants } : {}),
+      ...(params.suiteId !== undefined ? { suiteId: params.suiteId } : {}),
     });
 
     return {
@@ -284,11 +302,12 @@ export const testScenarioService = {
     validateKeys(params as unknown as Record<string, unknown>, [
       ...IDENTIFIER_FIELDS,
       ...SCENARIO_FIELDS,
+      "folderId",
     ]);
     requireIdentifier(params.scenarioId, "Scenario ID");
     requireIdentifier(params.projectId, "Project ID");
 
-    const supplied = SCENARIO_FIELDS.filter((field) => hasOwn(params, field));
+    const supplied = [...SCENARIO_FIELDS.filter((field) => hasOwn(params, field)), ...(hasOwn(params, "folderId") ? ["folderId" as const] : [])];
     if (supplied.length === 0) {
       throw new TestScenarioValidationError(
         "At least one editable field is required",
@@ -297,7 +316,10 @@ export const testScenarioService = {
 
     const data: Omit<UpdateTestScenarioParams, "scenarioId" | "projectId"> = {};
     for (const field of supplied) {
-      if (field === "title") {
+      if (field === "folderId") {
+        if (params.folderId && !(await testScenarioModel.folderBelongsToProject(params.folderId, params.projectId))) throw new TestScenarioNotFoundError("Folder not found");
+        data.folderId = params.folderId;
+      } else if (field === "title") {
         data.title = normalizeNonBlank(params.title, "Title");
       } else if (field === "scenarioKey") {
         data.scenarioKey = normalizeKey(params.scenarioKey, "Scenario key");

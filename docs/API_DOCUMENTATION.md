@@ -110,6 +110,20 @@ the catalog-provided `downloadUrl` or directly to
 
 ## Test Scenario Routes
 
+### Folders and suites
+
+Organization endpoints use the existing bearer JWT authentication and require an explicit `projectId` on every request. `GET` and `POST /api/v2/test-scenario-folders` list or create project folders; `PATCH` and `DELETE /api/v2/test-scenario-folders/{folderId}` rename/move or remove a folder. Deletion requires `disposition=parent` or `disposition=unfiled`; direct scenarios are reassigned and child folders are promoted.
+
+`GET` and `POST /api/v2/test-suites` list or create manually curated suites. `PATCH` and `DELETE /api/v2/test-suites/{suiteId}` update or remove a suite. Add/remove members with `POST`/`DELETE /api/v2/test-suites/{suiteId}/members` and reorder all members with `PUT /api/v2/test-suites/{suiteId}/members/order`; member bodies use `{ "projectId": "…", "scenarioIds": ["…"] }`.
+
+Create folder example:
+
+```json
+{ "projectId": "11111111-1111-4111-8111-111111111111", "name": "Authentication", "parentId": null }
+```
+
+Move up to 100 scenarios atomically with `PATCH /api/v2/test-scenarios/bulk-folder` and `{ "projectId": "…", "scenarioIds": ["…"], "folderId": null }` to unfile them. The scenario list accepts `folderId=<UUID|unfiled>`, `includeDescendants=false`, and `suiteId=<UUID>`; filters are applied before pagination. Scenario summaries add nullable `folderId` and `folderName`. Suite membership is mutable current organization; only run snapshots represent historical execution state.
+
 Test Scenario list responses are lightweight summaries. Each item contains
 `id`, `projectId`, `createdById`, `title`, nullable `scenarioKey`, nullable plain-text `details`, a
 `createdBy` object containing only `id`, `name`, and `email`, `createdAt`, and

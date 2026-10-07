@@ -103,6 +103,7 @@ describe("testScenarioService", () => {
   it("normalizes structured creation and keeps initial step order", async () => {
     await testScenarioService.createScenario({
       projectId,
+      folderId: null,
       createdById: scenario.createdById,
       title: "  Login  ",
       details: "  Details  ",
@@ -111,6 +112,7 @@ describe("testScenarioService", () => {
     });
     expect(createMock).toHaveBeenCalledWith({
       projectId,
+      folderId: null,
       createdById: scenario.createdById,
       title: "Login",
       scenarioKey: null,

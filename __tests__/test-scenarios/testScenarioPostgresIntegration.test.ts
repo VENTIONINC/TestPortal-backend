@@ -4,6 +4,8 @@
 import "@/test-utils/testEnv";
 import { randomUUID } from "node:crypto";
 import { Prisma } from "@prisma/client";
+import express from "express";
+import request from "supertest";
 import { dbClient } from "@/prisma/client";
 import {
   hashTestScenarioMarkdown,
@@ -11,6 +13,11 @@ import {
 } from "@/lib/testScenarioMarkdown";
 import { testScenarioModel } from "@/models/testScenarioModel";
 import { testScenarioService } from "@/services/testScenarioService";
+import { testScenarioOrganizationService as organization } from "@/services/testScenarioOrganizationService";
+import { projectModel } from "@/models/projectModel";
+import { TestScenarioNotFoundError } from "@/types/testScenarios";
+import { jwtService } from "@/services/jwtService";
+import organizationRouter from "@/routes/test-scenario-organization";
 import type {
   CreateTestScenarioParams,
   TestScenarioResponse,
@@ -150,6 +157,8 @@ describePostgres("test scenario PostgreSQL aggregate integration", () => {
   });
 
   beforeEach(async () => {
+    await dbClient.testSuite.deleteMany({ where: { projectId: { in: [projectId, otherProjectId] } } });
+    await dbClient.testScenarioFolder.deleteMany({ where: { projectId: { in: [projectId, otherProjectId] } } });
     await dbClient.testScenario.deleteMany({
       where: { projectId: { in: [projectId, otherProjectId] } },
     });
@@ -237,7 +246,10 @@ describePostgres("test scenario PostgreSQL aggregate integration", () => {
       "createdBy",
       "createdById",
       "details",
+      "folderId",
+      "folderName",
       "id",
+      "matchedSuiteId",
       "projectId",
       "scenarioKey",
       "title",
@@ -537,5 +549,124 @@ describePostgres("test scenario PostgreSQL aggregate integration", () => {
     expect(persisted.contentMd).not.toMatch(/\r/);
     expect(persisted.contentMd.endsWith("\n")).toBe(true);
     await expectProjectionConsistency(persisted);
+  });
+
+  it("keeps folder and suite organization project-scoped and supports ordered membership", async () => {
+    const root = await organization.createFolder({ projectId, name: "Product" });
+    const child = await organization.createFolder({ projectId, name: "Login", parentId: root.id });
+    await organization.updateFolder({ projectId, folderId: child.id, name: "Sign-in", position: 2 });
+    const billing = await organization.createFolder({ projectId, name: "Billing", parentId: root.id, position: 1 });
+    const alternate = await organization.createFolder({ projectId, name: "Alternate", position: 3 });
+    await organization.updateFolder({ projectId, folderId: child.id, parentId: alternate.id });
+    await organization.updateFolder({ projectId, folderId: child.id, parentId: root.id });
+    const tree = await organization.listFolders(projectId) as Array<{ id: string; children: Array<{ id: string }> }>;
+    expect(tree.find(({ id }) => id === root.id)?.children.map(({ id }) => id)).toEqual([billing.id, child.id]);
+    await expect(organization.updateFolder({ projectId, folderId: root.id, parentId: child.id })).rejects.toMatchObject({ status: 400 });
+    const level3 = await organization.createFolder({ projectId, name: "Level 3", parentId: child.id });
+    const level4 = await organization.createFolder({ projectId, name: "Level 4", parentId: level3.id });
+    const level5 = await organization.createFolder({ projectId, name: "Level 5", parentId: level4.id });
+    await expect(organization.createFolder({ projectId, name: "Too deep", parentId: level5.id })).rejects.toMatchObject({ status: 400 });
+    const foreignParent = await organization.createFolder({ projectId: otherProjectId, name: "Foreign parent" });
+    await expect(organization.createFolder({ projectId, name: "Cross-project child", parentId: foreignParent.id })).rejects.toMatchObject({ status: 404 });
+    const first = await createScenario({ title: "Login" });
+    const second = await createScenario({ title: "Logout" });
+    const third = await createScenario({ title: "Signup", folderId: child.id });
+    await organization.moveScenarios({ projectId, scenarioIds: [first.id], folderId: child.id });
+    await organization.moveScenarios({ projectId, scenarioIds: [second.id], folderId: root.id });
+    expect((await getScenario(third.id)).folderId).toBe(child.id);
+    await testScenarioService.updateScenario({ scenarioId: third.id, projectId, title: "Signup updated" });
+    const updatedThird = await getScenario(third.id);
+    expect(updatedThird.folderId).toBe(child.id);
+    await testScenarioService.updateScenario({ scenarioId: third.id, projectId, folderId: null });
+    expect(await getScenario(third.id)).toMatchObject({ folderId: null, contentMd: updatedThird.contentMd });
+    const foreignAssignment = await organization.createFolder({ projectId: otherProjectId, name: "Not for this project" });
+    await expect(testScenarioService.updateScenario({ scenarioId: third.id, projectId, folderId: foreignAssignment.id })).rejects.toBeInstanceOf(TestScenarioNotFoundError);
+    await expect(organization.createFolder({ projectId, name: "product" })).rejects.toMatchObject({ status: 409 });
+    const suite = await organization.createSuite({ projectId, name: "Smoke", purpose: "Critical route" });
+    await expect(organization.createSuite({ projectId, name: "smoke" })).rejects.toMatchObject({ status: 409 });
+    await organization.mutateMembers({ projectId, suiteId: suite.id, scenarioIds: [first.id, second.id], operation: "add" });
+    await organization.mutateMembers({ projectId, suiteId: suite.id, scenarioIds: [first.id], operation: "add" });
+    await organization.reorderMembers({ projectId, suiteId: suite.id, scenarioIds: [second.id, first.id] });
+    await expect(organization.reorderMembers({ projectId, suiteId: suite.id, scenarioIds: [first.id] })).rejects.toMatchObject({ status: 400 });
+    await Promise.all([
+      organization.mutateMembers({ projectId, suiteId: suite.id, scenarioIds: [third.id], operation: "add" }),
+      organization.mutateMembers({ projectId, suiteId: suite.id, scenarioIds: [third.id], operation: "add" }),
+    ]);
+    await expect(organization.mutateMembers({ projectId, suiteId: suite.id, scenarioIds: [first.id, randomUUID()], operation: "add" })).rejects.toMatchObject({ status: 404 });
+    const nonMember = await createScenario({ title: "Not in this suite" });
+    await organization.mutateMembers({ projectId, suiteId: suite.id, scenarioIds: [nonMember.id], operation: "remove" });
+
+    const filtered = await testScenarioService.listScenarios({ projectId, folderId: root.id, suiteId: suite.id });
+    expect(filtered.total).toBe(2);
+    expect(filtered.scenarios.map(({ id }) => id).sort()).toEqual([first.id, second.id].sort());
+    expect(filtered.scenarios.find(({ id }) => id === first.id)).toMatchObject({ folderId: child.id, folderName: "Sign-in", matchedSuiteId: suite.id });
+    await organization.updateSuite({ projectId, suiteId: suite.id, description: "Current smoke selection", release: "R1" });
+    expect(await organization.getSuite(projectId, suite.id)).toMatchObject({ description: "Current smoke selection", release: "R1" });
+    const direct = await testScenarioService.listScenarios({ projectId, folderId: root.id, includeDescendants: false });
+    expect(direct.total).toBe(1);
+    expect(direct.scenarios.map(({ id }) => id)).toEqual([second.id]);
+    const outOfRange = await testScenarioService.listScenarios({ projectId, folderId: root.id, suiteId: suite.id, page: 3, limit: 1 });
+    expect(outOfRange).toMatchObject({ scenarios: [], total: 2, page: 3, limit: 1, totalPages: 2 });
+    await expect(organization.moveScenarios({ projectId, scenarioIds: [first.id, randomUUID()], folderId: root.id })).rejects.toMatchObject({ status: 404 });
+    expect((await getScenario(first.id)).folderId).toBe(child.id);
+    expect(await organization.moveScenarios({ projectId, scenarioIds: [second.id], folderId: null })).toEqual({ moved: 1 });
+    expect((await getScenario(second.id)).folderId).toBeNull();
+    expect((await organization.listSuites(projectId))[0]?.members.map(({ testScenarioId }) => testScenarioId)).toEqual([second.id, first.id, third.id]);
+    await organization.deleteSuite(projectId, suite.id);
+    expect(await dbClient.testScenario.findMany({ where: { id: { in: [first.id, second.id, third.id] } } })).toHaveLength(3);
+    const foreign = await organization.createFolder({ projectId: otherProjectId, name: "Foreign" });
+    expect(foreign.projectId).toBe(otherProjectId);
+    await expect(organization.moveScenarios({ projectId, scenarioIds: [first.id], folderId: foreign.id })).rejects.toMatchObject({ status: 404 });
+    const foreignSuite = await organization.createSuite({ projectId: otherProjectId, name: "Foreign suite" });
+    await expect(testScenarioService.listScenarios({ projectId, suiteId: foreignSuite.id })).rejects.toBeInstanceOf(TestScenarioNotFoundError);
+
+    await organization.deleteFolder({ projectId, folderId: root.id, disposition: "unfiled" });
+    expect(await dbClient.testScenario.findUnique({ where: { id: first.id }, select: { folderId: true } })).toEqual({ folderId: child.id });
+    expect(await dbClient.testScenario.findUnique({ where: { id: second.id }, select: { folderId: true } })).toEqual({ folderId: null });
+    expect(await dbClient.testScenarioFolder.findFirst({ where: { id: child.id }, select: { parentId: true } })).toEqual({ parentId: null });
+  });
+
+  it("cascades project deletion through its folders, suites, and memberships only", async () => {
+    const folder = await organization.createFolder({ projectId, name: "Delete with project" });
+    const foreignFolder = await organization.createFolder({ projectId: otherProjectId, name: "Keep foreign" });
+    const scenario = await createScenario({ title: "Project cascade" });
+    const suite = await organization.createSuite({ projectId, name: "Delete with project" });
+    await organization.mutateMembers({ projectId, suiteId: suite.id, scenarioIds: [scenario.id], operation: "add" });
+
+    await projectModel.deleteWithCascade(projectId);
+
+    expect(await dbClient.testScenarioFolder.findFirst({ where: { id: folder.id } })).toBeNull();
+    expect(await dbClient.testSuite.findFirst({ where: { id: suite.id } })).toBeNull();
+    expect(await dbClient.testScenario.findFirst({ where: { id: scenario.id } })).toBeNull();
+    expect(await dbClient.testScenarioFolder.findFirst({ where: { id: foreignFolder.id } })).not.toBeNull();
+  });
+
+  it("serves authenticated folder and suite operations and validates organization requests", async () => {
+    const app = express();
+    app.use(express.json());
+    app.use("/api", organizationRouter);
+    const routeProjectId = otherProjectId;
+    const token = jwtService.generateAccessToken({ userId: otherUserId, email: `test-scenario-postgres-${otherUserId}@example.test` });
+
+    await request(app).get(`/api/v2/test-scenario-folders?projectId=${routeProjectId}`).expect(401);
+    const folder = await request(app).post("/api/v2/test-scenario-folders").set("Authorization", `Bearer ${token}`).send({ projectId: routeProjectId, name: "REST folder" }).expect(201);
+    await request(app).post("/api/v2/test-scenario-folders").set("Authorization", `Bearer ${token}`).send({ projectId: routeProjectId, name: "rest folder" }).expect(409);
+    await request(app).post("/api/v2/test-scenario-folders").set("Authorization", `Bearer ${token}`).send({ projectId: routeProjectId, name: "   " }).expect(400);
+    await request(app).get(`/api/v2/test-scenario-folders?projectId=${routeProjectId}`).set("Authorization", `Bearer ${token}`).expect(200);
+    await request(app).patch(`/api/v2/test-scenario-folders/${folder.body.id}?projectId=${routeProjectId}`).set("Authorization", `Bearer ${token}`).send({ name: "Renamed folder" }).expect(200);
+    const suite = await request(app).post("/api/v2/test-suites").set("Authorization", `Bearer ${token}`).send({ projectId: routeProjectId, name: "REST suite", purpose: "API contract", release: "R2" }).expect(201);
+    expect(suite.body).toMatchObject({ purpose: "API contract", release: "R2" });
+    await request(app).post("/api/v2/test-suites").set("Authorization", `Bearer ${token}`).send({ projectId: routeProjectId, name: "rest suite" }).expect(409);
+    const routeScenario = await createScenarioFor(routeProjectId, otherUserId, { title: "REST member" });
+    await request(app).post(`/api/v2/test-suites/${suite.body.id}/members`).set("Authorization", `Bearer ${token}`).send({ projectId: routeProjectId, scenarioIds: [routeScenario.id] }).expect(200);
+    await request(app).put(`/api/v2/test-suites/${suite.body.id}/members/order`).set("Authorization", `Bearer ${token}`).send({ projectId: routeProjectId, scenarioIds: [routeScenario.id] }).expect(200);
+    await request(app).delete(`/api/v2/test-suites/${suite.body.id}/members`).set("Authorization", `Bearer ${token}`).send({ projectId: routeProjectId, scenarioIds: [routeScenario.id] }).expect(200);
+    await request(app).get(`/api/v2/test-suites/${suite.body.id}?projectId=${routeProjectId}`).set("Authorization", `Bearer ${token}`).expect(200);
+    await request(app).get(`/api/v2/test-suites/${suite.body.id}?projectId=${projectId}`).set("Authorization", `Bearer ${token}`).expect(404);
+    await request(app).patch("/api/v2/test-scenarios/bulk-folder").set("Authorization", `Bearer ${token}`).send({ projectId: routeProjectId, scenarioIds: [], folderId: null }).expect(400);
+    await request(app).delete(`/api/v2/test-scenario-folders/${randomUUID()}?projectId=${routeProjectId}&disposition=unfiled`).set("Authorization", `Bearer ${token}`).expect(404);
+    const assignmentFolder = await organization.createFolder({ projectId: routeProjectId, name: "REST assignment" });
+    await request(app).patch("/api/v2/test-scenarios/bulk-folder").set("Authorization", `Bearer ${token}`).send({ projectId: routeProjectId, scenarioIds: [routeScenario.id], folderId: assignmentFolder.id }).expect(200);
+    await request(app).delete(`/api/v2/test-scenario-folders/${assignmentFolder.id}?projectId=${routeProjectId}&disposition=unfiled`).set("Authorization", `Bearer ${token}`).expect(200);
   });
 });

@@ -4,6 +4,30 @@
 import { generateOpenAPISpec } from "@/lib/openapi";
 
 describe("structured Test Scenario OpenAPI contract", () => {
+  it("publishes folder, suite, membership, and bulk organization operations", () => {
+    const paths = generateOpenAPISpec().paths ?? {};
+    for (const [path, method] of [
+      ["/api/v2/test-scenario-folders", "get"], ["/api/v2/test-scenario-folders", "post"],
+      ["/api/v2/test-scenario-folders/{folderId}", "patch"], ["/api/v2/test-scenario-folders/{folderId}", "delete"],
+      ["/api/v2/test-suites", "get"], ["/api/v2/test-suites", "post"],
+      ["/api/v2/test-suites/{suiteId}", "get"], ["/api/v2/test-suites/{suiteId}", "patch"], ["/api/v2/test-suites/{suiteId}", "delete"],
+      ["/api/v2/test-suites/{suiteId}/members", "post"], ["/api/v2/test-suites/{suiteId}/members", "delete"],
+      ["/api/v2/test-suites/{suiteId}/members/order", "put"], ["/api/v2/test-scenarios/bulk-folder", "patch"],
+    ] as const) {
+      const operation = paths[path]?.[method];
+      expect(operation).toBeDefined();
+      expect(operation?.tags).toContain("Test Scenarios");
+      expect(operation?.security).toEqual([{ BearerAuth: [] }]);
+      expect(operation?.responses?.[method === "post" && (path === "/api/v2/test-scenario-folders" || path === "/api/v2/test-suites") ? "201" : "200"]?.content?.["application/json"]?.schema).toBeDefined();
+    }
+    expect(paths["/api/v2/test-suites/{suiteId}/members"]?.delete?.requestBody).toBeDefined();
+    expect(paths["/api/v2/test-scenario-folders/{folderId}"]?.delete?.parameters).toEqual(expect.arrayContaining([expect.objectContaining({ name: "disposition", in: "query" })]));
+    const query = generateOpenAPISpec().components?.schemas?.TestScenarioListQuery as { properties?: Record<string, unknown> };
+    expect(query.properties?.folderId).toBeDefined();
+    expect(query.properties?.includeDescendants).toBeDefined();
+    expect(query.properties?.suiteId).toBeDefined();
+  });
+
   it("publishes CRUD and all four authenticated step operations", () => {
     const spec = generateOpenAPISpec();
     const paths = spec.paths ?? {};

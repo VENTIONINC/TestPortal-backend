@@ -18,6 +18,7 @@ const createStepSchema = z
 export const createTestScenarioSchema = z
   .object({
     projectId: uuidSchema,
+    folderId: uuidSchema.nullable().optional(),
     title: nonBlankText,
     scenarioKey: editableTestManagementKeySchema.optional(),
     details: nonBlankText.optional(),
@@ -34,6 +35,7 @@ const updateFieldSchema = nonBlankText.nullable();
 
 export const updateTestScenarioSchema = z
   .object({
+    folderId: uuidSchema.nullable().optional(),
     title: nonBlankText.optional(),
     scenarioKey: editableTestManagementKeySchema.optional(),
     details: updateFieldSchema.optional(),
@@ -100,6 +102,9 @@ export const testScenarioListQuerySchema = z.object({
   search: z.string().trim().optional(),
   createdById: uuidSchema.optional(),
   sort: z.enum(TEST_SCENARIO_SORT_VALUES).default("recently_created"),
+  folderId: z.union([uuidSchema, z.literal("unfiled")]).optional(),
+  includeDescendants: z.enum(["true", "false"]).transform((value) => value === "true").optional(),
+  suiteId: uuidSchema.optional(),
 });
 
 export type CreateTestScenarioInput = z.infer<typeof createTestScenarioSchema>;
