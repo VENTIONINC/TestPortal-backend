@@ -260,6 +260,81 @@ describePostgres("test scenario PostgreSQL aggregate integration", () => {
     ).toEqual(["email", "id", "name"]);
   });
 
+  it("combines column filters and sorts summaries by displayed folder paths before pagination", async () => {
+    const root = await organization.createFolder({ projectId, name: "Root" });
+    const child = await organization.createFolder({ projectId, name: "Child", parentId: root.id });
+    const nested = await createScenario({ title: "Alpha nested", scenarioKey: "KEY-1", details: "Special detail", folderId: child.id });
+    const nestedSecond = await createScenario({ title: "Alpha second", scenarioKey: "KEY-1", details: "Special detail", folderId: child.id });
+    const unfiled = await createScenario({ title: "Beta unfiled", scenarioKey: "KEY-2", details: "Special detail" });
+    await createScenarioFor(otherProjectId, otherUserId, { title: "Alpha foreign", scenarioKey: "KEY-1", folderId: (await organization.createFolder({ projectId: otherProjectId, name: "Root" })).id });
+
+    const combined = await testScenarioService.listScenarios({
+      projectId,
+      scenarioKey: "key-1",
+      title: "ALPHA",
+      details: "special",
+      createdBy: "test-scenario-postgres-",
+      sortField: "title",
+      sortDirection: "asc",
+      page: 1,
+      limit: 1,
+    });
+    expect(combined.total).toBe(2);
+    expect(combined.totalPages).toBe(2);
+    expect(combined.scenarios.map(({ id }) => id)).toEqual([nested.id]);
+    const combinedSecondPage = await testScenarioService.listScenarios({ projectId, scenarioKey: "key-1", title: "ALPHA", details: "special", createdBy: "test-scenario-postgres-", sortField: "title", sortDirection: "asc", page: 2, limit: 1 });
+    expect(combinedSecondPage.scenarios.map(({ id }) => id)).toEqual([nestedSecond.id]);
+
+    const nestedPath = await testScenarioService.listScenarios({ projectId, folder: "root / child" });
+    expect(nestedPath.scenarios.map(({ id }) => id)).toEqual([nested.id, nestedSecond.id]);
+    const unfiledPath = await testScenarioService.listScenarios({ projectId, folder: " UNFILED " });
+    expect(unfiledPath.scenarios.map(({ id }) => id)).toEqual([unfiled.id]);
+
+    const folderOrder = await testScenarioService.listScenarios({ projectId, sortField: "folder", sortDirection: "asc" });
+    expect(folderOrder.scenarios.map(({ id }) => id)).toEqual([nested.id, unfiled.id]);
+  });
+
+  it("sorts every supported column in both directions with stable defaults", async () => {
+    const alphaFolder = await organization.createFolder({ projectId, name: "Alpha folder" });
+    const alpha = await createScenario({ title: "Alpha", scenarioKey: "A", details: "A detail", folderId: alphaFolder.id });
+    const zeta = await createScenarioFor(projectId, otherUserId, { title: "Zeta", scenarioKey: "Z", details: "Z detail" });
+    await dbClient.testScenario.update({ where: { id: alpha.id }, data: { createdAt: new Date("2026-01-01T00:00:00Z"), updatedAt: new Date("2026-01-02T00:00:00Z") } });
+    await dbClient.testScenario.update({ where: { id: zeta.id }, data: { createdAt: new Date("2026-01-03T00:00:00Z"), updatedAt: new Date("2026-01-04T00:00:00Z") } });
+
+    for (const field of ["scenarioKey", "title", "details", "createdAt", "updatedAt"] as const) {
+      const ascending = await testScenarioService.listScenarios({ projectId, sortField: field, sortDirection: "asc" });
+      expect(ascending.scenarios.map(({ id }) => id)).toEqual([alpha.id, zeta.id]);
+      const descending = await testScenarioService.listScenarios({ projectId, sortField: field, sortDirection: "desc" });
+      expect(descending.scenarios.map(({ id }) => id)).toEqual([zeta.id, alpha.id]);
+    }
+    const creatorAscending = await testScenarioService.listScenarios({ projectId, sortField: "createdBy", sortDirection: "asc" });
+    expect(creatorAscending.scenarios.map(({ id }) => id)).toEqual([zeta.id, alpha.id]);
+    const creatorDescending = await testScenarioService.listScenarios({ projectId, sortField: "createdBy", sortDirection: "desc" });
+    expect(creatorDescending.scenarios.map(({ id }) => id)).toEqual([alpha.id, zeta.id]);
+    const folderAscending = await testScenarioService.listScenarios({ projectId, sortField: "folder", sortDirection: "asc" });
+    expect(folderAscending.scenarios.map(({ id }) => id)).toEqual([alpha.id, zeta.id]);
+    const folderDescending = await testScenarioService.listScenarios({ projectId, sortField: "folder", sortDirection: "desc" });
+    expect(folderDescending.scenarios.map(({ id }) => id)).toEqual([zeta.id, alpha.id]);
+    const defaultOrder = await testScenarioService.listScenarios({ projectId });
+    expect(defaultOrder.scenarios.map(({ id }) => id)).toEqual([zeta.id, alpha.id]);
+  });
+
+  it("orders nullable keys and details using PostgreSQL null ordering and stable ID ties", async () => {
+    const keyed = await createScenario({ title: "Nullable keyed", scenarioKey: "A", details: "Present" });
+    const noKey = await createScenario({ title: "Nullable without key", scenarioKey: null });
+    const tiedFirst = await createScenario({ title: "Tie" });
+    const tiedSecond = await createScenario({ title: "Tie" });
+
+    const keyAscending = await testScenarioService.listScenarios({ projectId, title: "Nullable", sortField: "scenarioKey", sortDirection: "asc" });
+    expect(keyAscending.scenarios.map(({ id }) => id)).toEqual([keyed.id, noKey.id]);
+    const keyDescending = await testScenarioService.listScenarios({ projectId, title: "Nullable", sortField: "scenarioKey", sortDirection: "desc" });
+    expect(keyDescending.scenarios.map(({ id }) => id)).toEqual([noKey.id, keyed.id]);
+    const detailsAscending = await testScenarioService.listScenarios({ projectId, title: "Nullable", sortField: "details", sortDirection: "asc" });
+    expect(detailsAscending.scenarios.map(({ id }) => id)).toEqual([keyed.id, noKey.id]);
+    const titleTies = await testScenarioService.listScenarios({ projectId, title: "Tie", sortField: "title", sortDirection: "asc" });
+    expect(titleTies.scenarios.map(({ id }) => id)).toEqual([tiedFirst.id, tiedSecond.id].sort());
+  });
+
   it("searches keys literally and case-insensitively without duplicating overlapping matches", async () => {
     const keyOnly = await createScenario({
       title: "Payment history",

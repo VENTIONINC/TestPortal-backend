@@ -142,19 +142,27 @@ identifiers. A key-only PATCH preserves generated Markdown, its hash, and its
 format version.
 
 `GET /api/v2/test-scenarios` accepts `page` (default `1`), `limit` (default
-`30`, maximum `100`), optional `search`, optional `createdById`, and optional
-`sort`. Search is trimmed and, when nonblank, performs a case-insensitive
-literal substring match against `title` only; `%`, `_`, and backslash are
-literal characters, and `details`, steps, and generated Markdown are not
-searched. `createdById` is a UUID filter that returns zero matches when no
-scenario was created by that user. Sort values are `recently_created` (the
-default: `createdAt DESC, id DESC`), `recently_updated` (`updatedAt DESC,
-id DESC`), and `title_asc` (`title ASC, id ASC` under the database collation).
-All filters apply before pagination, so `total` and `totalPages` describe the
-matching set; a client resolving a `Me` control must send the authenticated
-user's UUID. Search is a case-insensitive literal substring over `title` or
-`scenarioKey`; `%`, `_`, and backslash are literal characters. Details, other
-authored fields, and generated Markdown are not searched.
+`30`, maximum `100`), optional global `search`, optional `createdById`, and
+optional `sort`. Global search matches `title` or `scenarioKey`. The independent
+column filters `scenarioKey`, `title`, `details`, `folder`, and `createdBy`
+combine with AND semantics and global search. Each is a trimmed,
+case-insensitive literal substring; whitespace-only values are ignored.
+`folder` matches the displayed full path (`Root / Child`) or `Unfiled`, while
+`createdBy` matches creator name or email. These filters use persisted summary
+fields and do not search generated Markdown or presentation placeholders.
+
+New sorting uses `sortField` (`scenarioKey`, `title`, `details`, `folder`,
+`createdBy`, `createdAt`, or `updatedAt`) and optional `sortDirection` (`asc` or
+`desc`, default `desc`). New sorting uses `id ASC` as a tie-breaker. With no
+sort parameters, the default is `createdAt DESC, id DESC`. Existing `sort`
+presets remain supported: `recently_created` (`createdAt DESC, id DESC`),
+`recently_updated` (`updatedAt DESC, id DESC`), and `title_asc` (`title ASC,
+id ASC` under the database collation). `sortDirection` requires `sortField`,
+and `sortField` cannot be combined with legacy `sort`. All filters apply before
+sorting and pagination, so `total` and `totalPages` describe the matching set.
+`createdById` remains an exact creator UUID filter.
+
+Example: `GET /api/v2/test-scenarios?projectId=…&title=login&folder=Root%20%2F%20Auth&sortField=updatedAt&sortDirection=desc`
 
 `POST /api/v2/test-scenarios` and `PATCH /api/v2/test-scenarios/{scenarioId}`
 return the complete scenario detail. Step edits are independent operations and

@@ -154,8 +154,8 @@ describe("testScenarioModel", () => {
   });
 
   it("builds one literal project-scoped predicate and deterministic order", async () => {
-    summaryFindManyMock.mockResolvedValue([]);
-    countMock.mockResolvedValue(0);
+    summaryFindManyMock.mockResolvedValue([{ ...scenario, folder: null, createdBy: { id: scenario.createdById, name: "Creator", email: "creator@example.test" } }]);
+    queryRawMock.mockResolvedValueOnce([{ id: scenario.id }]).mockResolvedValueOnce([{ total: 1n }]);
 
     await testScenarioModel.listSummaries({
       projectId: scenario.projectId,
@@ -166,33 +166,9 @@ describe("testScenarioModel", () => {
       sort: "title_asc",
     });
 
-    const expectedWhere = {
-      projectId: scenario.projectId,
-      createdById: scenario.createdById,
-      OR: [
-        {
-          title: {
-            contains: "\\%\\_\\\\",
-            mode: "insensitive",
-          },
-        },
-        {
-          scenarioKey: {
-            contains: "\\%\\_\\\\",
-            mode: "insensitive",
-          },
-        },
-      ],
-    };
-    expect(summaryFindManyMock).toHaveBeenCalledWith(
-      expect.objectContaining({
-        where: expectedWhere,
-        skip: 10,
-        take: 10,
-        orderBy: [{ title: "asc" }, { id: "asc" }],
-      }),
-    );
-    expect(countMock).toHaveBeenCalledWith({ where: expectedWhere });
+    expect(queryRawMock).toHaveBeenCalledTimes(2);
+    expect(summaryFindManyMock).toHaveBeenCalledWith(expect.objectContaining({ where: { id: { in: [scenario.id] }, projectId: scenario.projectId } }));
+    expect(summaryFindManyMock).not.toHaveBeenCalledWith(expect.objectContaining({ select: expect.objectContaining({ contentMd: true }) }));
     expect(transactionMock).toHaveBeenCalledWith(expect.any(Function), {
       isolationLevel: Prisma.TransactionIsolationLevel.RepeatableRead,
     });

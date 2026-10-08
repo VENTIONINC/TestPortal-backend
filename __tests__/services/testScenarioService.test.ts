@@ -165,6 +165,24 @@ describe("testScenarioService", () => {
     });
   });
 
+  it("forwards independent column filters and selected column sorting", async () => {
+    await testScenarioService.listScenarios({ projectId, sortField: "createdBy", sortDirection: "asc", scenarioKey: " KEY ", title: " Login ", details: "  ", folder: " Root / Child ", createdBy: " alice@example.test " });
+    expect(listSummariesMock).toHaveBeenCalledWith(expect.objectContaining({
+      sort: "recently_created", sortField: "createdBy", sortDirection: "asc",
+      scenarioKey: "KEY", title: "Login", folder: "Root / Child", createdBy: "alice@example.test",
+    }));
+    expect(listSummariesMock.mock.calls[0]?.[0]).not.toHaveProperty("details");
+  });
+
+  it.each([
+    { sortDirection: "asc" },
+    { sortField: "title", sort: "recently_created" },
+    { sortField: "unknown" },
+  ])("rejects ambiguous or unsupported new sorting %#", async (params) => {
+    await expect(testScenarioService.listScenarios({ projectId, ...params } as never)).rejects.toBeInstanceOf(TestScenarioValidationError);
+    expect(listSummariesMock).not.toHaveBeenCalled();
+  });
+
   it.each([
     { search: 42, message: "search" },
     { createdById: "not-a-uuid", message: "Creator ID" },

@@ -96,7 +96,6 @@ describe("structured Test Scenario schemas", () => {
       projectId,
       page: 1,
       limit: 30,
-      sort: "recently_created",
     });
     expect(
       testScenarioListQuerySchema.parse({
@@ -120,5 +119,10 @@ describe("structured Test Scenario schemas", () => {
     expect(
       testScenarioListQuerySchema.safeParse({ projectId, sort: "bad" }).success,
     ).toBe(false);
+    expect(testScenarioListQuerySchema.parse({ projectId, sortField: "title", title: "  Login " })).toMatchObject({ sortField: "title", title: "Login" });
+    expect(testScenarioListQuerySchema.parse({ projectId, folder: "  " }).folder).toBeUndefined();
+    expect(testScenarioListQuerySchema.safeParse({ projectId, sortField: "bad" }).success).toBe(false);
+    expect(testScenarioListQuerySchema.safeParse({ projectId, sortDirection: "asc" }).success).toBe(false);
+    expect(testScenarioListQuerySchema.safeParse({ projectId, sortField: "title", sort: "title_asc" }).success).toBe(false);
   });
 });

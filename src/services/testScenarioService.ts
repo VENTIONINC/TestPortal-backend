@@ -12,6 +12,7 @@ import {
   type ListTestScenariosParams,
   type ReorderTestScenarioStepsParams,
   TEST_SCENARIO_SORT_VALUES,
+  TEST_SCENARIO_SORT_FIELDS,
   type TestScenarioSort,
   type TestScenarioListResponse,
   type TestScenarioResponse,
@@ -121,6 +122,12 @@ function normalizeSort(value: unknown): TestScenarioSort {
     );
   }
   return value as TestScenarioSort;
+}
+
+function normalizeColumnFilter(value: unknown, label: string): string | undefined {
+  if (value === undefined) return undefined;
+  if (typeof value !== "string") throw new TestScenarioValidationError(`${label} must be a string`);
+  return value.trim() || undefined;
 }
 
 function validateKeys(
@@ -238,6 +245,7 @@ export const testScenarioService = {
       "search",
       "createdById",
       "sort",
+      "sortField", "sortDirection", "scenarioKey", "title", "details", "folder", "createdBy",
       "folderId",
       "includeDescendants",
       "suiteId",
@@ -250,7 +258,18 @@ export const testScenarioService = {
     if (params.createdById !== undefined) {
       requireUuid(params.createdById, "Creator ID");
     }
+    if (params.sortField !== undefined && !(TEST_SCENARIO_SORT_FIELDS as readonly string[]).includes(params.sortField)) throw new TestScenarioValidationError("sortField is invalid");
+    if (params.sortDirection !== undefined && params.sortDirection !== "asc" && params.sortDirection !== "desc") throw new TestScenarioValidationError("sortDirection must be asc or desc");
+    if (params.sortDirection !== undefined && params.sortField === undefined) throw new TestScenarioValidationError("sortDirection requires sortField");
+    if (params.sortField !== undefined && params.sort !== undefined) throw new TestScenarioValidationError("sort cannot be combined with sortField");
     const sort = normalizeSort(params.sort);
+    const filters = {
+      scenarioKey: normalizeColumnFilter(params.scenarioKey, "scenarioKey"),
+      title: normalizeColumnFilter(params.title, "title"),
+      details: normalizeColumnFilter(params.details, "details"),
+      folder: normalizeColumnFilter(params.folder, "folder"),
+      createdBy: normalizeColumnFilter(params.createdBy, "createdBy"),
+    };
     if (params.folderId && params.folderId !== "unfiled" && !(await testScenarioModel.folderBelongsToProject(params.folderId, params.projectId))) {
       throw new TestScenarioNotFoundError("Folder not found");
     }
@@ -267,6 +286,13 @@ export const testScenarioService = {
         ? { createdById: params.createdById }
         : {}),
       sort,
+      ...(params.sortField !== undefined ? { sortField: params.sortField } : {}),
+      ...(params.sortDirection !== undefined ? { sortDirection: params.sortDirection } : {}),
+      ...(filters.scenarioKey ? { scenarioKey: filters.scenarioKey } : {}),
+      ...(filters.title ? { title: filters.title } : {}),
+      ...(filters.details ? { details: filters.details } : {}),
+      ...(filters.folder ? { folder: filters.folder } : {}),
+      ...(filters.createdBy ? { createdBy: filters.createdBy } : {}),
       ...(params.folderId !== undefined ? { folderId: params.folderId } : {}),
       ...(params.includeDescendants !== undefined ? { includeDescendants: params.includeDescendants } : {}),
       ...(params.suiteId !== undefined ? { suiteId: params.suiteId } : {}),

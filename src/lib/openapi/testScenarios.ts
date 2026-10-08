@@ -6,7 +6,7 @@ import { ErrorResponseSchema } from "./common";
 import { ResultSchema } from "./results";
 import { z } from "./zod";
 import type { ZodTypeAny } from "zod";
-import { TEST_SCENARIO_SORT_VALUES } from "@/types/testScenarios";
+import { TEST_SCENARIO_SORT_FIELDS, TEST_SCENARIO_SORT_VALUES } from "@/types/testScenarios";
 
 const TestScenarioSchema = z
   .object({
@@ -177,16 +177,26 @@ const TestScenarioListQuerySchema = z
     }),
     sort: z
       .enum(TEST_SCENARIO_SORT_VALUES)
-      .default("recently_created")
       .optional()
       .openapi({
         description:
           "Ordering: recently_created (createdAt DESC, id DESC), recently_updated (updatedAt DESC, id DESC), or title_asc (title ASC, id ASC).",
         example: "title_asc",
       }),
+    sortField: z.enum(TEST_SCENARIO_SORT_FIELDS).optional().openapi({ description: "Single sort column. Defaults to createdAt descending when omitted. Cannot be combined with legacy sort.", example: "scenarioKey" }),
+    sortDirection: z.enum(["asc", "desc"]).optional().openapi({ description: "Sort direction; defaults to desc when sortField is supplied. Requires sortField.", example: "asc" }),
+    scenarioKey: z.string().trim().optional().openapi({ description: "Case-insensitive literal substring filter for the persisted scenario key; whitespace-only values are ignored." }),
+    title: z.string().trim().optional().openapi({ description: "Case-insensitive literal substring filter for title; whitespace-only values are ignored." }),
+    details: z.string().trim().optional().openapi({ description: "Case-insensitive literal substring filter for persisted details; whitespace-only values are ignored." }),
+    folder: z.string().trim().optional().openapi({ description: "Case-insensitive literal substring filter for the displayed full folder path or Unfiled value; whitespace-only values are ignored." }),
+    createdBy: z.string().trim().optional().openapi({ description: "Case-insensitive literal substring filter for creator display name or email; whitespace-only values are ignored." }),
     folderId: z.union([z.string().uuid(), z.literal("unfiled")]).optional(),
     includeDescendants: z.boolean().optional(),
     suiteId: z.string().uuid().optional(),
+  })
+  .superRefine((value, context) => {
+    if (value.sortDirection && !value.sortField) context.addIssue({ code: "custom", path: ["sortDirection"], message: "sortDirection requires sortField" });
+    if (value.sortField && value.sort !== undefined) context.addIssue({ code: "custom", path: ["sort"], message: "sort cannot be combined with sortField" });
   })
   .openapi("TestScenarioListQuery");
 
@@ -754,7 +764,7 @@ export function registerTestScenarioRoutes(registry: OpenAPIRegistry): void {
     method: "get",
     path: "/api/v2/test-scenarios",
     description:
-      "Lists lightweight project-scoped Test Scenario summaries without Markdown bodies. Optional search is a trimmed, case-insensitive literal substring of title or scenarioKey; details and other authored fields are not searched, and percent, underscore, and backslash are literal. createdById filters by the supplied creator User UUID and may identify any user; sort defaults to recently_created. Filtering happens before pagination and total counts matching scenarios.",
+      "Lists lightweight project-scoped Test Scenario summaries without Markdown bodies. Global search matches title or scenarioKey; the independent scenarioKey, title, details, folder-path, and creator-name/email filters are combined before sorting and pagination. Text matching is case-insensitive literal substring matching; whitespace-only column filters are ignored. sortField supports scenarioKey, title, details, folder, createdBy, createdAt, and updatedAt; sortDirection defaults to desc. Omit sortField for createdAt DESC then id DESC. Legacy sort presets remain supported and cannot be combined with sortField. Totals count matching scenarios.",
     request: {
       query: TestScenarioListQuerySchema,
     },

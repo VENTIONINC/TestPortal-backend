@@ -138,6 +138,12 @@ export const TEST_SCENARIO_SORT_VALUES = [
 
 export type TestScenarioSort = (typeof TEST_SCENARIO_SORT_VALUES)[number];
 
+export const TEST_SCENARIO_SORT_FIELDS = [
+  "scenarioKey", "title", "details", "folder", "createdBy", "createdAt", "updatedAt",
+] as const;
+export type TestScenarioSortField = (typeof TEST_SCENARIO_SORT_FIELDS)[number];
+export type TestScenarioSortDirection = "asc" | "desc";
+
 export interface ListTestScenariosParams {
   projectId: string;
   page?: number | undefined;
@@ -145,6 +151,13 @@ export interface ListTestScenariosParams {
   search?: string | undefined;
   createdById?: string | undefined;
   sort?: TestScenarioSort | undefined;
+  sortField?: TestScenarioSortField | undefined;
+  sortDirection?: TestScenarioSortDirection | undefined;
+  scenarioKey?: string | undefined;
+  title?: string | undefined;
+  details?: string | undefined;
+  folder?: string | undefined;
+  createdBy?: string | undefined;
   folderId?: string | undefined;
   includeDescendants?: boolean | undefined;
   suiteId?: string | undefined;

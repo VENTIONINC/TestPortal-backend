@@ -96,6 +96,13 @@ describe("structured Test Scenario OpenAPI contract", () => {
     expect(querySchema.properties?.search?.description).toContain(
       "backslash are literal",
     );
+    expect(querySchema.properties).toEqual(expect.objectContaining({
+      sortField: expect.any(Object), sortDirection: expect.any(Object),
+      scenarioKey: expect.any(Object), title: expect.any(Object), details: expect.any(Object),
+      folder: expect.any(Object), createdBy: expect.any(Object),
+    }));
+    expect(description).toContain("folder-path");
+    expect(description).toContain("cannot be combined with sortField");
   });
 
   it("preserves integration evidence operations and deletion envelopes", () => {
