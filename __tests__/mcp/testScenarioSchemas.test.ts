@@ -17,7 +17,6 @@ describe("structured Test Scenario MCP schemas", () => {
       projectId,
       page: 1,
       limit: 30,
-      sort: "recently_created",
     });
     expect(getTestScenarioSchema.parse({ scenarioId, projectId })).toEqual({
       scenarioId,
@@ -43,6 +42,12 @@ describe("structured Test Scenario MCP schemas", () => {
       createdById: scenarioId,
       sort: "recently_updated",
     });
+  });
+
+  it("accepts column sorting and filters and rejects ambiguous sorting", () => {
+    expect(listTestScenariosSchema.parse({ projectId, search: "login", sortField: "createdBy", sortDirection: "asc", scenarioKey: "K-1", title: "Login", details: "smoke", folder: "Root / Auth", createdBy: "  Alice " })).toMatchObject({ projectId, search: "login", sortField: "createdBy", sortDirection: "asc", scenarioKey: "K-1", title: "Login", details: "smoke", folder: "Root / Auth", createdBy: "Alice" });
+    expect(listTestScenariosSchema.safeParse({ projectId, sortDirection: "asc" }).success).toBe(false);
+    expect(listTestScenariosSchema.safeParse({ projectId, sortField: "title", sort: "title_asc" }).success).toBe(false);
   });
 
   it("accepts structured update fields and nullable clearing", () => {

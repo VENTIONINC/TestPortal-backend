@@ -60,6 +60,8 @@ model Project {
   specs         Spec[]
   issues        Issue[]
   testScenarios TestScenario[]
+  testScenarioFolders TestScenarioFolder[]
+  testSuites TestSuite[]
   manualTestRuns ManualTestRun[]
   uploadApiKeys UploadApiKey[]
   dailyMetrics  DailyExecutionMetric[]
@@ -254,15 +256,67 @@ model TestScenario {
 
   project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
   projectId String  @db.Uuid
+  folderId  String? @db.Uuid
+  folder    TestScenarioFolder? @relation(fields: [folderId], references: [id], onDelete: SetNull)
   createdBy User    @relation("TestScenarioCreatedBy", fields: [createdById], references: [id])
 
   specLinks TestScenarioSpecLink[]
   steps     TestScenarioStep[]
   manualTestRuns ManualTestRun[]
+  suiteMemberships TestSuiteMember[]
 
   @@index([projectId])
   @@index([projectId, createdAt])
+  @@index([projectId, folderId])
   @@index([createdById])
+}
+
+model TestScenarioFolder {
+  id        String   @id @default(uuid()) @db.Uuid
+  projectId String   @db.Uuid
+  parentId  String?  @db.Uuid
+  name      String
+  position  Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  parent    TestScenarioFolder? @relation("FolderTree", fields: [parentId], references: [id], onDelete: Cascade)
+  children  TestScenarioFolder[] @relation("FolderTree")
+  scenarios TestScenario[]
+
+  @@index([projectId, parentId, position])
+  @@index([projectId])
+}
+
+model TestSuite {
+  id          String   @id @default(uuid()) @db.Uuid
+  projectId   String   @db.Uuid
+  name        String
+  description String?
+  purpose     String?
+  release     String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  members TestSuiteMember[]
+
+  @@index([projectId, name])
+}
+
+model TestSuiteMember {
+  suiteId String @db.Uuid
+  testScenarioId String @db.Uuid
+  position Int
+  createdAt DateTime @default(now())
+
+  suite TestSuite @relation(fields: [suiteId], references: [id], onDelete: Cascade)
+  testScenario TestScenario @relation(fields: [testScenarioId], references: [id], onDelete: Cascade)
+
+  @@id([suiteId, testScenarioId])
+  @@unique([suiteId, position])
+  @@index([testScenarioId])
 }
 
 model TestScenarioStep {

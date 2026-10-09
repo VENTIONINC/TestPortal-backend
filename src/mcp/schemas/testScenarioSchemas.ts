@@ -3,7 +3,7 @@
 
 import { z } from "zod/v3";
 import type { MCPToolSchema } from "@/types";
-import { TEST_SCENARIO_SORT_VALUES } from "@/types/testScenarios";
+import { TEST_SCENARIO_SORT_FIELDS, TEST_SCENARIO_SORT_VALUES } from "@/types/testScenarios";
 
 const uuid = () => z.string().uuid();
 const page = () => z.number().int().min(1);
@@ -27,12 +27,23 @@ export const listTestScenariosSchema = z
       ),
     sort: z
       .enum(TEST_SCENARIO_SORT_VALUES)
-      .default("recently_created")
+      .optional()
       .describe(
         "Ordering: recently_created (default, createdAt DESC then id DESC), recently_updated (updatedAt DESC then id DESC), or title_asc (title ASC then id ASC under database collation)",
       ),
+    sortField: z.enum(TEST_SCENARIO_SORT_FIELDS).optional(),
+    sortDirection: z.enum(["asc", "desc"]).optional(),
+    scenarioKey: z.string().trim().optional().transform((value) => value || undefined),
+    title: z.string().trim().optional().transform((value) => value || undefined),
+    details: z.string().trim().optional().transform((value) => value || undefined),
+    folder: z.string().trim().optional().transform((value) => value || undefined),
+    createdBy: z.string().trim().optional().transform((value) => value || undefined),
   })
-  .strict() satisfies MCPToolSchema;
+  .strict()
+  .superRefine((value, context) => {
+    if (value.sortDirection && !value.sortField) context.addIssue({ code: "custom", path: ["sortDirection"], message: "sortDirection requires sortField" });
+    if (value.sortField && value.sort !== undefined) context.addIssue({ code: "custom", path: ["sort"], message: "sort cannot be combined with sortField" });
+  }) satisfies MCPToolSchema;
 
 export const getTestScenarioSchema = z
   .object({

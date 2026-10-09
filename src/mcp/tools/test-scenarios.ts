@@ -19,7 +19,7 @@ import type {
 
 export const listTestScenarios = createMcpTool(
   "list-test-scenarios",
-  "List lightweight Test Scenario summaries for a project. Optional search is trimmed and matched case-insensitively as a literal substring against title or scenarioKey (not details, other authored fields, or generated Markdown); %, _, and backslash are literal. createdById filters by the supplied creator User UUID and may identify any user; sort is recently_created (default: createdAt DESC, id DESC), recently_updated (updatedAt DESC, id DESC), or title_asc (title ASC, id ASC under database collation). Filtering happens before pagination and totals count all matches. Markdown is available from get-test-scenario.",
+  "List lightweight Test Scenario summaries for a project. Global search and the independent scenarioKey, title, details, folder-path, and creator-name/email filters are combined before sorting and pagination using case-insensitive literal substring matching. Folder filters match the complete displayed path or Unfiled; whitespace-only filters are ignored. sortField supports scenarioKey, title, details, folder, createdBy, createdAt, and updatedAt; sortDirection defaults to desc. With no new sort, default ordering is createdAt DESC then id DESC. Legacy sort presets remain supported but cannot be combined with sortField. Filtering happens before pagination and totals count all matches. Markdown is available from get-test-scenario.",
   listTestScenariosSchema,
   async (params: TestScenarioMcpListParams): Promise<MCPToolResponse> => {
     const scenarios = await mcpTestScenarioHandler.listTestScenarios(params);

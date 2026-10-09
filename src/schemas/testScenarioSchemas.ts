@@ -3,7 +3,7 @@
 
 import { z } from "zod";
 import { editableTestManagementKeySchema } from "@/schemas/testManagementKeySchemas";
-import { TEST_SCENARIO_SORT_VALUES } from "@/types/testScenarios";
+import { TEST_SCENARIO_SORT_FIELDS, TEST_SCENARIO_SORT_VALUES } from "@/types/testScenarios";
 
 const uuidSchema = z.string().uuid("Must be a valid UUID");
 const nonBlankText = z.string().trim().min(1, "Value must not be blank");
@@ -18,6 +18,7 @@ const createStepSchema = z
 export const createTestScenarioSchema = z
   .object({
     projectId: uuidSchema,
+    folderId: uuidSchema.nullable().optional(),
     title: nonBlankText,
     scenarioKey: editableTestManagementKeySchema.optional(),
     details: nonBlankText.optional(),
@@ -34,6 +35,7 @@ const updateFieldSchema = nonBlankText.nullable();
 
 export const updateTestScenarioSchema = z
   .object({
+    folderId: uuidSchema.nullable().optional(),
     title: nonBlankText.optional(),
     scenarioKey: editableTestManagementKeySchema.optional(),
     details: updateFieldSchema.optional(),
@@ -99,7 +101,20 @@ export const testScenarioListQuerySchema = z.object({
   limit: positiveIntegerQuerySchema(30, 100),
   search: z.string().trim().optional(),
   createdById: uuidSchema.optional(),
-  sort: z.enum(TEST_SCENARIO_SORT_VALUES).default("recently_created"),
+  sort: z.enum(TEST_SCENARIO_SORT_VALUES).optional(),
+  sortField: z.enum(TEST_SCENARIO_SORT_FIELDS).optional(),
+  sortDirection: z.enum(["asc", "desc"]).optional(),
+  scenarioKey: z.string().trim().optional().transform((value) => value || undefined),
+  title: z.string().trim().optional().transform((value) => value || undefined),
+  details: z.string().trim().optional().transform((value) => value || undefined),
+  folder: z.string().trim().optional().transform((value) => value || undefined),
+  createdBy: z.string().trim().optional().transform((value) => value || undefined),
+  folderId: z.union([uuidSchema, z.literal("unfiled")]).optional(),
+  includeDescendants: z.enum(["true", "false"]).transform((value) => value === "true").optional(),
+  suiteId: uuidSchema.optional(),
+}).superRefine((value, context) => {
+  if (value.sortDirection && !value.sortField) context.addIssue({ code: "custom", path: ["sortDirection"], message: "sortDirection requires sortField" });
+  if (value.sortField && value.sort !== undefined) context.addIssue({ code: "custom", path: ["sort"], message: "sort cannot be combined with sortField" });
 });
 
 export type CreateTestScenarioInput = z.infer<typeof createTestScenarioSchema>;

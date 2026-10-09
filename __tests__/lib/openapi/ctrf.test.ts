@@ -26,7 +26,8 @@ describe("CTRF REST and MCP contracts", () => {
   });
 
   it("accepts the same conformant report through the MCP runtime schema", () => {
-    const reportSchema = processCtrfReportSchema.report as z.ZodSchema;
+    const reportSchema = (processCtrfReportSchema as Record<string, z.ZodSchema>).report;
+    if (!reportSchema) throw new Error("CTRF report schema is missing");
     expect(reportSchema.safeParse(conformantReport).success).toBe(true);
   });
 });

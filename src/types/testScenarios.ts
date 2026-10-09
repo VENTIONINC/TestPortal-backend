@@ -16,6 +16,7 @@ export interface TestScenarioStepResponse {
 export interface TestScenarioResponse {
   id: string;
   projectId: string;
+  folderId?: string | null;
   createdById: string;
   title: string;
   scenarioKey: string | null;
@@ -51,6 +52,9 @@ export interface TestScenarioSummary {
   createdBy: TestScenarioCreatorSummary;
   createdAt: Date;
   updatedAt: Date;
+  folderId?: string | null;
+  folderName?: string | null;
+  matchedSuiteId?: string | null;
 }
 
 export interface RelatedTestScenarioSummary {
@@ -71,6 +75,7 @@ export interface CreateTestScenarioParams {
   title: string;
   scenarioKey?: string | null | undefined;
   createdById: string;
+  folderId?: string | null | undefined;
   /** @deprecated Markdown is generated; transport schemas reject this field. */
   contentMd?: string | undefined;
   details?: string | undefined;
@@ -85,6 +90,7 @@ export interface CreateTestScenarioParams {
 export interface UpdateTestScenarioParams {
   scenarioId: string;
   projectId: string;
+  folderId?: string | null | undefined;
   /** @deprecated Markdown is generated; transport schemas reject this field. */
   contentMd?: string | undefined;
   title?: string | undefined;
@@ -132,6 +138,12 @@ export const TEST_SCENARIO_SORT_VALUES = [
 
 export type TestScenarioSort = (typeof TEST_SCENARIO_SORT_VALUES)[number];
 
+export const TEST_SCENARIO_SORT_FIELDS = [
+  "scenarioKey", "title", "details", "folder", "createdBy", "createdAt", "updatedAt",
+] as const;
+export type TestScenarioSortField = (typeof TEST_SCENARIO_SORT_FIELDS)[number];
+export type TestScenarioSortDirection = "asc" | "desc";
+
 export interface ListTestScenariosParams {
   projectId: string;
   page?: number | undefined;
@@ -139,6 +151,16 @@ export interface ListTestScenariosParams {
   search?: string | undefined;
   createdById?: string | undefined;
   sort?: TestScenarioSort | undefined;
+  sortField?: TestScenarioSortField | undefined;
+  sortDirection?: TestScenarioSortDirection | undefined;
+  scenarioKey?: string | undefined;
+  title?: string | undefined;
+  details?: string | undefined;
+  folder?: string | undefined;
+  createdBy?: string | undefined;
+  folderId?: string | undefined;
+  includeDescendants?: boolean | undefined;
+  suiteId?: string | undefined;
 }
 
 export interface TestScenarioListResponse {
