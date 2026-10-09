@@ -28,6 +28,7 @@
     ```
 
 **Usage for Frontend Hook Generation:**
+
 - Use tools like `@rtk-query/codegen-openapi` or `openapi-typescript` to generate TypeScript types and API hooks
 - Example: `npx openapi-typescript http://localhost:3001/api/openapi.json --output ./types/api.ts`
 
@@ -106,6 +107,162 @@ resources.
 `GET /api/v2/skills/{id}/download` is no longer available. Migrate clients to
 the catalog-provided `downloadUrl` or directly to
 `GET /api/v2/skills/{id}/archive`.
+
+## Test Scenario Routes
+
+### Folders and suites
+
+Organization endpoints use the existing bearer JWT authentication and require an explicit `projectId` on every request. `GET` and `POST /api/v2/test-scenario-folders` list or create project folders; `PATCH` and `DELETE /api/v2/test-scenario-folders/{folderId}` rename/move or remove a folder. Deletion requires `disposition=parent` or `disposition=unfiled`; direct scenarios are reassigned and child folders are promoted.
+
+`GET` and `POST /api/v2/test-suites` list or create manually curated suites. `PATCH` and `DELETE /api/v2/test-suites/{suiteId}` update or remove a suite. Add/remove members with `POST`/`DELETE /api/v2/test-suites/{suiteId}/members` and reorder all members with `PUT /api/v2/test-suites/{suiteId}/members/order`; member bodies use `{ "projectId": "…", "scenarioIds": ["…"] }`.
+
+Create folder example:
+
+```json
+{ "projectId": "11111111-1111-4111-8111-111111111111", "name": "Authentication", "parentId": null }
+```
+
+Move up to 100 scenarios atomically with `PATCH /api/v2/test-scenarios/bulk-folder` and `{ "projectId": "…", "scenarioIds": ["…"], "folderId": null }` to unfile them. The scenario list accepts `folderId=<UUID|unfiled>`, `includeDescendants=false`, and `suiteId=<UUID>`; filters are applied before pagination. Scenario summaries add nullable `folderId` and `folderName`. Suite membership is mutable current organization; only run snapshots represent historical execution state.
+
+Test Scenario list responses are lightweight summaries. Each item contains
+`id`, `projectId`, `createdById`, `title`, nullable `scenarioKey`, nullable plain-text `details`, a
+`createdBy` object containing only `id`, `name`, and `email`, `createdAt`, and
+`updatedAt`; list items no longer contain `contentMd`.
+
+This is a breaking REST response change for dependent clients. Regenerate
+client types and hooks from the final `/api/openapi.json` document. Create
+requests now use structured `objective`, `preconditions`, `testData`,
+`expectedResult`, `notes`, and optional initial `steps`; `contentMd`, its hash,
+and its format version are read-only detail fields. Details and structured text
+are trimmed and must be nonblank when supplied; PATCH accepts `null` for
+clearing nullable fields and preserves omitted fields. `scenarioKey` is an
+optional editable single-line label up to 100 characters; it is trimmed, may
+be cleared with `null`, and may be duplicated. UUIDs remain scenario
+identifiers. A key-only PATCH preserves generated Markdown, its hash, and its
+format version.
+
+`GET /api/v2/test-scenarios` accepts `page` (default `1`), `limit` (default
+`30`, maximum `100`), optional global `search`, optional `createdById`, and
+optional `sort`. Global search matches `title` or `scenarioKey`. The independent
+column filters `scenarioKey`, `title`, `details`, `folder`, and `createdBy`
+combine with AND semantics and global search. Each is a trimmed,
+case-insensitive literal substring; whitespace-only values are ignored.
+`folder` matches the displayed full path (`Root / Child`) or `Unfiled`, while
+`createdBy` matches creator name or email. These filters use persisted summary
+fields and do not search generated Markdown or presentation placeholders.
+
+New sorting uses `sortField` (`scenarioKey`, `title`, `details`, `folder`,
+`createdBy`, `createdAt`, or `updatedAt`) and optional `sortDirection` (`asc` or
+`desc`, default `desc`). New sorting uses `id ASC` as a tie-breaker. With no
+sort parameters, the default is `createdAt DESC, id DESC`. Existing `sort`
+presets remain supported: `recently_created` (`createdAt DESC, id DESC`),
+`recently_updated` (`updatedAt DESC, id DESC`), and `title_asc` (`title ASC,
+id ASC` under the database collation). `sortDirection` requires `sortField`,
+and `sortField` cannot be combined with legacy `sort`. All filters apply before
+sorting and pagination, so `total` and `totalPages` describe the matching set.
+`createdById` remains an exact creator UUID filter.
+
+Example: `GET /api/v2/test-scenarios?projectId=…&title=login&folder=Root%20%2F%20Auth&sortField=updatedAt&sortDirection=desc`
+
+`POST /api/v2/test-scenarios` and `PATCH /api/v2/test-scenarios/{scenarioId}`
+return the complete scenario detail. Step edits are independent operations and
+require `projectId` query context:
+
+- `POST /api/v2/test-scenarios/{scenarioId}/steps` appends a step and returns 201.
+- `PATCH` or `DELETE /api/v2/test-scenarios/{scenarioId}/steps/{stepId}` edits or removes a stable-ID step and returns the updated detail.
+- `PUT /api/v2/test-scenarios/{scenarioId}/steps/order` accepts the complete current `stepIds` list and returns the updated detail.
+
+Every content mutation regenerates persisted Markdown atomically. The document
+uses LF endings, includes an explicit `_No steps defined._` section for empty
+scenarios, and is hashed with SHA-256. The migration intentionally removes
+existing development scenarios and scenario-to-Spec links; Specs, Results,
+Issues, projects, and users are preserved.
+
+## Result Detail Route
+
+`GET /api/v2/results/{resultId}?projectId=...` requires bearer authentication
+and returns the existing Result detail fields plus `relatedTestScenarios`.
+Each related scenario contains its `id`, `title`, nullable `scenarioKey`,
+nullable `details`, and the current generated Markdown in the `contentMd` JSON
+string field. For example,
+the added portion of a Result response is:
+
+```json
+{
+  "relatedTestScenarios": [
+    {
+      "id": "11111111-1111-4111-8111-111111111111",
+      "title": "Checkout",
+      "scenarioKey": "PAY-1",
+      "details": "Purchase flow",
+      "contentMd": "# Checkout\n\n## Details\nPurchase flow\n\n## Steps\n_No steps defined._\n"
+    }
+  ]
+}
+```
+
+The array is empty when the Result's Spec has no linked scenarios. It reflects
+current same-project scenario links and content for every Result status, ordered
+by scenario creation time descending and then ID descending. The Markdown is
+part of the JSON response; this endpoint does not return a `.md` file.
+
+## Manual Test Run Routes
+
+Manual runs are separate from automated `Result` records. Starting a run
+captures the structured scenario fields and ordered steps as an independent
+snapshot; later scenario edits do not rewrite that run. Runs do not store
+Markdown, attachments, or automated evidence.
+
+All routes require a JWT and a UUID `projectId` query parameter. The executor,
+source provenance, and timestamps are server-owned. The seven operations are:
+
+- `POST /api/v2/test-scenarios/{scenarioId}/manual-runs` starts a run and accepts
+  optional `notes` and `runKey` fields (an empty body/object is valid).
+- `GET /api/v2/test-scenarios/{scenarioId}/manual-runs` lists history for a live
+  project-scoped scenario.
+- `GET /api/v2/manual-test-runs` lists project history, including runs whose
+  source scenario was later deleted.
+- `GET /api/v2/manual-test-runs/{runId}` retrieves the full snapshot and steps.
+- `PATCH /api/v2/manual-test-runs/{runId}` updates `runKey`, execution notes,
+  or the overall status.
+- `PATCH /api/v2/manual-test-runs/{runId}/steps/{stepId}` updates one copied
+  step's status or notes.
+- `POST /api/v2/manual-test-runs/{runId}/complete` completes a run with one of
+  `passed`, `failed`, `blocked`, or `skipped`.
+
+Run statuses are `in_progress`, `passed`, `failed`, `blocked`, and `skipped`;
+step statuses additionally include `not_started`. Notes are trimmed when
+provided, `null` clears them, and omission preserves the existing value.
+`runKey` is an optional editable single-line label up to 100 characters. It is
+trimmed, may be cleared with `null`, and may be duplicated. Each run also
+stores nullable `sourceScenarioKey`, captured from the scenario at start and
+unchanged by later rename, clear, or deletion. Both labels are metadata; UUIDs
+remain entity identifiers. Completed runs permit `runKey`-only PATCH; adding
+`notes` or `status` returns `409` without partial mutation. Other execution
+mutations remain blocked and runs cannot be reopened. A passing nonempty run
+requires at least one passed step and every step to be passed or skipped;
+failed, blocked, skipped, and zero-step runs may complete without inferring
+step outcomes. Completion returns `409` when those rules are not satisfied.
+
+History supports `page` (default `1`, positive), `limit` (default `30`, maximum
+`100`), one `status`, and optional `startedFrom` (inclusive) and `startedBefore`
+(exclusive) RFC 3339 timestamps with an explicit timezone. Project history
+also supports one `testScenarioId` filter against immutable source provenance.
+It also accepts `sourceScenarioKey` for exact, case-sensitive filtering against
+the captured label. Duplicate labels intentionally match runs from multiple
+scenarios; use `testScenarioId` when one source scenario is required.
+Bounds and filters are combined before pagination; offset pages are stable only
+when the underlying data is unchanged. Scenario history derives the scenario
+filter from its path and rejects a redundant `testScenarioId` query parameter.
+
+Example completion request:
+
+```json
+{
+  "status": "passed",
+  "notes": "Verified in the staging environment"
+}
+```
 
 ## Related Documentation
 
@@ -251,7 +408,7 @@ Both route paths are mounted under `/api`, producing the public endpoints
 
 - **Description:** Checks the status of the server and its connections (e.g., database).
 - **Response:**
-  - `200 OK`:  An object indicating the status. Example:
+  - `200 OK`: An object indicating the status. Example:
     ```json
     {
       "status": "ok",

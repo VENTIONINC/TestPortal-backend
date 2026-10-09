@@ -1,0 +1,17 @@
+{
+  "info": {
+    "name": "Test Scenario Organization API",
+    "description": "Project folders, suites, membership, and bulk scenario organization. Set baseUrl, token, projectId, folderId, suiteId, and scenarioId in the environment.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{token}}", "type": "string" }] },
+  "item": [
+    { "name": "List folders", "request": { "method": "GET", "url": "{{baseUrl}}/api/v2/test-scenario-folders?projectId={{projectId}}" } },
+    { "name": "Create folder", "request": { "method": "POST", "header": [{ "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{\n  \"projectId\": \"{{projectId}}\",\n  \"name\": \"Authentication\",\n  \"parentId\": null\n}" }, "url": "{{baseUrl}}/api/v2/test-scenario-folders" } },
+    { "name": "List suites", "request": { "method": "GET", "url": "{{baseUrl}}/api/v2/test-suites?projectId={{projectId}}" } },
+    { "name": "Create suite", "request": { "method": "POST", "header": [{ "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{\n  \"projectId\": \"{{projectId}}\",\n  \"name\": \"Smoke\",\n  \"purpose\": \"Critical path\"\n}" }, "url": "{{baseUrl}}/api/v2/test-suites" } },
+    { "name": "Add suite member", "request": { "method": "POST", "header": [{ "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{\n  \"projectId\": \"{{projectId}}\",\n  \"scenarioIds\": [\"{{scenarioId}}\"]\n}" }, "url": "{{baseUrl}}/api/v2/test-suites/{{suiteId}}/members" } },
+    { "name": "List folder scenarios", "request": { "method": "GET", "url": "{{baseUrl}}/api/v2/test-scenarios?projectId={{projectId}}&folderId={{folderId}}&includeDescendants=true&page=1&limit=30" } },
+    { "name": "Move scenarios to unfiled", "request": { "method": "PATCH", "header": [{ "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{\n  \"projectId\": \"{{projectId}}\",\n  \"scenarioIds\": [\"{{scenarioId}}\"],\n  \"folderId\": null\n}" }, "url": "{{baseUrl}}/api/v2/test-scenarios/bulk-folder" } }
+  ]
+}
