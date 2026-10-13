@@ -8,6 +8,7 @@ import { projectModel } from "@/models/projectModel";
 import { testScenarioModel } from "@/models/testScenarioModel";
 import { manualTestRunModel } from "@/models/manualTestRunModel";
 import { manualTestRunService } from "@/services/manualTestRunService";
+import { manualRunEnvironmentProfileService } from "@/services/manualRunEnvironmentProfileService";
 import type { TestScenarioResponse } from "@/types/testScenarios";
 import type { ManualTestRunResponse } from "@/types/manualTestRuns";
 
@@ -79,14 +80,43 @@ describePostgres("manual test run PostgreSQL integration", () => {
   beforeEach(async () => {
     await dbClient.manualTestRun.deleteMany({ where: { projectId } });
     await dbClient.testScenario.deleteMany({ where: { projectId } });
+    await dbClient.manualRunEnvironmentProfile.deleteMany({ where: { projectId } });
   });
 
   afterAll(async () => {
     await dbClient.manualTestRun.deleteMany({ where: { projectId } });
     await dbClient.testScenario.deleteMany({ where: { projectId } });
+    await dbClient.manualRunEnvironmentProfile.deleteMany({ where: { projectId } });
     await dbClient.project.deleteMany({ where: { id: projectId } });
     await dbClient.user.deleteMany({ where: { id: userId } });
     await dbClient.$disconnect();
+  });
+
+  it("keeps a resolved environment snapshot after profile changes and deletion", async () => {
+    const scenario = await createScenario([]);
+    const profile = await manualRunEnvironmentProfileService.create(projectId, userId, {
+      name: "Desktop", browser: "Chrome", operatingSystem: "Linux", device: "Laptop", apiEnvironment: "Staging",
+    });
+    await expect(manualRunEnvironmentProfileService.list(projectId)).resolves.toContainEqual(expect.objectContaining({ id: profile.id }));
+    await expect(manualRunEnvironmentProfileService.update(randomUUID(), profile.id, { name: "Foreign" })).rejects.toThrow("Project not found");
+    const run = await manualTestRunService.startRun({ projectId, scenarioId: scenario.id, executedById: userId,
+      environmentProfileId: profile.id, browser: null, build: "2026.10", deployment: "canary" });
+    expect(run).toMatchObject({ browser: null, operatingSystem: "Linux", device: "Laptop", apiEnvironment: "Staging", build: "2026.10", deployment: "canary" });
+    await manualRunEnvironmentProfileService.update(projectId, profile.id, { operatingSystem: "Windows" });
+    await manualRunEnvironmentProfileService.remove(projectId, profile.id);
+    expect(await manualTestRunService.getRun({ projectId, runId: run.id })).toMatchObject({ operatingSystem: "Linux", browser: null });
+    expect((await manualTestRunService.listRuns({ projectId })).runs[0]).toMatchObject({ operatingSystem: "Linux", build: "2026.10" });
+    await expect(manualTestRunService.startRun({ projectId, scenarioId: scenario.id, executedById: userId, environmentProfileId: profile.id })).rejects.toThrow("Environment profile not found");
+    expect(await dbClient.manualTestRun.count({ where: { projectId } })).toBe(1);
+  });
+
+  it("returns null environment values for runs started without them", async () => {
+    const scenario = await createScenario([]);
+    const run = await startRun(scenario);
+    const emptyEnvironment = { browser: null, operatingSystem: null, device: null, apiEnvironment: null, build: null, deployment: null };
+    expect(run).toMatchObject(emptyEnvironment);
+    expect(await manualTestRunService.getRun({ projectId, runId: run.id })).toMatchObject(emptyEnvironment);
+    expect((await manualTestRunService.listRuns({ projectId })).runs[0]).toMatchObject(emptyEnvironment);
   });
 
   it("preserves active and completed snapshots after source edits and step deletion", async () => {

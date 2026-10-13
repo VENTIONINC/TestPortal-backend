@@ -36,6 +36,18 @@ const ManualTestRunStepSchema = z
   .strict()
   .openapi("ManualTestRunStep");
 
+const environmentResponseFields = {
+  browser: z.string().nullable(), operatingSystem: z.string().nullable(), device: z.string().nullable(), apiEnvironment: z.string().nullable(), build: z.string().nullable(), deployment: z.string().nullable(),
+};
+const environmentInputFields = {
+  browser: z.string().trim().max(200).regex(/^[^\r\n]*$/).nullable().optional(),
+  operatingSystem: z.string().trim().max(200).regex(/^[^\r\n]*$/).nullable().optional(),
+  device: z.string().trim().max(200).regex(/^[^\r\n]*$/).nullable().optional(),
+  apiEnvironment: z.string().trim().max(200).regex(/^[^\r\n]*$/).nullable().optional(),
+  build: z.string().trim().max(200).regex(/^[^\r\n]*$/).nullable().optional(),
+  deployment: z.string().trim().max(200).regex(/^[^\r\n]*$/).nullable().optional(),
+};
+
 const ManualTestRunSchema = z
   .object({
     id: z.string().uuid().openapi({ readOnly: true }),
@@ -58,6 +70,7 @@ const ManualTestRunSchema = z
     expectedResult: z.string().nullable().openapi({ readOnly: true }),
     scenarioNotes: z.string().nullable().openapi({ readOnly: true }),
     notes: z.string().nullable(),
+    ...environmentResponseFields,
     steps: z.array(ManualTestRunStepSchema).openapi({ readOnly: true }),
   })
   .strict()
@@ -74,6 +87,7 @@ const ManualTestRunSummarySchema = z
     executedById: z.string().uuid().nullable().openapi({ readOnly: true }),
     executedBy: ManualTestRunExecutorSchema,
     title: z.string().openapi({ readOnly: true }),
+    ...environmentResponseFields,
     status: ManualTestRunStatusSchema,
     startedAt: z.string().openapi({ readOnly: true }),
     completedAt: z.string().nullable().openapi({ readOnly: true }),
@@ -143,6 +157,8 @@ const ManualTestRunStartRequestSchema = z
   .object({
     notes: z.string().min(1).regex(/\S/).nullable().optional(),
     runKey: z.string().trim().min(1).max(100).regex(/^[^\r\n]+$/).nullable().optional(),
+    environmentProfileId: z.string().uuid().optional(),
+    ...environmentInputFields,
   })
   .strict()
   .openapi("ManualTestRunStartRequest");
@@ -223,7 +239,7 @@ export function registerManualTestRunRoutes(registry: OpenAPIRegistry): void {
     method: "post",
     path: "/api/v2/test-scenarios/{scenarioId}/manual-runs",
     description:
-    "Starts an authenticated manual run by atomically capturing the structured scenario and ordered steps. The executor and timestamps are server-owned.",
+    "Starts an authenticated manual run by atomically capturing the structured scenario and ordered steps. The executor and timestamps are server-owned. Optional environment fields override values from an owned profile; null or blank clears a value. Build and deployment are always per-run.",
     request: {
       params: ScenarioIdParamsSchema,
       query: ProjectIdQuerySchema,

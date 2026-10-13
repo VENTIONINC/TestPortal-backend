@@ -22,6 +22,7 @@ import analysisExport from "@/routes/analysis-export";
 import reports from "@/routes/reports";
 import testScenarios from "@/routes/test-scenarios";
 import manualTestRuns from "@/routes/manual-test-runs";
+import manualRunEnvironmentProfiles from "@/routes/manual-run-environment-profiles";
 import testScenarioOrganization from "@/routes/test-scenario-organization";
 import mcp from "@/mcp/server";
 
@@ -52,6 +53,7 @@ router.use(reports);
 router.use(testScenarioOrganization);
 router.use(testScenarios);
 router.use(manualTestRuns);
+router.use(manualRunEnvironmentProfiles);
 router.use(mcp);
 
 export default router;

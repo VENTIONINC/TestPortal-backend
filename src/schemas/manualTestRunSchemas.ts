@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { z } from "zod";
+import { environmentValueSchema } from "@/schemas/manualRunEnvironmentProfileSchemas";
 import {
   MANUAL_TEST_RUN_STATUSES,
   MANUAL_TEST_RUN_STEP_STATUSES,
@@ -66,6 +67,13 @@ export const manualTestRunStartSchema = z
   .object({
     notes: notesSchema.optional(),
     runKey: editableTestManagementKeySchema.optional(),
+    environmentProfileId: uuidSchema.optional(),
+    browser: environmentValueSchema.optional(),
+    operatingSystem: environmentValueSchema.optional(),
+    device: environmentValueSchema.optional(),
+    apiEnvironment: environmentValueSchema.optional(),
+    build: environmentValueSchema.optional(),
+    deployment: environmentValueSchema.optional(),
   })
   .strict();
 

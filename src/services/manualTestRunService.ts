@@ -226,10 +226,12 @@ export const manualTestRunService = {
       "executedById",
       "notes",
       "runKey",
+      "environmentProfileId", "browser", "operatingSystem", "device", "apiEnvironment", "build", "deployment",
     ]);
     requireUuid(params.projectId, "Project ID");
     requireUuid(params.scenarioId, "Scenario ID");
     requireUuid(params.executedById, "Executor ID");
+    if (params.environmentProfileId !== undefined) requireUuid(params.environmentProfileId, "Environment profile ID");
     const notes = normalizeNotes(params.notes);
     const runKey = params.runKey === undefined ? undefined : normalizeKey(params.runKey, "Run key");
 
@@ -239,6 +241,8 @@ export const manualTestRunService = {
       executedById: params.executedById,
       notes,
       ...(runKey !== undefined ? { runKey } : {}),
+      ...(params.environmentProfileId !== undefined ? { environmentProfileId: params.environmentProfileId } : {}),
+      ...Object.fromEntries((["browser", "operatingSystem", "device", "apiEnvironment", "build", "deployment"] as const).filter((key) => Object.prototype.hasOwnProperty.call(params, key)).map((key) => [key, params[key]])),
     });
     if (!run) {
       throw new ManualTestRunNotFoundError(

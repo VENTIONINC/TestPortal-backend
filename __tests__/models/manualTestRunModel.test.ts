@@ -60,6 +60,7 @@ function createTransactionClient() {
     $queryRaw: asyncMock(),
     project: { findUnique: asyncMock() },
     testScenario: { findFirst: asyncMock() },
+    manualRunEnvironmentProfile: { findFirst: asyncMock() },
     manualTestRun: {
       create: asyncMock(),
       findFirst: asyncMock(),
@@ -139,6 +140,30 @@ describe("manualTestRunModel", () => {
         }),
       }),
     );
+  });
+
+  it("uses an owned profile, permits explicit clearing, and stores per-run values", async () => {
+    const tx = createTransactionClient();
+    tx.$queryRaw.mockResolvedValue([{ id: projectId }]);
+    tx.testScenario.findFirst.mockResolvedValue({ id: scenarioId, title: "Login", scenarioKey: null, details: null, objective: null, preconditions: null, testData: null, expectedResult: null, notes: null, steps: [] });
+    tx.manualRunEnvironmentProfile.findFirst.mockResolvedValue({ browser: "Chrome", operatingSystem: "Linux", device: "Laptop", apiEnvironment: "Staging" });
+    tx.manualTestRun.create.mockResolvedValue(detail);
+    transactionMock.mockImplementation(async (callback: unknown) => await (callback as (client: Prisma.TransactionClient) => Promise<unknown>)(tx as unknown as Prisma.TransactionClient));
+
+    await manualTestRunModel.createFromScenario({ projectId, scenarioId, executedById: executorId, environmentProfileId: runId, browser: null, device: "Phone", build: "1.2" });
+    expect(tx.manualRunEnvironmentProfile.findFirst).toHaveBeenCalledWith({ where: { id: runId, projectId } });
+    expect(tx.manualTestRun.create).toHaveBeenCalledWith(expect.objectContaining({ data: expect.objectContaining({ browser: null, operatingSystem: "Linux", device: "Phone", apiEnvironment: "Staging", build: "1.2", deployment: null }) }));
+  });
+
+  it("rejects an out-of-scope profile before writing a run", async () => {
+    const tx = createTransactionClient();
+    tx.$queryRaw.mockResolvedValue([{ id: projectId }]);
+    tx.testScenario.findFirst.mockResolvedValue({ id: scenarioId, title: "Login", steps: [] });
+    tx.manualRunEnvironmentProfile.findFirst.mockResolvedValue(null);
+    transactionMock.mockImplementation(async (callback: unknown) => await (callback as (client: Prisma.TransactionClient) => Promise<unknown>)(tx as unknown as Prisma.TransactionClient));
+
+    await expect(manualTestRunModel.createFromScenario({ projectId, scenarioId, executedById: executorId, environmentProfileId: runId })).rejects.toThrow("Environment profile not found");
+    expect(tx.manualTestRun.create).not.toHaveBeenCalled();
   });
 
   it.each(["in_progress", "passed", "failed", "blocked", "skipped"] as const)(

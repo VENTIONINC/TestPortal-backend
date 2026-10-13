@@ -48,7 +48,16 @@ export interface ManualTestRunStepResponse {
   updatedAt: Date;
 }
 
-export interface ManualTestRunResponse {
+export interface ManualRunEnvironmentSnapshot {
+  browser: string | null;
+  operatingSystem: string | null;
+  device: string | null;
+  apiEnvironment: string | null;
+  build: string | null;
+  deployment: string | null;
+}
+
+export interface ManualTestRunResponse extends ManualRunEnvironmentSnapshot {
   id: string;
   projectId: string;
   sourceTestScenarioId: string;
@@ -72,7 +81,7 @@ export interface ManualTestRunResponse {
   steps: ManualTestRunStepResponse[];
 }
 
-export interface ManualTestRunSummary {
+export interface ManualTestRunSummary extends ManualRunEnvironmentSnapshot {
   id: string;
   projectId: string;
   sourceTestScenarioId: string;
@@ -102,6 +111,13 @@ export interface StartManualTestRunParams {
   executedById: string;
   notes?: string | null | undefined;
   runKey?: string | null | undefined;
+  environmentProfileId?: string | undefined;
+  browser?: string | null | undefined;
+  operatingSystem?: string | null | undefined;
+  device?: string | null | undefined;
+  apiEnvironment?: string | null | undefined;
+  build?: string | null | undefined;
+  deployment?: string | null | undefined;
 }
 
 export interface GetManualTestRunParams {

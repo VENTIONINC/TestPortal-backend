@@ -111,6 +111,7 @@ export const manualTestRunController = {
         projectId: query.data.projectId,
         scenarioId: params.data.scenarioId,
         executedById: req.user.id,
+        ...body.data,
         ...(Object.prototype.hasOwnProperty.call(body.data, "notes")
           ? { notes: body.data.notes }
           : {}),
