@@ -28,6 +28,7 @@ import { registerAnalysisExportRoutes } from "./analysisExport";
 import { registerPdfExportRoutes } from "./pdfExport";
 import { registerTestScenarioRoutes } from "./testScenarios";
 import { registerManualTestRunRoutes } from "./manualTestRuns";
+import { registerManualRunEnvironmentProfileRoutes } from "./manualRunEnvironmentProfiles";
 import "./zod";
 
 export function generateOpenAPISpec() {
@@ -55,6 +56,7 @@ export function generateOpenAPISpec() {
   registerPdfExportRoutes(registry);
   registerTestScenarioRoutes(registry);
   registerManualTestRunRoutes(registry);
+  registerManualRunEnvironmentProfileRoutes(registry);
 
   const generator = new OpenApiGeneratorV31(registry.definitions);
 

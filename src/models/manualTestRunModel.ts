@@ -41,6 +41,7 @@ const detailSelect = {
   expectedResult: true,
   scenarioNotes: true,
   notes: true,
+  browser: true, operatingSystem: true, device: true, apiEnvironment: true, build: true, deployment: true,
   executedBy: {
     select: {
       id: true,
@@ -75,6 +76,7 @@ const summarySelect = {
   completedAt: true,
   updatedAt: true,
   title: true,
+  browser: true, operatingSystem: true, device: true, apiEnvironment: true, build: true, deployment: true,
   executedBy: {
     select: {
       id: true,
@@ -315,6 +317,22 @@ export const manualTestRunModel = {
         return null;
       }
 
+      const profile = params.environmentProfileId
+        ? await client.manualRunEnvironmentProfile.findFirst({
+            where: { id: params.environmentProfileId, projectId: params.projectId },
+          })
+        : null;
+      if (params.environmentProfileId && !profile) {
+        throw new ManualTestRunValidationError("Environment profile not found in the requested project");
+      }
+      const environment = {
+        browser: params.browser !== undefined ? params.browser : profile?.browser ?? null,
+        operatingSystem: params.operatingSystem !== undefined ? params.operatingSystem : profile?.operatingSystem ?? null,
+        device: params.device !== undefined ? params.device : profile?.device ?? null,
+        apiEnvironment: params.apiEnvironment !== undefined ? params.apiEnvironment : profile?.apiEnvironment ?? null,
+        build: params.build ?? null,
+        deployment: params.deployment ?? null,
+      };
       const now = new Date();
       const created = await client.manualTestRun.create({
         data: {
@@ -335,6 +353,7 @@ export const manualTestRunModel = {
           expectedResult: scenario.expectedResult,
           scenarioNotes: scenario.notes,
           notes: params.notes ?? null,
+          ...environment,
           steps: {
             create: scenario.steps.map((step) => ({
               position: step.position,

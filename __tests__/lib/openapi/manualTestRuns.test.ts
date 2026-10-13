@@ -64,4 +64,21 @@ describe("manual test run OpenAPI contract", () => {
       "skipped",
     ]);
   });
+
+  it("publishes profile CRUD and nullable environment snapshots", () => {
+    const spec = generateOpenAPISpec();
+    const base = "/api/v2/projects/{projectId}/manual-run-environment-profiles";
+    expect(spec.paths?.[base]?.get).toBeDefined();
+    expect(spec.paths?.[base]?.post).toBeDefined();
+    expect(spec.paths?.[`${base}/{profileId}`]?.patch).toBeDefined();
+    expect(spec.paths?.[`${base}/{profileId}`]?.delete).toBeDefined();
+    const schemas = spec.components?.schemas as Record<string, { properties?: Record<string, { type?: string | string[] }> }>;
+    for (const field of ["browser", "operatingSystem", "device", "apiEnvironment", "build", "deployment"]) {
+      expect(schemas.ManualTestRun?.properties?.[field]?.type).toEqual(["string", "null"]);
+      expect(schemas.ManualTestRunSummary?.properties?.[field]?.type).toEqual(["string", "null"]);
+      expect(schemas.ManualTestRunStartRequest?.properties?.[field]).toBeDefined();
+    }
+    expect(schemas.ManualTestRunStartRequest?.properties?.environmentProfileId).toBeDefined();
+    expect(schemas.ManualRunEnvironmentProfile?.properties?.browser?.type).toEqual(["string", "null"]);
+  });
 });

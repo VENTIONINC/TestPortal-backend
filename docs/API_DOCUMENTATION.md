@@ -217,7 +217,9 @@ All routes require a JWT and a UUID `projectId` query parameter. The executor,
 source provenance, and timestamps are server-owned. The seven operations are:
 
 - `POST /api/v2/test-scenarios/{scenarioId}/manual-runs` starts a run and accepts
-  optional `notes` and `runKey` fields (an empty body/object is valid).
+  optional `notes`, `runKey`, `environmentProfileId`, `browser`,
+  `operatingSystem`, `device`, `apiEnvironment`, `build`, and `deployment`
+  fields (an empty body/object is valid).
 - `GET /api/v2/test-scenarios/{scenarioId}/manual-runs` lists history for a live
   project-scoped scenario.
 - `GET /api/v2/manual-test-runs` lists project history, including runs whose
@@ -229,6 +231,28 @@ source provenance, and timestamps are server-owned. The seven operations are:
   step's status or notes.
 - `POST /api/v2/manual-test-runs/{runId}/complete` completes a run with one of
   `passed`, `failed`, `blocked`, or `skipped`.
+
+The six environment values are nullable single-line strings up to 200
+characters. Explicit values override a selected profile; omitted reusable
+values inherit from it. `null` or a blank string clears a value. Build and
+deployment are always entered per run. The resolved values are stored on the
+run, returned in detail and history, and cannot be changed through run PATCH.
+Older runs return `null` for each value. An invalid or out-of-scope profile
+reference returns `400` without creating a run.
+
+Personal environment profiles use these project-scoped routes, with a JWT and
+project ownership required:
+
+- `GET /api/v2/projects/{projectId}/manual-run-environment-profiles`
+- `POST /api/v2/projects/{projectId}/manual-run-environment-profiles`
+- `PATCH /api/v2/projects/{projectId}/manual-run-environment-profiles/{profileId}`
+- `DELETE /api/v2/projects/{projectId}/manual-run-environment-profiles/{profileId}`
+
+Create requires a trimmed, nonblank `name` of at most 100 characters. The
+four reusable fields are optional: `browser`, `operatingSystem`, `device`, and
+`apiEnvironment`. Update requires at least one field. Invalid bodies return
+`400`; an inaccessible project or a profile outside the user's project and
+ownership scope returns `404`. Deleting a profile does not alter prior runs.
 
 Run statuses are `in_progress`, `passed`, `failed`, `blocked`, and `skipped`;
 step statuses additionally include `not_started`. Notes are trimmed when
