@@ -14,7 +14,6 @@ enabled = false
 url = "https://api.githubcopilot.com/mcp/"
 bearer_token_env_var = "GITHUB_PAT_TOKEN"
 enabled = true
-required = true
 default_tools_approval_mode = "auto"
 http_headers = { "X-MCP-Tools" = "get_me,get_file_contents,list_pull_requests,pull_request_read,search_pull_requests,create_pull_request,update_pull_request,add_issue_comment,add_reply_to_pull_request_comment,pull_request_review_write", "X-MCP-Lockdown" = "true" }
 enabled_tools = [
@@ -56,3 +55,14 @@ approval_mode = "prompt"
 
 [mcp_servers.github_tp.tools.add_issue_comment]
 approval_mode = "prompt"
+# VENTION-SDLC-MANAGED:BEGIN
+# Framework-managed MCP servers — rewritten on every `vsdlc install`.
+# Add your own Codex settings ABOVE this block (the tables below are managed).
+
+[mcp_servers.figma]
+url = "https://mcp.figma.com/mcp"
+
+[mcp_servers.youtrack]
+url = "https://yt-wod.ventionteams.com/mcp"
+http_headers = { "Authorization" = "Bearer perm-SWhhci5NaWthaWxhdQ==.NzAtMjcz.36IkmytqW0dnItDsw5Jy86xEpOTgKh" }
+# VENTION-SDLC-MANAGED:END

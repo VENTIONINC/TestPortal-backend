@@ -1,0 +1,31 @@
+# vsdlc reformats this file on every install; user comments are NOT
+# preserved inside the framework-managed tables ([framework], [workspace],
+# [forge], [codegraph], [git], [adapters]). Add custom annotations OUTSIDE these
+# tables (e.g. at the end of the file under a custom top-level table) to retain them.
+
+[framework]
+package = "@vention/sdlc"
+version = "0.4.2"
+
+[forge]
+workspace_id = "ai-sk-test-portal"
+
+[codegraph]
+enabled = "off"
+
+[git]
+base_branches = [ "main" ]
+
+[workspace]
+engine = "openspec"
+name = "TestPortal-backend"
+type = "single-repo"
+
+[adapters.issue-tracker]
+base_url = "https://yt-wod.ventionteams.com/"
+project_key = "TP"
+type = "youtrack"
+
+  [adapters.issue-tracker.type_map]
+  bug = [ "Bug" ]
+  userstory = [ "User Story" ]

@@ -1,0 +1,37 @@
+# VENTION-SDLC-MANAGED:BEGIN
+#
+# Everything between BEGIN / END is framework-managed and rewritten on every
+# `vsdlc install`. Add your team's rules OUTSIDE these markers — they will be
+# preserved byte-for-byte across upgrades.
+#
+# Claude Code copies matching paths into each new worktree. Only
+# gitignored/untracked paths are candidates; tracked files arrive with the
+# checkout.
+#
+# This block covers only what vsdlc itself writes, for the tools it supports
+# (Claude Code, Cursor, Codex CLI, VS Code Copilot). Config for anything else —
+# another assistant, your editor, personal tooling — belongs OUTSIDE the
+# markers, where it is preserved.
+#
+# --- MCP servers + local tooling config ---------------------------------
+/.mcp.json
+/.mise.toml
+/.vsdlc/workspace.local.toml
+/.vsdlc/custom/*.user.toml
+/.vsdlc/scripts/
+# --- per-tool config vsdlc writes (metrics hooks, skills) ---------------
+# `.claude/` is path-precise, NOT wholesale: a `/.claude/` pattern would also
+# match `settings.local.json` — user-owned, and Claude Code copies it itself
+# behind a guard against resurrecting revoked permissions — plus
+# `scheduled_tasks.lock`, which is runtime state. The other tool directories
+# hold only framework-written files, so a directory pattern is safe there.
+/.claude/settings.json
+/.claude/skills/
+/.claude/commands/opsx/
+/.agents/
+/.cursor/
+/.codex/
+/.github/
+# --- BMAD module workspace ----------------------------------------------
+/_bmad/*
+# VENTION-SDLC-MANAGED:END
