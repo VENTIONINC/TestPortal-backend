@@ -1,0 +1,45 @@
+openspec/schemas/vention-spec-driven/templates/proposal.md
+  s_53b9659fa4ad04::t_5f725481f0ee05 1-31
+.vsdlc/workspace.toml
+  s_53b9659fa4ad04::t_5f725481f0ee05 1-31
+openspec/schemas/vention-spec-driven/upstream.yaml
+  s_53b9659fa4ad04::t_5f725481f0ee05 1-4
+.gitignore
+  s_53b9659fa4ad04::t_5f725481f0ee05 91-137
+openspec/schemas/vention-spec-driven/templates/tasks.md
+  s_53b9659fa4ad04::t_5f725481f0ee05 1-11
+.worktreeinclude
+  s_53b9659fa4ad04::t_5f725481f0ee05 1-37
+openspec/config.yaml
+  s_53b9659fa4ad04::t_5f725481f0ee05 1-64
+openspec/schemas/vention-spec-driven/templates/design.md
+  s_53b9659fa4ad04::t_5f725481f0ee05 1-21
+openspec/schemas/vention-spec-driven/templates/spec.md
+  s_53b9659fa4ad04::t_5f725481f0ee05 1-13
+openspec/schemas/vention-spec-driven/schema.yaml
+  s_53b9659fa4ad04::t_5f725481f0ee05 1-251
+openspec/schemas/vention-spec-driven/story-size-rubric.md
+  s_53b9659fa4ad04::t_5f725481f0ee05 1-78
+AGENTS.md
+  s_53b9659fa4ad04::t_5f725481f0ee05 1-52,62
+README.md
+  s_53b9659fa4ad04::t_5f725481f0ee05 1-48
+.codex/config.toml
+  s_53b9659fa4ad04::t_06c9c14121009f 58-68
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.18",
+  "base_commit_sha": "3f35fb84ae877323fcf926b999f6e40e68459eb5",
+  "prompts": {},
+  "sessions": {
+    "s_53b9659fa4ad04": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a13a7d-c70c-7c11-a3fa-102b8868ea56",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Ihar Mikailau <ihar.mikailau@ventionteams.com>"
+    }
+  }
+}
