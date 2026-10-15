@@ -34,6 +34,10 @@ src/services/insightsService.ts
   s_40b7cb8048341b::t_c93bd0548293b6 5-6,163-165
 src/services/testAnalysisService.ts
   s_40b7cb8048341b::t_d14024477b2975 7,118-120
+docs/MCP_TOOLS.md
+  s_827b2763c19169::t_389cd82ff36026 217
+openspec/changes/migrate-openai-to-server-ai-config/.openspec.yaml
+  s_8e81f7739a44de::t_2fe422088bbc6a 1,1
 ---
 {
   "schema_version": "authorship/3.0.0",
@@ -41,6 +45,22 @@ src/services/testAnalysisService.ts
   "base_commit_sha": "367ec88b85b4cf808d128e4527e2070d142c7bb3",
   "prompts": {},
   "sessions": {
+    "s_223cbd193de0fd": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a0618d-3f91-7fa0-bf0f-4f7b1eec3716",
+        "model": "unknown"
+      },
+      "human_author": "Ihar Mikailau <ihar.mikailau@ventionteams.com>"
+    },
+    "s_3a21418ee94bc0": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a05d43-8037-7d13-b2a5-fe5bdbdadaef",
+        "model": "gpt-5.6-luna"
+      },
+      "human_author": "Ihar Mikailau <ihar.mikailau@ventionteams.com>"
+    },
     "s_40b7cb8048341b": {
       "agent_id": {
         "tool": "codex",
@@ -48,6 +68,22 @@ src/services/testAnalysisService.ts
         "model": "unknown"
       },
       "human_author": "Igor <hirzhek@gmail.com>"
+    },
+    "s_827b2763c19169": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a05d34-026d-7420-a78e-1fd3c1d7ed2c",
+        "model": "gpt-5.6-sol"
+      },
+      "human_author": "Ihar Mikailau <ihar.mikailau@ventionteams.com>"
+    },
+    "s_8e81f7739a44de": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a0339c-0c8f-7773-a7f2-b130e3a2558f",
+        "model": "gpt-5.6-sol"
+      },
+      "human_author": "Ihar Mikailau <ihar.mikailau@ventionteams.com>"
     }
   }
 }
