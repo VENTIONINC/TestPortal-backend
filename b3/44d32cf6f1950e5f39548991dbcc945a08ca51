@@ -15,7 +15,7 @@ docs/INSPECT_MCP_SERVER.md
 docs/MCP_TOOLS.md
   s_827b2763c19169::t_389cd82ff36026 188-234,246,252
 openspec/changes/add-test-scenario-mcp-tools/.openspec.yaml
-  s_8e81f7739a44de::t_2fe422088bbc6a 1-2
+  s_8e81f7739a44de::t_2fe422088bbc6a 1-2,1
 openspec/changes/add-test-scenario-mcp-tools/proposal.md
   s_827b2763c19169::t_f565c9665acbd9 1-29
 package.json
