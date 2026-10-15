@@ -7,6 +7,22 @@ README.md
   "base_commit_sha": "c99d2dfd37d40ae379c0d9373ec16497a0558d0f",
   "prompts": {},
   "sessions": {
+    "s_5c418767e5ce2b": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a0bfa9-5470-7bf0-bc0d-d85d8d0dd395",
+        "model": "gpt-5.6-luna"
+      },
+      "human_author": "Igor <hirzhek@gmail.com>"
+    },
+    "s_9ec675c848cc25": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a0bf98-dc05-7663-a9b9-936460e88799",
+        "model": "gpt-6-astra"
+      },
+      "human_author": "Igor <hirzhek@gmail.com>"
+    },
     "s_cbb368511ef5dd": {
       "agent_id": {
         "tool": "codex",
