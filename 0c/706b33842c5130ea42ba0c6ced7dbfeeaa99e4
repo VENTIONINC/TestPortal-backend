@@ -1,0 +1,111 @@
+.codex/config.toml
+  s_53b9659fa4ad04::t_106da7acadc1fe 13-16,18,20-25,26-31
+docs/MCP_TOOLS.md
+  s_827b2763c19169::t_389cd82ff36026 217
+openspec/changes/redesign-assign-issue-modal/.openspec.yaml
+  s_8e81f7739a44de::t_2fe422088bbc6a 1
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.18",
+  "base_commit_sha": "0c706b33842c5130ea42ba0c6ced7dbfeeaa99e4",
+  "prompts": {},
+  "sessions": {
+    "s_029b63534d706f": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a13ad8-3ffd-7ab0-b3e1-bc86e811b9eb",
+        "model": "unknown"
+      },
+      "human_author": "Ihar Mikailau <ihar.mikailau@ventionteams.com>"
+    },
+    "s_223cbd193de0fd": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a0618d-3f91-7fa0-bf0f-4f7b1eec3716",
+        "model": "unknown"
+      },
+      "human_author": "Ihar Mikailau <ihar.mikailau@ventionteams.com>"
+    },
+    "s_37bc189ff5e077": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a06c7e-de94-7b73-a4a7-15448f3ae5a7",
+        "model": "gpt-5.6-sol"
+      },
+      "human_author": "Ihar Mikailau <ihar.mikailau@ventionteams.com>"
+    },
+    "s_3a21418ee94bc0": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a05d43-8037-7d13-b2a5-fe5bdbdadaef",
+        "model": "gpt-5.6-luna"
+      },
+      "human_author": "Ihar Mikailau <ihar.mikailau@ventionteams.com>"
+    },
+    "s_53b9659fa4ad04": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a13a7d-c70c-7c11-a3fa-102b8868ea56",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Ihar Mikailau <ihar.mikailau@ventionteams.com>"
+    },
+    "s_827b2763c19169": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a05d34-026d-7420-a78e-1fd3c1d7ed2c",
+        "model": "gpt-5.6-sol"
+      },
+      "human_author": "Ihar Mikailau <ihar.mikailau@ventionteams.com>"
+    },
+    "s_886c05f2da06c3": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a06c66-2d17-7fb2-9054-5d7fe385c56c",
+        "model": "gpt-5.6-sol"
+      },
+      "human_author": "Ihar Mikailau <ihar.mikailau@ventionteams.com>"
+    },
+    "s_8e81f7739a44de": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a0339c-0c8f-7773-a7f2-b130e3a2558f",
+        "model": "gpt-5.6-sol"
+      },
+      "human_author": "Ihar Mikailau <ihar.mikailau@ventionteams.com>"
+    },
+    "s_95c10211ff01e3": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a0d89e-6b1c-7ad2-b3fb-b0e694b7b9d6",
+        "model": "unknown"
+      },
+      "human_author": "Ihar Mikailau <ihar.mikailau@ventionteams.com>"
+    },
+    "s_ece107861da71b": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a06c97-b363-7030-95f5-b67551fc1a02",
+        "model": "unknown"
+      },
+      "human_author": "Ihar Mikailau <ihar.mikailau@ventionteams.com>"
+    },
+    "s_f2ddcdbaaf593b": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a06c73-c77c-74b1-a260-1c914b5c672f",
+        "model": "unknown"
+      },
+      "human_author": "Ihar Mikailau <ihar.mikailau@ventionteams.com>"
+    },
+    "s_fb5cb10e4cc804": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a06c50-e761-7663-afc0-e860a9f343b0",
+        "model": "gpt-5.6-luna"
+      },
+      "human_author": "Ihar Mikailau <ihar.mikailau@ventionteams.com>"
+    }
+  }
+}
