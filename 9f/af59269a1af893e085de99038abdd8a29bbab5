@@ -1,7 +1,27 @@
+openspec/changes/expose-related-test-scenarios-in-result-details/.openspec.yaml
+  s_9ec675c848cc25::t_040a60ab4dcf66 1
 ---
 {
   "schema_version": "authorship/3.0.0",
   "git_ai_version": "1.6.18",
   "base_commit_sha": "9faf59269a1af893e085de99038abdd8a29bbab5",
-  "prompts": {}
+  "prompts": {},
+  "sessions": {
+    "s_5c418767e5ce2b": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a0bfa9-5470-7bf0-bc0d-d85d8d0dd395",
+        "model": "gpt-5.6-luna"
+      },
+      "human_author": "Igor <hirzhek@gmail.com>"
+    },
+    "s_9ec675c848cc25": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a0bf98-dc05-7663-a9b9-936460e88799",
+        "model": "gpt-6-astra"
+      },
+      "human_author": "Igor <hirzhek@gmail.com>"
+    }
+  }
 }
