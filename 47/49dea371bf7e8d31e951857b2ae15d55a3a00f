@@ -1,0 +1,125 @@
+src/lib/openapi/testScenarios.ts
+  s_478ceef37ca57c::t_e044ec6c20965d 163-179,341,343-344,349,358-361,451-452,499-501,510-511,524-526,535-536,553-555,711
+  s_478ceef37ca57c::t_acba76989afbcd 161-162
+__tests__/controllers/testScenarioController.test.ts
+  s_5c418767e5ce2b::t_549e7e6eb23513 93-95,109-138,147-151,155-185
+__tests__/services/testScenarioService.test.ts
+  s_5c418767e5ce2b::t_b713454cc7dbd8 6-9,12-21,23-32,42,56-59,76-78,91,147-194,244-253,258-268,270-295,300-306,308-314
+openspec/changes/add-test-scenario-search/design.md
+  s_478ceef37ca57c::t_8ee9387a85005c 3-52
+  s_478ceef37ca57c::t_de1418e87f80b2 1-2
+__tests__/models/testScenarioModel.test.ts
+  s_478ceef37ca57c::t_c0195c507b6a81 171-184
+  s_5c418767e5ce2b::t_8b595bb3689c4a 6-7,125-132,139-150,155-170,185-199
+src/mcp/tools/test-scenarios.ts
+  s_478ceef37ca57c::t_95b32516b81c69 22
+openspec/changes/add-test-scenario-search/proposal.md
+  s_5d078bc1eac805::t_62016908a56691 8,12,26
+  s_9ec675c848cc25::t_656fe17c032493 1-7,9-11,13-25,27-28
+openspec/changes/add-test-scenario-search/tasks.md
+  s_478ceef37ca57c::t_1ad096d61d7f1d 8-22
+  s_478ceef37ca57c::t_5acdf6e16759b9 5-7
+  s_478ceef37ca57c::t_96cfc4c1779f76 23
+docs/API_DOCUMENTATION.md
+  s_5c418767e5ce2b::t_83c0343597f1ab 31,130-140,144,389
+  s_478ceef37ca57c::t_da81e49bf3da7d 141-143
+src/mcp/schemas/testScenarioSchemas.ts
+  s_478ceef37ca57c::t_83b0172f0bf315 20-33,73
+  s_478ceef37ca57c::t_b2ba7c4d4b4222 17-19
+  s_478ceef37ca57c::t_b6f245fee88f39 70-72
+  s_478ceef37ca57c::t_86d6d9a90a42db 74-76
+__tests__/schemas/testScenarioSchemas.test.ts
+  s_5c418767e5ce2b::t_253c67e09acd17 8,31-33,47-49,54-62,75-83,85-122
+__tests__/test-scenarios/resultScenarioDetailPostgresIntegration.test.ts
+  s_478ceef37ca57c::t_6c18c73fe37b13 161,179,197-203,212-218
+__tests__/test-scenarios/testScenarioPostgresIntegration.test.ts
+  s_5c418767e5ce2b::t_bbff13f5f1216f 13,20,27-28,46-63,95-97,104-111,129-135,143-149,153-155,159-167,171-367,370-375,391,405,426,465-467
+docs/MCP_TOOLS.md
+  s_5c418767e5ce2b::t_23f546f4ef4ff9 12,22,35,47,56,79,90,108,120,135,148,160,172,181,189,197,209,225,233-234,239,252,267,294
+  s_478ceef37ca57c::t_0fe21d655e1066 232,235-236,249,259
+__tests__/lib/openapi/testScenarios.test.ts
+  s_478ceef37ca57c::t_5dbaa4eede3681 62-76
+__tests__/mcp/testScenarioTools.test.ts
+  s_478ceef37ca57c::t_98f1404dbe8456 10,15-17,142-156
+src/models/testScenarioModel.ts
+  s_478ceef37ca57c::t_479175e341565f 76-89
+  s_478ceef37ca57c::t_9eaf2d276ee292 73-75
+  s_478ceef37ca57c::t_4a8a300edc4cfc 90-92
+openspec/changes/add-test-scenario-search/.openspec.yaml
+  s_9ec675c848cc25::t_040a60ab4dcf66 2
+  s_5c8c3111da6940::t_622e9ae9d09031 1
+__tests__/mcp/testScenarioSchemas.test.ts
+  s_5c418767e5ce2b::t_9b44a20591bdf5 16-21,49-72,78-104
+  s_478ceef37ca57c::t_51febd6f61650c 32-47
+openspec/changes/add-test-scenario-search/specs/test-scenario-summaries/spec.md
+  s_5d078bc1eac805::t_887c86bd93c3bd 29,36-48,58,91,104
+  s_9ec675c848cc25::t_6860fc034b004b 1-28,30-35,49-57,59-90,92-103
+README.md
+  s_53b9659fa4ad04::t_596e3bc56b930f 89-93,114-116
+package.json
+  s_029b63534d706f::t_fc8f7debf3eb7a 24-28
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.18",
+  "base_commit_sha": "4749dea371bf7e8d31e951857b2ae15d55a3a00f",
+  "prompts": {},
+  "sessions": {
+    "s_029b63534d706f": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a13ad8-3ffd-7ab0-b3e1-bc86e811b9eb",
+        "model": "gpt-6-luna"
+      },
+      "human_author": "Ihar Mikailau <ihar.mikailau@ventionteams.com>"
+    },
+    "s_478ceef37ca57c": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a0f73f-83b5-79d2-ad21-8ccc333d761c",
+        "model": "unknown"
+      },
+      "human_author": "Ihar Mikailau <ihar.mikailau@ventionteams.com>"
+    },
+    "s_53b9659fa4ad04": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a13a7d-c70c-7c11-a3fa-102b8868ea56",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Ihar Mikailau <ihar.mikailau@ventionteams.com>"
+    },
+    "s_5c418767e5ce2b": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a0bfa9-5470-7bf0-bc0d-d85d8d0dd395",
+        "model": "gpt-5.6-luna"
+      },
+      "human_author": "Igor <hirzhek@gmail.com>"
+    },
+    "s_5c8c3111da6940": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a0f295-5852-71a1-913f-9f4143e99508",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Ihar Mikailau <ihar.mikailau@ventionteams.com>"
+    },
+    "s_5d078bc1eac805": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a0f6d8-0084-7060-a05d-ee06c3afde73",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Ihar Mikailau <ihar.mikailau@ventionteams.com>"
+    },
+    "s_9ec675c848cc25": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a0bf98-dc05-7663-a9b9-936460e88799",
+        "model": "gpt-6-astra"
+      },
+      "human_author": "Igor <hirzhek@gmail.com>"
+    }
+  }
+}
