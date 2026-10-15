@@ -44,6 +44,8 @@ openspec/changes/add-test-scenario-mcp-tools/specs/test-scenario-mcp-tools/spec.
   s_8e81f7739a44de::t_7b9be219f4924e 1-111
 src/mcp/tools/test-scenarios.ts
   s_3a21418ee94bc0::t_5709ad978b340d 1-62
+__prompts-tests__/error-solution/runners/error-solution.ts
+  s_40b7cb8048341b::t_c584e429cd569e 39
 ---
 {
   "schema_version": "authorship/3.0.0",
@@ -51,6 +53,14 @@ src/mcp/tools/test-scenarios.ts
   "base_commit_sha": "b344d32cf6f1950e5f39548991dbcc945a08ca51",
   "prompts": {},
   "sessions": {
+    "s_223cbd193de0fd": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a0618d-3f91-7fa0-bf0f-4f7b1eec3716",
+        "model": "unknown"
+      },
+      "human_author": "Ihar Mikailau <ihar.mikailau@ventionteams.com>"
+    },
     "s_3a21418ee94bc0": {
       "agent_id": {
         "tool": "codex",
@@ -58,6 +68,14 @@ src/mcp/tools/test-scenarios.ts
         "model": "gpt-5.6-luna"
       },
       "human_author": "Ihar Mikailau <ihar.mikailau@ventionteams.com>"
+    },
+    "s_40b7cb8048341b": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a0f423-acfd-7090-ae3c-78b932b85771",
+        "model": "unknown"
+      },
+      "human_author": "Igor <hirzhek@gmail.com>"
     },
     "s_827b2763c19169": {
       "agent_id": {

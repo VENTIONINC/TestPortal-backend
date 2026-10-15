@@ -1,3 +1,5 @@
+openspec/changes/add-manual-test-runs/.openspec.yaml
+  s_4de586c9d28d08::t_dff11453de0ff1 1
 ---
 {
   "schema_version": "authorship/3.0.0",
@@ -12,6 +14,14 @@
         "model": "gpt-5.6-sol"
       },
       "human_author": "Ihar Mikailau <ihar.mikailau@ventionteams.com>"
+    },
+    "s_4de586c9d28d08": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a0f3b8-c3e6-7351-944e-c5bf9301a583",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Igor <hirzhek@gmail.com>"
     },
     "s_d2746bb04edf7f": {
       "agent_id": {
