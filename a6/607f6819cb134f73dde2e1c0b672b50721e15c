@@ -1,0 +1,133 @@
+__tests__/services/ctrfService.test.ts
+  s_95c10211ff01e3::t_8aca5eec565897 97,102,108,259,276,284,292,297-298,312,321-322,331,343-344,358,373,375-410
+  s_95c10211ff01e3::t_a58f053f78937d 94-96
+  s_95c10211ff01e3::t_90db27474314d6 98-101
+  s_95c10211ff01e3::t_6d9b30849819b2 103-107
+  s_95c10211ff01e3::t_c11c721ca716c6 109-111
+  s_95c10211ff01e3::t_91aef75b5bf599 260-262,273-275
+  s_95c10211ff01e3::t_9f6f10c8004729 277-279,281-283
+  s_95c10211ff01e3::t_eb57e0fd89503b 285-287,289-291
+  s_95c10211ff01e3::t_d3f4eae5bbe050 293-296
+  s_95c10211ff01e3::t_32951351f47793 299-301,309-311
+  s_95c10211ff01e3::t_8fce6730ff9f0d 313-315,318-320
+  s_95c10211ff01e3::t_da06679e5652b8 323-325,328-330
+  s_95c10211ff01e3::t_e8f17bbc51d279 332-334,340-342
+  s_95c10211ff01e3::t_1e144653edbd5c 345-347,355-357
+  s_95c10211ff01e3::t_28926e842023da 359-361,370-372
+  s_95c10211ff01e3::t_6399c49f09541d 374
+  s_95c10211ff01e3::t_734642be831565 9,15,26-43,81-93,112-116,263-272,280,288,302-308,316-317,326-327,335-339,348-354,362-369
+src/services/jsonReportService.ts
+  s_95c10211ff01e3::t_a2079baa2bee57 15,43-51,58,86-88,122,154,202,208-209,222,247-249,255-391,395-402,412,503-507,528-531,546,558-568
+  s_95c10211ff01e3::t_bd13a966ce65e8 4-5
+__tests__/services/jsonReportService.test.ts
+  s_95c10211ff01e3::t_d44156f4931156 12,18,24,28,115,267-268,271-273,279-281,283,285-286,294-296,298,302,305,307,309-310,316,318,322,324,326,328-329,335,337,345,351-352,362-363,366-367,370-372,386-387,391,394,399-400,405,408-411,413-415,417-438,441-444,449-604
+  s_95c10211ff01e3::t_ca9593bccb0dba 9-11
+  s_95c10211ff01e3::t_ac8f062c025f5f 13-17
+  s_95c10211ff01e3::t_91ea80530a5058 19-23
+  s_95c10211ff01e3::t_392e21f53402bc 25-27
+  s_95c10211ff01e3::t_c880fa9b630e29 29-31
+  s_95c10211ff01e3::t_0bf9739d504d73 112-114
+  s_95c10211ff01e3::t_df0f42802aaddc 264-266
+  s_95c10211ff01e3::t_4bba44d663e806 269-270
+  s_95c10211ff01e3::t_43297819ebee7b 274-278
+  s_95c10211ff01e3::t_97bb7a980d40e7 282
+  s_95c10211ff01e3::t_dc59bd16402e6a 284
+  s_95c10211ff01e3::t_36d0bdd1143121 287-289,291-293
+  s_95c10211ff01e3::t_0a2c1e508b2d90 297
+  s_95c10211ff01e3::t_abcac3b8a4903e 299-301
+  s_95c10211ff01e3::t_6bd5c6c4249b58 303-304
+  s_95c10211ff01e3::t_7344f0cc2c57ea 306
+  s_95c10211ff01e3::t_1b998d62745776 308
+  s_95c10211ff01e3::t_c450e504610ae5 311-315
+  s_95c10211ff01e3::t_5564b9fce8d8ac 317
+  s_95c10211ff01e3::t_5009a760edafa7 319-321
+  s_95c10211ff01e3::t_886316753b28d8 323
+  s_95c10211ff01e3::t_d0a953c75a7a56 325
+  s_95c10211ff01e3::t_075ae9fec920e4 327
+  s_95c10211ff01e3::t_35014eaee3f059 330-334
+  s_95c10211ff01e3::t_b8037b02062ebb 336
+  s_95c10211ff01e3::t_94b0dfb540b17e 338-340,342-344
+  s_95c10211ff01e3::t_224f8a4d0dafa8 346-350
+  s_95c10211ff01e3::t_bcf766801a546f 353-355,359-361
+  s_95c10211ff01e3::t_21e9b195fb4cea 364-365
+  s_95c10211ff01e3::t_7d04ea284dfa17 368-369
+  s_95c10211ff01e3::t_18dd203d81fcae 373-375,383-385
+  s_95c10211ff01e3::t_8a8ccf84dfdffa 388-390
+  s_95c10211ff01e3::t_a367c93af01a0b 392-393
+  s_95c10211ff01e3::t_c753e46d539ba7 395-398
+  s_95c10211ff01e3::t_a6f4342525ca47 401-404
+  s_95c10211ff01e3::t_bd43b85d9877cb 406-407
+  s_95c10211ff01e3::t_6e6765583c5cf9 412
+  s_95c10211ff01e3::t_aafddfdebfd6ff 416
+  s_95c10211ff01e3::t_d073d39d4eec9f 439-440
+  s_95c10211ff01e3::t_2724fa5d259865 445-448
+  s_95c10211ff01e3::t_a9144fe105299d 8,32,39,41,45,47,51,53-56,105-111,124,128,138-139,263,290,341,356-358,376-382
+docs/MCP_TOOLS.md
+  s_827b2763c19169::t_389cd82ff36026 217
+src/controllers/jsonReportController.ts
+  s_95c10211ff01e3::t_41cf257e3e686c 16,221-223,234,241-274,278-284
+  s_95c10211ff01e3::t_0fd9ae30c40298 300,309,325
+.codex/config.toml
+  s_53b9659fa4ad04::t_106da7acadc1fe 1-3,5-58
+.gitignore
+  s_029b63534d706f::t_4f6ac66432be9d 86
+  s_029b63534d706f::t_43ec8d71e9a5a5 60,70,90
+AGENTS.md
+  s_53b9659fa4ad04::t_a87b93da50f216 48-55
+README.md
+  s_53b9659fa4ad04::t_c4ce0ebde2a919 46,66,72-73,145-152,163-164
+package-lock.json
+  s_029b63534d706f::t_d61638b8dd3272 11-13
+package.json
+  s_029b63534d706f::t_3c09bfa4a76a0e 13-14,19,28-30
+.env.example
+  s_029b63534d706f::t_257d066e609a1e 1,4-51
+__tests__/controllers/dashboardController.test.ts
+  s_95c10211ff01e3::t_cbb0e799403508 1-78
+src/controllers/dashboardController.ts
+  s_95c10211ff01e3::t_e67f796345669a 5,18,25-26,46,53,67
+src/lib/openapi/ctrf.ts
+  s_95c10211ff01e3::t_ca85e38fa0de8e 37-38,62-65
+src/lib/openapi/projects.ts
+  s_95c10211ff01e3::t_5a09b8adb70bf1 56-62,79,137,185-232,497
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.18",
+  "base_commit_sha": "a6607f6819cb134f73dde2e1c0b672b50721e15c",
+  "prompts": {},
+  "sessions": {
+    "s_029b63534d706f": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a13ad8-3ffd-7ab0-b3e1-bc86e811b9eb",
+        "model": "unknown"
+      },
+      "human_author": "Ihar Mikailau <ihar.mikailau@ventionteams.com>"
+    },
+    "s_53b9659fa4ad04": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a13a7d-c70c-7c11-a3fa-102b8868ea56",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Ihar Mikailau <ihar.mikailau@ventionteams.com>"
+    },
+    "s_827b2763c19169": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a05d34-026d-7420-a78e-1fd3c1d7ed2c",
+        "model": "gpt-5.6-sol"
+      },
+      "human_author": "Ihar Mikailau <ihar.mikailau@ventionteams.com>"
+    },
+    "s_95c10211ff01e3": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a0d89e-6b1c-7ad2-b3fb-b0e694b7b9d6",
+        "model": "unknown"
+      },
+      "human_author": "Ihar Mikailau <ihar.mikailau@ventionteams.com>"
+    }
+  }
+}
