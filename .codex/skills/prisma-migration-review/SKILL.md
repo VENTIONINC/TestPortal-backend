@@ -5,8 +5,6 @@ description: Review Prisma schema, migrations, query shape, indexes, and Postgre
 
 # Prisma Migration Review
 
-Use this skill when work touches `prisma/schema.prisma`, migrations, model queries, indexing, relation traversal, pagination, aggregation, or data-heavy reports.
-
 ## Review Focus
 
 - Migration safety and backwards compatibility

@@ -88,6 +88,10 @@ mocks/
 # Prompt testing datasets (generated files)
 __prompts-tests__/**/datasets/
 mocks/
+
+# Generated prompt evaluation reports
+__prompts-tests__/**/reports/
+
 # VENTION-SDLC-MANAGED:BEGIN
 #
 # Everything between BEGIN / END is framework-managed and rewritten on every

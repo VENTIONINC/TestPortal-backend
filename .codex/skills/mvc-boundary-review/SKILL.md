@@ -5,8 +5,6 @@ description: Review MVC layering, service boundaries, REST/MCP reuse, and archit
 
 # MVC Boundary Review
 
-Use this skill when designing or reviewing backend changes across controllers, services, models, routes, MCP handlers, schemas, or shared helpers.
-
 ## Repository Shape
 
 - REST routes live under `src/routes`.

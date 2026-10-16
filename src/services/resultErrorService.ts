@@ -117,9 +117,14 @@ export const resultErrorService = {
   async assignExistingIssue(
     resultErrorId: string,
     issueId: string,
-  ): Promise<{ assumption: PrismaAssumption }> {
+    reviewedById: string,
+  ): Promise<{
+    assumption: PrismaAssumption;
+    result: { id: string; analysisFeedbackCategory: string | null };
+  }> {
     if (!resultErrorId) throw new Error("Result error ID is required");
     if (!issueId) throw new Error("Issue ID is required");
+    if (!reviewedById) throw new Error("Reviewer ID is required");
 
     return await dbClient.$transaction(async (tx) => {
       await tx.$queryRaw`
@@ -137,15 +142,36 @@ export const resultErrorService = {
             take: 1,
             select: { id: true },
           },
+          result: {
+            select: {
+              id: true,
+              startTime: true,
+              execution: {
+                select: {
+                  projectId: true,
+                  environment: true,
+                  type: true,
+                },
+              },
+            },
+          },
         },
       });
-      if (!resultError) throw new Error(`Result error with ID ${resultErrorId} not found`);
+      if (!resultError?.result) {
+        throw new Error(`Result error with ID ${resultErrorId} not found`);
+      }
       if (resultError.assumptions.length > 0) {
         throw new Error(`Result error with ID ${resultErrorId} already has a confirmed assumption`);
       }
 
-      const issue = await tx.issue.findUnique({ where: { id: issueId }, select: { id: true } });
+      const issue = await tx.issue.findUnique({
+        where: { id: issueId },
+        select: { id: true, category: true },
+      });
       if (!issue) throw new Error(`Issue with ID ${issueId} not found`);
+      if (!isResultCategory(issue.category)) {
+        throw new Error(invalidCategoryMessage);
+      }
 
       const assumption = await tx.assumption.create({
         data: {
@@ -156,7 +182,20 @@ export const resultErrorService = {
           score: 1,
         },
       });
-      return { assumption };
+      const result = await tx.result.update({
+        where: { id: resultError.result.id },
+        data: feedbackUpdate(issue.category, reviewedById),
+        select: { id: true, analysisFeedbackCategory: true },
+      });
+      await dashboardService.refreshDailyStats(
+        resultError.result.execution.projectId,
+        resultError.result.startTime,
+        resultError.result.execution.environment,
+        resultError.result.execution.type,
+        tx,
+      );
+
+      return { assumption, result };
     });
   },
 
