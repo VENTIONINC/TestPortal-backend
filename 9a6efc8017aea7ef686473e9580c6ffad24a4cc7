@@ -1,0 +1,81 @@
+__prompts-tests__/error-formatter/reports/2026-10-02T11-32-09-258Z.json
+  s_1a63ecb2443eff::t_0d7b740486e50e 1-251
+__prompts-tests__/error-formatter/reports/2026-10-02T12-01-47-805Z.json
+  s_1a63ecb2443eff::t_552b80e9d1132e 1-275
+__prompts-tests__/error-formatter/reports/2026-10-02T12-02-29-658Z.json
+  s_1a63ecb2443eff::t_98944fea3684b9 1-251
+__prompts-tests__/error-formatter/reports/2026-10-02T12-02-58-432Z.json
+  s_1a63ecb2443eff::t_fada0022f7c516 1-275
+__prompts-tests__/error-formatter/reports/2026-10-02T12-03-34-142Z.json
+  s_1a63ecb2443eff::t_62a2d16ae63da4 1-251
+__prompts-tests__/error-formatter/reports/2026-10-02T14-49-02-639Z.json
+  s_1a63ecb2443eff::t_a46eb59577ac43 1-251
+__prompts-tests__/error-formatter/reports/2026-10-02T16-00-04-221Z.json
+  s_1a63ecb2443eff::t_c666afe414a8d5 1-264
+__prompts-tests__/error-formatter/reports/latest.json
+  s_1a63ecb2443eff::t_1461c9e568af55 1-264
+__prompts-tests__/stored-results-analysis/reports/openai/regression/2026-10-02T12-01-39-071Z.json
+  s_1a63ecb2443eff::t_0073e38e6c5aa9 1-879
+__prompts-tests__/stored-results-analysis/reports/openai/regression/2026-10-02T12-01-58-963Z.json
+  s_1a63ecb2443eff::t_e059e289b7beb9 1-879
+__prompts-tests__/stored-results-analysis/reports/openai/regression/2026-10-02T15-59-10-375Z.json
+  s_1a63ecb2443eff::t_9bd9fbeea626a2 1-904
+__prompts-tests__/stored-results-analysis/reports/openai/regression/2026-10-02T15-59-28-122Z.json
+  s_1a63ecb2443eff::t_d346170bc3b0c1 1-904
+__prompts-tests__/stored-results-analysis/reports/openai/regression/latest.json
+  s_1a63ecb2443eff::t_6200f529925e6d 1-904
+__prompts-tests__/stored-results-analysis/reports/openai/smoke/2026-10-02T11-31-49-620Z.json
+  s_1a63ecb2443eff::t_7d3a4a64c8337a 1-199
+__prompts-tests__/stored-results-analysis/reports/openai/smoke/2026-10-02T11-31-58-043Z.json
+  s_1a63ecb2443eff::t_7a90c7f6a1931b 1-199
+__prompts-tests__/stored-results-analysis/reports/openai/smoke/2026-10-02T15-59-40-572Z.json
+  s_1a63ecb2443eff::t_37ad0ae59ba50a 1-224
+__prompts-tests__/stored-results-analysis/reports/openai/smoke/2026-10-02T15-59-49-306Z.json
+  s_1a63ecb2443eff::t_be9843291ca90f 1-224
+__prompts-tests__/stored-results-analysis/reports/openai/smoke/latest.json
+  s_1a63ecb2443eff::t_29233c6e7c7dd9 1-224
+openspec/specs/analysis-category-source-of-truth/spec.md
+  s_da9ecfd444f491::t_a0f3572de273cb 1-103
+openspec/specs/assign-issue-modal/spec.md
+  s_da9ecfd444f491::t_be4b5c4ceb100f 1-107
+openspec/specs/dashboard-execution-metrics/spec.md
+  s_da9ecfd444f491::t_aec9130a44aa4b 1-54
+openspec/specs/execution-type-filtering/spec.md
+  s_da9ecfd444f491::t_c8c4505ca02d12 1-95
+openspec/specs/issue-similarity-suggestions/spec.md
+  s_da9ecfd444f491::t_567047dd29a044 1-54
+openspec/specs/report-import-test-identity/spec.md
+  s_da9ecfd444f491::t_ebc1c78e0a82f0 1-39
+openspec/specs/result-error-modal-context/spec.md
+  s_da9ecfd444f491::t_3d06b4ff163c0d 1-46
+openspec/specs/skill-archive-downloads/spec.md
+  s_da9ecfd444f491::t_f8b1a27c5ce010 4,7,20-23,42-56
+openspec/specs/skill-package-persistence/spec.md
+  s_da9ecfd444f491::t_3c03c0550f6357 4,46-105
+openspec/specs/skills-hub-artifacts/spec.md
+  s_da9ecfd444f491::t_5fd53ea1fbb11f 4,13,16,25,40,44-45,47-119
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.18",
+  "base_commit_sha": "9a6efc8017aea7ef686473e9580c6ffad24a4cc7",
+  "prompts": {},
+  "sessions": {
+    "s_1a63ecb2443eff": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a0fbf0-f3c2-7e20-8f7b-f5c743c0e086",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Ihar Mikailau <ihar.mikailau@ventionteams.com>"
+    },
+    "s_da9ecfd444f491": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a10b37-7f4e-7cc3-b31b-eeb4ae52d5f4",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Ihar Mikailau <ihar.mikailau@ventionteams.com>"
+    }
+  }
+}

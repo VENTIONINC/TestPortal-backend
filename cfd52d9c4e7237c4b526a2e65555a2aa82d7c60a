@@ -1,0 +1,47 @@
+__prompts-tests__/README.md
+  s_1a63ecb2443eff::t_27c9f55720e0d5 18,100-117
+__prompts-tests__/error-formatter/README.md
+  s_1a63ecb2443eff::t_1120adeb056775 25
+__prompts-tests__/helpers/evaluation.ts
+  s_1a63ecb2443eff::t_ed816bec750ac6 7-8,10-16,18-42,44-61,63-75
+__prompts-tests__/stored-results-analysis/regression.test.ts
+  s_1a63ecb2443eff::t_fcad0de0bfe7f4 1-17
+__prompts-tests__/stored-results-analysis/runners/compare-versions.ts
+  s_1a63ecb2443eff::t_e0aaff748edd4d 11-15,53
+__prompts-tests__/stored-results-analysis/runners/dataset-evaluation.ts
+  s_1a63ecb2443eff::t_9c0c1a9d2fa68d 8-51,53-60
+__prompts-tests__/stored-results-analysis/runners/evaluation-report.ts
+  s_1a63ecb2443eff::t_aad0ed230cac95 6-8,11,28,49
+__prompts-tests__/stored-results-analysis/runners/stored-results-analysis.ts
+  s_1a63ecb2443eff::t_3dc33677eecca9 12-17,41,54,57-62,66,69-74,115,220
+__prompts-tests__/stored-results-analysis/runners/types.ts
+  s_1a63ecb2443eff::t_3874d6f705692d 9,27
+__prompts-tests__/stored-results-analysis/smoke.test.ts
+  s_1a63ecb2443eff::t_bf87b56f9d51cf 4-16
+__tests__/prompts/evaluation.test.ts
+  s_1a63ecb2443eff::t_c56544e6ddd5e0 4-28,30,32-39,41-45
+src/config/promptModels.ts
+  s_1a63ecb2443eff::t_ad7abf2c8cf2f6 4-42
+src/services/errorFormatterService.ts
+  s_1a63ecb2443eff::t_387058c933512f 8-11,42
+src/services/testAnalysisService.ts
+  s_1a63ecb2443eff::t_329331689e98dc 7-10,121-123
+__prompts-tests__/error-formatter/baseline.test.ts
+  s_1a63ecb2443eff::t_87d60f109c36e0 6-16,26-31,35-46,48-49,52-53,86-89,142-163,166-168,176-192,194
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.18",
+  "base_commit_sha": "cfd52d9c4e7237c4b526a2e65555a2aa82d7c60a",
+  "prompts": {},
+  "sessions": {
+    "s_1a63ecb2443eff": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a0fbf0-f3c2-7e20-8f7b-f5c743c0e086",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Ihar Mikailau <ihar.mikailau@ventionteams.com>"
+    }
+  }
+}

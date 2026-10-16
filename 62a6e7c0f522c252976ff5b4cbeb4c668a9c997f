@@ -1,0 +1,19 @@
+__tests__/test-scenarios/resultScenarioDetailPostgresIntegration.test.ts
+  s_478ceef37ca57c::t_6c18c73fe37b13 161,179,197-203,212-218
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.18",
+  "base_commit_sha": "62a6e7c0f522c252976ff5b4cbeb4c668a9c997f",
+  "prompts": {},
+  "sessions": {
+    "s_478ceef37ca57c": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a0f73f-83b5-79d2-ad21-8ccc333d761c",
+        "model": "unknown"
+      },
+      "human_author": "Ihar Mikailau <ihar.mikailau@ventionteams.com>"
+    }
+  }
+}

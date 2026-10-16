@@ -1,0 +1,143 @@
+.codex/config.toml
+  s_5d078bc1eac805::t_1c7a6a9b84e903 1-5,8-9,17-19,27-44
+.codex/skills/testportal-create-issue/SKILL.md
+  s_5d078bc1eac805::t_463edc5ebf2077 1-56
+.codex/skills/testportal-create-issue/agents/openai.yaml
+  s_5d078bc1eac805::t_b136ba338ec99e 1-4
+.docker/README.md
+  s_5d078bc1eac805::t_466fd7ac0e3449 1-82
+.docker/mcp-profile.json
+  s_5d078bc1eac805::t_ef0f1af5b8689f 1-2022
+__tests__/controllers/resultController.detail.test.ts
+  s_5d078bc1eac805::t_36767c8580b3a5 1-82
+__tests__/controllers/testScenarioController.test.ts
+  s_5d078bc1eac805::t_c5ad577247badc 53
+__tests__/lib/openapi/manualTestRuns.test.ts
+  s_5d078bc1eac805::t_4aad40a48228ea 50-51
+__tests__/lib/openapi/results.test.ts
+  s_5d078bc1eac805::t_8d961f1e923da3 1-100
+__tests__/lib/openapi/testScenarios.test.ts
+  s_5d078bc1eac805::t_95a0ec585c1112 55-58
+__tests__/lib/params-builder.test.ts
+  s_5d078bc1eac805::t_cf411702aa2d1b 56-76
+__tests__/mcp/mcpTestScenarioHandler.test.ts
+  s_5d078bc1eac805::t_2398ddfdf08878 78
+__tests__/mcp/testScenarioMcpWorkflow.test.ts
+  s_5d078bc1eac805::t_c402a0cce4b164 40,107,115,119-123
+__tests__/mcp/testScenarioSchemas.test.ts
+  s_5d078bc1eac805::t_f3be66b8c4564f 57-58
+__tests__/mcp/testScenarioTools.test.ts
+  s_5d078bc1eac805::t_268e6ad869b7fa 42
+__tests__/models/manualTestRunModel.test.ts
+  s_5d078bc1eac805::t_09a8e0b2ec50eb 93,124-125,144-176,202-216,251-347
+__tests__/models/resultModel.test.ts
+  s_5d078bc1eac805::t_c0da3f41501989 28-30,211-325,360-388,492-493,495-497
+__tests__/models/testScenarioModel.test.ts
+  s_5d078bc1eac805::t_4577e25e3f80f4 62,204-225
+__tests__/models/testScenarioSpecLinkModel.test.ts
+  s_5d078bc1eac805::t_ea229e40270aa3 94-139
+__tests__/prisma/manualTestRunMigration.test.ts
+  s_5d078bc1eac805::t_c213a2a3e4542d 14-16,48-59
+__tests__/schemas/manualTestRunSchemas.test.ts
+  s_5d078bc1eac805::t_a014b7db793702 23-37
+__tests__/schemas/testScenarioSchemas.test.ts
+  s_5d078bc1eac805::t_0bd3c543e3321f 65-73
+__tests__/services/manualTestRunService.test.ts
+  s_5d078bc1eac805::t_09413b1eb65a5b 130-141
+__tests__/services/resultService.jsonPayloads.test.ts
+  s_5d078bc1eac805::t_c76fce8fbc85e1 7,9,12,19-21,111-194,280-305
+__tests__/services/testScenarioService.test.ts
+  s_5d078bc1eac805::t_4c19a3b381be70 69,116,208-242
+__tests__/test-scenarios/resultScenarioDetailPostgresIntegration.test.ts
+  s_5d078bc1eac805::t_e84f7446078b2c 1-215
+__tests__/test-scenarios/testScenarioWorkflow.test.ts
+  s_5d078bc1eac805::t_7539fa2c31487a 39
+docs/API_DOCUMENTATION.md
+  s_5d078bc1eac805::t_84049607a9147a 114,124-128,158-185,197,203-204,213-219,228-230
+openspec/changes/add-editable-test-management-keys/.openspec.yaml
+  s_5d078bc1eac805::t_fe7c8dfc949b03 1-2
+openspec/changes/add-editable-test-management-keys/design.md
+  s_5d078bc1eac805::t_ddb0df37a14dec 1-65
+openspec/changes/add-editable-test-management-keys/proposal.md
+  s_5d078bc1eac805::t_5a5ceabf911e31 1-28
+openspec/changes/add-editable-test-management-keys/specs/manual-test-run-execution/spec.md
+  s_5d078bc1eac805::t_e163fe1e67eb9a 1-32
+openspec/changes/add-editable-test-management-keys/specs/test-management-key-labels/spec.md
+  s_5d078bc1eac805::t_7712e19870d9ce 1-117
+openspec/changes/add-editable-test-management-keys/tasks.md
+  s_5d078bc1eac805::t_56028f005cdcb7 1-32
+openspec/changes/expose-related-test-scenarios-in-result-details/.openspec.yaml
+  s_5d078bc1eac805::t_2e520f6a141ffb 1-2
+openspec/changes/expose-related-test-scenarios-in-result-details/design.md
+  s_5d078bc1eac805::t_01e44b74676585 1-42
+openspec/changes/expose-related-test-scenarios-in-result-details/proposal.md
+  s_5d078bc1eac805::t_0d80739d0fc5f7 1-25
+openspec/changes/expose-related-test-scenarios-in-result-details/specs/test-scenario-execution-evidence/spec.md
+  s_5d078bc1eac805::t_19a064362563bd 1-41
+openspec/changes/expose-related-test-scenarios-in-result-details/tasks.md
+  s_5d078bc1eac805::t_3a93de576da4ad 1-17
+postman/docs/Manual_Test_Runs_API.md
+  s_5d078bc1eac805::t_745ad715a60407 8-13
+postman/docs/User_API.md
+  s_5d078bc1eac805::t_72c8e3d2fbc5cf 87,95,107
+prisma/migrations/20260917120600_add_editable_test_management_keys/migration.sql
+  s_5d078bc1eac805::t_0ac6d2b152ba11 1-9
+prisma/schema.prisma
+  s_5d078bc1eac805::t_ef8b7860456324 243,296-297,319
+src/controllers/manualTestRunController.ts
+  s_5d078bc1eac805::t_c70d3d394b3539 84-86
+src/controllers/resultController.ts
+  s_5d078bc1eac805::t_941a8b7486dbd2 133
+src/lib/openapi/manualTestRuns.ts
+  s_5d078bc1eac805::t_520b17e1ffa2b2 44-45,71-72,124,145,154,217,277
+src/lib/openapi/results.ts
+  s_5d078bc1eac805::t_0b0d2a80fa3b85 102,112-128,134-136,234-238,272-275,341,629
+src/lib/openapi/testScenarios.ts
+  s_5d078bc1eac805::t_c755a023425c9a 16,56,83,96
+src/lib/params-builder.ts
+  s_5d078bc1eac805::t_0fb69c358ee58b 8,51,56-59,83-93,104-106
+src/mcp/schemas/testScenarioSchemas.ts
+  s_5d078bc1eac805::t_78417006607d0a 51-58
+src/models/manualTestRunModel.ts
+  s_5d078bc1eac805::t_5ff375b8c76965 26-27,67-68,181,208,261,289-290,370-372,424-434,448,456,523
+src/models/resultModel.ts
+  s_5d078bc1eac805::t_b7afa28cb71d95 26,123-154,205,304-310,316-330,401,501-507,513-527,629,669-671
+src/models/testScenarioModel.ts
+  s_5d078bc1eac805::t_31043f3c83ed5b 46,108,235,386,405-411
+src/models/testScenarioSpecLinkModel.ts
+  s_5d078bc1eac805::t_da90b0f3ceee5d 10,75-111
+src/schemas/manualTestRunSchemas.ts
+  s_5d078bc1eac805::t_e6ce92d23c601f 10-13,68,98,121
+src/schemas/testManagementKeySchemas.ts
+  s_5d078bc1eac805::t_a5e988f2a0fa38 1-20
+src/schemas/testScenarioSchemas.ts
+  s_5d078bc1eac805::t_e61452fc773b46 5,22,38
+src/services/manualTestRunService.ts
+  s_5d078bc1eac805::t_fba4b0d536d34b 62-78,167,181,187-191,210,216,223,249-254,275,279,288,294
+src/services/resultService.ts
+  s_5d078bc1eac805::t_52daa8ea3e6624 10,24,41-69,84,111,155-156,158-169
+src/services/testScenarioService.ts
+  s_5d078bc1eac805::t_cbbe64968f6351 28,69-80,194,302-303
+src/types/api.ts
+  s_5d078bc1eac805::t_010b058bb6b4bd 55
+src/types/manualTestRuns.ts
+  s_5d078bc1eac805::t_a589ef351bda26 55-56,79-80,104,116,129
+src/types/testScenarios.ts
+  s_5d078bc1eac805::t_4501e2fb896039 21,49,56-63,72,91
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.18",
+  "base_commit_sha": "fbe7bcfc8702759ef62f814919ba1c18c33d7269",
+  "prompts": {},
+  "sessions": {
+    "s_5d078bc1eac805": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a0f6d8-0084-7060-a05d-ee06c3afde73",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Ihar Mikailau <ihar.mikailau@ventionteams.com>"
+    }
+  }
+}

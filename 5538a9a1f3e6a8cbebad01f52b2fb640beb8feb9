@@ -1,0 +1,39 @@
+__prompts-tests__/README.md
+  s_c359055618c3d6::t_586b16ebc0cd54 42,111-112
+__tests__/config/serverAiConfig.test.ts
+  s_c359055618c3d6::t_97d702c0fd0f66 52-63,114,235,241-243
+config/ai/evaluation.baseline.json
+  s_c359055618c3d6::t_469f779d88aef0 5,31,33
+docs/AI_CONFIGURATION.md
+  s_c359055618c3d6::t_df5feed41dc69f 5,11,26
+openspec/changes/archive/2026-10-05-migrate-openai-to-server-ai-config/design.md
+  s_c359055618c3d6::t_7e5194f5cc44e6 7,21,67,75,81,92
+openspec/changes/archive/2026-10-05-migrate-openai-to-server-ai-config/proposal.md
+  s_c359055618c3d6::t_7aaea94afc79d6 33
+openspec/changes/archive/2026-10-05-migrate-openai-to-server-ai-config/specs/ai-evaluation-configuration/spec.md
+  s_c359055618c3d6::t_2bbd1f1256bbe4 21
+openspec/changes/archive/2026-10-05-migrate-openai-to-server-ai-config/specs/server-ai-configuration/spec.md
+  s_c359055618c3d6::t_7a3ed85ba64237 85
+openspec/changes/archive/2026-10-05-migrate-openai-to-server-ai-config/tasks.md
+  s_c359055618c3d6::t_73fd238e2a3ad1 3,45-50
+openspec/specs/ai-evaluation-configuration/spec.md
+  s_c359055618c3d6::t_b13df2dee6841b 1-68
+openspec/specs/server-ai-configuration/spec.md
+  s_c359055618c3d6::t_d408ca63307e5b 1-93
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.18",
+  "base_commit_sha": "5538a9a1f3e6a8cbebad01f52b2fb640beb8feb9",
+  "prompts": {},
+  "sessions": {
+    "s_c359055618c3d6": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a10b04-ce96-7603-80c9-5377ae2d5af9",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Ihar Mikailau <ihar.mikailau@ventionteams.com>"
+    }
+  }
+}

@@ -1,0 +1,91 @@
+.agents/skills/.openspec-target
+  s_8dd5cf134ce568::t_31614cd2297931 1
+.agents/skills/openspec-apply-change/SKILL.md
+  s_8dd5cf134ce568::t_560e550aa857fd 3-4,10,15-28,37,39,47,59,61-63,66-68,72-86,94-96,111-113,119,159,190-191,193-198
+.agents/skills/openspec-archive-change/SKILL.md
+  s_8dd5cf134ce568::t_5db7540388670c 3-4,10,15-29,34,36-39,41,44-71,79-80,82,84,89-102,106,109,113-116,119-124,126,129-167,171,173,176,180,183,197,202-203,205,209,214-215,217-221
+.agents/skills/openspec-explore/SKILL.md
+  s_8dd5cf134ce568::t_6017d090163a5b 3-4,10,15,19-31,45-68,93-106,109-111,132,135-148,156-164,169-172,180-189,220,223-230,242-262,269,294-296,299-301,304-306,319,336,346,350-351
+.agents/skills/openspec-propose/SKILL.md
+  s_8dd5cf134ce568::t_e9892c71b9aee7 3-4,10,15-17,19,23-25,29-41,46,48,55-81,86-92,98-99,101,103,117-118,120-126,130,132-138,141,144,153-155,159-160,169-172
+.agents/skills/openspec-sync-specs/SKILL.md
+  s_8dd5cf134ce568::t_b448b5eca3cae7 2-4,10,13,15,17,19,21,23,25-26,28,30,32,34,36,38-41,43,45,47,49-52,54-232,234,236,238-239,241-242,244,246-247,249-251,254,256-259,261,263-264,266,268-270,272-274,276,280-290
+.codex/config.toml
+  s_cd8a16c4329821::t_b79a41746d10ff 1,5-7,9-11,14-15,18,21,24,27,30
+.codex/skills/auth-security-review/SKILL.md
+  s_7b2f488b9c26ec::t_6b37e02d0c8a06 3,8-12
+.codex/skills/backend-behavior-review/SKILL.md
+  s_7b2f488b9c26ec::t_e74eab50ea4525 1-126
+.codex/skills/backend-code-review/SKILL.md
+  s_7b2f488b9c26ec::t_c1521ae59349d6 1-158
+.codex/skills/jest-test-patterns/SKILL.md
+  s_7b2f488b9c26ec::t_660bbaff2aed4d 3,10-16
+.codex/skills/mcp-tool-contract-review/SKILL.md
+  s_7b2f488b9c26ec::t_254da132de0690 3,9-15
+.codex/skills/mvc-boundary-review/SKILL.md
+  s_7b2f488b9c26ec::t_7df61d21693389 3,8-12
+.codex/skills/openapi-contract-update/SKILL.md
+  s_7b2f488b9c26ec::t_a14faab7c04738 3,10-16
+.codex/skills/prisma-migration-review/SKILL.md
+  s_7b2f488b9c26ec::t_e86bf8bc5d1547 3,8-12
+.docker/mcp-profile.json
+  s_29ccfafd417954::t_b77c44216800d4 1-2022
+.gitignore
+  s_da9ecfd444f491::t_426a5d85a6a8ac 91-93
+README.md
+  s_cd8a16c4329821::t_c1dbcf9c13238d 178
+docs/CODEX_MCP_SETUP.md
+  s_cd8a16c4329821::t_06596cbfd25312 1-73
+AGENTS.md
+  s_7b2f488b9c26ec::t_81e0e91c5c7ec8 18-20
+docs/engineering/backend-conventions.md
+  s_7b2f488b9c26ec::t_fc9e50ad99a06a 1,3-4,6-8,10,12-19,21-23,25,27-36,38-40,42-45,47-48,50,52-55,57-59,61-62,64,66-68,70-71,73,75-83,85-87,89-91,93-95,97-98,100,102,104-118,120-122,124-130,132-134,136,138-140,142-145,147-148,150-152,155-156,158,160,162-167,169-171,173,175-180
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.18",
+  "base_commit_sha": "e6656a09020cd408eeeb39fb92306f5bc03d1169",
+  "prompts": {},
+  "sessions": {
+    "s_29ccfafd417954": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a10b41-5f0e-78b3-8d77-2ec7c496e7f3",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Ihar Mikailau <ihar.mikailau@ventionteams.com>"
+    },
+    "s_7b2f488b9c26ec": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a10bc6-7514-7a00-adcb-62e74a02b3a0",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Ihar Mikailau <ihar.mikailau@ventionteams.com>"
+    },
+    "s_8dd5cf134ce568": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a10bcf-5f26-7963-ae95-e630a064d00c",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Ihar Mikailau <ihar.mikailau@ventionteams.com>"
+    },
+    "s_cd8a16c4329821": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a10b51-d0b3-7f41-b005-6305da74c4c3",
+        "model": "gpt-6-luna"
+      },
+      "human_author": "Ihar Mikailau <ihar.mikailau@ventionteams.com>"
+    },
+    "s_da9ecfd444f491": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a10b37-7f4e-7cc3-b31b-eeb4ae52d5f4",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Ihar Mikailau <ihar.mikailau@ventionteams.com>"
+    }
+  }
+}
