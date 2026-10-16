@@ -1,0 +1,99 @@
+__tests__/prompts/openrouter-evaluation.test.ts
+  s_22827f530d1b39::t_0a605b4c5f86bf 148,455,562,921-943,945-949,951-960,968-985,993-1001,1066-1076,1079-1083,1086-1088,1091-1098,1102
+  s_22827f530d1b39::t_e1c20c81de439f 660,697
+  s_22827f530d1b39::t_ad782ac4ff6347 263
+  s_22827f530d1b39::t_9c23c0398b945e 806
+  s_22827f530d1b39::t_66b610e2984bdc 40,819,828-832,841,865-879
+  s_22827f530d1b39::t_a59c5105b3e50b 963-967,986-992
+  s_22827f530d1b39::t_ab2ea6fbeff48b 24,262,264-297
+  s_22827f530d1b39::t_cb2f876b5b868c 44,78-97,560-561
+  s_22827f530d1b39::t_c99e4095f30b8f 962
+  s_22827f530d1b39::t_e7da5ccab37658 1046,1048-1049,1077-1078,1084-1085,1089-1090
+  s_22827f530d1b39::t_30a75019f9ee8c 950
+  s_22827f530d1b39::t_dfe04fdf1657be 102,113-118,140,143-147,446-454
+  s_22827f530d1b39::t_93302370bcdb6d 139,944,961
+  s_22827f530d1b39::t_f80c8fac9eb21d 638-659,661-696,698-707,1099,1101
+  s_22827f530d1b39::t_4575e9e0fba6a9 457-477
+  s_22827f530d1b39::t_91cd67c259a93c 456
+  s_22827f530d1b39::t_6d0d81a7c1712c 1100
+__tests__/lib/openrouter-decisions.test.ts
+  s_22827f530d1b39::t_e336e0cc0a7bdb 195-225
+__prompts-tests__/stored-results-analysis/runners/compare-openrouter-reports.ts
+  s_22827f530d1b39::t_584f890836a0d6 17-28,35-39,66-67,90-93,104,109,111-119,122,201-208,210-231,238-246,249,252-290,294,303,306-316,318-339,346-352,358,360-367,369,373,377-378,380,383-388
+  s_22827f530d1b39::t_f8f38532d1e308 317,340-345
+  s_22827f530d1b39::t_d77f58d68df175 232-235
+__prompts-tests__/stored-results-analysis/runners/openrouter-profiles.ts
+  s_22827f530d1b39::t_585d613087fc17 17-20,52-59,62
+__prompts-tests__/stored-results-analysis/v1.1.0/microsoft-decision.regression.test.ts
+  s_22827f530d1b39::t_b930d946c0e782 1-3
+  s_22827f530d1b39::t_806149055f27e0 4-45
+jest.prompts.config.ts
+  s_22827f530d1b39::t_1de001708983ee 12,19-24
+  s_22827f530d1b39::t_6b7aec9e7ff3bd 25-26
+__prompts-tests__/stored-results-analysis/v1.1.0/microsoft-decision.smoke.test.ts
+  s_22827f530d1b39::t_b930d946c0e782 1-3
+  s_22827f530d1b39::t_8ad6d09b621375 4-39
+__prompts-tests__/stored-results-analysis/runners/openrouter-stored-results-analysis.ts
+  s_22827f530d1b39::t_eaf60b12a9b541 136-140
+__prompts-tests__/stored-results-analysis/microsoftDecisionTestEnv.ts
+  s_22827f530d1b39::t_b930d946c0e782 1-3
+  s_22827f530d1b39::t_c86916d2cbf58b 4-32
+__prompts-tests__/README.md
+  s_22827f530d1b39::t_c9e8f18f32861b 241-245,357
+  s_22827f530d1b39::t_529613b169a74c 216-217,225,231,233,235,237-239,278-308,330-356,358,360-365
+  s_22827f530d1b39::t_332f929d86e1f0 240
+  s_22827f530d1b39::t_386f04e0164c21 359
+openspec/specs/openrouter-classification-evaluation/spec.md
+  s_898bf44db921ed::t_4abe940f604589 10,24-31,66,80-95,97
+openspec/specs/openrouter-decisions-adapter/spec.md
+  s_898bf44db921ed::t_4abe940f604589 21,31-38,55,65-68
+  s_898bf44db921ed::t_4e8164c9d2c90c 69
+openspec/changes/archive/2026-10-17-tp-4-microsoft-decisions/delivery-evidence.md
+  s_898bf44db921ed::t_63cb66a9dde9bf 1-43
+openspec/changes/archive/2026-10-17-tp-4-microsoft-decisions/.openspec.yaml
+  s_796c1b38a6bf97::t_7a9bcc7584f418 1-2
+openspec/changes/archive/2026-10-17-tp-4-microsoft-decisions/flow.json
+  s_22827f530d1b39::t_f454542be7df40 1-13
+openspec/changes/archive/2026-10-17-tp-4-microsoft-decisions/specs/openrouter-classification-evaluation/spec.md
+  s_796c1b38a6bf97::t_55c705044bcbed 1-68
+openspec/changes/archive/2026-10-17-tp-4-microsoft-decisions/specs/openrouter-decisions-adapter/spec.md
+  s_796c1b38a6bf97::t_ebcd1e05a5a2f0 1-38
+openspec/changes/archive/2026-10-17-tp-4-microsoft-decisions/design.md
+  s_796c1b38a6bf97::t_194ff4fd4af8a9 1-80
+openspec/changes/archive/2026-10-17-tp-4-microsoft-decisions/proposal.md
+  s_796c1b38a6bf97::t_9a8e574b4b810a 1-32
+openspec/changes/archive/2026-10-17-tp-4-microsoft-decisions/tasks.md
+  s_22827f530d1b39::t_5ce563816a2c36 1-28
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.18",
+  "base_commit_sha": "d29f323244cbbcac10a9398eb333ec110a9616fd",
+  "prompts": {},
+  "sessions": {
+    "s_22827f530d1b39": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a146cc-ed23-7381-ad9c-e9acf2898ac7",
+        "model": "gpt-6-luna"
+      },
+      "human_author": "Igor <hirzhek@gmail.com>"
+    },
+    "s_796c1b38a6bf97": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a1469b-a5e6-71a0-8e31-7d1d589536b7",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Igor <hirzhek@gmail.com>"
+    },
+    "s_898bf44db921ed": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a146e3-4e38-7ed1-b7c3-ecb5817842a4",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Igor <hirzhek@gmail.com>"
+    }
+  }
+}
