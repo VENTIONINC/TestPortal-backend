@@ -21,6 +21,7 @@ import {
   runOpenRouterStoredResultsAnalysis,
 } from "../../__prompts-tests__/stored-results-analysis/runners/openrouter-stored-results-analysis";
 import { OpenRouterDecisionsError } from "../../src/lib/openrouter-decisions/transport";
+import { OPENROUTER_ENDPOINT } from "../../__prompts-tests__/stored-results-analysis/runners/openrouter-report";
 import type { OpenRouterDecisionsRequest } from "../../src/lib/openrouter-decisions/schemas";
 import type { TestCase, Category } from "../../__prompts-tests__/stored-results-analysis/v1.1.0/templates/types";
 import { mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
@@ -36,9 +37,11 @@ import type { OpenRouterEvalResult } from "../../__prompts-tests__/stored-result
 import { runOpenRouterSuite } from "../../__prompts-tests__/stored-results-analysis/runners/openrouter-suite";
 import {
   compareOpenRouterReports,
+  compareOpenRouterReportFiles,
   OpenRouterReportComparisonError,
 } from "../../__prompts-tests__/stored-results-analysis/runners/compare-openrouter-reports";
 import { resolveOpenRouterTestConfig } from "../../__prompts-tests__/stored-results-analysis/openrouterTestEnv";
+import { resolveMicrosoftDecisionTestConfig } from "../../__prompts-tests__/stored-results-analysis/microsoftDecisionTestEnv";
 
 describe("OpenRouter live-suite environment", () => {
   test.each([undefined, "", "  \t\n"])(
@@ -72,10 +75,31 @@ describe("OpenRouter live-suite environment", () => {
   });
 });
 
+describe("Microsoft Decision live-suite environment", () => {
+  test.each([undefined, "", "  \t\n"])(
+    "disables suites for a missing or blank OpenRouter key (%s)",
+    (apiKey) => {
+      expect(resolveMicrosoftDecisionTestConfig({ OPENROUTER_API_KEY: apiKey })).toEqual({
+        enabled: false,
+      });
+    },
+  );
+
+  test("uses only the OpenRouter credential and ignores the generic profile selector", () => {
+    expect(resolveMicrosoftDecisionTestConfig({
+      OPENROUTER_API_KEY: "openrouter-key",
+      OPENROUTER_EVAL_PROFILE: "jev",
+      OPENAI_API_KEY: undefined,
+      TYPESAFE_API_KEY: undefined,
+    } as never)).toEqual({ enabled: true });
+  });
+});
+
 describe("OpenRouter evaluation profiles", () => {
   test.each([
     ["jev", "typesafe/jev-1.13"],
     ["openai", "openai/gpt-6-luna-decisions"],
+    ["microsoft", "microsoft/microsoft-decision-1"],
   ] as const)("selects %s with an explicit model and zero retries", (id, model) => {
     expect(resolveOpenRouterProfile(id)).toEqual({
       id,
@@ -86,8 +110,12 @@ describe("OpenRouter evaluation profiles", () => {
     });
   });
 
-  test("exposes only the two scoped profiles", () => {
-    expect(Object.keys(OPENROUTER_EVALUATION_PROFILES)).toEqual(["jev", "openai"]);
+  test("exposes the three pinned research profiles", () => {
+    expect(Object.keys(OPENROUTER_EVALUATION_PROFILES)).toEqual([
+      "jev",
+      "openai",
+      "microsoft",
+    ]);
   });
 
   test("validates execution overrides", () => {
@@ -108,9 +136,15 @@ describe("OpenRouter evaluation profiles", () => {
   });
 
   test("rejects unknown profiles clearly", () => {
-    expect(() => resolveOpenRouterProfile("microsoft")).toThrow(
-      "expected 'jev' or 'openai'",
+    expect(() => resolveOpenRouterProfile("unsupported")).toThrow(
+      "expected 'jev', 'openai', or 'microsoft'",
     );
+  });
+
+  test("rejects unsupported runtime model overrides", () => {
+    expect(() =>
+      resolveOpenRouterProfile("microsoft", { model: "other/model" } as never),
+    ).toThrow("Unsupported OpenRouter evaluation override(s): model");
   });
 });
 
@@ -225,6 +259,42 @@ const categoryResponse = (category: Category = "infra") => ({
 });
 
 describe("runOpenRouterStoredResultsAnalysis", () => {
+  test("runs Microsoft through the exact shared OpenRouter Decisions request", async () => {
+    const fetchImpl = jest.fn(async (input: Parameters<typeof fetch>[0], init?: RequestInit) => {
+      expect(String(input)).toBe(OPENROUTER_ENDPOINT);
+      const request = JSON.parse(String(init?.body)) as OpenRouterDecisionsRequest;
+      expect(request.model).toBe("microsoft/microsoft-decision-1");
+      expect(request.provider).toEqual({ allow_fallbacks: false });
+      expect(request.questions.category).toEqual({
+        type: "choice",
+        instructions: OPENROUTER_CATEGORY_INSTRUCTIONS,
+        criteria: OPENROUTER_CATEGORY_CRITERIA,
+      });
+      expect(request.state).toEqual(toOpenRouterEvidence(evalCase(0).input));
+      expect(request.state).not.toHaveProperty("id");
+      expect(request.state).not.toHaveProperty("name");
+      expect(request.state).not.toHaveProperty("expectedCategory");
+      return new Response(
+        JSON.stringify({ ...categoryResponse(), model: "microsoft/microsoft-decision-1" }),
+        { status: 200 },
+      );
+    });
+
+    const result = await runOpenRouterStoredResultsAnalysis({
+      cases: [evalCase(0)],
+      profile: "microsoft",
+      apiKey: "openrouter-key",
+      fetchImpl: fetchImpl as typeof fetch,
+    });
+
+    expect(fetchImpl).toHaveBeenCalledTimes(1);
+    expect(result).toMatchObject({
+      profile: "microsoft",
+      requestedModel: "microsoft/microsoft-decision-1",
+      accuracy: 1,
+    });
+  });
+
   test("keeps input ordering while honoring the concurrency limit", async () => {
     let active = 0;
     let maxActive = 0;
@@ -373,6 +443,38 @@ describe("runOpenRouterStoredResultsAnalysis", () => {
     }
   });
 
+  test("rejects a runtime model override instead of silently ignoring it", async () => {
+    await expect(
+      runOpenRouterStoredResultsAnalysis({
+        cases: [evalCase(0)],
+        profile: "microsoft",
+        apiKey: "openrouter-key",
+        model: "other/model",
+      } as never),
+    ).rejects.toThrow("model overrides are not supported");
+  });
+
+  test.each([400, 413])("never emits predictions for HTTP %i input-limit failures", async (status) => {
+    await expect(
+      runOpenRouterStoredResultsAnalysis({
+        cases: [evalCase(0)],
+        profile: "microsoft",
+        apiKey: "openrouter-key",
+        submitRequest: async () => {
+          throw new OpenRouterDecisionsError("upstream", `HTTP ${status}`, {
+            status,
+            attempts: 1,
+          });
+        },
+      }),
+    ).rejects.toMatchObject({
+      kind: "upstream",
+      requestCount: 1,
+      attemptCount: 1,
+      completedPredictions: [],
+    });
+  });
+
   test("propagates an undocumented refusal-shaped response as invalid_response", async () => {
     const submitRequest = jest.fn().mockResolvedValue({
       data: { answers: { category: { type: "refusal", refusal: "blocked" } } },
@@ -455,6 +557,9 @@ describe("OpenRouter evaluation reports", () => {
     expect(resolveOpenRouterReportDirectory("jev", "smoke")).toContain(
       path.join("reports", "openrouter", "jev", "smoke"),
     );
+    expect(resolveOpenRouterReportDirectory("microsoft", "smoke")).toContain(
+      path.join("reports", "openrouter", "microsoft", "smoke"),
+    );
   });
 
   test("fingerprints ordered dataset content", () => {
@@ -526,6 +631,76 @@ describe("OpenRouter evaluation reports", () => {
       expect(await readFile(paths.latestReportPath, "utf8")).not.toContain(
         "secret-key",
       );
+    } finally {
+      await rm(outputDirectory, { recursive: true, force: true });
+    }
+  });
+
+  test("writes only validated Microsoft answers and scoped report metadata", async () => {
+    const outputDirectory = await mkdtemp(
+      path.join(os.tmpdir(), "microsoft-decision-report-"),
+    );
+    try {
+      const microsoftResult: OpenRouterEvalResult = {
+        ...reportResult,
+        profile: "microsoft",
+        requestedModel: "microsoft/microsoft-decision-1",
+        predictions: reportResult.predictions.map((prediction) => ({
+          ...prediction,
+          requestedModel: "microsoft/microsoft-decision-1",
+          returnedModel: "microsoft/microsoft-decision-1-20261016",
+          rawAnswer: {
+            type: "choice",
+            choice: "infra",
+            confidence: 0.8,
+            probabilities: prediction.probabilities,
+          },
+          provider: null,
+          upstreamRequestId: null,
+          usage: { inputTokens: 10, outputTokens: 4, totalTokens: 14, cost: 0.001 },
+          unexpectedFullResponse: { secret: "provider-body" },
+        } as never)),
+      };
+      const datasetFingerprint = fingerprintOpenRouterDataset([evalCase(0)]);
+      const paths = await writeOpenRouterEvaluationReport(
+        {
+          suite: "regression",
+          datasetVersion: "v1.1.0",
+          datasetFingerprint,
+          policyVersion: OPENROUTER_CATEGORY_POLICY_VERSION,
+          result: microsoftResult,
+        },
+        { outputDirectory, now: new Date("2026-10-16T11:15:00.000Z") },
+      );
+      const contents = await readFile(paths.timestampedReportPath, "utf8");
+      const report = JSON.parse(contents);
+
+      expect(paths.timestampedReportPath).toContain("2026-10-16T11-15-00-000Z");
+      expect(report).toMatchObject({
+        profile: "microsoft",
+        requestedModel: "microsoft/microsoft-decision-1",
+        suite: "regression",
+        datasetVersion: "v1.1.0",
+        datasetFingerprint,
+        policyVersion: OPENROUTER_CATEGORY_POLICY_VERSION,
+        generatedAt: "2026-10-16T11:15:00.000Z",
+        cases: [
+          expect.objectContaining({
+            rawAnswer: {
+              type: "choice",
+              choice: "infra",
+              confidence: 0.8,
+              probabilities: reportResult.predictions[0]?.probabilities,
+            },
+            durationMs: 123,
+            returnedModel: "microsoft/microsoft-decision-1-20261016",
+            usage: { inputTokens: 10, outputTokens: 4, totalTokens: 14, cost: 0.001 },
+          }),
+        ],
+      });
+      expect(contents).not.toContain("provider-body");
+      expect(contents).not.toContain("secret-key");
+      expect(contents).not.toContain("Authorization");
     } finally {
       await rm(outputDirectory, { recursive: true, force: true });
     }
@@ -628,7 +803,7 @@ describe("runOpenRouterSuite", () => {
       runOpenRouterSuite({
         suite: "smoke",
         cases: [evalCase(0), evalCase(1)],
-        profile: "jev",
+        profile: "microsoft",
         concurrency: 1,
         apiKey: "openrouter-key",
         outputDirectory,
@@ -641,7 +816,7 @@ describe("runOpenRouterSuite", () => {
 });
 
 const comparisonReport = (
-  profile: "jev" | "openai",
+  profile: "jev" | "openai" | "microsoft",
   overrides: Record<string, unknown> = {},
 ) => ({
   schemaVersion: 1,
@@ -650,8 +825,11 @@ const comparisonReport = (
   endpoint: "https://openrouter.ai/api/alpha/decisions",
   apiMode: "alpha.decisions",
   profile,
-  requestedModel:
-    profile === "jev" ? "typesafe/jev-1.13" : "openai/gpt-6-luna-decisions",
+  requestedModel: {
+    jev: "typesafe/jev-1.13",
+    openai: "openai/gpt-6-luna-decisions",
+    microsoft: "microsoft/microsoft-decision-1",
+  }[profile],
   suite: "regression",
   datasetVersion: "v1.1.0",
   datasetFingerprint: "sha256:baseline",
@@ -660,7 +838,7 @@ const comparisonReport = (
   totalCases: 2,
   correctCases: profile === "jev" ? 2 : 1,
   accuracy: profile === "jev" ? 1 : 0.5,
-  durationMs: profile === "jev" ? 200 : 250,
+  durationMs: profile === "jev" ? 200 : profile === "openai" ? 250 : 300,
   requestCount: 2,
   attemptCount: 2,
   usage: {
@@ -684,7 +862,21 @@ const comparisonReport = (
       actualCategory: profile === "jev" ? "infra" : "bug",
       correct: profile === "jev",
     },
-  ],
+  ].map((testCase, index) => ({
+    ...testCase,
+    durationMs: (profile === "jev" ? 100 : profile === "openai" ? 120 : 140) + index * 10,
+    attempts: 1,
+    requestedModel: {
+      jev: "typesafe/jev-1.13",
+      openai: "openai/gpt-6-luna-decisions",
+      microsoft: "microsoft/microsoft-decision-1",
+    }[profile],
+    returnedModel: `${{
+      jev: "typesafe/jev-1.13",
+      openai: "openai/gpt-6-luna-decisions",
+      microsoft: "microsoft/microsoft-decision-1",
+    }[profile]}-20261016`,
+  })),
   ...overrides,
 });
 
@@ -724,6 +916,87 @@ describe("compareOpenRouterReports", () => {
         },
       },
     });
+  });
+
+  test("compares three pinned OpenRouter reports with latency and model provenance", () => {
+    const result = compareOpenRouterReports(
+      comparisonReport("jev"),
+      comparisonReport("openai"),
+      comparisonReport("microsoft", {
+        usage: { inputTokens: 40, outputTokens: 20, totalTokens: 60, cost: 0.03 },
+      }),
+    );
+
+    expect(result.profiles.microsoft).toMatchObject({
+      accuracy: 0.5,
+      durationMs: 300,
+      meanCaseLatencyMs: 145,
+      requestCount: 2,
+      attemptCount: 2,
+      generatedAt: "2026-10-14T12:30:00.000Z",
+      requestedModel: "microsoft/microsoft-decision-1",
+      returnedModels: ["microsoft/microsoft-decision-1-20261016"],
+      usage: { inputTokens: 40, outputTokens: 20, totalTokens: 60, cost: 0.03 },
+    });
+    expect(result.microsoftMinusJev).toMatchObject({
+      accuracy: -0.5,
+      durationMs: 100,
+      meanCaseLatencyMs: 40,
+      usage: { inputTokens: null, outputTokens: null, totalTokens: null, cost: null },
+    });
+    expect(result.microsoftMinusOpenai).toMatchObject({
+      accuracy: 0,
+      durationMs: 50,
+      meanCaseLatencyMs: 20,
+    });
+    expect(result.profiles.microsoft).not.toHaveProperty("confidence");
+  });
+
+  test.each([
+    [comparisonReport("microsoft", { gateway: "direct-provider" }), "provenance"],
+    [comparisonReport("microsoft", { requestedModel: "other/model" }), "provenance"],
+    [comparisonReport("microsoft", { schemaVersion: 2 }), "provenance"],
+    [comparisonReport("microsoft", { endpoint: "https://example.test" }), "provenance"],
+    [comparisonReport("microsoft", { cases: comparisonReport("microsoft").cases.map((testCase) => ({ ...testCase, durationMs: undefined })) }), "latency provenance"],
+    [comparisonReport("microsoft", { cases: [comparisonReport("microsoft").cases[0], { ...comparisonReport("microsoft").cases[1], id: "id-0" }] }), "duplicate case identities"],
+    [comparisonReport("microsoft", { cases: [comparisonReport("microsoft").cases[0], { ...comparisonReport("microsoft").cases[1], name: "case 0" }] }), "matching complete case identities"],
+    [comparisonReport("microsoft", { suite: "smoke" }), "different suite values"],
+    [comparisonReport("microsoft", { datasetVersion: "v2" }), "different datasetVersion values"],
+    [comparisonReport("microsoft", { datasetFingerprint: "sha256:other" }), "different datasetFingerprint values"],
+    [comparisonReport("microsoft", { policyVersion: "other-policy" }), "different policyVersion values"],
+    [comparisonReport("microsoft", { correctCases: 2, accuracy: 1 }), "aggregate correctness values"],
+  ])("rejects invalid Microsoft report provenance or cases", (microsoft, message) => {
+    expect(() =>
+      compareOpenRouterReports(
+        comparisonReport("jev"),
+        comparisonReport("openai"),
+        microsoft,
+      ),
+    ).toThrow(message);
+  });
+
+  test("rejects reports with duplicate or missing profile selection", () => {
+    expect(() =>
+      compareOpenRouterReports(
+        comparisonReport("jev"),
+        comparisonReport("openai"),
+        comparisonReport("openai"),
+      ),
+    ).toThrow("Expected a 'microsoft' report");
+    expect(() =>
+      compareOpenRouterReports(
+        comparisonReport("jev"),
+        comparisonReport("openai"),
+        { ...comparisonReport("microsoft"), profile: "unsupported" },
+      ),
+    ).toThrow("invalid or incomplete");
+    expect(() =>
+      compareOpenRouterReports(
+        comparisonReport("jev"),
+        comparisonReport("openai"),
+        undefined,
+      ),
+    ).not.toThrow();
   });
 
   test.each([
@@ -770,9 +1043,10 @@ describe("compareOpenRouterReports", () => {
       ]);
 
       const output = execFileSync(
-        "npx",
+        "node",
         [
-          "tsx",
+          "--import",
+          "tsx/esm",
           "__prompts-tests__/stored-results-analysis/runners/compare-openrouter-reports.ts",
           jevPath,
           openaiPath,
@@ -785,6 +1059,43 @@ describe("compareOpenRouterReports", () => {
         datasetFingerprint: "sha256:baseline",
         profiles: { jev: { accuracy: 1 }, openai: { accuracy: 0.5 } },
       });
+    } finally {
+      await rm(directory, { recursive: true, force: true });
+    }
+  });
+
+  test("runs the three-report CLI and requires exactly two or three paths", async () => {
+    const directory = await mkdtemp(path.join(os.tmpdir(), "openrouter-compare-triple-"));
+    const paths = ["jev", "openai", "microsoft"].map((name) => path.join(directory, `${name}.json`));
+    try {
+      await Promise.all([
+        writeFile(paths[0] as string, JSON.stringify(comparisonReport("jev")), "utf8"),
+        writeFile(paths[1] as string, JSON.stringify(comparisonReport("openai")), "utf8"),
+        writeFile(paths[2] as string, JSON.stringify(comparisonReport("microsoft")), "utf8"),
+      ]);
+      const output = execFileSync(
+        "node",
+        ["--import", "tsx/esm", "__prompts-tests__/stored-results-analysis/runners/compare-openrouter-reports.ts", ...paths],
+        { cwd: process.cwd(), encoding: "utf8" },
+      );
+      expect(JSON.parse(output).profiles).toHaveProperty("microsoft");
+
+      expect(() => execFileSync(
+        "node",
+        ["--import", "tsx/esm", "__prompts-tests__/stored-results-analysis/runners/compare-openrouter-reports.ts", paths[0] as string],
+        { cwd: process.cwd(), encoding: "utf8", stdio: "pipe" },
+      )).toThrow();
+      expect(() => execFileSync(
+        "node",
+        ["--import", "tsx/esm", "__prompts-tests__/stored-results-analysis/runners/compare-openrouter-reports.ts", ...paths, "extra.json"],
+        { cwd: process.cwd(), encoding: "utf8", stdio: "pipe" },
+      )).toThrow();
+
+      await expect(compareOpenRouterReportFiles(paths[0] as string, paths[1] as string, path.join(directory, "missing.json")))
+        .rejects.toThrow("could not be read");
+      await writeFile(paths[2] as string, "{bad json", "utf8");
+      await expect(compareOpenRouterReportFiles(paths[0] as string, paths[1] as string, paths[2] as string))
+        .rejects.toThrow("invalid JSON");
     } finally {
       await rm(directory, { recursive: true, force: true });
     }

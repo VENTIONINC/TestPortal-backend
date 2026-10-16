@@ -18,7 +18,7 @@ The adapter SHALL send authenticated JSON requests to `https://openrouter.ai/api
 - **THEN** validation fails before network access
 
 ### Requirement: Credentials and explicit model configuration
-The adapter SHALL require a nonblank `OPENROUTER_API_KEY` or explicitly injected credential and a validated nonblank model identifier. TP-5 SHALL provide evaluation profiles only for Jev and OpenAI Decisions. It SHALL NOT add Microsoft model integration, profiles, evaluation suites, or comparison requirements. Requests SHALL disable automatic provider fallback and SHALL NOT silently substitute a model or credential from another provider.
+The adapter SHALL require a nonblank `OPENROUTER_API_KEY` or explicitly injected credential and a validated nonblank model identifier. Evaluation SHALL provide pinned OpenRouter profiles for Jev (`typesafe/jev-1.13`), OpenAI Decisions (`openai/gpt-6-luna-decisions`), and Microsoft (`microsoft/microsoft-decision-1`). Unsupported model overrides SHALL be rejected before network access; the generic adapter SHALL remain reusable for explicitly configured model identifiers. Requests SHALL disable automatic provider fallback and SHALL NOT silently substitute a model or credential from another provider.
 
 #### Scenario: Missing credentials
 - **WHEN** direct execution is attempted with no credential or a whitespace-only credential
@@ -27,6 +27,14 @@ The adapter SHALL require a nonblank `OPENROUTER_API_KEY` or explicitly injected
 #### Scenario: Explicit model selection
 - **WHEN** the OpenAI Decisions profile is selected
 - **THEN** the request uses its configured OpenRouter model and cannot fall back to Jev or a generative model
+
+#### Scenario: Microsoft profile selection
+- **WHEN** the Microsoft evaluation is selected
+- **THEN** requests use microsoft/microsoft-decision-1 through OpenRouter with the same credential boundary and fallback prohibition
+
+#### Scenario: Unsupported model override
+- **WHEN** an evaluation caller supplies an arbitrary model override
+- **THEN** configuration fails explicitly before any provider request instead of silently ignoring or accepting the override
 
 ### Requirement: Runtime validation and answer correlation
 The adapter SHALL validate external responses before exposing successful answers. Answer names and count MUST match the requested question set, each answer type MUST match its question, and choice values and probability keys MUST match supplied criteria. Probabilities and confidence values where defined MUST be finite and within their documented ranges; discrete distributions MUST be complete and normalized within a documented numeric tolerance. Scores MUST use valid rubric indices and remain within the documented score range. Model and supplied usage/cost fields MUST be validated; unavailable metadata MUST remain explicitly unavailable rather than invented or zero-filled. Returned model identifiers SHALL be retained separately from requested identifiers because provider snapshots can differ from aliases.
@@ -44,7 +52,7 @@ The adapter SHALL validate external responses before exposing successful answers
 - **THEN** the adapter retains the answers and explicitly marks that metadata unavailable
 
 ### Requirement: Explicit provider failures and invalid responses
-The adapter SHALL expose provider transport failures through stable error kinds. Malformed JSON, incomplete responses, authentication errors, exhausted credit, rate limits, timeouts, network errors, upstream failures, and undocumented refusal-shaped or error-shaped successful responses MUST NOT become successful answers or the category `other`. Because the current OpenRouter Decisions contract does not document a refusal payload shape, such successful response bodies SHALL fail validation as `invalid_response`. Failure details exposed in logs or reports MUST exclude credentials.
+The adapter SHALL expose provider transport failures through stable error kinds. Malformed JSON, incomplete responses, authentication errors, exhausted credit, rate limits, timeouts, network errors, upstream failures, and undocumented refusal-shaped or error-shaped successful responses MUST NOT become successful answers or the category `other`. Because the current OpenRouter Decisions contract does not document a refusal payload shape, such successful response bodies SHALL fail validation as `invalid_response`. Input-limit errors, including HTTP 413 and provider context-limit failures returned as HTTP 400, SHALL fail execution without truncating evidence, retrying a permanent failure, or manufacturing a prediction. Failure details exposed in logs or reports MUST exclude credentials.
 
 #### Scenario: Undocumented refusal-shaped answer
 - **WHEN** a successful response contains an undocumented refusal-shaped answer
@@ -53,6 +61,11 @@ The adapter SHALL expose provider transport failures through stable error kinds.
 #### Scenario: Upstream or error-shaped failure
 - **WHEN** OpenRouter returns an HTTP error or a successful response with an undocumented error-shaped answer
 - **THEN** the caller receives a stable transport error or `invalid_response`, rather than fabricated decision output
+
+
+#### Scenario: Oversized evidence
+- **WHEN** the provider rejects the submitted evidence with HTTP 413 or a context-limit HTTP 400
+- **THEN** execution rejects with the HTTP status and actual attempt count, produces no successful prediction, and does not retry or shorten the evidence
 
 ### Requirement: Bounded timeout and retry policy
 The adapter SHALL validate a positive timeout and nonnegative bounded retry count. Zero retries SHALL cause at most one transport attempt. Configured retries SHALL apply only to documented transient failures, use bounded backoff, and preserve attempt accounting; invalid requests, invalid responses, and authentication failures SHALL NOT be retried. Evaluation profiles SHALL default to zero retries.

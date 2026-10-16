@@ -192,6 +192,37 @@ describe("submitOpenRouterDecision", () => {
     ).rejects.toMatchObject({ kind, status, attempts: 1 });
   });
 
+  test.each([413, 400])(
+    "treats HTTP %i input-limit responses as permanent failures even with retries enabled",
+    async (status) => {
+      const state = {
+        status: "failed",
+        errorMessage: "x".repeat(20_000),
+      };
+      const request = { ...validRequest, state };
+      const fetchImpl = jest
+        .fn<ReturnType<typeof fetch>, Parameters<typeof fetch>>()
+        .mockResolvedValue(
+          new Response('{"error":"context limit exceeded"}', { status }),
+        );
+      const sleep = jest.fn().mockResolvedValue(undefined);
+
+      await expect(
+        submitOpenRouterDecision(request, {
+          apiKey: "key",
+          maxRetries: 2,
+          fetchImpl,
+          sleep,
+        }),
+      ).rejects.toMatchObject({ kind: "upstream", status, attempts: 1 });
+
+      expect(fetchImpl).toHaveBeenCalledTimes(1);
+      expect(sleep).not.toHaveBeenCalled();
+      const [, init] = fetchImpl.mock.calls[0] ?? [];
+      expect(JSON.parse(String(init?.body)).state).toEqual(state);
+    },
+  );
+
   test("aborts a timed-out attempt and retains its attempt count", async () => {
     const fetchImpl = jest
       .fn<ReturnType<typeof fetch>, Parameters<typeof fetch>>()
