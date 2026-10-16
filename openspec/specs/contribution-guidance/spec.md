@@ -1,4 +1,10 @@
-## ADDED Requirements
+# contribution-guidance Specification
+
+## Purpose
+
+Describe the contribution workflow, validation expectations, and licensing responsibilities for contributors to the Apache 2.0 repository.
+
+## Requirements
 
 ### Requirement: Repository SHALL publish contributor guidance for licensing-aligned changes
 The repository SHALL publish contributor guidance that explains the minimum workflow expectations for changes made under the Apache 2.0 license.
