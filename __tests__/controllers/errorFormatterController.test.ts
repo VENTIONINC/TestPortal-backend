@@ -122,6 +122,24 @@ describe("errorFormatterController.formatError", () => {
     expect(errorFormatterService.formatErrorMessage).not.toHaveBeenCalled();
     expect(res.statusCode).toBe(400);
   });
+
+  it("does not expose internal service errors in failure responses", async () => {
+    jest
+      .spyOn(errorFormatterService, "formatErrorMessage")
+      .mockRejectedValue(new Error("OpenAI API key rejected: secret-detail"));
+
+    const res = await executeController(errorFormatterController.formatError, {
+      method: "POST",
+      body: {
+        name: "Original failure",
+        description: "Original details",
+      },
+    });
+
+    expect(res.statusCode).toBe(500);
+    expect(res.body).toEqual({ error: "Failed to format error message" });
+    expect(JSON.stringify(res.body)).not.toContain("secret-detail");
+  });
 });
 
 describe("errorFormatterController.suggestFromResult", () => {
@@ -152,6 +170,51 @@ describe("errorFormatterController.suggestFromResult", () => {
       category: "infra",
       name: "Staging checkout timeout",
       description: "Actionable investigation steps",
+    });
+  });
+
+  it("does not expose internal service errors in failure responses", async () => {
+    jest
+      .spyOn(errorFormatterService, "suggestFromResult")
+      .mockRejectedValue(
+        new Error("Provider says required API key is missing: secret-detail"),
+      );
+
+    const res = await executeController(
+      errorFormatterController.suggestFromResult,
+      {
+        method: "POST",
+        body: {
+          resultId: "7d9fac75-b4d1-4f94-b06a-f72755a9d284",
+          projectId: "32655dc8-5a49-4074-aa5b-c3ac2d09c857",
+        },
+      },
+    );
+
+    expect(res.statusCode).toBe(500);
+    expect(res.body).toEqual({ error: "Failed to generate suggestion" });
+    expect(JSON.stringify(res.body)).not.toContain("secret-detail");
+  });
+
+  it("preserves the existing result validation status and message", async () => {
+    jest
+      .spyOn(errorFormatterService, "suggestFromResult")
+      .mockRejectedValue(new Error("Only failed or flaky results can be analyzed"));
+
+    const res = await executeController(
+      errorFormatterController.suggestFromResult,
+      {
+        method: "POST",
+        body: {
+          resultId: "7d9fac75-b4d1-4f94-b06a-f72755a9d284",
+          projectId: "32655dc8-5a49-4074-aa5b-c3ac2d09c857",
+        },
+      },
+    );
+
+    expect(res.statusCode).toBe(400);
+    expect(res.body).toEqual({
+      error: "Only failed or flaky results can be analyzed",
     });
   });
 });

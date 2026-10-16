@@ -11,6 +11,12 @@ const ErrorSuggestionSchema = z.object({
   resultId: z.string().uuid("Result ID must be a valid UUID"),
   projectId: z.string().uuid("Project ID must be a valid UUID"),
 });
+const resultValidationErrors = new Set([
+  "Result ID is required",
+  "Project ID is required",
+  "Only failed or flaky results can be analyzed",
+  "Result has no error details to analyze",
+]);
 
 export const errorFormatterController = {
   formatError: async (req: Request, res: Response): Promise<void> => {
@@ -35,10 +41,9 @@ export const errorFormatterController = {
       });
 
       res.status(200).json(formattedError);
-    } catch (error) {
+    } catch {
       res.status(500).json({
         error: "Failed to format error message",
-        details: error instanceof Error ? error.message : "Unknown error",
       });
     }
   },
@@ -63,14 +68,15 @@ export const errorFormatterController = {
 
       res.status(200).json(suggestion);
     } catch (error) {
-      const err = error as Error;
+      const err = error instanceof Error ? error : undefined;
       const isValidationError =
-        err.message.includes("required") ||
-        err.message.includes("failed or flaky") ||
-        err.message.includes("no error details");
+        err !== undefined && resultValidationErrors.has(err.message);
 
       res.status(isValidationError ? 400 : 500).json({
-        error: err.message || "Failed to generate suggestion",
+        error:
+          err && isValidationError
+            ? err.message
+            : "Failed to generate suggestion",
       });
     }
   },
