@@ -29,6 +29,47 @@ const CTRFSummarySchema = z
   })
   .openapi("CTRFSummary");
 
+const CTRFSourceSnippetSchema = z.object({
+  path: z.string(),
+  text: z.string(),
+  startLine: z.number().int().positive(),
+  failingLine: z.number().int().positive(),
+});
+
+const CTRFTestPortalErrorSchema = z.object({
+  index: z.number().int().nonnegative(),
+  message: z.string().optional(),
+  stack: z.string().optional(),
+  location: z.object({ file: z.string(), line: z.number().int(), column: z.number().int().optional() }).optional(),
+  rawLogs: z.array(z.string()).optional(),
+  sourceSnippet: CTRFSourceSnippetSchema.optional(),
+  generatedTestCase: z.string().optional(),
+});
+
+const CTRFTestPortalExtraSchema = z.object({
+  version: z.literal(1),
+  errors: z.array(CTRFTestPortalErrorSchema),
+});
+
+const CTRFExtraSchema = z.object({
+  testPortal: CTRFTestPortalExtraSchema,
+}).passthrough();
+
+const CTRFRetryAttemptSchema = z.object({
+  attempt: z.number().int().positive(),
+  status: CTRFTestStatusSchema,
+  duration: z.number().int().nonnegative().optional(),
+  message: z.string().optional(),
+  trace: z.string().optional(),
+  line: z.number().int().optional(),
+  snippet: z.string().optional(),
+  stdout: z.array(z.string()).optional(),
+  stderr: z.array(z.string()).optional(),
+  start: z.number().int().optional(),
+  stop: z.number().int().optional(),
+  extra: CTRFExtraSchema.optional(),
+});
+
 const CTRFTestSchema = z
   .object({
     name: z.string().describe("Test name/title"),
@@ -41,10 +82,16 @@ const CTRFTestSchema = z
     rawStatus: z.string().optional().describe("Original status from test framework"),
     type: z.string().optional().describe("Test type (e.g., 'unit', 'integration')"),
     filePath: z.string().optional().describe("Path to test file"),
-    retry: z.number().optional().describe("Retry attempt number"),
+    retries: z.number().int().nonnegative().optional().describe("Number of retries"),
+    retryAttempts: z.array(CTRFRetryAttemptSchema).optional(),
     flaky: z.boolean().optional().describe("Whether test is flaky"),
-    suite: z.string().optional().describe("Test suite name"),
+    suite: z.array(z.string()).optional().describe("Test suite hierarchy"),
     tags: z.array(z.string()).optional().describe("Array of test tags"),
+    snippet: z.string().optional(),
+    line: z.number().int().optional(),
+    stdout: z.array(z.string()).optional(),
+    stderr: z.array(z.string()).optional(),
+    extra: CTRFExtraSchema.optional(),
     meta: z.record(z.string(), z.any()).optional().describe("Custom test metadata"),
   })
   .openapi("CTRFTest");
@@ -79,6 +126,8 @@ const CTRFResultsSchema = z
 
 const CTRFReportRequestSchema = z
   .object({
+    reportFormat: z.literal("CTRF"),
+    specVersion: z.literal("0.0.0"),
     results: CTRFResultsSchema,
   })
   .openapi("CTRFReportRequest");
@@ -86,17 +135,13 @@ const CTRFReportRequestSchema = z
 const CTRFReportResponseSchema = z
   .object({
     success: z.boolean(),
-    message: z.string(),
     executionId: z
       .string()
       .uuid()
       .describe("Execution ID for the processed report"),
-    data: z.object({
-      specsProcessed: z.number().describe("Number of test specs processed"),
-      executionId: z
-        .string()
-        .uuid()
-        .describe("Database execution ID"),
+    specsProcessed: z.number().describe("Number of test specs processed"),
+    analysis: z.array(z.any()).optional().openapi({
+      description: "Optional AI analysis results for test failures",
     }),
   })
   .openapi("CTRFReportResponse");
@@ -145,7 +190,7 @@ export function registerCtrfRoutes(registry: OpenAPIRegistry) {
     },
     security: [{ BearerAuth: [] }],
     responses: {
-      200: {
+      201: {
         description: "CTRF report file processed successfully",
         content: {
           "application/json": {
@@ -154,7 +199,8 @@ export function registerCtrfRoutes(registry: OpenAPIRegistry) {
         },
       },
       400: {
-        description: "Bad request - Invalid file format, missing file, or missing projectId",
+        description:
+          "Bad request - invalid file, missing projectId, or future execution timestamp validation failure",
         content: {
           "application/json": {
             schema: ErrorResponseSchema,
@@ -205,7 +251,7 @@ export function registerCtrfRoutes(registry: OpenAPIRegistry) {
     },
     security: [{ ApiKeyAuth: [] }],
     responses: {
-      200: {
+      201: {
         description: "CTRF report file processed successfully",
         content: {
           "application/json": {
@@ -214,7 +260,8 @@ export function registerCtrfRoutes(registry: OpenAPIRegistry) {
         },
       },
       400: {
-        description: "Bad request - Invalid file format, missing file, or missing projectId",
+        description:
+          "Bad request - invalid file, missing projectId, or future execution timestamp validation failure",
         content: {
           "application/json": {
             schema: ErrorResponseSchema,
