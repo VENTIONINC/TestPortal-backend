@@ -1,0 +1,133 @@
+.env.example
+  s_9bd447cede0061::t_a12e3e3fd68ac1 39-43
+openspec/specs/openrouter-decisions-adapter/spec.md
+  s_d3fa50109dd260::t_d35a610eaccbcc 1-66
+src/lib/openrouter-decisions/response.ts
+  s_9bd447cede0061::t_09bfd334646290 1-147,149-162,164-236
+  s_9bd447cede0061::t_c20bccfa7fb655 148,163
+__prompts-tests__/stored-results-analysis/openrouterTestEnv.ts
+  s_9bd447cede0061::t_dbf9440bdaefef 32-35
+  s_9bd447cede0061::t_1d6b13f475f2f5 38-41
+  s_9bd447cede0061::t_ebd2528fe739b3 11-12
+  s_9bd447cede0061::t_5c136f8090a247 1-3
+  s_9bd447cede0061::t_4ce5d49eee339f 4-10,13-31,36-37,42-48
+src/lib/openrouter-decisions/transport.ts
+  s_9bd447cede0061::t_dddec7403b34ba 4-29,31-200,202-214,216,218-233
+  s_9bd447cede0061::t_412b3c09199c09 1-3
+  s_9bd447cede0061::t_820024c77eddfd 215,217
+  s_9bd447cede0061::t_082998b4d1f256 30,201
+__prompts-tests__/stored-results-analysis/runners/openrouter-policy.ts
+  s_9bd447cede0061::t_74cebe36641aa2 1-3
+  s_9bd447cede0061::t_33e7ba45ad809c 4
+  s_9bd447cede0061::t_665c142d9cf324 5-55
+__prompts-tests__/stored-results-analysis/v1.1.0/openrouter.regression.test.ts
+  s_9bd447cede0061::t_1c7cd5189a648a 3-4,6-34,38-45
+  s_9bd447cede0061::t_d921ebfd1bdd63 35-37
+  s_9bd447cede0061::t_7c0c4b68f81a6d 1-2,5
+__prompts-tests__/stored-results-analysis/runners/openrouter-profiles.ts
+  s_9bd447cede0061::t_b0251bb549af8e 1-3
+  s_9bd447cede0061::t_948c30b084044a 4-72
+__prompts-tests__/stored-results-analysis/runners/openrouter-report.ts
+  s_9bd447cede0061::t_5d065aa408d2ef 1-3
+  s_9bd447cede0061::t_69ba9e67398160 9,76-91,152
+  s_9bd447cede0061::t_9bbef6f59ad794 4-8,10-75,92-151,153-168
+__prompts-tests__/stored-results-analysis/v1.1.0/openrouter.smoke.test.ts
+  s_9bd447cede0061::t_7c0c4b68f81a6d 1-2,5
+  s_9bd447cede0061::t_1c7cd5189a648a 3-4,6-39
+src/lib/openrouter-decisions/schemas.ts
+  s_9bd447cede0061::t_6260e96ae932f1 1-3
+  s_9bd447cede0061::t_0b7c8ed7e67fb1 25,28-31,82
+  s_9bd447cede0061::t_f26e6a52e6c735 41-42,52,68
+  s_9bd447cede0061::t_bf8392cf36d3bc 4-24,26-27,32-40,43-49,61-67,69-81,83-87,92-109
+  s_9bd447cede0061::t_0cafcf51296de0 50-51,53-60,88-91
+__prompts-tests__/stored-results-analysis/runners/openrouter-suite.ts
+  s_9bd447cede0061::t_b97d6da187f99b 1-3
+  s_9bd447cede0061::t_edcd95c2fc2ac2 4-92
+__tests__/lib/openrouter-decisions.test.ts
+  s_9bd447cede0061::t_407dff23e70c77 4-5,7-12,48-56,85-103,107,109-132,134-141,145-156,158-173
+  s_9bd447cede0061::t_ccbe62d4a0a7bb 14-34,36-47,57-84,465-466
+  s_9bd447cede0061::t_7a558252e8ea24 1-3
+  s_9bd447cede0061::t_41b41fe7eded81 175-216,231-250,270-309,442-447,461-464
+  s_9bd447cede0061::t_4e756d0cb8d654 251-269,448-460
+  s_9bd447cede0061::t_b79d421f681a97 217-230
+  s_9bd447cede0061::t_ea70199e6cd1e8 323,350
+  s_9bd447cede0061::t_be326e4c2513d6 13,174,310-322,324-349,351-441
+  s_9bd447cede0061::t_8a7a24e1cecc13 6,35,104-106,108,133,142-144,157
+__prompts-tests__/README.md
+  s_9bd447cede0061::t_a12e3e3fd68ac1 45-48,249-269
+  s_9bd447cede0061::t_d61f3f0bd011ae 271-304
+  s_9bd447cede0061::t_23cd0fb6dd702a 163-222
+  s_9bd447cede0061::t_a49503c1cc78e9 223-248,270
+__prompts-tests__/stored-results-analysis/runners/openrouter-stored-results-analysis.ts
+  s_9bd447cede0061::t_77fcddb0277f2c 1-3
+  s_9bd447cede0061::t_8c56f30ea26e7a 4-189,191-201,203-233,236-296
+  s_9bd447cede0061::t_be0a04cb51564e 190,202,234-235
+openspec/specs/openrouter-classification-evaluation/spec.md
+  s_d3fa50109dd260::t_d35a610eaccbcc 1-81
+__prompts-tests__/stored-results-analysis/runners/compare-openrouter-reports.ts
+  s_9bd447cede0061::t_8a149f4e6ccd26 1-3
+  s_9bd447cede0061::t_52e488579fed20 269
+  s_9bd447cede0061::t_929e70808331e7 128-137
+  s_9bd447cede0061::t_ba112f43829f60 4-127,138-268,270-277
+jest.prompts.config.ts
+  s_9bd447cede0061::t_480084e7747417 18-25
+  s_9bd447cede0061::t_11040ed5b3c0f9 10-11
+__tests__/prompts/openrouter-evaluation.test.ts
+  s_9bd447cede0061::t_929e70808331e7 741-751
+  s_9bd447cede0061::t_c2108ae9f1aba5 37-40,640-735,737-740,752-758
+  s_9bd447cede0061::t_ec4e1327fd97bd 4-10,74-113,791-792
+  s_9bd447cede0061::t_8665240a417921 1-3
+  s_9bd447cede0061::t_64cd5d24c3fb70 41-73
+  s_9bd447cede0061::t_9f614c2994954b 11-18,114-183
+  s_9bd447cede0061::t_3fcd981ed30d0c 19-25,184-392
+  s_9bd447cede0061::t_c3a1ddb0e480ed 26-27,759-790
+  s_9bd447cede0061::t_6e52d135bae958 28-35,393-531
+  s_9bd447cede0061::t_655076f483f8fb 36,532-639
+  s_9bd447cede0061::t_7a7c6cf834c1f3 736
+openspec/changes/archive/2026-10-16-tp-5/.openspec.yaml
+  s_7e888ebc17020a::t_6c428b8629519b 1-2
+openspec/changes/archive/2026-10-16-tp-5/flow.json
+  s_9bd447cede0061::t_193f795b2631ab 1-13
+openspec/changes/archive/2026-10-16-tp-5/design.md
+  s_9bd447cede0061::t_dffdcc7e5cc781 1-92
+openspec/changes/archive/2026-10-16-tp-5/proposal.md
+  s_9bd447cede0061::t_2d43df610527e3 1-33
+openspec/changes/archive/2026-10-16-tp-5/specs/openrouter-classification-evaluation/spec.md
+  s_7e888ebc17020a::t_e3b4d0b80a845f 1-81
+openspec/changes/archive/2026-10-16-tp-5/specs/openrouter-decisions-adapter/spec.md
+  s_9bd447cede0061::t_6ff892bd9db9b7 1-66
+openspec/changes/archive/2026-10-16-tp-5/tasks.md
+  s_9bd447cede0061::t_d3d817db2fca02 1-35
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.18",
+  "base_commit_sha": "5afd3296d2abbd84b5310d8308286ca0466f13f2",
+  "prompts": {},
+  "sessions": {
+    "s_7e888ebc17020a": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a14551-518f-7491-a874-35045d82cb97",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Igor <hirzhek@gmail.com>"
+    },
+    "s_9bd447cede0061": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a1465b-2739-7560-b275-ad71b275c9b9",
+        "model": "gpt-6-luna"
+      },
+      "human_author": "Igor <hirzhek@gmail.com>"
+    },
+    "s_d3fa50109dd260": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a14674-5ee6-7531-8a7e-938decd4108a",
+        "model": "gpt-6-luna"
+      },
+      "human_author": "Igor <hirzhek@gmail.com>"
+    }
+  }
+}
