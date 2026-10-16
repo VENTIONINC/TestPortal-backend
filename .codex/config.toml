@@ -65,4 +65,4 @@ url = "https://mcp.figma.com/mcp"
 [mcp_servers.youtrack]
 url = "https://yt-wod.ventionteams.com/mcp"
 # VENTION-SDLC-MANAGED:END
-http_headers_helper = "\"/Users/igor/.nvm/versions/node/v24.15.0/bin/node\" \"/Users/igor/Workspace/test-portal/TestPortal-backend/scripts/codex-youtrack-headers.js\""
+http_headers_helper = "node scripts/codex-youtrack-headers.js"
