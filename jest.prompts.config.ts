@@ -7,11 +7,20 @@ const config: JestConfigWithTsJest = {
       ...baseConfig,
       testPathIgnorePatterns: [
         "/dist/",
-        "/typesafe\\.(smoke|regression)\\.test\\.ts$",
+        "typesafe",
+        "openrouter",
       ],
       displayName: "stored-results-analysis",
       testMatch: [
         "<rootDir>/__prompts-tests__/stored-results-analysis/**/?(*.)test.ts",
+      ],
+    },
+    {
+      ...baseConfig,
+      testPathIgnorePatterns: ["/dist/"],
+      displayName: "stored-results-analysis-openrouter-decisions",
+      testMatch: [
+        "<rootDir>/__prompts-tests__/stored-results-analysis/**/openrouter.*.test.ts",
       ],
     },
     {
