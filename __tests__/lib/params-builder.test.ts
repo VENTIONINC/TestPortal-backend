@@ -53,4 +53,25 @@ describe("buildResultParams", () => {
       }),
     ).toEqual({ projectId: "project-1" });
   });
+
+  it.each(["all", "confirmed", "not-confirmed"] as const)(
+    "preserves the supported assumption filter %s",
+    (assumption) => {
+      expect(
+        buildResultParams({
+          projectId: "project-1",
+          assumption,
+        }),
+      ).toMatchObject({ projectId: "project-1", assumption });
+    },
+  );
+
+  it("ignores unsupported assumption filter values", () => {
+    expect(
+      buildResultParams({
+        projectId: "project-1",
+        assumption: "pending",
+      }),
+    ).toEqual({ projectId: "project-1" });
+  });
 });

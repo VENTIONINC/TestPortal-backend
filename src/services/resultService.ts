@@ -50,6 +50,7 @@ export const resultService = {
       reviewStatus,
       errorMessage,
       issueName,
+      assumption,
       from,
       to,
       dates,
@@ -76,6 +77,7 @@ export const resultService = {
     if (reviewStatus) filters.reviewStatus = reviewStatus;
     if (errorMessage) filters.errorMessage = errorMessage;
     if (issueName) filters.issueName = issueName;
+    if (assumption) filters.assumption = assumption;
     if (from) filters.from = from;
     if (to) filters.to = to;
     if (dates) filters.dates = dates;

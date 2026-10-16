@@ -52,6 +52,7 @@ export interface GetResultsParams extends PaginationParams {
   reviewStatus?: string;
   errorMessage?: string;
   issueName?: string;
+  assumption?: "all" | "confirmed" | "not-confirmed";
   from?: string;
   to?: string;
   dates?: string[];
