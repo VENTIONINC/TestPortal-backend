@@ -1,7 +1,7 @@
 {
   "version": 1,
-  "id": "testportal-github",
-  "name": "TestPortal GitHub",
+  "id": "testportal",
+  "name": "TestPortal",
   "servers": [
     {
       "type": "image",
