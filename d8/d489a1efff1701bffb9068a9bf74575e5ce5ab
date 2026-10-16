@@ -1,0 +1,19 @@
+.codex/config.toml
+  s_1a72f505c05671::t_f60b109a2166ee 68
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.18",
+  "base_commit_sha": "d8d489a1efff1701bffb9068a9bf74575e5ce5ab",
+  "prompts": {},
+  "sessions": {
+    "s_1a72f505c05671": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a14384-73c9-7771-8ea1-0e15c6a88bd7",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Igor <hirzhek@gmail.com>"
+    }
+  }
+}
