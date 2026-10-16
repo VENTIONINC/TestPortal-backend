@@ -6,9 +6,6 @@ enabled = false
 command = "docker"
 args = ["mcp", "gateway", "run", "--profile", "testportal"]
 enabled = true
-required = false
-startup_timeout_sec = 30
-tool_timeout_sec = 60
 default_tools_approval_mode = "auto"
 
 # Prompt before writing to GitHub; read tools use the default policy.
@@ -29,3 +26,14 @@ approval_mode = "prompt"
 
 [mcp_servers.MCP_DOCKER.tools.pull_request_review_write]
 approval_mode = "prompt"
+# VENTION-SDLC-MANAGED:BEGIN
+# Framework-managed MCP servers — rewritten on every `vsdlc install`.
+# Add your own Codex settings ABOVE this block (the tables below are managed).
+
+[mcp_servers.figma]
+url = "https://mcp.figma.com/mcp"
+
+[mcp_servers.youtrack]
+url = "https://yt-wod.ventionteams.com/mcp"
+http_headers_helper = "node scripts/codex-youtrack-headers.js"
+# VENTION-SDLC-MANAGED:END

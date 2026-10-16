@@ -1,4 +1,52 @@
-# TestPortal Backend
+<!-- VENTION-SDLC-MANAGED:BEGIN -->
+## Vention SDLC workspace — managed by `vsdlc`
+
+This README block is managed by the Vention SDLC framework (`@vention/sdlc`).
+The bytes between the BEGIN / END markers are rewritten on every `vsdlc install` run.
+
+- **Workspace:** `TestPortal-backend` (scenario: `single-repo`)
+- **Issue tracker:** `youtrack` at `https://yt-wod.ventionteams.com/` (project: `TP`)
+
+## Getting started
+
+New developers landing in this workspace should run the following steps in order:
+
+- Clone the workspace repository with `git clone` and `cd` into the resulting directory.
+- Install the per-developer environment by running `vsdlc install` from the workspace
+  root. The framework will scaffold the IDE wiring, hook configurations, and shell-rc
+  managed blocks for your machine.
+- Install the toolchain by running `mise install` after `vsdlc install` completes. The
+  per-tool versions are pinned by the framework so every workspace member runs the same
+  binaries.
+
+Refer to your team's onboarding notes OUTSIDE the BEGIN / END markers for any
+team-specific steps not covered above. See `AGENTS.md` for the full agent guide
+(work types, MCP usage, slash-command catalogue, hook behaviour).
+
+## Issue tracker integration
+
+The framework wires this workspace to the configured issue tracker via the
+`issue-tracker` capability adapter.
+
+- **Adapter:** `youtrack`
+- **Base URL:** `https://yt-wod.ventionteams.com/`
+- **Project key:** `TP`
+- **Token environment variable:** $YT_TOKEN or $YOUTRACK_TOKEN or $VSDLC_YOUTRACK_TOKEN (the framework resolves the token from
+  the first non-empty match in declaration order; never hard-code it).
+
+Agents that need to read or write issue-tracker state MUST go through the adapter
+operations — never call the vendor CLI or vendor MCP tool directly.
+
+## What this block is
+
+Everything between the BEGIN / END markers is framework-managed and gets rewritten on
+every `vsdlc install`. Add your team's onboarding notes OUTSIDE the markers — they will
+be preserved byte-for-byte across upgrades.
+
+> Run `vsdlc install` to refresh this block. Do not edit between the markers.
+<!-- VENTION-SDLC-MANAGED:END -->
+
+# Test Results Manager - TypeScript Edition
 
 [![License: Apache 2.0](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](LICENSE)
 

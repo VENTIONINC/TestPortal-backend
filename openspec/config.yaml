@@ -1,4 +1,67 @@
-schema: spec-driven
+schema: vention-spec-driven
+context: |
+  <!-- vsdlc:begin -->
+  V-SDLC tracking. Each section below names the OpenSpec workflows it governs. The new, explore, sync, verify and onboard workflows start no activity.
+
+  For every section:
+  - Run every `vsdlc` command from the workspace root (the folder that holds `.vsdlc/workspace.toml`), not from a nested repository, as a standalone command whose output stays visible (do not capture, pipe or redirect it).
+  - In the commands below, `<change>` is the change the workflow works on.
+  - If a `vsdlc` command exits non-zero, quote its message to the user word for word (do not summarize or restate it) and wait for their choice. Continue without tracking only with the user's explicit approval. A failed result report follows its own rule in its section.
+
+  Planning: the propose, ff, continue and update workflows.
+  - One invocation of one of these workflows for a change is one planning run, even when it writes several artifacts. A new invocation or a new session starts a new run. Here, planning means preparing artifacts; the CLI chooses the Forge stage from the operation and, for continue, the artifact.
+  - Before you pick or create a change, run `vsdlc metrics instance`. Its `changeName` is the change this branch's flow tracks; plan that change. Run `vsdlc metrics instance` on its own and read its `changeName` before you run the start command.
+  - If the user asks to plan another existing change, run that change's start command anyway before writing anything; it refuses, and its message lists the options to show the user.
+  - If the user explicitly asks you to create a new change next to it, tell the user before you create it that the new change stays untracked, and start no activity for it.
+  - Start the activity once per run, before the run writes its first artifact: run the start command below. Keep the printed `activity id:` for the whole run; a pause to ask the user something is part of the same run. Reading these instructions again during the run starts nothing.
+
+  The start command for each planning workflow:
+  - propose: `vsdlc metrics activity-start --change <change> --operation propose`. The change `<change>` already exists (the flow created it): use it as the propose change name, do not run `openspec new change`, and do not offer to create a new change; write the artifacts into `<change>`.
+  - ff: `vsdlc metrics activity-start --change <change> --operation ff`
+  - continue: `vsdlc metrics activity-start --change <change> --operation continue --artifact <artifact id>`, where `<artifact id>` is the native id of the artifact this run creates.
+  - update: `vsdlc metrics activity-start --change <change> --operation update`, only when the run creates an artifact or substantially rewrites one; a small edit starts nothing.
+
+  Apply: the apply workflow (`openspec-apply-change`, `/opsx:apply`). One apply invocation is one run.
+  - Run the start command at the beginning of every apply invocation, right after you read the apply instructions and before any code change, even when they say the change is blocked or complete: `vsdlc metrics activity-start --change <change> --operation apply`. Keep the printed `activity id:` and `run number:` for the whole run. A pause for guidance and its continuation are the same run, and reading the apply instructions again starts nothing; a new apply invocation or a new session is a new run and starts again.
+  - A new apply invocation while an earlier run is paused ends that earlier run without a report: print `AI Forge: build-completed not sent — the run was replaced by a new apply invocation`, then start the new run.
+  - If the start command prints `no activity: <reason>`, show that line to the user and follow the native apply instructions for that state. This invocation has no run and reports no result; the `no activity` line is its notice. If implementation is to begin later in this invocation, run the start command again before the first code change.
+  - Before your first change in each project repository of the run, work on the branch whose name is exactly the workspace repository's current branch name: check it out if it exists, otherwise create it from the repository's current branch. Never stash, and never switch branches over uncommitted changes: name that repository to the user, change nothing in it, and wait for the user's choice. Skip the workspace repository itself.
+  - The run ends when native apply has no pending task left, or when the user tells you to end the implementation. A stop to report a blocker, an error or a question is a pause, not the end. Report the result once, when the run ends:
+    1. Decide whether this run reports. If it checked no task, or its activity id or run number is not known, send nothing, print `AI Forge: build-completed not sent — <reason>` and stop here. Tasks checked before this run started are not part of its result.
+    2. Size the tasks this run checked by the rubric in `openspec/schemas/vention-spec-driven/story-size-rubric.md`: exactly one of `small`, `medium`, `large`.
+    3. Check whether the whole change is now done: from the workspace root, run `openspec instructions apply --change <change> --json` exactly as written and read its `state`. The change is done only when `state` is `all_done`; any other state or a failed call means it is not.
+    4. Run `vsdlc metrics fact build-completed --activity-id <activity id> --story "<change>#<run number>" --size <size>`. Only when step 3 found the change done, add `--last-planned` to this `vsdlc` command.
+  - If the report command exits non-zero, do not run it again on your own: stop, show the user the CLI's message word for word, and wait for their choice. Only when the user approves a retry, run the same command again with the same activity id, story, size and flag (that is safe); continue other work only with the user's explicit approval.
+  - If the activity id or run number is lost, do not start a new activity to report this run: its result cannot be reported (step 1). Work that continues in this invocation runs the start command again first and reports only the tasks it checks.
+
+  Archive: the archive workflow (`openspec-archive-change`, `/opsx:archive`) and the bulk-archive workflow (`openspec-bulk-archive-change`, `/opsx:bulk-archive`).
+
+  Archive of one change:
+  - Run the start command after you select the change and read the archive instructions, and before the first native confirmation prompt, spec sync or move (the read-only `status` and `list --json` calls may come before it); run it even when you expect it to refuse: `vsdlc metrics activity-start --change <change> --operation archive`. Keep the printed `activity id:` until the archive ends.
+  - If the start command exits non-zero, archive nothing until the user chooses (see "For every section"). If the user approves archiving without tracking, this archive has no activity: start nothing more, send no report and print no not-sent line (the report steps below do not apply), and follow the native archive steps.
+  - Keep every native step: the confirmation, the choice to sync the specs or not, and the task check with its stops.
+  - Report once, when the archive ends:
+    1. Decide whether this archive reports. If the native move did not happen (the user declined, or the native workflow stopped before it), or the activity id is not known, send nothing, print `AI Forge: flow-archived not sent — <reason>` and stop here.
+    2. Run `vsdlc metrics fact flow-archived --activity-id <activity id>`. Run it after every move the user confirmed, also when tasks were left open and when the flow is already complete.
+  - If the report command exits non-zero, do not run it again on your own and never run the archive again: stop, tell the user that the files moved but the archive report is unacknowledged, show the CLI's message word for word, offer the same command as the recovery, and wait for their choice. Only when the user approves a retry, run the same command again with the same activity id (that is safe); continue other work only with the user's explicit approval. Never present this archive as a full success.
+  - If the activity id is lost, this archive report cannot be sent; do not start a new activity for it.
+
+  Bulk-archive: it archives untracked changes only, and starts no activity and sends no report.
+  - After the user selects the changes and before the batch confirmation, run `vsdlc metrics resolve --change <one selected change>` once, even when you expect every selected change to be untracked. When it exits 0 it prints one JSON line: read its `Outcome`, `Message` and `UntrackedChanges`. If it exits non-zero, stop the whole batch before any spec sync or move (see "For every section").
+    - If `Outcome` is `invalid` or `ambiguous`, stop the whole batch: quote `Message` word for word and wait for the user's choice.
+    - Otherwise, if any selected change is not listed in `UntrackedChanges`, stop the whole batch before any spec sync or move: name those changes, tell the user to archive each of them with the archive workflow from its flow's branch, and wait for the user's choice.
+    - Otherwise continue the native bulk-archive.
+  - If only some changes of the batch were archived, list each change's outcome and call the batch partial, not a success.
+  <!-- vsdlc:end -->
+rules:
+  proposal:
+    - "[vsdlc] Before you write this artifact, check that you have already started the V-SDLC activity for the current invocation of propose, ff, continue or update and kept its printed `activity id:`. If not, read the V-SDLC tracking section in the `context` of `openspec/config.yaml` and follow its start instructions (`vsdlc metrics instance`, then the start command when required for this workflow). Reuse that activity throughout this invocation, including after a pause for user input or when writing another artifact; do not start it again when rereading instructions."
+  specs:
+    - "[vsdlc] Before you write this artifact, check that you have already started the V-SDLC activity for the current invocation of propose, ff, continue or update and kept its printed `activity id:`. If not, read the V-SDLC tracking section in the `context` of `openspec/config.yaml` and follow its start instructions (`vsdlc metrics instance`, then the start command when required for this workflow). Reuse that activity throughout this invocation, including after a pause for user input or when writing another artifact; do not start it again when rereading instructions."
+  design:
+    - "[vsdlc] Before you write this artifact, check that you have already started the V-SDLC activity for the current invocation of propose, ff, continue or update and kept its printed `activity id:`. If not, read the V-SDLC tracking section in the `context` of `openspec/config.yaml` and follow its start instructions (`vsdlc metrics instance`, then the start command when required for this workflow). Reuse that activity throughout this invocation, including after a pause for user input or when writing another artifact; do not start it again when rereading instructions."
+  tasks:
+    - "[vsdlc] Before you write this artifact, check that you have already started the V-SDLC activity for the current invocation of propose, ff, continue or update and kept its printed `activity id:`. If not, read the V-SDLC tracking section in the `context` of `openspec/config.yaml` and follow its start instructions (`vsdlc metrics instance`, then the start command when required for this workflow). Reuse that activity throughout this invocation, including after a pause for user input or when writing another artifact; do not start it again when rereading instructions."
 
 # Project context (optional)
 # This is shown to AI when creating artifacts.
