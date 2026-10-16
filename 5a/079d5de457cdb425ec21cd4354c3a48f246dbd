@@ -1,0 +1,23 @@
+.codex/config.toml
+  s_1a72f505c05671::t_9294571f2952a7 68
+.env.example
+  s_1a72f505c05671::t_67cd24f80723fb 52-54
+scripts/codex-youtrack-headers.js
+  s_1a72f505c05671::t_036ac75930a1e1 1-21
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.18",
+  "base_commit_sha": "5a079d5de457cdb425ec21cd4354c3a48f246dbd",
+  "prompts": {},
+  "sessions": {
+    "s_1a72f505c05671": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a14384-73c9-7771-8ea1-0e15c6a88bd7",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Igor <hirzhek@gmail.com>"
+    }
+  }
+}
