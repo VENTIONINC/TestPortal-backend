@@ -9,6 +9,7 @@ Tools are registered with the MCP server instance and can be invoked by clients 
 ### Status & Health
 
 #### `check-status`
+
 - **Source File:** `src/mcp/tools/status-check.js`
 - **Description:** Check the operational status and health of the test portal server
 - **Parameters:** None
@@ -18,6 +19,7 @@ Tools are registered with the MCP server instance and can be invoked by clients 
   - `service`: "test-portal-server" (string) - Service identifier
 
 #### `current-time`
+
 - **Source File:** `src/mcp/tools/current-time.js`
 - **Description:** Return the current date and time in ISO 8601 format
 - **Parameters:** None
@@ -30,6 +32,7 @@ Tools are registered with the MCP server instance and can be invoked by clients 
 ### Issue Management
 
 #### `get-issues`
+
 - **Source File:** `src/mcp/tools/issues.ts`
 - **Description:** Retrieve issues with persisted category filtering, optional name filtering, pagination, and a linked-result `categorySummary`
 - **Parameters:**
@@ -41,6 +44,7 @@ Tools are registered with the MCP server instance and can be invoked by clients 
 - **Response:** Issues with pagination metadata, persisted `category`, and `categorySummary`. `categorySummary.displayCategory` is the persisted Issue category; its distribution describes distinct linked Result categories.
 
 #### `get-issue-by-id`
+
 - **Source File:** `src/mcp/tools/issues.ts`
 - **Description:** Retrieve an issue with its persisted category and a `categorySummary` for linked Result analytics
 - **Parameters:**
@@ -49,6 +53,7 @@ Tools are registered with the MCP server instance and can be invoked by clients 
 - **Response:** Detailed issue object with persisted `category` and `categorySummary`
 
 #### `create-issue`
+
 - **Source File:** `src/mcp/tools/issues.ts`
 - **Description:** Create a new issue with a required lowercase category
 - **Parameters:**
@@ -71,6 +76,7 @@ modal workflow; use the authenticated REST endpoints documented in the Issue
 Postman collection for that workflow.
 
 #### `get-mock-issues`
+
 - **Source File:** `src/mcp/tools/issues.js`
 - **Description:** Get mock issues for testing and demonstration purposes
 - **Parameters:** None
@@ -81,6 +87,7 @@ Postman collection for that workflow.
 ### Test Results
 
 #### `get-results`
+
 - **Source File:** `src/mcp/tools/results.js`
 - **Description:** Retrieve test execution results with comprehensive filtering options for analysis, reporting, and debugging
 - **Parameters:**
@@ -98,6 +105,7 @@ Postman collection for that workflow.
 - **Response:** Array of test results with filtering metadata
 
 #### `get-result-by-id`
+
 - **Source File:** `src/mcp/tools/results.js`
 - **Description:** Retrieve complete details for a specific test result including error information, call stacks, and execution data
 - **Parameters:**
@@ -109,6 +117,7 @@ Postman collection for that workflow.
 ### Assumptions
 
 #### `create-assumption`
+
 - **Source File:** `src/mcp/tools/assumptions.ts`
 - **Description:** Create a new assumption with required issueId and resultErrorId, plus optional fields like description, hypothesis, and evidence
 - **Parameters:**
@@ -123,6 +132,7 @@ Postman collection for that workflow.
   operation does not copy the linked Issue category to a Result.
 
 #### `update-assumption`
+
 - **Source File:** `src/mcp/tools/assumptions.ts`
 - **Description:** Update an assumption by ID. Only real users can modify assumptions. Confirming synchronizes the linked Issue category to the containing Result's feedback category; setting `isConfirmed` to false deletes the assumption and preserves existing Result feedback.
 - **Parameters:**
@@ -135,6 +145,7 @@ Postman collection for that workflow.
 - **Response:** Updated assumption object or deletion confirmation
 
 #### `get-assumption-by-id`
+
 - **Source File:** `src/mcp/tools/assumptions.js`
 - **Description:** Retrieve detailed information about a specific assumption by its unique ID
 - **Parameters:**
@@ -146,6 +157,7 @@ Postman collection for that workflow.
 ### Execution Details
 
 #### `get-execution-by-id`
+
 - **Source File:** `src/mcp/tools/executions.js`
 - **Description:** Retrieve detailed information about a specific execution by its unique ID
 - **Parameters:**
@@ -157,6 +169,7 @@ Postman collection for that workflow.
 ### Result Error Management
 
 #### `assign-issue-to-result-error`
+
 - **Source File:** `src/mcp/tools/result-errors.ts`
 - **Description:** Assign an issue to a result error by connecting it with an assumption ID
 - **Parameters:**
@@ -165,6 +178,7 @@ Postman collection for that workflow.
 - **Response:** Updated result error record with success message
 
 #### `review-result-error`
+
 - **Source File:** `src/mcp/tools/result-errors.js`
 - **Description:** Run automated review analysis on a result error to find similar issues and create assumptions
 - **Parameters:**
@@ -172,6 +186,7 @@ Postman collection for that workflow.
 - **Response:** Reviewed result error record with analysis results
 
 #### `bulk-review-result-errors`
+
 - **Source File:** `src/mcp/tools/result-errors.js`
 - **Description:** Run automated review analysis on multiple result errors in batch
 - **Parameters:**
@@ -179,6 +194,7 @@ Postman collection for that workflow.
 - **Response:** Bulk review results with success/failure counts
 
 #### `get-result-error-by-id`
+
 - **Source File:** `src/mcp/tools/result-errors.js`
 - **Description:** Retrieve detailed information about a specific result error by its unique ID
 - **Parameters:**
@@ -190,11 +206,71 @@ Postman collection for that workflow.
 ### Specifications
 
 #### `get-spec-by-id`
+
 - **Source File:** `src/mcp/tools/specs.js`
 - **Description:** Retrieve detailed information about a specific spec by its unique ID, including parsed tags and annotations
 - **Parameters:**
   - `specId` (required): Unique identifier for the spec
 - **Response:** Detailed spec object with parsed tags and annotations
+
+---
+
+### Test Scenario Management
+
+All Test Scenario tools require the authenticated MCP transport and a
+project-scoped UUID. Service validation and project ownership errors are
+returned using the standard MCP error response with `isError: true`.
+
+#### `list-test-scenarios`
+
+- **Source File:** `src/mcp/tools/test-scenarios.ts`
+- **Description:** List lightweight Test Scenario summaries for one project
+- **Parameters:**
+  - `projectId` (required): Project UUID
+  - `page` (optional): Positive integer page number (default: 1)
+  - `limit` (optional): Integer from 1 through 100 (default: 30)
+  - `search` (optional): Trimmed, case-insensitive literal substring matched against `title` or `scenarioKey`. `%`, `_`, and backslash are literal; details, other authored fields, and generated Markdown are not searched.
+  - `createdById` (optional): Creator UUID filter. Resolve a `Me` control to the authenticated user's UUID client-side.
+  - `sort` (optional): `recently_created` (default, `createdAt DESC, id DESC`), `recently_updated` (`updatedAt DESC, id DESC`), or `title_asc` (`title ASC, id ASC` under database collation)
+- Filtering is applied before pagination, so `total` and `totalPages` count matching scenarios. Invalid search types, creator UUIDs, and sort values are input validation errors. A valid creator UUID with no matching scenarios returns an empty result. A client resolving a `Me` control sends the authenticated user's UUID.
+- **Response:** Pagination envelope containing `scenarios`, `total`, `page`, `limit`, and `totalPages`. Each summary contains exactly `id`, `projectId`, `createdById`, `title`, nullable `scenarioKey`, `details`, `createdBy`, `createdAt`, and `updatedAt`. `createdBy` contains only `id`, `name`, and `email`; `contentMd` and all other User fields are omitted from the list query and response.
+
+#### `get-test-scenario`
+
+- **Source File:** `src/mcp/tools/test-scenarios.ts`
+- **Description:** Retrieve complete structured scenario content, generated Markdown, and linked execution evidence
+- **Parameters:**
+  - `scenarioId` (required): Test Scenario UUID
+  - `projectId` (required): Owning project UUID
+  - `resultPage` (optional): Positive integer Result evidence page (default: 1)
+  - `resultLimit` (optional): Result evidence limit from 1 through 100 (default: 30)
+  - `issuePage` (optional): Positive integer observed-Issue evidence page (default: 1)
+  - `issueLimit` (optional): Observed-Issue evidence limit from 1 through 100 (default: 30)
+- **Response:** `{ scenario, resultEvidence, issueEvidence }`. `scenario` includes nullable `scenarioKey` and `details`, structured fields, ordered stable-ID `steps`, exact generated `contentMd`, `contentMdHash`, and `contentMdFormatVersion`. Each evidence envelope contains its scenario/project IDs, `linkedSpecCount`, collection, `total`, `page`, `limit`, and `totalPages`. Result evidence is derived from Results belonging to linked same-project Specs; Issue evidence is deduplicated from observed Issues.
+
+#### `update-test-scenario`
+
+- **Source File:** `src/mcp/tools/test-scenarios.ts`
+- **Description:** Partially update a project-scoped scenario
+- **Parameters:**
+  - `scenarioId` (required): Test Scenario UUID
+  - `projectId` (required): Owning project UUID
+  - `title`, `details`, `objective`, `preconditions`, `testData`, `expectedResult`, or `notes` (optional): Structured field updates; text is trimmed and `null` clears nullable fields
+  - `scenarioKey` (optional): Editable single-line label of 1–100 characters after trimming. `null` clears it; duplicate labels are allowed. UUIDs remain scenario identifiers, and a key-only update preserves generated Markdown, its hash, and its format version.
+- **Response:** The complete persisted Test Scenario, including structured fields, ordered steps, exact generated `contentMd`, hash, and format version. At least one editable field is required; omitted fields are preserved. `contentMd`, projection metadata, and steps are rejected as inputs. Scenario metadata and project ownership cannot be changed.
+
+MCP intentionally has no Markdown import, scenario creation, or step mutation
+tools in this change. Use the authenticated REST step routes for step editing;
+MCP remains the generated-document reader and structured-field updater.
+
+#### `delete-test-scenario`
+
+- **Source File:** `src/mcp/tools/test-scenarios.ts`
+- **Description:** Delete a project-scoped scenario and its association rows
+- **Parameters:**
+  - `scenarioId` (required): Test Scenario UUID
+  - `projectId` (required): Owning project UUID
+- **Response:** `{ "scenarioId": "...", "projectId": "...", "deleted": true }`. Linked Specs, Results, ResultErrors, Assumptions, and Issues are preserved.
 
 ---
 
@@ -209,9 +285,10 @@ The MCP tools are organized into the following functional categories:
 5. **Execution Details** - Retrieving detailed execution information
 6. **Result Error Management** - Handling and analyzing test result errors
 7. **Specifications** - Accessing test specification details
+8. **Test Scenario Management** - Listing, reading, editing, and deleting project-scoped Test Scenarios
 
 All tools return standardized responses using the `createSuccessResponse` helper, ensuring consistent formatting across the MCP interface.
 
 ---
 
-*This document is automatically updated based on the contents of the `src/mcp/tools/` directory.*
+_This document is automatically updated based on the contents of the `src/mcp/tools/` directory._
