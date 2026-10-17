@@ -4,8 +4,7 @@
 import { z } from "zod";
 
 /**
- * Base schema shared between all prompt versions
- * Contains fields common to all test result analyses
+ * Legacy field order shared by v1.0.0 and v1.1.0
  */
 const base = z.object({
   id: z.string(),
@@ -13,6 +12,14 @@ const base = z.object({
   category: z.enum(["bug", "infra", "performance", "script", "other"]),
   confidence: z.number().int().min(1).max(5),
   conclusion: z.string(),
+});
+
+const conclusionFirstBase = z.object({
+  id: z.string(),
+  status: z.enum(["failed", "flaky"]),
+  conclusion: z.string(),
+  category: z.enum(["bug", "infra", "performance", "script", "other"]),
+  confidence: z.number().int().min(1).max(5),
 });
 
 // =============================================================================
@@ -39,7 +46,7 @@ export type TestAnalysisResponseV1_0_0 = z.infer<
 >;
 
 // =============================================================================
-// v1.1.0 Schema (Current)
+// v1.1.0 Schema (Historical Baseline)
 // =============================================================================
 
 /**
@@ -69,14 +76,44 @@ export type TestAnalysisResponseV1_1_0 = z.infer<
 >;
 
 // =============================================================================
+// v1.2.0 Schema (Current)
+// =============================================================================
+
+/**
+ * v1.2.0: conclusion is generated before category and confidence
+ * The accepted fields and validation rules remain API-compatible with v1.1.0
+ */
+export const testResultSchemaV1_2_0 = z.discriminatedUnion("status", [
+  conclusionFirstBase.extend({
+    status: z.literal("failed"),
+    errorQuality: z.number().int().min(1).max(5).nullable(),
+    errorQualityConclusion: z.string().nullable(),
+  }),
+  conclusionFirstBase.extend({
+    status: z.literal("flaky"),
+    errorQuality: z.null(),
+    errorQualityConclusion: z.null(),
+  }),
+]);
+
+export const testAnalysisSchemaV1_2_0 = z.object({
+  results: z.array(testResultSchemaV1_2_0),
+});
+
+export type TestResultAnalysisV1_2_0 = z.infer<typeof testResultSchemaV1_2_0>;
+export type TestAnalysisResponseV1_2_0 = z.infer<
+  typeof testAnalysisSchemaV1_2_0
+>;
+
+// =============================================================================
 // Backward Compatibility Exports
 // =============================================================================
 
 /**
  * Default exports maintain backward compatibility with existing code
- * These point to v1.1.0 schemas (current production version)
+ * These point to v1.2.0 schemas (current production version)
  */
-export const testResultSchema = testResultSchemaV1_1_0;
-export const testAnalysisSchema = testAnalysisSchemaV1_1_0;
-export type TestResultAnalysis = TestResultAnalysisV1_1_0;
-export type TestAnalysisResponse = TestAnalysisResponseV1_1_0;
+export const testResultSchema = testResultSchemaV1_2_0;
+export const testAnalysisSchema = testAnalysisSchemaV1_2_0;
+export type TestResultAnalysis = TestResultAnalysisV1_2_0;
+export type TestAnalysisResponse = TestAnalysisResponseV1_2_0;
