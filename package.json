@@ -37,6 +37,7 @@
     "@quixo3/prisma-session-store": "3.1.13",
     "@types/jsonwebtoken": "9.0.9",
     "@types/multer": "1.4.13",
+    "@typesafe-ai/sdk": "0.6.0",
     "amazon-cognito-identity-js": "6.3.15",
     "argon2": "0.43.0",
     "canvas": "3.2.1",
