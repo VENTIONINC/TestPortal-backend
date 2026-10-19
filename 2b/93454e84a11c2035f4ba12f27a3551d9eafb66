@@ -1,0 +1,35 @@
+openspec/changes/enable-microsoft-decisions-categorization/proposal.md
+  s_d5af529eafedf5::t_3db335e76f2558 1-30
+openspec/changes/enable-microsoft-decisions-categorization/design.md
+  s_d5af529eafedf5::t_8559a8db99eb21 1-87
+openspec/changes/enable-microsoft-decisions-categorization/tasks.md
+  s_d5af529eafedf5::t_2ca8588b44d68e 1-35
+openspec/changes/enable-microsoft-decisions-categorization/.openspec.yaml
+  s_d5af529eafedf5::t_76752740490993 1-2
+openspec/changes/enable-microsoft-decisions-categorization/flow.json
+  s_d5af529eafedf5::t_fa0b7b39cfda55 1-7,9-13
+  s_d5af529eafedf5::t_e46b2eef3a19d2 8
+openspec/changes/enable-microsoft-decisions-categorization/specs/stored-results-decisions-categorization/spec.md
+  s_d5af529eafedf5::t_8f18b4992ebc3c 1-91
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.18",
+  "base_commit_sha": "2b93454e84a11c2035f4ba12f27a3551d9eafb66",
+  "prompts": {},
+  "humans": {
+    "h_a7ee58a11b75fb": {
+      "author": "Ihar Mikailau <ihar.mikailau@ventionteams.com>"
+    }
+  },
+  "sessions": {
+    "s_d5af529eafedf5": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a153d8-b7c2-7893-b4c0-fe7251e656d7",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Ihar Mikailau <ihar.mikailau@ventionteams.com>"
+    }
+  }
+}
