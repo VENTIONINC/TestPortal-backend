@@ -1,0 +1,27 @@
+openspec/specs/contribution-guidance/spec.md
+  s_1a72f505c05671::t_77a3d8e58f761b 1-7
+openspec/specs/ctrf-diagnostic-round-trip/spec.md
+  s_1a72f505c05671::t_95afa90ae619c3 1-81
+openspec/specs/source-report-normalization/spec.md
+  s_1a72f505c05671::t_95afa90ae619c3 1-63
+openspec/specs/file-header-scaffolding/spec.md
+  s_1a72f505c05671::t_77a3d8e58f761b 1-7
+openspec/specs/repository-licensing/spec.md
+  s_1a72f505c05671::t_77a3d8e58f761b 1-7
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.18",
+  "base_commit_sha": "6f6013f61d6d4dada02cc90e6e5b01af26ceb487",
+  "prompts": {},
+  "sessions": {
+    "s_1a72f505c05671": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a14384-73c9-7771-8ea1-0e15c6a88bd7",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Igor <hirzhek@gmail.com>"
+    }
+  }
+}
