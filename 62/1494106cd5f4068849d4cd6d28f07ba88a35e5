@@ -1,0 +1,178 @@
+__tests__/lib/publicResultProjection.test.ts
+  s_13e05a9c24c4d1::t_1aa0d0d09e5a76 4-35
+  s_13e05a9c24c4d1::t_b34ecf0d7fb4b8 1-3
+index.ts
+  s_13e05a9c24c4d1::t_ea83481c2faa35 11,27-33
+  s_13e05a9c24c4d1::t_aeb817fdd8239b 34
+openspec/changes/enable-microsoft-decisions-categorization/specs/stored-results-decisions-categorization/spec.md
+  s_13e05a9c24c4d1::t_20c94f68921ba1 5,10,14,37,62,83
+  s_13e05a9c24c4d1::t_f934a659dfd9c6 54
+src/schemas/analysisMetadataSchemas.ts
+  s_13e05a9c24c4d1::t_f934a659dfd9c6 30
+  s_13e05a9c24c4d1::t_7759a14a121e5f 23,50
+  s_13e05a9c24c4d1::t_15eba671aa5aea 1-3
+  s_13e05a9c24c4d1::t_d781ebdbfeb7d8 4-22,24-29,31-49,51-58
+prisma/migrations/20261019130000_add_result_analysis_metadata/migration.sql
+  s_13e05a9c24c4d1::t_1ad1088a25b9e7 1-3
+__tests__/services/resultService.jsonPayloads.test.ts
+  s_13e05a9c24c4d1::t_9ce36c2f2bef4f 42-43,140-144
+__tests__/services/testAnalysisService.test.ts
+  s_13e05a9c24c4d1::t_52faa244e5fe8f 117-121
+  s_13e05a9c24c4d1::t_909c10c4b0b9b7 13,29-50,185
+  s_13e05a9c24c4d1::t_1284d257f4e12d 5,11,16-24,145-166,168-183
+  s_13e05a9c24c4d1::t_20c94f68921ba1 53,61,78,102,140,167
+  s_13e05a9c24c4d1::t_49d55f5c85bf2a 6-10,122-123,142-143
+  s_13e05a9c24c4d1::t_3f2cd660fd3ade 89-98,132-137
+  s_13e05a9c24c4d1::t_1359f244353a9c 1-3
+  s_13e05a9c24c4d1::t_18b31f82ec2430 4,12,14-15,25-28,51-52,54-60,62-77,79-88,99-101,103-116,124-131,138-139,141,144,184
+src/services/storedResultAnalysisService.ts
+  s_13e05a9c24c4d1::t_51b9d3c30ccf6e 11,26-33,35-36,38-45
+  s_13e05a9c24c4d1::t_db4c51bfbb29f2 4-7,12,15-19,49-53,77-80
+  s_13e05a9c24c4d1::t_cc9ded1fd285cb 1-3
+  s_13e05a9c24c4d1::t_1ac492f2969efa 34,64
+  s_13e05a9c24c4d1::t_20c94f68921ba1 8,37
+  s_13e05a9c24c4d1::t_b179375d931599 58,66-68
+  s_13e05a9c24c4d1::t_5542e5892aef73 9-10,13-14,20-25,46-48,54-57,59-63,65,69-76
+src/services/ctrfService.ts
+  s_13e05a9c24c4d1::t_e00588ddf0a291 14,87-90
+__tests__/services/ctrfService.test.ts
+  s_13e05a9c24c4d1::t_7a49a775cd9df6 8,15,151,159-162,171,179,199
+  s_13e05a9c24c4d1::t_2c7b18d7bc6306 116
+openspec/changes/enable-microsoft-decisions-categorization/proposal.md
+  s_13e05a9c24c4d1::t_20c94f68921ba1 5,9
+docs/DEPLOY_ECS.md
+  s_13e05a9c24c4d1::t_3b21733baf1712 31-38
+__tests__/services/errorFormatterService.test.ts
+  s_13e05a9c24c4d1::t_3d46df8b9bddd5 52,184-185,280,343
+src/controllers/jsonReportController.ts
+  s_13e05a9c24c4d1::t_0896d117e8066e 9,119-122
+docs/AI_ERROR_ANALYSIS_RESEARCH.md
+  s_13e05a9c24c4d1::t_7d8fd6c655e0c2 405-407
+  s_13e05a9c24c4d1::t_91767186312009 399-402,404,408-420
+  s_13e05a9c24c4d1::t_2d58d8e8252079 403
+src/models/resultModel.ts
+  s_13e05a9c24c4d1::t_8938b57ef371dd 12-17,971,981,999,1002
+  s_13e05a9c24c4d1::t_0254c3661b15cc 964-970,972-980,982-998,1000-1001,1003-1010
+  s_13e05a9c24c4d1::t_202935d102861f 11,81-83
+  s_13e05a9c24c4d1::t_66bd48c920a61b 84-85
+src/config/environment.ts
+  s_13e05a9c24c4d1::t_2efa79fe48eb3d 33-34,40,117-120,141-142
+  s_13e05a9c24c4d1::t_370a718b87da2f 23-32,35-39,42-47
+  s_13e05a9c24c4d1::t_496ef8a9955685 41
+__tests__/config/environment.test.ts
+  s_13e05a9c24c4d1::t_916581e0c2660a 4-30
+  s_13e05a9c24c4d1::t_85f8334a5a0fbb 1-3
+docs/engineering/backend-conventions.md
+  s_13e05a9c24c4d1::t_58b3da1acbf39c 160-164,169-171,175-178
+  s_13e05a9c24c4d1::t_49d55f5c85bf2a 166-168
+  s_13e05a9c24c4d1::t_f934a659dfd9c6 165
+  s_13e05a9c24c4d1::t_b3502d1878fd63 172-174
+prisma/schema.prisma
+  s_13e05a9c24c4d1::t_fb2f5b6ce7573c 124-125
+__tests__/models/resultModel.test.ts
+  s_13e05a9c24c4d1::t_30ae3e8ac748c4 10-16,443,455
+  s_13e05a9c24c4d1::t_a2789c4cd70525 403
+  s_13e05a9c24c4d1::t_20c94f68921ba1 423-424
+  s_13e05a9c24c4d1::t_5e62e587ee259c 27,400-402,404-422,425-435,437-442,444-447,452-454
+  s_13e05a9c24c4d1::t_b3502d1878fd63 448-451
+  s_13e05a9c24c4d1::t_49d55f5c85bf2a 32,436
+  s_9fe75e6b93fed1::t_4e435c8d7d6bbb 456
+src/types/database.ts
+  s_13e05a9c24c4d1::t_ccc0d0dc1194ad 195-196
+src/mcp/helpers/mcpHelpers.ts
+  s_13e05a9c24c4d1::t_a3732b15160487 9,18,20-21
+src/lib/storedResultCategoryPolicy.ts
+  s_13e05a9c24c4d1::t_f934a659dfd9c6 4-30
+  s_13e05a9c24c4d1::t_4b305201807c43 1-3
+docs/DEVELOPMENT_GUIDE.md
+  s_13e05a9c24c4d1::t_3b9cc26684d56d 38,40-45
+  s_13e05a9c24c4d1::t_20c94f68921ba1 39
+  s_13e05a9c24c4d1::t_894ebccb9dcace 543
+openspec/changes/enable-microsoft-decisions-categorization/flow.json
+  s_13e05a9c24c4d1::t_d08528525fb992 12
+src/services/resultErrorService.ts
+  s_13e05a9c24c4d1::t_99c8e19323be76 17,716-718
+src/lib/jsonPayloads.ts
+  s_13e05a9c24c4d1::t_be71ed0e0ddfa0 129-130
+  s_13e05a9c24c4d1::t_06f74b764153e5 98
+  s_13e05a9c24c4d1::t_3975ab1e0fa84f 108,121-128,131-139
+  s_13e05a9c24c4d1::t_bfa234797087fc 109,113-120,140
+__tests__/services/resultService.export.test.ts
+  s_13e05a9c24c4d1::t_93de5923b42ff7 132-138,168-171
+__prompts-tests__/README.md
+  s_13e05a9c24c4d1::t_967832a412f30b 254-255,296-297
+openspec/changes/enable-microsoft-decisions-categorization/tasks.md
+  s_13e05a9c24c4d1::t_20437281908c85 5,7
+  s_13e05a9c24c4d1::t_7291348c176683 26-27
+  s_13e05a9c24c4d1::t_87f90218d8eb14 34
+  s_13e05a9c24c4d1::t_49d55f5c85bf2a 11
+  s_13e05a9c24c4d1::t_19cd84ecdb6c7e 32
+  s_13e05a9c24c4d1::t_20c94f68921ba1 15
+  s_13e05a9c24c4d1::t_5f9c0eb12fb9d2 12
+  s_13e05a9c24c4d1::t_771e82ee5f281e 28
+  s_13e05a9c24c4d1::t_ce1274fbfe413a 33
+src/lib/openapi/results.ts
+  s_13e05a9c24c4d1::t_9e3a79f532612b 77,79,94
+  s_13e05a9c24c4d1::t_20c94f68921ba1 78
+__tests__/prompts/openrouter-evaluation.test.ts
+  s_13e05a9c24c4d1::t_6f3f24d2dcdf8f 157,216,221
+  s_13e05a9c24c4d1::t_6724344c971916 220
+  s_13e05a9c24c4d1::t_49d55f5c85bf2a 24,158-160
+  s_13e05a9c24c4d1::t_48818b195a8a3d 178
+  s_13e05a9c24c4d1::t_1f3e88b4aa58ee 219,222-223
+src/services/testAnalysisService.ts
+  s_13e05a9c24c4d1::t_41a08730b1fd4e 9-13,151,320-321,362
+  s_13e05a9c24c4d1::t_a91f5a3d3c5975 7,14-16,28-29,70-79,120,127,154,156-158,270,273,280,284-286,288-314,316-319,322-334,336-342,364-365,367-372
+  s_13e05a9c24c4d1::t_3b5dcd9fb9f7a8 99-109,119,121-126,129-143,145-150,152-153,155,272,278
+  s_13e05a9c24c4d1::t_09274e16d37a3b 17,33-61,63-64,66-67
+  s_13e05a9c24c4d1::t_20c94f68921ba1 26,65,128,271,274,277,315,349
+  s_13e05a9c24c4d1::t_367f463e643166 27
+  s_13e05a9c24c4d1::t_3d3490db46ae83 62,144
+  s_13e05a9c24c4d1::t_b5e64d73153062 287,366,373
+  s_13e05a9c24c4d1::t_030a03b5e7c17c 374-383
+  s_13e05a9c24c4d1::t_cc5b16ff176ebf 30-32,68,275-276,279,281-283,335,343-348,350-361,363,384
+  s_13e05a9c24c4d1::t_07e4a1dbe17585 69
+docs/API_DOCUMENTATION.md
+  s_13e05a9c24c4d1::t_56db2ad0d807c7 5-10
+openspec/changes/enable-microsoft-decisions-categorization/design.md
+  s_13e05a9c24c4d1::t_2d58d8e8252079 21,25,71
+  s_13e05a9c24c4d1::t_f934a659dfd9c6 41
+  s_13e05a9c24c4d1::t_7d8fd6c655e0c2 61
+.env.example
+  s_13e05a9c24c4d1::t_12101b2dfcc924 34-37,43
+src/services/errorFormatterService.ts
+  s_13e05a9c24c4d1::t_aec96edbb10c6b 165
+__tests__/services/resultErrorService.test.ts
+  s_13e05a9c24c4d1::t_35e2695bc05bb2 8,20-23,126,144-147,189
+__prompts-tests__/stored-results-analysis/runners/openrouter-policy.ts
+  s_13e05a9c24c4d1::t_f934a659dfd9c6 6-11,14-19
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.18",
+  "base_commit_sha": "621494106cd5f4068849d4cd6d28f07ba88a35e5",
+  "prompts": {},
+  "humans": {
+    "h_a7ee58a11b75fb": {
+      "author": "Ihar Mikailau <ihar.mikailau@ventionteams.com>"
+    }
+  },
+  "sessions": {
+    "s_13e05a9c24c4d1": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a153fa-d942-7881-bde5-18422a0cfe1a",
+        "model": "gpt-6-luna"
+      },
+      "human_author": "Ihar Mikailau <ihar.mikailau@ventionteams.com>"
+    },
+    "s_9fe75e6b93fed1": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a15846-9cf4-79d2-ba28-e17283ff78e1",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Ihar Mikailau <ihar.mikailau@ventionteams.com>"
+    }
+  }
+}
