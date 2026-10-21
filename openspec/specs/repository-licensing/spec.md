@@ -1,4 +1,10 @@
-## ADDED Requirements
+# repository-licensing Specification
+
+## Purpose
+
+Declare Apache 2.0 consistently across repository licensing artifacts, package metadata, and contributor-facing documentation.
+
+## Requirements
 
 ### Requirement: Repository SHALL declare Apache 2.0 consistently
 The repository SHALL declare Apache 2.0 as its active license consistently across root licensing artifacts, package metadata, and top-level documentation.

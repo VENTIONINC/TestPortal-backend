@@ -1,4 +1,10 @@
-## ADDED Requirements
+# file-header-scaffolding Specification
+
+## Purpose
+
+Keep supported source files consistently licensed through file creation scaffolding, documented extension rules, and safe bulk header backfilling.
+
+## Requirements
 
 ### Requirement: Repository SHALL provide a headered file creation command
 The repository SHALL provide an npm command named `new:file` that creates a new file at a caller-supplied path for supported file types.
