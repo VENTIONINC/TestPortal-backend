@@ -1,0 +1,52 @@
+openspec/specs/stored-results-decisions-categorization/spec.md
+  s_c71d351d8bbbd5::t_8cd69890134c3c 1-91
+openspec/changes/archive/2026-10-20-enable-microsoft-decisions-categorization/.openspec.yaml
+  s_d5af529eafedf5::t_a1263198601a07 1-2
+openspec/changes/archive/2026-10-20-enable-microsoft-decisions-categorization/design.md
+  s_c71d351d8bbbd5::t_a92dc32015ede6 1-97
+openspec/changes/archive/2026-10-20-enable-microsoft-decisions-categorization/flow.json
+  s_13e05a9c24c4d1::t_96c35fc61fa158 1-13
+openspec/changes/archive/2026-10-20-enable-microsoft-decisions-categorization/proposal.md
+  s_c71d351d8bbbd5::t_e726e53560f80a 1-30
+openspec/changes/archive/2026-10-20-enable-microsoft-decisions-categorization/specs/stored-results-decisions-categorization/spec.md
+  s_c71d351d8bbbd5::t_2231e2a61c15fa 1-91
+openspec/changes/archive/2026-10-20-enable-microsoft-decisions-categorization/tasks.md
+  s_c71d351d8bbbd5::t_7e3fbb7773313a 1-39
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.18",
+  "base_commit_sha": "81f1a82e3f4108661e2abd8ee7ce19ef574ec1fb",
+  "prompts": {},
+  "humans": {
+    "h_a7ee58a11b75fb": {
+      "author": "Ihar Mikailau <ihar.mikailau@ventionteams.com>"
+    }
+  },
+  "sessions": {
+    "s_13e05a9c24c4d1": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a153fa-d942-7881-bde5-18422a0cfe1a",
+        "model": "gpt-6-luna"
+      },
+      "human_author": "Ihar Mikailau <ihar.mikailau@ventionteams.com>"
+    },
+    "s_c71d351d8bbbd5": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a15872-6e51-7230-b148-99d4f6539126",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Ihar Mikailau <ihar.mikailau@ventionteams.com>"
+    },
+    "s_d5af529eafedf5": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a153d8-b7c2-7893-b4c0-fe7251e656d7",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Ihar Mikailau <ihar.mikailau@ventionteams.com>"
+    }
+  }
+}
