@@ -1,0 +1,49 @@
+openspec/specs/openrouter-decisions-adapter/spec.md
+  s_45022f9f266b84::t_a36c017b54e001 21,25,29
+openspec/changes/enable-microsoft-decisions-categorization/tasks.md
+  s_45022f9f266b84::t_01ddd00cbd4ef5 9
+jest.prompts.config.ts
+  s_45022f9f266b84::t_b9dd26f545dd60 8
+__tests__/lib/openrouter-decisions.test.ts
+  s_45022f9f266b84::t_e00bd85e58d85b 359,386
+  s_45022f9f266b84::t_b9dd26f545dd60 16,358,385
+src/lib/storedResultCategoryPolicy.ts
+  s_45022f9f266b84::t_b3c43489d34879 9
+__tests__/prompts/openrouter-evaluation.test.ts
+  s_45022f9f266b84::t_e00bd85e58d85b 27-31,51,62-71,76-77,86,97-104,108,114,118,180-194,233-234,240-266,270,277-278,291-293,310,317-322,327-328,332-337,345-347,357-364,375,436-437,448,455-477,489,548-553,556-558,560-561,567-569,620-625,633-638,651,653,656,658-682,691,700-701,716-722,739-741,756,761-763,781-785,790-792,804-806,814-818,827,847,854-856
+__prompts-tests__/stored-results-analysis/openrouterTestEnv.ts
+  s_45022f9f266b84::t_e00bd85e58d85b 16,25,38
+__prompts-tests__/stored-results-analysis/runners/openrouter-profiles.ts
+  s_45022f9f266b84::t_e00bd85e58d85b 30-35,37-45,66
+docs/AI_ERROR_ANALYSIS_RESEARCH.md
+  s_45022f9f266b84::t_a36c017b54e001 421-424
+__prompts-tests__/README.md
+  s_45022f9f266b84::t_a36c017b54e001 41-43,105,139,146,148-151,153-154,163-166,170-197
+  s_45022f9f266b84::t_28cb8e48a1db80 90-91,167-169
+openspec/changes/enable-microsoft-decisions-categorization/design.md
+  s_45022f9f266b84::t_01ddd00cbd4ef5 9,29,49
+openspec/specs/openrouter-classification-evaluation/spec.md
+  s_45022f9f266b84::t_28cb8e48a1db80 69
+  s_45022f9f266b84::t_a36c017b54e001 5,9-10,13-14,21,25,32,57-58,61-62,65-66
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.18",
+  "base_commit_sha": "6147b281d6c580f469ac502a2e38a58b0b53b211",
+  "prompts": {},
+  "humans": {
+    "h_a7ee58a11b75fb": {
+      "author": "Ihar Mikailau <ihar.mikailau@ventionteams.com>"
+    }
+  },
+  "sessions": {
+    "s_45022f9f266b84": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a15d98-d331-7c11-a25a-0fe03f3535da",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Ihar Mikailau <ihar.mikailau@ventionteams.com>"
+    }
+  }
+}
