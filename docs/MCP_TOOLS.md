@@ -27,6 +27,16 @@ Tools are registered with the MCP server instance and can be invoked by clients 
 
 ---
 
+### Projects
+
+#### `get-available-projects`
+- **Source File:** `src/mcp/tools/projects.ts`
+- **Description:** List active projects that can be used with project-scoped MCP tools
+- **Parameters:** None
+- **Response:** Array of objects containing `id` and `name`. The list includes all active projects, including `Default Project`; it is not limited to projects owned by the authenticated MCP user. Pass a returned `id` as `projectId` to project-scoped tools such as `get-issues` and `get-results`.
+
+---
+
 ### Issue Management
 
 #### `get-issues`
@@ -203,15 +213,16 @@ Postman collection for that workflow.
 The MCP tools are organized into the following functional categories:
 
 1. **Status & Health** - Server monitoring and health checks
-2. **Issue Management** - Creating, retrieving, and managing issues
-3. **Test Results** - Querying and analyzing test execution results
-4. **Assumptions** - Managing assumptions related to issues and errors
-5. **Execution Details** - Retrieving detailed execution information
-6. **Result Error Management** - Handling and analyzing test result errors
-7. **Specifications** - Accessing test specification details
+2. **Projects** - Discovering active projects and their IDs
+3. **Issue Management** - Creating, retrieving, and managing issues
+4. **Test Results** - Querying and analyzing test execution results
+5. **Assumptions** - Managing assumptions related to issues and errors
+6. **Execution Details** - Retrieving detailed execution information
+7. **Result Error Management** - Handling and analyzing test result errors
+8. **Specifications** - Accessing test specification details
 
 All tools return standardized responses using the `createSuccessResponse` helper, ensuring consistent formatting across the MCP interface.
 
 ---
 
-*This document is automatically updated based on the contents of the `src/mcp/tools/` directory.*
+The tool registration in `src/mcp/server.ts` and each tool definition under `src/mcp/tools/` are the source of truth for the available tools and their behavior.
