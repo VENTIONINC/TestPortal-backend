@@ -240,21 +240,21 @@ describe("runOpenRouterStoredResultsAnalysis", () => {
   test("runs OpenAI through the exact shared OpenRouter Decisions request", async () => {
     const fetchImpl = jest.fn(
       async (input: Parameters<typeof fetch>[0], init?: RequestInit) => {
-        expect(String(input)).toBe(OPENROUTER_ENDPOINT);
-        const request = JSON.parse(
-          String(init?.body),
-        ) as OpenRouterDecisionsRequest;
-        expect(request.model).toBe("openai/gpt-6-luna-decisions");
-        expect(request.provider).toEqual({ allow_fallbacks: false });
-        expect(request.questions.category).toEqual({
+        const request =
+          input instanceof Request ? input : new Request(input, init);
+        expect(request.url).toBe(OPENROUTER_ENDPOINT);
+        const body = (await request.clone().json()) as OpenRouterDecisionsRequest;
+        expect(body.model).toBe("openai/gpt-6-luna-decisions");
+        expect(body.provider).toEqual({ allow_fallbacks: false });
+        expect(body.questions.category).toEqual({
           type: "choice",
           instructions: OPENROUTER_CATEGORY_INSTRUCTIONS,
           criteria: OPENROUTER_CATEGORY_CRITERIA,
         });
-        expect(request.state).toEqual(toOpenRouterEvidence(evalCase(0).input));
-        expect(request.state).not.toHaveProperty("id");
-        expect(request.state).not.toHaveProperty("name");
-        expect(request.state).not.toHaveProperty("expectedCategory");
+        expect(body.state).toEqual(toOpenRouterEvidence(evalCase(0).input));
+        expect(body.state).not.toHaveProperty("id");
+        expect(body.state).not.toHaveProperty("name");
+        expect(body.state).not.toHaveProperty("expectedCategory");
         return new Response(
           JSON.stringify({
             ...categoryResponse(),

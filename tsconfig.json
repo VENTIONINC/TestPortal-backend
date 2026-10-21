@@ -37,6 +37,9 @@
     // Path mapping for clean imports
     "baseUrl": "./",
     "paths": {
+      "@openrouter/sdk/models/errors": [
+        "node_modules/@openrouter/sdk/esm/models/errors/index.d.ts"
+      ],
       "@/*": ["src/*"],
       "@/types/*": ["src/types/*"],
       "@/models/*": ["src/models/*"],

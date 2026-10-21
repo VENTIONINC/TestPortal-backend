@@ -112,17 +112,146 @@ describe("submitOpenRouterDecision", () => {
     });
 
     expect(fetchImpl).toHaveBeenCalledTimes(1);
-    const [url, init] = fetchImpl.mock.calls[0] ?? [];
-    expect(url).toBe(OPENROUTER_DECISIONS_ENDPOINT);
-    expect(init?.method).toBe("POST");
-    expect(init?.headers).toEqual({
-      Authorization: "Bearer injected-openrouter-key",
-      "Content-Type": "application/json",
-    });
-    expect(JSON.parse(String(init?.body))).toEqual({
+    const [input] = fetchImpl.mock.calls[0] ?? [];
+    expect(input).toBeInstanceOf(Request);
+    const request = input as Request;
+    expect(request?.url).toBe(OPENROUTER_DECISIONS_ENDPOINT);
+    expect(request?.method).toBe("POST");
+    expect(request?.headers.get("authorization")).toBe(
+      "Bearer injected-openrouter-key",
+    );
+    expect(request?.headers.get("content-type")).toBe("application/json");
+    expect(await request?.clone().json()).toEqual({
       ...validRequest,
       provider: { allow_fallbacks: false },
     });
+  });
+
+  test.each([
+    {
+      label: "full usage including total tokens",
+      usage: { input_tokens: 17, output_tokens: 8, total_tokens: 25, cost: 0 },
+      expected: { inputTokens: 17, outputTokens: 8, totalTokens: 25, cost: 0 },
+    },
+    {
+      label: "missing usage",
+      usage: undefined,
+      expected: { inputTokens: null, outputTokens: null, totalTokens: null, cost: null },
+    },
+    {
+      label: "partial usage with supplied zero values",
+      usage: { input_tokens: 0, cost: 0 },
+      expected: { inputTokens: 0, outputTokens: null, totalTokens: null, cost: 0 },
+    },
+  ])("preserves the original wire usage for $label", async ({ usage, expected }) => {
+    const payload: Record<string, unknown> = { ...validResponse };
+    if (usage === undefined) delete payload.usage;
+    else payload.usage = usage;
+    const fetchImpl = jest
+      .fn<ReturnType<typeof fetch>, Parameters<typeof fetch>>()
+      .mockResolvedValue(
+        new Response(JSON.stringify(payload), {
+          status: 200,
+          headers: { "content-type": "application/json" },
+        }),
+      );
+
+    const submitted = await submitOpenRouterDecision(validRequest, {
+      apiKey: "key",
+      fetchImpl,
+    });
+
+    expect(submitted.data).toEqual(payload);
+    expect(
+      validateOpenRouterDecisionsResponse(
+        submitted.data,
+        validRequest,
+        submitted.attempts,
+      ).usage,
+    ).toEqual(expected);
+    expect(fetchImpl).toHaveBeenCalledTimes(1);
+  });
+
+  test("maps malformed HTTP error bodies by status without retaining sensitive data", async () => {
+    const sensitiveBody =
+      "Bearer secret-key; submitted evidence: private test failure details";
+    const fetchImpl = jest
+      .fn<ReturnType<typeof fetch>, Parameters<typeof fetch>>()
+      .mockResolvedValue(
+        new Response(sensitiveBody, {
+          status: 401,
+          headers: { "content-type": "text/html" },
+        }),
+      );
+
+    try {
+      await submitOpenRouterDecision(validRequest, {
+        apiKey: "secret-key",
+        fetchImpl,
+      });
+      throw new Error("expected the request to fail");
+    } catch (error) {
+      expect(error).toMatchObject({
+        kind: "authentication",
+        status: 401,
+        attempts: 1,
+      });
+      expect((error as Error).cause).toBeUndefined();
+      expect((error as Error).message).not.toContain("secret-key");
+      expect((error as Error).message).not.toContain("private test failure");
+    }
+  });
+
+  test.each([
+    [201, "application/json; charset=utf-8"],
+    [202, "text/plain"],
+  ])("accepts an otherwise-valid HTTP %i response with %s content type", async (status, contentType) => {
+    const fetchImpl = jest
+      .fn<ReturnType<typeof fetch>, Parameters<typeof fetch>>()
+      .mockResolvedValue(
+        new Response(JSON.stringify(validResponse), {
+          status,
+          headers: { "content-type": contentType },
+        }),
+      );
+
+    const submitted = await submitOpenRouterDecision(validRequest, {
+      apiKey: "key",
+      fetchImpl,
+    });
+
+    expect(submitted.data).toEqual(validResponse);
+    expect(submitted.attempts).toBe(1);
+    expect(fetchImpl).toHaveBeenCalledTimes(1);
+  });
+
+  test("recovers SDK-rejected JSON only for strict application validation", async () => {
+    const invalidPayload = {
+      ...validResponse,
+      answers: Object.fromEntries(
+        Object.entries(validResponse.answers).filter(([name]) => name !== "category"),
+      ),
+    };
+    const fetchImpl = jest
+      .fn<ReturnType<typeof fetch>, Parameters<typeof fetch>>()
+      .mockResolvedValue(
+        new Response(JSON.stringify(invalidPayload), { status: 200 }),
+      );
+
+    const submitted = await submitOpenRouterDecision(validRequest, {
+      apiKey: "key",
+      fetchImpl,
+    });
+
+    expect(submitted.data).toEqual(invalidPayload);
+    expect(() =>
+      validateOpenRouterDecisionsResponse(
+        submitted.data,
+        validRequest,
+        submitted.attempts,
+      ),
+    ).toThrow(expect.objectContaining({ kind: "invalid_response" }));
+    expect(fetchImpl).toHaveBeenCalledTimes(1);
   });
 
   test("rejects missing OpenRouter credentials without using direct-provider keys", async () => {
@@ -216,8 +345,9 @@ describe("submitOpenRouterDecision", () => {
 
       expect(fetchImpl).toHaveBeenCalledTimes(1);
       expect(sleep).not.toHaveBeenCalled();
-      const [, init] = fetchImpl.mock.calls[0] ?? [];
-      expect(JSON.parse(String(init?.body)).state).toEqual(state);
+      const [input] = fetchImpl.mock.calls[0] ?? [];
+      expect(input).toBeInstanceOf(Request);
+      expect(await (input as Request).clone().json()).toMatchObject({ state });
     },
   );
 
@@ -225,12 +355,14 @@ describe("submitOpenRouterDecision", () => {
     const fetchImpl = jest
       .fn<ReturnType<typeof fetch>, Parameters<typeof fetch>>()
       .mockImplementation(
-        (_input, init) =>
-          new Promise<Response>((_resolve, reject) => {
-            init?.signal?.addEventListener("abort", () => {
+        (input, init) => {
+          const signal = input instanceof Request ? input.signal : init?.signal;
+          return new Promise<Response>((_resolve, reject) => {
+            signal?.addEventListener("abort", () => {
               reject(new DOMException("Aborted", "AbortError"));
             });
-          }),
+          });
+        },
       );
 
     await expect(
@@ -241,6 +373,123 @@ describe("submitOpenRouterDecision", () => {
       }),
     ).rejects.toMatchObject({ kind: "timeout", attempts: 1 });
     expect(fetchImpl).toHaveBeenCalledTimes(1);
+  });
+
+  test("keeps the per-attempt deadline active while consuming the response body", async () => {
+    const fetchImpl = jest.fn((input: Parameters<typeof fetch>[0], init?: RequestInit) => {
+      const signal = input instanceof Request ? input.signal : init?.signal;
+      const body = new ReadableStream<Uint8Array>({
+        start(controller) {
+          signal?.addEventListener("abort", () => {
+            controller.error(new DOMException("Aborted", "AbortError"));
+          });
+        },
+      });
+      return Promise.resolve(
+        new Response(body, {
+          status: 200,
+          headers: { "content-type": "application/json" },
+        }),
+      );
+    });
+
+    await expect(
+      submitOpenRouterDecision(validRequest, {
+        apiKey: "key",
+        timeoutMs: 5,
+        fetchImpl: fetchImpl as typeof fetch,
+      }),
+    ).rejects.toMatchObject({ kind: "timeout", attempts: 1 });
+    expect(fetchImpl).toHaveBeenCalledTimes(1);
+  });
+
+  test.each([
+    { status: 200, recover: true },
+    { status: 202, recover: true },
+    { status: 200, recover: false },
+    { status: 202, recover: false },
+  ])("retries HTTP $status body timeouts within the configured bound (recover: $recover)", async ({ status, recover }) => {
+    let calls = 0;
+    const fetchImpl = jest.fn<ReturnType<typeof fetch>, Parameters<typeof fetch>>()
+      .mockImplementation(async (input, init) => {
+        calls += 1;
+        if (recover && calls > 1) {
+          return new Response(JSON.stringify(validResponse), {
+            headers: { "content-type": "application/json" },
+          });
+        }
+        const signal = input instanceof Request ? input.signal : init?.signal;
+        const body = new ReadableStream<Uint8Array>({
+          start(controller) {
+            signal?.addEventListener("abort", () => {
+              controller.error(new DOMException("Aborted", "AbortError"));
+            });
+          },
+        });
+        return new Response(body, {
+          status,
+          headers: { "content-type": "application/json" },
+        });
+      });
+    const sleep = jest.fn().mockResolvedValue(undefined);
+    const submitted = submitOpenRouterDecision(validRequest, {
+      apiKey: "key",
+      timeoutMs: 20,
+      maxRetries: 1,
+      fetchImpl,
+      sleep,
+    });
+
+    if (recover) {
+      await expect(submitted).resolves.toMatchObject({ data: validResponse, attempts: 2 });
+    } else {
+      await expect(submitted).rejects.toMatchObject({ kind: "timeout", status, attempts: 2 });
+    }
+    expect(fetchImpl).toHaveBeenCalledTimes(2);
+    expect(sleep).toHaveBeenCalledTimes(1);
+    expect(sleep).toHaveBeenCalledWith(200);
+  });
+
+  test("keeps response data, usage, status, and attempts request-local concurrently", async () => {
+    const fetchImpl = jest.fn(async (input: Parameters<typeof fetch>[0], init?: RequestInit) => {
+      const request = input instanceof Request ? input : new Request(input, init);
+      const body = (await request.clone().json()) as { model: string };
+      const delay = body.model.endsWith("slow") ? 10 : 0;
+      await new Promise((resolve) => setTimeout(resolve, delay));
+      return new Response(
+        JSON.stringify({
+          ...validResponse,
+          model: `${body.model}-returned`,
+          provider: body.model,
+          usage: {
+            input_tokens: body.model.endsWith("slow") ? 11 : 22,
+            output_tokens: body.model.endsWith("slow") ? 1 : 2,
+          },
+        }),
+        { status: 200 },
+      );
+    });
+    const slowRequest = { ...validRequest, model: "model-slow" };
+    const fastRequest = { ...validRequest, model: "model-fast" };
+
+    const [slow, fast] = await Promise.all([
+      submitOpenRouterDecision(slowRequest, { apiKey: "key", fetchImpl: fetchImpl as typeof fetch }),
+      submitOpenRouterDecision(fastRequest, { apiKey: "key", fetchImpl: fetchImpl as typeof fetch }),
+    ]);
+
+    expect(slow.attempts).toBe(1);
+    expect(fast.attempts).toBe(1);
+    expect(slow.data).toMatchObject({
+      model: "model-slow-returned",
+      provider: "model-slow",
+      usage: { input_tokens: 11, output_tokens: 1 },
+    });
+    expect(fast.data).toMatchObject({
+      model: "model-fast-returned",
+      provider: "model-fast",
+      usage: { input_tokens: 22, output_tokens: 2 },
+    });
+    expect(fetchImpl).toHaveBeenCalledTimes(2);
   });
 
   test("rejects malformed JSON as an invalid response without retrying", async () => {
@@ -273,6 +522,24 @@ describe("submitOpenRouterDecision", () => {
     });
 
     expect(result.attempts).toBe(3);
+    expect(fetchImpl).toHaveBeenCalledTimes(3);
+    expect(sleep).toHaveBeenCalledTimes(2);
+  });
+
+  test("reports actual attempts when transient retries are exhausted", async () => {
+    const fetchImpl = jest
+      .fn<ReturnType<typeof fetch>, Parameters<typeof fetch>>()
+      .mockRejectedValue(new Error("offline"));
+    const sleep = jest.fn().mockResolvedValue(undefined);
+
+    await expect(
+      submitOpenRouterDecision(validRequest, {
+        apiKey: "key",
+        maxRetries: 2,
+        fetchImpl,
+        sleep,
+      }),
+    ).rejects.toMatchObject({ kind: "network", attempts: 3 });
     expect(fetchImpl).toHaveBeenCalledTimes(3);
     expect(sleep).toHaveBeenCalledTimes(2);
   });

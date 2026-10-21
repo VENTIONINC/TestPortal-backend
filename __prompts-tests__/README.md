@@ -125,14 +125,25 @@ For example, this request matches the adapter's validated type surface:
 }
 ```
 
+The shared adapter pins `@openrouter/sdk` to `1.4.25` and submits with
+`OpenRouter.alpha.decisions.create`. It injects an SDK `HTTPClient` at the
+adapter boundary; tests provide its fetcher to exercise real SDK serialization,
+response parsing, and status handling. The operation targets the explicit
+`https://openrouter.ai` origin and disables SDK retries. The adapter owns the
+bounded retry policy so production and evaluation can keep zero retries while
+the generic boundary retains up to three transient retries.
+
 The adapter always disables OpenRouter provider fallback. Its default timeout is
-30 seconds per attempt and its default retry count is zero; explicit retry
-overrides are bounded to three retries. It validates question/answer names and
-types, selected criteria, finite values, complete normalized probability
-distributions, scores, returned model identity, and supplied usage/cost. Missing
-usage, cost, or upstream identity stays unavailable rather than being
-zero-filled or inferred. Authentication, credit, rate-limit, timeout, network,
-and upstream failures use stable error kinds. Malformed, incomplete, and
+30 seconds per attempt and covers request submission and response-body reading.
+It captures the original response before SDK parsing so the local validator can
+preserve wire usage such as `total_tokens` and continue accepting valid missing
+or partial usage. Missing usage, cost, or upstream identity stays unavailable
+rather than being zero-filled or inferred. The local validator correlates
+question/answer names and types, checks selected criteria, finite values,
+complete normalized probability distributions, score legends, returned model
+identity, and supplied usage/cost. SDK errors are converted to stable safe
+error kinds using exported SDK error types and captured HTTP status; raw SDK
+causes and response bodies are not returned. Malformed, incomplete, and
 undocumented refusal-shaped responses fail as `invalid_response`; the current
 OpenRouter Decisions contract does not define a refusal payload shape.
 
