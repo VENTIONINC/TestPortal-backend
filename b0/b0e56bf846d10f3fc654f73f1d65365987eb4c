@@ -1,0 +1,88 @@
+openspec/changes/tp-19-migrate-openrouter-decisions-sdk/.openspec.yaml
+  s_5db1aedc0cc9e7::t_68778f6a99ee84 3
+  s_5db1aedc0cc9e7::t_9857f88a25e767 1-2
+openspec/changes/tp-19-migrate-openrouter-decisions-sdk/design.md
+  s_5db1aedc0cc9e7::t_87f5aa17f568ff 1-90
+openspec/changes/tp-19-migrate-openrouter-decisions-sdk/flow.json
+  s_5db1aedc0cc9e7::t_dd91986a3f4399 1-11,13
+  s_30f22d631a90a6::t_9b119295bee567 12
+src/lib/openrouter-decisions/transport.ts
+  s_f56685370754b8::t_24ef105be86e67 310-311,315-317
+  s_30f22d631a90a6::t_24cbc471ead855 289,291-294
+  s_f56685370754b8::t_bc9032c39e487c 263,281,283-284,290,295-297,299,301,306-307,312-313,322
+  s_30f22d631a90a6::t_0ef9b0363ee502 5-12,152,161-162,170
+  s_30f22d631a90a6::t_bdf0be00a33160 4,13,24,71,77-81,133,147-151,153-158,164-169,171-189,192,196,201,214,216,222-223,226-236,238-241,244-251,253,259-262,264-266,270-278,314,318-319,321,323,329-331
+  s_30f22d631a90a6::t_a3db94f6a2e8bd 159-160,163,243,254-258,285-288,300,302-305,309
+__tests__/lib/openrouter-decisions.test.ts
+  s_30f22d631a90a6::t_d62f26bedbf506 118-124,358-361,364-365
+  s_30f22d631a90a6::t_72059a9b09f487 199
+  s_30f22d631a90a6::t_dba6b823906f61 115-117,348-350
+  s_30f22d631a90a6::t_dcfbc66f1ae52e 378,380-405,453,455-494
+  s_30f22d631a90a6::t_d92a07fe295499 228,235-256
+  s_f56685370754b8::t_5a84980897b1aa 406-452
+  s_30f22d631a90a6::t_47d9a4debe831c 229-234
+  s_30f22d631a90a6::t_922ef5e0bdfa40 379,454
+  s_30f22d631a90a6::t_015b611f4adf50 175-198,200-204,527-542
+  s_30f22d631a90a6::t_650f1f5d410ad6 130-174,205-227
+  s_30f22d631a90a6::t_27338644d28be4 543-544
+__prompts-tests__/README.md
+  s_30f22d631a90a6::t_02b86da78c62ba 128-135,137-146
+jest.config.ts
+  s_30f22d631a90a6::t_51d8fd2fd7d8a4 8-9,11-15
+  s_30f22d631a90a6::t_02bf7d2da57e3f 10
+openspec/changes/tp-19-migrate-openrouter-decisions-sdk/proposal.md
+  s_5db1aedc0cc9e7::t_68778f6a99ee84 1-33
+tsconfig.json
+  s_30f22d631a90a6::t_079ab3d3083d7a 40-42
+__tests__/prompts/openrouter-evaluation.test.ts
+  s_30f22d631a90a6::t_5acf9079cf4f63 243-249,254-257
+openspec/changes/tp-19-migrate-openrouter-decisions-sdk/tasks.md
+  s_30f22d631a90a6::t_8f21f18bf81ed1 24-26
+  s_30f22d631a90a6::t_05258a2ffe323d 5-7,11-13
+  s_5db1aedc0cc9e7::t_186972fdbc335b 1-4,8-10,14-16,21-23,27-29
+  s_30f22d631a90a6::t_5967dd6b01550a 17-20
+  s_30f22d631a90a6::t_5a94c37bfd2cc6 31-36,39,42-43
+  s_30f22d631a90a6::t_b53bacdb89a528 40-41
+  s_30f22d631a90a6::t_a79bbfbdb49f4f 30,37-38
+package-lock.json
+  s_30f22d631a90a6::t_f4d5f5c251e39f 19,2060-2069
+package.json
+  s_30f22d631a90a6::t_eede089a5ff82a 36
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.18",
+  "base_commit_sha": "b0b0e56bf846d10f3fc654f73f1d65365987eb4c",
+  "prompts": {},
+  "humans": {
+    "h_a7ee58a11b75fb": {
+      "author": "Ihar Mikailau <ihar.mikailau@ventionteams.com>"
+    }
+  },
+  "sessions": {
+    "s_30f22d631a90a6": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a15e7d-9374-7ea1-b325-957a4d480799",
+        "model": "gpt-6-luna"
+      },
+      "human_author": "Ihar Mikailau <ihar.mikailau@ventionteams.com>"
+    },
+    "s_5db1aedc0cc9e7": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a15e4c-e591-7222-886f-2ad2fc54654a",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Ihar Mikailau <ihar.mikailau@ventionteams.com>"
+    },
+    "s_f56685370754b8": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a15e8c-9a71-7740-b0c3-e6a940e24b5c",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Ihar Mikailau <ihar.mikailau@ventionteams.com>"
+    }
+  }
+}
