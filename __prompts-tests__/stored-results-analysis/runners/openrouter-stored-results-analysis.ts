@@ -133,6 +133,11 @@ function buildRequest(
 export async function runOpenRouterStoredResultsAnalysis(
   options: RunOpenRouterEvalOptions,
 ): Promise<OpenRouterEvalResult> {
+  if (Object.hasOwn(options, "model")) {
+    throw new Error(
+      "OpenRouter evaluation model overrides are not supported; select a pinned profile",
+    );
+  }
   const apiKey = options.apiKey ?? process.env.OPENROUTER_API_KEY;
   if (typeof apiKey !== "string" || !apiKey.trim()) {
     throw new OpenRouterDecisionsError(

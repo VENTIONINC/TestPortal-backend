@@ -14,6 +14,10 @@ export const OPENROUTER_EVALUATION_PROFILES = {
     id: "openai",
     model: "openai/gpt-6-luna-decisions",
   },
+  microsoft: {
+    id: "microsoft",
+    model: "microsoft/microsoft-decision-1",
+  },
 } as const;
 
 export type OpenRouterProfileId = keyof typeof OPENROUTER_EVALUATION_PROFILES;
@@ -45,9 +49,17 @@ export function resolveOpenRouterProfile(
   profileId: string,
   overrides: OpenRouterProfileOverrides = {},
 ): OpenRouterEvaluationProfile {
+  const unsupportedOverrides = Object.keys(overrides).filter(
+    (key) => key !== "concurrency" && key !== "timeoutMs",
+  );
+  if (unsupportedOverrides.length > 0) {
+    throw new Error(
+      `Unsupported OpenRouter evaluation override(s): ${unsupportedOverrides.join(", ")}`,
+    );
+  }
   if (!Object.hasOwn(OPENROUTER_EVALUATION_PROFILES, profileId)) {
     throw new Error(
-      `Unknown OpenRouter evaluation profile '${profileId}'; expected 'jev' or 'openai'`,
+      `Unknown OpenRouter evaluation profile '${profileId}'; expected 'jev', 'openai', or 'microsoft'`,
     );
   }
   const selected =

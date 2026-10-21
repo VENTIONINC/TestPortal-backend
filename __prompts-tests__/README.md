@@ -213,8 +213,8 @@ and upstream failures use stable error kinds. Malformed, incomplete, and
 undocumented refusal-shaped responses fail as `invalid_response`; the current
 OpenRouter Decisions contract does not define a refusal payload shape.
 
-This is OpenRouter's Decisions wire contract even for the `openai` evaluation
-profile. It is not the direct OpenAI Decisions API contract: direct OpenAI uses
+This is OpenRouter's Decisions wire contract for all evaluation profiles. It is
+not the direct OpenAI Decisions API contract: direct OpenAI uses
 its own endpoint and request/response schema, and its `input` or direct-provider
 payloads are rejected by this adapter. See the [OpenRouter Decisions
 reference](https://openrouter.ai/docs/api/api-reference/alphadecisions/submit-a-decisions-request)
@@ -222,18 +222,27 @@ and [OpenAI Decisions documentation](https://developers.openai.com/api/docs/guid
 
 ### OpenRouter evaluation profiles
 
-The shared stored-result category runner exposes two explicit profiles:
+The shared stored-result category runner exposes three pinned profiles:
 
 | Profile | OpenRouter model |
 | --- | --- |
 | `jev` | `typesafe/jev-1.13` |
 | `openai` | `openai/gpt-6-luna-decisions` |
+| `microsoft` | `microsoft/microsoft-decision-1` |
 
-Live-suite selection uses `OPENROUTER_EVAL_PROFILE=jev|openai`; if omitted, it
+The existing OpenRouter project uses `OPENROUTER_EVAL_PROFILE=jev|openai`; if omitted, it
 selects `openai`. Unknown values fail instead of choosing a model implicitly.
-Both profiles use concurrency 8, a 30-second timeout per attempt, and zero
+All profiles use concurrency 8, a 30-second timeout per attempt, and zero
 retries by default. Concurrency and timeout may be overridden with validated
-positive integers.
+positive integers. Evaluation model overrides are rejected; choose a pinned
+profile instead. Microsoft is selected only by its dedicated Jest project and
+is not affected by `OPENROUTER_EVAL_PROFILE`.
+
+HTTP 413 payload-too-large and context-limit HTTP 400 responses remain upstream
+failures with their status and attempt count. They are never retried, even if a
+caller enables transient retries, and the evaluation does not truncate the
+evidence to force a request through. Failed requests produce no successful
+prediction or completed-run report.
 
 The OpenRouter runner evaluates only the five-category choice. It uses the
 existing priority `infra`, `performance`, `script`, `bug`, `other`, with explicit
@@ -266,7 +275,37 @@ npx jest --config jest.prompts.config.ts --selectProjects stored-results-analysi
 
 When the key is absent or whitespace, the live project is skipped before it
 reads either dataset. An invalid supplied profile fails clearly. These commands
-run only the two TP-5 profiles; Microsoft is outside TP-5.
+run only Jev or OpenAI Decisions. The independent TypeSafe project continues to
+use `TYPESAFE_API_KEY`.
+
+### Microsoft Decision smoke and regression
+
+Generate the same shared datasets once. Microsoft uses only
+`OPENROUTER_API_KEY`; it does not need either direct-provider credential and
+always selects `microsoft/microsoft-decision-1`, regardless of
+`OPENROUTER_EVAL_PROFILE`:
+
+```bash
+npx tsx __prompts-tests__/stored-results-analysis/generate-datasets.ts
+export OPENROUTER_API_KEY="..."
+npx jest --config jest.prompts.config.ts --selectProjects stored-results-analysis-microsoft-decision --testPathPattern='microsoft-decision\.smoke\.test\.ts$'
+npx jest --config jest.prompts.config.ts --selectProjects stored-results-analysis-microsoft-decision --testPathPattern='microsoft-decision\.regression\.test\.ts$'
+```
+
+Without a nonblank OpenRouter key, these suites skip before reading datasets or
+making a request. Smoke requires 100% accuracy; regression requires at least
+90%. The generated data remains the common 4-case smoke and 40-case regression
+baseline, which has no performance-category examples.
+
+Microsoft writes timestamped and `latest.json` reports to
+`__prompts-tests__/stored-results-analysis/reports/openrouter/microsoft/<suite>/`.
+Reports include validated answers and distributions, pinned/requested and
+returned model identities, evaluation timestamp, dataset and policy identity,
+per-case gateway-inclusive latency, request/attempt counts, and actual usage or
+cost when available (otherwise `null`). Complete reports are written before
+the accuracy threshold is asserted. A failed run writes no complete report;
+`latest.json` may still point to an earlier successful run, so use timestamped
+files as research evidence. Dataset and report directories are ignored by Git.
 
 ### OpenRouter reports and comparisons
 
@@ -288,9 +327,42 @@ npx tsx __prompts-tests__/stored-results-analysis/runners/compare-openrouter-rep
   __prompts-tests__/stored-results-analysis/reports/openrouter/openai/regression/latest.json
 ```
 
-The comparison prints separate model summaries, mismatches, accuracy, duration,
-request/attempt counts, and differences for usage fields available in both
-reports. A missing usage or cost value stays unavailable in the summary.
+The two-report comparison keeps its existing Jev/OpenAI output. A three-report
+comparison also validates OpenRouter provenance, pinned requested models,
+complete matching experiment identity, unique case identities, and recomputed
+correctness totals. It prints Jev, OpenAI, and Microsoft summaries with
+mismatches, accuracy, whole-run duration, mean per-case request latency,
+request/attempt counts, evaluation timestamps, requested/returned models, and
+actual available usage/cost. Microsoft-minus-Jev and Microsoft-minus-OpenAI
+differences preserve unavailable metrics as `null`. Raw confidence is retained
+as provider evidence and is not treated as calibrated model quality.
+
+For a reproducible three-model experiment, generate the common datasets once,
+run Jev and OpenAI through the existing OpenRouter project with the same
+execution settings, then run Microsoft through its dedicated project. Select
+exact timestamped report paths in Jev, OpenAI, Microsoft order:
+
+```bash
+npx tsx __prompts-tests__/stored-results-analysis/generate-datasets.ts
+export OPENROUTER_API_KEY="..."
+export OPENROUTER_EVAL_PROFILE=jev
+npx jest --config jest.prompts.config.ts --selectProjects stored-results-analysis-openrouter-decisions --testPathPattern='openrouter\.smoke\.test\.ts$'
+npx jest --config jest.prompts.config.ts --selectProjects stored-results-analysis-openrouter-decisions --testPathPattern='openrouter\.regression\.test\.ts$'
+export OPENROUTER_EVAL_PROFILE=openai
+npx jest --config jest.prompts.config.ts --selectProjects stored-results-analysis-openrouter-decisions --testPathPattern='openrouter\.smoke\.test\.ts$'
+npx jest --config jest.prompts.config.ts --selectProjects stored-results-analysis-openrouter-decisions --testPathPattern='openrouter\.regression\.test\.ts$'
+npx jest --config jest.prompts.config.ts --selectProjects stored-results-analysis-microsoft-decision --testPathPattern='microsoft-decision\.smoke\.test\.ts$'
+npx jest --config jest.prompts.config.ts --selectProjects stored-results-analysis-microsoft-decision --testPathPattern='microsoft-decision\.regression\.test\.ts$'
+npx tsx __prompts-tests__/stored-results-analysis/runners/compare-openrouter-reports.ts \
+  "path/to/jev-timestamped-report.json" "path/to/openai-timestamped-report.json" "path/to/microsoft-timestamped-report.json"
+```
+
+These suites currently share concurrency 8, 30-second per-attempt timeout, and
+zero retries. Reported per-case latency includes OpenRouter gateway and routing
+time; it is not direct-provider latency. Model aliases may change weights over
+time, so retain returned model IDs and timestamps. A failed run does not replace
+the last successful `latest.json`; never substitute it for the missing run's
+timestamped evidence. Choosing a model for future work remains a human decision.
 Probabilities are the provider's raw distribution over the named criteria;
 they are evaluation evidence and are not calibrated to the production
 `analysisConfidence` scale.
