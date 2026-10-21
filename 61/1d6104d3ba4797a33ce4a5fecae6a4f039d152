@@ -1,0 +1,72 @@
+__prompts-tests__/stored-results-analysis/v1.1.0/openrouter.smoke.test.ts
+  s_45022f9f266b84::t_40c968a04b36bc 10-11
+__prompts-tests__/error-solution/v1.0.0/templates/error-solution/bug.assertion.ts
+  s_45022f9f266b84::t_40c968a04b36bc 4-5
+__prompts-tests__/stored-results-analysis/runners/compare-versions.ts
+  s_45022f9f266b84::t_40c968a04b36bc 9
+__prompts-tests__/error-solution/v1.0.0/templates/error-solution/performance.slow-response.ts
+  s_45022f9f266b84::t_40c968a04b36bc 4-5
+__prompts-tests__/stored-results-analysis/v1.1.0/templates/stored-results-analysis/other.generic.ts
+  s_45022f9f266b84::t_40c968a04b36bc 4-5
+__prompts-tests__/stored-results-analysis/v1.1.0/templates/stored-results-analysis/script.selector-not-found.ts
+  s_45022f9f266b84::t_40c968a04b36bc 4-5
+src/config/cognitoConfig.ts
+  s_45022f9f266b84::t_40c968a04b36bc 10
+__prompts-tests__/stored-results-analysis/runners/openrouter-policy.ts
+  s_45022f9f266b84::t_d6bc26440d2063 4-5,11
+__prompts-tests__/stored-results-analysis/v1.1.0/templates/stored-results-analysis/bug.assertion.ts
+  s_45022f9f266b84::t_40c968a04b36bc 4-5
+__tests__/routes/status.test.ts
+  s_45022f9f266b84::t_40c968a04b36bc 7
+__prompts-tests__/error-solution/v1.0.0/templates/error-solution/infra.network-timeout.ts
+  s_45022f9f266b84::t_40c968a04b36bc 4-5
+__prompts-tests__/stored-results-analysis/v1.1.0/templates/stored-results-analysis/infra.network-timeout.ts
+  s_45022f9f266b84::t_40c968a04b36bc 4-5
+__prompts-tests__/error-solution/v1.0.0/templates/error-solution/script.selector-not-found.ts
+  s_45022f9f266b84::t_40c968a04b36bc 4-5
+__prompts-tests__/stored-results-analysis/runners/openrouter-suite.ts
+  s_45022f9f266b84::t_40c968a04b36bc 4
+__prompts-tests__/error-solution/v1.0.0/smoke.test.ts
+  s_45022f9f266b84::t_40c968a04b36bc 8,11-12
+__prompts-tests__/stored-results-analysis/runners/stored-results-analysis.ts
+  s_45022f9f266b84::t_40c968a04b36bc 12
+__tests__/prompts/openrouter-evaluation.test.ts
+  s_45022f9f266b84::t_c736118aad3a95 10,18,22-26,30,38-41
+__prompts-tests__/stored-results-analysis/v1.1.0/smoke.test.ts
+  s_45022f9f266b84::t_40c968a04b36bc 11,14-15
+__prompts-tests__/error-solution/runners/error-solution.ts
+  s_45022f9f266b84::t_40c968a04b36bc 15
+__prompts-tests__/stored-results-analysis/runners/openrouter-report.ts
+  s_45022f9f266b84::t_40c968a04b36bc 8
+__prompts-tests__/error-solution/v1.0.0/regression.test.ts
+  s_45022f9f266b84::t_40c968a04b36bc 8,11-12
+__tests__/lib/openrouter-decisions.test.ts
+  s_45022f9f266b84::t_c736118aad3a95 7,12-13
+__prompts-tests__/stored-results-analysis/v1.1.0/regression.test.ts
+  s_45022f9f266b84::t_40c968a04b36bc 11,14-15
+__prompts-tests__/stored-results-analysis/runners/openrouter-stored-results-analysis.ts
+  s_45022f9f266b84::t_40c968a04b36bc 4,9,15-16
+__prompts-tests__/stored-results-analysis/v1.1.0/openrouter.regression.test.ts
+  s_45022f9f266b84::t_40c968a04b36bc 10-11
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.18",
+  "base_commit_sha": "611d6104d3ba4797a33ce4a5fecae6a4f039d152",
+  "prompts": {},
+  "humans": {
+    "h_a7ee58a11b75fb": {
+      "author": "Ihar Mikailau <ihar.mikailau@ventionteams.com>"
+    }
+  },
+  "sessions": {
+    "s_45022f9f266b84": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a15d98-d331-7c11-a25a-0fe03f3535da",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Ihar Mikailau <ihar.mikailau@ventionteams.com>"
+    }
+  }
+}
