@@ -429,6 +429,12 @@ export const userService = {
     return await userModel.list();
   },
 
+  async listActiveDirectory(): Promise<
+    Array<{ id: string; name: string; email: string }>
+  > {
+    return await userModel.listActiveDirectory();
+  },
+
   async approvePendingUser(userId: string): Promise<PrismaUser> {
     const user = await this.getUserById(userId);
 

@@ -1,0 +1,4 @@
+interface:
+  display_name: "TestPortal Create Issue"
+  short_description: "Create scoped issues matching repository conventions"
+  default_prompt: "Use $testportal-create-issue to create a GitHub issue for the agreed scope, checking related work and matching existing issue formatting."

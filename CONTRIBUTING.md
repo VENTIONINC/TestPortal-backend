@@ -88,6 +88,11 @@ Before opening a pull request, run:
 3. `npm test`
 4. `npm run build`
 
+The Jest categories and database requirements are documented in
+[docs/TESTING.md](docs/TESTING.md). Use `npm run test:integration` with an
+isolated `TEST_DATABASE_URL` when a change affects database or in-process
+transport integration behavior.
+
 ## Code Style
 
 - Follow the MVC patterns used in `src/controllers`, `src/services`, `src/models`, and `src/routes`.
