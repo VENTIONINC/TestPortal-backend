@@ -1,0 +1,21 @@
+.gitignore
+  s_2d52cf123cad66::t_79e584f4595f10 92-96
+docs/CARTODEX_MAP.md
+  s_2d52cf123cad66::t_8c49eb54f7a4dc 153,170,172,195
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.18",
+  "base_commit_sha": "cda4b62b979dd0667c195ef9bc9fd9f41966a5ea",
+  "prompts": {},
+  "sessions": {
+    "s_2d52cf123cad66": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a16308-475a-7c00-b0c6-ccbc32ad4ccc",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Ihar Mikailau <ihar.mikailau@ventionteams.com>"
+    }
+  }
+}
