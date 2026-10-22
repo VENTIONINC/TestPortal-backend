@@ -1,6 +1,16 @@
 // Copyright 2026 VENSOLUTIONSGROUP LTD
 // SPDX-License-Identifier: Apache-2.0
 
+import { HTTPClient, OpenRouter, type Fetcher } from "@openrouter/sdk";
+import {
+  ConnectionError,
+  InvalidRequestError,
+  RequestAbortedError,
+  RequestTimeoutError,
+  SDKValidationError,
+  UnexpectedClientError,
+} from "@openrouter/sdk/models/errors";
+
 import {
   openRouterDecisionsRequestSchema,
   type OpenRouterDecisionsRequest,
@@ -11,6 +21,7 @@ export const OPENROUTER_DECISIONS_ENDPOINT =
 export const DEFAULT_OPENROUTER_TIMEOUT_MS = 30_000;
 export const DEFAULT_OPENROUTER_MAX_RETRIES = 0;
 export const MAX_OPENROUTER_RETRIES = 3;
+const OPENROUTER_DECISIONS_ORIGIN = "https://openrouter.ai";
 const MAX_TIMEOUT_MS = 120_000;
 const MAX_RETRY_AFTER_MS = 2_000;
 
@@ -57,13 +68,17 @@ export interface OpenRouterTransportResult {
   durationMs: number;
 }
 
-function validateTransportOptions(options: OpenRouterTransportOptions): {
+interface TransportConfig {
   apiKey: string;
   fetchImpl: typeof fetch;
   timeoutMs: number;
   maxRetries: number;
   sleep: (milliseconds: number) => Promise<void>;
-} {
+}
+
+function validateTransportOptions(
+  options: OpenRouterTransportOptions,
+): TransportConfig {
   const apiKey = options.apiKey ?? process.env.OPENROUTER_API_KEY;
   if (typeof apiKey !== "string" || !apiKey.trim()) {
     throw new OpenRouterDecisionsError(
@@ -115,8 +130,7 @@ function isRetryableStatus(status: number): boolean {
   return status === 429 || status >= 500;
 }
 
-function retryAfterMs(response: Response, attempt: number): number {
-  const retryAfter = response.headers.get("retry-after");
+function retryDelayMs(retryAfter: string | null, attempt: number): number {
   if (retryAfter) {
     const seconds = Number(retryAfter);
     if (Number.isFinite(seconds) && seconds >= 0) {
@@ -130,19 +144,61 @@ function retryAfterMs(response: Response, attempt: number): number {
   return Math.min(200 * 2 ** (attempt - 1), MAX_RETRY_AFTER_MS);
 }
 
-async function readJson(response: Response): Promise<unknown> {
+function mapSdkFailure(
+  failure: unknown,
+  attempts: number,
+  timedOut: boolean,
+): OpenRouterDecisionsError {
+  if (failure instanceof InvalidRequestError || failure instanceof SDKValidationError) {
+    return new OpenRouterDecisionsError(
+      "configuration",
+      "OpenRouter Decisions rejected the request configuration",
+      { attempts },
+    );
+  }
+  if (
+    timedOut ||
+    failure instanceof RequestTimeoutError ||
+    failure instanceof RequestAbortedError
+  ) {
+    return new OpenRouterDecisionsError(
+      "timeout",
+      "OpenRouter request timed out",
+      { attempts },
+    );
+  }
+  if (failure instanceof ConnectionError || failure instanceof UnexpectedClientError) {
+    return new OpenRouterDecisionsError(
+      "network",
+      "OpenRouter network request failed",
+      { attempts },
+    );
+  }
+  return new OpenRouterDecisionsError(
+    attempts === 0 ? "configuration" : "upstream",
+    attempts === 0
+      ? "OpenRouter Decisions rejected the request configuration"
+      : "OpenRouter request failed",
+    { attempts },
+  );
+}
+
+async function parseCapturedSuccess(
+  response: Response,
+  attempts: number,
+): Promise<unknown> {
   try {
     return await response.json();
-  } catch (cause) {
+  } catch {
     throw new OpenRouterDecisionsError(
       "invalid_response",
       "OpenRouter returned malformed JSON",
-      { status: response.status, cause },
+      { attempts, status: response.status },
     );
   }
 }
 
-/** Submit a validated request with one bounded timeout per transport attempt. */
+/** Submit through the SDK while keeping application retry and response policy local. */
 export async function submitOpenRouterDecision(
   input: OpenRouterDecisionsRequest,
   options: OpenRouterTransportOptions = {},
@@ -155,73 +211,124 @@ export async function submitOpenRouterDecision(
     );
   }
   const config = validateTransportOptions(options);
-  const body = {
+  const request = {
     ...parsedRequest.data,
-    provider: { allow_fallbacks: false as const },
+    provider: { allowFallbacks: false },
   };
   const startedAt = Date.now();
   let attempts = 0;
 
   while (attempts <= config.maxRetries) {
-    attempts += 1;
+    let capturedResponse: Response | undefined;
+    let retryAfter: string | null = null;
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), config.timeoutMs);
-    try {
-      const response = await config.fetchImpl(OPENROUTER_DECISIONS_ENDPOINT, {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${config.apiKey}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(body),
-        signal: controller.signal,
-      });
+    const httpClient = new HTTPClient({
+      fetcher: ((input, init) => config.fetchImpl(input, init)) as Fetcher,
+    });
+    httpClient.addHook("beforeRequest", () => {
+      attempts += 1;
+    });
+    httpClient.addHook("response", (response) => {
+      capturedResponse = response.clone();
+      retryAfter = response.headers.get("retry-after");
+    });
 
-      if (!response.ok) {
-        const error = new OpenRouterDecisionsError(
-          classifyStatus(response.status),
-          `OpenRouter request failed with HTTP ${response.status}`,
-          { status: response.status, attempts },
+    try {
+      const client = new OpenRouter({
+        apiKey: config.apiKey,
+        httpClient,
+        retryConfig: { strategy: "none" },
+      });
+      await client.alpha.decisions.create(
+        { decisionsRequest: request },
+        {
+          serverURL: OPENROUTER_DECISIONS_ORIGIN,
+          retries: { strategy: "none" },
+          retryCodes: [],
+          signal: controller.signal,
+        },
+      );
+
+      if (!capturedResponse) {
+        throw new OpenRouterDecisionsError(
+          "upstream",
+          "OpenRouter request completed without a captured response",
+          { attempts },
         );
-        if (isRetryableStatus(response.status) && attempts <= config.maxRetries) {
-          const delay = retryAfterMs(response, attempts);
-          clearTimeout(timeout);
-          await config.sleep(delay);
-          continue;
-        }
-        throw error;
       }
 
-      const data = await readJson(response);
+      const status = capturedResponse.status;
+      if (status < 200 || status >= 300) {
+        throw new OpenRouterDecisionsError(
+          classifyStatus(status),
+          `OpenRouter request failed with HTTP ${status}`,
+          { status, attempts },
+        );
+      }
+
+      if (controller.signal.aborted) {
+        throw new OpenRouterDecisionsError(
+          "timeout",
+          `OpenRouter request timed out after ${config.timeoutMs}ms`,
+          { status, attempts },
+        );
+      }
+
+      const data = await parseCapturedSuccess(capturedResponse, attempts);
       return { data, attempts, durationMs: Date.now() - startedAt };
     } catch (error) {
+      let failure: OpenRouterDecisionsError;
       if (error instanceof OpenRouterDecisionsError) {
-        if (error.attempts === 0) {
-          throw new OpenRouterDecisionsError(error.kind, error.message, {
-            ...(error.status === undefined ? {} : { status: error.status }),
-            attempts,
-            cause: error,
-          });
+        failure = error;
+      } else if (
+        capturedResponse &&
+        capturedResponse.status >= 200 &&
+        capturedResponse.status < 300
+      ) {
+        if (controller.signal.aborted) {
+          failure = new OpenRouterDecisionsError(
+            "timeout",
+            `OpenRouter request timed out after ${config.timeoutMs}ms`,
+            { status: capturedResponse.status, attempts },
+          );
+        } else {
+          const data = await parseCapturedSuccess(capturedResponse, attempts);
+          return { data, attempts, durationMs: Date.now() - startedAt };
         }
-        throw error;
+      } else if (capturedResponse) {
+        const status = capturedResponse.status;
+        failure = new OpenRouterDecisionsError(
+          classifyStatus(status),
+          `OpenRouter request failed with HTTP ${status}`,
+          { status, attempts },
+        );
+      } else {
+        failure = mapSdkFailure(error, attempts, controller.signal.aborted);
       }
-      const timedOut = controller.signal.aborted;
-      const kind = timedOut ? "timeout" : "network";
-      const failure = new OpenRouterDecisionsError(
-        kind,
-        timedOut
-          ? `OpenRouter request timed out after ${config.timeoutMs}ms`
-          : "OpenRouter network request failed",
-        { attempts },
-      );
-      if (attempts <= config.maxRetries) {
+
+      const retryableStatus =
+        failure.status !== undefined &&
+        (failure.kind === "rate_limit" || failure.kind === "upstream") &&
+        isRetryableStatus(failure.status);
+      if (
+        (failure.kind === "network" ||
+          failure.kind === "timeout" ||
+          retryableStatus) &&
+        attempts <= config.maxRetries
+      ) {
         clearTimeout(timeout);
-        await config.sleep(Math.min(200 * 2 ** (attempts - 1), MAX_RETRY_AFTER_MS));
+        await config.sleep(
+          retryDelayMs(retryableStatus ? retryAfter : null, attempts),
+        );
         continue;
       }
       throw failure;
     } finally {
       clearTimeout(timeout);
+      if (capturedResponse?.body && !capturedResponse.bodyUsed) {
+        await capturedResponse.body.cancel().catch(() => undefined);
+      }
     }
   }
 
