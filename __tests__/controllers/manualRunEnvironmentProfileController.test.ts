@@ -47,13 +47,13 @@ describe("environment profile controller", () => {
     expect(res.status).toHaveBeenCalledWith(400);
     expect(service.update).not.toHaveBeenCalled();
   });
-  it("returns scoped profiles and deletes by project, owner, and id", async () => {
+  it("returns and deletes profiles scoped to the project", async () => {
     service.list.mockResolvedValue([]);
     const res = response();
     await controller.list(request(), res);
     await controller.remove(request(), res);
-    expect(service.list).toHaveBeenCalledWith(projectId, ownerId);
-    expect(service.remove).toHaveBeenCalledWith(projectId, ownerId, profileId);
+    expect(service.list).toHaveBeenCalledWith(projectId);
+    expect(service.remove).toHaveBeenCalledWith(projectId, profileId);
     expect(res.status).toHaveBeenCalledWith(204);
   });
 });

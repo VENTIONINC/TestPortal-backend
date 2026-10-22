@@ -27,7 +27,7 @@ describe("manual environment profile scope", () => {
   });
   it("rejects inaccessible projects before any profile query", async () => {
     model.projectAccessible.mockResolvedValue(false);
-    await expect(service.list(projectId, ownerId)).rejects.toBeInstanceOf(ProfileNotFoundError);
+    await expect(service.list(projectId)).rejects.toBeInstanceOf(ProfileNotFoundError);
     expect(model.list).not.toHaveBeenCalled();
   });
   it("creates with creator attribution and scopes mutations to the project", async () => {
