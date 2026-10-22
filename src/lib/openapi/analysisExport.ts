@@ -10,7 +10,7 @@ export function registerAnalysisExportRoutes(registry: OpenAPIRegistry) {
     method: "get",
     path: "/api/v2/analysis-export",
     description:
-      "Exports AI analysis and human feedback data as JSONL for a project and date range",
+      "Exports AI analysis and human feedback as JSONL for a shared-workspace project and date range; project ownerId does not restrict access",
     security: [{ BearerAuth: [] }],
     request: {
       query: z.object({

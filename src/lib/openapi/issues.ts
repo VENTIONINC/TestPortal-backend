@@ -143,7 +143,7 @@ export function registerIssueRoutes(registry: OpenAPIRegistry) {
     method: "get",
     path: "/api/v2/issues",
     description:
-      "Retrieves issues with pagination, optional persisted category filtering, and linked-result category summaries.",
+      "Retrieves issues from a shared-workspace project with pagination, optional persisted category filtering, and linked-result category summaries.",
     request: {
       query: z.object({
         projectId: z.string().uuid().describe("Project ID to filter issues"),
@@ -244,7 +244,7 @@ export function registerIssueRoutes(registry: OpenAPIRegistry) {
     method: "get",
     path: "/api/v2/issues/{issueId}",
     description:
-      "Retrieves an issue with its persisted category and a linked-result category summary.",
+      "Retrieves an issue from a shared-workspace project with its persisted category and a linked-result category summary. Project ownership does not restrict access.",
     request: {
       params: z.object({
         issueId: z.string().uuid(),
@@ -253,7 +253,7 @@ export function registerIssueRoutes(registry: OpenAPIRegistry) {
         projectId: z
           .string()
           .uuid()
-          .describe("Project ID to verify ownership of the issue"),
+          .describe("Project ID used to scope the issue lookup"),
       }),
     },
     security: [{ BearerAuth: [] }],
@@ -298,7 +298,7 @@ export function registerIssueRoutes(registry: OpenAPIRegistry) {
     method: "post",
     path: "/api/v2/issues",
     description:
-      "Creates an issue with a required lowercase category.",
+      "Creates an issue in a shared-workspace project with a required lowercase category (requires authentication).",
     request: {
       body: {
         content: {
@@ -342,7 +342,7 @@ export function registerIssueRoutes(registry: OpenAPIRegistry) {
     method: "patch",
     path: "/api/v2/issues/{issueId}",
     description:
-      "Updates issue core fields, including an optional lowercase category.",
+      "Updates issue core fields in a shared-workspace project, including an optional lowercase category (requires authentication).",
     request: {
       params: z.object({
         issueId: z.string().uuid(),
@@ -397,7 +397,7 @@ export function registerIssueRoutes(registry: OpenAPIRegistry) {
     method: "delete",
     path: "/api/v2/issues/{issueId}",
     description:
-      "Deletes an issue and its associated assumptions. The response contains the deleted issue core.",
+      "Deletes an issue and its associated assumptions from a shared-workspace project (requires authentication). The response contains the deleted issue core.",
     request: {
       params: z.object({
         issueId: z.string().uuid(),
@@ -406,7 +406,7 @@ export function registerIssueRoutes(registry: OpenAPIRegistry) {
         projectId: z
           .string()
           .uuid()
-          .describe("Project ID to verify ownership of the issue"),
+          .describe("Project ID used to scope the issue lookup"),
       }),
     },
     security: [{ BearerAuth: [] }],

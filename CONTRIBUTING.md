@@ -19,8 +19,6 @@ large changes that do not fit the project direction.
    - If the change affects APIs, database schema, MCP tools, authentication, or
      project structure, please wait for maintainer feedback before investing a
      lot of time.
-   - For non-trivial changes, maintainers may ask you to use the repository's
-     OpenSpec skills instead of creating OpenSpec files by hand.
 3. **Create a branch**
    - Fork the repository if you do not have write access.
    - Create a focused branch from `main`, unless maintainers ask you to use another branch.
@@ -33,7 +31,6 @@ large changes that do not fit the project direction.
 5. **Open a pull request**
    - Open pull requests against `main`, unless the issue or maintainer guidance says otherwise.
    - Link the related issue or discussion.
-   - Link the OpenSpec change when one was created.
    - Explain what changed and why.
    - Include screenshots, API examples, or logs when they help reviewers.
    - Mention any follow-up work that is intentionally left out.
@@ -72,6 +69,11 @@ Before opening a pull request, run:
 2. `npm run lint`
 3. `npm test`
 4. `npm run build`
+
+The Jest categories and database requirements are documented in
+[docs/TESTING.md](docs/TESTING.md). Use `npm run test:integration` with an
+isolated `TEST_DATABASE_URL` when a change affects database or in-process
+transport integration behavior.
 
 ## Code Style
 

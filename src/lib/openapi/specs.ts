@@ -23,13 +23,17 @@ export function registerSpecRoutes(registry: OpenAPIRegistry) {
   registry.registerPath({
     method: "get",
     path: "/api/v2/specs/{specId}",
-    description: "Retrieves a specific spec by its ID (requires projectId)",
+    description:
+      "Retrieves a spec in a shared-workspace project (requires projectId; project ownership does not restrict access)",
     request: {
       params: z.object({
         specId: z.string().uuid(),
       }),
       query: z.object({
-        projectId: z.string().uuid().describe("Project ID to verify ownership of the spec"),
+        projectId: z
+          .string()
+          .uuid()
+          .describe("Project ID used to scope the spec lookup"),
       }),
     },
     responses: {
@@ -86,7 +90,8 @@ export function registerSpecRoutes(registry: OpenAPIRegistry) {
   registry.registerPath({
     method: "delete",
     path: "/api/v2/specs/{specId}",
-    description: "Delete a specific spec by its ID (requires projectId and authentication)",
+    description:
+      "Deletes a spec in a shared-workspace project (requires projectId and authentication)",
     request: {
       params: z.object({
         specId: z.string().uuid().openapi({
@@ -94,7 +99,10 @@ export function registerSpecRoutes(registry: OpenAPIRegistry) {
         }),
       }),
       query: z.object({
-        projectId: z.string().uuid().describe("Project ID to verify ownership of the spec"),
+        projectId: z
+          .string()
+          .uuid()
+          .describe("Project ID used to scope the spec deletion"),
       }),
     },
     responses: {

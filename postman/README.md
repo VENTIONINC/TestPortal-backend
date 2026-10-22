@@ -36,6 +36,15 @@ Model Context Protocol server endpoints:
 
 **Authentication**: Requires MCP token from User API
 
+### 4. 🧪 Manual Test Runs (`Manual_Test_Runs_API.postman_collection.json`)
+Authenticated manual execution snapshots and project/scenario history:
+- Start a structured scenario snapshot
+- Update copied step and run outcomes
+- Complete and retrieve immutable execution history
+- Query detached project history with status/date/scenario filters
+
+**Documentation**: See `docs/Manual_Test_Runs_API.md`
+
 ## 🔧 Environment Setup
 
 Create a Postman environment with these variables:

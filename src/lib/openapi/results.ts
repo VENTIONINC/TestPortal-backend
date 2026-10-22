@@ -111,6 +111,23 @@ const ResultSchema = z
   })
   .openapi("Result");
 
+const RelatedTestScenarioSummarySchema = z
+  .object({
+    id: z.string().uuid(),
+    title: z.string(),
+    scenarioKey: z.string().max(100).nullable(),
+    details: z.string().nullable(),
+    contentMd: z
+      .string()
+      .describe("Current generated Test Scenario Markdown returned as JSON text"),
+  })
+  .strict()
+  .openapi("RelatedTestScenarioSummary");
+
+const ResultDetailSchema = ResultSchema.extend({
+  relatedTestScenarios: z.array(RelatedTestScenarioSummarySchema),
+}).openapi("ResultDetail");
+
 const ResultsListResponseSchema = z
   .object({
     results: z.array(ResultSchema),
@@ -216,6 +233,11 @@ const UpdateResultAnalysisFeedbackRequestSchema = z
 
 export function registerResultRoutes(registry: OpenAPIRegistry) {
   registry.register("Result", ResultSchema);
+  registry.register(
+    "RelatedTestScenarioSummary",
+    RelatedTestScenarioSummarySchema,
+  );
+  registry.register("ResultDetail", ResultDetailSchema);
   registry.register("ResultSpec", ResultSpecSchema);
   registry.register("ResultExecution", ResultExecutionSchema);
   registry.register("ResultNestedError", ResultErrorSchema);
@@ -234,7 +256,7 @@ export function registerResultRoutes(registry: OpenAPIRegistry) {
     method: "get",
     path: "/api/v2/results",
     description:
-      "Retrieves results with optional filtering (requires projectId)",
+      "Retrieves results from a shared-workspace project with optional filtering (requires projectId)",
     security: [{ BearerAuth: [] }],
     request: {
       query: z.object({
@@ -300,7 +322,8 @@ export function registerResultRoutes(registry: OpenAPIRegistry) {
   registry.registerPath({
     method: "get",
     path: "/api/v2/results/{resultId}",
-    description: "Retrieves a specific result by its ID (requires projectId)",
+    description:
+      "Retrieves a result in a shared-workspace project (requires projectId; project ownership does not restrict access)",
     security: [{ BearerAuth: [] }],
     request: {
       params: z.object({
@@ -310,7 +333,7 @@ export function registerResultRoutes(registry: OpenAPIRegistry) {
         projectId: z
           .string()
           .uuid()
-          .describe("Project ID to verify ownership of the result"),
+          .describe("Project ID used to scope the result lookup"),
       }),
     },
     responses: {
@@ -318,7 +341,7 @@ export function registerResultRoutes(registry: OpenAPIRegistry) {
         description: "Result details",
         content: {
           "application/json": {
-            schema: ResultSchema,
+            schema: ResultDetailSchema,
           },
         },
       },
@@ -548,7 +571,7 @@ export function registerResultRoutes(registry: OpenAPIRegistry) {
     method: "delete",
     path: "/api/v2/results/{resultId}",
     description:
-      "Delete a specific result by its ID (requires projectId and authentication)",
+      "Deletes a result in a shared-workspace project (requires projectId and authentication)",
     security: [{ BearerAuth: [] }],
     request: {
       params: z.object({
@@ -560,7 +583,7 @@ export function registerResultRoutes(registry: OpenAPIRegistry) {
         projectId: z
           .string()
           .uuid()
-          .describe("Project ID to verify ownership of the result"),
+          .describe("Project ID used to scope the result deletion"),
       }),
     },
     responses: {
@@ -606,6 +629,7 @@ export function registerResultRoutes(registry: OpenAPIRegistry) {
 
 export {
   ResultSchema,
+  ResultDetailSchema,
   ResultsStatsSchema,
   UpdateResultAnalysisRequestSchema,
   UpdateResultAnalysisFeedbackRequestSchema,

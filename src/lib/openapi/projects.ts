@@ -22,7 +22,12 @@ const ProjectSchema = z
     name: z.string(),
     description: z.string().nullable(),
     isActive: z.boolean(),
-    ownerId: z.string().uuid(),
+    ownerId: z
+      .string()
+      .uuid()
+      .describe(
+        "Creator/owner attribution. This field is not a visibility or authorization boundary in the shared workspace.",
+      ),
     categoryWeights: ProjectCategoryWeightsSchema,
     createdAt: z.string(),
     updatedAt: z.string(),
@@ -144,14 +149,7 @@ export function registerProjectRoutes(registry: OpenAPIRegistry) {
     method: "get",
     path: "/api/v2/projects",
     description:
-      "Retrieves all projects for the authenticated user (requires authentication)",
-    request: {
-      query: z.object({
-        ownerId: z.string().uuid().optional(),
-        isActive: z.boolean().optional(),
-        name: z.string().optional(),
-      }),
-    },
+      "Retrieves all projects in the shared workspace. Every active authenticated user can see projects regardless of ownerId.",
     security: [{ BearerAuth: [] }],
     responses: {
       200: {
@@ -233,7 +231,8 @@ export function registerProjectRoutes(registry: OpenAPIRegistry) {
   registry.registerPath({
     method: "get",
     path: "/api/v2/projects/{id}",
-    description: "Retrieves a specific project by ID (requires authentication)",
+    description:
+      "Retrieves a project from the shared workspace. ownerId is attribution metadata and does not restrict active authenticated users.",
     request: {
       params: z.object({
         id: z.string().uuid(),
@@ -280,7 +279,8 @@ export function registerProjectRoutes(registry: OpenAPIRegistry) {
   registry.registerPath({
     method: "post",
     path: "/api/v2/projects",
-    description: "Creates a new project (requires authentication)",
+    description:
+      "Creates a project in the shared workspace and records the authenticated creator as ownerId.",
     request: {
       body: {
         content: {
@@ -323,7 +323,8 @@ export function registerProjectRoutes(registry: OpenAPIRegistry) {
   registry.registerPath({
     method: "put",
     path: "/api/v2/projects/{id}",
-    description: "Updates an existing project (requires authentication)",
+    description:
+      "Updates a project in the shared workspace regardless of ownerId. Normal updates cannot transfer ownership.",
     request: {
       params: z.object({
         id: z.string().uuid(),
@@ -378,7 +379,7 @@ export function registerProjectRoutes(registry: OpenAPIRegistry) {
     method: "delete",
     path: "/api/v2/projects/{id}",
     description:
-      "Deletes a project by ID (requires authentication). Also deletes all associated executions, specs, and results (cascade delete).",
+      "Deletes a project in the shared workspace regardless of ownerId. Also deletes all associated executions, specs, and results (cascade delete).",
     request: {
       params: z.object({
         id: z.string().uuid(),
@@ -421,7 +422,7 @@ export function registerProjectRoutes(registry: OpenAPIRegistry) {
     method: "get",
     path: "/api/v2/projects/{projectId}/dashboard",
     description:
-      "Retrieves aggregated dashboard metrics, execution history, and recent execution list for a project.",
+      "Retrieves dashboard metrics for a shared-workspace project. Access does not depend on the project's ownerId.",
     request: {
       params: z.object({
         projectId: z

@@ -35,6 +35,13 @@ import {
   getResultErrorById,
 } from "@/mcp/tools/result-errors";
 import { getSpecById } from "@/mcp/tools/specs";
+import {
+  deleteTestScenario,
+  getTestScenario,
+  listTestScenarios,
+  updateTestScenario,
+} from "@/mcp/tools/test-scenarios";
+import { getAvailableProjects } from "@/mcp/tools/projects";
 import * as testPortalAssistant from "@/mcp/prompts/test-portal-assistant/v1.0.0";
 import * as issueAnalysisAssistant from "@/mcp/prompts/issue-analysis-assistant/v1.0.0";
 import * as environmentPerformanceAssistant from "@/mcp/prompts/environment-performance-assistant/v1.0.0";
@@ -57,6 +64,7 @@ interface TransportStorage {
 // Extended MCP server interface to handle tool registration
 interface McpServerWithTools extends McpServer {
   tool: (...args: unknown[]) => RegisteredTool;
+  registerTool: (...args: unknown[]) => RegisteredTool;
   connect: (transport: unknown) => Promise<void>;
 }
 
@@ -131,6 +139,7 @@ router.post(
         // Register all tools
         server.tool(...statusCheck);
         server.tool(...currentTime);
+        server.tool(...getAvailableProjects);
 
         // Issue tools
         server.tool(...getIssues);
@@ -158,6 +167,24 @@ router.post(
 
         // Spec tools
         server.tool(...getSpecById);
+
+        // Test Scenario tools
+        server.registerTool(listTestScenarios[0], {
+          description: listTestScenarios[1],
+          inputSchema: listTestScenarios[2],
+        }, listTestScenarios[3]);
+        server.registerTool(getTestScenario[0], {
+          description: getTestScenario[1],
+          inputSchema: getTestScenario[2],
+        }, getTestScenario[3]);
+        server.registerTool(updateTestScenario[0], {
+          description: updateTestScenario[1],
+          inputSchema: updateTestScenario[2],
+        }, updateTestScenario[3]);
+        server.registerTool(deleteTestScenario[0], {
+          description: deleteTestScenario[1],
+          inputSchema: deleteTestScenario[2],
+        }, deleteTestScenario[3]);
 
         // Test Portal Assistant
         server.registerPrompt(
