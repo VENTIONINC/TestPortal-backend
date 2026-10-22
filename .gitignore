@@ -91,3 +91,7 @@ mocks/
 
 # Generated prompt evaluation reports
 __prompts-tests__/**/reports/
+
+# Local tooling and generated reports
+/.agents/skills/playwright-cli/
+/.claude/skills/playwright-cli/
