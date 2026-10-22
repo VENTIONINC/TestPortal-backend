@@ -28,6 +28,14 @@ Naming convention per environment (`<env>` is one of `dev`, `stg`, `prod`):
 > Task Definition as `environment` / `secrets` and is **not** managed by this
 > workflow.
 
+Stored-result Decisions analysis is opt-in. Keep `USE_DECISIONS_API=false` (or unset) by default;
+only enable it after controlled acceptance. When enabled, configure `OPENROUTER_API_KEY` through
+the task definition's existing Secrets Manager / Parameter Store `secrets` wiring. The flag does
+not replace `OPENAI_API_KEY` for issue drafts and other generative features. Apply the additive
+Prisma migration before rollout. To roll provider selection back, set the flag to false and
+restart/redeploy; the nullable analysis columns remain in place and historical rows are not
+rewritten.
+
 ## Prerequisites
 
 These should already be configured by the ops/devops side. If a deploy fails

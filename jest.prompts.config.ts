@@ -5,10 +5,18 @@ const config: JestConfigWithTsJest = {
   projects: [
     {
       ...baseConfig,
-      testPathIgnorePatterns: ["/dist/"],
+      testPathIgnorePatterns: ["/dist/", "openrouter"],
       displayName: "stored-results-analysis",
       testMatch: [
         "<rootDir>/__prompts-tests__/stored-results-analysis/**/?(*.)test.ts",
+      ],
+    },
+    {
+      ...baseConfig,
+      testPathIgnorePatterns: ["/dist/"],
+      displayName: "stored-results-analysis-openrouter-decisions",
+      testMatch: [
+        "<rootDir>/__prompts-tests__/stored-results-analysis/**/openrouter.*.test.ts",
       ],
     },
     {

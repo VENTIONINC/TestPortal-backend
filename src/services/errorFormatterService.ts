@@ -162,7 +162,7 @@ const resolveResultAnalysis = async (
     };
   }
 
-  const analysisMap = await testAnalysisService.analyzeStoredResults([
+  const analysisMap = await testAnalysisService.analyzeGenerativeStoredResults([
     {
       id: result.id,
       status: result.status,

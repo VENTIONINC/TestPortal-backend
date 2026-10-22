@@ -6,7 +6,7 @@ import {
   jsonReportService,
   type ProcessReportResult,
 } from "@/services/jsonReportService";
-import { testAnalysisService } from "@/services/testAnalysisService";
+import { storedResultAnalysisService } from "@/services/storedResultAnalysisService";
 import type { TestResultAnalysis } from "@/schemas/testAnalysisSchemas";
 import type { ApiKeyAuthenticatedRequest } from "@/middleware/apiKeyMiddleware";
 import type { AuthenticatedRequest } from "@/middleware/authMiddleware";
@@ -116,28 +116,13 @@ export const jsonReportController = {
     // Step 4: Analyze stored results (POST-PERSIST)
     let analysisMap = null;
     try {
-      analysisMap =
-        await testAnalysisService.analyzeStoredResults(createdResults);
+      analysisMap = await storedResultAnalysisService.analyzeAndPersist(
+        projectId,
+        createdResults,
+      );
 
       // Step 5: Update results with analysis fields
       logger.info(`Updating ${analysisMap.size} results with analysis data`);
-
-      await Promise.all(
-        Array.from(analysisMap.entries()).map(([resultId, analysis]) =>
-          dbClient.result.update({
-            where: { id: resultId },
-            data: {
-              analysisStatus: analysis.status,
-              analysisCategory: analysis.category ?? null,
-              analysisConfidence: analysis.confidence,
-              analysisConclusion: analysis.conclusion ?? null,
-              analysisErrorQuality: analysis.errorQuality ?? null,
-              analysisErrorQualityConclusion:
-                analysis.errorQualityConclusion ?? null,
-            },
-          }),
-        ),
-      );
 
       logger.info(
         `Successfully updated ${analysisMap.size} results with analysis`,

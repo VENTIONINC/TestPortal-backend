@@ -4,7 +4,7 @@
 import { statusHandler } from "@/routes/status";
 import { executeController } from "@/test-utils/httpMocks";
 import { environment } from "@/config/environment";
-import pkg from "../../package.json";
+import pkg from "@/root/package.json";
 
 describe("status route", () => {
   it("GET /v2/status returns ok", async () => {

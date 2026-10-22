@@ -64,21 +64,6 @@ Supported file types for `npm run new:file`:
 
 Unsupported extensions fail with a clear error. For formats such as Markdown, JSON, SQL, or shell scripts, create the file manually until explicit support is added.
 
-## OpenSpec Workflow
-
-Use OpenSpec for changes that affect behavior, APIs, database schema, MCP tools,
-architecture, security, or user-facing workflows. Small typo fixes,
-straightforward documentation edits, and minor test-only cleanup usually do not
-need an OpenSpec change.
-
-When OpenSpec is needed, use the repository OpenSpec skills. See the
-[OpenSpec workflow guide](https://openspec.pro/workflow/) for the general flow.
-
-1. Optionally use `openspec-explore` to clarify early ideas before proposing a change.
-2. Use `openspec-propose` to create the change and planning artifacts.
-3. Use `openspec-apply-change` to implement the approved change and keep tasks updated.
-4. Use `openspec-archive-change` after the change is complete so the permanent specs in `openspec/specs` stay current.
-
 ## Validation
 
 Before opening a pull request, run:

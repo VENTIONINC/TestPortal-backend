@@ -49,7 +49,7 @@ jest.mock("@/services/resultService", () => ({
 
 jest.mock("@/services/testAnalysisService", () => ({
   testAnalysisService: {
-    analyzeStoredResults: jest.fn(),
+    analyzeGenerativeStoredResults: jest.fn(),
   },
 }));
 
@@ -181,8 +181,8 @@ describe("errorFormatterService.suggestFromResult", () => {
     typeof resultService.getResultById
   >;
   const analyzeStoredResultsMock =
-    testAnalysisService.analyzeStoredResults as jest.MockedFunction<
-      typeof testAnalysisService.analyzeStoredResults
+    testAnalysisService.analyzeGenerativeStoredResults as jest.MockedFunction<
+      typeof testAnalysisService.analyzeGenerativeStoredResults
     >;
 
   beforeEach(() => {
@@ -277,7 +277,7 @@ describe("errorFormatterService.suggestFromResult", () => {
       "project-1",
     );
 
-    expect(testAnalysisService.analyzeStoredResults).not.toHaveBeenCalled();
+    expect(testAnalysisService.analyzeGenerativeStoredResults).not.toHaveBeenCalled();
     expect(chatOpenAIMock).toHaveBeenCalledTimes(1);
     expect(withStructuredOutputMock).toHaveBeenCalledTimes(1);
     expect(invokeMock).toHaveBeenCalledTimes(1);
@@ -340,7 +340,7 @@ describe("errorFormatterService.suggestFromResult", () => {
       "project-1",
     );
 
-    expect(testAnalysisService.analyzeStoredResults).toHaveBeenCalledTimes(1);
+    expect(testAnalysisService.analyzeGenerativeStoredResults).toHaveBeenCalledTimes(1);
     expect(formatMessagesMock).toHaveBeenCalledWith(
       expect.objectContaining({ analysisCategory: "infra" }),
     );

@@ -2,6 +2,12 @@
 
 ## OpenAPI Schema
 
+Result analysis retains the existing public field shape. `analysisConclusion` can contain the
+fixed text `Explanation is not available from the Decisions API.` when the selected classifier
+does not provide rationale; error-quality values and conclusions may be `null` when unavailable.
+Human feedback remains authoritative over the automated category. Internal provider provenance and
+analysis failure JSON are excluded from REST and MCP responses and exports.
+
 ### GET `/api/openapi.json`
 
 - **Description:** Returns the OpenAPI 3.1.0 JSON schema specification for the entire API. This endpoint provides machine-readable documentation that can be used to generate client SDKs, API hooks, and interactive documentation.

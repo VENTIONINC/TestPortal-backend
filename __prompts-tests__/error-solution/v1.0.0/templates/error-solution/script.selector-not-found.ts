@@ -1,8 +1,8 @@
 // Copyright 2026 VENSOLUTIONSGROUP LTD
 // SPDX-License-Identifier: Apache-2.0
 
-import type { TestCase } from "../types";
-import { makeCaseBase, pick } from "../util";
+import type { TestCase } from "@/root/__prompts-tests__/error-solution/v1.0.0/templates/types";
+import { makeCaseBase, pick } from "@/root/__prompts-tests__/error-solution/v1.0.0/templates/util";
 
 export function scriptSelectorNotFound(i: number): TestCase {
   const base = makeCaseBase(i, {

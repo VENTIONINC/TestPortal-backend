@@ -54,7 +54,6 @@ Core domain data is project-scoped. `Project` owns executions, specs, issues, up
 | `__tests__` | Jest unit/integration coverage for routes, controllers, services, models, middleware, lib. | 49199 |
 | `__prompts-tests__` | Prompt evaluation runners, templates, dataset generators, smoke/regression tests. | 10585 |
 | `docs` | Human-facing API, MCP, Docker, deploy, auth, dashboard, release, and research docs. | 29688 |
-| `openspec` | Permanent specs and archived OpenSpec changes. | 16608 |
 | `postman` | REST/MCP Postman collections, environment, and usage docs. | 18729 |
 | `scripts` | License header and new-file automation. | 1093 |
 | `.github/workflows` | Manual ECS deploy and Docker publish workflows. | 1352 |
@@ -167,11 +166,10 @@ Core domain data is project-scoped. `Project` owns executions, specs, issues, up
 | `docs/DEPLOY_ECS.md` | ECS deployment and migration caveats. | 1872 |
 | `docs/RELEASE.md` | Release/version/tag workflow. | 473 |
 | `postman` | API collections and shared environment. | 18729 |
-| `openspec/specs` | Permanent accepted specs. | 3688 |
 
-**Exports**: OpenAPI JSON/Swagger UI, Postman collections, OpenSpec permanent specs, human docs.
+**Exports**: OpenAPI JSON/Swagger UI, Postman collections, human docs.
 
-**Dependencies**: Runtime routes/controllers/schemas, GitHub workflows, Docker configuration, OpenSpec archive history.
+**Dependencies**: Runtime routes/controllers/schemas, GitHub workflows, Docker configuration.
 
 **Dependents**: Developers, API consumers, release/deploy work, contract-update tasks, manual validation.
 

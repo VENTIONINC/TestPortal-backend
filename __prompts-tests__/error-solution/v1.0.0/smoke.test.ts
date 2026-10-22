@@ -5,11 +5,11 @@
  * Smoke tests for error solution prompt
  */
 
-import "../../testEnv";
+import "@/root/__prompts-tests__/testEnv";
 import fs from "node:fs";
 import path from "node:path";
-import { runEval } from "../runners/error-solution";
-import { DEFAULT_VERSION } from "../runners/versions";
+import { runEval } from "@/root/__prompts-tests__/error-solution/runners/error-solution";
+import { DEFAULT_VERSION } from "@/root/__prompts-tests__/error-solution/runners/versions";
 import type { TestCase } from "./templates/types";
 
 const datasetPath = path.join(

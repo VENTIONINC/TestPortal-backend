@@ -39,6 +39,8 @@ describe("resultService JSON payload normalization", () => {
     analysisFeedbackCategory: null,
     analysisFeedbackConfidence: null,
     analysisFeedbackConclusion: null,
+    analysisMetadata: { provider: "private-provider" },
+    analysisLastError: { message: "private-error" },
     spec: {
       id: "spec-1",
       createdAt: now,
@@ -135,6 +137,11 @@ describe("resultService JSON payload normalization", () => {
       },
     });
     expect(response.rawTotal).toBe(1);
+    const serialized = JSON.stringify(response);
+    expect(serialized).not.toContain("analysisMetadata");
+    expect(serialized).not.toContain("analysisLastError");
+    expect(serialized).not.toContain("private-provider");
+    expect(serialized).not.toContain("private-error");
   });
 
   it("limits raw results to unique specs from the filtered page", async () => {
