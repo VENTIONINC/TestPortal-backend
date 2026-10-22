@@ -41,6 +41,7 @@ import {
   listTestScenarios,
   updateTestScenario,
 } from "@/mcp/tools/test-scenarios";
+import { getAvailableProjects } from "@/mcp/tools/projects";
 import * as testPortalAssistant from "@/mcp/prompts/test-portal-assistant/v1.0.0";
 import * as issueAnalysisAssistant from "@/mcp/prompts/issue-analysis-assistant/v1.0.0";
 import * as environmentPerformanceAssistant from "@/mcp/prompts/environment-performance-assistant/v1.0.0";
@@ -138,6 +139,7 @@ router.post(
         // Register all tools
         server.tool(...statusCheck);
         server.tool(...currentTime);
+        server.tool(...getAvailableProjects);
 
         // Issue tools
         server.tool(...getIssues);
