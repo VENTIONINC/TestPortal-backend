@@ -11,13 +11,8 @@ import dotenv from "dotenv";
 // Load .env file
 dotenv.config();
 
-// Ensure required environment variables are set
-if (!process.env.OPENAI_API_KEY) {
-  throw new Error(
-    "OPENAI_API_KEY environment variable is required for prompt tests. " +
-      "Please add it to your .env file.",
-  );
-}
+// Live suites skip when credentials are absent; direct runners validate separately.
+export const hasOpenAiCredentials = Boolean(process.env.OPENAI_API_KEY?.trim());
 
 // Configure LangSmith tracing for prompt tests using dedicated variables
 if (

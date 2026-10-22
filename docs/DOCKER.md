@@ -2,6 +2,10 @@
 
 This guide explains how to build, publish, and run the Docker image for the Test Portal Backend.
 
+## AI configuration
+
+The runtime image includes the required shipped production and evaluation configuration files under `/app/config/ai`. Set `AI_CONFIG_PATH` only when replacing the production file with a complete custom configuration. Keep `OPENAI_API_KEY` in the task's environment secret configuration; do not add credentials to JSON files. See [AI_CONFIGURATION.md](AI_CONFIGURATION.md) for schemas, settings, supported models, evaluation isolation, and restart behavior.
+
 ## Prerequisites
 
 - Docker installed on your machine.

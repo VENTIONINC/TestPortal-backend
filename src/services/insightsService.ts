@@ -2,6 +2,8 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { ChatOpenAI } from "@langchain/openai";
+
+import { getProductionAiSettings, toChatOpenAIOptions } from "@/config/serverAiConfig";
 import getLogger from "@/lib/logger";
 import { buildInsightsPrompt } from "@/prompts/insights/v1.0.0";
 import { anomalyDetector } from "@/services/anomalyDetector";
@@ -158,12 +160,9 @@ export const insightsService = {
     const passRateTrend = getPassRateTrend(dashboard.history);
 
     try {
-      const model = new ChatOpenAI({
-        model: "gpt-4.1-mini",
-        temperature: 0.2,
-        maxTokens: 400,
-        maxRetries: 1,
-      });
+      const model = new ChatOpenAI(
+        toChatOpenAIOptions(getProductionAiSettings("dashboardInsights")),
+      );
 
       const promptMessages = await buildInsightsPrompt({
         filters,

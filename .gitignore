@@ -89,3 +89,8 @@ mocks/
 __prompts-tests__/**/datasets/
 __prompts-tests__/**/reports/
 mocks/
+
+# Local tooling and generated reports
+/.vsdlc/
+/.agents/skills/playwright-cli/
+/.claude/skills/playwright-cli/

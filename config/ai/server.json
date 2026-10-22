@@ -1,0 +1,48 @@
+{
+  "$schema": "./server.schema.json",
+  "version": 1,
+  "profiles": {
+    "default": {
+      "provider": "openai",
+      "model": "gpt-4.1-mini"
+    },
+    "classification": {
+      "provider": "openai",
+      "model": "gpt-6-luna",
+      "reasoning": {
+        "effort": "low"
+      }
+    },
+    "formatter": {
+      "provider": "openai",
+      "model": "gpt-6-luna",
+      "reasoning": {
+        "effort": "none"
+      }
+    }
+  },
+  "operations": {
+    "storedResultsAnalysis": {
+      "profile": "classification",
+      "maxOutputTokens": 4000,
+      "maxRetries": 2
+    },
+    "errorFormatting": {
+      "profile": "formatter",
+      "maxOutputTokens": 500,
+      "maxRetries": 2
+    },
+    "solutionSuggestion": {
+      "profile": "default",
+      "temperature": 0.3,
+      "maxOutputTokens": 700,
+      "maxRetries": 2
+    },
+    "dashboardInsights": {
+      "profile": "default",
+      "temperature": 0.2,
+      "maxOutputTokens": 400,
+      "maxRetries": 1
+    }
+  }
+}

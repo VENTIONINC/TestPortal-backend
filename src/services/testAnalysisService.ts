@@ -4,10 +4,7 @@
 import { ChatOpenAI } from "@langchain/openai";
 import { z } from "zod";
 
-import {
-  getPromptModelOptions,
-  storedResultsAnalysisConfig,
-} from "@/config/promptModels";
+import { getProductionAiSettings, toChatOpenAIOptions } from "@/config/serverAiConfig";
 import { normalizeJsonArrayForText } from "@/lib/jsonPayloads";
 import getLogger from "@/lib/logger";
 import { getStoredResultsAnalysisPrompt } from "@/prompts/stored-results-analysis/v1.2.0";
@@ -119,7 +116,7 @@ export const testAnalysisService = {
       const userPrompt = JSON.stringify(essentialData);
 
       const model = new ChatOpenAI(
-        getPromptModelOptions(storedResultsAnalysisConfig),
+        toChatOpenAIOptions(getProductionAiSettings("storedResultsAnalysis")),
       );
 
       const structuredModel = model.withStructuredOutput<

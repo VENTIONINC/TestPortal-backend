@@ -3,7 +3,8 @@
 
 import path from "node:path";
 
-import type { PromptModelSettings } from "@/config/promptModels";
+import type { ResolvedAiSettings } from "@/config/serverAiConfig";
+import type { EvalMetadata } from "./types";
 import { writePromptEvaluationReport } from "../../helpers/evaluation";
 import type { EvaluationTokenUsage } from "../../helpers/evaluation";
 import type { Category } from "../v1.1.0/templates/types";
@@ -25,7 +26,8 @@ export interface EvaluationReport {
   createdAt: string;
   provider: "openai" | "typesafe";
   model: string;
-  settings?: PromptModelSettings;
+  settings?: ResolvedAiSettings;
+  metadata?: EvalMetadata;
   promptVersion?: string;
   suite: "smoke" | "regression";
   requestCount: number;

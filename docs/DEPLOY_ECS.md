@@ -4,6 +4,10 @@ This guide explains how to deploy the Test Portal Backend to AWS ECS using the
 `Deploy BE to ECS (manual)` GitHub Actions workflow
 (`.github/workflows/deploy-be-ecs.yml`).
 
+## AI model configuration
+
+The backend loads its shipped server-wide AI configuration automatically. In ECS, provide a complete replacement JSON through the task's mounted/config provisioning mechanism only when needed, then set `AI_CONFIG_PATH` to its container path. Inject `OPENAI_API_KEY` as a secret for both shipped and custom configurations. Changing the file or path requires a new task deployment because settings are loaded once before the service listens. See [AI_CONFIGURATION.md](AI_CONFIGURATION.md) for the complete schema and shipped settings.
+
 ## Overview
 
 The workflow is triggered manually. On each run it:

@@ -6,7 +6,7 @@
  */
 
 import type { TestAnalysisResponse } from "@/schemas/testAnalysisSchemas";
-import type { PromptModelSettings } from "@/config/promptModels";
+import type { ResolvedAiSettings } from "@/config/serverAiConfig";
 import type { EvaluationTokenUsage } from "./evaluation-report";
 
 /**
@@ -23,9 +23,29 @@ export interface EvalFailure {
 export interface EvalResult {
   response: TestAnalysisResponse;
   failures: EvalFailure[];
+  metadata: EvalMetadata;
   model: string;
-  settings: PromptModelSettings;
+  settings: ResolvedAiSettings;
   requestCount: number;
   durationMs: number;
   usage: EvaluationTokenUsage | null;
+}
+
+export interface EvalMetadata {
+  suite: string;
+  operation: string;
+  promptVersion: string;
+  configurationVersion: 1;
+  configurationSource: "evaluation-baseline" | "custom";
+  profile: string;
+  provider: "openai";
+  requestedModel: string;
+  reasoning?: { effort: "none" | "low" | "medium" | "high" };
+  generationSettings: {
+    temperature?: number;
+    maxOutputTokens: number;
+    maxRetries: number;
+    timeoutMs?: number;
+    cache?: false;
+  };
 }

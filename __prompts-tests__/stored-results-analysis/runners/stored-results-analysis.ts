@@ -9,12 +9,13 @@
 import { ChatOpenAI } from "@langchain/openai";
 import { z } from "zod";
 import type { UsageMetadata } from "@langchain/core/messages";
-import {
-  getPromptModelOptions,
-  storedResultsAnalysisConfig,
-  type PromptModelSettings,
-} from "@/config/promptModels";
 import { sumTokenUsage } from "../../helpers/evaluation";
+import {
+  assertEvaluationCredentials,
+  loadEvaluationAiConfiguration,
+  resolveAiSettings,
+  toChatOpenAIOptions,
+} from "@/config/serverAiConfig";
 import type { TestAnalysisResponse } from "@/schemas/testAnalysisSchemas";
 import type { TestCase } from "../v1.1.0/templates/types";
 import type { EvalResult, EvalFailure } from "./types";
@@ -38,8 +39,6 @@ export interface RunEvalOptions {
   model?: string;
   temperature?: number;
   batchSize?: number;
-  reasoningEffort?: PromptModelSettings["reasoningEffort"];
-  useResponsesApi?: boolean;
 }
 
 /**
@@ -48,32 +47,18 @@ export interface RunEvalOptions {
  * @returns Evaluation result with LLM response and validation failures
  */
 export async function runEval(options: RunEvalOptions): Promise<EvalResult> {
-  const {
-    cases,
-    version,
-    model = storedResultsAnalysisConfig.model,
-    temperature = 0.1,
-    batchSize = 25,
-    reasoningEffort = model === storedResultsAnalysisConfig.model
-      ? storedResultsAnalysisConfig.reasoningEffort
-      : undefined,
-    useResponsesApi = model === storedResultsAnalysisConfig.model
-      ? storedResultsAnalysisConfig.useResponsesApi
-      : false,
-  } = options;
+  const { cases, version, model, temperature, batchSize = 25 } = options;
   const startedAt = Date.now();
-
-  const settings: PromptModelSettings = {
-    model,
-    useResponsesApi,
-    maxTokens: storedResultsAnalysisConfig.maxTokens,
-    maxRetries: storedResultsAnalysisConfig.maxRetries,
-    ...(reasoningEffort !== undefined ? { reasoningEffort } : { temperature }),
-  };
-  const llm = new ChatOpenAI({
-    ...getPromptModelOptions(settings),
-    cache: false,
+  if (!Number.isInteger(batchSize) || batchSize < 1) throw new Error("batchSize must be a positive integer");
+  assertEvaluationCredentials();
+  const configuration = loadEvaluationAiConfiguration();
+  const settings = resolveAiSettings(configuration, "storedResultsAnalysis", {
+    ...(model === undefined ? {} : { model }),
+    ...(temperature === undefined ? {} : { temperature }),
   });
+
+  // Setup LLM with structured output using version-specific schema
+  const llm = new ChatOpenAI(toChatOpenAIOptions(settings));
 
   const structuredModel = llm.withStructuredOutput<TestAnalysisResponse>(
     version.schema,
@@ -216,10 +201,28 @@ export async function runEval(options: RunEvalOptions): Promise<EvalResult> {
   return {
     response,
     failures,
-    model,
+    model: settings.model,
     settings,
     requestCount: batches.length,
     durationMs: Date.now() - startedAt,
     usage,
+    metadata: {
+      suite: "stored-results-analysis",
+      operation: settings.operation,
+      promptVersion: version.version,
+      configurationVersion: settings.version,
+      configurationSource: settings.source === "custom" ? "custom" : "evaluation-baseline",
+      profile: settings.profile,
+      provider: settings.provider,
+      requestedModel: settings.model,
+      ...(settings.reasoning ? { reasoning: settings.reasoning } : {}),
+      generationSettings: {
+        ...(settings.temperature === undefined ? {} : { temperature: settings.temperature }),
+        maxOutputTokens: settings.maxOutputTokens,
+        maxRetries: settings.maxRetries,
+        ...(settings.timeoutMs === undefined ? {} : { timeoutMs: settings.timeoutMs }),
+        ...(settings.cache === false ? { cache: false as const } : {}),
+      },
+    },
   };
 }

@@ -1,15 +1,15 @@
 // Copyright 2026 VENSOLUTIONSGROUP LTD
 // SPDX-License-Identifier: Apache-2.0
 
-import "../testEnv";
+import { hasOpenAiCredentials } from "../testEnv";
 import path from "node:path";
 import type { UsageMetadata } from "@langchain/core/messages";
 
 import {
-  errorFormatterConfig,
-  getPromptModelOptions,
-  type PromptModelSettings,
-} from "@/config/promptModels";
+  assertEvaluationCredentials,
+  loadEvaluationAiConfiguration,
+  resolveAiSettings,
+} from "@/config/serverAiConfig";
 import {
   sumTokenUsage,
   writePromptEvaluationReport,
@@ -20,6 +20,14 @@ import {
   errorFormatterSchema,
   type ErrorFormatterInput,
 } from "@/schemas/errorFormatterSchemas";
+
+jest.mock("@/config/serverAiConfig", () => {
+  const actual = jest.requireActual<typeof import("@/config/serverAiConfig")>("@/config/serverAiConfig");
+  return {
+    ...actual,
+    getProductionAiSettings: () => settings,
+  };
+});
 
 // Keep the production formatter and real OpenAI call; isolate unrelated DB services.
 jest.mock("@langchain/openai", () => {
@@ -34,19 +42,9 @@ jest.mock("@langchain/openai", () => {
     usageEntries,
     ChatOpenAI: jest.fn(
       (options: ConstructorParameters<typeof actual.ChatOpenAI>[0]) => {
-        if (
-          !process.env.ERROR_FORMATTER_MODEL &&
-          !process.env.ERROR_FORMATTER_REASONING
-        ) {
-          return new actual.ChatOpenAI({ ...options, callbacks });
-        }
-        const selectedOptions = { ...options };
-        delete selectedOptions.temperature;
-        delete selectedOptions.reasoning;
-        delete selectedOptions.modelKwargs;
+        assertEvaluationCredentials();
         return new actual.ChatOpenAI({
-          ...selectedOptions,
-          ...getPromptModelOptions(getFormatterEvaluationSettings()),
+          ...options,
           callbacks,
         });
       },
@@ -139,33 +137,9 @@ const cases: Case[] = [
   },
 ];
 
-function getFormatterEvaluationSettings(): PromptModelSettings {
-  const model = process.env.ERROR_FORMATTER_MODEL ?? errorFormatterConfig.model;
-  const reasoningEffort =
-    process.env.ERROR_FORMATTER_REASONING ??
-    errorFormatterConfig.reasoningEffort;
-  if (reasoningEffort !== "none" && reasoningEffort !== "low") {
-    throw new Error(
-      `Unsupported ERROR_FORMATTER_REASONING: ${reasoningEffort}`,
-    );
-  }
-  if (model !== "gpt-4.1-mini" && model !== errorFormatterConfig.model) {
-    throw new Error(`Unsupported ERROR_FORMATTER_MODEL: ${model}`);
-  }
-  const { reasoningEffort: _defaultReasoning, ...defaults } =
-    errorFormatterConfig;
-  return {
-    ...defaults,
-    model,
-    ...(model === "gpt-4.1-mini"
-      ? { useResponsesApi: false, temperature: 0.7 }
-      : { reasoningEffort }),
-  };
-}
+const settings = resolveAiSettings(loadEvaluationAiConfiguration(), "errorFormatting");
 
-const settings = getFormatterEvaluationSettings();
-
-describe(`error formatter: ${settings.model}`, () => {
+(hasOpenAiCredentials ? describe : describe.skip)(`error formatter: ${settings.model}`, () => {
   jest.setTimeout(120_000);
   const records: Array<Record<string, unknown>> = [];
   const { usageEntries } = jest.requireMock<{
@@ -179,6 +153,12 @@ describe(`error formatter: ${settings.model}`, () => {
         model: settings.model,
         promptVersion: "v1.1.0",
         settings,
+        operation: settings.operation,
+        provider: settings.provider,
+        configurationSource: settings.source,
+        configurationVersion: settings.version,
+        profile: settings.profile,
+        requestedModel: settings.model,
         usage: sumTokenUsage(usageEntries),
         usageEntries,
         // These checks cover factual anchors, not a complete semantic quality judgment.
