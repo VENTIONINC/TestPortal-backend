@@ -5,9 +5,15 @@ import "@/test-utils/testEnv";
 import { jest } from "@jest/globals";
 import { resultService } from "@/services/resultService";
 import { resultModel } from "@/models/resultModel";
+import { dashboardService } from "@/services/dashboardService";
 import type { ResultWithRelations } from "@/types";
 
 jest.mock("@/models/resultModel");
+jest.mock("@/services/dashboardService", () => ({
+  dashboardService: {
+    refreshDailyStats: jest.fn(),
+  },
+}));
 
 const mockTx = {};
 
@@ -20,6 +26,9 @@ jest.mock("@/prisma/client", () => ({
 }));
 
 const mockResultModel = resultModel as jest.Mocked<typeof resultModel>;
+const mockDashboardService = dashboardService as jest.Mocked<
+  typeof dashboardService
+>;
 
 describe("resultService.updateAnalysisFeedback", () => {
   const resultId = "result-1";
@@ -148,5 +157,12 @@ describe("resultService.updateAnalysisFeedback", () => {
         tags: ["smoke"],
       }),
     });
+    expect(mockDashboardService.refreshDailyStats).toHaveBeenCalledWith(
+      "project-1",
+      now,
+      "staging",
+      "e2e",
+      mockTx,
+    );
   });
 });

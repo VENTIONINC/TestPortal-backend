@@ -58,6 +58,13 @@ const UpdateProjectRequestSchema = z
   })
   .openapi("UpdateProjectRequest");
 
+const ProjectExecutionTypesSchema = z
+  .array(z.string())
+  .describe(
+    "Distinct non-empty execution types for the project. The reserved value 'all' is excluded.",
+  )
+  .openapi("ProjectExecutionTypes");
+
 const DashboardIssueMetricsSchema = z
   .object({
     bug: z.number(),
@@ -132,6 +139,7 @@ export function registerProjectRoutes(registry: OpenAPIRegistry) {
   registry.register("ProjectCategoryWeights", ProjectCategoryWeightsSchema);
   registry.register("CreateProjectRequest", CreateProjectRequestSchema);
   registry.register("UpdateProjectRequest", UpdateProjectRequestSchema);
+  registry.register("ProjectExecutionTypes", ProjectExecutionTypesSchema);
   registry.register("DashboardIssueMetrics", DashboardIssueMetricsSchema);
   registry.register("DailyExecutionMetrics", DailyExecutionMetricsSchema);
   registry.register("ExecutionSummary", ExecutionSummarySchema);
@@ -149,6 +157,54 @@ export function registerProjectRoutes(registry: OpenAPIRegistry) {
         content: {
           "application/json": {
             schema: z.array(ProjectSchema),
+          },
+        },
+      },
+      401: {
+        description: "Unauthorized - invalid or missing token",
+        content: {
+          "application/json": {
+            schema: ErrorResponseSchema,
+          },
+        },
+      },
+      500: {
+        description: "Internal server error",
+        content: {
+          "application/json": {
+            schema: ErrorResponseSchema,
+          },
+        },
+      },
+    },
+    tags: ["Projects"],
+  });
+
+  registry.registerPath({
+    method: "get",
+    path: "/api/v2/projects/{id}/execution-types",
+    description:
+      "Retrieves the distinct selectable execution types stored for a project.",
+    request: {
+      params: z.object({
+        id: z.string().uuid(),
+      }),
+    },
+    security: [{ BearerAuth: [] }],
+    responses: {
+      200: {
+        description: "Project execution types",
+        content: {
+          "application/json": {
+            schema: ProjectExecutionTypesSchema,
+          },
+        },
+      },
+      400: {
+        description: "Bad request - invalid project ID",
+        content: {
+          "application/json": {
+            schema: ErrorResponseSchema,
           },
         },
       },
@@ -375,9 +431,6 @@ export function registerProjectRoutes(registry: OpenAPIRegistry) {
           .describe("The unique identifier of the project"),
       }),
       query: z.object({
-        environment: z
-          .string()
-          .describe("Target environment to filter results"),
         period: z
           .string()
           .optional()
@@ -389,6 +442,16 @@ export function registerProjectRoutes(registry: OpenAPIRegistry) {
           .describe(
             "Aggregation level for history data (daily, weekly, monthly). Defaults to daily for short periods, weekly for long periods.",
           ),
+        dateFrom: z
+          .string()
+          .regex(/^\d{4}-\d{2}-\d{2}$/)
+          .optional()
+          .describe("Inclusive start date in YYYY-MM-DD format"),
+        dateTo: z
+          .string()
+          .regex(/^\d{4}-\d{2}-\d{2}$/)
+          .optional()
+          .describe("Inclusive end date in YYYY-MM-DD format"),
       }),
     },
     security: [{ BearerAuth: [] }],
@@ -442,6 +505,7 @@ export {
   ProjectSchema,
   CreateProjectRequestSchema,
   UpdateProjectRequestSchema,
+  ProjectExecutionTypesSchema,
   DashboardIssueMetricsSchema,
   DailyExecutionMetricsSchema,
   ExecutionSummarySchema,

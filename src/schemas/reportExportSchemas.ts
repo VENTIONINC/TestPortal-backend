@@ -40,7 +40,6 @@ function extractDatePart(value: string): string | null {
 export const pdfExportSchema = z
   .object({
     project: z.string().min(1),
-    environment: z.string().min(1),
     executionType: z.string().min(1),
     periodStart: z.string().refine((value) => extractDatePart(value) !== null, {
       message: "Invalid periodStart date",

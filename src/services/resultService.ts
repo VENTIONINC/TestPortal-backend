@@ -7,6 +7,7 @@ import {
   type AnalysisExportFilters,
   type AnalysisExportRow,
 } from "@/models/resultModel";
+import { testScenarioSpecLinkModel } from "@/models/testScenarioSpecLinkModel";
 import {
   normalizeJsonStringArray,
   normalizeResultPayload,
@@ -20,6 +21,7 @@ import type {
   ResultsStats,
   StructuredResultWithRelations,
 } from "@/types";
+import type { RelatedTestScenarioSummary } from "@/types/testScenarios";
 import { dashboardService } from "@/services/dashboardService";
 import getLogger from "@/lib/logger";
 import { dbClient } from "@/prisma/client";
@@ -29,10 +31,40 @@ const logger = getLogger("result-service");
 interface GetResultsResponse {
   results: StructuredResultWithRelations[];
   rawResults: StructuredResultWithRelations[];
+  availableTags: string[];
   total: number;
   rawTotal: number;
   page: number;
   totalPages: number;
+}
+
+interface ResultDetailResponse extends StructuredResultWithRelations {
+  relatedTestScenarios: RelatedTestScenarioSummary[];
+}
+
+async function getNormalizedResultById(
+  resultId: number | string,
+  projectId: string,
+): Promise<StructuredResultWithRelations> {
+  if (!resultId) {
+    throw new Error("Result ID is required");
+  }
+
+  if (!projectId) {
+    throw new Error("Project ID is required");
+  }
+
+  const resultRecord = await resultModel.findById(
+    resultId,
+    projectId,
+    dbClient,
+  );
+
+  if (!resultRecord) {
+    throw new Error(`Result with ID ${resultId} not found`);
+  }
+
+  return normalizeResultPayload(resultRecord);
 }
 
 export const resultService = {
@@ -49,6 +81,7 @@ export const resultService = {
       reviewStatus,
       errorMessage,
       issueName,
+      assumption,
       from,
       to,
       dates,
@@ -75,14 +108,23 @@ export const resultService = {
     if (reviewStatus) filters.reviewStatus = reviewStatus;
     if (errorMessage) filters.errorMessage = errorMessage;
     if (issueName) filters.issueName = issueName;
+    if (assumption) filters.assumption = assumption;
     if (from) filters.from = from;
     if (to) filters.to = to;
     if (dates) filters.dates = dates;
 
-    const [results, totalResults] = await Promise.all([
+    const availableTagsFilters: ResultFilters = { ...filters };
+    delete availableTagsFilters.tag;
+
+    const [results, totalResults, specTags] = await Promise.all([
       resultModel.findMany(filters, page, limit),
       resultModel.count(filters),
+      resultModel.findSpecTags(availableTagsFilters),
     ]);
+
+    const availableTags = [
+      ...new Set(specTags.flatMap(normalizeJsonStringArray)),
+    ].sort((left, right) => left.localeCompare(right));
 
     const specRecordIds = [
       ...new Set(results.map((result) => result.spec.id)),
@@ -98,6 +140,7 @@ export const resultService = {
     return {
       results: results.map(normalizeResultPayload),
       rawResults: rawResults.map(normalizeResultPayload),
+      availableTags,
       total: totalResults,
       rawTotal: rawResults.length,
       page: Number(page),
@@ -109,25 +152,52 @@ export const resultService = {
     resultId: number | string,
     projectId: string,
   ): Promise<StructuredResultWithRelations> {
-    if (!resultId) {
-      throw new Error("Result ID is required");
-    }
+    return await getNormalizedResultById(resultId, projectId);
+  },
 
-    if (!projectId) {
+  async getResultDetailById(
+    resultId: number | string,
+    projectId: string,
+  ): Promise<ResultDetailResponse> {
+    const result = await getNormalizedResultById(resultId, projectId);
+    const relatedTestScenarios =
+      await testScenarioSpecLinkModel.findLinkedTestScenarios(
+        result.spec.id,
+        projectId,
+      );
+
+    return { ...result, relatedTestScenarios };
+  },
+
+  async getResultsBySpecRecordIds(params: {
+    projectId: string;
+    specRecordIds: string[];
+    page?: number;
+    limit?: number;
+  }): Promise<{
+    results: StructuredResultWithRelations[];
+    total: number;
+  }> {
+    if (!params.projectId) {
       throw new Error("Project ID is required");
     }
 
-    const resultRecord = await resultModel.findById(
-      resultId,
-      projectId,
-      dbClient,
-    );
+    const page = params.page ?? 1;
+    const limit = params.limit ?? 30;
+    const [results, total] = await Promise.all([
+      resultModel.findManyBySpecRecordIds(
+        params.specRecordIds,
+        params.projectId,
+        page,
+        limit,
+      ),
+      resultModel.countBySpecRecordIds(params.specRecordIds, params.projectId),
+    ]);
 
-    if (!resultRecord) {
-      throw new Error(`Result with ID ${resultId} not found`);
-    }
-
-    return normalizeResultPayload(resultRecord);
+    return {
+      results: results.map(normalizeResultPayload),
+      total,
+    };
   },
 
   async getResultsStats(params: GetResultsStatsParams): Promise<ResultsStats> {
@@ -272,6 +342,23 @@ export const resultService = {
 
       if (!updatedResult) {
         throw new Error(`Result with ID ${resultId} not found`);
+      }
+
+      if (updatedResult.execution) {
+        try {
+          await dashboardService.refreshDailyStats(
+            updatedResult.execution.projectId,
+            updatedResult.startTime,
+            updatedResult.execution.environment,
+            updatedResult.execution.type,
+            tx,
+          );
+        } catch (error) {
+          logger.error(
+            `Failed to refresh dashboard stats in updateAnalysisFeedback: ${error}`,
+          );
+          throw error;
+        }
       }
 
       return updatedResult;

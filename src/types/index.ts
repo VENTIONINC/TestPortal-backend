@@ -8,10 +8,14 @@ export * from "@/types/mcp";
 export * from "@/types/tests";
 export * from "@/types/ctrf";
 export * from "@/types/skills";
+export * from "@/types/testScenarios";
+export * from "@/types/testScenarioIntegration";
+export * from "@/types/manualTestRuns";
+export * from "@/types/resultCategory";
 
 // Express types extensions
 import type { Request } from "express";
-import { IssueCategory } from "./enums";
+import type { ResultCategory } from "@/types/resultCategory";
 
 export interface AuthenticatedRequest extends Request {
   user?: {
@@ -69,7 +73,7 @@ export interface Filter {
 
 export interface CreateIssueParams {
   name: string;
-  category: IssueCategory;
+  category: ResultCategory;
   description?: string;
   portal?: string;
   service?: string;
@@ -81,7 +85,7 @@ export interface CreateIssueParams {
 
 export interface UpdateIssueParams {
   name?: string;
-  category?: IssueCategory;
+  category?: ResultCategory;
   description?: string;
   portal?: string;
   service?: string;

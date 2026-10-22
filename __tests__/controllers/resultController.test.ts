@@ -14,7 +14,7 @@ describe("resultController shared workspace access", () => {
 
   it("reads and deletes results using project scope without owner scope", async () => {
     jest
-      .spyOn(resultService, "getResultById")
+      .spyOn(resultService, "getResultDetailById")
       .mockResolvedValue({ id: "result-1" } as never);
     jest.spyOn(resultService, "deleteResult").mockResolvedValue();
 
@@ -29,7 +29,7 @@ describe("resultController shared workspace access", () => {
     });
 
     expect(readResponse.statusCode).toBe(200);
-    expect(resultService.getResultById).toHaveBeenCalledWith(
+    expect(resultService.getResultDetailById).toHaveBeenCalledWith(
       "result-1",
       "project-1",
     );

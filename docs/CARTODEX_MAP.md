@@ -49,11 +49,11 @@ Core domain data is project-scoped and shared across active authenticated users.
 | `src/schemas` | Zod schemas for REST contracts, prompt outputs, test analysis, report export. | 1830 |
 | `src/prompts` | Production LLM prompt modules used by backend services. | 7038 |
 | `src/skills` | Downloadable backend-owned assistant skill artifacts. | 7891 |
-| `src/types` | Shared API, Prisma-shaped, MCP, CTRF, dashboard, skills, and test types. | 5400 |
-| `prisma` | PostgreSQL schema, migrations, seed and migration helpers. | 14739 |
-| `__tests__` | Jest unit/integration coverage for routes, controllers, services, models, middleware, lib. | 68270 |
+| `src/types` | Shared API, Prisma-shaped, MCP, CTRF, dashboard, skills, and test types. | 5251 |
+| `prisma` | PostgreSQL schema, migrations, client, and persisted skill package seeder. | 13857 |
+| `__tests__` | Jest unit/integration coverage for routes, controllers, services, models, middleware, lib. | 49199 |
 | `__prompts-tests__` | Prompt evaluation runners, templates, dataset generators, smoke/regression tests. | 10585 |
-| `docs` | Human-facing API, MCP, Docker, deploy, auth, dashboard, release, and research docs. | 35275 |
+| `docs` | Human-facing API, MCP, Docker, deploy, auth, dashboard, release, and research docs. | 29688 |
 | `postman` | REST/MCP Postman collections, environment, and usage docs. | 18729 |
 | `scripts` | License header and new-file automation. | 1744 |
 | `.github/workflows` | Manual ECS deploy and Docker publish workflows. | 1352 |
@@ -191,7 +191,7 @@ Core domain data is project-scoped and shared across active authenticated users.
 | `Dockerfile` | Build/runtime image contract. | 352 |
 | `docker-compose.yml` | Local PostgreSQL and pgAdmin stack. | 307 |
 | `.github/workflows/deploy-be-ecs.yml` | Manual ECS deploy workflow. | 899 |
-| `README.md` | Setup, scripts, API surface, documentation index. | 1453 |
+| `README.md` | Setup, scripts, API surface, documentation index. | 1349 |
 | `CONTRIBUTING.md` | Contribution workflow. | 1069 |
 | `AGENTS.md` | Agent-facing repo rules and Cartodex pointer. | 861 |
 
@@ -260,7 +260,6 @@ Core domain data is project-scoped and shared across active authenticated users.
 - `src/mcp/schemas/ctrfSchemas.ts` exists, but no CTRF MCP tools are registered.
 - Prompt datasets are generated artifacts and are not part of the scanner output.
 - `prisma/client.ts` logs `"sqlite STARTED"` even though the datasource is PostgreSQL.
-- `prisma/seed/migrate-from-sqlite.js` appears stale for the current UUID/project schema.
 - Manual Prisma-shaped types in `src/types/database.ts` can drift from `schema.prisma`.
 - Category naming is not fully unified: some code uses `infra`, while daily metrics include `issuesEnvironment`.
 - `npm run inspector` points to `node build/index.js`, while the build emits and runtime uses `dist/index.js`.

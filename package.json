@@ -17,13 +17,15 @@
     "lint": "eslint .",
     "format": "prettier --write .",
     "seed": "tsx prisma/seed/index.ts",
-    "seed:reports": "node prisma/seed/index.js",
-    "seed:migrate": "node prisma/seed/migrate-from-sqlite.js",
     "db:generate": "prisma generate",
     "studio": "npx prisma studio",
     "migrate": "npx prisma migrate dev --name commit",
-    "inspector": "npx @modelcontextprotocol/inspector node build/index.js",
-    "test": "jest --config jest.config.ts"
+    "inspector": "npx @modelcontextprotocol/inspector --web --transport http --server-url http://localhost:3001/api/v2/mcp",
+    "test": "jest --config jest.main.config.ts",
+    "test:unit": "jest --config jest.main.config.ts --selectProjects unit",
+    "test:contract": "jest --config jest.main.config.ts --selectProjects contract",
+    "test:integration": "node scripts/run-integration-tests.mjs",
+    "test:e2e": "jest --config jest.main.config.ts --selectProjects e2e --runInBand --passWithNoTests"
   },
   "author": "",
   "license": "Apache-2.0",
@@ -61,7 +63,6 @@
     "pdfkit": "0.17.2",
     "pg": "8.16.0",
     "prisma": "6.19.3",
-    "sqlite3": "6.0.1",
     "string-similarity": "4.0.4",
     "swagger-ui-express": "5.0.1",
     "zod": "3.25.76"

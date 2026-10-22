@@ -2,37 +2,28 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { OpenAPIRegistry } from "@asteasolutions/zod-to-openapi";
+import { errorFormatterRequestSchema } from "@/schemas/errorFormatterSchemas";
 import { z } from "./zod";
 import { ErrorResponseSchema } from "./common";
 
-const ErrorFormatterRequestSchema = z
-  .object({
-    name: z
-      .string()
-      .min(1, "Name cannot be empty")
-      .max(100, "Name is too long"),
-    description: z
-      .string()
-      .min(1, "Description cannot be empty")
-      .max(2000, "Description is too long"),
-    category: z
-      .string()
-      .min(1, "Category cannot be empty")
-      .max(50, "Category is too long"),
+const ErrorFormatterRequestSchema = errorFormatterRequestSchema
+  .extend({
+    contextCategory: errorFormatterRequestSchema.shape.contextCategory.openapi({
+      description:
+        "Optional canonical prompt context category. Values must be lowercase.",
+    }),
+    category: errorFormatterRequestSchema.shape.category.openapi({
+      deprecated: true,
+      description:
+        "Deprecated legacy prompt context alias. Case-insensitive; use contextCategory instead.",
+    }),
   })
   .openapi("ErrorFormatterRequest");
 
 const ErrorFormatterResponseSchema = z
   .object({
-    original: z.object({
-      name: z.string(),
-      description: z.string(),
-      category: z.string(),
-    }),
-    formatted: z.object({
-      name: z.string(),
-      description: z.string(),
-    }),
+    name: z.string(),
+    description: z.string(),
   })
   .openapi("ErrorFormatterResponse");
 
@@ -45,7 +36,8 @@ const ErrorSuggestionRequestSchema = z
 
 const ErrorSuggestionResponseSchema = z
   .object({
-    category: z.string(),
+    category: z.enum(["bug", "infra", "performance", "script", "other"]),
+    name: z.string(),
     description: z.string(),
   })
   .openapi("ErrorSuggestionResponse");
@@ -112,7 +104,7 @@ export function registerErrorFormatterRoutes(registry: OpenAPIRegistry) {
     method: "post",
     path: "/api/v2/error-formatter/result",
     description:
-      "Suggests an issue description and investigation steps based on a failed/flaky result (requires authentication)",
+      "Suggests an issue category, name, description, and investigation steps based on a failed/flaky result (requires authentication)",
     request: {
       body: {
         content: {

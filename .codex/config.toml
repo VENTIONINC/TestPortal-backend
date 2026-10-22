@@ -1,6 +1,31 @@
-[features]
-multi_agent = true
+# Use the shared TestPortal Docker MCP profile instead of duplicate GitHub tools.
+[apps.github]
+enabled = false
 
-[agents]
-max_threads = 6
-max_depth = 1
+[mcp_servers.MCP_DOCKER]
+command = "docker"
+args = ["mcp", "gateway", "run", "--profile", "testportal"]
+enabled = true
+required = false
+startup_timeout_sec = 30
+tool_timeout_sec = 60
+default_tools_approval_mode = "auto"
+
+# Prompt before writing to GitHub; read tools use the default policy.
+[mcp_servers.MCP_DOCKER.tools.create_pull_request]
+approval_mode = "prompt"
+
+[mcp_servers.MCP_DOCKER.tools.update_pull_request]
+approval_mode = "prompt"
+
+[mcp_servers.MCP_DOCKER.tools.issue_write]
+approval_mode = "prompt"
+
+[mcp_servers.MCP_DOCKER.tools.add_issue_comment]
+approval_mode = "prompt"
+
+[mcp_servers.MCP_DOCKER.tools.add_reply_to_pull_request_comment]
+approval_mode = "prompt"
+
+[mcp_servers.MCP_DOCKER.tools.pull_request_review_write]
+approval_mode = "prompt"

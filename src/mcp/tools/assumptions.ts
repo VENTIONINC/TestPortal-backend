@@ -37,31 +37,33 @@ export const createAssumption = createMcpTool(
   "creating assumption",
 );
 
-export const updateAssumption = createMcpTool(
-  "update-assumption",
-  "Update an assumption by ID. Only real users can modify assumptions. If isConfirmed is false, the assumption will be deleted",
-  updateAssumptionSchema,
-  async (params: UpdateAssumptionParams): Promise<MCPToolResponse> => {
-    const { assumptionId, ...updateData } = params;
-    const result = await mcpAssumptionHandler.updateAssumption(
-      assumptionId,
-      updateData,
-    );
+export const createUpdateAssumptionTool = (reviewedById: string) =>
+  createMcpTool(
+    "update-assumption",
+    "Update an assumption by ID. Only real users can modify assumptions. If isConfirmed is false, the assumption will be deleted",
+    updateAssumptionSchema,
+    async (params: UpdateAssumptionParams): Promise<MCPToolResponse> => {
+      const { assumptionId, ...updateData } = params;
+      const result = await mcpAssumptionHandler.updateAssumption(
+        assumptionId,
+        updateData,
+        reviewedById,
+      );
 
-    if (result.action === "deleted") {
-      return createSuccessResponse(
-        result,
-        "Assumption deleted successfully (confirmed as incorrect):",
-      );
-    } else {
-      return createSuccessResponse(
-        result.assumption,
-        "Assumption updated successfully:",
-      );
-    }
-  },
-  "updating assumption",
-);
+      if (result.action === "deleted") {
+        return createSuccessResponse(
+          result,
+          "Assumption deleted successfully (confirmed as incorrect):",
+        );
+      } else {
+        return createSuccessResponse(
+          result.assumption,
+          "Assumption updated successfully:",
+        );
+      }
+    },
+    "updating assumption",
+  );
 
 export const getAssumptionById = createMcpTool(
   "get-assumption-by-id",

@@ -1,15 +1,15 @@
 #!/bin/bash
 
-# Test script for /v2/json-report/upload endpoint
-# Usage: ./test-upload-json-report.sh <API_KEY>
+# Test script for /api/v2/upload-json-report-api-key endpoint
+# Usage: ./test-upload-json-report.sh <API_KEY> <REPORT_FILE>
 
-API_KEY="${1:-YOUR_API_KEY_HERE}"
-REPORT_FILE="example-reports/web-app-qa-hotfix-4645-2025-10-02-19-25-35.json"
-ENDPOINT="http://localhost:3001/api/v2/json-report/upload"
+API_KEY="${1:-}"
+REPORT_FILE="${2:-}"
+ENDPOINT="http://localhost:3001/api/v2/upload-json-report-api-key"
 
-if [ "$API_KEY" = "YOUR_API_KEY_HERE" ]; then
-  echo "Error: Please provide an API key as the first argument"
-  echo "Usage: $0 <API_KEY>"
+if [ -z "$API_KEY" ] || [ -z "$REPORT_FILE" ]; then
+  echo "Error: API key and report file are required"
+  echo "Usage: $0 <API_KEY> <REPORT_FILE>"
   exit 1
 fi
 

@@ -1,26 +1,38 @@
 // Copyright 2026 VENSOLUTIONSGROUP LTD
 // SPDX-License-Identifier: Apache-2.0
 
-import { IssueCategory } from "@/types/enums";
 import type { GetResultsParams } from "@/types";
+import type { ResultCategory } from "@/types/resultCategory";
+import { isResultCategory } from "@/lib/resultCategory";
+
+export function resolveExecutionTypeFilter(type?: string): string | undefined {
+  if (!type || type === "all") {
+    return undefined;
+  }
+
+  return type;
+}
 
 export function buildIssueParams(query: Record<string, string | undefined>) {
   const params: {
     projectId: string;
-    category?: IssueCategory;
+    category?: ResultCategory;
     name?: string;
     page?: number;
     limit?: number;
     statFrom?: string;
     statTo?: string;
+    type?: string;
   } = { projectId: query.projectId ?? "" };
 
-  if (query.category) params.category = query.category as IssueCategory;
+  if (isResultCategory(query.category)) params.category = query.category;
   if (query.name) params.name = query.name;
   if (query.page) params.page = Number(query.page);
   if (query.limit) params.limit = Number(query.limit);
   if (query.statFrom) params.statFrom = query.statFrom;
   if (query.statTo) params.statTo = query.statTo;
+  const type = resolveExecutionTypeFilter(query.type);
+  if (type) params.type = type;
 
   return params;
 }
@@ -36,11 +48,15 @@ const RESULT_STRING_KEYS = [
   "reviewStatus",
   "errorMessage",
   "issueName",
+  "assumption",
   "from",
   "to",
 ] as const satisfies readonly (keyof GetResultsParams)[];
 
-const RESULT_NUMBER_KEYS = ["page", "limit"] as const satisfies readonly (keyof GetResultsParams)[];
+const RESULT_NUMBER_KEYS = [
+  "page",
+  "limit",
+] as const satisfies readonly (keyof GetResultsParams)[];
 
 export function buildResultParams(
   query: Record<string, string | string[] | undefined>,
@@ -56,7 +72,26 @@ export function buildResultParams(
 
   for (const key of RESULT_STRING_KEYS) {
     const value = getString(key);
-    if (value) params[key] = value;
+    if (!value) continue;
+
+    if (key === "type") {
+      const resolvedType = resolveExecutionTypeFilter(value);
+      if (resolvedType) params[key] = resolvedType;
+      continue;
+    }
+
+    if (key === "assumption") {
+      if (
+        value === "all" ||
+        value === "confirmed" ||
+        value === "not-confirmed"
+      ) {
+        params.assumption = value;
+      }
+      continue;
+    }
+
+    params[key] = value;
   }
 
   for (const key of RESULT_NUMBER_KEYS) {
@@ -66,7 +101,9 @@ export function buildResultParams(
 
   const dates = query.dates;
   if (dates) {
-    params.dates = (Array.isArray(dates) ? dates : dates.split(",")).map((d) => d.trim());
+    params.dates = (Array.isArray(dates) ? dates : dates.split(",")).map((d) =>
+      d.trim(),
+    );
   }
 
   return params;

@@ -13,6 +13,11 @@ import type { AuthenticatedRequest } from "@/middleware/authMiddleware";
 import { dbClient } from "@/prisma/client";
 import getLogger from "@/lib/logger";
 import { dashboardService } from "@/services/dashboardService";
+import {
+  formatFutureReportTimestampsError,
+  FutureReportTimestampsError,
+} from "@/lib/reportTimestampWarnings";
+import { normalizePlaywrightAttempt } from "@/lib/playwrightDiagnostics";
 
 const logger = getLogger("json-report-controller");
 
@@ -183,7 +188,10 @@ export const jsonReportController = {
     } catch (error) {
       const err = error as Error;
       res.status(400).json({
-        error: `Failed to process raw JSON report file. ${err.message}`,
+        error:
+          err instanceof FutureReportTimestampsError
+            ? formatFutureReportTimestampsError(err, req.file?.originalname)
+            : `Failed to process raw JSON report file. ${err.message}`,
       });
     }
   },
@@ -209,7 +217,10 @@ export const jsonReportController = {
     } catch (error) {
       const err = error as Error;
       res.status(400).json({
-        error: `Failed to process raw JSON report file. ${err.message}`,
+        error:
+          err instanceof FutureReportTimestampsError
+            ? formatFutureReportTimestampsError(err, req.file?.originalname)
+            : `Failed to process raw JSON report file. ${err.message}`,
       });
     }
   },
@@ -237,9 +248,23 @@ export const jsonReportController = {
             result.allureReportLink ??
             "https://automation.qa.theguarantors.com/allure-report/index.html";
 
+          const normalized = normalizePlaywrightAttempt(result, {
+            file: test.location?.file ?? "unknown",
+            line: Number.isInteger(test.location?.line) ? test.location.line : 1,
+          });
+          const primary = normalized.errors[0];
+
           return {
             reportPortalLink,
             ...result,
+            ...normalized,
+            ...(primary?.rawLogs ? { logs: primary.rawLogs } : {}),
+            ...(primary?.sourceSnippet
+              ? { sourceSnippet: primary.sourceSnippet }
+              : {}),
+            ...(primary?.generatedTestCase
+              ? { generatedTestCase: primary.generatedTestCase }
+              : {}),
           };
         });
         return test;
@@ -282,7 +307,7 @@ export const jsonReportController = {
             projectName: t.projectName,
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             results: t.results.map((r: any) => {
-              const { /* errors, */ ...rest } = r;
+              const rest = { ...r };
               const maxSize = 10000;
 
               if (rest.error?.message?.length > maxSize) {
@@ -293,6 +318,18 @@ export const jsonReportController = {
                   rest.error.matcherResult.message =
                     rest.error.matcherResult.message.slice(0, maxSize);
                 }
+              }
+
+              if (Array.isArray(rest.errors)) {
+                rest.errors = rest.errors.map((error: { message?: string; stack?: string }) => ({
+                  ...error,
+                  ...(typeof error.message === "string"
+                    ? { message: error.message.slice(0, maxSize) }
+                    : {}),
+                  ...(typeof error.stack === "string"
+                    ? { stack: error.stack.slice(0, maxSize) }
+                    : {}),
+                }));
               }
 
               return rest;

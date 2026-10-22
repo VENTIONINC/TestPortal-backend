@@ -12,6 +12,7 @@ import type {
 interface GetResultsResponse {
   results: StructuredResultWithRelations[];
   rawResults: StructuredResultWithRelations[];
+  availableTags: string[];
   total: number;
   rawTotal: number;
   page: number;

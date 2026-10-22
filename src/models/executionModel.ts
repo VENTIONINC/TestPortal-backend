@@ -14,6 +14,16 @@ export interface FindManyParams {
 }
 
 export const executionModel = {
+  findDistinctTypes: async (projectId: string): Promise<string[]> => {
+    const executions = await dbClient.execution.findMany({
+      where: { projectId },
+      select: { type: true },
+      distinct: ["type"],
+    });
+
+    return executions.map(({ type }) => type);
+  },
+
   findById: async (
     id: string,
     projectId: string,

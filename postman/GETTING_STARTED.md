@@ -15,7 +15,9 @@ Set your environment variables:
 {
   "baseUrl": "http://localhost:3001",
   "testEmail": "your-test@email.com", 
-  "testPassword": "YourPassword123!"
+  "testPassword": "YourPassword123!",
+  "projectId": "",
+  "resultErrorId": ""
 }
 ```
 
@@ -28,7 +30,8 @@ Run in this order:
 
 ### 3. Test Your APIs
 - **User API**: User management and authentication
-- **Issue API**: Issue CRUD with user tracking (V1 public, V2 authenticated)
+- **Issue API**: Authenticated V2 Issue CRUD, lowercase persisted categories,
+  and Assign Issue modal workflows
 
 ## 🎯 Common Workflows
 
@@ -60,4 +63,4 @@ newman run Issue_API.postman_collection.json -e environment.json
 | Token Issues | Check Postman Console logs |
 | Tests Failing | Verify API server is running |
 
-**Happy Testing!** 🎉 
+**Happy Testing!** 🎉

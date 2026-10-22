@@ -18,6 +18,13 @@ router.get(
   projectController.getProjectById,
 );
 
+// Get the execution types available for a project (requires authentication)
+router.get(
+  "/v2/projects/:id/execution-types",
+  authMiddleware,
+  projectController.getExecutionTypes,
+);
+
 // Create new project (requires authentication)
 router.post("/v2/projects", authMiddleware, projectController.createProject);
 

@@ -10,6 +10,10 @@ import type {
   StructuredResultWithRelations,
   StructuredSpec,
 } from "@/types";
+import {
+  normalizeResultErrorLogs,
+  normalizeResultErrorSourceSnippet,
+} from "@/lib/resultErrorModalContext";
 
 type JsonArrayValue = Prisma.JsonArray | readonly Prisma.JsonValue[];
 
@@ -95,6 +99,8 @@ export const normalizeResultErrorPayload = (
   ...error,
   callLog: normalizeJsonStringArray(error.callLog),
   callStack: normalizeJsonStringArray(error.callStack),
+  rawLogs: normalizeResultErrorLogs(error.rawLogs) ?? [],
+  sourceSnippet: normalizeResultErrorSourceSnippet(error.sourceSnippet),
 });
 
 export const normalizeResultPayload = (

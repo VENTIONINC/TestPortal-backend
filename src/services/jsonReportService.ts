@@ -1,6 +1,8 @@
 // Copyright 2026 VENSOLUTIONSGROUP LTD
 // SPDX-License-Identifier: Apache-2.0
 
+import { randomUUID } from "node:crypto";
+
 import getLogger from "@/lib/logger";
 import { dbClient } from "@/prisma/client";
 import { Prisma } from "@prisma/client";
@@ -10,6 +12,8 @@ import {
   type IdentifierStrategy,
 } from "@/lib/executionIdentifiers";
 import { normalizeJsonStringArray } from "@/lib/jsonPayloads";
+import { validateReportTimestamps } from "@/lib/reportTimestampWarnings";
+import { normalizeResultErrorModalContext } from "@/lib/resultErrorModalContext";
 import type {
   PrismaExecution,
   PrismaSpec,
@@ -33,16 +37,26 @@ interface ResultCreateInput {
   analysisErrorQualityConclusion?: string;
   spec: { connect: { id: string } }; // UUID reference to Spec
   execution: { connect: { id: string } }; // UUID reference to Execution
-  errors?: { connect: { id: string } }; // UUID reference to ResultError
+  errors?: { connect: Array<{ id: string }> }; // UUID references to ResultError
 }
 
 const logger = getLogger("json-report-service");
+const WRITE_BATCH_SIZE = 500;
+
+const chunk = <T>(items: T[], size = WRITE_BATCH_SIZE): T[][] => {
+  const chunks: T[][] = [];
+  for (let index = 0; index < items.length; index += size) {
+    chunks.push(items.slice(index, index + size));
+  }
+  return chunks;
+};
 
 export interface ReportData {
   runId?: string;
   env?: string;
   version?: string;
   provider: string;
+  executionType?: string;
   stats?: {
     startTime?: string | Date;
   };
@@ -70,6 +84,10 @@ interface TestResult {
   duration: number;
   startTime: string | Date;
   error?: ErrorData;
+  errors?: ErrorData[];
+  logs?: unknown;
+  sourceSnippet?: unknown;
+  generatedTestCase?: unknown;
   workerIndex: number;
 }
 
@@ -77,7 +95,14 @@ interface ErrorData {
   message: string;
   stack: string;
   location: { file: string; line: number };
+  rawLogs?: unknown;
+  logs?: unknown;
+  sourceSnippet?: unknown;
+  generatedTestCase?: unknown;
 }
+
+const getOrderedErrors = (result: TestResult): ErrorData[] =>
+  result.errors?.length ? result.errors : result.error ? [result.error] : [];
 
 export interface ProcessReportResult {
   success: boolean;
@@ -98,11 +123,14 @@ export const jsonReportService = {
       throw new Error("Report data is required");
     }
 
+    validateReportTimestamps(reportData);
+
     const {
       runId,
       env,
       version,
       provider,
+      executionType,
       stats,
       tests,
       identifierStrategy = "time-period",
@@ -134,6 +162,7 @@ export const jsonReportService = {
           env: env ?? "unknown",
           version: version ?? "unknown",
           provider,
+          ...(executionType ? { executionType } : {}),
           ...(stats && { stats }),
           projectId,
         },
@@ -181,12 +210,14 @@ export const jsonReportService = {
       env: string;
       version: string;
       provider: string;
+      executionType?: string;
       stats?: { startTime?: string | Date };
       projectId: string;
     },
     tx?: Prisma.TransactionClient,
   ): Promise<PrismaExecution> {
-    const { runId, env, version, provider, stats, projectId } = params;
+    const { runId, env, version, provider, executionType, stats, projectId } =
+      params;
     const client = tx ?? dbClient;
 
     let executionRecord = await client.execution.findFirst({
@@ -199,7 +230,7 @@ export const jsonReportService = {
     if (!executionRecord) {
       executionRecord = await client.execution.create({
         data: {
-          type: "nightly",
+          type: executionType?.trim() || "nightly",
           name: runId,
           environment: env,
           version,
@@ -224,14 +255,167 @@ export const jsonReportService = {
     projectId: string,
     tx?: Prisma.TransactionClient,
   ): Promise<void> {
+    const client = tx ?? dbClient;
+    const specsByKey = new Map<string, TestSpec>();
+
     for (const spec of specs) {
       if (!spec.title) {
         throw new Error(`Spec data is missing title: ${spec.location?.file}`);
       }
 
-      const specRecord = await this._findOrCreateSpec(spec, projectId, tx);
-      await this._processSpecResults(spec, specRecord, executionRecord, tx);
+      if (!spec.results?.length) {
+        throw new Error(`Spec (${spec.title}) report has no results data`);
+      }
+
+      const specKey = this._getSpecKey(spec);
+      if (!specsByKey.has(specKey)) {
+        specsByKey.set(specKey, spec);
+      }
     }
+
+    const specKeys = Array.from(specsByKey.keys());
+    const existingSpecs: PrismaSpec[] = [];
+    for (const keys of chunk(specKeys)) {
+      existingSpecs.push(
+        ...(await client.spec.findMany({
+          where: { projectId, key: { in: keys } },
+        })),
+      );
+    }
+
+    const existingSpecKeys = new Set(existingSpecs.map(({ key }) => key));
+    const missingSpecs = Array.from(specsByKey.entries())
+      .filter(([key]) => !existingSpecKeys.has(key))
+      .map(([key, spec]) => ({
+        key,
+        file: spec.location?.file ?? "",
+        title: spec.title,
+        tags: normalizeJsonStringArray(spec.tags),
+        annotations: (Array.isArray(spec.annotations)
+          ? spec.annotations
+          : []) as Prisma.InputJsonValue,
+        projectId: projectId ?? DEFAULT_PROJECT_ID,
+      }));
+
+    for (const data of chunk(missingSpecs)) {
+      await client.spec.createMany({ data, skipDuplicates: true });
+    }
+
+    const persistedSpecs: PrismaSpec[] = [];
+    for (const keys of chunk(specKeys)) {
+      persistedSpecs.push(
+        ...(await client.spec.findMany({
+          where: { projectId, key: { in: keys } },
+        })),
+      );
+    }
+
+    const specRecordsByKey = new Map(
+      persistedSpecs.map((specRecord) => [specRecord.key, specRecord]),
+    );
+    const resultInputs = specs.flatMap((spec) => {
+      const specKey = this._getSpecKey(spec);
+      const specRecord = specRecordsByKey.get(specKey);
+      if (!specRecord) {
+        throw new Error(`Failed to persist spec with key ${specKey}`);
+      }
+
+      return spec.results.map((result) => ({ result, specRecord }));
+    });
+
+    const existingResultKeys = new Set<string>();
+    for (const inputs of chunk(resultInputs)) {
+      const existingResults = await client.result.findMany({
+        where: {
+          executionId: executionRecord.id,
+          OR: inputs.map(({ result, specRecord }) => ({
+            specId: specRecord.id,
+            startTime: new Date(result.startTime),
+          })),
+        },
+        select: { specId: true, startTime: true },
+      });
+      existingResults.forEach(({ specId, startTime }) => {
+        existingResultKeys.add(`${specId}:${startTime.toISOString()}`);
+      });
+    }
+
+    const newResultKeys = new Set<string>();
+    const resultRecords: Prisma.ResultCreateManyInput[] = [];
+    const errorRecords: Prisma.ResultErrorCreateManyInput[] = [];
+
+    for (const { result, specRecord } of resultInputs) {
+      const startTime = new Date(result.startTime);
+      const resultKey = `${specRecord.id}:${startTime.toISOString()}`;
+      if (existingResultKeys.has(resultKey) || newResultKeys.has(resultKey)) {
+        continue;
+      }
+
+      newResultKeys.add(resultKey);
+      const resultId = randomUUID();
+      resultRecords.push({
+        id: resultId,
+        reportPortalLink: result.reportPortalLink ?? null,
+        retry: result.retry ?? 0,
+        status: result.status,
+        duration: result.duration,
+        startTime,
+        specId: specRecord.id,
+        executionId: executionRecord.id,
+      });
+
+      for (const [errorIndex, error] of getOrderedErrors(result).entries()) {
+        const parsedError = parseStackTrace(error);
+        const modalContext = normalizeResultErrorModalContext({
+          logs: error.rawLogs ?? error.logs ?? (errorIndex === 0 ? result.logs : undefined),
+          sourceSnippet:
+            error.sourceSnippet ?? (errorIndex === 0 ? result.sourceSnippet : undefined),
+          generatedTestCase:
+            error.generatedTestCase ??
+            (errorIndex === 0 ? result.generatedTestCase : undefined),
+        });
+        errorRecords.push({
+          id: randomUUID(),
+          type: parsedError.type,
+          message: parsedError.message,
+          callLog: parsedError.callLog,
+          callStack: parsedError.callStack,
+          testAssertion: parsedError.testAssertion,
+          expectedPattern: parsedError.expectedPattern,
+          receivedString: parsedError.receivedString,
+          location: `${parsedError.location.file}:${parsedError.location.line}`,
+          resultId,
+          ...(modalContext.rawLogs
+            ? { rawLogs: modalContext.rawLogs }
+            : {}),
+          ...(modalContext.sourceSnippet
+            ? {
+                sourceSnippet: {
+                  ...modalContext.sourceSnippet,
+                } as Prisma.InputJsonObject,
+              }
+            : {}),
+          ...(modalContext.generatedTestCase
+            ? { generatedTestCase: modalContext.generatedTestCase }
+            : {}),
+        });
+      }
+    }
+
+    for (const data of chunk(resultRecords)) {
+      await client.result.createMany({ data });
+    }
+    for (const data of chunk(errorRecords)) {
+      await client.resultError.createMany({ data });
+    }
+  },
+
+  _getSpecKey(specData: TestSpec): string {
+    if (specData.custom_id) {
+      return specData.custom_id;
+    }
+
+    return specData.title.match(/C\d+/)?.[0] ?? specData.title;
   },
 
   /**
@@ -243,16 +427,7 @@ export const jsonReportService = {
     tx?: Prisma.TransactionClient,
   ): Promise<PrismaSpec> {
     const client = tx ?? dbClient;
-    let specKey = "";
-    const titleMatch = specData.title.match(/C\d+/);
-
-    if (specData.custom_id) {
-      specKey = specData.custom_id;
-    } else if (titleMatch) {
-      specKey = titleMatch[0];
-    } else {
-      specKey = specData.title; // fallback to title
-    }
+    const specKey = this._getSpecKey(specData);
 
     let specRecord = await client.spec.findFirst({
       where: {
@@ -342,12 +517,26 @@ export const jsonReportService = {
     };
 
     // Handle error data if present
-    if (resultData.error) {
-      const errorRecord = await this._createErrorRecord(resultData.error, tx);
+    const orderedErrors = getOrderedErrors(resultData);
+    if (orderedErrors.length > 0) {
+      const errorRecords = await Promise.all(
+        orderedErrors.map((error, index) =>
+          this._createErrorRecord(
+            error,
+            {
+              logs: error.rawLogs ?? error.logs ?? (index === 0 ? resultData.logs : undefined),
+              sourceSnippet:
+                error.sourceSnippet ?? (index === 0 ? resultData.sourceSnippet : undefined),
+              generatedTestCase:
+                error.generatedTestCase ??
+                (index === 0 ? resultData.generatedTestCase : undefined),
+            },
+            tx,
+          ),
+        ),
+      );
       recordData.errors = {
-        connect: {
-          id: errorRecord.id,
-        },
+        connect: errorRecords.map(({ id }) => ({ id })),
       };
     }
 
@@ -364,6 +553,10 @@ export const jsonReportService = {
    */
   async _createErrorRecord(
     errorData: ErrorData,
+    modalContextInput: Pick<
+      TestResult,
+      "logs" | "sourceSnippet" | "generatedTestCase"
+    > = {},
     tx?: Prisma.TransactionClient,
   ): Promise<PrismaResultError> {
     const client = tx ?? dbClient;
@@ -378,6 +571,7 @@ export const jsonReportService = {
       receivedString,
       location,
     } = parsedError;
+    const modalContext = normalizeResultErrorModalContext(modalContextInput);
 
     const errorRecord = await client.resultError.create({
       data: {
@@ -389,6 +583,17 @@ export const jsonReportService = {
         expectedPattern,
         receivedString,
         location: `${location.file}:${location.line}`,
+        ...(modalContext.rawLogs ? { rawLogs: modalContext.rawLogs } : {}),
+        ...(modalContext.sourceSnippet
+          ? {
+              sourceSnippet: {
+                ...modalContext.sourceSnippet,
+              } as Prisma.InputJsonObject,
+            }
+          : {}),
+        ...(modalContext.generatedTestCase
+          ? { generatedTestCase: modalContext.generatedTestCase }
+          : {}),
       },
     });
 

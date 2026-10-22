@@ -1,5 +1,9 @@
 # Dashboard Data Implementation Plan
 
+> **Current-state note:** This plan now reflects the implemented all-environment
+> Dashboard read behavior. Execution environment remains stored as aggregation
+> metadata, but it is not a Dashboard request or database filter.
+
 ## 1. Data Requirements (from Screenshot)
 
 Based on the dashboard visualization, the client requires the following structured data:
@@ -29,7 +33,6 @@ Based on the dashboard visualization, the client requires the following structur
 ### C. Filters
 
 - **Project**: (Implicit context)
-- **Environment**: (e.g., "Dev Environment")
 - **Execution Type**: Select specific run types (e.g., "Nightly", "Release").
 - **Period**:
   - Week (Last 7 days)
@@ -99,12 +102,16 @@ model DailyExecutionMetric {
 When an `Execution` finishes:
 
 1.  Calculate metrics for context.
-2.  **Atomic Increment**: Use Prisma `upsert` to increment the counters for the day. This avoids race conditions between parallel test runs.
+2.  **Idempotent Refresh**: Re-query the affected project/environment/type/day
+    bucket, then use Prisma `upsert` to overwrite it with absolute totals. The
+    environment value is execution metadata used only to identify the write-side
+    bucket.
 
 ### C. Client Delivery (Read Path)
 
-**Endpoint**: `GET /api/projects/:projectId/dashboard`
-**Params**: `environment`, `period` (7d/30d...), `type` (optional).
+**Endpoint**: `GET /api/v2/projects/:projectId/dashboard`
+**Params**: `period` (number of days), `type` (optional), and `granularity`
+(`daily`, `weekly`, or `monthly`, optional).
 
 **Response Structure (Data-Centric)**:
 We will return raw aggregated data, leaving visualization formatting to the frontend.
@@ -133,19 +140,24 @@ We will return raw aggregated data, leaving visualization formatting to the fron
     ...
   ],
   "recentExecutions": [
-    { "id": "uuid", "name": "nighty 1", "status": "failed", ... }
+    { "id": "uuid", "name": "nightly 1", "status": "failed", "environment": "staging", ... }
   ]
 }
 ```
+
+Here, `recentExecutions[].environment` is descriptive metadata for an individual
+execution. The `issues.environment` value is an issue-category count. Neither
+field is a Dashboard request or read filter.
 
 **Algorithm**:
 
 1.  **Fetch History**: Query `DailyExecutionMetric` rows within the requested `period`.
 2.  **Filter & Aggregate**:
 
-- Filter by `environment` and optional `type`.
+- Filter by project and date range, plus optional `type`; do not filter by execution environment.
+- Sum matching `DailyExecutionMetric` rows across all stored execution environments.
 - Compute period totals for the `summary` object.
-- Return the relevant daily objects in the `history` array.
+- Return history buckets at the requested daily, weekly, or monthly granularity.
 
 3.  **Fetch Recent Executions**:
 
@@ -153,31 +165,27 @@ We will return raw aggregated data, leaving visualization formatting to the fron
 
 4.  **Combine & Return**.
 
-## 4. Proposed Enhancements: Long-Range Reporting (Deferred)
+## 4. Long-Range Reporting
 
-This is optional and not implemented yet. The current API ignores `granularity` and always returns **daily** data. This keeps the behavior stable while we validate the dashboard.
+Weekly and monthly history aggregation is implemented. The current API accepts
+`granularity`; when omitted, short periods default to daily and periods longer
+than 90 days default to weekly.
 
-### A. Future API Shape
+### A. Current API Shape
 
 Optional params on the existing dashboard endpoint:
 
-- `granularity`: `daily` | `weekly` | `monthly` (ignored for now)
+- `granularity`: `daily` | `weekly` | `monthly`
 - `period`: number of days (existing)
 
-### B. Future Aggregation Strategy
+### B. Aggregation Strategy
 
 - **Daily**: current behavior using `dailyExecutionMetric` rows.
 - **Weekly**: group by ISO week (e.g., year + week number) and sum metrics.
 - **Monthly**: group by year + month and sum metrics.
 
-### C. Future Implementation Notes
+### C. Implementation Notes
 
 - Use `dailyExecutionMetric` as the base source and aggregate in memory.
-- Return `history` entries with a `label` field for weekly/monthly buckets, e.g. `2025-W03`, `2025-01`.
+- Return `history` entries whose `date` field contains the bucket key, e.g. `2025-W03` or `2025-01` for weekly/monthly data.
 - Keep `recentExecutions` unchanged (still capped at 20).
-
-## 5. Next Steps
-
-1.  Add `granularity` to the dashboard endpoint.
-2.  Implement weekly/monthly aggregation in `dashboardService.getDashboard`.
-3.  Update API docs to describe `granularity`.

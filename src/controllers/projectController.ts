@@ -15,6 +15,26 @@ type ProjectIdParams = {
 };
 
 export const projectController = {
+  async getExecutionTypes(
+    req: Request<ProjectIdParams>,
+    res: Response,
+  ): Promise<void> {
+    try {
+      const { id } = req.params;
+
+      if (!id || typeof id !== "string") {
+        res.status(400).json({ error: "Invalid project ID" });
+        return;
+      }
+
+      const executionTypes = await projectService.getExecutionTypes(id);
+      res.json(executionTypes);
+    } catch (error) {
+      const err = error as Error;
+      res.status(500).json({ error: err.message });
+    }
+  },
+
   async getProjects(_req: Request, res: Response): Promise<void> {
     try {
       const projects = await projectService.getProjects({});

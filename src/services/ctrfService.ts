@@ -2,6 +2,8 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import getLogger from "@/lib/logger";
+import { normalizeResultErrorModalContext } from "@/lib/resultErrorModalContext";
+import { decodeTestPortalExtension } from "@/lib/ctrfTestPortalExtension";
 import { dbClient } from "@/prisma/client";
 import type { CTRFReport, CTRFTest } from "@/types/ctrf";
 import type {
@@ -38,69 +40,61 @@ export const ctrfService = {
     // Step 1: Transform CTRF to report data WITHOUT analysis
     const reportData = this.transformCtrfToReportData(ctrfReport);
 
-    const result = await dbClient.$transaction(
-      async (tx) => {
-        // Step 2: Persist to database
-        const processResult = await jsonReportService.processReport(
-          {
-            ...reportData,
-            provider: reportData.provider || "ctrf",
-          },
-          projectId.toString(),
-          tx,
-        );
+    // Step 2: Persist atomically. Analysis and dashboard work intentionally run
+    // after this transaction commits so external work cannot expire it.
+    const processResult = await jsonReportService.processReport(
+      {
+        ...reportData,
+        provider: reportData.provider || "ctrf",
+      },
+      projectId.toString(),
+    );
 
-        // Step 3: Check if analysis is enabled for project owner
-        const project = await tx.project.findUnique({
-          where: { id: projectId },
-          include: { owner: true },
-        });
+    // Step 3: Check if analysis is enabled for project owner
+    const project = await dbClient.project.findUnique({
+      where: { id: projectId },
+      include: { owner: true },
+    });
 
-        const shouldAnalyze = project?.owner.analyzeEnabled ?? false;
+    const shouldAnalyze = project?.owner.analyzeEnabled ?? false;
 
-        if (!shouldAnalyze) {
-          logger.info("Analysis disabled for user, skipping analysis");
-          return {
-            ...processResult,
-            analysis: undefined,
-          };
-        }
+    let result: CTRFProcessResult = {
+      ...processResult,
+      analysis: undefined,
+    };
 
-        // Step 4: Fetch just-created results from DB with relations
-        const createdResults = await tx.result.findMany({
-          where: { executionId: processResult.executionId },
-          include: {
-            spec: true,
-            execution: true,
-            errors: true,
-          },
-        });
+    if (!shouldAnalyze) {
+      logger.info("Analysis disabled for user, skipping analysis");
+    } else {
+      // Step 4: Fetch just-created results from DB with relations
+      const createdResults = await dbClient.result.findMany({
+        where: { executionId: processResult.executionId },
+        include: {
+          spec: true,
+          execution: true,
+          errors: true,
+        },
+      });
 
-        logger.info(
-          `Fetched ${createdResults.length} results from DB for analysis`,
-        );
+      logger.info(
+        `Fetched ${createdResults.length} results from DB for analysis`,
+      );
 
-        if (this.shouldSkipAnalysis(createdResults)) {
-          return {
-            ...processResult,
-            analysis: undefined,
-          };
-        }
-
+      if (!this.shouldSkipAnalysis(createdResults)) {
         // Step 5: Analyze stored results (POST-PERSIST)
         let analysisMap: Map<string, TestResultAnalysis> | null = null;
         try {
           analysisMap =
             await testAnalysisService.analyzeStoredResults(createdResults);
 
-          // Step 6: Update results with analysis fields
+          // Step 6: Update results with analysis fields (POST-PERSIST)
           logger.info(
             `Updating ${analysisMap.size} results with analysis data`,
           );
 
           await Promise.all(
             Array.from(analysisMap.entries()).map(([resultId, analysis]) =>
-              tx.result.update({
+              dbClient.result.update({
                 where: { id: resultId },
                 data: {
                   analysisStatus: analysis.status,
@@ -125,15 +119,12 @@ export const ctrfService = {
           );
         }
 
-        return {
+        result = {
           ...processResult,
           analysis: analysisMap ? Array.from(analysisMap.values()) : undefined,
         };
-      },
-      {
-        timeout: 30000, // Increase timeout for analysis
-      },
-    );
+      }
+    }
 
     // Update dashboard metrics asynchronously (fire and forget or await?)
     // Awaiting to ensure data consistency in case subsequent calls depend on it,
@@ -163,12 +154,14 @@ export const ctrfService = {
       .map((test, index) => this.transformCtrfTest(test, summary.start, index));
 
     const providerName = tool?.name.toLowerCase() || "ctrf";
+    const executionType = environment?.executionType?.trim();
 
     return {
       runId: environment?.buildNumber ?? `${providerName}-${Date.now()}`,
       env: environment?.testEnvironment ?? "N/A",
       version: tool.version ?? "N/A",
       provider: providerName,
+      ...(executionType ? { executionType } : {}),
       stats: {
         startTime: new Date(summary.start),
       },
@@ -182,24 +175,71 @@ export const ctrfService = {
     fallbackStartTime: number,
     index: number,
   ) {
-    const results = [
-      {
-        retry: ctrfTest.retry ?? 0,
-        status: this.mapCtrfStatus(ctrfTest.status),
-        duration: ctrfTest.duration,
-        startTime: this.getCtrfTestStartTime(ctrfTest, fallbackStartTime, index),
-        ...(ctrfTest.message
-          ? {
-              error: {
-                message: ctrfTest.message,
-                stack: ctrfTest.trace ?? "",
-                location: this.parseLocation(ctrfTest.filePath),
-              },
-            }
-          : {}),
-        workerIndex: 0,
-      },
-    ];
+    const legacyContext = normalizeResultErrorModalContext({
+      logs: ctrfTest.meta?.logs,
+      sourceSnippet: ctrfTest.meta?.sourceSnippet,
+      generatedTestCase: ctrfTest.meta?.generatedTestCase,
+    });
+    const toErrors = (
+      message: string | undefined,
+      trace: string | undefined,
+      filePath: string | undefined,
+      extra: unknown,
+      fallback = legacyContext,
+    ) => {
+      const decoded = decodeTestPortalExtension(extra);
+      if (decoded.length > 0) {
+        return decoded.map((error) => ({
+          message: error.message ?? (error.index === 0 ? message ?? "Unknown error" : "Unknown error"),
+          stack: error.stack ?? (error.index === 0 ? trace ?? "" : ""),
+          location: error.location ?? { file: "", line: 0 },
+          ...(error.rawLogs ? { rawLogs: error.rawLogs } : {}),
+          ...(error.sourceSnippet ? { sourceSnippet: error.sourceSnippet } : {}),
+          ...(error.generatedTestCase ? { generatedTestCase: error.generatedTestCase } : {}),
+        }));
+      }
+      return message
+        ? [{
+            message,
+            stack: trace ?? "",
+            location: this.parseLocation(filePath),
+            ...(fallback.rawLogs ? { rawLogs: fallback.rawLogs } : {}),
+            ...(fallback.sourceSnippet ? { sourceSnippet: fallback.sourceSnippet } : {}),
+            ...(fallback.generatedTestCase ? { generatedTestCase: fallback.generatedTestCase } : {}),
+          }]
+        : [];
+    };
+
+    const priorAttempts = (ctrfTest.retryAttempts ?? []).map((attempt, attemptIndex) => ({
+      retry: Math.max(0, attempt.attempt - 1),
+      status: this.mapCtrfStatus(attempt.status),
+      duration: attempt.duration ?? 0,
+      startTime: new Date(attempt.start ?? fallbackStartTime + index + attemptIndex),
+      errors: toErrors(attempt.message, attempt.trace, ctrfTest.filePath, attempt.extra, {
+        rawLogs: null,
+        sourceSnippet: null,
+        generatedTestCase: null,
+      }),
+      workerIndex: 0,
+    }));
+    const finalErrors = toErrors(
+      ctrfTest.message,
+      ctrfTest.trace,
+      ctrfTest.filePath,
+      ctrfTest.extra,
+    );
+    const finalAttempt = {
+      retry: ctrfTest.retries ?? ctrfTest.retry ?? priorAttempts.length,
+      status: this.mapCtrfStatus(ctrfTest.status),
+      duration: ctrfTest.duration,
+      startTime: this.getCtrfTestStartTime(ctrfTest, fallbackStartTime, index),
+      ...(finalErrors.length > 0 ? { errors: finalErrors, error: finalErrors[0] } : {}),
+      ...(finalErrors[0]?.rawLogs ? { logs: finalErrors[0].rawLogs } : {}),
+      ...(finalErrors[0]?.sourceSnippet ? { sourceSnippet: finalErrors[0].sourceSnippet } : {}),
+      ...(finalErrors[0]?.generatedTestCase ? { generatedTestCase: finalErrors[0].generatedTestCase } : {}),
+      workerIndex: 0,
+    };
+    const results = [...priorAttempts, finalAttempt];
 
     const testSpec = {
       title: ctrfTest.name,
@@ -229,7 +269,9 @@ export const ctrfService = {
 
     return [
       ctrfTest.filePath ?? "unknown",
-      ctrfTest.suite ?? "default",
+      Array.isArray(ctrfTest.suite)
+        ? ctrfTest.suite.join(" › ")
+        : ctrfTest.suite ?? "default",
       ctrfTest.name,
     ].join("::");
   },

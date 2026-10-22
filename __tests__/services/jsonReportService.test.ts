@@ -12,14 +12,19 @@ jest.mock("@/prisma/client", () => {
     };
     spec: {
       findFirst: jest.Mock;
+      findMany: jest.Mock;
       create: jest.Mock;
+      createMany: jest.Mock;
     };
     result: {
       findFirst: jest.Mock;
+      findMany: jest.Mock;
       create: jest.Mock;
+      createMany: jest.Mock;
     };
     resultError: {
       create: jest.Mock;
+      createMany: jest.Mock;
     };
     $transaction: jest.Mock;
   }
@@ -31,17 +36,23 @@ jest.mock("@/prisma/client", () => {
     },
     spec: {
       findFirst: jest.fn(),
+      findMany: jest.fn(),
       create: jest.fn(),
+      createMany: jest.fn(),
     },
     result: {
       findFirst: jest.fn(),
+      findMany: jest.fn(),
       create: jest.fn(),
+      createMany: jest.fn(),
     },
     resultError: {
       create: jest.fn(),
+      createMany: jest.fn(),
     },
-    $transaction: jest.fn(async (callback: (client: MockClient) => Promise<unknown>) =>
-      await callback(mockClient),
+    $transaction: jest.fn(
+      async (callback: (client: MockClient) => Promise<unknown>) =>
+        await callback(mockClient),
     ),
   };
 
@@ -91,6 +102,17 @@ describe("jsonReportService with optional runId", () => {
 
     // Mock spec creation
     dbClient.spec.findFirst.mockResolvedValue(null);
+    dbClient.spec.findMany.mockImplementation(
+      async ({ where }: { where: { key: { in: string[] } } }) =>
+        where.key.in.map((key) => ({
+          id: `spec-${key}`,
+          key,
+          file: "test.spec.js",
+          title: key,
+          tags: [],
+          annotations: [],
+        })),
+    );
     dbClient.spec.create.mockResolvedValue({
       id: 1,
       key: "TEST_SPEC",
@@ -99,9 +121,11 @@ describe("jsonReportService with optional runId", () => {
       tags: [],
       annotations: [],
     });
+    dbClient.spec.createMany.mockResolvedValue({ count: 0 });
 
     // Mock result creation
     dbClient.result.findFirst.mockResolvedValue(null);
+    dbClient.result.findMany.mockResolvedValue([]);
     dbClient.result.create.mockResolvedValue({
       id: 1,
       specId: 1,
@@ -111,6 +135,8 @@ describe("jsonReportService with optional runId", () => {
       duration: 1000,
       startTime: new Date(),
     });
+    dbClient.result.createMany.mockResolvedValue({ count: 0 });
+    dbClient.resultError.createMany.mockResolvedValue({ count: 0 });
   });
 
   const mockTestData = {
@@ -159,12 +185,6 @@ describe("jsonReportService with optional runId", () => {
     expect(dbClient.execution.create).toHaveBeenCalledWith({
       data: expect.objectContaining({
         name: "PROVIDED_RUN_ID",
-      }),
-    });
-    expect(dbClient.spec.create).toHaveBeenCalledWith({
-      data: expect.objectContaining({
-        tags: [],
-        annotations: [],
       }),
     });
   });
@@ -265,11 +285,390 @@ describe("jsonReportService with optional runId", () => {
       "b4225bdf-9e2b-43f9-8f13-5bb6f5079176",
     );
 
-    expect(dbClient.spec.findFirst).toHaveBeenCalledWith({
+    expect(dbClient.spec.findMany).toHaveBeenCalledWith({
       where: {
-        key: "TestScriptRepository.checkout.VerifyCheckoutPageNavigationForLoggedInUser_RT_TS61TC01::default::VerifyCheckoutPageNavigationForLoggedInUser_RT_TS61TC01",
-        AND: { projectId: "b4225bdf-9e2b-43f9-8f13-5bb6f5079176" },
+        projectId: "b4225bdf-9e2b-43f9-8f13-5bb6f5079176",
+        key: {
+          in: [
+            "TestScriptRepository.checkout.VerifyCheckoutPageNavigationForLoggedInUser_RT_TS61TC01::default::VerifyCheckoutPageNavigationForLoggedInUser_RT_TS61TC01",
+          ],
+        },
       },
     });
+  });
+
+  it("should persist provided executionType on execution create", async () => {
+    const reportData = {
+      ...mockTestData,
+      runId: "RELEASE_RUN",
+      executionType: "release",
+    };
+
+    await jsonReportService.processReport(
+      reportData,
+      "b4225bdf-9e2b-43f9-8f13-5bb6f5079176",
+    );
+
+    expect(dbClient.execution.create).toHaveBeenCalledWith({
+      data: expect.objectContaining({
+        type: "release",
+        name: "RELEASE_RUN",
+      }),
+    });
+  });
+
+  it("should default execution type to nightly when executionType is absent", async () => {
+    const reportData = {
+      ...mockTestData,
+      runId: "DEFAULT_RUN",
+    };
+
+    await jsonReportService.processReport(
+      reportData,
+      "b4225bdf-9e2b-43f9-8f13-5bb6f5079176",
+    );
+
+    expect(dbClient.execution.create).toHaveBeenCalledWith({
+      data: expect.objectContaining({
+        type: "nightly",
+        name: "DEFAULT_RUN",
+      }),
+    });
+  });
+
+  it("should persist 5001 tests with a bounded number of database batches", async () => {
+    const tests = Array.from({ length: 5001 }, (_, index) => ({
+      title: `Test ${index}`,
+      custom_id: `test-${index}`,
+      location: { file: `test-${index}.spec.ts`, line: 1 },
+      results: [
+        {
+          retry: 0,
+          status: "passed",
+          duration: 1,
+          startTime: new Date(1_700_000_000_000 + index).toISOString(),
+          workerIndex: 0,
+        },
+      ],
+    }));
+
+    let specReadBatch = 0;
+    dbClient.spec.findMany.mockImplementation(
+      async ({ where }: { where: { key: { in: string[] } } }) => {
+        specReadBatch += 1;
+        return specReadBatch <= 11
+          ? []
+          : where.key.in.map((key) => ({ id: `spec-${key}`, key }));
+      },
+    );
+
+    const result = await jsonReportService.processReport(
+      {
+        ...mockTestData,
+        runId: "large-report",
+        tests,
+      },
+      "b4225bdf-9e2b-43f9-8f13-5bb6f5079176",
+    );
+
+    expect(result).toEqual({
+      success: true,
+      executionId: 1,
+      specsProcessed: 5001,
+    });
+    expect(dbClient.spec.findFirst).not.toHaveBeenCalled();
+    expect(dbClient.result.findFirst).not.toHaveBeenCalled();
+    expect(dbClient.spec.findMany.mock.calls.length).toBeLessThanOrEqual(22);
+    expect(dbClient.spec.createMany.mock.calls.length).toBeLessThanOrEqual(11);
+    expect(dbClient.result.findMany.mock.calls.length).toBeLessThanOrEqual(12);
+    expect(dbClient.result.createMany.mock.calls.length).toBeLessThanOrEqual(
+      12,
+    );
+  });
+
+  it("should not create a duplicate result when the execution already contains it", async () => {
+    dbClient.result.findMany.mockResolvedValue([
+      {
+        specId: "spec-TEST_SPEC Test Case",
+        startTime: new Date("2025-05-14T10:30:00Z"),
+      },
+    ]);
+
+    const result = await jsonReportService.processReport(
+      { ...mockTestData, runId: "existing-run" },
+      "b4225bdf-9e2b-43f9-8f13-5bb6f5079176",
+    );
+
+    expect(result.specsProcessed).toBe(1);
+    expect(dbClient.result.createMany).not.toHaveBeenCalled();
+    expect(dbClient.resultError.createMany).not.toHaveBeenCalled();
+  });
+
+  it("should batch failed-test errors with their generated result IDs", async () => {
+    const [testSpec] = mockTestData.tests;
+    if (!testSpec) {
+      throw new Error("Expected mock test data");
+    }
+
+    await jsonReportService.processReport(
+      {
+        ...mockTestData,
+        runId: "failed-run",
+        tests: [
+          {
+            ...testSpec,
+            results: [
+              {
+                retry: 0,
+                status: "failed",
+                duration: 1000,
+                startTime: "2025-05-14T10:30:00Z",
+                workerIndex: 0,
+                error: {
+                  message: "Error: expected true",
+                  stack: "Error: expected true",
+                  location: { file: "test.spec.js", line: 10 },
+                },
+              },
+            ],
+          },
+        ],
+      },
+      "b4225bdf-9e2b-43f9-8f13-5bb6f5079176",
+    );
+
+    const createdResult = dbClient.result.createMany.mock.calls[0][0].data[0];
+    const createdError =
+      dbClient.resultError.createMany.mock.calls[0][0].data[0];
+    expect(createdError).toEqual(
+      expect.objectContaining({
+        resultId: createdResult.id,
+        type: "TestError",
+        message: "Mock error",
+        location: "test.js:1",
+      }),
+    );
+  });
+
+  it("should reject a future timestamp before starting persistence", async () => {
+    jest.useFakeTimers().setSystemTime(new Date("2026-08-14T12:00:00.000Z"));
+    const reportData = {
+      ...mockTestData,
+      stats: { startTime: "2026-08-14T12:15:00.000Z" },
+      tests: mockTestData.tests.map((test) => ({
+        ...test,
+        results: test.results.map((result) => ({
+          ...result,
+          startTime: "2026-08-14T12:20:00.000Z",
+        })),
+      })),
+    };
+
+    try {
+      await expect(
+        jsonReportService.processReport(
+          reportData,
+          "b4225bdf-9e2b-43f9-8f13-5bb6f5079176",
+        ),
+      ).rejects.toThrow(
+        "Import failed. Future test execution timestamps were detected. 2 timestamps exceed the allowed 10-minute tolerance. Maximum deviation: 20m. No data was imported.",
+      );
+      expect(dbClient.$transaction).not.toHaveBeenCalled();
+      expect(dbClient.execution.findFirst).not.toHaveBeenCalled();
+      expect(dbClient.execution.create).not.toHaveBeenCalled();
+      expect(dbClient.spec.create).not.toHaveBeenCalled();
+      expect(dbClient.result.create).not.toHaveBeenCalled();
+    } finally {
+      jest.useRealTimers();
+    }
+  });
+
+  it("persists normalized modal enrichment for an enriched failed result", async () => {
+    const [testSpec] = mockTestData.tests;
+    if (!testSpec) {
+      throw new Error("Expected mock test data");
+    }
+
+    const enrichedReport = {
+      ...mockTestData,
+      runId: "enriched-run",
+      tests: [
+        {
+          ...testSpec,
+          results: [
+            {
+              retry: 0,
+              status: "failed",
+              duration: 1000,
+              startTime: "2025-05-14T10:30:00Z",
+              workerIndex: 0,
+              logs: ["browser started", "request failed"],
+              sourceSnippet: {
+                path: "test.spec.js",
+                text: "const actual = read();\nawait refresh();\nexpect(actual).toBe(expected);",
+                startLine: 8,
+                failingLine: 10,
+              },
+              generatedTestCase: "test('reproduces the failure', async () => {});",
+              error: {
+                message: "Error: expected true",
+                stack: "Error: expected true",
+                location: { file: "test.spec.js", line: 10 },
+              },
+            },
+          ],
+        },
+      ],
+    };
+
+    await jsonReportService.processReport(
+      enrichedReport,
+      "b4225bdf-9e2b-43f9-8f13-5bb6f5079176",
+    );
+
+    const createdError =
+      dbClient.resultError.createMany.mock.calls[0][0].data[0];
+    expect(createdError).toEqual(
+      expect.objectContaining({
+        rawLogs: ["browser started", "request failed"],
+        sourceSnippet: {
+          path: "test.spec.js",
+          text: "const actual = read();\nawait refresh();\nexpect(actual).toBe(expected);",
+          startLine: 8,
+          failingLine: 10,
+        },
+        generatedTestCase: "test('reproduces the failure', async () => {});",
+      }),
+    );
+  });
+
+  it("persists every ordered error with diagnostics on its associated error", async () => {
+    const [testSpec] = mockTestData.tests;
+    if (!testSpec) throw new Error("Expected mock test data");
+
+    await jsonReportService.processReport(
+      {
+        ...mockTestData,
+        runId: "multiple-errors-run",
+        tests: [{
+          ...testSpec,
+          results: [{
+            retry: 0,
+            status: "failed",
+            duration: 1000,
+            startTime: "2025-05-14T10:30:00Z",
+            workerIndex: 0,
+            errors: [
+              { message: "primary", stack: "stack one", location: { file: "one.ts", line: 1 }, rawLogs: ["first"] },
+              { message: "secondary", stack: "stack two", location: { file: "two.ts", line: 2 }, generatedTestCase: "test('secondary', () => {});" },
+            ],
+          }],
+        }],
+      },
+      "b4225bdf-9e2b-43f9-8f13-5bb6f5079176",
+    );
+
+    const createdErrors = dbClient.resultError.createMany.mock.calls[0][0].data;
+    expect(createdErrors).toHaveLength(2);
+    expect(createdErrors.map((item: { resultId: string }) => item.resultId)).toEqual([
+      createdErrors[0].resultId,
+      createdErrors[0].resultId,
+    ]);
+    expect(createdErrors[0].rawLogs).toEqual(["first"]);
+    expect(createdErrors[1].generatedTestCase).toBe("test('secondary', () => {});");
+  });
+
+  it("persists absent modal enrichment as null for a legacy failed result", async () => {
+    const [testSpec] = mockTestData.tests;
+    if (!testSpec) {
+      throw new Error("Expected mock test data");
+    }
+
+    await jsonReportService.processReport(
+      {
+        ...mockTestData,
+        runId: "legacy-run",
+        tests: [
+          {
+            ...testSpec,
+            results: [
+              {
+                retry: 0,
+                status: "failed",
+                duration: 1000,
+                startTime: "2025-05-14T10:30:00Z",
+                workerIndex: 0,
+                error: {
+                  message: "Error: expected true",
+                  stack: "Error: expected true",
+                  location: { file: "test.spec.js", line: 10 },
+                },
+              },
+            ],
+          },
+        ],
+      },
+      "b4225bdf-9e2b-43f9-8f13-5bb6f5079176",
+    );
+
+    const createdError =
+      dbClient.resultError.createMany.mock.calls[0][0].data[0];
+    expect(createdError).not.toHaveProperty("rawLogs");
+    expect(createdError).not.toHaveProperty("sourceSnippet");
+    expect(createdError).not.toHaveProperty("generatedTestCase");
+  });
+
+  it("discards invalid optional fields independently without rejecting the report", async () => {
+    const [testSpec] = mockTestData.tests;
+    if (!testSpec) {
+      throw new Error("Expected mock test data");
+    }
+    const oversizedLogs = "x".repeat(256 * 1024 + 1);
+    const reportWithInvalidEnrichment = {
+      ...mockTestData,
+      runId: "bounded-run",
+      tests: [
+        {
+          ...testSpec,
+          results: [
+            {
+              retry: 0,
+              status: "failed",
+              duration: 1000,
+              startTime: "2025-05-14T10:30:00Z",
+              workerIndex: 0,
+              logs: oversizedLogs,
+              sourceSnippet: {
+                path: "test.spec.js",
+                text: "line 10",
+                startLine: 10,
+                failingLine: 9,
+              },
+              generatedTestCase: "test('still retained', () => {});",
+              error: {
+                message: "Error: expected true",
+                stack: "Error: expected true",
+                location: { file: "test.spec.js", line: 10 },
+              },
+            },
+          ],
+        },
+      ],
+    };
+
+    await expect(
+      jsonReportService.processReport(
+        reportWithInvalidEnrichment,
+        "b4225bdf-9e2b-43f9-8f13-5bb6f5079176",
+      ),
+    ).resolves.toEqual(expect.objectContaining({ success: true }));
+
+    const createdError =
+      dbClient.resultError.createMany.mock.calls[0][0].data[0];
+    expect(createdError).not.toHaveProperty("rawLogs");
+    expect(createdError).not.toHaveProperty("sourceSnippet");
+    expect(createdError.generatedTestCase).toBe(
+      "test('still retained', () => {});",
+    );
   });
 });

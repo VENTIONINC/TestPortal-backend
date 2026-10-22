@@ -83,7 +83,14 @@ describe("errorFormatterService.suggestFromResult", () => {
     .invokeMock as unknown as jest.MockedFunction<
     (
       messages: Array<{ role: string; content: string }>,
-    ) => Promise<{ description: string }>
+    ) => Promise<
+      | {
+          category: "bug" | "infra" | "performance" | "script" | "other";
+          name: string;
+          description: string;
+        }
+      | { name: string; description: string }
+    >
   >;
   const chatOpenAIMock = openAiMocks.__mocks__.chatOpenAIMock;
   const withStructuredOutputMock =
@@ -143,6 +150,8 @@ describe("errorFormatterService.suggestFromResult", () => {
         message: "Error",
         callLog: [],
         callStack: ["stack"],
+        rawLogs: [],
+        sourceSnippet: null,
         testAssertion: null,
         expectedPattern: null,
         receivedString: null,
@@ -182,7 +191,38 @@ describe("errorFormatterService.suggestFromResult", () => {
       { role: "system", content: "system" },
       { role: "user", content: "user" },
     ]);
-    invokeMock.mockResolvedValue({ description: "Suggested steps" });
+    invokeMock.mockResolvedValue({
+      category: "bug",
+      name: "Checkout request fails",
+      description: "Suggested steps",
+    });
+  });
+
+  it("passes canonical generic context to the formatter prompt without making it output data", async () => {
+    invokeMock.mockResolvedValue({
+      name: "Readable failure",
+      description: "Actionable details",
+    });
+
+    const formatted = await errorFormatterService.formatErrorMessage({
+      name: "Original failure",
+      description: "Original details",
+      contextCategory: "infra",
+    });
+
+    expect(invokeMock).toHaveBeenCalledWith([
+      expect.objectContaining({ role: "system" }),
+      expect.objectContaining({
+        role: "user",
+        content:
+          "Name: Original failure\nDescription: Original details\nContext category: infra",
+      }),
+    ]);
+    expect(formatted).toEqual({
+      name: "Readable failure",
+      description: "Actionable details",
+    });
+    expect(formatted).not.toHaveProperty("contextCategory");
   });
 
   it("throws when resultId is missing", async () => {
@@ -221,7 +261,7 @@ describe("errorFormatterService.suggestFromResult", () => {
     ).rejects.toThrow("Result has no error details to analyze");
   });
 
-  it("uses existing analysis when present", async () => {
+  it("returns the complete issue draft generated from existing analysis", async () => {
     getResultByIdMock.mockResolvedValue(
       makeResult({
         analysisCategory: "bug",
@@ -243,11 +283,44 @@ describe("errorFormatterService.suggestFromResult", () => {
     expect(invokeMock).toHaveBeenCalledTimes(1);
     expect(result).toEqual({
       category: "bug",
+      name: "Checkout request fails",
       description: "Suggested steps",
     });
   });
 
-  it("runs analysis when missing and returns category", async () => {
+  it("uses authoritative feedback category ahead of the AI analysis category", async () => {
+    getResultByIdMock.mockResolvedValue(
+      makeResult({
+        analysisCategory: "bug",
+        analysisFeedbackCategory: "script",
+      }),
+    );
+
+    await errorFormatterService.suggestFromResult("result-1", "project-1");
+
+    expect(analyzeStoredResultsMock).not.toHaveBeenCalled();
+    expect(formatMessagesMock).toHaveBeenCalledWith(
+      expect.objectContaining({ analysisCategory: "script" }),
+    );
+  });
+
+  it("keeps malformed authoritative feedback uncategorized without rerunning AI analysis", async () => {
+    getResultByIdMock.mockResolvedValue(
+      makeResult({
+        analysisCategory: "bug",
+        analysisFeedbackCategory: "unsupported-feedback-category",
+      }),
+    );
+
+    await errorFormatterService.suggestFromResult("result-1", "project-1");
+
+    expect(analyzeStoredResultsMock).not.toHaveBeenCalled();
+    expect(formatMessagesMock).toHaveBeenCalledWith(
+      expect.objectContaining({ analysisCategory: "uncategorized" }),
+    );
+  });
+
+  it("runs analysis when missing and returns the complete issue draft", async () => {
     getResultByIdMock.mockResolvedValue(makeResult({}));
 
     const analysisMap = new Map();
@@ -268,8 +341,12 @@ describe("errorFormatterService.suggestFromResult", () => {
     );
 
     expect(testAnalysisService.analyzeStoredResults).toHaveBeenCalledTimes(1);
+    expect(formatMessagesMock).toHaveBeenCalledWith(
+      expect.objectContaining({ analysisCategory: "infra" }),
+    );
     expect(result).toEqual({
-      category: "infra",
+      category: "bug",
+      name: "Checkout request fails",
       description: "Suggested steps",
     });
   });

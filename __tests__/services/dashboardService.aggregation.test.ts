@@ -35,7 +35,6 @@ jest.mock("@/prisma/client", () => ({
 
 describe("dashboardService Aggregation", () => {
   const projectId = "proj-agg-123";
-  const environment = "prod";
 
   beforeEach(() => {
     jest.clearAllMocks();
@@ -92,7 +91,6 @@ describe("dashboardService Aggregation", () => {
 
     const result = await dashboardService.getDashboard(
       projectId,
-      environment,
       30,
       undefined,
       "weekly",
@@ -132,7 +130,6 @@ describe("dashboardService Aggregation", () => {
 
     const result = await dashboardService.getDashboard(
       projectId,
-      environment,
       30,
       undefined,
       "monthly",
@@ -177,7 +174,6 @@ describe("dashboardService Aggregation", () => {
 
     const result = await dashboardService.getDashboard(
       projectId,
-      environment,
       30,
     );
 
@@ -192,9 +188,8 @@ describe("dashboardService Aggregation", () => {
 
     await dashboardService.getDashboard(
       projectId,
-      environment,
       999,
-      undefined,
+      "Nightly",
       "daily",
       "2025-01-10",
       "2025-01-12",
@@ -202,27 +197,27 @@ describe("dashboardService Aggregation", () => {
 
     expect(dbClient.dailyExecutionMetric.findMany).toHaveBeenCalledWith(
       expect.objectContaining({
-        where: expect.objectContaining({
+        where: {
           projectId,
-          environment,
           date: {
             gte: new Date("2025-01-10T00:00:00.000Z"),
             lt: new Date("2025-01-13T00:00:00.000Z"),
           },
-        }),
+          type: "Nightly",
+        },
       }),
     );
 
     expect(dbClient.execution.findMany).toHaveBeenCalledWith(
       expect.objectContaining({
-        where: expect.objectContaining({
+        where: {
           projectId,
-          environment,
           startedAt: {
             gte: new Date("2025-01-10T00:00:00.000Z"),
             lt: new Date("2025-01-13T00:00:00.000Z"),
           },
-        }),
+          type: "Nightly",
+        },
       }),
     );
   });

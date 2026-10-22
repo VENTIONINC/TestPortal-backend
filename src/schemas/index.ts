@@ -8,6 +8,8 @@
 
 // Error Formatter schemas and types
 export {
+  contextCategorySchema,
+  errorFormatterRequestSchema,
   errorFormatterSchema,
   type ErrorFormatterInput,
   type ErrorFormatterOutput,
@@ -28,3 +30,22 @@ export {
 } from "./testAnalysisSchemas";
 
 export { pdfExportSchema, type PdfExportInput } from "./reportExportSchemas";
+
+export {
+  testScenarioEvidenceParamsSchema,
+  testScenarioEvidenceQuerySchema,
+  testScenarioSpecLinkBodySchema,
+  testScenarioSpecLinkDeleteParamsSchema,
+  testScenarioSpecLinkListQuerySchema,
+  testScenarioSpecLinkParamsSchema,
+  testScenarioSpecLinkQuerySchema,
+  type TestScenarioEvidenceParams,
+  type TestScenarioEvidenceQuery,
+  type TestScenarioSpecLinkBody,
+  type TestScenarioSpecLinkDeleteParams,
+  type TestScenarioSpecLinkListQuery,
+  type TestScenarioSpecLinkParams,
+  type TestScenarioSpecLinkQuery,
+} from "./testScenarioIntegrationSchemas";
+
+export * from "./manualTestRunSchemas";
