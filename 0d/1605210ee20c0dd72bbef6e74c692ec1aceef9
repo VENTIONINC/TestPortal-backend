@@ -1,0 +1,337 @@
+.codex/skills/testportal-create-issue/SKILL.md
+  s_0b1cf9339a0772::t_4511ebe73e1222 1-56
+.codex/skills/testportal-create-issue/agents/openai.yaml
+  s_0b1cf9339a0772::t_dbf17e1a91b961 1-4
+.codex/skills/testportal-handoff-apply/SKILL.md
+  s_0b1cf9339a0772::t_996bc1553fcc1c 1-43
+.codex/skills/testportal-handoff-apply/agents/openai.yaml
+  s_0b1cf9339a0772::t_f028e42740407e 1-6
+.codex/skills/testportal-handoff/SKILL.md
+  s_0b1cf9339a0772::t_77f5ac45fc8fc1 1-52
+.codex/skills/testportal-handoff/agents/openai.yaml
+  s_0b1cf9339a0772::t_0cf2dba7ee1ff8 1-6
+.codex/skills/testportal-review/SKILL.md
+  s_0b1cf9339a0772::t_bbf8fc20d9014b 1-76
+.codex/skills/testportal-review/agents/openai.yaml
+  s_0b1cf9339a0772::t_044c56558a1655 1-4
+.docker/README.md
+  s_0b1cf9339a0772::t_92fa6722d1f51a 1-82
+.gitignore
+  s_0b1cf9339a0772::t_ed8af201fe97ea 93-96
+CONTRIBUTING.md
+  s_0b1cf9339a0772::t_9fc25cb3068eb4 73-77
+__tests__/controllers/assumptionController.test.ts
+  s_0b1cf9339a0772::t_294a3abd94e038 10-45
+__tests__/controllers/ctrfController.test.ts
+  s_0b1cf9339a0772::t_b6749398bf4ccb 1-29
+__tests__/controllers/dashboardController.test.ts
+  s_0b1cf9339a0772::t_bf1fff7e14afcb 9,21-45
+__tests__/controllers/executionController.test.ts
+  s_0b1cf9339a0772::t_5b5304aead8b8a 1-44
+__tests__/controllers/issueController.test.ts
+  s_0b1cf9339a0772::t_088e28b093aa08 1-40
+__tests__/controllers/jsonReportController.test.ts
+  s_0b1cf9339a0772::t_0c324d85e2a1ea 4-6,8-43
+__tests__/controllers/manualRunEnvironmentProfileController.test.ts
+  s_0b1cf9339a0772::t_714bd721df0ff2 1-59
+__tests__/controllers/manualTestRunController.test.ts
+  s_0b1cf9339a0772::t_78290fef3206ef 1-121
+__tests__/controllers/projectController.test.ts
+  s_0b1cf9339a0772::t_d9c76ceae9481e 10-134
+__tests__/controllers/resultController.detail.test.ts
+  s_0b1cf9339a0772::t_17587078888743 1-82
+__tests__/controllers/resultController.test.ts
+  s_0b1cf9339a0772::t_16b6cbebed7736 1-66
+__tests__/controllers/resultErrorController.test.ts
+  s_0b1cf9339a0772::t_c2b5fc69fcad63 215-236
+__tests__/controllers/specController.test.ts
+  s_0b1cf9339a0772::t_f5369e2deb5e04 1-38
+__tests__/controllers/testScenarioController.test.ts
+  s_0b1cf9339a0772::t_3f78ca31598efc 1-187
+__tests__/controllers/testScenarioIntegrationController.test.ts
+  s_0b1cf9339a0772::t_34ea697741a48c 1-191
+__tests__/lib/openapi/ctrf.test.ts
+  s_0b1cf9339a0772::t_6e0b7986de1e3c 29-30
+__tests__/lib/openapi/manualTestRuns.test.ts
+  s_0b1cf9339a0772::t_ea1dcaa01c5707 1-84
+__tests__/lib/openapi/results.test.ts
+  s_0b1cf9339a0772::t_bf6924c3164678 1-100
+__tests__/lib/openapi/testScenarios.test.ts
+  s_0b1cf9339a0772::t_5a49700686492b 1-123
+__tests__/lib/openapi/users.test.ts
+  s_0b1cf9339a0772::t_07871c5bad80b3 1-28
+__tests__/lib/testScenarioMarkdown.test.ts
+  s_0b1cf9339a0772::t_ac8fef9d1c4d4d 1-70
+__tests__/manual-test-runs/manualTestRunPostgresIntegration.test.ts
+  s_0b1cf9339a0772::t_663b2a77a50d5f 1-695
+__tests__/mcp/mcpTestScenarioHandler.test.ts
+  s_0b1cf9339a0772::t_1cbaf793e19f61 1-223
+__tests__/mcp/mcpTransport.test.ts
+  s_0b1cf9339a0772::t_91089ab95ec426 1-56
+__tests__/mcp/projectTools.test.ts
+  s_0b1cf9339a0772::t_e1354452dd1592 1-32
+__tests__/mcp/serverRegistration.test.ts
+  s_0b1cf9339a0772::t_b26d5e876fcfb1 1-35
+__tests__/mcp/testScenarioMcpWorkflow.test.ts
+  s_0b1cf9339a0772::t_f2a4fea6669421 1-136
+__tests__/mcp/testScenarioSchemas.test.ts
+  s_0b1cf9339a0772::t_e97ad5b4f24d17 1-111
+__tests__/mcp/testScenarioTools.test.ts
+  s_0b1cf9339a0772::t_47e229c44efdc9 1-206
+__tests__/models/manualTestRunModel.test.ts
+  s_0b1cf9339a0772::t_77c2d0594b146f 1-454
+__tests__/models/testScenarioEvidenceModel.test.ts
+  s_0b1cf9339a0772::t_448c197476d099 1-116
+__tests__/models/testScenarioModel.test.ts
+  s_0b1cf9339a0772::t_df40c7924e7195 1-222
+__tests__/models/testScenarioSpecLinkModel.test.ts
+  s_0b1cf9339a0772::t_726fd333b841e3 1-149
+__tests__/prisma/manualTestRunMigration.test.ts
+  s_0b1cf9339a0772::t_3566fb0d41dc1b 1-60
+__tests__/prisma/testScenarioMigration.test.ts
+  s_0b1cf9339a0772::t_fc17874b588854 1-153
+__tests__/routes/README.md
+  s_0b1cf9339a0772::t_19129aff6e1fc4 30-31,34,36-38
+__tests__/routes/manual-test-runs.test.ts
+  s_0b1cf9339a0772::t_3b53332296a667 1-108
+__tests__/routes/test-scenarios.test.ts
+  s_0b1cf9339a0772::t_0c169c39333b01 1-153
+__tests__/routes/users.test.ts
+  s_0b1cf9339a0772::t_2a3a479c5ad8ea 96-101,317-346
+__tests__/schemas/manualTestRunSchemas.test.ts
+  s_0b1cf9339a0772::t_d16bb8511367b1 1-101
+__tests__/schemas/testScenarioIntegrationSchemas.test.ts
+  s_0b1cf9339a0772::t_7d78775596bcd0 1-46
+__tests__/schemas/testScenarioOrganizationSchemas.test.ts
+  s_0b1cf9339a0772::t_693d1e7ef6deb0 1-25
+__tests__/schemas/testScenarioSchemas.test.ts
+  s_0b1cf9339a0772::t_c44b32b0ad694a 1-128
+__tests__/services/manualRunEnvironmentProfileService.test.ts
+  s_0b1cf9339a0772::t_bc1a7dc9578d0f 1-50
+__tests__/services/manualTestRunService.test.ts
+  s_0b1cf9339a0772::t_f7828721e34307 1-193
+__tests__/services/reportService.test.ts
+  s_0b1cf9339a0772::t_f391d1c5aefa9c 117,128
+__tests__/services/resultService.jsonPayloads.test.ts
+  s_0b1cf9339a0772::t_f8399902a9aa28 7,9,12,19-21,113-196
+__tests__/services/testScenarioIntegrationService.test.ts
+  s_0b1cf9339a0772::t_9e41e5214a3adb 1-234
+__tests__/services/testScenarioService.test.ts
+  s_0b1cf9339a0772::t_125c929fc71aee 1-336
+__tests__/services/uploadApiKeyService.test.ts
+  s_0b1cf9339a0772::t_eeba7cd30af6a7 1-117
+__tests__/services/userService.test.ts
+  s_0b1cf9339a0772::t_034283799103c4 51-57
+__tests__/test-scenarios/resultScenarioDetailPostgresIntegration.test.ts
+  s_0b1cf9339a0772::t_81a26d9afe2d2d 1-229
+__tests__/test-scenarios/testScenarioIntegrationWorkflow.test.ts
+  s_0b1cf9339a0772::t_484a4746027be2 1-393
+__tests__/test-scenarios/testScenarioPostgresIntegration.test.ts
+  s_0b1cf9339a0772::t_7f5e0f00bbd72d 1-747
+__tests__/test-scenarios/testScenarioWorkflow.test.ts
+  s_0b1cf9339a0772::t_73a06189e99d32 1-107
+docs/API_DOCUMENTATION.md
+  s_0b1cf9339a0772::t_5dc6945ed906ee 37,117-296,441
+docs/APPLICATION_OVERVIEW.md
+  s_0b1cf9339a0772::t_55ef14e7ba59e2 156-162,219,233
+docs/CARTODEX_MAP.md
+  s_0b1cf9339a0772::t_5926724a383371 2-4,9,33,40-48,58,73,79-81,83-85,105,107,109-112,137,153,161,166,186,188,195,245,256
+docs/INSPECT_MCP_SERVER.md
+  s_0b1cf9339a0772::t_78bebb804c72d6 8-13,25,38-82
+docs/MCP_TOOLS.md
+  s_0b1cf9339a0772::t_c959bc683b3fb4 12,22,32-41,45,57,66,89,100,118,130,145,158,170,182,191,199,207,219,228-286,292-299,305
+docs/TESTING.md
+  s_0b1cf9339a0772::t_ec7726cf456b44 1-42
+eslint.config.js
+  s_0b1cf9339a0772::t_5370a2851d00a1 73,90,95
+jest.main.config.ts
+  s_0b1cf9339a0772::t_9dd29ba6d66e03 1-62
+package-lock.json
+  s_0b1cf9339a0772::t_b4bbc3f75d4c39 77-79
+package.json
+  s_0b1cf9339a0772::t_080e41e30a9032 23-28
+postman/Manual_Test_Runs_API.postman_collection.json
+  s_0b1cf9339a0772::t_04df0e31f206d5 1-90
+postman/README.md
+  s_0b1cf9339a0772::t_8e37a7abb81d27 39-47
+postman/Test_Scenario_Organization_API.postman_collection.json
+  s_0b1cf9339a0772::t_5f2e3a0b70dfd1 1-17
+postman/docs/Manual_Test_Runs_API.md
+  s_0b1cf9339a0772::t_770314d720fdcc 1-13
+postman/docs/User_API.md
+  s_0b1cf9339a0772::t_69e40773ce5428 86-109,261
+prisma/migrations/20260917120000_add_test_scenarios/migration.sql
+  s_0b1cf9339a0772::t_4d196bf500f395 1-27
+prisma/migrations/20260917120100_add_test_scenario_spec_links/migration.sql
+  s_0b1cf9339a0772::t_e1a05be79cac61 1-19
+prisma/migrations/20260917120200_add_test_scenario_details/migration.sql
+  s_0b1cf9339a0772::t_e0de549a620c2f 1-2
+prisma/migrations/20260917120300_add_structured_test_scenario_authoring/migration.sql
+  s_0b1cf9339a0772::t_69241d95251290 1-32
+prisma/migrations/20260917120400_add_manual_test_runs/migration.sql
+  s_0b1cf9339a0772::t_b413ac37aee7a5 1-86
+prisma/migrations/20260917120500_cascade_project_scenarios_and_manual_runs/migration.sql
+  s_0b1cf9339a0772::t_700bd444c457b3 1-8
+prisma/migrations/20260917120600_add_editable_test_management_keys/migration.sql
+  s_0b1cf9339a0772::t_51b74d2ee4b6f0 1-9
+prisma/migrations/20261005120204_commit/migration.sql
+  s_0b1cf9339a0772::t_81afd7a0cb8f33 1-2
+prisma/migrations/20261006120000_add_scenario_folders_and_suites/migration.sql
+  s_0b1cf9339a0772::t_07db7085001dd2 1-48
+prisma/migrations/20261009120000_manual_run_environments/migration.sql
+  s_0b1cf9339a0772::t_89a2f19aba833b 1-18
+prisma/migrations/migration_lock.toml
+  s_0b1cf9339a0772::t_363c969a3b9d87 3
+prisma/schema.prisma
+  s_0b1cf9339a0772::t_adc89691d6e0a6 29-44,62-66,112,122-145,147-150,210-216,245-421
+scripts/run-integration-tests.mjs
+  s_0b1cf9339a0772::t_91332f66498fad 1-77
+src/controllers/manualRunEnvironmentProfileController.ts
+  s_0b1cf9339a0772::t_3aff187072d588 1-49
+src/controllers/manualTestRunController.ts
+  s_0b1cf9339a0772::t_2f38c29cbfdef0 1-282
+src/controllers/resultController.ts
+  s_0b1cf9339a0772::t_d785a811fd5037 133
+src/controllers/testScenarioController.ts
+  s_0b1cf9339a0772::t_adbb801f40825f 1-450
+src/controllers/testScenarioOrganizationController.ts
+  s_0b1cf9339a0772::t_04e2c660e9b979 1-38
+src/controllers/userController.ts
+  s_0b1cf9339a0772::t_17493bb5275c60 315-326
+src/handlers/mcpProjectHandler.ts
+  s_0b1cf9339a0772::t_ba280723f494fa 1-16
+src/handlers/mcpTestScenarioHandler.ts
+  s_0b1cf9339a0772::t_e4830c761465e8 1-84
+src/lib/openapi/analysisExport.ts
+  s_0b1cf9339a0772::t_bc7cd983743e91 13
+src/lib/openapi/assumptions.ts
+  s_0b1cf9339a0772::t_5b6473611127b8 55-56,100-101,156-157,164-167,211-212,221-224
+src/lib/openapi/ctrf.ts
+  s_0b1cf9339a0772::t_8f07ae5cebc2a6 172-173,235-236
+src/lib/openapi/executions.ts
+  s_0b1cf9339a0772::t_a00793b3385ba7 29-30,39-42,86-87,96-99
+src/lib/openapi/index.ts
+  s_0b1cf9339a0772::t_a0e5f2406c2307 29-31,57-59,97-105
+src/lib/openapi/issues.ts
+  s_0b1cf9339a0772::t_fc048a983940c7 146,247,256,301,345,400,409
+src/lib/openapi/manualRunEnvironmentProfiles.ts
+  s_0b1cf9339a0772::t_913d754a8f387a 1-30
+src/lib/openapi/manualTestRuns.ts
+  s_0b1cf9339a0772::t_0d02ec46e2b80f 1-382
+src/lib/openapi/pdfExport.ts
+  s_0b1cf9339a0772::t_e3106862ad0106 109
+src/lib/openapi/projects.ts
+  s_0b1cf9339a0772::t_f5074e22f24952 25-30,152,234-235,282-283,326-327,382,425
+src/lib/openapi/reports.ts
+  s_0b1cf9339a0772::t_9ee53b8fc2ae3b 105,162
+src/lib/openapi/resultErrors.ts
+  s_0b1cf9339a0772::t_d807a0d0d78fe6 458-459,468
+src/lib/openapi/results.ts
+  s_0b1cf9339a0772::t_631169e7969248 114-130,236-240,259,325-326,336,344,574,586,632
+src/lib/openapi/specs.ts
+  s_0b1cf9339a0772::t_14a29013de3473 26-27,33-36,93-94,102-105
+src/lib/openapi/testScenarios.ts
+  s_0b1cf9339a0772::t_f6d222f59a435f 1-955
+src/lib/openapi/users.ts
+  s_0b1cf9339a0772::t_cbe863e2756ead 36-44,80,94-120
+src/lib/testScenarioMarkdown.ts
+  s_0b1cf9339a0772::t_9f0b128058f078 1-82
+src/mcp/schemas/issueSchemas.ts
+  s_0b1cf9339a0772::t_3849aa785a06bc 5,18,33,43
+src/mcp/schemas/testScenarioSchemas.ts
+  s_0b1cf9339a0772::t_deeb9bce18fe07 1-95
+src/mcp/server.ts
+  s_0b1cf9339a0772::t_baeeea6f3d82e8 38-44,67,142,171-188
+src/mcp/tools/projects.ts
+  s_0b1cf9339a0772::t_bfc6eb701a2c6e 1-17
+src/mcp/tools/test-scenarios.ts
+  s_0b1cf9339a0772::t_7b4a5c3e2d2502 1-62
+src/models/issueModel.ts
+  s_0b1cf9339a0772::t_ec4c95f2a7bbaf 113-177
+src/models/manualRunEnvironmentProfileModel.ts
+  s_0b1cf9339a0772::t_9763012d8cecb0 1-37
+src/models/manualTestRunModel.ts
+  s_0b1cf9339a0772::t_2ed0d3a178d42b 1-582
+src/models/projectModel.ts
+  s_0b1cf9339a0772::t_ad10e5036a0022 111-120
+src/models/resultModel.ts
+  s_0b1cf9339a0772::t_fbeafb10a5fb2d 574-629
+src/models/testScenarioModel.ts
+  s_0b1cf9339a0772::t_43e9b6b911beb5 1-656
+src/models/testScenarioSpecLinkModel.ts
+  s_0b1cf9339a0772::t_c22294e0b2ad44 1-124
+src/models/userModel.ts
+  s_0b1cf9339a0772::t_b15ab738a001e1 96-105
+src/routes/index.ts
+  s_0b1cf9339a0772::t_e7443da7046e58 23-26,53-56
+src/routes/manual-run-environment-profiles.ts
+  s_0b1cf9339a0772::t_539ea223c73fac 1-14
+src/routes/manual-test-runs.ts
+  s_0b1cf9339a0772::t_9804be63886525 1-51
+src/routes/test-scenario-organization.ts
+  s_0b1cf9339a0772::t_0edee0e29bf032 1-22
+src/routes/test-scenarios.ts
+  s_0b1cf9339a0772::t_7ba313ae88f95c 1-81
+src/routes/users.ts
+  s_0b1cf9339a0772::t_38f383fac1ca94 25
+src/schemas/index.ts
+  s_0b1cf9339a0772::t_624bac20adddda 33-51
+src/schemas/manualRunEnvironmentProfileSchemas.ts
+  s_0b1cf9339a0772::t_85f525aafbaccb 1-20
+src/schemas/manualTestRunSchemas.ts
+  s_0b1cf9339a0772::t_b8fb9c853f2260 1-175
+src/schemas/testManagementKeySchemas.ts
+  s_0b1cf9339a0772::t_892f68b1c342cb 1-20
+src/schemas/testScenarioIntegrationSchemas.ts
+  s_0b1cf9339a0772::t_bdec03f9d7f394 1-70
+src/schemas/testScenarioOrganizationSchemas.ts
+  s_0b1cf9339a0772::t_0c74c1ac83fa63 1-17
+src/schemas/testScenarioSchemas.ts
+  s_0b1cf9339a0772::t_aab1d4bdc2a55d 1-138
+src/services/issueService.ts
+  s_0b1cf9339a0772::t_81b2f03f01b546 279-312
+src/services/manualRunEnvironmentProfileService.ts
+  s_0b1cf9339a0772::t_769dba4f329734 1-37
+src/services/manualTestRunService.ts
+  s_0b1cf9339a0772::t_dba421fad6645a 1-393
+src/services/projectService.ts
+  s_0b1cf9339a0772::t_709902014a32db 122
+src/services/resultService.ts
+  s_0b1cf9339a0772::t_5e128f2c6df820 10,24,41-69,155-156,158-181,185-195,197-200
+src/services/testScenarioIntegrationService.ts
+  s_0b1cf9339a0772::t_5ebc1759ad7b20 1-261
+src/services/testScenarioOrganizationService.ts
+  s_0b1cf9339a0772::t_cda8899722bf17 1-161
+src/services/testScenarioService.ts
+  s_0b1cf9339a0772::t_949bc1ab022d1f 1-481
+src/services/uploadApiKeyService.ts
+  s_0b1cf9339a0772::t_f1ba336c2bf63f 158-159,185-192,194-196
+src/services/userService.ts
+  s_0b1cf9339a0772::t_8204ffef6e028a 432-437
+src/types/index.ts
+  s_0b1cf9339a0772::t_495b671c1e54b8 11-13
+src/types/manualTestRuns.ts
+  s_0b1cf9339a0772::t_12fc31b155d1d1 1-194
+src/types/mcp.ts
+  s_0b1cf9339a0772::t_e571fb46785cca 7,11-13
+src/types/testScenarioIntegration.ts
+  s_0b1cf9339a0772::t_4fe1b47ad6e8f7 1-92
+src/types/testScenarios.ts
+  s_0b1cf9339a0772::t_cc5cdc6a5f77fa 1-222
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.18",
+  "base_commit_sha": "0d1605210ee20c0dd72bbef6e74c692ec1aceef9",
+  "prompts": {},
+  "sessions": {
+    "s_0b1cf9339a0772": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a16419-c084-77f0-9985-81323926296f",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Ihar Mikailau <ihar.mikailau@ventionteams.com>"
+    }
+  }
+}
