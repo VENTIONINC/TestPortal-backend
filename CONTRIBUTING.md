@@ -19,8 +19,6 @@ large changes that do not fit the project direction.
    - If the change affects APIs, database schema, MCP tools, authentication, or
      project structure, please wait for maintainer feedback before investing a
      lot of time.
-   - For non-trivial changes, maintainers may ask you to use the repository's
-     OpenSpec skills instead of creating OpenSpec files by hand.
 3. **Create a branch**
    - Fork the repository if you do not have write access.
    - Create a focused branch from `main`, unless maintainers ask you to use another branch.
@@ -33,7 +31,6 @@ large changes that do not fit the project direction.
 5. **Open a pull request**
    - Open pull requests against `main`, unless the issue or maintainer guidance says otherwise.
    - Link the related issue or discussion.
-   - Link the OpenSpec change when one was created.
    - Explain what changed and why.
    - Include screenshots, API examples, or logs when they help reviewers.
    - Mention any follow-up work that is intentionally left out.
@@ -63,21 +60,6 @@ Supported file types for `npm run new:file`:
 - `.cjs`
 
 Unsupported extensions fail with a clear error. For formats such as Markdown, JSON, SQL, or shell scripts, create the file manually until explicit support is added.
-
-## OpenSpec Workflow
-
-Use OpenSpec for changes that affect behavior, APIs, database schema, MCP tools,
-architecture, security, or user-facing workflows. Small typo fixes,
-straightforward documentation edits, and minor test-only cleanup usually do not
-need an OpenSpec change.
-
-When OpenSpec is needed, use the repository OpenSpec skills. See the
-[OpenSpec workflow guide](https://openspec.pro/workflow/) for the general flow.
-
-1. Optionally use `openspec-explore` to clarify early ideas before proposing a change.
-2. Use `openspec-propose` to create the change and planning artifacts.
-3. Use `openspec-apply-change` to implement the approved change and keep tasks updated.
-4. Use `openspec-archive-change` after the change is complete so the permanent specs in `openspec/specs` stay current.
 
 ## Validation
 

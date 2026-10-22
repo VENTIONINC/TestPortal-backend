@@ -54,7 +54,6 @@ Core domain data is project-scoped and shared across active authenticated users.
 | `__tests__` | Jest unit/integration coverage for routes, controllers, services, models, middleware, lib. | 68270 |
 | `__prompts-tests__` | Prompt evaluation runners, templates, dataset generators, smoke/regression tests. | 10585 |
 | `docs` | Human-facing API, MCP, Docker, deploy, auth, dashboard, release, and research docs. | 35275 |
-| `openspec` | Permanent specs plus active and archived OpenSpec changes. | 45210 |
 | `postman` | REST/MCP Postman collections, environment, and usage docs. | 18729 |
 | `scripts` | License header and new-file automation. | 1744 |
 | `.github/workflows` | Manual ECS deploy and Docker publish workflows. | 1352 |
@@ -151,7 +150,7 @@ Core domain data is project-scoped and shared across active authenticated users.
 
 ### Contracts And Documentation
 
-**Purpose**: Keeps runtime behavior aligned with published REST/MCP contracts, Postman validation flows, OpenSpec specs, and operational docs.
+**Purpose**: Keeps runtime behavior aligned with published REST/MCP contracts, Postman validation flows, and operational docs.
 
 **Entry point**: OpenAPI route plus docs and Postman collections.
 
@@ -167,11 +166,10 @@ Core domain data is project-scoped and shared across active authenticated users.
 | `docs/DEPLOY_ECS.md` | ECS deployment and migration caveats. | 1912 |
 | `docs/RELEASE.md` | Release/version/tag workflow. | 473 |
 | `postman` | API collections and shared environment. | 18729 |
-| `openspec/specs` | Permanent accepted specs. | 6988 |
 
-**Exports**: OpenAPI JSON/Swagger UI, Postman collections, OpenSpec permanent specs, human docs.
+**Exports**: OpenAPI JSON/Swagger UI, Postman collections, human docs.
 
-**Dependencies**: Runtime routes/controllers/schemas, GitHub workflows, Docker configuration, OpenSpec archive history.
+**Dependencies**: Runtime routes/controllers/schemas, GitHub workflows, Docker configuration.
 
 **Dependents**: Developers, API consumers, release/deploy work, contract-update tasks, manual validation.
 
@@ -194,7 +192,7 @@ Core domain data is project-scoped and shared across active authenticated users.
 | `docker-compose.yml` | Local PostgreSQL and pgAdmin stack. | 307 |
 | `.github/workflows/deploy-be-ecs.yml` | Manual ECS deploy workflow. | 899 |
 | `README.md` | Setup, scripts, API surface, documentation index. | 1453 |
-| `CONTRIBUTING.md` | Contribution and OpenSpec workflow. | 1069 |
+| `CONTRIBUTING.md` | Contribution workflow. | 1069 |
 | `AGENTS.md` | Agent-facing repo rules and Cartodex pointer. | 861 |
 
 **Exports**: `npm run type-check`, `npm run lint`, `npm test`, `npm run build`, `npm run new:file`, `npm run headers:add`, `npm run inspector`, Docker compose stacks, deploy/publish workflows.
@@ -248,7 +246,6 @@ Core domain data is project-scoped and shared across active authenticated users.
 - Supported source/test files in `src`, `__tests__`, and `__prompts-tests__` should carry the Apache 2.0 header.
 - Create supported source files with `npm run new:file -- <path>`.
 - Regular Jest tests and prompt tests are separate. `npm test` excludes `__prompts-tests__`; prompt suites use `jest.prompts.config.ts` and require generated datasets plus `OPENAI_API_KEY`.
-- OpenSpec currently has permanent specs and archived changes; new spec work starts by creating an active change.
 
 ## Gotchas
 
