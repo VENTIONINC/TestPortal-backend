@@ -256,7 +256,6 @@ Core domain data is project-scoped and shared across active authenticated users.
 - Interactive workspace access is shared, but upload API keys remain scoped machine credentials: the signed key ID, project ID, owner ID, and payload must match an active stored record.
 - OpenAPI docs are regenerated on every docs request and are manually assembled.
 - `src/lib/openapi/testAnalysis.ts` exists but is not registered in `src/lib/openapi/index.ts`.
-- `src/mcp/tools/issues.ts` exports `getIssuesWithStats`, but `src/mcp/server.ts` does not register it.
 - `src/mcp/schemas/ctrfSchemas.ts` exists, but no CTRF MCP tools are registered.
 - Prompt datasets are generated artifacts and are not part of the scanner output.
 - `prisma/client.ts` logs `"sqlite STARTED"` even though the datasource is PostgreSQL.

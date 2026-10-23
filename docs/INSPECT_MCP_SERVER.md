@@ -2,6 +2,28 @@
 
 This document outlines the steps to inspect the MCP server with the local MCP inspector or another MCP-compatible client.
 
+## MCP beta endpoint
+
+The parallel modern-only endpoint is `http://localhost:3001/api/v2/mcp-beta`. It accepts MCP revision `2026-07-28` and rejects legacy initialization. Set `MCP_BETA_ALLOWED_ORIGINS` to a comma-separated list of exact HTTP(S) origins before starting the backend. For the local Inspector UI, include the browser origin shown in its address bar (commonly `http://localhost:6274`). Do not include a path or wildcard. An empty setting allows authenticated native clients without an `Origin` header and rejects browser requests that send one. The beta route uses the existing `MCP_SECRET` bearer credential.
+
+The project installs MCP Inspector `2.12.0` as a development dependency. Run `npm run inspector` for `/api/v2/mcp` or `npm run inspector:beta` for the modern beta endpoint. In the web UI, select the Streamable HTTP transport, enter the beta endpoint, set Protocol Era to **modern**, and configure the existing MCP bearer token as an Authorization header. Verify `server/discover`, `tools/list`, and the harmless `check-status` call; the beta route does not issue a session ID.
+
+For a terminal smoke check with no protocol fallback, use the pinned Inspector CLI:
+
+```bash
+./node_modules/.bin/mcp-inspector --cli \
+  http://localhost:3001/api/v2/mcp-beta --transport http \
+  --protocol-era modern --header "Authorization: Bearer $MCP_BETA_TEST_TOKEN" \
+  --method tools/list
+
+./node_modules/.bin/mcp-inspector --cli \
+  http://localhost:3001/api/v2/mcp-beta --transport http \
+  --protocol-era modern --header "Authorization: Bearer $MCP_BETA_TEST_TOKEN" \
+  --method tools/call --tool-name check-status --tool-args-json '{}'
+```
+
+Use a short-lived test token in `MCP_BETA_TEST_TOKEN`. A passing smoke check shows modern discovery followed by a successful `check-status` result. Keep Inspector traffic free of production data.
+
 ## Prerequisites
 
 Ensure you have the project set up and all dependencies installed.

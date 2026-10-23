@@ -10,8 +10,6 @@ interface IssueFilterParams {
   name?: string;
   page?: number;
   limit?: number;
-  statFrom?: string;
-  statTo?: string;
 }
 
 interface CreateIssueParams {
@@ -44,30 +42,6 @@ export const mcpIssueHandler = {
     if (limit) issueParams.limit = limit;
 
     return await issueService.getAllIssues(issueParams);
-  },
-
-  async getAllIssuesWithStats(
-    params: IssueFilterParams,
-  ) {
-    const {
-      projectId,
-      category,
-      name,
-      page = 1,
-      limit = 30,
-      statFrom,
-      statTo,
-    } = params;
-
-    const issueParams: IssueFilterParams = { projectId };
-    if (category) issueParams.category = category;
-    if (name) issueParams.name = name;
-    if (page) issueParams.page = page;
-    if (limit) issueParams.limit = limit;
-    if (statFrom) issueParams.statFrom = statFrom;
-    if (statTo) issueParams.statTo = statTo;
-
-    return await issueService.getAllIssuesWithStats(issueParams);
   },
 
   async getIssueById(

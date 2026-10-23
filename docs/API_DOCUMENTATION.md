@@ -444,6 +444,27 @@ Both route paths are mounted under `/api`, producing the public endpoints
 
 ## MCP Routes (`src/mcp/server.js`)
 
+### POST `/api/v2/mcp-beta`
+
+- **Description:** Parallel stateless MCP SDK v2 endpoint for clients that
+  support protocol revision `2026-07-28`.
+- **Authentication:** Existing `MCP_SECRET` bearer token in
+  `Authorization: Bearer <token>`.
+- **Protocol:** Accepts modern discovery, tool, and prompt requests declaring
+  `2026-07-28`. Rejects legacy initialization and unsupported revisions. Each
+  POST is handled independently; the route does not issue or require an MCP
+  session ID.
+- **Methods:** `GET` and `DELETE` return `405 Method Not Allowed`.
+- **Browser origins:** Set `MCP_BETA_ALLOWED_ORIGINS` to exact comma-separated
+  HTTP(S) origins for browser clients, including the MCP Inspector UI origin.
+  Clients with no `Origin` header can connect without this setting.
+- **Compatibility:** The v1 session endpoint below remains available. The
+  server does not redirect or forward requests between the two routes. Use MCP
+  Inspector `2.12.0` with Protocol Era `modern` to inspect beta; see
+  [INSPECT_MCP_SERVER.md](INSPECT_MCP_SERVER.md).
+- **Catalog:** Beta exposes the registered tools and five prompts documented
+  in [MCP_TOOLS.md](MCP_TOOLS.md).
+
 ### POST `/api/v2/mcp`
 
 - **Description:** Main endpoint for MCP (Model Context Protocol) communication. Handles initialization of new MCP sessions and subsequent requests within an existing session.

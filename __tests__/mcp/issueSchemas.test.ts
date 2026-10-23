@@ -23,10 +23,8 @@ describe("MCP issue schemas", () => {
     }
   });
 
-  it("keeps project scoping and statistics date filters", () => {
+  it("keeps project scoping", () => {
     expect(getIssuesSchema).toHaveProperty("projectId");
-    expect(getIssuesSchema).toHaveProperty("statFrom");
-    expect(getIssuesSchema).toHaveProperty("statTo");
     expect(getIssueByIdSchema).toHaveProperty("projectId");
   });
 });

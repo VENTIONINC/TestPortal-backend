@@ -16,6 +16,8 @@ const integrationTestPaths = [
   "<rootDir>/__tests__/mcp/serverRegistration.test.ts",
   "<rootDir>/__tests__/mcp/sessionAuthorization.test.ts",
   "<rootDir>/__tests__/mcp/testScenarioMcpWorkflow.test.ts",
+  "<rootDir>/__tests__/mcp/beta/betaTransport.test.ts",
+  "<rootDir>/__tests__/mcp/beta/parallelLifecycle.test.ts",
   "<rootDir>/__tests__/test-scenarios/testScenarioIntegrationWorkflow.test.ts",
   "<rootDir>/__tests__/**/*PostgresIntegration.test.ts",
 ];
@@ -31,6 +33,8 @@ const unitConfig: JestConfigWithTsJest = {
     "/__tests__/prisma/.*Migration\\.test\\.ts$",
     "/__tests__/routes/",
     "/__tests__/mcp/(mcpTransport|serverRegistration|sessionAuthorization|testScenarioMcpWorkflow)\\.test\\.ts$",
+    "/__tests__/mcp/beta/betaTransport\\.test\\.ts$",
+    "/__tests__/mcp/beta/parallelLifecycle\\.test\\.ts$",
     "/__tests__/test-scenarios/testScenarioIntegrationWorkflow\\.test\\.ts$",
     "/__tests__/.*PostgresIntegration\\.test\\.ts$",
     "/__tests__/e2e/",
