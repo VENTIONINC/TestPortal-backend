@@ -5,14 +5,14 @@ import "@/test-utils/testEnv";
 
 import { ctrfService } from "@/services/ctrfService";
 import { jsonReportService } from "@/services/jsonReportService";
-import { testAnalysisService } from "@/services/testAnalysisService";
+import { storedResultAnalysisService } from "@/services/storedResultAnalysisService";
 import { dashboardService } from "@/services/dashboardService";
 import type { CTRFReport } from "@/types/ctrf";
 import { validateReportTimestamps } from "@/lib/reportTimestampWarnings";
 
 // Mock dependencies
 jest.mock("@/services/jsonReportService");
-jest.mock("@/services/testAnalysisService");
+jest.mock("@/services/storedResultAnalysisService");
 jest.mock("@/services/dashboardService");
 jest.mock("@/lib/logger", () => ({
   __esModule: true,
@@ -113,7 +113,7 @@ describe("ctrfService", () => {
     ).rejects.toThrow("Future test execution timestamps were detected");
 
     expect(mockDbClient.project.findUnique).not.toHaveBeenCalled();
-    expect(testAnalysisService.analyzeStoredResults).not.toHaveBeenCalled();
+    expect(storedResultAnalysisService.analyzeAndPersist).not.toHaveBeenCalled();
     expect(dashboardService.updateStats).not.toHaveBeenCalled();
   });
 
@@ -148,7 +148,7 @@ describe("ctrfService", () => {
       status: "analyzed",
       confidence: 0.9,
     });
-    (testAnalysisService.analyzeStoredResults as jest.Mock).mockResolvedValue(
+    (storedResultAnalysisService.analyzeAndPersist as jest.Mock).mockResolvedValue(
       mockAnalysis,
     );
 
@@ -156,11 +156,10 @@ describe("ctrfService", () => {
       projectId: mockProjectId,
     });
 
-    expect(testAnalysisService.analyzeStoredResults).toHaveBeenCalled();
-    expect(mockTx.result.update).toHaveBeenCalledWith({
-      where: { id: "res-1" },
-      data: expect.objectContaining({ analysisStatus: "analyzed" }),
-    });
+    expect(storedResultAnalysisService.analyzeAndPersist).toHaveBeenCalledWith(
+      mockProjectId,
+      expect.any(Array),
+    );
     expect(result.analysis).toHaveLength(1);
   });
 
@@ -169,7 +168,7 @@ describe("ctrfService", () => {
       owner: { analyzeEnabled: true },
     });
     mockTx.result.findMany.mockResolvedValue([{ id: "res-1" }]);
-    (testAnalysisService.analyzeStoredResults as jest.Mock).mockRejectedValue(
+    (storedResultAnalysisService.analyzeAndPersist as jest.Mock).mockRejectedValue(
       new Error("Analysis failed"),
     );
 
@@ -177,7 +176,7 @@ describe("ctrfService", () => {
       projectId: mockProjectId,
     });
 
-    expect(testAnalysisService.analyzeStoredResults).toHaveBeenCalled();
+    expect(storedResultAnalysisService.analyzeAndPersist).toHaveBeenCalled();
     expect(mockTx.result.update).not.toHaveBeenCalled();
     expect(result.analysis).toBeUndefined();
   });
@@ -197,7 +196,7 @@ describe("ctrfService", () => {
       projectId: mockProjectId,
     });
 
-    expect(testAnalysisService.analyzeStoredResults).not.toHaveBeenCalled();
+    expect(storedResultAnalysisService.analyzeAndPersist).not.toHaveBeenCalled();
     expect(mockTx.result.update).not.toHaveBeenCalled();
     expect(result.analysis).toBeUndefined();
   });

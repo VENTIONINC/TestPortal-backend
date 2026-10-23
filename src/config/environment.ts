@@ -20,6 +20,31 @@ const LANGSMITH_ENDPOINT =
   process.env.LANGSMITH_ENDPOINT ?? "https://api.smith.langchain.com";
 const LANGSMITH_API_KEY = process.env.LANGSMITH_API_KEY ?? "";
 const LANGSMITH_PROJECT = process.env.LANGSMITH_PROJECT ?? "test-portal-backend";
+export function resolveDecisionsConfiguration(
+  flag: string | undefined,
+  apiKey: string | undefined,
+): { enabled: boolean; apiKey: string } {
+  let enabled = false;
+  if (flag !== undefined) {
+    const normalized = flag.trim().toLowerCase();
+    if (normalized === "true") enabled = true;
+    else if (normalized !== "false") {
+      throw new Error("USE_DECISIONS_API must be true or false.");
+    }
+  }
+  const normalizedKey = apiKey?.trim() ?? "";
+  if (enabled && !normalizedKey) {
+    throw new Error("OPENROUTER_API_KEY is required when USE_DECISIONS_API is true.");
+  }
+  return { enabled, apiKey: normalizedKey };
+}
+
+const decisionsConfiguration = resolveDecisionsConfiguration(
+  process.env.USE_DECISIONS_API,
+  process.env.OPENROUTER_API_KEY,
+);
+const USE_DECISIONS_API = decisionsConfiguration.enabled;
+const OPENROUTER_API_KEY = decisionsConfiguration.apiKey;
 
 const SUPPORTED_AUTH_PROVIDERS = ["local", "cognito"] as const;
 type AuthProviderName = (typeof SUPPORTED_AUTH_PROVIDERS)[number];
@@ -89,6 +114,10 @@ export const environment = {
     project: LANGSMITH_PROJECT,
   },
   defaultProjectId: DEFAULT_PROJECT_ID,
+  decisions: {
+    enabled: USE_DECISIONS_API,
+    openRouterApiKey: OPENROUTER_API_KEY,
+  },
   testUser: {
     email: TEST_USER_EMAIL,
     password: TEST_USER_PASSWORD,
@@ -109,4 +138,6 @@ export {
   LANGSMITH_ENDPOINT,
   LANGSMITH_API_KEY,
   LANGSMITH_PROJECT,
+  USE_DECISIONS_API,
+  OPENROUTER_API_KEY,
 };

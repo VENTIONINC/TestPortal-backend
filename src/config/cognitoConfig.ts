@@ -7,7 +7,7 @@ import {
   COGNITO_USER_POOL_ID,
   COGNITO_CLIENT_ID,
   isCognitoConfigured,
-} from "../config/environment";
+} from "@/config/environment";
 
 let userPool: CognitoUserPool | null = null;
 

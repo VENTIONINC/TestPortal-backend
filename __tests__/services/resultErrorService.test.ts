@@ -5,7 +5,7 @@ import "@/test-utils/testEnv";
 import { jest } from "@jest/globals";
 import { resultErrorService } from "@/services/resultErrorService";
 import { resultErrorModel } from "@/models/resultErrorModel";
-import { testAnalysisService } from "@/services/testAnalysisService";
+import { storedResultAnalysisService } from "@/services/storedResultAnalysisService";
 import { dashboardService } from "@/services/dashboardService";
 import { dbClient } from "@/prisma/client";
 jest.mock("@/lib/logger", () => ({
@@ -15,6 +15,10 @@ jest.mock("@/lib/logger", () => ({
     warn: jest.fn(),
     error: jest.fn(),
   }),
+}));
+
+jest.mock("@/services/storedResultAnalysisService", () => ({
+  storedResultAnalysisService: { analyzeAndPersist: jest.fn() },
 }));
 
 jest.mock("@/prisma/client", () => ({
@@ -119,7 +123,7 @@ describe("resultErrorService.analyzeErrors", () => {
     });
 
     jest
-      .spyOn(testAnalysisService, "analyzeStoredResults")
+      .spyOn(storedResultAnalysisService, "analyzeAndPersist")
       .mockResolvedValue(mockAnalysis);
     jest
       .spyOn(dashboardService, "updateStats")
@@ -137,30 +141,10 @@ describe("resultErrorService.analyzeErrors", () => {
       "project-1",
     );
 
-    expect(testAnalysisService.analyzeStoredResults).toHaveBeenCalledWith([
-      expect.objectContaining({
-        id: "res-1",
-        status: "failed",
-        execution: { name: "Run 1", environment: "staging" },
-        spec: { key: "SPEC-1", title: "Spec title", file: "spec.ts" },
-        errors: [
-          {
-            message: "Error one",
-            callStack: '[\n  "stack-1"\n]',
-            location: "loc-1",
-          },
-        ],
-      }),
-    ]);
-
-    expect(dbClient.result.update).toHaveBeenCalledWith({
-      where: { id: "res-1" },
-      data: expect.objectContaining({
-        analysisStatus: "failed",
-        analysisCategory: "bug",
-        analysisConfidence: 4,
-      }),
-    });
+    expect(storedResultAnalysisService.analyzeAndPersist).toHaveBeenCalledWith(
+      "project-1",
+      expect.any(Array),
+    );
 
     expect(dashboardService.updateStats).toHaveBeenCalledWith(
       "exec-1",
@@ -202,7 +186,7 @@ describe("resultErrorService.analyzeErrors", () => {
     ]);
 
     jest
-      .spyOn(testAnalysisService, "analyzeStoredResults")
+      .spyOn(storedResultAnalysisService, "analyzeAndPersist")
       .mockRejectedValue(new Error("Analysis failed"));
 
     await expect(

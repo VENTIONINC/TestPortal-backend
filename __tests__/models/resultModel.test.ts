@@ -7,6 +7,13 @@ import { jest } from "@jest/globals";
 const findManyMock: jest.Mock = jest.fn();
 const countMock: jest.Mock = jest.fn();
 const specFindManyMock: jest.Mock = jest.fn();
+const updateManyMock: jest.Mock = jest.fn();
+const transactionClient = { result: { updateMany: updateManyMock } };
+const transactionMock: jest.Mock = jest.fn();
+transactionMock.mockImplementation((callback: unknown) => {
+  if (typeof callback !== "function") throw new Error("transaction callback required");
+  return callback(transactionClient);
+});
 
 jest.mock("@/prisma/client", () => ({
   dbClient: {
@@ -17,10 +24,12 @@ jest.mock("@/prisma/client", () => ({
     spec: {
       findMany: specFindManyMock,
     },
+    $transaction: transactionMock,
   },
 }));
 
 import { resultModel } from "@/models/resultModel";
+import { STORED_RESULT_CATEGORY_POLICY_VERSION } from "@/lib/storedResultCategoryPolicy";
 
 describe("resultModel filtering", () => {
   beforeEach(() => {
@@ -385,6 +394,63 @@ describe("resultModel filtering", () => {
         }),
       }),
     );
+  });
+});
+
+describe("resultModel analysis persistence", () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+    (updateManyMock.mockResolvedValue as unknown as (value: unknown) => void)({ count: 1 });
+  });
+
+  it("persists a validated success batch within project scope and clears the last error", async () => {
+    await resultModel.persistAnalysisBatch("project-1", new Map([
+      ["result-1", {
+        analysis: {
+          id: "result-1",
+          status: "failed",
+          category: "bug",
+          confidence: 4,
+          conclusion: "Explanation is not available from the Decisions API.",
+          errorQuality: null,
+          errorQualityConclusion: null,
+        },
+        metadata: {
+          version: 1,
+          provider: "openrouter",
+          apiMode: "decisions",
+          metricsScope: "per_result",
+          requestedModel: "openai/gpt-6-luna-decisions",
+          returnedModel: "openai/gpt-6-luna-decisions",
+          upstreamProvider: null,
+          requestId: null,
+          analyzedAt: "2026-10-19T12:00:00.000Z",
+          latencyMs: 300,
+          attempts: 1,
+          inputTokens: null,
+          outputTokens: null,
+          totalTokens: null,
+          cost: null,
+          rawConfidence: 0.9,
+          categoryProbabilities: { bug: 0.9, infra: 0.025, performance: 0.025, script: 0.025, other: 0.025 },
+          categoryPolicyVersion: STORED_RESULT_CATEGORY_POLICY_VERSION,
+          confidenceMappingVersion: "decisions-confidence-v1",
+        },
+      }],
+    ]));
+
+    expect(transactionMock).toHaveBeenCalledTimes(1);
+    expect(updateManyMock).toHaveBeenCalledWith(expect.objectContaining({
+      where: { id: "result-1", execution: { projectId: "project-1" } },
+      data: expect.objectContaining({
+        analysisStatus: "failed",
+        analysisCategory: "bug",
+        analysisMetadata: expect.objectContaining({
+          provider: "openrouter",
+          categoryPolicyVersion: STORED_RESULT_CATEGORY_POLICY_VERSION,
+        }),
+      }),
+    }));
   });
 });
 

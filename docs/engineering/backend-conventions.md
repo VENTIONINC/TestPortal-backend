@@ -157,6 +157,25 @@ automatically.
 
 ## Tests and Completion
 
+### Stored analysis internals
+
+`Result.analysisMetadata` and `Result.analysisLastError` are nullable, internal JSON fields. Their
+version 1 runtime contracts live in `src/schemas/analysisMetadataSchemas.ts`. Metadata records
+provider/API/model identity, request identity, timestamp, latency, attempts, supplied token/cost
+usage, and (for Decisions) raw confidence, category probabilities, category-policy version, and
+confidence-mapping version. Unknown metrics remain `null`; do not infer zero cost or allocate a
+shared request's usage to individual results. Error records contain a stable failure kind, fixed
+sanitized message, timestamp, attempts,
+and nullable HTTP status. They must never contain credentials, exception dumps, provider response
+bodies, test evidence, or stack traces.
+
+Increment the category-policy version when its instructions, priority, or criteria change. Version
+confidence mapping independently when its thresholds or output scale change.
+
+These columns are owned by the analysis persistence lifecycle. Feedback and review fields remain
+user-owned. The migration is additive and nullable; existing rows are not backfilled. Keep these
+fields out of public REST/MCP responses and exports using an explicit result projection.
+
 Test behavior at the boundary that owns it:
 
 - Helpers: transformations, edge cases, and normalization decisions.

@@ -1,8 +1,8 @@
 // Copyright 2026 VENSOLUTIONSGROUP LTD
 // SPDX-License-Identifier: Apache-2.0
 
-import type { TestCase } from "../types";
-import { makeCaseBase, makeUuid, pick } from "../util";
+import type { TestCase } from "@/root/__prompts-tests__/stored-results-analysis/v1.1.0/templates/types";
+import { makeCaseBase, makeUuid, pick } from "@/root/__prompts-tests__/stored-results-analysis/v1.1.0/templates/util";
 
 /**
  * Template factory for bug/assertion failure errors

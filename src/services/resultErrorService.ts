@@ -14,7 +14,7 @@ import { getEffectiveResultCategory } from "@/lib/resultCategory";
 import { isResultCategory } from "@/lib/resultCategory";
 import { dbClient } from "@/prisma/client";
 import { dashboardService } from "@/services/dashboardService";
-import { testAnalysisService } from "@/services/testAnalysisService";
+import { storedResultAnalysisService } from "@/services/storedResultAnalysisService";
 import type {
   ResultErrorModalAssignmentSummary,
   ResultErrorModalContext,
@@ -713,24 +713,9 @@ export const resultErrorService = {
       `Analyzing ${resultsForAnalysis.length} results from ${validatedIds.length} errors`,
     );
 
-    const analysisMap =
-      await testAnalysisService.analyzeStoredResults(resultsForAnalysis);
-
-    await Promise.all(
-      Array.from(analysisMap.entries()).map(([resultId, analysis]) =>
-        dbClient.result.update({
-          where: { id: resultId },
-          data: {
-            analysisStatus: analysis.status,
-            analysisCategory: analysis.category ?? null,
-            analysisConfidence: analysis.confidence,
-            analysisConclusion: analysis.conclusion ?? null,
-            analysisErrorQuality: analysis.errorQuality ?? null,
-            analysisErrorQualityConclusion:
-              analysis.errorQualityConclusion ?? null,
-          },
-        }),
-      ),
+    const analysisMap = await storedResultAnalysisService.analyzeAndPersist(
+      projectId,
+      resultsForAnalysis,
     );
 
     const updatedResultIds = Array.from(analysisMap.keys());
