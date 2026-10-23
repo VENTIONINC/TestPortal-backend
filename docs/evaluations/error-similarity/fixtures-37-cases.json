@@ -1,0 +1,2550 @@
+[
+  {
+    "id": "identical-checkout",
+    "legacyMatch": true,
+    "expectedMatch": true,
+    "target": {
+      "id": "error-target",
+      "createdAt": "2026-09-01T00:00:00.000Z",
+      "updatedAt": "2026-09-01T00:00:00.000Z",
+      "type": "TimeoutError",
+      "message": "Checkout button was not visible",
+      "callLog": [
+        "waiting for checkout button"
+      ],
+      "callStack": [
+        "at /app/checkout.ts:10:2"
+      ],
+      "location": "/app/checkout.ts",
+      "resultId": "result-target",
+      "result": null,
+      "assumptions": [],
+      "rawLogs": null,
+      "sourceSnippet": null,
+      "generatedTestCase": null,
+      "testAssertion": null,
+      "expectedPattern": null,
+      "receivedString": null
+    },
+    "candidate": {
+      "id": "error-old",
+      "createdAt": "2026-09-01T00:00:00.000Z",
+      "updatedAt": "2026-09-01T00:00:00.000Z",
+      "type": "TimeoutError",
+      "message": "Checkout button was not visible",
+      "callLog": [
+        "waiting for checkout button"
+      ],
+      "callStack": [
+        "at /app/checkout.ts:10:2"
+      ],
+      "location": "/app/checkout.ts",
+      "resultId": "result-target",
+      "result": null,
+      "assumptions": [
+        {
+          "id": "assumption-old",
+          "createdAt": "2026-09-01T00:00:00.000Z",
+          "updatedAt": "2026-09-01T00:00:00.000Z",
+          "isConfirmed": true,
+          "score": 1,
+          "madeBy": "user",
+          "issueId": "issue-old",
+          "resultErrorId": "error-old",
+          "issue": {
+            "id": "issue-old",
+            "createdAt": "2026-09-01T00:00:00.000Z",
+            "updatedAt": "2026-09-01T00:00:00.000Z",
+            "name": "Checkout unavailable",
+            "category": "bug",
+            "projectId": "project-a"
+          }
+        }
+      ],
+      "rawLogs": null,
+      "sourceSnippet": null,
+      "generatedTestCase": null,
+      "testAssertion": null,
+      "expectedPattern": null,
+      "receivedString": null
+    }
+  },
+  {
+    "id": "missing-both-traces",
+    "legacyMatch": false,
+    "expectedMatch": true,
+    "target": {
+      "id": "error-target",
+      "createdAt": "2026-09-01T00:00:00.000Z",
+      "updatedAt": "2026-09-01T00:00:00.000Z",
+      "type": "TimeoutError",
+      "message": "Checkout button was not visible",
+      "callLog": [],
+      "callStack": [],
+      "location": "/app/checkout.ts",
+      "resultId": "result-target",
+      "result": null,
+      "assumptions": [],
+      "rawLogs": null,
+      "sourceSnippet": null,
+      "generatedTestCase": null,
+      "testAssertion": null,
+      "expectedPattern": null,
+      "receivedString": null
+    },
+    "candidate": {
+      "id": "error-old",
+      "createdAt": "2026-09-01T00:00:00.000Z",
+      "updatedAt": "2026-09-01T00:00:00.000Z",
+      "type": "TimeoutError",
+      "message": "Checkout button was not visible",
+      "callLog": [
+        "waiting for checkout button"
+      ],
+      "callStack": [
+        "at /app/checkout.ts:10:2"
+      ],
+      "location": "/app/checkout.ts",
+      "resultId": "result-target",
+      "result": null,
+      "assumptions": [
+        {
+          "id": "assumption-old",
+          "createdAt": "2026-09-01T00:00:00.000Z",
+          "updatedAt": "2026-09-01T00:00:00.000Z",
+          "isConfirmed": true,
+          "score": 1,
+          "madeBy": "user",
+          "issueId": "issue-old",
+          "resultErrorId": "error-old",
+          "issue": {
+            "id": "issue-old",
+            "createdAt": "2026-09-01T00:00:00.000Z",
+            "updatedAt": "2026-09-01T00:00:00.000Z",
+            "name": "Checkout unavailable",
+            "category": "bug",
+            "projectId": "project-a"
+          }
+        }
+      ],
+      "rawLogs": null,
+      "sourceSnippet": null,
+      "generatedTestCase": null,
+      "testAssertion": null,
+      "expectedPattern": null,
+      "receivedString": null
+    }
+  },
+  {
+    "id": "missing-call-log",
+    "legacyMatch": true,
+    "expectedMatch": true,
+    "target": {
+      "id": "error-target",
+      "createdAt": "2026-09-01T00:00:00.000Z",
+      "updatedAt": "2026-09-01T00:00:00.000Z",
+      "type": "TimeoutError",
+      "message": "Checkout button was not visible",
+      "callLog": [],
+      "callStack": [
+        "at /app/checkout.ts:10:2"
+      ],
+      "location": "/app/checkout.ts",
+      "resultId": "result-target",
+      "result": null,
+      "assumptions": [],
+      "rawLogs": null,
+      "sourceSnippet": null,
+      "generatedTestCase": null,
+      "testAssertion": null,
+      "expectedPattern": null,
+      "receivedString": null
+    },
+    "candidate": {
+      "id": "error-old",
+      "createdAt": "2026-09-01T00:00:00.000Z",
+      "updatedAt": "2026-09-01T00:00:00.000Z",
+      "type": "TimeoutError",
+      "message": "Checkout button was not visible",
+      "callLog": [
+        "waiting for checkout button"
+      ],
+      "callStack": [
+        "at /app/checkout.ts:10:2"
+      ],
+      "location": "/app/checkout.ts",
+      "resultId": "result-target",
+      "result": null,
+      "assumptions": [
+        {
+          "id": "assumption-old",
+          "createdAt": "2026-09-01T00:00:00.000Z",
+          "updatedAt": "2026-09-01T00:00:00.000Z",
+          "isConfirmed": true,
+          "score": 1,
+          "madeBy": "user",
+          "issueId": "issue-old",
+          "resultErrorId": "error-old",
+          "issue": {
+            "id": "issue-old",
+            "createdAt": "2026-09-01T00:00:00.000Z",
+            "updatedAt": "2026-09-01T00:00:00.000Z",
+            "name": "Checkout unavailable",
+            "category": "bug",
+            "projectId": "project-a"
+          }
+        }
+      ],
+      "rawLogs": null,
+      "sourceSnippet": null,
+      "generatedTestCase": null,
+      "testAssertion": null,
+      "expectedPattern": null,
+      "receivedString": null
+    }
+  },
+  {
+    "id": "missing-call-stack",
+    "legacyMatch": true,
+    "expectedMatch": true,
+    "target": {
+      "id": "error-target",
+      "createdAt": "2026-09-01T00:00:00.000Z",
+      "updatedAt": "2026-09-01T00:00:00.000Z",
+      "type": "TimeoutError",
+      "message": "Checkout button was not visible",
+      "callLog": [
+        "waiting for checkout button"
+      ],
+      "callStack": [],
+      "location": "/app/checkout.ts",
+      "resultId": "result-target",
+      "result": null,
+      "assumptions": [],
+      "rawLogs": null,
+      "sourceSnippet": null,
+      "generatedTestCase": null,
+      "testAssertion": null,
+      "expectedPattern": null,
+      "receivedString": null
+    },
+    "candidate": {
+      "id": "error-old",
+      "createdAt": "2026-09-01T00:00:00.000Z",
+      "updatedAt": "2026-09-01T00:00:00.000Z",
+      "type": "TimeoutError",
+      "message": "Checkout button was not visible",
+      "callLog": [
+        "waiting for checkout button"
+      ],
+      "callStack": [
+        "at /app/checkout.ts:10:2"
+      ],
+      "location": "/app/checkout.ts",
+      "resultId": "result-target",
+      "result": null,
+      "assumptions": [
+        {
+          "id": "assumption-old",
+          "createdAt": "2026-09-01T00:00:00.000Z",
+          "updatedAt": "2026-09-01T00:00:00.000Z",
+          "isConfirmed": true,
+          "score": 1,
+          "madeBy": "user",
+          "issueId": "issue-old",
+          "resultErrorId": "error-old",
+          "issue": {
+            "id": "issue-old",
+            "createdAt": "2026-09-01T00:00:00.000Z",
+            "updatedAt": "2026-09-01T00:00:00.000Z",
+            "name": "Checkout unavailable",
+            "category": "bug",
+            "projectId": "project-a"
+          }
+        }
+      ],
+      "rawLogs": null,
+      "sourceSnippet": null,
+      "generatedTestCase": null,
+      "testAssertion": null,
+      "expectedPattern": null,
+      "receivedString": null
+    }
+  },
+  {
+    "id": "different-placeholder-messages",
+    "legacyMatch": false,
+    "expectedMatch": null,
+    "target": {
+      "id": "error-target",
+      "createdAt": "2026-09-01T00:00:00.000Z",
+      "updatedAt": "2026-09-01T00:00:00.000Z",
+      "type": "TimeoutError",
+      "message": "aaaa",
+      "callLog": [
+        "waiting for checkout button"
+      ],
+      "callStack": [
+        "at /app/checkout.ts:10:2"
+      ],
+      "location": "/app/checkout.ts",
+      "resultId": "result-target",
+      "result": null,
+      "assumptions": [],
+      "rawLogs": null,
+      "sourceSnippet": null,
+      "generatedTestCase": null,
+      "testAssertion": null,
+      "expectedPattern": null,
+      "receivedString": null
+    },
+    "candidate": {
+      "id": "error-old",
+      "createdAt": "2026-09-01T00:00:00.000Z",
+      "updatedAt": "2026-09-01T00:00:00.000Z",
+      "type": "TimeoutError",
+      "message": "zzzz",
+      "callLog": [
+        "waiting for checkout button"
+      ],
+      "callStack": [
+        "at /app/checkout.ts:10:2"
+      ],
+      "location": "/app/checkout.ts",
+      "resultId": "result-target",
+      "result": null,
+      "assumptions": [
+        {
+          "id": "assumption-old",
+          "createdAt": "2026-09-01T00:00:00.000Z",
+          "updatedAt": "2026-09-01T00:00:00.000Z",
+          "isConfirmed": true,
+          "score": 1,
+          "madeBy": "user",
+          "issueId": "issue-old",
+          "resultErrorId": "error-old",
+          "issue": {
+            "id": "issue-old",
+            "createdAt": "2026-09-01T00:00:00.000Z",
+            "updatedAt": "2026-09-01T00:00:00.000Z",
+            "name": "Checkout unavailable",
+            "category": "bug",
+            "projectId": "project-a"
+          }
+        }
+      ],
+      "rawLogs": null,
+      "sourceSnippet": null,
+      "generatedTestCase": null,
+      "testAssertion": null,
+      "expectedPattern": null,
+      "receivedString": null
+    }
+  },
+  {
+    "id": "length-over-50-percent",
+    "legacyMatch": false,
+    "expectedMatch": null,
+    "target": {
+      "id": "error-target",
+      "createdAt": "2026-09-01T00:00:00.000Z",
+      "updatedAt": "2026-09-01T00:00:00.000Z",
+      "type": "TimeoutError",
+      "message": "Error 1",
+      "callLog": [
+        "waiting for checkout button"
+      ],
+      "callStack": [
+        "at /app/checkout.ts:10:2"
+      ],
+      "location": "/app/checkout.ts",
+      "resultId": "result-target",
+      "result": null,
+      "assumptions": [],
+      "rawLogs": null,
+      "sourceSnippet": null,
+      "generatedTestCase": null,
+      "testAssertion": null,
+      "expectedPattern": null,
+      "receivedString": null
+    },
+    "candidate": {
+      "id": "error-old",
+      "createdAt": "2026-09-01T00:00:00.000Z",
+      "updatedAt": "2026-09-01T00:00:00.000Z",
+      "type": "TimeoutError",
+      "message": "Error 123456789012345",
+      "callLog": [
+        "waiting for checkout button"
+      ],
+      "callStack": [
+        "at /app/checkout.ts:10:2"
+      ],
+      "location": "/app/checkout.ts",
+      "resultId": "result-target",
+      "result": null,
+      "assumptions": [
+        {
+          "id": "assumption-old",
+          "createdAt": "2026-09-01T00:00:00.000Z",
+          "updatedAt": "2026-09-01T00:00:00.000Z",
+          "isConfirmed": true,
+          "score": 1,
+          "madeBy": "user",
+          "issueId": "issue-old",
+          "resultErrorId": "error-old",
+          "issue": {
+            "id": "issue-old",
+            "createdAt": "2026-09-01T00:00:00.000Z",
+            "updatedAt": "2026-09-01T00:00:00.000Z",
+            "name": "Checkout unavailable",
+            "category": "bug",
+            "projectId": "project-a"
+          }
+        }
+      ],
+      "rawLogs": null,
+      "sourceSnippet": null,
+      "generatedTestCase": null,
+      "testAssertion": null,
+      "expectedPattern": null,
+      "receivedString": null
+    }
+  },
+  {
+    "id": "length-exactly-50-percent",
+    "legacyMatch": true,
+    "expectedMatch": null,
+    "target": {
+      "id": "error-target",
+      "createdAt": "2026-09-01T00:00:00.000Z",
+      "updatedAt": "2026-09-01T00:00:00.000Z",
+      "type": "TimeoutError",
+      "message": "Error 12",
+      "callLog": [
+        "waiting for checkout button"
+      ],
+      "callStack": [
+        "at /app/checkout.ts:10:2"
+      ],
+      "location": "/app/checkout.ts",
+      "resultId": "result-target",
+      "result": null,
+      "assumptions": [],
+      "rawLogs": null,
+      "sourceSnippet": null,
+      "generatedTestCase": null,
+      "testAssertion": null,
+      "expectedPattern": null,
+      "receivedString": null
+    },
+    "candidate": {
+      "id": "error-old",
+      "createdAt": "2026-09-01T00:00:00.000Z",
+      "updatedAt": "2026-09-01T00:00:00.000Z",
+      "type": "TimeoutError",
+      "message": "Error 123456",
+      "callLog": [
+        "waiting for checkout button"
+      ],
+      "callStack": [
+        "at /app/checkout.ts:10:2"
+      ],
+      "location": "/app/checkout.ts",
+      "resultId": "result-target",
+      "result": null,
+      "assumptions": [
+        {
+          "id": "assumption-old",
+          "createdAt": "2026-09-01T00:00:00.000Z",
+          "updatedAt": "2026-09-01T00:00:00.000Z",
+          "isConfirmed": true,
+          "score": 1,
+          "madeBy": "user",
+          "issueId": "issue-old",
+          "resultErrorId": "error-old",
+          "issue": {
+            "id": "issue-old",
+            "createdAt": "2026-09-01T00:00:00.000Z",
+            "updatedAt": "2026-09-01T00:00:00.000Z",
+            "name": "Checkout unavailable",
+            "category": "bug",
+            "projectId": "project-a"
+          }
+        }
+      ],
+      "rawLogs": null,
+      "sourceSnippet": null,
+      "generatedTestCase": null,
+      "testAssertion": null,
+      "expectedPattern": null,
+      "receivedString": null
+    }
+  },
+  {
+    "id": "legacy-json-traces",
+    "legacyMatch": true,
+    "expectedMatch": true,
+    "target": {
+      "id": "error-target",
+      "createdAt": "2026-09-01T00:00:00.000Z",
+      "updatedAt": "2026-09-01T00:00:00.000Z",
+      "type": "TimeoutError",
+      "message": "Checkout button was not visible",
+      "callLog": "[\"waiting for checkout button\"]",
+      "callStack": "[\"at /app/checkout.ts:10:2\"]",
+      "location": "/app/checkout.ts",
+      "resultId": "result-target",
+      "result": null,
+      "assumptions": [],
+      "rawLogs": null,
+      "sourceSnippet": null,
+      "generatedTestCase": null,
+      "testAssertion": null,
+      "expectedPattern": null,
+      "receivedString": null
+    },
+    "candidate": {
+      "id": "error-old",
+      "createdAt": "2026-09-01T00:00:00.000Z",
+      "updatedAt": "2026-09-01T00:00:00.000Z",
+      "type": "TimeoutError",
+      "message": "Checkout button was not visible",
+      "callLog": "[\"waiting for checkout button\"]",
+      "callStack": "[\"at /app/checkout.ts:10:2\"]",
+      "location": "/app/checkout.ts",
+      "resultId": "result-target",
+      "result": null,
+      "assumptions": [
+        {
+          "id": "assumption-old",
+          "createdAt": "2026-09-01T00:00:00.000Z",
+          "updatedAt": "2026-09-01T00:00:00.000Z",
+          "isConfirmed": true,
+          "score": 1,
+          "madeBy": "user",
+          "issueId": "issue-old",
+          "resultErrorId": "error-old",
+          "issue": {
+            "id": "issue-old",
+            "createdAt": "2026-09-01T00:00:00.000Z",
+            "updatedAt": "2026-09-01T00:00:00.000Z",
+            "name": "Checkout unavailable",
+            "category": "bug",
+            "projectId": "project-a"
+          }
+        }
+      ],
+      "rawLogs": null,
+      "sourceSnippet": null,
+      "generatedTestCase": null,
+      "testAssertion": null,
+      "expectedPattern": null,
+      "receivedString": null
+    }
+  },
+  {
+    "id": "http-status-conflict",
+    "legacyMatch": true,
+    "expectedMatch": false,
+    "target": {
+      "id": "error-target",
+      "createdAt": "2026-09-01T00:00:00.000Z",
+      "updatedAt": "2026-09-01T00:00:00.000Z",
+      "type": "TimeoutError",
+      "message": "HTTP 401 Unauthorized",
+      "callLog": [
+        "waiting for checkout button"
+      ],
+      "callStack": [
+        "at /app/checkout.ts:10:2"
+      ],
+      "location": "/app/checkout.ts",
+      "resultId": "result-target",
+      "result": null,
+      "assumptions": [],
+      "rawLogs": null,
+      "sourceSnippet": null,
+      "generatedTestCase": null,
+      "testAssertion": null,
+      "expectedPattern": null,
+      "receivedString": null
+    },
+    "candidate": {
+      "id": "error-old",
+      "createdAt": "2026-09-01T00:00:00.000Z",
+      "updatedAt": "2026-09-01T00:00:00.000Z",
+      "type": "TimeoutError",
+      "message": "HTTP 500 Unauthorized",
+      "callLog": [
+        "waiting for checkout button"
+      ],
+      "callStack": [
+        "at /app/checkout.ts:10:2"
+      ],
+      "location": "/app/checkout.ts",
+      "resultId": "result-target",
+      "result": null,
+      "assumptions": [
+        {
+          "id": "assumption-old",
+          "createdAt": "2026-09-01T00:00:00.000Z",
+          "updatedAt": "2026-09-01T00:00:00.000Z",
+          "isConfirmed": true,
+          "score": 1,
+          "madeBy": "user",
+          "issueId": "issue-old",
+          "resultErrorId": "error-old",
+          "issue": {
+            "id": "issue-old",
+            "createdAt": "2026-09-01T00:00:00.000Z",
+            "updatedAt": "2026-09-01T00:00:00.000Z",
+            "name": "Checkout unavailable",
+            "category": "bug",
+            "projectId": "project-a"
+          }
+        }
+      ],
+      "rawLogs": null,
+      "sourceSnippet": null,
+      "generatedTestCase": null,
+      "testAssertion": null,
+      "expectedPattern": null,
+      "receivedString": null
+    }
+  },
+  {
+    "id": "selector-line-number-change",
+    "expectedMatch": true,
+    "legacyMatch": true,
+    "target": {
+      "id": "error-target",
+      "createdAt": "2026-09-01T00:00:00.000Z",
+      "updatedAt": "2026-09-01T00:00:00.000Z",
+      "type": "TestError",
+      "message": "Timeout 30000ms: #checkout-submit is not visible",
+      "callLog": [
+        "waiting for #checkout-submit to become visible"
+      ],
+      "callStack": [
+        "at /app/checkout.spec.ts:42:7"
+      ],
+      "location": "/app/checkout.ts",
+      "resultId": "result-target",
+      "result": null,
+      "assumptions": [],
+      "rawLogs": null,
+      "sourceSnippet": null,
+      "generatedTestCase": null,
+      "testAssertion": null,
+      "expectedPattern": null,
+      "receivedString": null
+    },
+    "candidate": {
+      "id": "error-old",
+      "createdAt": "2026-09-01T00:00:00.000Z",
+      "updatedAt": "2026-09-01T00:00:00.000Z",
+      "type": "TestError",
+      "message": "Timeout 45000ms: #checkout-submit is not visible",
+      "callLog": [
+        "waiting for #checkout-submit to become visible"
+      ],
+      "callStack": [
+        "at /app/checkout.spec.ts:91:3"
+      ],
+      "location": "/app/checkout.ts",
+      "resultId": "result-target",
+      "result": null,
+      "assumptions": [
+        {
+          "id": "assumption-old",
+          "createdAt": "2026-09-01T00:00:00.000Z",
+          "updatedAt": "2026-09-01T00:00:00.000Z",
+          "isConfirmed": true,
+          "score": 1,
+          "madeBy": "user",
+          "issueId": "issue-old",
+          "resultErrorId": "error-old",
+          "issue": {
+            "id": "issue-old",
+            "createdAt": "2026-09-01T00:00:00.000Z",
+            "updatedAt": "2026-09-01T00:00:00.000Z",
+            "name": "Checkout unavailable",
+            "category": "bug",
+            "projectId": "project-a"
+          }
+        }
+      ],
+      "rawLogs": null,
+      "sourceSnippet": null,
+      "generatedTestCase": null,
+      "testAssertion": null,
+      "expectedPattern": null,
+      "receivedString": null
+    }
+  },
+  {
+    "id": "connection-refused-paraphrase",
+    "expectedMatch": true,
+    "legacyMatch": false,
+    "target": {
+      "id": "error-target",
+      "createdAt": "2026-09-01T00:00:00.000Z",
+      "updatedAt": "2026-09-01T00:00:00.000Z",
+      "type": "TestError",
+      "message": "connect ECONNREFUSED 127.0.0.1:5432",
+      "callLog": [
+        "database setup: TCP connection rejected; postgres not listening"
+      ],
+      "callStack": [
+        "at /app/testRunner.ts:10:2"
+      ],
+      "location": "/app/checkout.ts",
+      "resultId": "result-target",
+      "result": null,
+      "assumptions": [],
+      "rawLogs": null,
+      "sourceSnippet": null,
+      "generatedTestCase": null,
+      "testAssertion": null,
+      "expectedPattern": null,
+      "receivedString": null
+    },
+    "candidate": {
+      "id": "error-old",
+      "createdAt": "2026-09-01T00:00:00.000Z",
+      "updatedAt": "2026-09-01T00:00:00.000Z",
+      "type": "TestError",
+      "message": "PostgreSQL refused the connection on localhost port 5432",
+      "callLog": [
+        "database setup: TCP connection rejected; postgres not listening"
+      ],
+      "callStack": [
+        "at /app/testRunner.ts:10:2"
+      ],
+      "location": "/app/checkout.ts",
+      "resultId": "result-target",
+      "result": null,
+      "assumptions": [
+        {
+          "id": "assumption-old",
+          "createdAt": "2026-09-01T00:00:00.000Z",
+          "updatedAt": "2026-09-01T00:00:00.000Z",
+          "isConfirmed": true,
+          "score": 1,
+          "madeBy": "user",
+          "issueId": "issue-old",
+          "resultErrorId": "error-old",
+          "issue": {
+            "id": "issue-old",
+            "createdAt": "2026-09-01T00:00:00.000Z",
+            "updatedAt": "2026-09-01T00:00:00.000Z",
+            "name": "Checkout unavailable",
+            "category": "bug",
+            "projectId": "project-a"
+          }
+        }
+      ],
+      "rawLogs": null,
+      "sourceSnippet": null,
+      "generatedTestCase": null,
+      "testAssertion": null,
+      "expectedPattern": null,
+      "receivedString": null
+    }
+  },
+  {
+    "id": "dns-paraphrase",
+    "expectedMatch": true,
+    "legacyMatch": false,
+    "target": {
+      "id": "error-target",
+      "createdAt": "2026-09-01T00:00:00.000Z",
+      "updatedAt": "2026-09-01T00:00:00.000Z",
+      "type": "TestError",
+      "message": "getaddrinfo ENOTFOUND inventory.internal",
+      "callLog": [
+        "GET https://inventory.internal/stock failed during DNS lookup"
+      ],
+      "callStack": [
+        "at /app/testRunner.ts:10:2"
+      ],
+      "location": "/app/checkout.ts",
+      "resultId": "result-target",
+      "result": null,
+      "assumptions": [],
+      "rawLogs": null,
+      "sourceSnippet": null,
+      "generatedTestCase": null,
+      "testAssertion": null,
+      "expectedPattern": null,
+      "receivedString": null
+    },
+    "candidate": {
+      "id": "error-old",
+      "createdAt": "2026-09-01T00:00:00.000Z",
+      "updatedAt": "2026-09-01T00:00:00.000Z",
+      "type": "TestError",
+      "message": "Cannot resolve host inventory.internal: DNS name does not exist",
+      "callLog": [
+        "GET https://inventory.internal/stock failed during DNS lookup"
+      ],
+      "callStack": [
+        "at /app/testRunner.ts:10:2"
+      ],
+      "location": "/app/checkout.ts",
+      "resultId": "result-target",
+      "result": null,
+      "assumptions": [
+        {
+          "id": "assumption-old",
+          "createdAt": "2026-09-01T00:00:00.000Z",
+          "updatedAt": "2026-09-01T00:00:00.000Z",
+          "isConfirmed": true,
+          "score": 1,
+          "madeBy": "user",
+          "issueId": "issue-old",
+          "resultErrorId": "error-old",
+          "issue": {
+            "id": "issue-old",
+            "createdAt": "2026-09-01T00:00:00.000Z",
+            "updatedAt": "2026-09-01T00:00:00.000Z",
+            "name": "Checkout unavailable",
+            "category": "bug",
+            "projectId": "project-a"
+          }
+        }
+      ],
+      "rawLogs": null,
+      "sourceSnippet": null,
+      "generatedTestCase": null,
+      "testAssertion": null,
+      "expectedPattern": null,
+      "receivedString": null
+    }
+  },
+  {
+    "id": "expired-certificate-paraphrase",
+    "expectedMatch": true,
+    "legacyMatch": false,
+    "target": {
+      "id": "error-target",
+      "createdAt": "2026-09-01T00:00:00.000Z",
+      "updatedAt": "2026-09-01T00:00:00.000Z",
+      "type": "TestError",
+      "message": "CERT_HAS_EXPIRED for https://payments.internal",
+      "callLog": [
+        "payments healthcheck: certificate expiration date is in the past"
+      ],
+      "callStack": [
+        "at /app/testRunner.ts:10:2"
+      ],
+      "location": "/app/checkout.ts",
+      "resultId": "result-target",
+      "result": null,
+      "assumptions": [],
+      "rawLogs": null,
+      "sourceSnippet": null,
+      "generatedTestCase": null,
+      "testAssertion": null,
+      "expectedPattern": null,
+      "receivedString": null
+    },
+    "candidate": {
+      "id": "error-old",
+      "createdAt": "2026-09-01T00:00:00.000Z",
+      "updatedAt": "2026-09-01T00:00:00.000Z",
+      "type": "TestError",
+      "message": "TLS handshake rejected: payments.internal server certificate has expired",
+      "callLog": [
+        "payments healthcheck: certificate expiration date is in the past"
+      ],
+      "callStack": [
+        "at /app/testRunner.ts:10:2"
+      ],
+      "location": "/app/checkout.ts",
+      "resultId": "result-target",
+      "result": null,
+      "assumptions": [
+        {
+          "id": "assumption-old",
+          "createdAt": "2026-09-01T00:00:00.000Z",
+          "updatedAt": "2026-09-01T00:00:00.000Z",
+          "isConfirmed": true,
+          "score": 1,
+          "madeBy": "user",
+          "issueId": "issue-old",
+          "resultErrorId": "error-old",
+          "issue": {
+            "id": "issue-old",
+            "createdAt": "2026-09-01T00:00:00.000Z",
+            "updatedAt": "2026-09-01T00:00:00.000Z",
+            "name": "Checkout unavailable",
+            "category": "bug",
+            "projectId": "project-a"
+          }
+        }
+      ],
+      "rawLogs": null,
+      "sourceSnippet": null,
+      "generatedTestCase": null,
+      "testAssertion": null,
+      "expectedPattern": null,
+      "receivedString": null
+    }
+  },
+  {
+    "id": "jwt-expired-paraphrase",
+    "expectedMatch": true,
+    "legacyMatch": false,
+    "target": {
+      "id": "error-target",
+      "createdAt": "2026-09-01T00:00:00.000Z",
+      "updatedAt": "2026-09-01T00:00:00.000Z",
+      "type": "TestError",
+      "message": "JWT expired while loading /profile",
+      "callLog": [
+        "auth middleware: token expiration check failed"
+      ],
+      "callStack": [
+        "at /app/testRunner.ts:10:2"
+      ],
+      "location": "/app/checkout.ts",
+      "resultId": "result-target",
+      "result": null,
+      "assumptions": [],
+      "rawLogs": null,
+      "sourceSnippet": null,
+      "generatedTestCase": null,
+      "testAssertion": null,
+      "expectedPattern": null,
+      "receivedString": null
+    },
+    "candidate": {
+      "id": "error-old",
+      "createdAt": "2026-09-01T00:00:00.000Z",
+      "updatedAt": "2026-09-01T00:00:00.000Z",
+      "type": "TestError",
+      "message": "GET /profile returned 401 because the access token is past its expiration time",
+      "callLog": [
+        "auth middleware: token expiration check failed"
+      ],
+      "callStack": [
+        "at /app/testRunner.ts:10:2"
+      ],
+      "location": "/app/checkout.ts",
+      "resultId": "result-target",
+      "result": null,
+      "assumptions": [
+        {
+          "id": "assumption-old",
+          "createdAt": "2026-09-01T00:00:00.000Z",
+          "updatedAt": "2026-09-01T00:00:00.000Z",
+          "isConfirmed": true,
+          "score": 1,
+          "madeBy": "user",
+          "issueId": "issue-old",
+          "resultErrorId": "error-old",
+          "issue": {
+            "id": "issue-old",
+            "createdAt": "2026-09-01T00:00:00.000Z",
+            "updatedAt": "2026-09-01T00:00:00.000Z",
+            "name": "Checkout unavailable",
+            "category": "bug",
+            "projectId": "project-a"
+          }
+        }
+      ],
+      "rawLogs": null,
+      "sourceSnippet": null,
+      "generatedTestCase": null,
+      "testAssertion": null,
+      "expectedPattern": null,
+      "receivedString": null
+    }
+  },
+  {
+    "id": "missing-specific-error-traces",
+    "expectedMatch": true,
+    "legacyMatch": false,
+    "target": {
+      "id": "error-target",
+      "createdAt": "2026-09-01T00:00:00.000Z",
+      "updatedAt": "2026-09-01T00:00:00.000Z",
+      "type": "TestError",
+      "message": "Unique constraint failed on users.email during signup",
+      "callLog": [],
+      "callStack": [],
+      "location": "/app/checkout.ts",
+      "resultId": "result-target",
+      "result": null,
+      "assumptions": [],
+      "rawLogs": null,
+      "sourceSnippet": null,
+      "generatedTestCase": null,
+      "testAssertion": null,
+      "expectedPattern": null,
+      "receivedString": null
+    },
+    "candidate": {
+      "id": "error-old",
+      "createdAt": "2026-09-01T00:00:00.000Z",
+      "updatedAt": "2026-09-01T00:00:00.000Z",
+      "type": "TestError",
+      "message": "Unique constraint failed on users.email during signup",
+      "callLog": [],
+      "callStack": [],
+      "location": "/app/checkout.ts",
+      "resultId": "result-target",
+      "result": null,
+      "assumptions": [
+        {
+          "id": "assumption-old",
+          "createdAt": "2026-09-01T00:00:00.000Z",
+          "updatedAt": "2026-09-01T00:00:00.000Z",
+          "isConfirmed": true,
+          "score": 1,
+          "madeBy": "user",
+          "issueId": "issue-old",
+          "resultErrorId": "error-old",
+          "issue": {
+            "id": "issue-old",
+            "createdAt": "2026-09-01T00:00:00.000Z",
+            "updatedAt": "2026-09-01T00:00:00.000Z",
+            "name": "Checkout unavailable",
+            "category": "bug",
+            "projectId": "project-a"
+          }
+        }
+      ],
+      "rawLogs": null,
+      "sourceSnippet": null,
+      "generatedTestCase": null,
+      "testAssertion": null,
+      "expectedPattern": null,
+      "receivedString": null
+    }
+  },
+  {
+    "id": "dynamic-order-identifiers",
+    "expectedMatch": true,
+    "legacyMatch": true,
+    "target": {
+      "id": "error-target",
+      "createdAt": "2026-09-01T00:00:00.000Z",
+      "updatedAt": "2026-09-01T00:00:00.000Z",
+      "type": "TestError",
+      "message": "Order 12345: total remained zero after adding product",
+      "callLog": [
+        "cart recalculation: expected total 25, received 0"
+      ],
+      "callStack": [
+        "at /app/testRunner.ts:10:2"
+      ],
+      "location": "/app/checkout.ts",
+      "resultId": "result-target",
+      "result": null,
+      "assumptions": [],
+      "rawLogs": null,
+      "sourceSnippet": null,
+      "generatedTestCase": null,
+      "testAssertion": null,
+      "expectedPattern": null,
+      "receivedString": null
+    },
+    "candidate": {
+      "id": "error-old",
+      "createdAt": "2026-09-01T00:00:00.000Z",
+      "updatedAt": "2026-09-01T00:00:00.000Z",
+      "type": "TestError",
+      "message": "Order 98765: total remained zero after adding product",
+      "callLog": [
+        "cart recalculation: expected total 25, received 0"
+      ],
+      "callStack": [
+        "at /app/testRunner.ts:10:2"
+      ],
+      "location": "/app/checkout.ts",
+      "resultId": "result-target",
+      "result": null,
+      "assumptions": [
+        {
+          "id": "assumption-old",
+          "createdAt": "2026-09-01T00:00:00.000Z",
+          "updatedAt": "2026-09-01T00:00:00.000Z",
+          "isConfirmed": true,
+          "score": 1,
+          "madeBy": "user",
+          "issueId": "issue-old",
+          "resultErrorId": "error-old",
+          "issue": {
+            "id": "issue-old",
+            "createdAt": "2026-09-01T00:00:00.000Z",
+            "updatedAt": "2026-09-01T00:00:00.000Z",
+            "name": "Checkout unavailable",
+            "category": "bug",
+            "projectId": "project-a"
+          }
+        }
+      ],
+      "rawLogs": null,
+      "sourceSnippet": null,
+      "generatedTestCase": null,
+      "testAssertion": null,
+      "expectedPattern": null,
+      "receivedString": null
+    }
+  },
+  {
+    "id": "assertion-paraphrase",
+    "expectedMatch": true,
+    "legacyMatch": true,
+    "target": {
+      "id": "error-target",
+      "createdAt": "2026-09-01T00:00:00.000Z",
+      "updatedAt": "2026-09-01T00:00:00.000Z",
+      "type": "TestError",
+      "message": "Cart total mismatch: expected 25, received 0",
+      "callLog": [
+        "POST /cart/items succeeded; cart total is still 0"
+      ],
+      "callStack": [
+        "at /app/testRunner.ts:10:2"
+      ],
+      "location": "/app/checkout.ts",
+      "resultId": "result-target",
+      "result": null,
+      "assumptions": [],
+      "rawLogs": null,
+      "sourceSnippet": null,
+      "generatedTestCase": null,
+      "testAssertion": null,
+      "expectedPattern": null,
+      "receivedString": null
+    },
+    "candidate": {
+      "id": "error-old",
+      "createdAt": "2026-09-01T00:00:00.000Z",
+      "updatedAt": "2026-09-01T00:00:00.000Z",
+      "type": "TestError",
+      "message": "Cart total should be 25 but was 0",
+      "callLog": [
+        "POST /cart/items succeeded; cart total is still 0"
+      ],
+      "callStack": [
+        "at /app/testRunner.ts:10:2"
+      ],
+      "location": "/app/checkout.ts",
+      "resultId": "result-target",
+      "result": null,
+      "assumptions": [
+        {
+          "id": "assumption-old",
+          "createdAt": "2026-09-01T00:00:00.000Z",
+          "updatedAt": "2026-09-01T00:00:00.000Z",
+          "isConfirmed": true,
+          "score": 1,
+          "madeBy": "user",
+          "issueId": "issue-old",
+          "resultErrorId": "error-old",
+          "issue": {
+            "id": "issue-old",
+            "createdAt": "2026-09-01T00:00:00.000Z",
+            "updatedAt": "2026-09-01T00:00:00.000Z",
+            "name": "Checkout unavailable",
+            "category": "bug",
+            "projectId": "project-a"
+          }
+        }
+      ],
+      "rawLogs": null,
+      "sourceSnippet": null,
+      "generatedTestCase": null,
+      "testAssertion": null,
+      "expectedPattern": null,
+      "receivedString": null
+    }
+  },
+  {
+    "id": "wrapper-adds-long-context",
+    "expectedMatch": true,
+    "legacyMatch": false,
+    "target": {
+      "id": "error-target",
+      "createdAt": "2026-09-01T00:00:00.000Z",
+      "updatedAt": "2026-09-01T00:00:00.000Z",
+      "type": "TestError",
+      "message": "ECONNRESET reading /inventory",
+      "callLog": [
+        "inventory fixture: socket reset by peer before headers"
+      ],
+      "callStack": [
+        "at /app/testRunner.ts:10:2"
+      ],
+      "location": "/app/checkout.ts",
+      "resultId": "result-target",
+      "result": null,
+      "assumptions": [],
+      "rawLogs": null,
+      "sourceSnippet": null,
+      "generatedTestCase": null,
+      "testAssertion": null,
+      "expectedPattern": null,
+      "receivedString": null
+    },
+    "candidate": {
+      "id": "error-old",
+      "createdAt": "2026-09-01T00:00:00.000Z",
+      "updatedAt": "2026-09-01T00:00:00.000Z",
+      "type": "TestError",
+      "message": "Test fixture initialization failed while preparing the inventory scenario: ECONNRESET reading /inventory; the upstream server closed the socket before returning headers",
+      "callLog": [
+        "inventory fixture: socket reset by peer before headers"
+      ],
+      "callStack": [
+        "at /app/testRunner.ts:10:2"
+      ],
+      "location": "/app/checkout.ts",
+      "resultId": "result-target",
+      "result": null,
+      "assumptions": [
+        {
+          "id": "assumption-old",
+          "createdAt": "2026-09-01T00:00:00.000Z",
+          "updatedAt": "2026-09-01T00:00:00.000Z",
+          "isConfirmed": true,
+          "score": 1,
+          "madeBy": "user",
+          "issueId": "issue-old",
+          "resultErrorId": "error-old",
+          "issue": {
+            "id": "issue-old",
+            "createdAt": "2026-09-01T00:00:00.000Z",
+            "updatedAt": "2026-09-01T00:00:00.000Z",
+            "name": "Checkout unavailable",
+            "category": "bug",
+            "projectId": "project-a"
+          }
+        }
+      ],
+      "rawLogs": null,
+      "sourceSnippet": null,
+      "generatedTestCase": null,
+      "testAssertion": null,
+      "expectedPattern": null,
+      "receivedString": null
+    }
+  },
+  {
+    "id": "stack-path-refactor",
+    "expectedMatch": true,
+    "legacyMatch": true,
+    "target": {
+      "id": "error-target",
+      "createdAt": "2026-09-01T00:00:00.000Z",
+      "updatedAt": "2026-09-01T00:00:00.000Z",
+      "type": "TestError",
+      "message": "Price rounding: expected 10.01, received 10.00",
+      "callLog": [
+        "rounding 10.005 to two decimals returned 10.00"
+      ],
+      "callStack": [
+        "at /old/pricing/calculate.ts:15:2"
+      ],
+      "location": "/app/checkout.ts",
+      "resultId": "result-target",
+      "result": null,
+      "assumptions": [],
+      "rawLogs": null,
+      "sourceSnippet": null,
+      "generatedTestCase": null,
+      "testAssertion": null,
+      "expectedPattern": null,
+      "receivedString": null
+    },
+    "candidate": {
+      "id": "error-old",
+      "createdAt": "2026-09-01T00:00:00.000Z",
+      "updatedAt": "2026-09-01T00:00:00.000Z",
+      "type": "TestError",
+      "message": "Price rounding: expected 10.01, received 10.00",
+      "callLog": [
+        "rounding 10.005 to two decimals returned 10.00"
+      ],
+      "callStack": [
+        "at /new/billing/roundMoney.ts:98:8"
+      ],
+      "location": "/app/checkout.ts",
+      "resultId": "result-target",
+      "result": null,
+      "assumptions": [
+        {
+          "id": "assumption-old",
+          "createdAt": "2026-09-01T00:00:00.000Z",
+          "updatedAt": "2026-09-01T00:00:00.000Z",
+          "isConfirmed": true,
+          "score": 1,
+          "madeBy": "user",
+          "issueId": "issue-old",
+          "resultErrorId": "error-old",
+          "issue": {
+            "id": "issue-old",
+            "createdAt": "2026-09-01T00:00:00.000Z",
+            "updatedAt": "2026-09-01T00:00:00.000Z",
+            "name": "Checkout unavailable",
+            "category": "bug",
+            "projectId": "project-a"
+          }
+        }
+      ],
+      "rawLogs": null,
+      "sourceSnippet": null,
+      "generatedTestCase": null,
+      "testAssertion": null,
+      "expectedPattern": null,
+      "receivedString": null
+    }
+  },
+  {
+    "id": "assertion-different-expected-values",
+    "expectedMatch": false,
+    "legacyMatch": true,
+    "target": {
+      "id": "error-target",
+      "createdAt": "2026-09-01T00:00:00.000Z",
+      "updatedAt": "2026-09-01T00:00:00.000Z",
+      "type": "TestError",
+      "message": "Expected cart item count 1, received 0",
+      "callLog": [
+        "assertion failed after cart update"
+      ],
+      "callStack": [
+        "at /app/testRunner.ts:10:2"
+      ],
+      "location": "/app/checkout.ts",
+      "resultId": "result-target",
+      "result": null,
+      "assumptions": [],
+      "rawLogs": null,
+      "sourceSnippet": null,
+      "generatedTestCase": null,
+      "testAssertion": null,
+      "expectedPattern": null,
+      "receivedString": null
+    },
+    "candidate": {
+      "id": "error-old",
+      "createdAt": "2026-09-01T00:00:00.000Z",
+      "updatedAt": "2026-09-01T00:00:00.000Z",
+      "type": "TestError",
+      "message": "Expected cart item count 0, received 1",
+      "callLog": [
+        "assertion failed after cart update"
+      ],
+      "callStack": [
+        "at /app/testRunner.ts:10:2"
+      ],
+      "location": "/app/checkout.ts",
+      "resultId": "result-target",
+      "result": null,
+      "assumptions": [
+        {
+          "id": "assumption-old",
+          "createdAt": "2026-09-01T00:00:00.000Z",
+          "updatedAt": "2026-09-01T00:00:00.000Z",
+          "isConfirmed": true,
+          "score": 1,
+          "madeBy": "user",
+          "issueId": "issue-old",
+          "resultErrorId": "error-old",
+          "issue": {
+            "id": "issue-old",
+            "createdAt": "2026-09-01T00:00:00.000Z",
+            "updatedAt": "2026-09-01T00:00:00.000Z",
+            "name": "Checkout unavailable",
+            "category": "bug",
+            "projectId": "project-a"
+          }
+        }
+      ],
+      "rawLogs": null,
+      "sourceSnippet": null,
+      "generatedTestCase": null,
+      "testAssertion": null,
+      "expectedPattern": null,
+      "receivedString": null
+    }
+  },
+  {
+    "id": "http-401-versus-403",
+    "expectedMatch": false,
+    "legacyMatch": true,
+    "target": {
+      "id": "error-target",
+      "createdAt": "2026-09-01T00:00:00.000Z",
+      "updatedAt": "2026-09-01T00:00:00.000Z",
+      "type": "TestError",
+      "message": "GET /admin returned HTTP 401",
+      "callLog": [
+        "admin request failed"
+      ],
+      "callStack": [
+        "at /app/testRunner.ts:10:2"
+      ],
+      "location": "/app/checkout.ts",
+      "resultId": "result-target",
+      "result": null,
+      "assumptions": [],
+      "rawLogs": null,
+      "sourceSnippet": null,
+      "generatedTestCase": null,
+      "testAssertion": null,
+      "expectedPattern": null,
+      "receivedString": null
+    },
+    "candidate": {
+      "id": "error-old",
+      "createdAt": "2026-09-01T00:00:00.000Z",
+      "updatedAt": "2026-09-01T00:00:00.000Z",
+      "type": "TestError",
+      "message": "GET /admin returned HTTP 403",
+      "callLog": [
+        "admin request failed"
+      ],
+      "callStack": [
+        "at /app/testRunner.ts:10:2"
+      ],
+      "location": "/app/checkout.ts",
+      "resultId": "result-target",
+      "result": null,
+      "assumptions": [
+        {
+          "id": "assumption-old",
+          "createdAt": "2026-09-01T00:00:00.000Z",
+          "updatedAt": "2026-09-01T00:00:00.000Z",
+          "isConfirmed": true,
+          "score": 1,
+          "madeBy": "user",
+          "issueId": "issue-old",
+          "resultErrorId": "error-old",
+          "issue": {
+            "id": "issue-old",
+            "createdAt": "2026-09-01T00:00:00.000Z",
+            "updatedAt": "2026-09-01T00:00:00.000Z",
+            "name": "Checkout unavailable",
+            "category": "bug",
+            "projectId": "project-a"
+          }
+        }
+      ],
+      "rawLogs": null,
+      "sourceSnippet": null,
+      "generatedTestCase": null,
+      "testAssertion": null,
+      "expectedPattern": null,
+      "receivedString": null
+    }
+  },
+  {
+    "id": "http-404-versus-500",
+    "expectedMatch": false,
+    "legacyMatch": true,
+    "target": {
+      "id": "error-target",
+      "createdAt": "2026-09-01T00:00:00.000Z",
+      "updatedAt": "2026-09-01T00:00:00.000Z",
+      "type": "TestError",
+      "message": "GET /orders returned HTTP 404",
+      "callLog": [
+        "orders request failed"
+      ],
+      "callStack": [
+        "at /app/testRunner.ts:10:2"
+      ],
+      "location": "/app/checkout.ts",
+      "resultId": "result-target",
+      "result": null,
+      "assumptions": [],
+      "rawLogs": null,
+      "sourceSnippet": null,
+      "generatedTestCase": null,
+      "testAssertion": null,
+      "expectedPattern": null,
+      "receivedString": null
+    },
+    "candidate": {
+      "id": "error-old",
+      "createdAt": "2026-09-01T00:00:00.000Z",
+      "updatedAt": "2026-09-01T00:00:00.000Z",
+      "type": "TestError",
+      "message": "GET /orders returned HTTP 500",
+      "callLog": [
+        "orders request failed"
+      ],
+      "callStack": [
+        "at /app/testRunner.ts:10:2"
+      ],
+      "location": "/app/checkout.ts",
+      "resultId": "result-target",
+      "result": null,
+      "assumptions": [
+        {
+          "id": "assumption-old",
+          "createdAt": "2026-09-01T00:00:00.000Z",
+          "updatedAt": "2026-09-01T00:00:00.000Z",
+          "isConfirmed": true,
+          "score": 1,
+          "madeBy": "user",
+          "issueId": "issue-old",
+          "resultErrorId": "error-old",
+          "issue": {
+            "id": "issue-old",
+            "createdAt": "2026-09-01T00:00:00.000Z",
+            "updatedAt": "2026-09-01T00:00:00.000Z",
+            "name": "Checkout unavailable",
+            "category": "bug",
+            "projectId": "project-a"
+          }
+        }
+      ],
+      "rawLogs": null,
+      "sourceSnippet": null,
+      "generatedTestCase": null,
+      "testAssertion": null,
+      "expectedPattern": null,
+      "receivedString": null
+    }
+  },
+  {
+    "id": "same-timeout-different-selectors",
+    "expectedMatch": false,
+    "legacyMatch": true,
+    "target": {
+      "id": "error-target",
+      "createdAt": "2026-09-01T00:00:00.000Z",
+      "updatedAt": "2026-09-01T00:00:00.000Z",
+      "type": "TestError",
+      "message": "Timeout waiting for #login-submit",
+      "callLog": [
+        "waiting for element to become visible"
+      ],
+      "callStack": [
+        "at /app/testRunner.ts:10:2"
+      ],
+      "location": "/app/checkout.ts",
+      "resultId": "result-target",
+      "result": null,
+      "assumptions": [],
+      "rawLogs": null,
+      "sourceSnippet": null,
+      "generatedTestCase": null,
+      "testAssertion": null,
+      "expectedPattern": null,
+      "receivedString": null
+    },
+    "candidate": {
+      "id": "error-old",
+      "createdAt": "2026-09-01T00:00:00.000Z",
+      "updatedAt": "2026-09-01T00:00:00.000Z",
+      "type": "TestError",
+      "message": "Timeout waiting for #delete-account",
+      "callLog": [
+        "waiting for element to become visible"
+      ],
+      "callStack": [
+        "at /app/testRunner.ts:10:2"
+      ],
+      "location": "/app/checkout.ts",
+      "resultId": "result-target",
+      "result": null,
+      "assumptions": [
+        {
+          "id": "assumption-old",
+          "createdAt": "2026-09-01T00:00:00.000Z",
+          "updatedAt": "2026-09-01T00:00:00.000Z",
+          "isConfirmed": true,
+          "score": 1,
+          "madeBy": "user",
+          "issueId": "issue-old",
+          "resultErrorId": "error-old",
+          "issue": {
+            "id": "issue-old",
+            "createdAt": "2026-09-01T00:00:00.000Z",
+            "updatedAt": "2026-09-01T00:00:00.000Z",
+            "name": "Checkout unavailable",
+            "category": "bug",
+            "projectId": "project-a"
+          }
+        }
+      ],
+      "rawLogs": null,
+      "sourceSnippet": null,
+      "generatedTestCase": null,
+      "testAssertion": null,
+      "expectedPattern": null,
+      "receivedString": null
+    }
+  },
+  {
+    "id": "same-timeout-network-versus-selector",
+    "expectedMatch": false,
+    "legacyMatch": true,
+    "target": {
+      "id": "error-target",
+      "createdAt": "2026-09-01T00:00:00.000Z",
+      "updatedAt": "2026-09-01T00:00:00.000Z",
+      "type": "TestError",
+      "message": "Timeout 30000ms exceeded",
+      "callLog": [
+        "GET /payments pending: upstream TCP connection timed out"
+      ],
+      "callStack": [
+        "at /app/testRunner.ts:10:2"
+      ],
+      "location": "/app/checkout.ts",
+      "resultId": "result-target",
+      "result": null,
+      "assumptions": [],
+      "rawLogs": null,
+      "sourceSnippet": null,
+      "generatedTestCase": null,
+      "testAssertion": null,
+      "expectedPattern": null,
+      "receivedString": null
+    },
+    "candidate": {
+      "id": "error-old",
+      "createdAt": "2026-09-01T00:00:00.000Z",
+      "updatedAt": "2026-09-01T00:00:00.000Z",
+      "type": "TestError",
+      "message": "Timeout 30000ms exceeded",
+      "callLog": [
+        "GET /payments returned 200; selector #pay-now does not exist"
+      ],
+      "callStack": [
+        "at /app/testRunner.ts:10:2"
+      ],
+      "location": "/app/checkout.ts",
+      "resultId": "result-target",
+      "result": null,
+      "assumptions": [
+        {
+          "id": "assumption-old",
+          "createdAt": "2026-09-01T00:00:00.000Z",
+          "updatedAt": "2026-09-01T00:00:00.000Z",
+          "isConfirmed": true,
+          "score": 1,
+          "madeBy": "user",
+          "issueId": "issue-old",
+          "resultErrorId": "error-old",
+          "issue": {
+            "id": "issue-old",
+            "createdAt": "2026-09-01T00:00:00.000Z",
+            "updatedAt": "2026-09-01T00:00:00.000Z",
+            "name": "Checkout unavailable",
+            "category": "bug",
+            "projectId": "project-a"
+          }
+        }
+      ],
+      "rawLogs": null,
+      "sourceSnippet": null,
+      "generatedTestCase": null,
+      "testAssertion": null,
+      "expectedPattern": null,
+      "receivedString": null
+    }
+  },
+  {
+    "id": "same-timeout-auth-versus-slow-response",
+    "expectedMatch": false,
+    "legacyMatch": true,
+    "target": {
+      "id": "error-target",
+      "createdAt": "2026-09-01T00:00:00.000Z",
+      "updatedAt": "2026-09-01T00:00:00.000Z",
+      "type": "TestError",
+      "message": "Timeout waiting for dashboard",
+      "callLog": [
+        "GET /dashboard returned 401: expired token; redirected to login"
+      ],
+      "callStack": [
+        "at /app/testRunner.ts:10:2"
+      ],
+      "location": "/app/checkout.ts",
+      "resultId": "result-target",
+      "result": null,
+      "assumptions": [],
+      "rawLogs": null,
+      "sourceSnippet": null,
+      "generatedTestCase": null,
+      "testAssertion": null,
+      "expectedPattern": null,
+      "receivedString": null
+    },
+    "candidate": {
+      "id": "error-old",
+      "createdAt": "2026-09-01T00:00:00.000Z",
+      "updatedAt": "2026-09-01T00:00:00.000Z",
+      "type": "TestError",
+      "message": "Timeout waiting for dashboard",
+      "callLog": [
+        "GET /dashboard still pending after 30s; database query blocked"
+      ],
+      "callStack": [
+        "at /app/testRunner.ts:10:2"
+      ],
+      "location": "/app/checkout.ts",
+      "resultId": "result-target",
+      "result": null,
+      "assumptions": [
+        {
+          "id": "assumption-old",
+          "createdAt": "2026-09-01T00:00:00.000Z",
+          "updatedAt": "2026-09-01T00:00:00.000Z",
+          "isConfirmed": true,
+          "score": 1,
+          "madeBy": "user",
+          "issueId": "issue-old",
+          "resultErrorId": "error-old",
+          "issue": {
+            "id": "issue-old",
+            "createdAt": "2026-09-01T00:00:00.000Z",
+            "updatedAt": "2026-09-01T00:00:00.000Z",
+            "name": "Checkout unavailable",
+            "category": "bug",
+            "projectId": "project-a"
+          }
+        }
+      ],
+      "rawLogs": null,
+      "sourceSnippet": null,
+      "generatedTestCase": null,
+      "testAssertion": null,
+      "expectedPattern": null,
+      "receivedString": null
+    }
+  },
+  {
+    "id": "dns-versus-connection-refused",
+    "expectedMatch": false,
+    "legacyMatch": false,
+    "target": {
+      "id": "error-target",
+      "createdAt": "2026-09-01T00:00:00.000Z",
+      "updatedAt": "2026-09-01T00:00:00.000Z",
+      "type": "TestError",
+      "message": "getaddrinfo ENOTFOUND database.internal",
+      "callLog": [
+        "database.internal does not resolve"
+      ],
+      "callStack": [
+        "at /app/testRunner.ts:10:2"
+      ],
+      "location": "/app/checkout.ts",
+      "resultId": "result-target",
+      "result": null,
+      "assumptions": [],
+      "rawLogs": null,
+      "sourceSnippet": null,
+      "generatedTestCase": null,
+      "testAssertion": null,
+      "expectedPattern": null,
+      "receivedString": null
+    },
+    "candidate": {
+      "id": "error-old",
+      "createdAt": "2026-09-01T00:00:00.000Z",
+      "updatedAt": "2026-09-01T00:00:00.000Z",
+      "type": "TestError",
+      "message": "connect ECONNREFUSED database.internal:5432",
+      "callLog": [
+        "DNS resolved; TCP port 5432 refuses connections"
+      ],
+      "callStack": [
+        "at /app/testRunner.ts:10:2"
+      ],
+      "location": "/app/checkout.ts",
+      "resultId": "result-target",
+      "result": null,
+      "assumptions": [
+        {
+          "id": "assumption-old",
+          "createdAt": "2026-09-01T00:00:00.000Z",
+          "updatedAt": "2026-09-01T00:00:00.000Z",
+          "isConfirmed": true,
+          "score": 1,
+          "madeBy": "user",
+          "issueId": "issue-old",
+          "resultErrorId": "error-old",
+          "issue": {
+            "id": "issue-old",
+            "createdAt": "2026-09-01T00:00:00.000Z",
+            "updatedAt": "2026-09-01T00:00:00.000Z",
+            "name": "Checkout unavailable",
+            "category": "bug",
+            "projectId": "project-a"
+          }
+        }
+      ],
+      "rawLogs": null,
+      "sourceSnippet": null,
+      "generatedTestCase": null,
+      "testAssertion": null,
+      "expectedPattern": null,
+      "receivedString": null
+    }
+  },
+  {
+    "id": "tls-expired-versus-hostname",
+    "expectedMatch": false,
+    "legacyMatch": true,
+    "target": {
+      "id": "error-target",
+      "createdAt": "2026-09-01T00:00:00.000Z",
+      "updatedAt": "2026-09-01T00:00:00.000Z",
+      "type": "TestError",
+      "message": "TLS handshake failed",
+      "callLog": [
+        "CERT_HAS_EXPIRED: server certificate expired yesterday"
+      ],
+      "callStack": [
+        "at /app/testRunner.ts:10:2"
+      ],
+      "location": "/app/checkout.ts",
+      "resultId": "result-target",
+      "result": null,
+      "assumptions": [],
+      "rawLogs": null,
+      "sourceSnippet": null,
+      "generatedTestCase": null,
+      "testAssertion": null,
+      "expectedPattern": null,
+      "receivedString": null
+    },
+    "candidate": {
+      "id": "error-old",
+      "createdAt": "2026-09-01T00:00:00.000Z",
+      "updatedAt": "2026-09-01T00:00:00.000Z",
+      "type": "TestError",
+      "message": "TLS handshake failed",
+      "callLog": [
+        "ERR_TLS_CERT_ALTNAME_INVALID: certificate is valid but issued for another hostname"
+      ],
+      "callStack": [
+        "at /app/testRunner.ts:10:2"
+      ],
+      "location": "/app/checkout.ts",
+      "resultId": "result-target",
+      "result": null,
+      "assumptions": [
+        {
+          "id": "assumption-old",
+          "createdAt": "2026-09-01T00:00:00.000Z",
+          "updatedAt": "2026-09-01T00:00:00.000Z",
+          "isConfirmed": true,
+          "score": 1,
+          "madeBy": "user",
+          "issueId": "issue-old",
+          "resultErrorId": "error-old",
+          "issue": {
+            "id": "issue-old",
+            "createdAt": "2026-09-01T00:00:00.000Z",
+            "updatedAt": "2026-09-01T00:00:00.000Z",
+            "name": "Checkout unavailable",
+            "category": "bug",
+            "projectId": "project-a"
+          }
+        }
+      ],
+      "rawLogs": null,
+      "sourceSnippet": null,
+      "generatedTestCase": null,
+      "testAssertion": null,
+      "expectedPattern": null,
+      "receivedString": null
+    }
+  },
+  {
+    "id": "auth-expiration-versus-signature",
+    "expectedMatch": false,
+    "legacyMatch": true,
+    "target": {
+      "id": "error-target",
+      "createdAt": "2026-09-01T00:00:00.000Z",
+      "updatedAt": "2026-09-01T00:00:00.000Z",
+      "type": "TestError",
+      "message": "GET /profile returned 401 Unauthorized",
+      "callLog": [
+        "JWT signature valid; token expired"
+      ],
+      "callStack": [
+        "at /app/testRunner.ts:10:2"
+      ],
+      "location": "/app/checkout.ts",
+      "resultId": "result-target",
+      "result": null,
+      "assumptions": [],
+      "rawLogs": null,
+      "sourceSnippet": null,
+      "generatedTestCase": null,
+      "testAssertion": null,
+      "expectedPattern": null,
+      "receivedString": null
+    },
+    "candidate": {
+      "id": "error-old",
+      "createdAt": "2026-09-01T00:00:00.000Z",
+      "updatedAt": "2026-09-01T00:00:00.000Z",
+      "type": "TestError",
+      "message": "GET /profile returned 401 Unauthorized",
+      "callLog": [
+        "JWT not expired; signature verification failed"
+      ],
+      "callStack": [
+        "at /app/testRunner.ts:10:2"
+      ],
+      "location": "/app/checkout.ts",
+      "resultId": "result-target",
+      "result": null,
+      "assumptions": [
+        {
+          "id": "assumption-old",
+          "createdAt": "2026-09-01T00:00:00.000Z",
+          "updatedAt": "2026-09-01T00:00:00.000Z",
+          "isConfirmed": true,
+          "score": 1,
+          "madeBy": "user",
+          "issueId": "issue-old",
+          "resultErrorId": "error-old",
+          "issue": {
+            "id": "issue-old",
+            "createdAt": "2026-09-01T00:00:00.000Z",
+            "updatedAt": "2026-09-01T00:00:00.000Z",
+            "name": "Checkout unavailable",
+            "category": "bug",
+            "projectId": "project-a"
+          }
+        }
+      ],
+      "rawLogs": null,
+      "sourceSnippet": null,
+      "generatedTestCase": null,
+      "testAssertion": null,
+      "expectedPattern": null,
+      "receivedString": null
+    }
+  },
+  {
+    "id": "same-exception-different-components",
+    "expectedMatch": false,
+    "legacyMatch": false,
+    "target": {
+      "id": "error-target",
+      "createdAt": "2026-09-01T00:00:00.000Z",
+      "updatedAt": "2026-09-01T00:00:00.000Z",
+      "type": "TestError",
+      "message": "Cannot read properties of undefined (reading 'id')",
+      "callLog": [
+        "checkout: cart.customer is undefined"
+      ],
+      "callStack": [
+        "at /app/cart.ts:10:2"
+      ],
+      "location": "/app/checkout.ts",
+      "resultId": "result-target",
+      "result": null,
+      "assumptions": [],
+      "rawLogs": null,
+      "sourceSnippet": null,
+      "generatedTestCase": null,
+      "testAssertion": null,
+      "expectedPattern": null,
+      "receivedString": null
+    },
+    "candidate": {
+      "id": "error-old",
+      "createdAt": "2026-09-01T00:00:00.000Z",
+      "updatedAt": "2026-09-01T00:00:00.000Z",
+      "type": "TestError",
+      "message": "Cannot read properties of undefined (reading 'id')",
+      "callLog": [
+        "profile: session.user is undefined"
+      ],
+      "callStack": [
+        "at /app/profile.ts:40:2"
+      ],
+      "location": "/app/checkout.ts",
+      "resultId": "result-target",
+      "result": null,
+      "assumptions": [
+        {
+          "id": "assumption-old",
+          "createdAt": "2026-09-01T00:00:00.000Z",
+          "updatedAt": "2026-09-01T00:00:00.000Z",
+          "isConfirmed": true,
+          "score": 1,
+          "madeBy": "user",
+          "issueId": "issue-old",
+          "resultErrorId": "error-old",
+          "issue": {
+            "id": "issue-old",
+            "createdAt": "2026-09-01T00:00:00.000Z",
+            "updatedAt": "2026-09-01T00:00:00.000Z",
+            "name": "Checkout unavailable",
+            "category": "bug",
+            "projectId": "project-a"
+          }
+        }
+      ],
+      "rawLogs": null,
+      "sourceSnippet": null,
+      "generatedTestCase": null,
+      "testAssertion": null,
+      "expectedPattern": null,
+      "receivedString": null
+    }
+  },
+  {
+    "id": "generic-timeout-no-evidence",
+    "expectedMatch": false,
+    "legacyMatch": false,
+    "target": {
+      "id": "error-target",
+      "createdAt": "2026-09-01T00:00:00.000Z",
+      "updatedAt": "2026-09-01T00:00:00.000Z",
+      "type": "TestError",
+      "message": "Timeout exceeded",
+      "callLog": [],
+      "callStack": [],
+      "location": "/app/checkout.ts",
+      "resultId": "result-target",
+      "result": null,
+      "assumptions": [],
+      "rawLogs": null,
+      "sourceSnippet": null,
+      "generatedTestCase": null,
+      "testAssertion": null,
+      "expectedPattern": null,
+      "receivedString": null
+    },
+    "candidate": {
+      "id": "error-old",
+      "createdAt": "2026-09-01T00:00:00.000Z",
+      "updatedAt": "2026-09-01T00:00:00.000Z",
+      "type": "TestError",
+      "message": "Timeout exceeded",
+      "callLog": [],
+      "callStack": [],
+      "location": "/app/checkout.ts",
+      "resultId": "result-target",
+      "result": null,
+      "assumptions": [
+        {
+          "id": "assumption-old",
+          "createdAt": "2026-09-01T00:00:00.000Z",
+          "updatedAt": "2026-09-01T00:00:00.000Z",
+          "isConfirmed": true,
+          "score": 1,
+          "madeBy": "user",
+          "issueId": "issue-old",
+          "resultErrorId": "error-old",
+          "issue": {
+            "id": "issue-old",
+            "createdAt": "2026-09-01T00:00:00.000Z",
+            "updatedAt": "2026-09-01T00:00:00.000Z",
+            "name": "Checkout unavailable",
+            "category": "bug",
+            "projectId": "project-a"
+          }
+        }
+      ],
+      "rawLogs": null,
+      "sourceSnippet": null,
+      "generatedTestCase": null,
+      "testAssertion": null,
+      "expectedPattern": null,
+      "receivedString": null
+    }
+  },
+  {
+    "id": "generic-error-shared-runner-only",
+    "expectedMatch": false,
+    "legacyMatch": true,
+    "target": {
+      "id": "error-target",
+      "createdAt": "2026-09-01T00:00:00.000Z",
+      "updatedAt": "2026-09-01T00:00:00.000Z",
+      "type": "TestError",
+      "message": "Test failed",
+      "callLog": [],
+      "callStack": [
+        "at /app/testRunner.ts:10:2"
+      ],
+      "location": "/app/checkout.ts",
+      "resultId": "result-target",
+      "result": null,
+      "assumptions": [],
+      "rawLogs": null,
+      "sourceSnippet": null,
+      "generatedTestCase": null,
+      "testAssertion": null,
+      "expectedPattern": null,
+      "receivedString": null
+    },
+    "candidate": {
+      "id": "error-old",
+      "createdAt": "2026-09-01T00:00:00.000Z",
+      "updatedAt": "2026-09-01T00:00:00.000Z",
+      "type": "TestError",
+      "message": "Test failed",
+      "callLog": [],
+      "callStack": [
+        "at /app/testRunner.ts:10:2"
+      ],
+      "location": "/app/checkout.ts",
+      "resultId": "result-target",
+      "result": null,
+      "assumptions": [
+        {
+          "id": "assumption-old",
+          "createdAt": "2026-09-01T00:00:00.000Z",
+          "updatedAt": "2026-09-01T00:00:00.000Z",
+          "isConfirmed": true,
+          "score": 1,
+          "madeBy": "user",
+          "issueId": "issue-old",
+          "resultErrorId": "error-old",
+          "issue": {
+            "id": "issue-old",
+            "createdAt": "2026-09-01T00:00:00.000Z",
+            "updatedAt": "2026-09-01T00:00:00.000Z",
+            "name": "Checkout unavailable",
+            "category": "bug",
+            "projectId": "project-a"
+          }
+        }
+      ],
+      "rawLogs": null,
+      "sourceSnippet": null,
+      "generatedTestCase": null,
+      "testAssertion": null,
+      "expectedPattern": null,
+      "receivedString": null
+    }
+  },
+  {
+    "id": "empty-messages-no-evidence",
+    "expectedMatch": false,
+    "legacyMatch": false,
+    "target": {
+      "id": "error-target",
+      "createdAt": "2026-09-01T00:00:00.000Z",
+      "updatedAt": "2026-09-01T00:00:00.000Z",
+      "type": "TestError",
+      "message": "",
+      "callLog": [],
+      "callStack": [],
+      "location": "/app/checkout.ts",
+      "resultId": "result-target",
+      "result": null,
+      "assumptions": [],
+      "rawLogs": null,
+      "sourceSnippet": null,
+      "generatedTestCase": null,
+      "testAssertion": null,
+      "expectedPattern": null,
+      "receivedString": null
+    },
+    "candidate": {
+      "id": "error-old",
+      "createdAt": "2026-09-01T00:00:00.000Z",
+      "updatedAt": "2026-09-01T00:00:00.000Z",
+      "type": "TestError",
+      "message": "",
+      "callLog": [],
+      "callStack": [],
+      "location": "/app/checkout.ts",
+      "resultId": "result-target",
+      "result": null,
+      "assumptions": [
+        {
+          "id": "assumption-old",
+          "createdAt": "2026-09-01T00:00:00.000Z",
+          "updatedAt": "2026-09-01T00:00:00.000Z",
+          "isConfirmed": true,
+          "score": 1,
+          "madeBy": "user",
+          "issueId": "issue-old",
+          "resultErrorId": "error-old",
+          "issue": {
+            "id": "issue-old",
+            "createdAt": "2026-09-01T00:00:00.000Z",
+            "updatedAt": "2026-09-01T00:00:00.000Z",
+            "name": "Checkout unavailable",
+            "category": "bug",
+            "projectId": "project-a"
+          }
+        }
+      ],
+      "rawLogs": null,
+      "sourceSnippet": null,
+      "generatedTestCase": null,
+      "testAssertion": null,
+      "expectedPattern": null,
+      "receivedString": null
+    }
+  },
+  {
+    "id": "unrelated-failures-shared-runner",
+    "expectedMatch": false,
+    "legacyMatch": false,
+    "target": {
+      "id": "error-target",
+      "createdAt": "2026-09-01T00:00:00.000Z",
+      "updatedAt": "2026-09-01T00:00:00.000Z",
+      "type": "TestError",
+      "message": "Disk quota exceeded while writing report",
+      "callLog": [
+        "report export: ENOSPC"
+      ],
+      "callStack": [
+        "at /app/testRunner.ts:10:2"
+      ],
+      "location": "/app/checkout.ts",
+      "resultId": "result-target",
+      "result": null,
+      "assumptions": [],
+      "rawLogs": null,
+      "sourceSnippet": null,
+      "generatedTestCase": null,
+      "testAssertion": null,
+      "expectedPattern": null,
+      "receivedString": null
+    },
+    "candidate": {
+      "id": "error-old",
+      "createdAt": "2026-09-01T00:00:00.000Z",
+      "updatedAt": "2026-09-01T00:00:00.000Z",
+      "type": "TestError",
+      "message": "Login rejected because password is incorrect",
+      "callLog": [
+        "authentication: invalid credentials"
+      ],
+      "callStack": [
+        "at /app/testRunner.ts:10:2"
+      ],
+      "location": "/app/checkout.ts",
+      "resultId": "result-target",
+      "result": null,
+      "assumptions": [
+        {
+          "id": "assumption-old",
+          "createdAt": "2026-09-01T00:00:00.000Z",
+          "updatedAt": "2026-09-01T00:00:00.000Z",
+          "isConfirmed": true,
+          "score": 1,
+          "madeBy": "user",
+          "issueId": "issue-old",
+          "resultErrorId": "error-old",
+          "issue": {
+            "id": "issue-old",
+            "createdAt": "2026-09-01T00:00:00.000Z",
+            "updatedAt": "2026-09-01T00:00:00.000Z",
+            "name": "Checkout unavailable",
+            "category": "bug",
+            "projectId": "project-a"
+          }
+        }
+      ],
+      "rawLogs": null,
+      "sourceSnippet": null,
+      "generatedTestCase": null,
+      "testAssertion": null,
+      "expectedPattern": null,
+      "receivedString": null
+    }
+  },
+  {
+    "id": "unique-constraint-different-fields",
+    "expectedMatch": false,
+    "legacyMatch": true,
+    "target": {
+      "id": "error-target",
+      "createdAt": "2026-09-01T00:00:00.000Z",
+      "updatedAt": "2026-09-01T00:00:00.000Z",
+      "type": "TestError",
+      "message": "Unique constraint failed on users.email",
+      "callLog": [
+        "signup INSERT rejected by unique index"
+      ],
+      "callStack": [
+        "at /app/testRunner.ts:10:2"
+      ],
+      "location": "/app/checkout.ts",
+      "resultId": "result-target",
+      "result": null,
+      "assumptions": [],
+      "rawLogs": null,
+      "sourceSnippet": null,
+      "generatedTestCase": null,
+      "testAssertion": null,
+      "expectedPattern": null,
+      "receivedString": null
+    },
+    "candidate": {
+      "id": "error-old",
+      "createdAt": "2026-09-01T00:00:00.000Z",
+      "updatedAt": "2026-09-01T00:00:00.000Z",
+      "type": "TestError",
+      "message": "Unique constraint failed on users.phone",
+      "callLog": [
+        "signup INSERT rejected by unique index"
+      ],
+      "callStack": [
+        "at /app/testRunner.ts:10:2"
+      ],
+      "location": "/app/checkout.ts",
+      "resultId": "result-target",
+      "result": null,
+      "assumptions": [
+        {
+          "id": "assumption-old",
+          "createdAt": "2026-09-01T00:00:00.000Z",
+          "updatedAt": "2026-09-01T00:00:00.000Z",
+          "isConfirmed": true,
+          "score": 1,
+          "madeBy": "user",
+          "issueId": "issue-old",
+          "resultErrorId": "error-old",
+          "issue": {
+            "id": "issue-old",
+            "createdAt": "2026-09-01T00:00:00.000Z",
+            "updatedAt": "2026-09-01T00:00:00.000Z",
+            "name": "Checkout unavailable",
+            "category": "bug",
+            "projectId": "project-a"
+          }
+        }
+      ],
+      "rawLogs": null,
+      "sourceSnippet": null,
+      "generatedTestCase": null,
+      "testAssertion": null,
+      "expectedPattern": null,
+      "receivedString": null
+    }
+  },
+  {
+    "id": "numeric-error-codes-are-semantic",
+    "expectedMatch": false,
+    "legacyMatch": true,
+    "target": {
+      "id": "error-target",
+      "createdAt": "2026-09-01T00:00:00.000Z",
+      "updatedAt": "2026-09-01T00:00:00.000Z",
+      "type": "TestError",
+      "message": "Database query failed with SQLSTATE 23505",
+      "callLog": [
+        "INSERT failed during persistence"
+      ],
+      "callStack": [
+        "at /app/testRunner.ts:10:2"
+      ],
+      "location": "/app/checkout.ts",
+      "resultId": "result-target",
+      "result": null,
+      "assumptions": [],
+      "rawLogs": null,
+      "sourceSnippet": null,
+      "generatedTestCase": null,
+      "testAssertion": null,
+      "expectedPattern": null,
+      "receivedString": null
+    },
+    "candidate": {
+      "id": "error-old",
+      "createdAt": "2026-09-01T00:00:00.000Z",
+      "updatedAt": "2026-09-01T00:00:00.000Z",
+      "type": "TestError",
+      "message": "Database query failed with SQLSTATE 23503",
+      "callLog": [
+        "INSERT failed during persistence"
+      ],
+      "callStack": [
+        "at /app/testRunner.ts:10:2"
+      ],
+      "location": "/app/checkout.ts",
+      "resultId": "result-target",
+      "result": null,
+      "assumptions": [
+        {
+          "id": "assumption-old",
+          "createdAt": "2026-09-01T00:00:00.000Z",
+          "updatedAt": "2026-09-01T00:00:00.000Z",
+          "isConfirmed": true,
+          "score": 1,
+          "madeBy": "user",
+          "issueId": "issue-old",
+          "resultErrorId": "error-old",
+          "issue": {
+            "id": "issue-old",
+            "createdAt": "2026-09-01T00:00:00.000Z",
+            "updatedAt": "2026-09-01T00:00:00.000Z",
+            "name": "Checkout unavailable",
+            "category": "bug",
+            "projectId": "project-a"
+          }
+        }
+      ],
+      "rawLogs": null,
+      "sourceSnippet": null,
+      "generatedTestCase": null,
+      "testAssertion": null,
+      "expectedPattern": null,
+      "receivedString": null
+    }
+  },
+  {
+    "id": "retry-number-only",
+    "expectedMatch": true,
+    "legacyMatch": true,
+    "target": {
+      "id": "error-target",
+      "createdAt": "2026-09-01T00:00:00.000Z",
+      "updatedAt": "2026-09-01T00:00:00.000Z",
+      "type": "TestError",
+      "message": "Attempt 1: inventory endpoint returned 503",
+      "callLog": [
+        "inventory service is unavailable"
+      ],
+      "callStack": [
+        "at /app/testRunner.ts:10:2"
+      ],
+      "location": "/app/checkout.ts",
+      "resultId": "result-target",
+      "result": null,
+      "assumptions": [],
+      "rawLogs": null,
+      "sourceSnippet": null,
+      "generatedTestCase": null,
+      "testAssertion": null,
+      "expectedPattern": null,
+      "receivedString": null
+    },
+    "candidate": {
+      "id": "error-old",
+      "createdAt": "2026-09-01T00:00:00.000Z",
+      "updatedAt": "2026-09-01T00:00:00.000Z",
+      "type": "TestError",
+      "message": "Attempt 3: inventory endpoint returned 503",
+      "callLog": [
+        "inventory service is unavailable"
+      ],
+      "callStack": [
+        "at /app/testRunner.ts:10:2"
+      ],
+      "location": "/app/checkout.ts",
+      "resultId": "result-target",
+      "result": null,
+      "assumptions": [
+        {
+          "id": "assumption-old",
+          "createdAt": "2026-09-01T00:00:00.000Z",
+          "updatedAt": "2026-09-01T00:00:00.000Z",
+          "isConfirmed": true,
+          "score": 1,
+          "madeBy": "user",
+          "issueId": "issue-old",
+          "resultErrorId": "error-old",
+          "issue": {
+            "id": "issue-old",
+            "createdAt": "2026-09-01T00:00:00.000Z",
+            "updatedAt": "2026-09-01T00:00:00.000Z",
+            "name": "Checkout unavailable",
+            "category": "bug",
+            "projectId": "project-a"
+          }
+        }
+      ],
+      "rawLogs": null,
+      "sourceSnippet": null,
+      "generatedTestCase": null,
+      "testAssertion": null,
+      "expectedPattern": null,
+      "receivedString": null
+    }
+  },
+  {
+    "id": "truncated-log-same-specific-failure",
+    "expectedMatch": true,
+    "legacyMatch": true,
+    "target": {
+      "id": "error-target",
+      "createdAt": "2026-09-01T00:00:00.000Z",
+      "updatedAt": "2026-09-01T00:00:00.000Z",
+      "type": "TestError",
+      "message": "Payment API rejected currency XYZ",
+      "callLog": [
+        "POST /pay: unsupported currency XYZ"
+      ],
+      "callStack": [
+        "at /app/testRunner.ts:10:2"
+      ],
+      "location": "/app/checkout.ts",
+      "resultId": "result-target",
+      "result": null,
+      "assumptions": [],
+      "rawLogs": null,
+      "sourceSnippet": null,
+      "generatedTestCase": null,
+      "testAssertion": null,
+      "expectedPattern": null,
+      "receivedString": null
+    },
+    "candidate": {
+      "id": "error-old",
+      "createdAt": "2026-09-01T00:00:00.000Z",
+      "updatedAt": "2026-09-01T00:00:00.000Z",
+      "type": "TestError",
+      "message": "Payment API rejected currency XYZ",
+      "callLog": [
+        "POST /pay: unsupported currency XYZ",
+        "request validation failed",
+        "test aborted"
+      ],
+      "callStack": [
+        "at /app/testRunner.ts:10:2"
+      ],
+      "location": "/app/checkout.ts",
+      "resultId": "result-target",
+      "result": null,
+      "assumptions": [
+        {
+          "id": "assumption-old",
+          "createdAt": "2026-09-01T00:00:00.000Z",
+          "updatedAt": "2026-09-01T00:00:00.000Z",
+          "isConfirmed": true,
+          "score": 1,
+          "madeBy": "user",
+          "issueId": "issue-old",
+          "resultErrorId": "error-old",
+          "issue": {
+            "id": "issue-old",
+            "createdAt": "2026-09-01T00:00:00.000Z",
+            "updatedAt": "2026-09-01T00:00:00.000Z",
+            "name": "Checkout unavailable",
+            "category": "bug",
+            "projectId": "project-a"
+          }
+        }
+      ],
+      "rawLogs": null,
+      "sourceSnippet": null,
+      "generatedTestCase": null,
+      "testAssertion": null,
+      "expectedPattern": null,
+      "receivedString": null
+    }
+  }
+]

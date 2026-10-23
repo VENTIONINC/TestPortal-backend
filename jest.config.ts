@@ -5,7 +5,7 @@ const config: JestConfigWithTsJest = {
   testEnvironment: "node",
   setupFiles: ["<rootDir>/src/test-utils/testEnv.ts"],
   extensionsToTreatAsEsm: [".ts"],
-  testPathIgnorePatterns: ["/dist/", "/__prompts-tests__/"],
+  testPathIgnorePatterns: ["/dist/", "/__prompts-tests__/", "/__tests__/fixtures/"],
   moduleNameMapper: {
     "^@/prisma/(.*)$": "<rootDir>/prisma/$1",
     "^@/root/path.config.js$": "<rootDir>/__mocks__/path.config.ts",
