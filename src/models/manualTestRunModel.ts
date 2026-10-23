@@ -35,11 +35,8 @@ const detailSelect = {
   updatedAt: true,
   title: true,
   details: true,
-  objective: true,
   preconditions: true,
   testData: true,
-  expectedResult: true,
-  scenarioNotes: true,
   notes: true,
   browser: true, operatingSystem: true, device: true, apiEnvironment: true, build: true, deployment: true,
   executedBy: {
@@ -298,11 +295,8 @@ export const manualTestRunModel = {
           title: true,
           scenarioKey: true,
           details: true,
-          objective: true,
           preconditions: true,
           testData: true,
-          expectedResult: true,
-          notes: true,
           steps: {
             select: {
               action: true,
@@ -347,11 +341,8 @@ export const manualTestRunModel = {
           updatedAt: now,
           title: scenario.title,
           details: scenario.details,
-          objective: scenario.objective,
           preconditions: scenario.preconditions,
           testData: scenario.testData,
-          expectedResult: scenario.expectedResult,
-          scenarioNotes: scenario.notes,
           notes: params.notes ?? null,
           ...environment,
           steps: {

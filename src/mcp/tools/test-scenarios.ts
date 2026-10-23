@@ -4,6 +4,7 @@
 import { mcpTestScenarioHandler } from "@/handlers/mcpTestScenarioHandler";
 import { createMcpTool, createSuccessResponse } from "@/mcp/helpers/mcpHelpers";
 import {
+  createTestScenarioSchema,
   deleteTestScenarioSchema,
   getTestScenarioSchema,
   listTestScenariosSchema,
@@ -16,6 +17,24 @@ import type {
   TestScenarioMcpListParams,
   TestScenarioMcpUpdateParams,
 } from "@/types";
+
+export const createTestScenarioTool = (createdById: string) =>
+  createMcpTool(
+    "create-test-scenario",
+    "Create a project-scoped Test Scenario with optional initial steps, nullable low/medium/high priority and an absolute HTTP(S) related issue URL. The authenticated user is the creator. Omitted metadata defaults to null.",
+    createTestScenarioSchema,
+    async (
+      params: import("@/schemas/testScenarioSchemas").CreateTestScenarioInput,
+    ): Promise<MCPToolResponse> => {
+      const input = createTestScenarioSchema.parse(params);
+      const scenario = await mcpTestScenarioHandler.createTestScenario({
+        ...input,
+        createdById,
+      });
+      return createSuccessResponse(scenario);
+    },
+    "creating Test Scenario",
+  );
 
 export const listTestScenarios = createMcpTool(
   "list-test-scenarios",

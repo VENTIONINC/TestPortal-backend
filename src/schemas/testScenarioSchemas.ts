@@ -8,6 +8,16 @@ import { TEST_SCENARIO_SORT_FIELDS, TEST_SCENARIO_SORT_VALUES } from "@/types/te
 const uuidSchema = z.string().uuid("Must be a valid UUID");
 const nonBlankText = z.string().trim().min(1, "Value must not be blank");
 
+export const testScenarioPrioritySchema = z.enum(["low", "medium", "high"]);
+export const testScenarioRelatedIssueUrlSchema = z.string().trim().url().refine((value) => {
+  try {
+    const url = new URL(value);
+    return /^https?:\/\//i.test(value) && ["http:", "https:"].includes(url.protocol);
+  } catch {
+    return false;
+  }
+}, "Must be an absolute HTTP(S) URL");
+
 const createStepSchema = z
   .object({
     action: nonBlankText,
@@ -22,11 +32,10 @@ export const createTestScenarioSchema = z
     title: nonBlankText,
     scenarioKey: editableTestManagementKeySchema.optional(),
     details: nonBlankText.optional(),
-    objective: nonBlankText.optional(),
     preconditions: nonBlankText.optional(),
     testData: nonBlankText.optional(),
-    expectedResult: nonBlankText.optional(),
-    notes: nonBlankText.optional(),
+    priority: testScenarioPrioritySchema.nullable().optional(),
+    relatedIssueUrl: testScenarioRelatedIssueUrlSchema.nullable().optional(),
     steps: z.array(createStepSchema).default([]),
   })
   .strict();
@@ -39,11 +48,10 @@ export const updateTestScenarioSchema = z
     title: nonBlankText.optional(),
     scenarioKey: editableTestManagementKeySchema.optional(),
     details: updateFieldSchema.optional(),
-    objective: updateFieldSchema.optional(),
     preconditions: updateFieldSchema.optional(),
     testData: updateFieldSchema.optional(),
-    expectedResult: updateFieldSchema.optional(),
-    notes: updateFieldSchema.optional(),
+    priority: testScenarioPrioritySchema.nullable().optional(),
+    relatedIssueUrl: testScenarioRelatedIssueUrlSchema.nullable().optional(),
   })
   .strict()
   .refine((value) => Object.keys(value).length > 0, {
