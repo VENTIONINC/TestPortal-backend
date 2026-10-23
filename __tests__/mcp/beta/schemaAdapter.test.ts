@@ -156,4 +156,3 @@ describe("MCP v2 Zod v3 schema adapter", () => {
     }
   });
 });
-

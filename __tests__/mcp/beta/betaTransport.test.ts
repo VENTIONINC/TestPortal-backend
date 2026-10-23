@@ -326,4 +326,3 @@ describe("MCP v2 beta minimal transport", () => {
     expect(response.headers.get("allow")).toContain("POST");
   });
 });
-

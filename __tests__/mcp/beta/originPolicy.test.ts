@@ -39,4 +39,3 @@ describe("MCP beta origin configuration", () => {
     expect(() => parseMcpBetaAllowedOrigins(value)).toThrow();
   });
 });
-
