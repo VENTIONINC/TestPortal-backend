@@ -5,6 +5,14 @@ const config: JestConfigWithTsJest = {
   testEnvironment: "node",
   setupFiles: ["<rootDir>/src/test-utils/testEnv.ts"],
   extensionsToTreatAsEsm: [".ts"],
+  transform: {
+    "^.+\\.tsx?$": ["ts-jest", { useESM: true }],
+    "^.+node_modules/@openrouter/sdk/.*\\.js$": [
+      "ts-jest",
+      { useESM: false, tsconfig: { allowJs: true, module: "CommonJS" } },
+    ],
+  },
+  transformIgnorePatterns: ["/node_modules/(?!@openrouter/sdk/)"],
   testPathIgnorePatterns: ["/dist/", "/__prompts-tests__/"],
   moduleNameMapper: {
     "^@/prisma/(.*)$": "<rootDir>/prisma/$1",

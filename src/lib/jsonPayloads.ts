@@ -95,7 +95,7 @@ export const normalizeSpecPayload = (spec: PrismaSpec): StructuredSpec => ({
 
 export const normalizeResultErrorPayload = (
   error: PrismaResultError,
-): StructuredResultError => ({
+): StructuredResultError => projectPublicPayload({
   ...error,
   callLog: normalizeJsonStringArray(error.callLog),
   callStack: normalizeJsonStringArray(error.callStack),
@@ -105,8 +105,36 @@ export const normalizeResultErrorPayload = (
 
 export const normalizeResultPayload = (
   result: ResultWithRelations,
-): StructuredResultWithRelations => ({
-  ...result,
+): StructuredResultWithRelations => projectPublicPayload({
+  ...projectPublicResult(result),
   spec: normalizeSpecPayload(result.spec),
   errors: result.errors.map(normalizeResultErrorPayload),
 });
+
+/** Explicitly strip internal analysis lifecycle fields before public serialization. */
+export function projectPublicResult<T extends object>(result: T): Omit<T, "analysisMetadata" | "analysisLastError"> {
+  const { analysisMetadata: _metadata, analysisLastError: _lastError, ...publicResult } = result as T & {
+    analysisMetadata?: unknown;
+    analysisLastError?: unknown;
+  };
+  return publicResult;
+}
+
+/** Remove internal lifecycle fields recursively from nested public payloads. */
+export function projectPublicPayload<T>(value: T): T {
+  if (Array.isArray(value)) {
+    return value.map((item) => projectPublicPayload(item)) as T;
+  }
+  if (value && typeof value === "object" && !(value instanceof Date)) {
+    const prototype = Object.getPrototypeOf(value);
+    if (prototype !== Object.prototype && prototype !== null) return value;
+    const projected: Record<string, unknown> = {};
+    for (const [key, item] of Object.entries(value)) {
+      if (key !== "analysisMetadata" && key !== "analysisLastError") {
+        projected[key] = projectPublicPayload(item);
+      }
+    }
+    return projected as T;
+  }
+  return value;
+}

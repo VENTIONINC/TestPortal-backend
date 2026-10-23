@@ -12,7 +12,7 @@ import {
 import { SystemMessage } from "@langchain/core/messages";
 import { ChatOpenAI } from "@langchain/openai";
 import type { ErrorSuggestionOutput } from "@/schemas/errorSuggestionSchemas";
-import type { TestCase } from "../v1.0.0/templates/types";
+import type { TestCase } from "@/root/__prompts-tests__/error-solution/v1.0.0/templates/types";
 import type { EvalFailure, EvalResult } from "./types";
 import type { PromptVersion } from "./versions";
 

@@ -6,9 +6,6 @@ enabled = false
 command = "docker"
 args = ["mcp", "gateway", "run", "--profile", "testportal"]
 enabled = true
-required = false
-startup_timeout_sec = 30
-tool_timeout_sec = 60
 default_tools_approval_mode = "auto"
 
 # Prompt before writing to GitHub; read tools use the default policy.

@@ -35,6 +35,14 @@ npm run migrate
 npm run dev
 ```
 
+Stored-result analysis remains on the existing generative provider by default. To opt into the
+OpenAI Luna Decisions classifier through OpenRouter in a controlled environment, set
+`USE_DECISIONS_API=true` and provide `OPENROUTER_API_KEY`, then restart the backend. The flag accepts
+only `true` or `false` (case-insensitive, surrounding whitespace ignored); it defaults to false
+when absent. Setting it to false and restarting rolls provider selection back. This flag does not
+change OpenAI use for issue drafts or other generative features. Apply the additive Prisma migration
+before deploying the code; it does not backfill existing rows.
+
 ### Essential Commands
 
 ```bash
@@ -532,4 +540,4 @@ Before committing:
 
 ---
 
-**Happy coding with TypeScript! 🚀** 
+**Happy coding with TypeScript! 🚀**

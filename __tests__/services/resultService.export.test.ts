@@ -129,7 +129,13 @@ describe("resultService.exportAnalysisJsonl", () => {
       },
     };
 
-    mockResultModel.findForAnalysisExport.mockResolvedValue([row]);
+    mockResultModel.findForAnalysisExport.mockResolvedValue([
+      {
+        ...row,
+        analysisMetadata: { provider: "internal" },
+        analysisLastError: { message: "private" },
+      } as AnalysisExportRow,
+    ]);
 
     const { content } = await resultService.exportAnalysisJsonl({
       projectId: "project-1",
@@ -159,5 +165,9 @@ describe("resultService.exportAnalysisJsonl", () => {
     expect(record.ai.category).toBe("bug");
     expect(record.feedback.reviewedById).toBe("user-1");
     expect(record.spec.tags).toEqual(["smoke", "ui"]);
+    expect(content).not.toContain("analysisMetadata");
+    expect(content).not.toContain("analysisLastError");
+    expect(content).not.toContain("internal");
+    expect(content).not.toContain("private");
   });
 });

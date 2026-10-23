@@ -144,6 +144,9 @@ model Result {
   analysisFeedbackConfidence      Int?
   analysisFeedbackConclusion      String?
 
+  analysisMetadata                Json?
+  analysisLastError               Json?
+
   @@index([specId, startTime])
   @@index([executionId])
 }
