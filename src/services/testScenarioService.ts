@@ -1,6 +1,7 @@
 // Copyright 2026 VENSOLUTIONSGROUP LTD
 // SPDX-License-Identifier: Apache-2.0
 
+import { testScenarioPrioritySchema, testScenarioRelatedIssueUrlSchema } from "@/schemas/testScenarioSchemas";
 import { projectModel } from "@/models/projectModel";
 import { testScenarioModel } from "@/models/testScenarioModel";
 import {
@@ -29,13 +30,26 @@ const SCENARIO_FIELDS = [
   "scenarioKey",
   "title",
   "details",
-  "objective",
   "preconditions",
   "testData",
-  "expectedResult",
-  "notes",
+  "priority",
+  "relatedIssueUrl",
 ] as const;
 const IDENTIFIER_FIELDS = ["scenarioId", "projectId"] as const;
+
+function normalizePriority(value: unknown): NonNullable<CreateTestScenarioParams["priority"]> | null {
+  if (value === null) return null;
+  const parsed = testScenarioPrioritySchema.safeParse(value);
+  if (!parsed.success) throw new TestScenarioValidationError("priority must be low, medium, high or null");
+  return parsed.data;
+}
+
+function normalizeRelatedIssueUrl(value: unknown): string | null {
+  if (value === null) return null;
+  const parsed = testScenarioRelatedIssueUrlSchema.safeParse(value);
+  if (!parsed.success) throw new TestScenarioValidationError("relatedIssueUrl must be an absolute HTTP(S) URL or null");
+  return parsed.data;
+}
 
 function requireIdentifier(
   value: unknown,
@@ -203,17 +217,13 @@ export const testScenarioService = {
       title: normalizeNonBlank(params.title, "Title"),
       scenarioKey: params.scenarioKey === undefined ? null : normalizeKey(params.scenarioKey, "Scenario key"),
       details: normalizeCreateOptional(params.details, "Details") ?? undefined,
-      objective:
-        normalizeCreateOptional(params.objective, "Objective") ?? undefined,
       preconditions:
         normalizeCreateOptional(params.preconditions, "Preconditions") ??
         undefined,
       testData:
         normalizeCreateOptional(params.testData, "Test data") ?? undefined,
-      expectedResult:
-        normalizeCreateOptional(params.expectedResult, "Expected result") ??
-        undefined,
-      notes: normalizeCreateOptional(params.notes, "Notes") ?? undefined,
+      priority: normalizePriority(params.priority ?? null),
+      relatedIssueUrl: normalizeRelatedIssueUrl(params.relatedIssueUrl ?? null),
       steps: validateCreateSteps(params.steps),
     };
 
@@ -349,6 +359,10 @@ export const testScenarioService = {
         data.title = normalizeNonBlank(params.title, "Title");
       } else if (field === "scenarioKey") {
         data.scenarioKey = normalizeKey(params.scenarioKey, "Scenario key");
+      } else if (field === "priority") {
+        data.priority = normalizePriority(params.priority);
+      } else if (field === "relatedIssueUrl") {
+        data.relatedIssueUrl = normalizeRelatedIssueUrl(params.relatedIssueUrl);
       } else {
         data[field] = normalizeUpdateOptional(params[field], field);
       }

@@ -19,13 +19,13 @@ describe("structured Test Scenario schemas", () => {
       createTestScenarioSchema.parse({
         projectId,
         title: "  Login  ",
-        objective: "  Verify login  ",
+        details: "  Verify login  ",
         steps: [{ action: "  Open page  ", expectedResult: "  Visible  " }],
       }),
     ).toEqual({
       projectId,
       title: "Login",
-      objective: "Verify login",
+      details: "Verify login",
       steps: [{ action: "Open page", expectedResult: "Visible" }],
     });
     expect(
@@ -45,9 +45,9 @@ describe("structured Test Scenario schemas", () => {
 
   it("requires a nonempty strict partial update and permits null clearing", () => {
     expect(
-      updateTestScenarioSchema.parse({ notes: null, title: " New " }),
+      updateTestScenarioSchema.parse({ relatedIssueUrl: null, title: " New " }),
     ).toEqual({
-      notes: null,
+      relatedIssueUrl: null,
       title: "New",
     });
     expect(updateTestScenarioSchema.safeParse({}).success).toBe(false);
@@ -69,6 +69,27 @@ describe("structured Test Scenario schemas", () => {
       expect(createTestScenarioSchema.safeParse({ projectId, title: "Login", scenarioKey }).success).toBe(false);
       expect(updateTestScenarioSchema.safeParse({ scenarioKey }).success).toBe(false);
     }
+  });
+
+  it("accepts nullable metadata and trims absolute HTTP(S) links", () => {
+    expect(createTestScenarioSchema.parse({ projectId, title: "Login", priority: "high", relatedIssueUrl: " https://tracker.example/issue/1 " })).toMatchObject({ priority: "high", relatedIssueUrl: "https://tracker.example/issue/1" });
+    expect(updateTestScenarioSchema.parse({ priority: null })).toEqual({ priority: null });
+    expect(createTestScenarioSchema.parse({ projectId, title: "Login", priority: null, relatedIssueUrl: null })).toMatchObject({ priority: null, relatedIssueUrl: null });
+  });
+
+  it.each(["urgent", "High", ""])("rejects invalid priority %s", (priority) => {
+    expect(createTestScenarioSchema.safeParse({ projectId, title: "Login", priority }).success).toBe(false);
+    expect(updateTestScenarioSchema.safeParse({ priority }).success).toBe(false);
+  });
+
+  it.each(["/issue/1", "ftp://example.com", "javascript:alert(1)", "", "https://"])("rejects invalid related URL %s", (relatedIssueUrl) => {
+    expect(createTestScenarioSchema.safeParse({ projectId, title: "Login", relatedIssueUrl }).success).toBe(false);
+    expect(updateTestScenarioSchema.safeParse({ relatedIssueUrl }).success).toBe(false);
+  });
+
+  it.each(["objective", "expectedResult", "notes"])("rejects removed scenario field %s", (field) => {
+    expect(createTestScenarioSchema.safeParse({ projectId, title: "Login", [field]: "removed" }).success).toBe(false);
+    expect(updateTestScenarioSchema.safeParse({ [field]: null }).success).toBe(false);
   });
 
   it("validates step append, patch, and complete ordering inputs", () => {

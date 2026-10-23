@@ -4,6 +4,25 @@
 import { generateOpenAPISpec } from "@/lib/openapi";
 
 describe("structured Test Scenario OpenAPI contract", () => {
+  it("keeps retained step expected results separate from scenario metadata", () => {
+    const schemas = generateOpenAPISpec().components?.schemas;
+    for (const name of ["CreateTestScenarioStep", "AppendTestScenarioStepRequest", "UpdateTestScenarioStepRequest"]) {
+      const schema = schemas?.[name] as { properties?: Record<string, unknown>; required?: string[] };
+      expect(Object.keys(schema.properties ?? {}).sort()).toEqual(["action", "expectedResult"]);
+      expect(schema.required ?? []).not.toContain("expectedResult");
+      expect(schema.properties?.expectedResult).toEqual(expect.objectContaining({ type: name === "UpdateTestScenarioStepRequest" ? ["string", "null"] : "string" }));
+      if (name === "UpdateTestScenarioStepRequest") expect(schema.required ?? []).not.toContain("action");
+    }
+  });
+  it("publishes nullable priority with an explicit null enum member", () => {
+    const schemas = generateOpenAPISpec().components?.schemas;
+    for (const name of ["TestScenario", "CreateTestScenarioRequest", "UpdateTestScenarioRequest"]) {
+      const schema = schemas?.[name] as { properties?: Record<string, unknown> };
+      expect(schema.properties?.priority).toEqual({ anyOf: expect.arrayContaining([{ type: "string", enum: ["low", "medium", "high"] }, { type: "null" }]) });
+      expect(schema.properties?.relatedIssueUrl).toBeDefined();
+      for (const field of ["objective", "expectedResult", "notes"]) expect(schema.properties).not.toHaveProperty(field);
+    }
+  });
   it("publishes folder, suite, membership, and bulk organization operations", () => {
     const paths = generateOpenAPISpec().paths ?? {};
     for (const [path, method] of [

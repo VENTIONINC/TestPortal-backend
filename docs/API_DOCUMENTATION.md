@@ -131,14 +131,19 @@ Test Scenario list responses are lightweight summaries. Each item contains
 
 This is a breaking REST response change for dependent clients. Regenerate
 client types and hooks from the final `/api/openapi.json` document. Create
-requests now use structured `objective`, `preconditions`, `testData`,
-`expectedResult`, `notes`, and optional initial `steps`; `contentMd`, its hash,
+requests use structured `details`, `preconditions`, `testData`, nullable
+`priority` (`low`, `medium`, or `high`), nullable `relatedIssueUrl` (trimmed
+absolute HTTP(S) URL), and optional initial `steps`; `contentMd`, its hash,
 and its format version are read-only detail fields. Details and structured text
 are trimmed and must be nonblank when supplied; PATCH accepts `null` for
 clearing nullable fields and preserves omitted fields. `scenarioKey` is an
 optional editable single-line label up to 100 characters; it is trimmed, may
 be cleared with `null`, and may be duplicated. UUIDs remain scenario
-identifiers. A key-only PATCH preserves generated Markdown, its hash, and its
+identifiers. Omitted priority and related issue URL default to null on create;
+omission preserves their values on PATCH, and null clears them. Scenario-level
+objective, expectedResult, and notes fields and the corresponding run snapshot
+fields are removed; step expectedResult and execution notes remain supported.
+A key-only PATCH preserves generated Markdown, its hash, and its
 format version.
 
 `GET /api/v2/test-scenarios` accepts `page` (default `1`), `limit` (default

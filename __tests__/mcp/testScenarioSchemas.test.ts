@@ -45,22 +45,57 @@ describe("structured Test Scenario MCP schemas", () => {
   });
 
   it("accepts column sorting and filters and rejects ambiguous sorting", () => {
-    expect(listTestScenariosSchema.parse({ projectId, search: "login", sortField: "createdBy", sortDirection: "asc", scenarioKey: "K-1", title: "Login", details: "smoke", folder: "Root / Auth", createdBy: "  Alice " })).toMatchObject({ projectId, search: "login", sortField: "createdBy", sortDirection: "asc", scenarioKey: "K-1", title: "Login", details: "smoke", folder: "Root / Auth", createdBy: "Alice" });
-    expect(listTestScenariosSchema.safeParse({ projectId, sortDirection: "asc" }).success).toBe(false);
-    expect(listTestScenariosSchema.safeParse({ projectId, sortField: "title", sort: "title_asc" }).success).toBe(false);
+    expect(
+      listTestScenariosSchema.parse({
+        projectId,
+        search: "login",
+        sortField: "createdBy",
+        sortDirection: "asc",
+        scenarioKey: "K-1",
+        title: "Login",
+        details: "smoke",
+        folder: "Root / Auth",
+        createdBy: "  Alice ",
+      }),
+    ).toMatchObject({
+      projectId,
+      search: "login",
+      sortField: "createdBy",
+      sortDirection: "asc",
+      scenarioKey: "K-1",
+      title: "Login",
+      details: "smoke",
+      folder: "Root / Auth",
+      createdBy: "Alice",
+    });
+    expect(
+      listTestScenariosSchema.safeParse({ projectId, sortDirection: "asc" })
+        .success,
+    ).toBe(false);
+    expect(
+      listTestScenariosSchema.safeParse({
+        projectId,
+        sortField: "title",
+        sort: "title_asc",
+      }).success,
+    ).toBe(false);
   });
 
   it("accepts structured update fields and nullable clearing", () => {
     expect(
-      updateTestScenarioSchema.parse({ scenarioId, projectId, notes: null }),
-    ).toMatchObject({ notes: null });
+      updateTestScenarioSchema.parse({
+        scenarioId,
+        projectId,
+        relatedIssueUrl: null,
+      }),
+    ).toMatchObject({ relatedIssueUrl: null });
     expect(
       updateTestScenarioSchema.parse({
         scenarioId,
         projectId,
-        objective: "Objective",
+        priority: "high",
       }),
-    ).toMatchObject({ objective: "Objective" });
+    ).toMatchObject({ priority: "high" });
     expect(
       updateTestScenarioSchema.safeParse({ scenarioId, projectId }).success,
     ).toBe(false);
@@ -75,8 +110,20 @@ describe("structured Test Scenario MCP schemas", () => {
       updateTestScenarioSchema.safeParse({ scenarioId, projectId, steps: [] })
         .success,
     ).toBe(false);
-    expect(updateTestScenarioSchema.parse({ scenarioId, projectId, scenarioKey: " R2 " }).scenarioKey).toBe("R2");
-    expect(updateTestScenarioSchema.safeParse({ scenarioId, projectId, scenarioKey: "R1\nR2" }).success).toBe(false);
+    expect(
+      updateTestScenarioSchema.parse({
+        scenarioId,
+        projectId,
+        scenarioKey: " R2 ",
+      }).scenarioKey,
+    ).toBe("R2");
+    expect(
+      updateTestScenarioSchema.safeParse({
+        scenarioId,
+        projectId,
+        scenarioKey: "R1\nR2",
+      }).success,
+    ).toBe(false);
   });
 
   it("rejects invalid identifiers, pagination, and obsolete creator inputs", () => {

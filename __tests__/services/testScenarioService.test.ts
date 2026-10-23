@@ -68,11 +68,10 @@ const scenario: TestScenarioResponse = {
   title: "Login",
   scenarioKey: null,
   details: null,
-  objective: "Verify login",
   preconditions: null,
   testData: null,
-  expectedResult: null,
-  notes: null,
+  priority: null,
+  relatedIssueUrl: null,
   steps: [
     { id: stepId, position: 0, action: "Open login", expectedResult: null },
   ],
@@ -107,7 +106,8 @@ describe("testScenarioService", () => {
       createdById: scenario.createdById,
       title: "  Login  ",
       details: "  Details  ",
-      objective: "  Objective  ",
+      priority: "high",
+      relatedIssueUrl: " https://example.com/issue/1 ",
       steps: [{ action: "  Open login  ", expectedResult: "  Form appears  " }],
     });
     expect(createMock).toHaveBeenCalledWith({
@@ -117,11 +117,10 @@ describe("testScenarioService", () => {
       title: "Login",
       scenarioKey: null,
       details: "Details",
-      objective: "Objective",
+      priority: "high",
+      relatedIssueUrl: "https://example.com/issue/1",
       preconditions: undefined,
       testData: undefined,
-      expectedResult: undefined,
-      notes: undefined,
       steps: [{ action: "Open login", expectedResult: "Form appears" }],
     });
   });
@@ -144,6 +143,32 @@ describe("testScenarioService", () => {
       }),
     ).rejects.toBeInstanceOf(TestScenarioValidationError);
     expect(createMock).not.toHaveBeenCalled();
+  });
+
+  it("creates without implicit metadata and scopes metadata writes and reads", async () => {
+    await testScenarioService.createScenario({ projectId, createdById: scenario.createdById, title: "Login" });
+    expect(createMock).toHaveBeenCalledWith(expect.objectContaining({ priority: null, relatedIssueUrl: null }));
+    const otherProjectId = "99999999-9999-4999-8999-999999999999";
+    updateMock.mockResolvedValueOnce(null);
+    await expect(testScenarioService.updateScenario({ scenarioId, projectId: otherProjectId, priority: "medium" })).rejects.toBeInstanceOf(TestScenarioNotFoundError);
+    expect(updateMock).toHaveBeenCalledWith(scenarioId, otherProjectId, { priority: "medium" });
+    findByIdMock.mockResolvedValueOnce(null);
+    await expect(testScenarioService.getScenarioById(scenarioId, otherProjectId)).rejects.toBeInstanceOf(TestScenarioNotFoundError);
+    expect(findByIdMock).toHaveBeenCalledWith(scenarioId, otherProjectId);
+  });
+
+  it("preserves omitted metadata and clears only a supplied field", async () => {
+    await testScenarioService.updateScenario({ scenarioId, projectId, priority: null });
+    expect(updateMock).toHaveBeenCalledWith(scenarioId, projectId, { priority: null });
+    await testScenarioService.updateScenario({ scenarioId, projectId, relatedIssueUrl: " http://example.com/1 " });
+    expect(updateMock).toHaveBeenLastCalledWith(scenarioId, projectId, { relatedIssueUrl: "http://example.com/1" });
+  });
+
+  it.each([{ priority: "urgent" }, { relatedIssueUrl: "/relative" }, { relatedIssueUrl: "ftp://example.com" }, { objective: "removed" }, { expectedResult: "removed" }, { notes: "removed" }])("rejects invalid metadata and removed fields before writes: %j", async (fields) => {
+    await expect(testScenarioService.createScenario({ projectId, createdById: scenario.createdById, title: "Login", ...fields } as unknown as Parameters<typeof testScenarioService.createScenario>[0])).rejects.toBeInstanceOf(TestScenarioValidationError);
+    await expect(testScenarioService.updateScenario({ scenarioId, projectId, ...fields } as unknown as Parameters<typeof testScenarioService.updateScenario>[0])).rejects.toBeInstanceOf(TestScenarioValidationError);
+    expect(createMock).not.toHaveBeenCalled();
+    expect(updateMock).not.toHaveBeenCalled();
   });
 
   it("normalizes list filters and defaults sort before persistence", async () => {
@@ -216,12 +241,12 @@ describe("testScenarioService", () => {
     await testScenarioService.updateScenario({
       scenarioId,
       projectId,
-      notes: null,
-      objective: "  Updated objective  ",
+      relatedIssueUrl: null,
+      priority: "low",
     });
     expect(updateMock).toHaveBeenCalledWith(scenarioId, projectId, {
-      notes: null,
-      objective: "Updated objective",
+      relatedIssueUrl: null,
+      priority: "low",
     });
   });
 

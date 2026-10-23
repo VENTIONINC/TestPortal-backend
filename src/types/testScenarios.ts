@@ -1,6 +1,8 @@
 // Copyright 2026 VENSOLUTIONSGROUP LTD
 // SPDX-License-Identifier: Apache-2.0
 
+import type { TestScenarioPriority } from "@prisma/client";
+
 import type {
   TestScenarioIssuesResponse,
   TestScenarioResultsResponse,
@@ -21,11 +23,10 @@ export interface TestScenarioResponse {
   title: string;
   scenarioKey: string | null;
   details: string | null;
-  objective: string | null;
   preconditions: string | null;
   testData: string | null;
-  expectedResult: string | null;
-  notes: string | null;
+  priority: TestScenarioPriority | null;
+  relatedIssueUrl: string | null;
   steps: TestScenarioStepResponse[];
   contentMd: string;
   contentMdHash: string;
@@ -79,11 +80,10 @@ export interface CreateTestScenarioParams {
   /** @deprecated Markdown is generated; transport schemas reject this field. */
   contentMd?: string | undefined;
   details?: string | undefined;
-  objective?: string | undefined;
   preconditions?: string | undefined;
   testData?: string | undefined;
-  expectedResult?: string | undefined;
-  notes?: string | undefined;
+  priority?: TestScenarioPriority | null | undefined;
+  relatedIssueUrl?: string | null | undefined;
   steps?: CreateTestScenarioStepInput[] | undefined;
 }
 
@@ -96,11 +96,10 @@ export interface UpdateTestScenarioParams {
   title?: string | undefined;
   scenarioKey?: string | null | undefined;
   details?: string | null | undefined;
-  objective?: string | null | undefined;
   preconditions?: string | null | undefined;
   testData?: string | null | undefined;
-  expectedResult?: string | null | undefined;
-  notes?: string | null | undefined;
+  priority?: TestScenarioPriority | null | undefined;
+  relatedIssueUrl?: string | null | undefined;
 }
 
 export interface AppendTestScenarioStepParams {

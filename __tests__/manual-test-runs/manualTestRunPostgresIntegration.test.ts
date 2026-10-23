@@ -29,8 +29,7 @@ async function createScenario(
     projectId,
     createdById,
     title: `Manual run scenario ${randomUUID()}`,
-    objective: "Verify a manual run",
-    notes: "Scenario notes",
+    details: "Verify a manual run",
     steps,
   });
   if (!scenario) {
@@ -125,7 +124,7 @@ describePostgres("manual test run PostgreSQL integration", () => {
 
     await testScenarioModel.update(scenario.id, projectId, {
       title: "Changed source title",
-      objective: "Changed source objective",
+      details: "Changed source details",
     });
     await testScenarioModel.updateStep({
       scenarioId: scenario.id,
@@ -147,7 +146,7 @@ describePostgres("manual test run PostgreSQL integration", () => {
 
     const stored = await manualTestRunModel.findById(run.id, projectId);
     expect(stored?.title).toBe(scenario.title);
-    expect(stored?.objective).toBe("Verify a manual run");
+    expect(stored?.details).toBe("Verify a manual run");
     expect(stored?.steps).toHaveLength(2);
     expect(
       stored?.steps.map(({ action, position }) => ({ action, position })),
@@ -359,7 +358,7 @@ describePostgres("manual test run PostgreSQL integration", () => {
       }),
       testScenarioModel.update(scenario.id, projectId, {
         title: "Raced source title",
-        objective: "Raced source objective",
+        details: "Raced source details",
       }),
     ]);
 
@@ -367,8 +366,8 @@ describePostgres("manual test run PostgreSQL integration", () => {
     expect(startResult).not.toBeNull();
     expect([
       [scenario.title, "Verify a manual run"],
-      ["Raced source title", "Raced source objective"],
-    ]).toContainEqual([startResult?.title, startResult?.objective]);
+      ["Raced source title", "Raced source details"],
+    ]).toContainEqual([startResult?.title, startResult?.details]);
   });
 
   it("rolls back an incomplete snapshot when copied-step insertion fails", async () => {
