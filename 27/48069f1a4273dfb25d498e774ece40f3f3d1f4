@@ -1,0 +1,91 @@
+__tests__/controllers/testScenarioController.test.ts
+  s_d8cea36c0b4b5b::t_cc91ed27af8e74 57-58,87,143,149
+__tests__/lib/openapi/testScenarios.test.ts
+  s_d8cea36c0b4b5b::t_04ac36b96ab3ab 7-25
+__tests__/lib/testScenarioMarkdown.test.ts
+  s_d8cea36c0b4b5b::t_a36b39d47bf420 15-16,25,31-34,39-41,50-51,55,68-84
+__tests__/manual-test-runs/manualTestRunPostgresIntegration.test.ts
+  s_d8cea36c0b4b5b::t_0a252d17b826f9 32,127,149,361,369-370
+__tests__/mcp/beta/parallelLifecycle.test.ts
+  s_d8cea36c0b4b5b::t_e4c12cc63fc6bf 134-162
+__tests__/mcp/mcpTestScenarioHandler.test.ts
+  s_d8cea36c0b4b5b::t_197671d0dd7788 83-86
+__tests__/mcp/serverRegistration.test.ts
+  s_d8cea36c0b4b5b::t_61f692590cb844 9,18,45-49,51-61
+__tests__/mcp/testScenarioMcpWorkflow.test.ts
+  s_d8cea36c0b4b5b::t_edbd9e2d9b91c6 10-11,32-35,48-59,67,86-105,117-125,127-139,146-148,151-156,160-162,168-177,182-186
+__tests__/mcp/testScenarioMetadataContract.test.ts
+  s_d8cea36c0b4b5b::t_1e7d6231dce0bc 1-49
+__tests__/mcp/testScenarioSchemas.test.ts
+  s_d8cea36c0b4b5b::t_74665616ddb107 48-81,86-91,96,98,113-126
+__tests__/mcp/testScenarioTools.test.ts
+  s_d8cea36c0b4b5b::t_0ea48ed3bdbe81 15-20,27,36,55-58,95-116,205,212,214,220
+__tests__/models/manualTestRunModel.test.ts
+  s_d8cea36c0b4b5b::t_e30df96b89d0ef 114-124
+__tests__/models/testScenarioModel.test.ts
+  s_d8cea36c0b4b5b::t_27446b4060d4ab 67-68,137-155,199,204,225,227
+__tests__/prisma/testScenarioMigration.test.ts
+  s_d8cea36c0b4b5b::t_2904d6bd8f596b 132,153-165
+__tests__/schemas/testScenarioSchemas.test.ts
+  s_d8cea36c0b4b5b::t_272e5520077837 22,28,48,50,74-94
+__tests__/services/manualTestRunService.test.ts
+  s_d8cea36c0b4b5b::t_51f253df5370f7 54-56
+__tests__/services/testScenarioService.test.ts
+  s_d8cea36c0b4b5b::t_93d9b741ab8261 73-74,109-110,120-121,148-173,244-245,248-249
+__tests__/test-scenarios/testScenarioIntegrationWorkflow.test.ts
+  s_d8cea36c0b4b5b::t_986a1f4c5feb18 65-74,85-94,97-152,230-234,236-240,248-252,255-258,266-270,273-279,285-301,303-399,404-418,420-443,453-456,458-460,464-473,483-487,495-502,506-515,534,545-551,553-559,563-567,571-573,586-595
+__tests__/test-scenarios/testScenarioPostgresIntegration.test.ts
+  s_d8cea36c0b4b5b::t_17b52c905b2460 86-87,91,288,294,596-597,600,617-618,621
+__tests__/test-scenarios/testScenarioWorkflow.test.ts
+  s_d8cea36c0b4b5b::t_1bcd6fdbd24684 10-15,19-21,48-49,51-52,73-75,84-88,91-97,99-105,107-109,113-129
+__tests__/test-scenarios/tmsFieldMigrationPostgresIntegration.test.ts
+  s_d8cea36c0b4b5b::t_e46a40997deca2 1-62
+docs/API_DOCUMENTATION.md
+  s_d8cea36c0b4b5b::t_23f3a265735e99 134-136,142-146
+docs/MCP_TOOLS.md
+  s_d8cea36c0b4b5b::t_772b7be6adee83 24,30,271-278,304,313,315-317,319,344
+prisma/migrations/20261023120000_tms_scenario_metadata/migration.sql
+  s_d8cea36c0b4b5b::t_b990ce31bc916f 1-14
+prisma/schema.prisma
+  s_d8cea36c0b4b5b::t_c384556bb39590 242-247,254-255
+src/handlers/mcpTestScenarioHandler.ts
+  s_d8cea36c0b4b5b::t_105e8e96e6e5d4 8,20-24
+src/lib/openapi/manualTestRuns.ts
+  s_d8cea36c0b4b5b::t_4d031a9f889956 40-45,48-89,97-112,136-151,203-217,238-245,256-263,298-300,313-316,321-328,346,352-354,378-384,395-401,412-418,445-447,464-469,472-478,490-495,498-504,516-521,524-530
+src/lib/openapi/testScenarios.ts
+  s_d8cea36c0b4b5b::t_086e39dbf036b3 9-22,35-36,71-78,82-83,121-128,132-133,202-257,261,268-279,293-332,334-342,345-359,361-368,373-378,385-390,1041-1044,1047-1068,1079-1143,1145
+src/lib/testScenarioMarkdown.ts
+  s_d8cea36c0b4b5b::t_058c3ed6ecde78 4,16-17,21,43-44,53-59
+src/mcp/beta/server.ts
+  s_d8cea36c0b4b5b::t_ddc8e32ba447d7 39,106
+src/mcp/schemas/testScenarioSchemas.ts
+  s_d8cea36c0b4b5b::t_f35047f972e6fe 6-49,79-103,107-118,148-149
+src/mcp/server.ts
+  s_d8cea36c0b4b5b::t_3c51afeaf73934 40,251-261
+src/mcp/tools/test-scenarios.ts
+  s_d8cea36c0b4b5b::t_d6eca59fc1bd3f 7,21-38
+src/models/testScenarioModel.ts
+  s_d8cea36c0b4b5b::t_35e69cad98b302 135-136,262-263,297-298,480-481,489
+src/schemas/testScenarioSchemas.ts
+  s_d8cea36c0b4b5b::t_f0c601693d879d 11-20,37-38,53-54
+src/services/testScenarioService.ts
+  s_d8cea36c0b4b5b::t_d6908c6533df81 4,35-36,40-53,225-226,362-365
+src/types/testScenarios.ts
+  s_d8cea36c0b4b5b::t_f06a19648d1225 4-5,28-29,85-86,101-102
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.18",
+  "base_commit_sha": "2748069f1a4273dfb25d498e774ece40f3f3d1f4",
+  "prompts": {},
+  "sessions": {
+    "s_d8cea36c0b4b5b": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a1784c-d419-7092-bca7-e53f6fd6e5c0",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Ihar Mikailau <ihar.mikailau@ventionteams.com>"
+    }
+  }
+}
