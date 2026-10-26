@@ -239,18 +239,23 @@ model Issue {
   @@index([projectId, createdAt])
 }
 
+enum TestScenarioPriority {
+  low
+  medium
+  high
+}
+
 model TestScenario {
   id                    String             @id @default(uuid()) @db.Uuid
   createdAt             DateTime           @default(now())
   updatedAt             DateTime           @updatedAt
   title                 String
   scenarioKey           String?            @db.VarChar(100)
+  priority              TestScenarioPriority?
+  relatedIssueUrl       String?            @db.Text
   details               String?            @db.Text
-  objective             String?            @db.Text
   preconditions         String?            @db.Text
   testData              String?            @db.Text
-  expectedResult        String?            @db.Text
-  notes                 String?            @db.Text
   contentMd             String             @db.Text
   contentMdHash         String             @db.Char(64)
   contentMdFormatVersion Int               @default(1)
@@ -358,11 +363,8 @@ model ManualTestRun {
   completedAt          DateTime?
   title                String
   details              String?             @db.Text
-  objective            String?             @db.Text
   preconditions        String?             @db.Text
   testData             String?             @db.Text
-  expectedResult       String?             @db.Text
-  scenarioNotes        String?             @db.Text
   notes                String?             @db.Text
   browser              String?             @db.VarChar(200)
   operatingSystem      String?             @db.VarChar(200)

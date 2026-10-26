@@ -51,13 +51,13 @@ const run = {
   startedAt: new Date("2026-01-01T00:00:00.000Z"),
   completedAt: null,
   updatedAt: new Date("2026-01-01T00:00:00.000Z"),
+  runKey: null,
+  sourceScenarioKey: null,
+  browser: null, operatingSystem: null, device: null, apiEnvironment: null, build: null, deployment: null,
   title: "Login",
   details: null,
-  objective: "Verify login",
   preconditions: null,
   testData: null,
-  expectedResult: null,
-  scenarioNotes: null,
   notes: null,
   steps: [
     {

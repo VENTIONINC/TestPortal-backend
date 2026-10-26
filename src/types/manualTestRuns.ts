@@ -72,11 +72,8 @@ export interface ManualTestRunResponse extends ManualRunEnvironmentSnapshot {
   updatedAt: Date;
   title: string;
   details: string | null;
-  objective: string | null;
   preconditions: string | null;
   testData: string | null;
-  expectedResult: string | null;
-  scenarioNotes: string | null;
   notes: string | null;
   steps: ManualTestRunStepResponse[];
 }

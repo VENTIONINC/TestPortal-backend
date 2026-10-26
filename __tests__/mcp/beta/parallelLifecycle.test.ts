@@ -131,7 +131,35 @@ describe("parallel MCP routes and stateless beta lifecycle", () => {
       expect(betaTools.tools.map(({ name }) => name).sort()).toEqual(
         legacyTools.tools.map(({ name }) => name).sort(),
       );
-      expect(betaTools.tools).toHaveLength(22);
+      expect(betaTools.tools).toHaveLength(23);
+      const createScenario = jest
+        .spyOn(mcpTestScenarioHandler, "createTestScenario")
+        .mockResolvedValue({ id: "created-scenario" } as never);
+      try {
+        for (const client of [legacyClient, betaClient]) {
+          createScenario.mockClear();
+          const input = { projectId: ownerId, title: "New scenario" };
+          const forgedResponse = await client.callTool({
+            name: "create-test-scenario",
+            arguments: { ...input, createdById: otherUserId },
+          });
+          expect(forgedResponse.isError).toBe(true);
+          expect(createScenario).not.toHaveBeenCalled();
+
+          const response = await client.callTool({
+            name: "create-test-scenario",
+            arguments: input,
+          });
+          expect(response.isError).not.toBe(true);
+          expect(createScenario).toHaveBeenCalledWith({
+            ...input,
+            steps: [],
+            createdById: ownerId,
+          });
+        }
+      } finally {
+        createScenario.mockRestore();
+      }
       for (const legacyTool of legacyTools.tools) {
         const betaTool = betaTools.tools.find(
           ({ name }) => name === legacyTool.name,

@@ -12,15 +12,19 @@ import type {
   TestScenarioResponse,
 } from "@/types/testScenarios";
 
-const listMock = jest.fn<
-  (params: TestScenarioMcpListParams) => Promise<TestScenarioSummaryListResponse>
->();
+const listMock =
+  jest.fn<
+    (
+      params: TestScenarioMcpListParams,
+    ) => Promise<TestScenarioSummaryListResponse>
+  >();
 const getMock = jest.fn<() => Promise<TestScenarioMcpDetailResponse>>();
 const updateMock = jest.fn<() => Promise<TestScenarioResponse>>();
 const deleteMock = jest.fn<() => Promise<TestScenarioMcpDeleteResponse>>();
 
 jest.mock("@/handlers/mcpTestScenarioHandler", () => ({
   mcpTestScenarioHandler: {
+    createTestScenario: updateMock,
     listTestScenarios: listMock,
     getTestScenario: getMock,
     updateTestScenario: updateMock,
@@ -29,6 +33,7 @@ jest.mock("@/handlers/mcpTestScenarioHandler", () => ({
 }));
 
 import {
+  createTestScenarioTool,
   deleteTestScenario,
   getTestScenario,
   listTestScenarios,
@@ -45,12 +50,12 @@ const scenario: TestScenarioResponse = {
   scenarioKey: null,
   contentMd: "# Login\n\n  exact ✓\n",
   details: null,
-  objective: null,
   preconditions: null,
   testData: null,
-  expectedResult: null,
-  notes: null,
-  contentMdHash: "0000000000000000000000000000000000000000000000000000000000000000",
+  priority: null,
+  relatedIssueUrl: null,
+  contentMdHash:
+    "0000000000000000000000000000000000000000000000000000000000000000",
   contentMdFormatVersion: 1,
   steps: [],
   createdAt: new Date("2026-01-01T00:00:00.000Z"),
@@ -87,6 +92,28 @@ const responseData = async (response: MCPToolResponse): Promise<unknown> => {
 };
 
 describe("Test Scenario MCP tools", () => {
+  it("binds creation to the trusted actor and rejects caller supplied creator", async () => {
+    updateMock.mockResolvedValue(scenario);
+    const tool = createTestScenarioTool(scenario.createdById);
+    const input = {
+      projectId,
+      title: "Case",
+      priority: "high" as const,
+      steps: [],
+    };
+    await tool[3](input);
+    expect(updateMock).toHaveBeenCalledWith({
+      ...input,
+      createdById: scenario.createdById,
+    });
+    updateMock.mockClear();
+    const response = await tool[3]({
+      ...input,
+      createdById: scenarioId,
+    } as typeof input);
+    expect(response).toMatchObject({ isError: true });
+    expect(updateMock).not.toHaveBeenCalled();
+  });
   beforeEach(() => {
     jest.clearAllMocks();
     listMock.mockResolvedValue({
@@ -175,32 +202,26 @@ describe("Test Scenario MCP tools", () => {
       ) => Promise<MCPToolResponse>;
       const response = await toolHandler(params);
 
-      expect(response.isError).toBe(true);
+      expect(response).toMatchObject({ isError: true });
       expect(response.content[0]?.text).toContain(
         `Error ${kind === "validation" ? "updating" : kind === "not-found" ? "fetching" : "deleting"} Test Scenario: ${kind} service failure`,
       );
     },
   );
 
-  it("exposes the four approved names and no creation tuple", () => {
+  it("exposes scenario CRUD tools", () => {
     expect([
+      createTestScenarioTool(scenario.createdById)[0],
       listTestScenarios[0],
       getTestScenario[0],
       updateTestScenario[0],
       deleteTestScenario[0],
     ]).toEqual([
+      "create-test-scenario",
       "list-test-scenarios",
       "get-test-scenario",
       "update-test-scenario",
       "delete-test-scenario",
     ]);
-    expect(
-      [
-        listTestScenarios,
-        getTestScenario,
-        updateTestScenario,
-        deleteTestScenario,
-      ].some(([name]) => name === "create-test-scenario"),
-    ).toBe(false);
   });
 });

@@ -130,11 +130,10 @@ function toResponse(scenario: ScenarioAggregate): TestScenarioResponse {
     title: scenario.title,
     scenarioKey: scenario.scenarioKey,
     details: scenario.details,
-    objective: scenario.objective,
     preconditions: scenario.preconditions,
     testData: scenario.testData,
-    expectedResult: scenario.expectedResult,
-    notes: scenario.notes,
+    priority: scenario.priority,
+    relatedIssueUrl: scenario.relatedIssueUrl,
     steps: scenario.steps.map(({ id, position, action, expectedResult }) => ({
       id,
       position,
@@ -258,11 +257,10 @@ function contentCreateData(
     title: data.title,
     scenarioKey: data.scenarioKey ?? null,
     details: data.details ?? null,
-    objective: data.objective ?? null,
     preconditions: data.preconditions ?? null,
     testData: data.testData ?? null,
-    expectedResult: data.expectedResult ?? null,
-    notes: data.notes ?? null,
+    priority: data.priority ?? null,
+    relatedIssueUrl: data.relatedIssueUrl ?? null,
     contentMd,
     contentMdHash: hashTestScenarioMarkdown(contentMd),
     contentMdFormatVersion: TEST_SCENARIO_MARKDOWN_FORMAT_VERSION,
@@ -290,15 +288,14 @@ export const testScenarioModel = {
       const contentMd = renderTestScenarioMarkdown({
         title: data.title,
         details: data.details ?? null,
-        objective: data.objective ?? null,
         preconditions: data.preconditions ?? null,
         testData: data.testData ?? null,
         steps: steps.map((step) => ({
           action: step.action,
           expectedResult: step.expectedResult ?? null,
         })),
-        expectedResult: data.expectedResult ?? null,
-        notes: data.notes ?? null,
+        priority: data.priority ?? null,
+        relatedIssueUrl: data.relatedIssueUrl ?? null,
       });
       const scenario = await client.testScenario.create({
         data: contentCreateData(data, contentMd),
@@ -476,17 +473,12 @@ export const testScenarioModel = {
           ...(data.scenarioKey !== undefined ? { scenarioKey: data.scenarioKey } : {}),
           ...(data.title !== undefined ? { title: data.title } : {}),
           ...(data.details !== undefined ? { details: data.details } : {}),
-          ...(data.objective !== undefined
-            ? { objective: data.objective }
-            : {}),
           ...(data.preconditions !== undefined
             ? { preconditions: data.preconditions }
             : {}),
           ...(data.testData !== undefined ? { testData: data.testData } : {}),
-          ...(data.expectedResult !== undefined
-            ? { expectedResult: data.expectedResult }
-            : {}),
-          ...(data.notes !== undefined ? { notes: data.notes } : {}),
+          ...(data.priority !== undefined ? { priority: data.priority } : {}),
+          ...(data.relatedIssueUrl !== undefined ? { relatedIssueUrl: data.relatedIssueUrl } : {}),
           ...(data.folderId !== undefined ? { folder: data.folderId ? { connect: { id: data.folderId } } : { disconnect: true } } : {}),
         };
         await client.testScenario.update({
@@ -494,7 +486,7 @@ export const testScenarioModel = {
           data: updateData,
         });
         const contentFields: readonly (keyof UpdateTestScenarioData)[] = [
-          "title", "details", "objective", "preconditions", "testData", "expectedResult", "notes",
+          "title", "details", "preconditions", "testData", "priority", "relatedIssueUrl",
         ];
         if (!contentFields.some((field) => data[field] !== undefined)) {
           const updated = await findAggregate(client, id, projectId);

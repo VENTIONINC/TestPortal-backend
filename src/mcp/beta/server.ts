@@ -36,6 +36,7 @@ import {
 } from "@/mcp/tools/result-errors";
 import { getSpecById } from "@/mcp/tools/specs";
 import {
+  createTestScenarioTool,
   deleteTestScenario,
   getTestScenario,
   listTestScenarios,
@@ -102,6 +103,7 @@ const createBetaServer = (userId: string): McpServer => {
     bulkReview,
     getResultErrorById,
     getSpecById,
+    createTestScenarioTool(userId),
     listTestScenarios,
     getTestScenario,
     updateTestScenario,

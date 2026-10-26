@@ -37,6 +37,7 @@ import {
 } from "@/mcp/tools/result-errors";
 import { getSpecById } from "@/mcp/tools/specs";
 import {
+  createTestScenarioTool,
   deleteTestScenario,
   getTestScenario,
   listTestScenarios,
@@ -246,6 +247,17 @@ router.post(
 
         // Spec tools
         server.tool(...getSpecById);
+
+        // Bind creation to the authenticated session owner, as with assumption updates.
+        const createTestScenario = createTestScenarioTool(reviewedById);
+        server.registerTool(
+          createTestScenario[0],
+          {
+            description: createTestScenario[1],
+            inputSchema: createTestScenario[2],
+          },
+          createTestScenario[3],
+        );
 
         // Test Scenario tools
         registerLegacyTestScenarioTools(server);

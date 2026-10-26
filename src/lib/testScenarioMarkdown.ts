@@ -1,6 +1,7 @@
 // Copyright 2026 VENSOLUTIONSGROUP LTD
 // SPDX-License-Identifier: Apache-2.0
 import { createHash } from "node:crypto";
+import type { TestScenarioPriority } from "@prisma/client";
 
 export const TEST_SCENARIO_MARKDOWN_FORMAT_VERSION = 1;
 
@@ -12,12 +13,12 @@ export interface TestScenarioMarkdownStep {
 export interface TestScenarioMarkdownSource {
   title: string;
   details: string | null;
-  objective: string | null;
+  priority: TestScenarioPriority | null;
+  relatedIssueUrl: string | null;
   preconditions: string | null;
   testData: string | null;
   steps: readonly TestScenarioMarkdownStep[];
-  expectedResult: string | null;
-  notes: string | null;
+
 }
 
 function normalizeLineEndings(value: string): string {
@@ -39,15 +40,21 @@ export function renderTestScenarioMarkdown(
 
   const optionalSections: Array<[string, string | null]> = [
     ["Details", source.details],
-    ["Objective", source.objective],
-    ["Preconditions", source.preconditions],
-    ["Test Data", source.testData],
+    ["Priority", source.priority === null ? null : ({ low: "Low", medium: "Medium", high: "High" })[source.priority]],
+    ["Related issue URL", source.relatedIssueUrl],
   ];
 
   for (const [title, value] of optionalSections) {
     if (value !== null) {
       blocks.push(section(title, value));
     }
+  }
+
+  if (source.preconditions !== null || source.testData !== null) {
+    const setup = ["## Test setup"];
+    if (source.preconditions !== null) setup.push("### Preconditions", normalizeLineEndings(source.preconditions));
+    if (source.testData !== null) setup.push("### Test data", normalizeLineEndings(source.testData));
+    blocks.push(setup);
   }
 
   const stepLines: string[] = ["## Steps"];
@@ -64,15 +71,6 @@ export function renderTestScenarioMarkdown(
     });
   }
   blocks.push(stepLines);
-
-  for (const [title, value] of [
-    ["Expected Result", source.expectedResult],
-    ["Notes", source.notes],
-  ] as const) {
-    if (value !== null) {
-      blocks.push(section(title, value));
-    }
-  }
 
   return `${blocks.map((block) => block.join("\n")).join("\n\n").replace(/\n+$/, "")}\n`;
 }

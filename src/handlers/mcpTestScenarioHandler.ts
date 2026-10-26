@@ -5,6 +5,7 @@ import { testScenarioIntegrationService } from "@/services/testScenarioIntegrati
 import { testScenarioService } from "@/services/testScenarioService";
 import type { TestScenarioEvidenceParams } from "@/types/testScenarioIntegration";
 import type {
+  CreateTestScenarioParams,
   TestScenarioMcpDeleteParams,
   TestScenarioMcpDeleteResponse,
   TestScenarioMcpDetailResponse,
@@ -16,6 +17,11 @@ import type {
 } from "@/types/testScenarios";
 
 export const mcpTestScenarioHandler = {
+  async createTestScenario(
+    params: CreateTestScenarioParams,
+  ): Promise<TestScenarioResponse> {
+    return await testScenarioService.createScenario(params);
+  },
   async listTestScenarios(
     params: TestScenarioMcpListParams,
   ): Promise<TestScenarioSummaryListResponse> {

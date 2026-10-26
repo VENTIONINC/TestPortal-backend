@@ -21,13 +21,13 @@ See [MCP Inspector instructions](INSPECT_MCP_SERVER.md) for the pinned modern
 mode setup.
 
 The beta catalog mirrors the tools and prompts registered by the v1 endpoint.
-It exposes these 22 tools: `check-status`, `current-time`,
+It exposes these 23 tools: `check-status`, `current-time`,
 `get-available-projects`, `get-issues`, `get-issue-by-id`, `create-issue`,
 `get-results`, `get-result-by-id`, `get-results-stats`, `create-assumption`,
 `update-assumption`, `get-assumption-by-id`, `get-execution-by-id`,
 `assign-issue-to-result-error`, `review-result-error`,
 `bulk-review-result-errors`, `get-result-error-by-id`, `get-spec-by-id`,
-`list-test-scenarios`, `get-test-scenario`, `update-test-scenario`, and
+`create-test-scenario`, `list-test-scenarios`, `get-test-scenario`, `update-test-scenario`, and
 `delete-test-scenario`. The five prompts are `test-portal-report-generator`,
 `issue-analysis-assistant`, `environment-performance-assistant`,
 `developer-code-assistant`, and `software-documentation-assistant`.
@@ -268,6 +268,14 @@ All Test Scenario tools require the authenticated MCP transport and a
 project-scoped UUID. Service validation and project ownership errors are
 returned using the standard MCP error response with `isError: true`.
 
+#### `create-test-scenario`
+
+- **Source File:** `src/mcp/tools/test-scenarios.ts`
+- **Parameters:** Required `projectId` and nonblank `title`; optional `folderId`, `scenarioKey`, `details`, `preconditions`, `testData`, and initial `steps` (`action`, optional `expectedResult`).
+- **Metadata:** `priority` accepts `low`, `medium`, `high`, or null. `relatedIssueUrl` accepts an absolute HTTP(S) URL (trimmed) or null. Omitted metadata defaults to null.
+- **Authentication:** The creator is bound to the authenticated MCP session owner. Caller-supplied `createdById` is rejected, and resumed sessions validate that the authenticated token still belongs to the session owner.
+- **Response:** Complete persisted scenario with generated Markdown, nullable metadata, and ordered steps. Uses the same creation service and project/folder checks as REST.
+
 #### `list-test-scenarios`
 
 - **Source File:** `src/mcp/tools/test-scenarios.ts`
@@ -293,7 +301,7 @@ returned using the standard MCP error response with `isError: true`.
   - `resultLimit` (optional): Result evidence limit from 1 through 100 (default: 30)
   - `issuePage` (optional): Positive integer observed-Issue evidence page (default: 1)
   - `issueLimit` (optional): Observed-Issue evidence limit from 1 through 100 (default: 30)
-- **Response:** `{ scenario, resultEvidence, issueEvidence }`. `scenario` includes nullable `scenarioKey` and `details`, structured fields, ordered stable-ID `steps`, exact generated `contentMd`, `contentMdHash`, and `contentMdFormatVersion`. Each evidence envelope contains its scenario/project IDs, `linkedSpecCount`, collection, `total`, `page`, `limit`, and `totalPages`. Result evidence is derived from Results belonging to linked same-project Specs; Issue evidence is deduplicated from observed Issues.
+- **Response:** `{ scenario, resultEvidence, issueEvidence }`. `scenario` includes nullable `scenarioKey`, `details`, `priority`, and `relatedIssueUrl`, structured fields, ordered stable-ID `steps`, exact generated `contentMd`, `contentMdHash`, and `contentMdFormatVersion`. Each evidence envelope contains its scenario/project IDs, `linkedSpecCount`, collection, `total`, `page`, `limit`, and `totalPages`. Result evidence is derived from Results belonging to linked same-project Specs; Issue evidence is deduplicated from observed Issues.
 
 #### `update-test-scenario`
 
@@ -302,13 +310,13 @@ returned using the standard MCP error response with `isError: true`.
 - **Parameters:**
   - `scenarioId` (required): Test Scenario UUID
   - `projectId` (required): Owning project UUID
-  - `title`, `details`, `objective`, `preconditions`, `testData`, `expectedResult`, or `notes` (optional): Structured field updates; text is trimmed and `null` clears nullable fields
+  - `title`, `details`, `preconditions`, or `testData` (optional): Structured field updates; text is trimmed and `null` clears nullable fields
   - `scenarioKey` (optional): Editable single-line label of 1–100 characters after trimming. `null` clears it; duplicate labels are allowed. UUIDs remain scenario identifiers, and a key-only update preserves generated Markdown, its hash, and its format version.
-- **Response:** The complete persisted Test Scenario, including structured fields, ordered steps, exact generated `contentMd`, hash, and format version. At least one editable field is required; omitted fields are preserved. `contentMd`, projection metadata, and steps are rejected as inputs. Scenario metadata and project ownership cannot be changed.
+- `priority` (optional): `low`, `medium`, `high`, or null; omitted values are preserved and null clears.
+- `relatedIssueUrl` (optional): Trimmed absolute HTTP(S) URL or null, with the same preserve/clear semantics.
+- **Response:** The complete persisted Test Scenario, including structured fields, ordered steps, exact generated `contentMd`, hash, and format version. At least one editable field is required; omitted fields are preserved. `contentMd`, projection metadata, and steps are rejected as inputs. Creation identity and project ownership cannot be changed.
 
-MCP intentionally has no Markdown import, scenario creation, or step mutation
-tools in this change. Use the authenticated REST step routes for step editing;
-MCP remains the generated-document reader and structured-field updater.
+MCP has no Markdown import or step mutation tools. Use the authenticated REST step routes for step editing. Scenario-level objective, expectedResult, and notes fields are no longer accepted; step expectedResult and execution notes remain available.
 
 #### `delete-test-scenario`
 
@@ -333,7 +341,7 @@ The MCP tools are organized into the following functional categories:
 6. **Execution Details** - Retrieving detailed execution information
 7. **Result Error Management** - Handling and analyzing test result errors
 8. **Specifications** - Accessing test specification details
-9. **Test Scenario Management** - Listing, reading, editing, and deleting project-scoped Test Scenarios
+9. **Test Scenario Management** - Creating, listing, reading, editing, and deleting project-scoped Test Scenarios
 
 All tools return standardized responses using the `createSuccessResponse` helper, ensuring consistent formatting across the MCP interface.
 

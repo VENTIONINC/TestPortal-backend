@@ -6,6 +6,7 @@ import path from "node:path";
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { InMemoryTransport } from "@modelcontextprotocol/sdk/inMemory.js";
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
+import { createTestScenarioSchema } from "@/mcp/schemas/testScenarioSchemas";
 import { registerLegacyTestScenarioTools } from "@/mcp/server";
 
 const serverSource = readFileSync(
@@ -14,7 +15,7 @@ const serverSource = readFileSync(
 );
 
 describe("Test Scenario MCP server registration", () => {
-  it("registers exactly the four approved Test Scenario tools", async () => {
+  it("registers the shared list, detail, update, and delete tools", async () => {
     const [clientTransport, serverTransport] =
       InMemoryTransport.createLinkedPair();
     const client = new Client({ name: "registration-test", version: "1.0.0" });
@@ -41,8 +42,22 @@ describe("Test Scenario MCP server registration", () => {
     }
   });
 
-  it("does not mention a scenario creation tool or creator input", () => {
-    expect(serverSource).not.toContain("create-test-scenario");
+  it("binds creation to the authenticated session owner and rejects caller creator input", () => {
+    expect(serverSource).toMatch(/const reviewedById = req\.mcpUserId/);
+    expect(serverSource).toMatch(
+      /const createTestScenario = createTestScenarioTool\(reviewedById\)/,
+    );
     expect(serverSource).not.toContain("createdById");
+    const input = {
+      projectId: "11111111-1111-4111-8111-111111111111",
+      title: "Case",
+    };
+    expect(createTestScenarioSchema.safeParse(input).success).toBe(true);
+    expect(
+      createTestScenarioSchema.safeParse({
+        ...input,
+        createdById: "22222222-2222-4222-8222-222222222222",
+      }).success,
+    ).toBe(false);
   });
 });

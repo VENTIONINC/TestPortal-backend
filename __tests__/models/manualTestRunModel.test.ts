@@ -34,11 +34,8 @@ const detail = {
   updatedAt: new Date("2026-01-01T00:00:00.000Z"),
   title: "Login",
   details: "Details",
-  objective: "Verify login",
   preconditions: null,
   testData: null,
-  expectedResult: "Dashboard",
-  scenarioNotes: "Keep evidence",
   notes: null,
   steps: [
     {
@@ -93,11 +90,8 @@ describe("manualTestRunModel", () => {
       title: "Login",
       scenarioKey: "R1",
       details: "Details",
-      objective: "Verify login",
       preconditions: null,
       testData: null,
-      expectedResult: "Dashboard",
-      notes: "Keep evidence",
       steps: [
         { position: 0, action: "Open login", expectedResult: "Login form" },
       ],
@@ -117,6 +111,17 @@ describe("manualTestRunModel", () => {
     });
 
     expect(result).toEqual(detail);
+    const createArgs = tx.manualTestRun.create.mock.calls[0]?.[0];
+    expect(createArgs).not.toEqual(expect.objectContaining({
+      data: expect.objectContaining({ objective: expect.anything() }),
+    }));
+    expect(createArgs).not.toEqual(expect.objectContaining({
+      data: expect.objectContaining({ expectedResult: expect.anything() }),
+    }));
+    expect(createArgs).not.toEqual(expect.objectContaining({
+      data: expect.objectContaining({ scenarioNotes: expect.anything() }),
+    }));
+
     expect(tx.$queryRaw).toHaveBeenCalledTimes(3);
     expect(tx.manualTestRun.create).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -126,7 +131,6 @@ describe("manualTestRunModel", () => {
           runKey: null,
           title: "Login",
           details: "Details",
-          scenarioNotes: "Keep evidence",
           notes: "Execution notes",
           steps: {
             create: [
@@ -258,11 +262,8 @@ describe("manualTestRunModel", () => {
       title: "Login",
       scenarioKey: null,
       details: null,
-      objective: null,
       preconditions: null,
       testData: null,
-      expectedResult: null,
-      notes: null,
       steps: [],
     });
     tx.manualTestRun.create.mockResolvedValue({ ...detail, runKey: null, sourceScenarioKey: null });
