@@ -106,6 +106,35 @@ will be deployed. In that case either:
 - ask infra to extend the workflow to render a new task definition revision
   per deploy.
 
+## MCP beta rollout and rollback
+
+The MCP beta route is additive. Keep existing clients on
+`/api/v2/mcp`; clients that have passed the modern-protocol compatibility
+check can be configured explicitly to use `/api/v2/mcp-beta`. The beta route
+serves only MCP revision `2026-07-28`, creates no MCP session, and does not
+redirect or forward requests to the existing route.
+
+Configure `MCP_BETA_ALLOWED_ORIGINS` in the target ECS task definition as a
+comma-separated list of exact HTTP(S) origins for browser clients. Do not add
+paths or wildcards, and do not guess origins; use the deployed client origins.
+Native clients that omit `Origin` can use an empty value. Both routes continue
+to use the existing `MCP_SECRET` bearer credential. No new credential or
+MCP-specific database migration is required.
+
+After deploying the backend and origin configuration, smoke-test
+`https://<backend-host>/api/v2/mcp-beta` with the modern Inspector instructions
+in [INSPECT_MCP_SERVER.md](./INSPECT_MCP_SERVER.md): verify modern discovery,
+`tools/list`, `check-status`, and prompt retrieval. The existing route remains
+available at `https://<backend-host>/api/v2/mcp`; verify its established
+session behavior separately.
+
+Rollback by redeploying the previous backend artifact using the procedure
+below and removing beta-specific client configuration. Keep the existing
+`MCP_SECRET` and `/api/v2/mcp` configuration in place. A process replacement
+ends active requests and sessions: clients reconnect to their configured
+route using the same bearer credential. Beta clients make a fresh stateless
+request after restart; existing-route clients initialize a new v1 session.
+
 ## Database migrations
 
 Migrations and persisted skill seeding are run **inside the container at startup** by `start.sh`:

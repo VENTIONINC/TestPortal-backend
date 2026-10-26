@@ -23,8 +23,6 @@ export const getIssuesSchema: MCPToolSchemaShape = {
   name: z.string().optional(),
   page: z.string().default("1").optional(),
   limit: z.string().default("10").optional(),
-  statFrom: z.string().datetime().optional(),
-  statTo: z.string().datetime().optional(),
 };
 
 /**

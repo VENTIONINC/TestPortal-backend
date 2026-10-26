@@ -16,8 +16,6 @@ interface GetIssuesParams {
   name?: string;
   page?: number;
   limit?: number;
-  statFrom?: string;
-  statTo?: string;
 }
 
 interface GetIssueByIdParams {
@@ -44,17 +42,6 @@ export const getIssues = createMcpTool(
     return createSuccessResponse(issues);
   },
   "fetching issues",
-);
-
-export const getIssuesWithStats = createMcpTool(
-  "get-issues-with-stats",
-  "Retrieve issues with persisted category, statistics, and linked-result category summaries. Optional category and statFrom/statTo filters are supported. Requires projectId.",
-  getIssuesSchema,
-  async (params: GetIssuesParams): Promise<MCPToolResponse> => {
-    const issues = await mcpIssueHandler.getAllIssuesWithStats(params);
-    return createSuccessResponse(issues);
-  },
-  "fetching issues with statistics",
 );
 
 export const getIssueById = createMcpTool(

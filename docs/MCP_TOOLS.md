@@ -2,6 +2,43 @@
 
 This document describes the tools available through the MCP (Model Context Protocol) server. MCP tools are functions or modules that the server can expose to connected clients, allowing them to request specific operations or retrieve specialized data.
 
+## Beta SDK schema adapter
+
+The parallel beta transport keeps the existing Zod v3 input definitions as the runtime validation source. At the SDK v2 boundary, `src/mcp/beta/schemaAdapter.ts` converts those definitions to an object-shaped JSON Schema using the pinned `zod-to-json-schema` 3.25.2 converter and exposes the original Zod parser through Standard Schema. Defaults, transforms, strict-object checks, nullability, and refinements therefore run before a tool handler receives its input.
+
+The converter is an archived upstream project and exports JSON Schema Draft 7. The adapter removes nested references and labels the emitted schemas as Draft 2020-12 for the modern MCP contract. JSON Schema cannot represent every Zod refinement or transform; it describes the accepted wire shape, while the original Zod v3 parser remains authoritative. Unsupported fields fail adapter construction instead of advertising an unconstrained schema. Keep SDK v2 and converter usage inside the beta boundary; the established SDK v1 endpoint remains available with its session-based transport.
+
+## MCP SDK v2 beta endpoint
+
+The parallel `POST /api/v2/mcp-beta` endpoint accepts only MCP revision
+`2026-07-28`. It uses the existing `MCP_SECRET` bearer token and has no MCP
+session lifecycle; clients send independent authenticated POST requests. It
+rejects legacy initialization and unsupported revisions. The established
+`/api/v2/mcp` SDK v1 endpoint remains available and does not redirect or forward
+requests to beta. Configure exact browser origins with
+`MCP_BETA_ALLOWED_ORIGINS`; native clients that omit `Origin` remain allowed.
+See [MCP Inspector instructions](INSPECT_MCP_SERVER.md) for the pinned modern
+mode setup.
+
+The beta catalog mirrors the tools and prompts registered by the v1 endpoint.
+It exposes these 23 tools: `check-status`, `current-time`,
+`get-available-projects`, `get-issues`, `get-issue-by-id`, `create-issue`,
+`get-results`, `get-result-by-id`, `get-results-stats`, `create-assumption`,
+`update-assumption`, `get-assumption-by-id`, `get-execution-by-id`,
+`assign-issue-to-result-error`, `review-result-error`,
+`bulk-review-result-errors`, `get-result-error-by-id`, `get-spec-by-id`,
+`create-test-scenario`, `list-test-scenarios`, `get-test-scenario`, `update-test-scenario`, and
+`delete-test-scenario`. The five prompts are `test-portal-report-generator`,
+`issue-analysis-assistant`, `environment-performance-assistant`,
+`developer-code-assistant`, and `software-documentation-assistant`.
+
+The v1 and beta routes advertise equivalent tool and prompt input contracts.
+Beta keeps Zod runtime defaults, transforms, strict checks, and refinements.
+`update-assumption` binds the reviewer to the user authenticated for each
+request; client arguments and metadata do not set that identity. Modern clients
+may receive server metadata and MCP error envelopes that differ from legacy
+session transport responses.
+
 Tools are registered with the MCP server instance and can be invoked by clients using MCP requests that specify the tool name and any required parameters.
 
 ## Available Tools
@@ -304,7 +341,7 @@ The MCP tools are organized into the following functional categories:
 6. **Execution Details** - Retrieving detailed execution information
 7. **Result Error Management** - Handling and analyzing test result errors
 8. **Specifications** - Accessing test specification details
-8. **Test Scenario Management** - Creating, listing, reading, editing, and deleting project-scoped Test Scenarios
+9. **Test Scenario Management** - Creating, listing, reading, editing, and deleting project-scoped Test Scenarios
 
 All tools return standardized responses using the `createSuccessResponse` helper, ensuring consistent formatting across the MCP interface.
 

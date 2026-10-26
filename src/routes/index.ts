@@ -25,6 +25,7 @@ import manualTestRuns from "@/routes/manual-test-runs";
 import manualRunEnvironmentProfiles from "@/routes/manual-run-environment-profiles";
 import testScenarioOrganization from "@/routes/test-scenario-organization";
 import mcp from "@/mcp/server";
+import betaMcp from "@/mcp/beta/server";
 
 const router = Router();
 
@@ -55,5 +56,6 @@ router.use(testScenarios);
 router.use(manualTestRuns);
 router.use(manualRunEnvironmentProfiles);
 router.use(mcp);
+router.use(betaMcp);
 
 export default router;
