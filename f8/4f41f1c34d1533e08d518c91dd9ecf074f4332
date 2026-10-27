@@ -1,0 +1,58 @@
+src/mcp/server.ts
+  s_8b11181492ae67::t_bf349f2e053b46 11-13,43-44,49-50,93-149,248
+__tests__/mcp/serverRegistration.test.ts
+  s_8b11181492ae67::t_5822fd00c08fd7 6-8,17-19,21-55,60-62,64-66
+  s_eedb6ea26b9f0d::t_91d24f8c5d8ab8 67,69-74
+__tests__/mcp/testScenarioMcpTransport.test.ts
+  s_8b11181492ae67::t_e205657920f16d 1-231
+docs/MCP_TOOLS.md
+  s_8b11181492ae67::t_f8090d3c237ec2 282,293-320,335
+__tests__/mcp/mcpTestScenarioHandler.test.ts
+  s_8c61a1c664b4cb::t_5620ad02d8a16a 16-19,39-46,72-75,142-145,243-267
+__tests__/mcp/testScenarioMcpWorkflow.test.ts
+  s_8c61a1c664b4cb::t_fcd142459ad339 13-16,25-28,41-42,44,46,77,96-97,100-144,255-299
+__tests__/mcp/testScenarioSchemas.test.ts
+  s_8c61a1c664b4cb::t_e2180c30b5d3a5 6-9,17,163-246
+__tests__/mcp/testScenarioTools.test.ts
+  s_8c61a1c664b4cb::t_f7d9a4860a0a11 24-27,36-39,49-52,141-144,243-301
+__tests__/test-scenarios/testScenarioPostgresIntegration.test.ts
+  s_8c61a1c664b4cb::t_154866c4657d19 16-17,169-312,635-673,706-732
+src/handlers/mcpTestScenarioHandler.ts
+  s_8c61a1c664b4cb::t_d520efd38aa2f2 9-11,18,94-117
+src/mcp/schemas/testScenarioSchemas.ts
+  s_8c61a1c664b4cb::t_189709a6a3693e 168-206
+src/mcp/tools/test-scenarios.ts
+  s_8c61a1c664b4cb::t_2869f820c6b696 8-9,14-15,23-26,90-133
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.18",
+  "base_commit_sha": "f84f41f1c34d1533e08d518c91dd9ecf074f4332",
+  "prompts": {},
+  "sessions": {
+    "s_8b11181492ae67": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a17d5b-a3ea-7411-a8eb-41d94b599cb4",
+        "model": "gpt-6-luna"
+      },
+      "human_author": "Ihar Mikailau <ihar.mikailau@ventionteams.com>"
+    },
+    "s_8c61a1c664b4cb": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a17d07-1032-7c32-a5d8-c9074bd388b0",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Ihar Mikailau <ihar.mikailau@ventionteams.com>"
+    },
+    "s_eedb6ea26b9f0d": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a17d7d-99d0-7143-8cea-704f990c8c4e",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Ihar Mikailau <ihar.mikailau@ventionteams.com>"
+    }
+  }
+}
