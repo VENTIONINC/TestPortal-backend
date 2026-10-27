@@ -165,3 +165,42 @@ export const deleteTestScenarioSchema = z
     projectId: uuid().describe("The UUID of the project"),
   })
   .strict() satisfies MCPToolSchema;
+
+export const appendTestScenarioStepSchema = z
+  .object({
+    projectId: uuid().describe("The UUID of the project"),
+    scenarioId: uuid().describe("The UUID of the Test Scenario"),
+    action: z.string().trim().min(1),
+    expectedResult: z.string().trim().min(1).optional(),
+  })
+  .strict() satisfies MCPToolSchema;
+
+export const updateTestScenarioStepSchema = z
+  .object({
+    projectId: uuid().describe("The UUID of the project"),
+    scenarioId: uuid().describe("The UUID of the Test Scenario"),
+    stepId: uuid().describe("The UUID of the scenario step"),
+    action: z.string().trim().min(1).optional(),
+    expectedResult: z.string().trim().min(1).nullable().optional(),
+  })
+  .strict()
+  .refine(
+    (value) => value.action !== undefined || value.expectedResult !== undefined,
+    { message: "At least one step field is required" },
+  ) satisfies MCPToolSchema;
+
+export const deleteTestScenarioStepSchema = z
+  .object({
+    projectId: uuid().describe("The UUID of the project"),
+    scenarioId: uuid().describe("The UUID of the Test Scenario"),
+    stepId: uuid().describe("The UUID of the scenario step"),
+  })
+  .strict() satisfies MCPToolSchema;
+
+export const reorderTestScenarioStepsSchema = z
+  .object({
+    projectId: uuid().describe("The UUID of the project"),
+    scenarioId: uuid().describe("The UUID of the Test Scenario"),
+    stepIds: z.array(uuid()).describe("Every current step UUID exactly once, in the desired order"),
+  })
+  .strict() satisfies MCPToolSchema;

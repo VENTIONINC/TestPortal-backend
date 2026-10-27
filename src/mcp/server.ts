@@ -8,6 +8,9 @@ import {
   RegisteredTool,
 } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/streamableHttp.js";
+import { z } from "zod/v3";
+import type { MCPToolSchema } from "@/types";
+import type { CallToolResult } from "@modelcontextprotocol/sdk/types.js";
 import { isInitializeRequest } from "@modelcontextprotocol/sdk/types.js";
 import {
   authenticateMcpToken,
@@ -37,10 +40,14 @@ import {
 import { getSpecById } from "@/mcp/tools/specs";
 import {
   createTestScenarioTool,
+  appendTestScenarioStep,
+  deleteTestScenarioStep,
   deleteTestScenario,
   getTestScenario,
   listTestScenarios,
   updateTestScenario,
+  updateTestScenarioStep,
+  reorderTestScenarioSteps,
 } from "@/mcp/tools/test-scenarios";
 import { getAvailableProjects } from "@/mcp/tools/projects";
 import * as testPortalAssistant from "@/mcp/prompts/test-portal-assistant/v1.0.0";
@@ -82,6 +89,63 @@ setInterval(() => {
     }
   }
 }, 60 * 1000); // Check every minute
+
+const strictMcpInputSchema = (schema: MCPToolSchema): unknown => {
+  let candidate: unknown = schema;
+  while (
+    typeof candidate === "object" &&
+    candidate !== null &&
+    "_def" in candidate &&
+    typeof candidate._def === "object" &&
+    candidate._def !== null &&
+    "schema" in candidate._def
+  ) {
+    candidate = candidate._def.schema;
+  }
+
+  if (
+    typeof candidate === "object" &&
+    candidate !== null &&
+    "shape" in candidate
+  ) {
+    return z.object(candidate.shape as z.ZodRawShape).strict();
+  }
+  return schema;
+};
+
+export const registerTestScenarioTools = (server: McpServer): void => {
+  const compatibleServer = server as McpServerWithTools;
+  const register = ([name, description, schema, handler]: readonly [
+    string,
+    string,
+    MCPToolSchema,
+    (input: never) => Promise<unknown>,
+  ]): void => {
+    compatibleServer.registerTool(
+      name,
+      { description, inputSchema: strictMcpInputSchema(schema) },
+      async (input: unknown) => {
+        const validatedInput =
+          typeof schema === "object" &&
+          schema !== null &&
+          "parseAsync" in schema &&
+          typeof schema.parseAsync === "function"
+            ? await schema.parseAsync(input)
+            : input;
+        return (await handler(validatedInput as never)) as CallToolResult;
+      },
+    );
+  };
+
+  register(listTestScenarios);
+  register(getTestScenario);
+  register(updateTestScenario);
+  register(deleteTestScenario);
+  register(appendTestScenarioStep);
+  register(updateTestScenarioStep);
+  register(deleteTestScenarioStep);
+  register(reorderTestScenarioSteps);
+};
 
 router.post(
   "/v2/mcp",
@@ -181,38 +245,7 @@ router.post(
         );
 
         // Test Scenario tools
-        server.registerTool(
-          listTestScenarios[0],
-          {
-            description: listTestScenarios[1],
-            inputSchema: listTestScenarios[2],
-          },
-          listTestScenarios[3],
-        );
-        server.registerTool(
-          getTestScenario[0],
-          {
-            description: getTestScenario[1],
-            inputSchema: getTestScenario[2],
-          },
-          getTestScenario[3],
-        );
-        server.registerTool(
-          updateTestScenario[0],
-          {
-            description: updateTestScenario[1],
-            inputSchema: updateTestScenario[2],
-          },
-          updateTestScenario[3],
-        );
-        server.registerTool(
-          deleteTestScenario[0],
-          {
-            description: deleteTestScenario[1],
-            inputSchema: deleteTestScenario[2],
-          },
-          deleteTestScenario[3],
-        );
+        registerTestScenarioTools(server);
 
         // Test Portal Assistant
         server.registerPrompt(

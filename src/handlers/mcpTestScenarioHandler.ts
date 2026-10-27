@@ -6,12 +6,16 @@ import { testScenarioService } from "@/services/testScenarioService";
 import type { TestScenarioEvidenceParams } from "@/types/testScenarioIntegration";
 import type {
   CreateTestScenarioParams,
+  AppendTestScenarioStepParams,
+  DeleteTestScenarioStepParams,
+  ReorderTestScenarioStepsParams,
   TestScenarioMcpDeleteParams,
   TestScenarioMcpDeleteResponse,
   TestScenarioMcpDetailResponse,
   TestScenarioMcpGetParams,
   TestScenarioMcpListParams,
   TestScenarioMcpUpdateParams,
+  UpdateTestScenarioStepParams,
   TestScenarioSummaryListResponse,
   TestScenarioResponse,
 } from "@/types/testScenarios";
@@ -86,5 +90,29 @@ export const mcpTestScenarioHandler = {
       projectId: params.projectId,
       deleted: true,
     };
+  },
+
+  async appendTestScenarioStep(
+    params: AppendTestScenarioStepParams,
+  ): Promise<TestScenarioResponse> {
+    return await testScenarioService.appendStep(params);
+  },
+
+  async updateTestScenarioStep(
+    params: UpdateTestScenarioStepParams,
+  ): Promise<TestScenarioResponse> {
+    return await testScenarioService.updateStep(params);
+  },
+
+  async deleteTestScenarioStep(
+    params: DeleteTestScenarioStepParams,
+  ): Promise<TestScenarioResponse> {
+    return await testScenarioService.deleteStep(params);
+  },
+
+  async reorderTestScenarioSteps(
+    params: ReorderTestScenarioStepsParams,
+  ): Promise<TestScenarioResponse> {
+    return await testScenarioService.reorderSteps(params);
   },
 };

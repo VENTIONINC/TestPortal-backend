@@ -13,6 +13,8 @@ import {
 } from "@/lib/testScenarioMarkdown";
 import { testScenarioModel } from "@/models/testScenarioModel";
 import { testScenarioService } from "@/services/testScenarioService";
+import { mcpTestScenarioHandler } from "@/handlers/mcpTestScenarioHandler";
+import { manualTestRunModel } from "@/models/manualTestRunModel";
 import { testScenarioOrganizationService as organization } from "@/services/testScenarioOrganizationService";
 import { projectModel } from "@/models/projectModel";
 import { TestScenarioNotFoundError } from "@/types/testScenarios";
@@ -162,6 +164,150 @@ describePostgres("test scenario PostgreSQL aggregate integration", () => {
     await dbClient.testScenario.deleteMany({
       where: { projectId: { in: [projectId, otherProjectId] } },
     });
+  });
+
+  it("authors steps through MCP handlers with shared PostgreSQL persistence", async () => {
+    const created = await createScenario({
+      title: "MCP persisted step lifecycle",
+      details: "Preserve scenario metadata",
+      preconditions: "User is signed in",
+      priority: "high",
+      steps: [
+        { action: "Open settings", expectedResult: "Settings are visible" },
+        { action: "Choose profile" },
+      ],
+    });
+    const spec = await dbClient.spec.create({
+      data: {
+        projectId,
+        key: `MCP-${randomUUID()}`,
+        title: "MCP linked evidence spec",
+        file: "mcp-linked-evidence.spec.ts",
+      },
+    });
+    await dbClient.testScenarioSpecLink.create({
+      data: { testScenarioId: created.id, specId: spec.id },
+    });
+    const execution = await dbClient.execution.create({
+      data: {
+        projectId,
+        type: "playwright",
+        name: `MCP evidence ${randomUUID()}`,
+        environment: "integration",
+        version: "1",
+        startedAt: new Date("2026-01-01T00:00:00.000Z"),
+      },
+    });
+    await dbClient.result.create({
+      data: {
+        specId: spec.id,
+        executionId: execution.id,
+        retry: 0,
+        status: "passed",
+        duration: 1,
+        startTime: new Date("2026-01-01T00:00:00.000Z"),
+      },
+    });
+    const manualRun = await manualTestRunModel.createFromScenario({
+      projectId,
+      scenarioId: created.id,
+      executedById: userId,
+    });
+    if (!manualRun) throw new Error("Failed to create MCP lifecycle manual run");
+    const evidenceBefore = await mcpTestScenarioHandler.getTestScenario({
+      projectId,
+      scenarioId: created.id,
+    });
+    const manualRunBefore = await manualTestRunModel.findById(manualRun.id, projectId);
+    if (!manualRunBefore) throw new Error("Failed to retrieve MCP lifecycle manual run");
+    const originalIds = created.steps.map(({ id }) => id);
+    const firstOriginalId = originalIds[0];
+    const secondOriginalId = originalIds[1];
+    if (!firstOriginalId || !secondOriginalId) {
+      throw new Error("Expected two initial scenario steps");
+    }
+
+    const appended = await mcpTestScenarioHandler.appendTestScenarioStep({
+      projectId,
+      scenarioId: created.id,
+      action: "Save changes",
+      expectedResult: "Changes are saved",
+    });
+    const appendedId = appended.steps[2]?.id;
+    if (!appendedId) throw new Error("Expected appended step ID");
+    expect(appended.steps.slice(0, 2).map(({ id }) => id)).toEqual(originalIds);
+
+    const actionEdited = await mcpTestScenarioHandler.updateTestScenarioStep({
+      projectId,
+      scenarioId: created.id,
+      stepId: firstOriginalId,
+      action: "Open account settings",
+    });
+    expect(actionEdited.steps[0]).toMatchObject({
+      id: originalIds[0],
+      action: "Open account settings",
+      expectedResult: "Settings are visible",
+    });
+
+    const cleared = await mcpTestScenarioHandler.updateTestScenarioStep({
+      projectId,
+      scenarioId: created.id,
+      stepId: appendedId,
+      expectedResult: null,
+    });
+    expect(cleared.steps[2]).toMatchObject({
+      id: appendedId,
+      action: "Save changes",
+      expectedResult: null,
+    });
+
+    const reordered = await mcpTestScenarioHandler.reorderTestScenarioSteps({
+      projectId,
+      scenarioId: created.id,
+      stepIds: [appendedId, secondOriginalId, firstOriginalId],
+    });
+    const deleted = await mcpTestScenarioHandler.deleteTestScenarioStep({
+      projectId,
+      scenarioId: created.id,
+      stepId: secondOriginalId,
+    });
+    const persisted = await getScenario(created.id);
+    const evidenceAfter = await mcpTestScenarioHandler.getTestScenario({
+      projectId,
+      scenarioId: created.id,
+    });
+    const manualRunAfter = await manualTestRunModel.findById(manualRun.id, projectId);
+
+    expect(reordered.steps.map(({ id, position }) => [id, position])).toEqual([
+      [appendedId, 0],
+      [originalIds[1], 1],
+      [originalIds[0], 2],
+    ]);
+    expect(deleted.steps.map(({ id, position }) => [id, position])).toEqual([
+      [appendedId, 0],
+      [originalIds[0], 1],
+    ]);
+    expect(persisted).toMatchObject({
+      title: created.title,
+      details: created.details,
+      preconditions: created.preconditions,
+      priority: created.priority,
+    });
+    expect(await dbClient.testScenarioSpecLink.findMany({
+      where: { testScenarioId: created.id },
+    })).toEqual([{ testScenarioId: created.id, specId: spec.id }]);
+    expect(evidenceAfter.resultEvidence).toEqual(evidenceBefore.resultEvidence);
+    expect(evidenceAfter.scenario).toMatchObject({ id: created.id, steps: persisted.steps });
+    expect(manualRunAfter).toEqual(manualRunBefore);
+    await expectProjectionConsistency(persisted);
+    await expect(
+      mcpTestScenarioHandler.appendTestScenarioStep({
+        projectId: otherProjectId,
+        scenarioId: created.id,
+        action: "Wrong project",
+      }),
+    ).rejects.toThrow();
+    expect(await getScenario(created.id)).toEqual(persisted);
   });
 
   afterAll(async () => {
@@ -486,6 +632,45 @@ describePostgres("test scenario PostgreSQL aggregate integration", () => {
     await expectProjectionConsistency(finalScenario);
   });
 
+  it("preserves concurrent appends alongside an unrelated scenario-field edit", async () => {
+    const scenario = await createScenario({
+      title: "Concurrent append and metadata edit",
+      steps: [{ action: "Initial" }],
+    });
+
+    const [firstAppend, secondAppend, metadataEdit] = await Promise.all([
+      testScenarioService.appendStep({
+        scenarioId: scenario.id,
+        projectId,
+        action: "Concurrent one",
+      }),
+      testScenarioService.appendStep({
+        scenarioId: scenario.id,
+        projectId,
+        action: "Concurrent two",
+      }),
+      testScenarioService.updateScenario({
+        scenarioId: scenario.id,
+        projectId,
+        details: "Metadata edit survives appends",
+      }),
+    ]);
+
+    expect(firstAppend.steps.length).toBeGreaterThanOrEqual(2);
+    expect(secondAppend.steps.length).toBeGreaterThanOrEqual(2);
+    expect(metadataEdit.details).toBe("Metadata edit survives appends");
+    const finalScenario = await getScenario(scenario.id);
+    expect(finalScenario.details).toBe("Metadata edit survives appends");
+    expect(finalScenario.steps).toHaveLength(3);
+    expect(finalScenario.steps.map(({ position }) => position)).toEqual([0, 1, 2]);
+    expect(finalScenario.steps.map(({ action }) => action).sort()).toEqual([
+      "Concurrent one",
+      "Concurrent two",
+      "Initial",
+    ]);
+    await expectProjectionConsistency(finalScenario);
+  });
+
   it("keeps append and reorder races lossless", async () => {
     const scenario = await createScenario({
       title: "Reorder versus append",
@@ -516,6 +701,33 @@ describePostgres("test scenario PostgreSQL aggregate integration", () => {
       ["First", "Second", "Third", "Appended"].sort(),
     );
     await expectProjectionConsistency(finalScenario);
+  });
+
+  it("rejects stale step membership atomically after a persisted append", async () => {
+    const scenario = await createScenario({
+      title: "Stale reorder membership",
+      steps: [{ action: "Existing" }],
+    });
+    const staleIds = scenario.steps.map(({ id }) => id);
+    const appended = await testScenarioModel.appendStep({
+      scenarioId: scenario.id,
+      projectId,
+      action: "Added after the client read",
+    });
+    if (!appended) throw new Error("Failed to append stale reorder fixture");
+    const beforeRejectedReorder = await getScenario(scenario.id);
+
+    await expect(
+      testScenarioModel.reorderSteps({
+        scenarioId: scenario.id,
+        projectId,
+        stepIds: staleIds,
+      }),
+    ).resolves.toMatchObject({ kind: "invalid-order" });
+
+    const afterRejectedReorder = await getScenario(scenario.id);
+    expect(afterRejectedReorder).toEqual(beforeRejectedReorder);
+    await expectProjectionConsistency(afterRejectedReorder);
   });
 
   it("keeps delete and reorder races lossless", async () => {
