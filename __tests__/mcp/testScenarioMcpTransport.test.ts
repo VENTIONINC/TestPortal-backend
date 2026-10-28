@@ -47,6 +47,122 @@ describe("Test Scenario MCP transport validation", () => {
     jest.useRealTimers();
   });
 
+  it("discovers the complete prefixed tool catalog and unchanged prompts", async () => {
+    const { default: mcpRouter } = await import("@/mcp/server");
+    const app = express();
+    app.use(express.json());
+    app.use("/api", mcpRouter);
+    const server = createServer(app);
+    await new Promise<void>((resolve) => server.listen(0, "127.0.0.1", resolve));
+    const address = server.address() as AddressInfo;
+    const client = new Client({ name: "catalog-test", version: "1.0.0" });
+    process.env.MCP_SECRET = secret;
+    await client.connect(new StreamableHTTPClientTransport(
+      new URL(`http://127.0.0.1:${address.port}/api/v2/mcp`),
+      { requestInit: { headers: { Authorization: `Bearer ${generateMcpToken(userId, secret)}` } } },
+    ));
+
+    try {
+      const catalog = await client.listTools();
+      const names = catalog.tools.map(({ name }) => name);
+      expect(names.sort()).toEqual([
+        "testportal-append-test-scenario-step",
+        "testportal-assign-issue-to-result-error",
+        "testportal-bulk-review-result-errors",
+        "testportal-check-status",
+        "testportal-create-assumption",
+        "testportal-create-issue",
+        "testportal-create-test-scenario",
+        "testportal-current-time",
+        "testportal-delete-test-scenario",
+        "testportal-delete-test-scenario-step",
+        "testportal-get-assumption-by-id",
+        "testportal-get-available-projects",
+        "testportal-get-execution-by-id",
+        "testportal-get-issue-by-id",
+        "testportal-get-issues",
+        "testportal-get-result-by-id",
+        "testportal-get-result-error-by-id",
+        "testportal-get-results",
+        "testportal-get-results-stats",
+        "testportal-get-spec-by-id",
+        "testportal-get-test-scenario",
+        "testportal-list-test-scenarios",
+        "testportal-reorder-test-scenario-steps",
+        "testportal-review-result-error",
+        "testportal-update-assumption",
+        "testportal-update-test-scenario",
+        "testportal-update-test-scenario-step",
+      ]);
+      expect(new Set(names).size).toBe(names.length);
+      expect(names.every((name) => name.startsWith("testportal-"))).toBe(true);
+      expect(names.some((name) => name.startsWith("testportal-testportal-"))).toBe(false);
+      expect(names).not.toContain("testportal-get-issues-with-stats");
+
+      const prompts = await client.listPrompts();
+      expect(prompts.prompts.map(({ name }) => name).sort()).toEqual([
+        "developer-code-assistant",
+        "environment-performance-assistant",
+        "issue-analysis-assistant",
+        "software-documentation-assistant",
+        "test-portal-report-generator",
+      ]);
+      const status = await client.callTool({
+        name: "testportal-check-status",
+        arguments: {},
+      });
+      expect(status.isError).not.toBe(true);
+      const statusText = status.content[0];
+      expect(statusText?.type).toBe("text");
+      expect(JSON.parse(statusText?.type === "text" ? statusText.text : "{}")).toMatchObject({
+        status: "ok",
+        service: "test-portal-server",
+      });
+    } finally {
+      await client.close();
+      await new Promise<void>((resolve, reject) => server.close((error) => error ? reject(error) : resolve()));
+      delete process.env.MCP_SECRET;
+    }
+  });
+
+  it("rejects legacy read and mutation names without running their handlers", async () => {
+    const { default: mcpRouter } = await import("@/mcp/server");
+    const app = express();
+    app.use(express.json());
+    app.use("/api", mcpRouter);
+    const server = createServer(app);
+    await new Promise<void>((resolve) => server.listen(0, "127.0.0.1", resolve));
+    const address = server.address() as AddressInfo;
+    const client = new Client({ name: "legacy-name-test", version: "1.0.0" });
+    process.env.MCP_SECRET = secret;
+    await client.connect(new StreamableHTTPClientTransport(
+      new URL(`http://127.0.0.1:${address.port}/api/v2/mcp`),
+      { requestInit: { headers: { Authorization: `Bearer ${generateMcpToken(userId, secret)}` } } },
+    ));
+
+    try {
+      const calls = [
+        ["get-test-scenario", { scenarioId, projectId }],
+        ["append-test-scenario-step", { scenarioId, projectId, action: "Open" }],
+      ] as const;
+      for (const [name, arguments_] of calls) {
+        const response = await client.callTool({ name, arguments: arguments_ });
+        expect(response.isError).toBe(true);
+        const errorContent = response.content[0];
+        expect(errorContent?.type).toBe("text");
+        expect(errorContent?.type === "text" ? errorContent.text : "").toMatch(
+          /tool .* not found/i,
+        );
+      }
+      expect(mockGetTestScenario).not.toHaveBeenCalled();
+      expect(mockAppendScenarioStep).not.toHaveBeenCalled();
+    } finally {
+      await client.close();
+      await new Promise<void>((resolve, reject) => server.close((error) => error ? reject(error) : resolve()));
+      delete process.env.MCP_SECRET;
+    }
+  });
+
   it("keeps strict and refined schemas active at the transport boundary", async () => {
     const { default: mcpRouter } = await import("@/mcp/server");
     const app = express();
@@ -64,7 +180,7 @@ describe("Test Scenario MCP transport validation", () => {
 
     try {
       const unknownFieldResponse = await client.callTool({
-        name: "update-test-scenario",
+        name: "testportal-update-test-scenario",
         arguments: {
           scenarioId,
           projectId,
@@ -76,13 +192,13 @@ describe("Test Scenario MCP transport validation", () => {
       expect(mockUpdateTestScenario).not.toHaveBeenCalled();
 
       const invalidCases = [
-        ["append-test-scenario-step", { projectId, scenarioId, action: "  " }],
+        ["testportal-append-test-scenario-step", { projectId, scenarioId, action: "  " }],
         [
-          "update-test-scenario-step",
+          "testportal-update-test-scenario-step",
           { projectId, scenarioId, stepId: scenarioId },
         ],
         [
-          "update-test-scenario-step",
+          "testportal-update-test-scenario-step",
           {
             projectId,
             scenarioId,
@@ -92,11 +208,11 @@ describe("Test Scenario MCP transport validation", () => {
           },
         ],
         [
-          "delete-test-scenario-step",
+          "testportal-delete-test-scenario-step",
           { projectId: "bad", scenarioId, stepId: scenarioId },
         ],
         [
-          "reorder-test-scenario-steps",
+          "testportal-reorder-test-scenario-steps",
           { projectId, scenarioId, stepIds: ["bad"] },
         ],
       ] as const;
@@ -110,7 +226,7 @@ describe("Test Scenario MCP transport validation", () => {
       expect(mockReorderScenarioSteps).not.toHaveBeenCalled();
 
       const refinementResponse = await client.callTool({
-        name: "update-test-scenario",
+        name: "testportal-update-test-scenario",
         arguments: { scenarioId, projectId },
       });
       expect(refinementResponse.isError).toBe(true);
@@ -148,28 +264,28 @@ describe("Test Scenario MCP transport validation", () => {
       const catalog = await client.listTools();
       expect(catalog.tools.map(({ name }) => name)).toEqual(
         expect.arrayContaining([
-          "create-test-scenario",
-          "list-test-scenarios",
-          "get-test-scenario",
-          "update-test-scenario",
-          "delete-test-scenario",
-          "append-test-scenario-step",
-          "update-test-scenario-step",
-          "delete-test-scenario-step",
-          "reorder-test-scenario-steps",
+          "testportal-create-test-scenario",
+          "testportal-list-test-scenarios",
+          "testportal-get-test-scenario",
+          "testportal-update-test-scenario",
+          "testportal-delete-test-scenario",
+          "testportal-append-test-scenario-step",
+          "testportal-update-test-scenario-step",
+          "testportal-delete-test-scenario-step",
+          "testportal-reorder-test-scenario-steps",
         ]),
       );
       const responses = [];
       responses.push(await client.callTool({
-        name: "create-test-scenario",
+        name: "testportal-create-test-scenario",
         arguments: { projectId, title: "Temporary MCP scenario" },
       }));
       responses.push(await client.callTool({
-        name: "append-test-scenario-step",
+        name: "testportal-append-test-scenario-step",
         arguments: { projectId, scenarioId, action: "Open" },
       }));
       responses.push(await client.callTool({
-        name: "update-test-scenario-step",
+        name: "testportal-update-test-scenario-step",
         arguments: {
           projectId,
           scenarioId,
@@ -178,11 +294,11 @@ describe("Test Scenario MCP transport validation", () => {
         },
       }));
       responses.push(await client.callTool({
-        name: "reorder-test-scenario-steps",
+        name: "testportal-reorder-test-scenario-steps",
         arguments: { projectId, scenarioId, stepIds: [] },
       }));
       responses.push(await client.callTool({
-        name: "delete-test-scenario-step",
+        name: "testportal-delete-test-scenario-step",
         arguments: {
           projectId,
           scenarioId,
@@ -190,11 +306,20 @@ describe("Test Scenario MCP transport validation", () => {
         },
       }));
       responses.push(await client.callTool({
-        name: "get-test-scenario",
+        name: "testportal-get-test-scenario",
         arguments: { projectId, scenarioId },
       }));
 
       expect(responses.every(({ isError }) => isError !== true)).toBe(true);
+      const decodedResponses = responses.map((response) => {
+        const content = response.content[0];
+        expect(content?.type).toBe("text");
+        return JSON.parse(content?.type === "text" ? content.text : "{}");
+      });
+      expect(decodedResponses.slice(0, 5)).toEqual(
+        Array.from({ length: 5 }, () => fullScenario),
+      );
+      expect(decodedResponses[5]).toEqual({ scenario: fullScenario });
       expect(mockCreateTestScenario).toHaveBeenCalledWith({
         projectId,
         title: "Temporary MCP scenario",

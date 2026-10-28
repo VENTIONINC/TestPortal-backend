@@ -214,7 +214,7 @@
             },
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"jsonrpc\": \"2.0\",\n  \"method\": \"tools/call\",\n  \"params\": {\n    \"name\": \"check-status\",\n    \"arguments\": {}\n  },\n  \"id\": 3\n}"
+              "raw": "{\n  \"jsonrpc\": \"2.0\",\n  \"method\": \"tools/call\",\n  \"params\": {\n    \"name\": \"testportal-check-status\",\n    \"arguments\": {}\n  },\n  \"id\": 3\n}"
             }
           }
         },
@@ -255,7 +255,7 @@
             },
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"jsonrpc\": \"2.0\",\n  \"method\": \"tools/call\",\n  \"params\": {\n    \"name\": \"current-time\",\n    \"arguments\": {}\n  },\n  \"id\": 4\n}"
+              "raw": "{\n  \"jsonrpc\": \"2.0\",\n  \"method\": \"tools/call\",\n  \"params\": {\n    \"name\": \"testportal-current-time\",\n    \"arguments\": {}\n  },\n  \"id\": 4\n}"
             }
           }
         },
@@ -296,7 +296,7 @@
             },
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"jsonrpc\": \"2.0\",\n  \"method\": \"tools/call\",\n  \"params\": {\n    \"name\": \"get-issues\",\n    \"arguments\": {\n      \"page\": 1,\n      \"limit\": 5\n    }\n  },\n  \"id\": 5\n}"
+              "raw": "{\n  \"jsonrpc\": \"2.0\",\n  \"method\": \"tools/call\",\n  \"params\": {\n    \"name\": \"testportal-get-issues\",\n    \"arguments\": {\n      \"page\": 1,\n      \"limit\": 5\n    }\n  },\n  \"id\": 5\n}"
             }
           }
         }

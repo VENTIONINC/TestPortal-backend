@@ -23,7 +23,7 @@ describe("Test Scenario MCP server registration", () => {
     jest.useRealTimers();
   });
 
-  it("registers all eight non-creation scenario tools", async () => {
+  it("registers all eight non-creation scenario tools with canonical names", async () => {
     const { registerTestScenarioTools } = await import("@/mcp/server");
     const [clientTransport, serverTransport] =
       InMemoryTransport.createLinkedPair();
@@ -41,14 +41,14 @@ describe("Test Scenario MCP server registration", () => {
       ]);
       const catalog = await client.listTools();
       expect(catalog.tools.map(({ name }) => name).sort()).toEqual([
-        "append-test-scenario-step",
-        "delete-test-scenario",
-        "delete-test-scenario-step",
-        "get-test-scenario",
-        "list-test-scenarios",
-        "reorder-test-scenario-steps",
-        "update-test-scenario",
-        "update-test-scenario-step",
+        "testportal-append-test-scenario-step",
+        "testportal-delete-test-scenario",
+        "testportal-delete-test-scenario-step",
+        "testportal-get-test-scenario",
+        "testportal-list-test-scenarios",
+        "testportal-reorder-test-scenario-steps",
+        "testportal-update-test-scenario",
+        "testportal-update-test-scenario-step",
       ]);
     } finally {
       await Promise.all([client.close(), server.close()]);

@@ -30,7 +30,7 @@ describe("MCP authentication transport", () => {
         jsonrpc: "2.0",
         id: 1,
         method: "tools/call",
-        params: { name: "list-test-scenarios", arguments: {} },
+        params: { name: "testportal-list-test-scenarios", arguments: {} },
       });
 
     expect(response.status).toBe(401);

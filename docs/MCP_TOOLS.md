@@ -6,9 +6,10 @@ Tools are registered with the MCP server instance and can be invoked by clients 
 
 ## Available Tools
 
+Every exposed tool uses the canonical name `testportal-<previous-name>`. Only prefixed names are supported: unprefixed names are unknown and have no aliases or transition period. Reconnect and discover the current catalog, or update hard-coded calls before invoking tools.
 ### Status & Health
 
-#### `check-status`
+#### `testportal-check-status`
 
 - **Source File:** `src/mcp/tools/status-check.js`
 - **Description:** Check the operational status and health of the test portal server
@@ -18,7 +19,7 @@ Tools are registered with the MCP server instance and can be invoked by clients 
   - `timestamp`: ISO timestamp (string) - Current server time
   - `service`: "test-portal-server" (string) - Service identifier
 
-#### `current-time`
+#### `testportal-current-time`
 
 - **Source File:** `src/mcp/tools/current-time.js`
 - **Description:** Return the current date and time in ISO 8601 format
@@ -31,17 +32,17 @@ Tools are registered with the MCP server instance and can be invoked by clients 
 
 ### Projects
 
-#### `get-available-projects`
+#### `testportal-get-available-projects`
 - **Source File:** `src/mcp/tools/projects.ts`
 - **Description:** List active projects that can be used with project-scoped MCP tools
 - **Parameters:** None
-- **Response:** Array of objects containing `id` and `name`. The list includes all active projects, including `Default Project`; it is not limited to projects owned by the authenticated MCP user. Pass a returned `id` as `projectId` to project-scoped tools such as `get-issues` and `get-results`.
+- **Response:** Array of objects containing `id` and `name`. The list includes all active projects, including `Default Project`; it is not limited to projects owned by the authenticated MCP user. Pass a returned `id` as `projectId` to project-scoped tools such as `testportal-get-issues` and `testportal-get-results`.
 
 ---
 
 ### Issue Management
 
-#### `get-issues`
+#### `testportal-get-issues`
 
 - **Source File:** `src/mcp/tools/issues.ts`
 - **Description:** Retrieve issues with persisted category filtering, optional name filtering, pagination, and a linked-result `categorySummary`
@@ -53,7 +54,7 @@ Tools are registered with the MCP server instance and can be invoked by clients 
   - `limit` (optional): Number of items per page (default: 30)
 - **Response:** Issues with pagination metadata, persisted `category`, and `categorySummary`. `categorySummary.displayCategory` is the persisted Issue category; its distribution describes distinct linked Result categories.
 
-#### `get-issue-by-id`
+#### `testportal-get-issue-by-id`
 
 - **Source File:** `src/mcp/tools/issues.ts`
 - **Description:** Retrieve an issue with its persisted category and a `categorySummary` for linked Result analytics
@@ -62,7 +63,7 @@ Tools are registered with the MCP server instance and can be invoked by clients 
   - `projectId` (required): Project UUID
 - **Response:** Detailed issue object with persisted `category` and `categorySummary`
 
-#### `create-issue`
+#### `testportal-create-issue`
 
 - **Source File:** `src/mcp/tools/issues.ts`
 - **Description:** Create a new issue with a required lowercase category
@@ -85,18 +86,9 @@ across all assumptions. MCP does not currently expose the atomic Assign Issue
 modal workflow; use the authenticated REST endpoints documented in the Issue
 Postman collection for that workflow.
 
-#### `get-mock-issues`
-
-- **Source File:** `src/mcp/tools/issues.js`
-- **Description:** Get mock issues for testing and demonstration purposes
-- **Parameters:** None
-- **Response:** Array of mock issues
-
----
-
 ### Test Results
 
-#### `get-results`
+#### `testportal-get-results`
 
 - **Source File:** `src/mcp/tools/results.js`
 - **Description:** Retrieve test execution results with comprehensive filtering options for analysis, reporting, and debugging
@@ -114,7 +106,16 @@ Postman collection for that workflow.
   - `limit` (optional): Items per page (default: 1000)
 - **Response:** Array of test results with filtering metadata
 
-#### `get-result-by-id`
+#### `testportal-get-results-stats`
+
+- **Source File:** `src/mcp/tools/results.ts`
+- **Description:** Retrieve statistical analysis of test results including status counts, entity counts, and top errors/issues for specified dates
+- **Parameters:**
+  - `projectId` (required): Project UUID
+  - `dates` (optional): Array of date strings
+- **Response:** Statistical summary of results for the requested project and dates
+
+#### `testportal-get-result-by-id`
 
 - **Source File:** `src/mcp/tools/results.js`
 - **Description:** Retrieve complete details for a specific test result including error information, call stacks, and execution data
@@ -126,7 +127,7 @@ Postman collection for that workflow.
 
 ### Assumptions
 
-#### `create-assumption`
+#### `testportal-create-assumption`
 
 - **Source File:** `src/mcp/tools/assumptions.ts`
 - **Description:** Create a new assumption with required issueId and resultErrorId, plus optional fields like description, hypothesis, and evidence
@@ -141,7 +142,7 @@ Postman collection for that workflow.
 - **Response:** Created assumption object with success message. This generic
   operation does not copy the linked Issue category to a Result.
 
-#### `update-assumption`
+#### `testportal-update-assumption`
 
 - **Source File:** `src/mcp/tools/assumptions.ts`
 - **Description:** Update an assumption by ID. Only real users can modify assumptions. Confirming synchronizes the linked Issue category to the containing Result's feedback category; setting `isConfirmed` to false deletes the assumption and preserves existing Result feedback.
@@ -154,7 +155,7 @@ Postman collection for that workflow.
   - `evidence` (optional): Updated evidence
 - **Response:** Updated assumption object or deletion confirmation
 
-#### `get-assumption-by-id`
+#### `testportal-get-assumption-by-id`
 
 - **Source File:** `src/mcp/tools/assumptions.js`
 - **Description:** Retrieve detailed information about a specific assumption by its unique ID
@@ -166,7 +167,7 @@ Postman collection for that workflow.
 
 ### Execution Details
 
-#### `get-execution-by-id`
+#### `testportal-get-execution-by-id`
 
 - **Source File:** `src/mcp/tools/executions.js`
 - **Description:** Retrieve detailed information about a specific execution by its unique ID
@@ -178,7 +179,7 @@ Postman collection for that workflow.
 
 ### Result Error Management
 
-#### `assign-issue-to-result-error`
+#### `testportal-assign-issue-to-result-error`
 
 - **Source File:** `src/mcp/tools/result-errors.ts`
 - **Description:** Assign an issue to a result error by connecting it with an assumption ID
@@ -187,7 +188,7 @@ Postman collection for that workflow.
   - `assumptionId` (required): Unique identifier for the assumption
 - **Response:** Updated result error record with success message
 
-#### `review-result-error`
+#### `testportal-review-result-error`
 
 - **Source File:** `src/mcp/tools/result-errors.js`
 - **Description:** Run automated review analysis on a result error to find similar issues and create assumptions
@@ -195,7 +196,7 @@ Postman collection for that workflow.
   - `resultErrorId` (required): Unique identifier for the result error
 - **Response:** Reviewed result error record with analysis results
 
-#### `bulk-review-result-errors`
+#### `testportal-bulk-review-result-errors`
 
 - **Source File:** `src/mcp/tools/result-errors.js`
 - **Description:** Run automated review analysis on multiple result errors in batch
@@ -203,7 +204,7 @@ Postman collection for that workflow.
   - `errorIds` (required): Array of result error IDs to review
 - **Response:** Bulk review results with success/failure counts
 
-#### `get-result-error-by-id`
+#### `testportal-get-result-error-by-id`
 
 - **Source File:** `src/mcp/tools/result-errors.js`
 - **Description:** Retrieve detailed information about a specific result error by its unique ID
@@ -215,7 +216,7 @@ Postman collection for that workflow.
 
 ### Specifications
 
-#### `get-spec-by-id`
+#### `testportal-get-spec-by-id`
 
 - **Source File:** `src/mcp/tools/specs.js`
 - **Description:** Retrieve detailed information about a specific spec by its unique ID, including parsed tags and annotations
@@ -231,7 +232,7 @@ All Test Scenario tools require the authenticated MCP transport and a
 project-scoped UUID. Service validation and project ownership errors are
 returned using the standard MCP error response with `isError: true`.
 
-#### `create-test-scenario`
+#### `testportal-create-test-scenario`
 
 - **Source File:** `src/mcp/tools/test-scenarios.ts`
 - **Parameters:** Required `projectId` and nonblank `title`; optional `folderId`, `scenarioKey`, `details`, `preconditions`, `testData`, and initial `steps` (`action`, optional `expectedResult`).
@@ -239,7 +240,7 @@ returned using the standard MCP error response with `isError: true`.
 - **Authentication:** The creator is bound to the authenticated MCP session owner. Caller-supplied `createdById` is rejected, and resumed sessions validate that the authenticated token still belongs to the session owner.
 - **Response:** Complete persisted scenario with generated Markdown, nullable metadata, and ordered steps. Uses the same creation service and project/folder checks as REST.
 
-#### `list-test-scenarios`
+#### `testportal-list-test-scenarios`
 
 - **Source File:** `src/mcp/tools/test-scenarios.ts`
 - **Description:** List lightweight Test Scenario summaries for one project
@@ -253,7 +254,7 @@ returned using the standard MCP error response with `isError: true`.
 - Filtering is applied before pagination, so `total` and `totalPages` count matching scenarios. Invalid search types, creator UUIDs, and sort values are input validation errors. A valid creator UUID with no matching scenarios returns an empty result. A client resolving a `Me` control sends the authenticated user's UUID.
 - **Response:** Pagination envelope containing `scenarios`, `total`, `page`, `limit`, and `totalPages`. Each summary contains exactly `id`, `projectId`, `createdById`, `title`, nullable `scenarioKey`, `details`, `createdBy`, `createdAt`, and `updatedAt`. `createdBy` contains only `id`, `name`, and `email`; `contentMd` and all other User fields are omitted from the list query and response.
 
-#### `get-test-scenario`
+#### `testportal-get-test-scenario`
 
 - **Source File:** `src/mcp/tools/test-scenarios.ts`
 - **Description:** Retrieve complete structured scenario content, generated Markdown, and linked execution evidence
@@ -266,7 +267,7 @@ returned using the standard MCP error response with `isError: true`.
   - `issueLimit` (optional): Observed-Issue evidence limit from 1 through 100 (default: 30)
 - **Response:** `{ scenario, resultEvidence, issueEvidence }`. `scenario` includes nullable `scenarioKey`, `details`, `priority`, and `relatedIssueUrl`, structured fields, ordered stable-ID `steps`, exact generated `contentMd`, `contentMdHash`, and `contentMdFormatVersion`. Each evidence envelope contains its scenario/project IDs, `linkedSpecCount`, collection, `total`, `page`, `limit`, and `totalPages`. Result evidence is derived from Results belonging to linked same-project Specs; Issue evidence is deduplicated from observed Issues.
 
-#### `update-test-scenario`
+#### `testportal-update-test-scenario`
 
 - **Source File:** `src/mcp/tools/test-scenarios.ts`
 - **Description:** Partially update a project-scoped scenario
@@ -281,7 +282,7 @@ returned using the standard MCP error response with `isError: true`.
 
 MCP has no Markdown import tool. Step maintenance is available through the four authenticated tools below. Scenario-level objective, expectedResult, and notes fields are no longer accepted; step expectedResult and execution notes remain available.
 
-#### `delete-test-scenario`
+#### `testportal-delete-test-scenario`
 
 - **Source File:** `src/mcp/tools/test-scenarios.ts`
 - **Description:** Delete a project-scoped scenario and its association rows
@@ -290,33 +291,33 @@ MCP has no Markdown import tool. Step maintenance is available through the four 
   - `projectId` (required): Owning project UUID
 - **Response:** `{ "scenarioId": "...", "projectId": "...", "deleted": true }`. Linked Specs, Results, ResultErrors, Assumptions, and Issues are preserved.
 
-#### `append-test-scenario-step`
+#### `testportal-append-test-scenario-step`
 
 - **Parameters:** Required UUID `projectId`, UUID `scenarioId`, and nonblank `action`; optional nonblank `expectedResult`. Text is trimmed. Step IDs and positions are generated by the service; unknown fields and null expected results are rejected.
 - **Example input:** `{"projectId":"11111111-1111-4111-8111-111111111111","scenarioId":"22222222-2222-4222-8222-222222222222","action":"Open settings","expectedResult":"Settings are visible"}`
 - **Response:** Complete updated scenario, including the generated stable step ID, ordered steps, Markdown, hash, and format version.
 - **Behavior:** One call atomically appends after the current last step and refreshes the scenario projection. Service errors use the standard MCP error envelope (`isError: true`).
 
-#### `update-test-scenario-step`
+#### `testportal-update-test-scenario-step`
 
 - **Parameters:** Required UUID `projectId`, `scenarioId`, and `stepId`; provide `action` and/or `expectedResult`. Text is trimmed and must be nonblank. Omitted fields are preserved; `expectedResult: null` clears the expected result, while null action and unknown fields are rejected.
 - **Example input:** `{"projectId":"11111111-1111-4111-8111-111111111111","scenarioId":"22222222-2222-4222-8222-222222222222","stepId":"33333333-3333-4333-8333-333333333333","expectedResult":null}`
 - **Response:** Complete updated scenario with stable step IDs and current generated Markdown metadata.
 - **Behavior:** One call atomically updates only the identified step and refreshes the scenario projection. Empty updates are rejected before the handler.
 
-#### `delete-test-scenario-step`
+#### `testportal-delete-test-scenario-step`
 
 - **Parameters:** Required UUID `projectId`, `scenarioId`, and `stepId`; unknown fields are rejected.
 - **Example input:** `{"projectId":"11111111-1111-4111-8111-111111111111","scenarioId":"22222222-2222-4222-8222-222222222222","stepId":"33333333-3333-4333-8333-333333333333"}`
 - **Response:** Complete updated scenario. The removed step is absent and remaining positions are dense zero-based values; remaining IDs and text are preserved.
 - **Behavior:** One call atomically deletes the identified step and refreshes the scenario projection. A step from another scenario is rejected without returning its details.
 
-#### `reorder-test-scenario-steps`
+#### `testportal-reorder-test-scenario-steps`
 
 - **Parameters:** Required UUID `projectId` and `scenarioId`, plus `stepIds`, an array of UUIDs containing every current step exactly once. Unknown fields are rejected. An empty array is valid only for a scenario with no steps.
 - **Example input:** `{"projectId":"11111111-1111-4111-8111-111111111111","scenarioId":"22222222-2222-4222-8222-222222222222","stepIds":["33333333-3333-4333-8333-333333333333","44444444-4444-4444-8444-444444444444"]}`
 - **Response:** Complete updated scenario with positions matching the requested order; IDs and text are preserved.
-- **Behavior:** One call atomically validates current membership and applies the order. Duplicates, foreign IDs, omissions, and stale membership are rejected without mutation. After a stale-order error, call `get-test-scenario` and resubmit the complete order from the returned current steps.
+- **Behavior:** One call atomically validates current membership and applies the order. Duplicates, foreign IDs, omissions, and stale membership are rejected without mutation. After a stale-order error, call `testportal-get-test-scenario` and resubmit the complete order from the returned current steps.
 
 ---
 
