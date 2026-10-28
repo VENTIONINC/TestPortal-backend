@@ -3,6 +3,10 @@
 
 import {
   deleteTestScenarioSchema,
+  appendTestScenarioStepSchema,
+  updateTestScenarioStepSchema,
+  deleteTestScenarioStepSchema,
+  reorderTestScenarioStepsSchema,
   getTestScenarioSchema,
   listTestScenariosSchema,
   updateTestScenarioSchema,
@@ -10,6 +14,7 @@ import {
 
 const projectId = "11111111-1111-1111-1111-111111111111";
 const scenarioId = "22222222-2222-2222-2222-222222222222";
+const stepId = "44444444-4444-4444-4444-444444444444";
 
 describe("structured Test Scenario MCP schemas", () => {
   it("keeps list and evidence pagination defaults independent", () => {
@@ -153,6 +158,90 @@ describe("structured Test Scenario MCP schemas", () => {
     ).toBe(false);
     expect(
       listTestScenariosSchema.safeParse({ projectId, sort: "bad" }).success,
+    ).toBe(false);
+  });
+
+  it("validates and trims append step inputs strictly", () => {
+    expect(
+      appendTestScenarioStepSchema.parse({
+        projectId,
+        scenarioId,
+        action: "  Click save  ",
+        expectedResult: "  Saved  ",
+      }),
+    ).toEqual({
+      projectId,
+      scenarioId,
+      action: "Click save",
+      expectedResult: "Saved",
+    });
+    expect(
+      appendTestScenarioStepSchema.parse({ projectId, scenarioId, action: " Go " }),
+    ).toEqual({ projectId, scenarioId, action: "Go" });
+    for (const invalid of [
+      { projectId: "bad", scenarioId, action: "Go" },
+      { projectId, scenarioId, action: "   " },
+      { projectId, scenarioId, action: "Go", expectedResult: " " },
+      { projectId, scenarioId, action: "Go", expectedResult: null },
+      { projectId, scenarioId, action: "Go", stepId },
+      { projectId, scenarioId, action: "Go", position: 0 },
+    ]) {
+      expect(appendTestScenarioStepSchema.safeParse(invalid).success).toBe(false);
+    }
+  });
+
+  it("requires a meaningful strict step update and distinguishes omission from clearing", () => {
+    expect(
+      updateTestScenarioStepSchema.parse({
+        projectId,
+        scenarioId,
+        stepId,
+        action: "  Submit  ",
+      }),
+    ).toEqual({ projectId, scenarioId, stepId, action: "Submit" });
+    expect(
+      updateTestScenarioStepSchema.parse({
+        projectId,
+        scenarioId,
+        stepId,
+        expectedResult: null,
+      }),
+    ).toEqual({ projectId, scenarioId, stepId, expectedResult: null });
+    for (const invalid of [
+      { projectId, scenarioId, stepId },
+      { projectId, scenarioId, stepId, action: " " },
+      { projectId, scenarioId, stepId, action: null },
+      { projectId, scenarioId, stepId, expectedResult: " " },
+      { projectId, scenarioId, stepId, unsupported: true },
+      { projectId, scenarioId, stepId: "bad", action: "Go" },
+    ]) {
+      expect(updateTestScenarioStepSchema.safeParse(invalid).success).toBe(false);
+    }
+  });
+
+  it("validates delete identifiers and reorder UUID array shape", () => {
+    expect(deleteTestScenarioStepSchema.parse({ projectId, scenarioId, stepId })).toEqual({
+      projectId,
+      scenarioId,
+      stepId,
+    });
+    expect(
+      reorderTestScenarioStepsSchema.parse({ projectId, scenarioId, stepIds: [] }),
+    ).toEqual({ projectId, scenarioId, stepIds: [] });
+    expect(
+      reorderTestScenarioStepsSchema.safeParse({
+        projectId,
+        scenarioId,
+        stepIds: [stepId, "bad"],
+      }).success,
+    ).toBe(false);
+    expect(
+      reorderTestScenarioStepsSchema.safeParse({ projectId, scenarioId, stepIds: stepId })
+        .success,
+    ).toBe(false);
+    expect(
+      reorderTestScenarioStepsSchema.safeParse({ projectId, scenarioId, stepIds: [], extra: true })
+        .success,
     ).toBe(false);
   });
 });
