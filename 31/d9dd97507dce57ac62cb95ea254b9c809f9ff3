@@ -1,0 +1,44 @@
+docs/MCP_TOOLS.md
+  s_ec36135ee07d88::t_ca77e6785d6ddd 9,12,22,35,39,45,57,66,91,118,130,145,158,170,182,191,199,207,219,235,243,257,270,285,294,301,308,315,320
+  s_ec36135ee07d88::t_2d50498eb5bd18 109-117
+src/mcp/tools/test-scenarios.ts
+  s_ec36135ee07d88::t_688afcafa1603e 49
+src/mcp/helpers/mcpHelpers.ts
+  s_ec36135ee07d88::t_688afcafa1603e 77-85
+__tests__/mcp/testScenarioMcpTransport.test.ts
+  s_ec36135ee07d88::t_ed4df5bf7e0e8e 50-109,121-148,156-165,183,195,197,201,211,215,229,267-275,280,284,288,297,301,309
+  s_ec36135ee07d88::t_40f20725b1c359 314-322
+  s_ec36135ee07d88::t_437b7a161a5d71 115-117
+  s_ec36135ee07d88::t_eef12ce305ad95 110-114,118-120
+  s_ec36135ee07d88::t_bbae268c03c0e3 149-155
+__tests__/mcp/mcpTransport.test.ts
+  s_ec36135ee07d88::t_eef12ce305ad95 33
+__tests__/mcp/serverRegistration.test.ts
+  s_ec36135ee07d88::t_ed4df5bf7e0e8e 26,44-51
+__tests__/mcp/testScenarioTools.test.ts
+  s_ec36135ee07d88::t_ed4df5bf7e0e8e 272-275,291-299
+  s_ec36135ee07d88::t_688afcafa1603e 236-240,261-271,276
+  s_ec36135ee07d88::t_f0abb00a118916 277-278
+docs/API_DOCUMENTATION.md
+  s_ec36135ee07d88::t_7d56fc8d44a21b 464
+docs/INSPECT_MCP_SERVER.md
+  s_ec36135ee07d88::t_211c5c512c433b 43-44,70,113
+postman/MCP_API.postman_collection.json
+  s_ec36135ee07d88::t_dfe6a4f2e4e863 217,258,299
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.18",
+  "base_commit_sha": "31d9dd97507dce57ac62cb95ea254b9c809f9ff3",
+  "prompts": {},
+  "sessions": {
+    "s_ec36135ee07d88": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a18335-0f1b-7932-8ee8-dcf54998ac00",
+        "model": "gpt-6-luna"
+      },
+      "human_author": "Ihar Mikailau <ihar.mikailau@ventionteams.com>"
+    }
+  }
+}
