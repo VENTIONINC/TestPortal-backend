@@ -233,11 +233,11 @@ describe("Test Scenario MCP tools", () => {
       updateTestScenario[0],
       deleteTestScenario[0],
     ]).toEqual([
-      "create-test-scenario",
-      "list-test-scenarios",
-      "get-test-scenario",
-      "update-test-scenario",
-      "delete-test-scenario",
+      "testportal-create-test-scenario",
+      "testportal-list-test-scenarios",
+      "testportal-get-test-scenario",
+      "testportal-update-test-scenario",
+      "testportal-delete-test-scenario",
     ]);
   });
 
@@ -258,6 +258,24 @@ describe("Test Scenario MCP tools", () => {
     }
   });
 
+  it("prefixes static and authenticated tool definitions exactly once", () => {
+    const names = [
+      createTestScenarioTool(scenario.createdById)[0],
+      listTestScenarios[0],
+      getTestScenario[0],
+      appendTestScenarioStep[0],
+      updateTestScenarioStep[0],
+      deleteTestScenarioStep[0],
+      reorderTestScenarioSteps[0],
+    ];
+
+    expect(names.every((name) => name.startsWith("testportal-"))).toBe(true);
+    expect(
+      names.every((name) => !name.startsWith("testportal-testportal-")),
+    ).toBe(true);
+    expect(new Set(names).size).toBe(names.length);
+  });
+
   it("advertises all nine scenario tool names", () => {
     expect([
       createTestScenarioTool(scenario.createdById)[0],
@@ -270,15 +288,15 @@ describe("Test Scenario MCP tools", () => {
       deleteTestScenarioStep[0],
       reorderTestScenarioSteps[0],
     ]).toEqual([
-      "create-test-scenario",
-      "list-test-scenarios",
-      "get-test-scenario",
-      "update-test-scenario",
-      "delete-test-scenario",
-      "append-test-scenario-step",
-      "update-test-scenario-step",
-      "delete-test-scenario-step",
-      "reorder-test-scenario-steps",
+      "testportal-create-test-scenario",
+      "testportal-list-test-scenarios",
+      "testportal-get-test-scenario",
+      "testportal-update-test-scenario",
+      "testportal-delete-test-scenario",
+      "testportal-append-test-scenario-step",
+      "testportal-update-test-scenario-step",
+      "testportal-delete-test-scenario-step",
+      "testportal-reorder-test-scenario-steps",
     ]);
   });
 

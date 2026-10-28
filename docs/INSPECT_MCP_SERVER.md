@@ -40,8 +40,8 @@ npm run server
 After connecting with a valid MCP bearer token:
 
 1. Open the tool list and verify these four tools are present:
-   `list-test-scenarios`, `get-test-scenario`, `update-test-scenario`, and
-   `delete-test-scenario`.
+   `testportal-list-test-scenarios`, `testportal-get-test-scenario`, `testportal-update-test-scenario`, and
+   `testportal-delete-test-scenario`.
 2. Inspect each input schema and confirm project and scenario identifiers are
    UUIDs. Confirm Result and Issue pagination fields are separate and bounded
    from 1 through 100.
@@ -67,7 +67,7 @@ The tool-call JSON-RPC shape used by inspector-compatible clients is:
   "id": 2,
   "method": "tools/call",
   "params": {
-    "name": "list-test-scenarios",
+    "name": "testportal-list-test-scenarios",
     "arguments": {
       "projectId": "11111111-1111-1111-1111-111111111111",
       "page": 1,
@@ -110,7 +110,7 @@ To connect from another MCP-compatible client, configure an HTTP remote server t
 
 3.  **Verify Connection:**
 
-    Verify the `test-portal` MCP server appears in the client's available tools or by attempting to use an MCP tool like `check-status`.
+    Verify the `test-portal` MCP server appears in the client's available tools or by attempting to use an MCP tool like `testportal-check-status`.
 
 ### Notes
 
