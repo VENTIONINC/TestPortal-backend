@@ -319,6 +319,34 @@ MCP has no Markdown import tool. Step maintenance is available through the four 
 - **Response:** Complete updated scenario with positions matching the requested order; IDs and text are preserved.
 - **Behavior:** One call atomically validates current membership and applies the order. Duplicates, foreign IDs, omissions, and stale membership are rejected without mutation. After a stale-order error, call `testportal-get-test-scenario` and resubmit the complete order from the returned current steps.
 
+### Manual Test Runs
+
+These tools record outcomes observed by the MCP client. They do not launch a browser, call an API under test, or create automated `Result` records. Use UUIDs returned by the intended project and the run's copied step IDs. Inputs reject unknown fields. Successful calls return the existing run detail or history object as JSON text; service failures return `isError: true`.
+
+| Canonical tool | Required inputs | Optional inputs and behavior |
+| --- | --- | --- |
+| `testportal-start-manual-test-run` | `projectId`, `scenarioId` (UUIDs) | `notes`, `runKey`, `environmentProfileId`, `browser`, `operatingSystem`, `device`, `apiEnvironment`, `build`, `deployment`. Executor is derived from the authenticated MCP session. Returns a new independent run snapshot with run-step UUIDs. |
+| `testportal-get-manual-test-run` | `projectId`, `runId` | Returns full saved snapshot, ordered run steps, environment, runKey/sourceScenarioKey, immutable source scenario ID, nullable live scenario ID, and safe nullable executor `{id,name,email}`. |
+| `testportal-update-manual-test-run` | `projectId`, `runId`, and at least one of `notes`, `runKey` | `notes` and `runKey` may be null to clear. Status is never accepted here. Completed runs accept runKey-only changes; combining runKey with notes fails atomically. |
+| `testportal-update-manual-test-run-step` | `projectId`, `runId`, snapshot `stepId`, and `status` and/or `notes` | Status is `not_started`, `passed`, `failed`, `blocked`, or `skipped`. Omitted values are preserved; notes may be null to clear. |
+| `testportal-complete-manual-test-run` | `projectId`, `runId`, terminal `status` | Status is `passed`, `failed`, `blocked`, or `skipped`; optional `notes`. Passing nonempty runs need at least one passed step and all remaining steps passed or skipped. This is the only MCP completion operation. |
+| `testportal-list-manual-test-runs` | `projectId` | Optional `testScenarioId`, exact `sourceScenarioKey`, overall `status`, RFC 3339 `startedFrom` (inclusive), `startedBefore` (exclusive), numeric `page` (default 1), `limit` (default 30, maximum 100). |
+| `testportal-list-test-scenario-manual-runs` | `projectId`, live same-project `scenarioId` | Optional overall `status`, date bounds and numeric pagination as above. Project-only source filters are not accepted. |
+| `testportal-list-active-users` | Empty object `{}` | Returns only active users as `{id,name,email}`, ordered by name then ID. No project ID or administrator access is required. |
+| `testportal-reassign-manual-test-run-executor` | `projectId`, `runId`, `executedById` (UUIDs) | Target must be an active user. Reassignment changes executor and run `updatedAt`; execution evidence and timestamps remain unchanged. This does not grant executor-only authorization. |
+
+History returns exactly `{runs,total,page,limit,totalPages}`. Each lightweight summary includes IDs and source provenance, run key, safe nullable executor, status, timestamps, and environment values; it excludes snapshot body, steps and notes. Filters are combined before pagination and order is `startedAt DESC, id DESC`. A valid unmatched source filter returns an empty page. Project history and direct run lookup preserve deleted-source snapshots (`testScenarioId: null`); nested scenario history requires a live scenario. Numeric pagination fields must be JSON numbers, not strings. Dates require an explicit timezone and `startedFrom` must precede `startedBefore`.
+
+The REST `PATCH /api/v2/manual-test-runs/{runId}` continues to accept terminal status updates in this change. MCP rejects every run `status` on its ordinary update tool and requires `testportal-complete-manual-test-run`; REST alignment belongs to TP-38. The general MCP account-lifecycle authentication fix remains tracked separately as TP-37.
+
+Filtered project-history example:
+
+```json
+{"projectId":"11111111-1111-4111-8111-111111111111","sourceScenarioKey":"AUTH-01","status":"failed","startedFrom":"2026-10-01T00:00:00Z","startedBefore":"2026-11-01T00:00:00Z","page":1,"limit":30}
+```
+
+To reassign a run, first call `testportal-list-active-users` with `{}` and select an active user's UUID, then call `testportal-reassign-manual-test-run-executor` with `projectId`, `runId`, and that `executedById`. This operation is project-scoped and does not establish executor-only authorization. TP-32 does not add the separate TP-37 account-lifecycle authentication fix.
+
 ---
 
 ## Tool Categories
@@ -334,6 +362,7 @@ The MCP tools are organized into the following functional categories:
 7. **Result Error Management** - Handling and analyzing test result errors
 8. **Specifications** - Accessing test specification details
 9. **Test Scenario Management** - Creating, listing, reading, editing, and deleting project-scoped Test Scenarios
+10. **Manual Test Runs** - Recording manual execution, retrieving history, and selecting/reassigning executors
 
 All tools return standardized responses using the `createSuccessResponse` helper, ensuring consistent formatting across the MCP interface.
 

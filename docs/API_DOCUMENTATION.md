@@ -293,6 +293,12 @@ Example completion request:
 }
 ```
 
+REST PATCH still accepts terminal run statuses; MCP requires
+`testportal-complete-manual-test-run` for completion.
+MCP records client-observed outcomes and does not execute browser/API tests or
+create automated Results. See [MCP Tools Documentation](MCP_TOOLS.md#manual-test-runs)
+for the full contract and examples.
+
 ## Related Documentation
 
 - [How to Inspect the MCP Server](INSPECT_MCP_SERVER.md)
