@@ -1,0 +1,66 @@
+__tests__/manual-test-runs/manualTestRunPostgresIntegration.test.ts
+  s_fe3cba2f918620::t_87d7acd163019e 292,331,334,336
+  s_fe3cba2f918620::t_9e30e6ce10b6b5 97,131-146
+  s_fe3cba2f918620::t_bc06e43f349dfa 127-130,147-160,162-169,177-197,199,202-207
+  s_fe3cba2f918620::t_3b6423c37fc821 12,95-96,98-122,124-126
+  s_fe3cba2f918620::t_d1b69f6f9cb8cc 123
+  s_fe3cba2f918620::t_7f4e1e649363ae 161,170-176,369,375
+  s_fe3cba2f918620::t_43556b60630934 198,200-201
+  s_fe3cba2f918620::t_a37ee8a4920269 325,332
+  s_fe3cba2f918620::t_737321187d6898 208
+src/mcp/tools/manual-test-runs.ts
+  s_fe3cba2f918620::t_9b999509ea2b55 1-39
+__tests__/mcp/testScenarioMcpTransport.test.ts
+  s_fe3cba2f918620::t_f54d3ca54c3396 73,85
+  s_fe3cba2f918620::t_b4d755ff56c06a 92-94,96,99,101-102
+__tests__/controllers/manualTestRunController.test.ts
+  s_fe3cba2f918620::t_d12b3c0dadb864 121-130
+docs/INSPECT_MCP_SERVER.md
+  s_fe3cba2f918620::t_daf4eec08aa410 83-93
+__tests__/mcp/mcpManualTestRunHandler.test.ts
+  s_fe3cba2f918620::t_f6091a7276548c 1-43,46-61
+  s_fe3cba2f918620::t_740ef6aa7cd7c8 44-45
+src/mcp/schemas/manualTestRunSchemas.ts
+  s_fe3cba2f918620::t_bf2d6991a12acc 61
+  s_fe3cba2f918620::t_d7ae0598659cc1 16,23-31
+  s_fe3cba2f918620::t_6cb9b2163d0841 88-89
+  s_fe3cba2f918620::t_8ca1e052a1c96b 1-15,17-22,32-60,62-87,90
+src/mcp/server.ts
+  s_fe3cba2f918620::t_c4e7627bbb6547 53,151-152,157-161,169-174,275-276
+  s_fe3cba2f918620::t_7e7dbf4e7f6889 153,162-168
+  s_fe3cba2f918620::t_bf2d6991a12acc 154-156
+  s_fe3cba2f918620::t_3da46f5469baec 277
+docs/MCP_TOOLS.md
+  s_fe3cba2f918620::t_02d013521d117c 342-349
+  s_fe3cba2f918620::t_7705ca801ea784 322-341,365
+__tests__/mcp/manualTestRunMcpTransport.test.ts
+  s_fe3cba2f918620::t_8b5268244f2d34 139-150,152-154
+  s_fe3cba2f918620::t_04a4d199b3c117 151
+  s_fe3cba2f918620::t_21dae7be3c7e64 1-36,38-50,52-53,56-66,68-111,126-138,155-160
+  s_fe3cba2f918620::t_85fd50aee359d5 37,51,54-55,112-125
+  s_fe3cba2f918620::t_d12b3c0dadb864 67
+docs/API_DOCUMENTATION.md
+  s_fe3cba2f918620::t_daf4eec08aa410 296-304
+src/handlers/mcpManualTestRunHandler.ts
+  s_fe3cba2f918620::t_9b999509ea2b55 1-16,23-24,33-39
+  s_fe3cba2f918620::t_f22cb864cd9655 17-22,25-32
+__tests__/mcp/manualTestRunSchemas.test.ts
+  s_fe3cba2f918620::t_d11ea752a255cc 1-47,49-60
+  s_fe3cba2f918620::t_7f4e1e649363ae 48
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.18",
+  "base_commit_sha": "b6511bf15697c29815613079db41290a6958a043",
+  "prompts": {},
+  "sessions": {
+    "s_fe3cba2f918620": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a186d2-d767-7a23-9c02-b78ddb082e7b",
+        "model": "gpt-6-luna"
+      },
+      "human_author": "Ihar Mikailau <ihar.mikailau@ventionteams.com>"
+    }
+  }
+}
