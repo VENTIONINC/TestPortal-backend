@@ -17,6 +17,14 @@ const mockList = jest.fn();
 const mockListForScenario = jest.fn();
 const mockListActiveUsers = jest.fn();
 const mockReassign = jest.fn();
+const mockProfileCreate = jest.fn();
+const mockProfileUpdate = jest.fn();
+const mockProfileList = jest.fn();
+const mockProfileRemove = jest.fn();
+
+jest.mock("@/handlers/mcpManualRunEnvironmentProfileHandler", () => ({ mcpManualRunEnvironmentProfileHandler: {
+  create: mockProfileCreate, update: mockProfileUpdate, list: mockProfileList, remove: mockProfileRemove,
+} }));
 
 jest.mock("@/handlers/mcpManualTestRunHandler", () => ({ mcpManualTestRunHandler: {
   start: mockStart, get: mockGet, update: mockUpdate, updateStep: mockUpdateStep,
@@ -64,7 +72,7 @@ describe("manual run Streamable HTTP MCP transport", () => {
 
   it("discovers exactly nine canonical tools and rejects missing authentication", async () => {
     const catalog = await client.listTools();
-    const runTools = catalog.tools.map(({ name }) => name).filter((name) => name.includes("manual") || name === "testportal-list-active-users");
+    const runTools = catalog.tools.map(({ name }) => name).filter((name) => /manual-test-run|test-scenario-manual-runs/.test(name) || name === "testportal-list-active-users");
     expect(runTools.sort()).toEqual([
       "testportal-complete-manual-test-run", "testportal-get-manual-test-run",
       "testportal-list-active-users", "testportal-list-manual-test-runs",
@@ -78,6 +86,37 @@ describe("manual run Streamable HTTP MCP transport", () => {
     const unauthenticated = await request(`http://127.0.0.1:${address.port}`)
       .post("/api/v2/mcp").send({ jsonrpc: "2.0", id: 1, method: "tools/list" });
     expect(unauthenticated.status).toBe(401);
+  });
+
+  it("discovers profile tools and validates identity and input before mutation", async () => {
+    const names = (await client.listTools()).tools.map(({ name }) => name);
+    const profileNames = ["testportal-list-manual-run-environment-profiles", "testportal-create-manual-run-environment-profile", "testportal-update-manual-run-environment-profile", "testportal-delete-manual-run-environment-profile"];
+    expect(names.filter((name) => name.includes("manual-run-environment-profile")).sort()).toEqual(profileNames.sort());
+    mockProfileCreate.mockResolvedValue({ id: runId });
+    const create = "testportal-create-manual-run-environment-profile";
+    const update = "testportal-update-manual-run-environment-profile";
+    expect((await client.callTool({ name: create, arguments: { projectId, name: " Profile ", browser: " " } })).isError).not.toBe(true);
+    expect(mockProfileCreate).toHaveBeenCalledWith({ projectId, name: "Profile", browser: null }, userId);
+    for (const args of [{ projectId: "invalid", name: "x" }, { projectId, name: "x", ownerId: userId }, { projectId, name: "x", build: "x" }]) {
+      expect((await client.callTool({ name: create, arguments: args })).isError).toBe(true);
+    }
+    expect(mockProfileCreate).toHaveBeenCalledTimes(1);
+    expect((await client.callTool({ name: update, arguments: { projectId, profileId: runId } })).isError).toBe(true);
+    expect(mockProfileUpdate).not.toHaveBeenCalled();
+    mockProfileUpdate.mockResolvedValue({ id: runId });
+    await client.callTool({ name: update, arguments: { projectId, profileId: runId, device: "  " } });
+    expect(mockProfileUpdate).toHaveBeenCalledWith({ projectId, profileId: runId, device: null });
+    await client.callTool({ name: update, arguments: { projectId, profileId: runId, browser: null } });
+    expect(mockProfileUpdate).toHaveBeenLastCalledWith({ projectId, profileId: runId, browser: null });
+    mockProfileList.mockRejectedValue(new Error("Project not found"));
+    expect((await client.callTool({ name: "testportal-list-manual-run-environment-profiles", arguments: { projectId } })).isError).toBe(true);
+    const address = server.address() as AddressInfo;
+    const foreign = await request(`http://127.0.0.1:${address.port}`).post("/api/v2/mcp")
+      .set("Authorization", `Bearer ${generateMcpToken("66666666-6666-4666-8666-666666666666", secret)}`)
+      .set("mcp-session-id", String(Reflect.get(transport, "sessionId")))
+      .send({ jsonrpc: "2.0", id: 1, method: "tools/call", params: { name: create, arguments: { projectId, name: "x" } } });
+    expect(foreign.status).toBe(403);
+    expect(mockProfileCreate).toHaveBeenCalledTimes(1);
   });
 
   it("runs the scoped lifecycle, binds executor identity and rejects spoofing/implicit completion before mutation", async () => {
