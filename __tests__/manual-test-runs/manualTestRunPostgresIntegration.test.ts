@@ -3,7 +3,12 @@
 
 import "@/test-utils/testEnv";
 import { randomUUID } from "node:crypto";
+import { createServer } from "node:http";
+import type { AddressInfo } from "node:net";
+import express from "express";
+import { Client, StreamableHTTPClientTransport } from "@modelcontextprotocol/client";
 import { dbClient } from "@/prisma/client";
+import { generateMcpToken } from "@/lib/mcp-token";
 import { projectModel } from "@/models/projectModel";
 import { testScenarioModel } from "@/models/testScenarioModel";
 import { manualTestRunModel } from "@/models/manualTestRunModel";
@@ -131,6 +136,68 @@ describePostgres("manual test run PostgreSQL integration", () => {
     } finally { await projectModel.deleteWithCascade(otherProjectId); }
     const direct = await mcpManualTestRunHandler.start({ projectId, scenarioId: scenario.id, browser: "Direct" }, userId);
     expect(direct).toMatchObject({ browser: "Direct", operatingSystem: null, device: null, apiEnvironment: null, build: null, deployment: null });
+  });
+
+  it("lists duplicate profiles in deterministic order and rejects repeated deletion", async () => {
+    expect(await profiles.list({ projectId })).toEqual([]);
+    const first = await profiles.create({ projectId, name: "Duplicate" }, userId);
+    const second = await profiles.create({ projectId, name: "Duplicate" }, userId);
+    const newest = await profiles.create({ projectId, name: "Newest" }, userId);
+    expect(first.id).not.toBe(second.id);
+    const tiedAt = new Date("2026-01-01T00:00:00Z");
+    await dbClient.manualRunEnvironmentProfile.updateMany({ where: { id: { in: [first.id, second.id] } }, data: { createdAt: tiedAt } });
+    await dbClient.manualRunEnvironmentProfile.update({ where: { id: newest.id }, data: { createdAt: new Date("2026-01-02T00:00:00Z") } });
+    expect((await profiles.list({ projectId })).map(({ id }) => id)).toEqual([newest.id, ...[first.id, second.id].sort().reverse()]);
+    await profiles.remove({ projectId, profileId: first.id });
+    await expect(profiles.remove({ projectId, profileId: first.id })).rejects.toThrow("Profile not found");
+  });
+
+  it("allows another authenticated session to list and update a creator's shared profile", async () => {
+    const otherUserId = randomUUID();
+    await dbClient.user.create({ data: { id: otherUserId, name: "Other user", email: `profile-${otherUserId}@example.test` } });
+    const previousSecret = process.env.MCP_SECRET;
+    const secret = "profile-sharing-integration-secret";
+    process.env.MCP_SECRET = secret;
+    jest.useFakeTimers();
+    const { default: router } = await import("@/mcp/server");
+    jest.clearAllTimers();
+    jest.useRealTimers();
+    const app = express();
+    app.use(express.json());
+    app.use("/api", router);
+    const server = createServer(app);
+    const clients: Client[] = [];
+    try {
+      await new Promise<void>((resolve) => server.listen(0, "127.0.0.1", resolve));
+      const address = server.address() as AddressInfo;
+      for (const actor of [userId, otherUserId]) {
+        const client = new Client({ name: "profile-sharing-test", version: "1.0.0" });
+        clients.push(client);
+        await client.connect(new StreamableHTTPClientTransport(new URL(`http://127.0.0.1:${address.port}/api/v2/mcp`), { requestInit: { headers: { Authorization: `Bearer ${generateMcpToken(actor, secret)}` } } }));
+      }
+      const [creator, other] = clients;
+      if (!creator || !other) throw new Error("Expected two authenticated clients");
+      const created = await creator.callTool({ name: "testportal-create-manual-run-environment-profile", arguments: { projectId, name: "Shared", browser: "Chrome" } });
+      expect(created.isError).not.toBe(true);
+      const content = created.content[0];
+      if (!content || content.type !== "text") throw new Error("Expected profile JSON text");
+      const profile = JSON.parse(content.text) as { id: string; ownerId: string };
+      expect(profile.ownerId).toBe(userId);
+      const listed = await other.callTool({ name: "testportal-list-manual-run-environment-profiles", arguments: { projectId } });
+      expect(listed.isError).not.toBe(true);
+      const listContent = listed.content[0];
+      if (!listContent || listContent.type !== "text") throw new Error("Expected profile list JSON text");
+      expect(JSON.parse(listContent.text)).toEqual(expect.arrayContaining([expect.objectContaining({ id: profile.id, ownerId: userId })]));
+      const updated = await other.callTool({ name: "testportal-update-manual-run-environment-profile", arguments: { projectId, profileId: profile.id, browser: "Firefox" } });
+      expect(updated.isError).not.toBe(true);
+      expect(await profiles.list({ projectId })).toEqual(expect.arrayContaining([expect.objectContaining({ id: profile.id, ownerId: userId, browser: "Firefox" })]));
+    } finally {
+      await Promise.all(clients.map((client) => client.close()));
+      if (server.listening) await new Promise<void>((resolve, reject) => server.close((error) => error ? reject(error) : resolve()));
+      jest.useRealTimers();
+      if (previousSecret === undefined) delete process.env.MCP_SECRET; else process.env.MCP_SECRET = previousSecret;
+      await dbClient.user.delete({ where: { id: otherUserId } });
+    }
   });
 
   it("persists an MCP adapter workflow with independent snapshots, profile overrides, edits and retesting", async () => {
