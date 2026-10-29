@@ -80,6 +80,17 @@ The tool-call JSON-RPC shape used by inspector-compatible clients is:
 Replace the tool name and arguments to inspect detail, update, and delete
 operations. Do not use a production scenario for mutation checks.
 
+### Manual Run Inspector Checks
+
+The registered manual-run MCP tools record client-observed outcomes. They do
+not perform browser/API execution. Confirm discovery on the connected instance
+before use. Start a disposable run and select step IDs from that returned run
+snapshot; do not send source-scenario step IDs. Update the step, then explicitly
+call `testportal-complete-manual-test-run`. The ordinary run update rejects all
+status fields even though the REST PATCH route still accepts terminal status
+until TP-38 aligns REST. See [MCP Tools Documentation](MCP_TOOLS.md#manual-test-runs)
+for inputs, history filters, safe executor lookup and metadata exceptions.
+
 ## Connecting from an MCP Client
 
 To connect from another MCP-compatible client, configure an HTTP remote server that points at the backend MCP endpoint.

@@ -118,4 +118,14 @@ describe("manualTestRunController", () => {
     });
     expect(result.status as jest.Mock).toHaveBeenCalledWith(200);
   });
+
+  it("retains REST PATCH completion behavior while MCP uses its dedicated completion tool", async () => {
+    const result = response();
+    await manualTestRunController.update(
+      { params: { runId }, query: { projectId }, body: { status: "passed" } } as unknown as Request<{ runId: string }>,
+      result,
+    );
+    expect(serviceMocks.updateRun).toHaveBeenCalledWith({ projectId, runId, status: "passed" });
+    expect(result.status as jest.Mock).toHaveBeenCalledWith(200);
+  });
 });

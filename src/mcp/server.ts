@@ -50,6 +50,7 @@ import {
   reorderTestScenarioSteps,
 } from "@/mcp/tools/test-scenarios";
 import { getAvailableProjects } from "@/mcp/tools/projects";
+import { createStartManualTestRunTool, manualTestRunTools } from "@/mcp/tools/manual-test-runs";
 import * as testPortalAssistant from "@/mcp/prompts/test-portal-assistant/v1.0.0";
 import * as issueAnalysisAssistant from "@/mcp/prompts/issue-analysis-assistant/v1.0.0";
 import * as environmentPerformanceAssistant from "@/mcp/prompts/environment-performance-assistant/v1.0.0";
@@ -145,6 +146,30 @@ export const registerTestScenarioTools = (server: McpServer): void => {
   register(updateTestScenarioStep);
   register(deleteTestScenarioStep);
   register(reorderTestScenarioSteps);
+};
+
+export const registerManualTestRunTools = (server: McpServer, executedById: string): void => {
+  const compatibleServer = server as McpServerWithTools;
+  const tools: Array<readonly [string, string, MCPToolSchema, (input: never) => Promise<unknown>]> = [
+    createStartManualTestRunTool(executedById),
+    ...manualTestRunTools,
+  ];
+  for (const [name, description, schema, handler] of tools) {
+    compatibleServer.registerTool(
+      name,
+      { description, inputSchema: strictMcpInputSchema(schema) },
+      async (input: unknown) => {
+        const validatedInput =
+          typeof schema === "object" &&
+          schema !== null &&
+          "parseAsync" in schema &&
+          typeof schema.parseAsync === "function"
+            ? await schema.parseAsync(input)
+            : input;
+        return (await handler(validatedInput as never)) as CallToolResult;
+      },
+    );
+  }
 };
 
 router.post(
@@ -246,6 +271,9 @@ router.post(
 
         // Test Scenario tools
         registerTestScenarioTools(server);
+
+        // Manual Test Run tools are bound to the authenticated session owner.
+        registerManualTestRunTools(server, reviewedById);
 
         // Test Portal Assistant
         server.registerPrompt(

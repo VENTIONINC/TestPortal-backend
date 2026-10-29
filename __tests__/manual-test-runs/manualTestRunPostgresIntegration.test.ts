@@ -9,6 +9,7 @@ import { testScenarioModel } from "@/models/testScenarioModel";
 import { manualTestRunModel } from "@/models/manualTestRunModel";
 import { manualTestRunService } from "@/services/manualTestRunService";
 import { manualRunEnvironmentProfileService } from "@/services/manualRunEnvironmentProfileService";
+import { mcpManualTestRunHandler } from "@/handlers/mcpManualTestRunHandler";
 import type { TestScenarioResponse } from "@/types/testScenarios";
 import type { ManualTestRunResponse } from "@/types/manualTestRuns";
 
@@ -89,6 +90,120 @@ describePostgres("manual test run PostgreSQL integration", () => {
     await dbClient.project.deleteMany({ where: { id: projectId } });
     await dbClient.user.deleteMany({ where: { id: userId } });
     await dbClient.$disconnect();
+  });
+
+  it("persists an MCP adapter workflow with independent snapshots, profile overrides, edits and retesting", async () => {
+    const scenario = await createScenario();
+    await testScenarioModel.update(scenario.id, projectId, { scenarioKey: "MCP-01" });
+    const profile = await manualRunEnvironmentProfileService.create(projectId, userId, {
+      name: "MCP profile", browser: "Chrome", operatingSystem: "Linux", device: "Laptop", apiEnvironment: "Staging",
+    });
+    const first = await mcpManualTestRunHandler.start({
+      projectId, scenarioId: scenario.id, environmentProfileId: profile.id,
+      browser: "Firefox", build: "build-42", deployment: "canary", notes: "Before run",
+    }, userId);
+    expect(first).toMatchObject({
+      executedById: userId, status: "in_progress", browser: "Firefox", operatingSystem: "Linux",
+      device: "Laptop", apiEnvironment: "Staging", build: "build-42", deployment: "canary",
+    });
+    expect(first.steps.map(({ id }) => id)).not.toEqual(scenario.steps.map(({ id }) => id));
+
+    const firstStep = first.steps[0];
+    if (!firstStep) throw new Error("Expected a run snapshot step");
+    await mcpManualTestRunHandler.updateStep({ projectId, runId: first.id, stepId: firstStep.id, status: "failed", notes: "Observed failure" });
+    await mcpManualTestRunHandler.updateStep({ projectId, runId: first.id, stepId: firstStep.id, status: "passed" });
+    await mcpManualTestRunHandler.update({ projectId, runId: first.id, notes: null });
+    await testScenarioModel.update(scenario.id, projectId, { title: "Edited for retest" });
+    const retest = await mcpManualTestRunHandler.start({ projectId, scenarioId: scenario.id }, userId);
+
+    expect(retest.id).not.toBe(first.id);
+    expect(retest.steps[0]?.id).not.toBe(firstStep.id);
+    expect(retest.title).toBe("Edited for retest");
+    expect(await mcpManualTestRunHandler.get({ projectId, runId: first.id })).toMatchObject({
+      title: scenario.title, notes: null, steps: expect.arrayContaining([expect.objectContaining({ id: firstStep.id, status: "passed", notes: "Observed failure" })]),
+    });
+    expect((await mcpManualTestRunHandler.list({ projectId })).runs.map(({ id }) => id)).toEqual(expect.arrayContaining([first.id, retest.id]));
+    expect(await dbClient.manualTestRun.count({ where: { projectId } })).toBe(2);
+    const page = await mcpManualTestRunHandler.list({ projectId });
+    expect(page).toMatchObject({ total: 2, page: 1, limit: 30, totalPages: 1 });
+    expect(page.runs[0]).not.toHaveProperty("steps");
+    expect(page.runs[0]).not.toHaveProperty("notes");
+
+    await mcpManualTestRunHandler.complete({ projectId, runId: first.id, status: "failed" });
+    await mcpManualTestRunHandler.complete({ projectId, runId: retest.id, status: "skipped" });
+    const tiedAt = new Date("2026-01-01T00:00:00.000Z");
+    await dbClient.manualTestRun.updateMany({ where: { id: { in: [first.id, retest.id] } }, data: { startedAt: tiedAt } });
+    const filtered = await mcpManualTestRunHandler.list({
+      projectId, testScenarioId: scenario.id, sourceScenarioKey: "MCP-01", status: "failed",
+      startedFrom: tiedAt.toISOString(), startedBefore: new Date(tiedAt.getTime() + 1000).toISOString(), page: 1, limit: 1,
+    });
+    expect(filtered).toMatchObject({ total: 1, page: 1, limit: 1, totalPages: 1 });
+    expect(filtered.runs[0]?.id).toBe(first.id);
+    const tiePageOne = await mcpManualTestRunHandler.list({ projectId, page: 1, limit: 1 });
+    const tiePageTwo = await mcpManualTestRunHandler.list({ projectId, page: 2, limit: 1 });
+    expect([tiePageOne.runs[0]?.id, tiePageTwo.runs[0]?.id]).toEqual([first.id, retest.id].sort().reverse());
+    expect(await mcpManualTestRunHandler.listForScenario({ projectId, scenarioId: scenario.id, status: "failed" })).toMatchObject({ total: 1 });
+    expect(await mcpManualTestRunHandler.list({ projectId, sourceScenarioKey: "NO-MATCH" })).toMatchObject({ runs: [], total: 0 });
+  });
+
+  it("enforces MCP completion, frozen metadata exceptions and empty-run completion through adapters", async () => {
+    const scenario = await createScenario([{ action: "Only step" }]);
+    const run = await mcpManualTestRunHandler.start({ projectId, scenarioId: scenario.id }, userId);
+    const stepId = run.steps[0]?.id;
+    if (!stepId) throw new Error("Expected one copied step");
+    await expect(mcpManualTestRunHandler.complete({ projectId, runId: run.id, status: "passed" })).rejects.toThrow();
+    expect(await manualTestRunModel.findById(run.id, projectId)).toMatchObject({ status: "in_progress", completedAt: null });
+    await mcpManualTestRunHandler.updateStep({ projectId, runId: run.id, stepId, status: "skipped" });
+    await expect(mcpManualTestRunHandler.complete({ projectId, runId: run.id, status: "passed" })).rejects.toThrow();
+    const completed = await mcpManualTestRunHandler.complete({ projectId, runId: run.id, status: "skipped" });
+    expect(completed).toMatchObject({ status: "skipped", steps: [{ id: stepId, status: "skipped" }] });
+    await expect(mcpManualTestRunHandler.complete({ projectId, runId: run.id, status: "failed" })).rejects.toThrow();
+    await expect(mcpManualTestRunHandler.updateStep({ projectId, runId: run.id, stepId, status: "failed" })).rejects.toThrow();
+    const runKeyOnly = await mcpManualTestRunHandler.update({ projectId, runId: run.id, runKey: "Retest-1" });
+    expect(runKeyOnly).toMatchObject({ runKey: "Retest-1", status: "skipped", completedAt: completed.completedAt });
+    await expect(mcpManualTestRunHandler.update({ projectId, runId: run.id, runKey: "Rejected", notes: "late" })).rejects.toThrow();
+    expect(await mcpManualTestRunHandler.get({ projectId, runId: run.id })).toMatchObject({ runKey: "Retest-1", notes: null, status: "skipped" });
+
+    const emptyScenario = await createScenario([]);
+    const emptyRun = await mcpManualTestRunHandler.start({ projectId, scenarioId: emptyScenario.id }, userId);
+    expect((await mcpManualTestRunHandler.complete({ projectId, runId: emptyRun.id, status: "passed" })).status).toBe("passed");
+
+    const earlyScenario = await createScenario([{ action: "Can stop here" }]);
+    const earlyRun = await mcpManualTestRunHandler.start({ projectId, scenarioId: earlyScenario.id }, userId);
+    for (const status of ["failed", "blocked"] as const) {
+      const candidate = status === "failed" ? earlyRun : await mcpManualTestRunHandler.start({ projectId, scenarioId: earlyScenario.id }, userId);
+      expect((await mcpManualTestRunHandler.complete({ projectId, runId: candidate.id, status })).steps[0]?.status).toBe("not_started");
+    }
+  });
+
+  it("lists safe active executors and reassigns without altering execution evidence", async () => {
+    const activeTargetId = randomUUID();
+    const pendingId = randomUUID();
+    const suspendedId = randomUUID();
+    await dbClient.user.createMany({ data: [
+      { id: activeTargetId, name: "A Target", email: `manual-run-active-${activeTargetId}@example.test`, status: "active" },
+      { id: pendingId, name: "B Pending", email: `manual-run-pending-${pendingId}@example.test`, status: "pending" },
+      { id: suspendedId, name: "C Suspended", email: `manual-run-suspended-${suspendedId}@example.test`, status: "suspended" },
+    ] });
+    const scenario = await createScenario([{ action: "Check" }]);
+    const run = await mcpManualTestRunHandler.start({ projectId, scenarioId: scenario.id }, userId);
+    const stepId = run.steps[0]?.id;
+    if (!stepId) throw new Error("Expected one copied step");
+    await mcpManualTestRunHandler.updateStep({ projectId, runId: run.id, stepId, status: "passed", notes: "Evidence" });
+    const beforeComplete = await mcpManualTestRunHandler.get({ projectId, runId: run.id });
+    const directory = await mcpManualTestRunHandler.listActiveUsers();
+    expect(directory.every((entry) => Object.keys(entry).sort().join(",") === "email,id,name")).toBe(true);
+    expect(directory.map(({ id }) => id)).toContain(activeTargetId);
+    expect(directory.map(({ id }) => id)).not.toEqual(expect.arrayContaining([pendingId, suspendedId]));
+    expect(directory.map(({ name, id }) => [name, id])).toEqual([...directory].sort((left, right) => left.name.localeCompare(right.name) || left.id.localeCompare(right.id)).map(({ name, id }) => [name, id]));
+    await expect(mcpManualTestRunHandler.reassignExecutor({ projectId, runId: run.id, executedById: suspendedId })).rejects.toThrow();
+    await expect(mcpManualTestRunHandler.reassignExecutor({ projectId: randomUUID(), runId: run.id, executedById: activeTargetId })).rejects.toThrow("not found");
+    expect((await mcpManualTestRunHandler.get({ projectId, runId: run.id })).executedById).toBe(userId);
+    const reassignedActive = await mcpManualTestRunHandler.reassignExecutor({ projectId, runId: run.id, executedById: activeTargetId });
+    expect(reassignedActive).toMatchObject({ executedById: activeTargetId, startedAt: beforeComplete.startedAt, steps: [{ id: stepId, status: "passed", notes: "Evidence", updatedAt: beforeComplete.steps[0]?.updatedAt }] });
+    const completed = await mcpManualTestRunHandler.complete({ projectId, runId: run.id, status: "passed" });
+    const reassignedCompleted = await mcpManualTestRunHandler.reassignExecutor({ projectId, runId: run.id, executedById: userId });
+    expect(reassignedCompleted).toMatchObject({ executedById: userId, completedAt: completed.completedAt, steps: [{ id: stepId, status: "passed", notes: "Evidence", updatedAt: completed.steps[0]?.updatedAt }] });
   });
 
   it("keeps a resolved environment snapshot after profile changes and deletion", async () => {
@@ -174,7 +289,7 @@ describePostgres("manual test run PostgreSQL integration", () => {
     expect(completed?.steps[0]?.status).toBe("passed");
 
     await dbClient.testScenario.delete({ where: { id: scenario.id } });
-    const detached = await manualTestRunModel.findById(run.id, projectId);
+    const detached = await mcpManualTestRunHandler.get({ projectId, runId: run.id });
     expect(detached?.sourceTestScenarioId).toBe(scenario.id);
     expect(detached?.testScenarioId).toBeNull();
     expect(detached?.title).toBe(scenario.title);
@@ -207,18 +322,18 @@ describePostgres("manual test run PostgreSQL integration", () => {
     await dbClient.testScenario.delete({ where: { id: scenario.id } });
     await dbClient.user.delete({ where: { id: creatorId } });
 
-    const detached = await manualTestRunModel.findById(run.id, projectId);
+    const detached = await mcpManualTestRunHandler.get({ projectId, runId: run.id });
     expect(detached?.sourceTestScenarioId).toBe(scenario.id);
     expect(detached?.testScenarioId).toBeNull();
     expect(detached?.executedById).toBeNull();
     expect(detached?.executedBy).toBeNull();
 
-    const history = await manualTestRunService.listRuns({ projectId });
-    expect(history.runs.map(({ id }) => id)).toContain(run.id);
+    const history = await mcpManualTestRunHandler.list({ projectId });
+    expect(history.runs.find(({ id }) => id === run.id)).toMatchObject({ sourceTestScenarioId: scenario.id, testScenarioId: null, executedById: null, executedBy: null });
     await expect(
-      manualTestRunService.listRuns({ projectId, scenarioId: scenario.id }),
+      mcpManualTestRunHandler.listForScenario({ projectId, scenarioId: scenario.id }),
     ).rejects.toThrow("Test scenario");
-    const filtered = await manualTestRunService.listRuns({
+    const filtered = await mcpManualTestRunHandler.list({
       projectId,
       testScenarioId: scenario.id,
     });
@@ -251,13 +366,13 @@ describePostgres("manual test run PostgreSQL integration", () => {
     if (!stepId) throw new Error("Expected a copied step");
 
     const [stepResult, completionResult] = await Promise.allSettled([
-      manualTestRunService.updateStep({
+      mcpManualTestRunHandler.updateStep({
         projectId,
         runId: run.id,
         stepId,
         status: "passed",
       }),
-      manualTestRunService.completeRun({
+      mcpManualTestRunHandler.complete({
         projectId,
         runId: run.id,
         status: "failed",
