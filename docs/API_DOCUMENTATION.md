@@ -293,14 +293,11 @@ Example completion request:
 }
 ```
 
-The REST PATCH route above intentionally continues to accept a terminal run
-status. The MCP contract is narrower: `testportal-update-manual-test-run`
-accepts only notes and/or `runKey`, and completion must use
-`testportal-complete-manual-test-run`. This temporary transport difference is
-tracked for REST alignment in TP-38. MCP records outcomes supplied by the
-client; it does not execute browser/API tests or create automated Results.
-See [MCP Tools Documentation](MCP_TOOLS.md#manual-test-runs) for the nine-tool
-manual-run contract and examples.
+REST PATCH still accepts terminal run statuses; MCP requires
+`testportal-complete-manual-test-run` for completion.
+MCP records client-observed outcomes and does not execute browser/API tests or
+create automated Results. See [MCP Tools Documentation](MCP_TOOLS.md#manual-test-runs)
+for the full contract and examples.
 
 ## Related Documentation
 
