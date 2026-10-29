@@ -1,0 +1,44 @@
+__tests__/mcp/manualRunEnvironmentProfile.test.ts
+  s_97da24d1931307::t_3d9e593dcc8f19 1-8,10-39,41,43-44,47,49-51
+  s_97da24d1931307::t_12e1995b586f89 9,40,45,48
+  s_97da24d1931307::t_3f12e0c90fbbfd 42,46
+src/mcp/schemas/manualRunEnvironmentProfileSchemas.ts
+  s_97da24d1931307::t_c900d317e4e97a 1-20
+src/handlers/mcpManualRunEnvironmentProfileHandler.ts
+  s_97da24d1931307::t_c900d317e4e97a 1-16
+src/mcp/server.ts
+  s_97da24d1931307::t_c900d317e4e97a 54,157-158
+src/mcp/tools/manual-run-environment-profiles.ts
+  s_97da24d1931307::t_c900d317e4e97a 1-14
+docs/MCP_TOOLS.md
+  s_97da24d1931307::t_0ec58240da89b7 352-377
+  s_97da24d1931307::t_e9c8413d605577 378-381
+__tests__/mcp/testScenarioMcpTransport.test.ts
+  s_97da24d1931307::t_76fadafae1c8b7 76,79,95,104
+__tests__/mcp/manualTestRunMcpTransport.test.ts
+  s_97da24d1931307::t_c900d317e4e97a 75
+  s_97da24d1931307::t_3f12e0c90fbbfd 112
+  s_97da24d1931307::t_1963b807a52971 20-27,91-108,111,113-119
+  s_97da24d1931307::t_e4c724069408a7 109-110
+  s_97da24d1931307::t_c26382cc013457 120-121
+__tests__/manual-test-runs/manualTestRunPostgresIntegration.test.ts
+  s_97da24d1931307::t_b02bca89d6e889 115-118,120,132-133
+  s_97da24d1931307::t_a94393e2e73027 13-14,97-114,119,121-131
+  s_97da24d1931307::t_ce4b077b9fb6e9 134-135
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.18",
+  "base_commit_sha": "e121a0c76de71da6f00b219e02a49eb3a9a6ec6e",
+  "prompts": {},
+  "sessions": {
+    "s_97da24d1931307": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a1872c-caaa-7b42-aa47-8f4d189ab8ca",
+        "model": "gpt-6.1-terra"
+      },
+      "human_author": "Ihar Mikailau <ihar.mikailau@ventionteams.com>"
+    }
+  }
+}
