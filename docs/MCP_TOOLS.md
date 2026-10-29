@@ -349,6 +349,36 @@ To reassign a run, first call `testportal-list-active-users` with `{}` and selec
 
 ---
 
+### Manual run environment profiles
+
+The four profile tools use authenticated project-shared access. All IDs are UUIDs; unknown fields are rejected. Successful calls return JSON in MCP text content; service errors set `isError: true`. List requires an existing project, returns an array ordered by `createdAt DESC, id DESC`, and is not filtered by creator. Create derives `ownerId` from the session. Create and update return the persisted profile with `id`, `projectId`, `ownerId`, `name`, `browser`, `operatingSystem`, `device`, `apiEnvironment`, `createdAt`, and `updatedAt`.
+
+| Tool | Input | Result |
+| --- | --- | --- |
+| `testportal-list-manual-run-environment-profiles` | `projectId` | Profile array, possibly empty |
+| `testportal-create-manual-run-environment-profile` | `projectId`, `name`; optional reusable fields below | Created profile |
+| `testportal-update-manual-run-environment-profile` | `projectId`, `profileId`; at least one editable field | Updated profile |
+| `testportal-delete-manual-run-environment-profile` | `projectId`, `profileId` | `{projectId, profileId, deleted: true}` |
+
+Names are trimmed, nonblank single-line strings up to 100 characters; duplicate names are allowed. Reusable fields `browser`, `operatingSystem`, `device`, and `apiEnvironment` accept null or trimmed single-line strings up to 200 characters. Blank strings normalize to null. Omission preserves an update field; null clears it. Ownership, generated IDs, timestamps, `build`, and `deployment` are not editable inputs. Missing projects and missing or foreign profiles return errors. Deleting a profile does not alter saved runs.
+
+For example, call these tools in order, replacing the identifiers with returned values:
+
+```jsonl
+{"name":"testportal-list-manual-run-environment-profiles","arguments":{"projectId":"11111111-1111-4111-8111-111111111111"}}
+{"name":"testportal-create-manual-run-environment-profile","arguments":{"projectId":"11111111-1111-4111-8111-111111111111","name":"Staging","browser":"Chrome","operatingSystem":"Linux","device":"Laptop","apiEnvironment":"Staging"}}
+{"name":"testportal-start-manual-test-run","arguments":{"projectId":"11111111-1111-4111-8111-111111111111","scenarioId":"22222222-2222-4222-8222-222222222222","environmentProfileId":"33333333-3333-4333-8333-333333333333","browser":"Firefox","device":null,"build":"42","deployment":"canary"}}
+{"name":"testportal-update-manual-run-environment-profile","arguments":{"projectId":"11111111-1111-4111-8111-111111111111","profileId":"33333333-3333-4333-8333-333333333333","operatingSystem":"Windows"}}
+{"name":"testportal-start-manual-test-run","arguments":{"projectId":"11111111-1111-4111-8111-111111111111","scenarioId":"22222222-2222-4222-8222-222222222222","environmentProfileId":"33333333-3333-4333-8333-333333333333"}}
+{"name":"testportal-delete-manual-run-environment-profile","arguments":{"projectId":"11111111-1111-4111-8111-111111111111","profileId":"33333333-3333-4333-8333-333333333333"}}
+{"name":"testportal-get-manual-test-run","arguments":{"projectId":"11111111-1111-4111-8111-111111111111","runId":"44444444-4444-4444-8444-444444444444"}}
+{"name":"testportal-get-manual-test-run","arguments":{"projectId":"11111111-1111-4111-8111-111111111111","runId":"55555555-5555-4555-8555-555555555555"}}
+{"name":"testportal-list-manual-test-runs","arguments":{"projectId":"11111111-1111-4111-8111-111111111111"}}
+{"name":"testportal-list-test-scenario-manual-runs","arguments":{"projectId":"11111111-1111-4111-8111-111111111111","scenarioId":"22222222-2222-4222-8222-222222222222"}}
+```
+
+Use the created profile's ID and the started run's ID in subsequent calls. The first run captures Firefox, Linux, null device, Staging, build 42, and canary. A later run started after the update captures Windows instead. Both retain their snapshots after deletion, including in project and scenario history. Build and deployment are run-only. Reconnect and inspect live `tools/list` to determine whether the connected deployment offers these tools.
+
 ## Tool Categories
 
 The MCP tools are organized into the following functional categories:

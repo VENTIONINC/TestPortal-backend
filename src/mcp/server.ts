@@ -51,6 +51,7 @@ import {
 } from "@/mcp/tools/test-scenarios";
 import { getAvailableProjects } from "@/mcp/tools/projects";
 import { createStartManualTestRunTool, manualTestRunTools } from "@/mcp/tools/manual-test-runs";
+import { createProfileTool, profileTools } from "@/mcp/tools/manual-run-environment-profiles";
 import * as testPortalAssistant from "@/mcp/prompts/test-portal-assistant/v1.0.0";
 import * as issueAnalysisAssistant from "@/mcp/prompts/issue-analysis-assistant/v1.0.0";
 import * as environmentPerformanceAssistant from "@/mcp/prompts/environment-performance-assistant/v1.0.0";
@@ -153,6 +154,8 @@ export const registerManualTestRunTools = (server: McpServer, executedById: stri
   const tools: Array<readonly [string, string, MCPToolSchema, (input: never) => Promise<unknown>]> = [
     createStartManualTestRunTool(executedById),
     ...manualTestRunTools,
+    createProfileTool(executedById),
+    ...profileTools,
   ];
   for (const [name, description, schema, handler] of tools) {
     compatibleServer.registerTool(

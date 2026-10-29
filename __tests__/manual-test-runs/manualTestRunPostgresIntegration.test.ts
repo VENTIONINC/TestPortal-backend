@@ -10,6 +10,8 @@ import { manualTestRunModel } from "@/models/manualTestRunModel";
 import { manualTestRunService } from "@/services/manualTestRunService";
 import { manualRunEnvironmentProfileService } from "@/services/manualRunEnvironmentProfileService";
 import { mcpManualTestRunHandler } from "@/handlers/mcpManualTestRunHandler";
+import { mcpManualRunEnvironmentProfileHandler as profiles } from "@/handlers/mcpManualRunEnvironmentProfileHandler";
+import { startManualTestRunSchema, updateManualTestRunSchema } from "@/mcp/schemas/manualTestRunSchemas";
 import type { TestScenarioResponse } from "@/types/testScenarios";
 import type { ManualTestRunResponse } from "@/types/manualTestRuns";
 
@@ -90,6 +92,45 @@ describePostgres("manual test run PostgreSQL integration", () => {
     await dbClient.project.deleteMany({ where: { id: projectId } });
     await dbClient.user.deleteMany({ where: { id: userId } });
     await dbClient.$disconnect();
+  });
+
+  it("preserves profile-derived snapshots across update and deletion through MCP adapters", async () => {
+    const scenario = await createScenario();
+    const profile = await profiles.create({ projectId, name: "Shared", browser: "Chrome", operatingSystem: "Linux", device: "Laptop", apiEnvironment: "Staging" }, userId);
+    expect(await profiles.list({ projectId })).toEqual(expect.arrayContaining([expect.objectContaining({ id: profile.id, ownerId: userId })]));
+    const first = await mcpManualTestRunHandler.start({ projectId, scenarioId: scenario.id, environmentProfileId: profile.id, browser: "Firefox", device: null, build: "42", deployment: "canary" }, userId);
+    const firstSnapshot = { browser: "Firefox", operatingSystem: "Linux", device: null, apiEnvironment: "Staging", build: "42", deployment: "canary" };
+    expect(first).toMatchObject(firstSnapshot);
+    await profiles.update({ projectId, profileId: profile.id, operatingSystem: "Windows" });
+    const second = await mcpManualTestRunHandler.start({ projectId, scenarioId: scenario.id, environmentProfileId: profile.id }, userId);
+    const secondSnapshot = { browser: "Chrome", operatingSystem: "Windows", device: "Laptop", apiEnvironment: "Staging", build: null, deployment: null };
+    expect(second).toMatchObject(secondSnapshot);
+    expect(await profiles.remove({ projectId, profileId: profile.id })).toEqual({ projectId, profileId: profile.id, deleted: true });
+    for (const [run, snapshot] of [[first, firstSnapshot], [second, secondSnapshot]] as const) {
+      expect(await mcpManualTestRunHandler.get({ projectId, runId: run.id })).toMatchObject(snapshot);
+      expect((await mcpManualTestRunHandler.list({ projectId })).runs.find(({ id }) => id === run.id)).toMatchObject(snapshot);
+      expect((await mcpManualTestRunHandler.listForScenario({ projectId, scenarioId: scenario.id })).runs.find(({ id }) => id === run.id)).toMatchObject(snapshot);
+    }
+    await expect(mcpManualTestRunHandler.start({ projectId, scenarioId: scenario.id, environmentProfileId: profile.id }, userId)).rejects.toThrow();
+    await expect(mcpManualTestRunHandler.start({ projectId, scenarioId: scenario.id, environmentProfileId: randomUUID() }, userId)).rejects.toThrow();
+    for (const browser of ["x\ny", "x".repeat(201), 42]) {
+      expect(startManualTestRunSchema.safeParse({ projectId, scenarioId: scenario.id, browser }).success).toBe(false);
+    }
+    expect(updateManualTestRunSchema.safeParse({ projectId, runId: first.id, browser: "changed" }).success).toBe(false);
+    expect(await mcpManualTestRunHandler.get({ projectId, runId: first.id })).toMatchObject(firstSnapshot);
+    expect(await dbClient.manualTestRun.count({ where: { projectId } })).toBe(2);
+    const otherProjectId = randomUUID();
+    await dbClient.project.create({ data: { id: otherProjectId, name: "Foreign profile project", ownerId: userId } });
+    try {
+      const foreign = await profiles.create({ projectId: otherProjectId, name: "Foreign" }, userId);
+      await expect(profiles.update({ projectId, profileId: foreign.id, name: "No" })).rejects.toThrow("Profile not found");
+      await expect(profiles.remove({ projectId, profileId: foreign.id })).rejects.toThrow("Profile not found");
+      await expect(mcpManualTestRunHandler.start({ projectId, scenarioId: scenario.id, environmentProfileId: foreign.id }, userId)).rejects.toThrow();
+      expect((await profiles.list({ projectId: otherProjectId }))[0]?.name).toBe("Foreign");
+      expect(await dbClient.manualTestRun.count({ where: { projectId } })).toBe(2);
+    } finally { await projectModel.deleteWithCascade(otherProjectId); }
+    const direct = await mcpManualTestRunHandler.start({ projectId, scenarioId: scenario.id, browser: "Direct" }, userId);
+    expect(direct).toMatchObject({ browser: "Direct", operatingSystem: null, device: null, apiEnvironment: null, build: null, deployment: null });
   });
 
   it("persists an MCP adapter workflow with independent snapshots, profile overrides, edits and retesting", async () => {
