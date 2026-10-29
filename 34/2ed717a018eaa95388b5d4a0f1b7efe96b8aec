@@ -1,0 +1,21 @@
+__tests__/manual-test-runs/manualTestRunPostgresIntegration.test.ts
+  s_97da24d1931307::t_9fea91da2fc4fe 6-9,11,141-162,165-201
+  s_97da24d1931307::t_bc7d9374c67b49 163-164
+  s_97da24d1931307::t_1d98ce01339877 202
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.18",
+  "base_commit_sha": "342ed717a018eaa95388b5d4a0f1b7efe96b8aec",
+  "prompts": {},
+  "sessions": {
+    "s_97da24d1931307": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a1872c-caaa-7b42-aa47-8f4d189ab8ca",
+        "model": "gpt-6.1-terra"
+      },
+      "human_author": "Ihar Mikailau <ihar.mikailau@ventionteams.com>"
+    }
+  }
+}
