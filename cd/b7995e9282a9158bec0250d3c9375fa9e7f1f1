@@ -1,0 +1,20 @@
+docs/API_DOCUMENTATION.md
+  s_fe3cba2f918620::t_fc6383c96ff38d 297
+  s_fe3cba2f918620::t_1042fc51b68f70 296,298-300
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.18",
+  "base_commit_sha": "cdb7995e9282a9158bec0250d3c9375fa9e7f1f1",
+  "prompts": {},
+  "sessions": {
+    "s_fe3cba2f918620": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a186d2-d767-7a23-9c02-b78ddb082e7b",
+        "model": "gpt-6-luna"
+      },
+      "human_author": "Ihar Mikailau <ihar.mikailau@ventionteams.com>"
+    }
+  }
+}
