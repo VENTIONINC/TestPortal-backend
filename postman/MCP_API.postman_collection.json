@@ -81,12 +81,12 @@
               }
             ],
             "url": {
-              "raw": "{{baseUrl}}/{{V_1}}/mcp",
+              "raw": "{{baseUrl}}/{{V_2}}/mcp",
               "host": [
                 "{{baseUrl}}"
               ],
               "path": [
-                "{{V_1}}",
+                "{{V_2}}",
                 "mcp"
               ]
             },
@@ -143,12 +143,12 @@
               }
             ],
             "url": {
-              "raw": "{{baseUrl}}/{{V_1}}/mcp",
+              "raw": "{{baseUrl}}/{{V_2}}/mcp",
               "host": [
                 "{{baseUrl}}"
               ],
               "path": [
-                "{{V_1}}",
+                "{{V_2}}",
                 "mcp"
               ]
             },
@@ -203,18 +203,18 @@
               }
             ],
             "url": {
-              "raw": "{{baseUrl}}/{{V_1}}/mcp",
+              "raw": "{{baseUrl}}/{{V_2}}/mcp",
               "host": [
                 "{{baseUrl}}"
               ],
               "path": [
-                "{{V_1}}",
+                "{{V_2}}",
                 "mcp"
               ]
             },
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"jsonrpc\": \"2.0\",\n  \"method\": \"tools/call\",\n  \"params\": {\n    \"name\": \"check-status\",\n    \"arguments\": {}\n  },\n  \"id\": 3\n}"
+              "raw": "{\n  \"jsonrpc\": \"2.0\",\n  \"method\": \"tools/call\",\n  \"params\": {\n    \"name\": \"testportal-execute-action\",\n    \"arguments\": {\n      \"actionId\": \"testportal-check-status\",\n      \"arguments\": {}\n    }\n  },\n  \"id\": 3\n}"
             }
           }
         },
@@ -244,18 +244,18 @@
               }
             ],
             "url": {
-              "raw": "{{baseUrl}}/{{V_1}}/mcp",
+              "raw": "{{baseUrl}}/{{V_2}}/mcp",
               "host": [
                 "{{baseUrl}}"
               ],
               "path": [
-                "{{V_1}}",
+                "{{V_2}}",
                 "mcp"
               ]
             },
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"jsonrpc\": \"2.0\",\n  \"method\": \"tools/call\",\n  \"params\": {\n    \"name\": \"current-time\",\n    \"arguments\": {}\n  },\n  \"id\": 4\n}"
+              "raw": "{\n  \"jsonrpc\": \"2.0\",\n  \"method\": \"tools/call\",\n  \"params\": {\n    \"name\": \"testportal-execute-action\",\n    \"arguments\": {\n      \"actionId\": \"testportal-current-time\",\n      \"arguments\": {}\n    }\n  },\n  \"id\": 4\n}"
             }
           }
         },
@@ -285,18 +285,18 @@
               }
             ],
             "url": {
-              "raw": "{{baseUrl}}/{{V_1}}/mcp",
+              "raw": "{{baseUrl}}/{{V_2}}/mcp",
               "host": [
                 "{{baseUrl}}"
               ],
               "path": [
-                "{{V_1}}",
+                "{{V_2}}",
                 "mcp"
               ]
             },
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"jsonrpc\": \"2.0\",\n  \"method\": \"tools/call\",\n  \"params\": {\n    \"name\": \"get-issues\",\n    \"arguments\": {\n      \"page\": 1,\n      \"limit\": 5\n    }\n  },\n  \"id\": 5\n}"
+              "raw": "{\n  \"jsonrpc\": \"2.0\",\n  \"method\": \"tools/call\",\n  \"params\": {\n    \"name\": \"testportal-execute-action\",\n    \"arguments\": {\n      \"actionId\": \"testportal-get-issues\",\n      \"arguments\": {\n        \"projectId\": \"{{projectId}}\",\n        \"page\": \"1\",\n        \"limit\": \"5\"\n      }\n    }\n  },\n  \"id\": 5\n}"
             }
           }
         }
@@ -327,12 +327,12 @@
               }
             ],
             "url": {
-              "raw": "{{baseUrl}}/{{V_1}}/mcp",
+              "raw": "{{baseUrl}}/{{V_2}}/mcp",
               "host": [
                 "{{baseUrl}}"
               ],
               "path": [
-                "{{V_1}}",
+                "{{V_2}}",
                 "mcp"
               ]
             }
@@ -360,12 +360,12 @@
               }
             ],
             "url": {
-              "raw": "{{baseUrl}}/{{V_1}}/mcp",
+              "raw": "{{baseUrl}}/{{V_2}}/mcp",
               "host": [
                 "{{baseUrl}}"
               ],
               "path": [
-                "{{V_1}}",
+                "{{V_2}}",
                 "mcp"
               ]
             }
@@ -387,12 +387,12 @@
               }
             ],
             "url": {
-              "raw": "{{baseUrl}}/{{V_1}}/mcp",
+              "raw": "{{baseUrl}}/{{V_2}}/mcp",
               "host": [
                 "{{baseUrl}}"
               ],
               "path": [
-                "{{V_1}}",
+                "{{V_2}}",
                 "mcp"
               ]
             },
@@ -423,12 +423,12 @@
               }
             ],
             "url": {
-              "raw": "{{baseUrl}}/{{V_1}}/mcp",
+              "raw": "{{baseUrl}}/{{V_2}}/mcp",
               "host": [
                 "{{baseUrl}}"
               ],
               "path": [
-                "{{V_1}}",
+                "{{V_2}}",
                 "mcp"
               ]
             },
@@ -454,12 +454,12 @@
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "{{baseUrl}}/{{V_1}}/mcp",
+              "raw": "{{baseUrl}}/{{V_2}}/mcp",
               "host": [
                 "{{baseUrl}}"
               ],
               "path": [
-                "{{V_1}}",
+                "{{V_2}}",
                 "mcp"
               ]
             }
@@ -487,12 +487,12 @@
               }
             ],
             "url": {
-              "raw": "{{baseUrl}}/{{V_1}}/mcp",
+              "raw": "{{baseUrl}}/{{V_2}}/mcp",
               "host": [
                 "{{baseUrl}}"
               ],
               "path": [
-                "{{V_1}}",
+                "{{V_2}}",
                 "mcp"
               ]
             }

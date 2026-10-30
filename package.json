@@ -65,10 +65,12 @@
     "prisma": "6.19.3",
     "string-similarity": "4.0.4",
     "swagger-ui-express": "5.0.1",
-    "zod": "3.25.76"
+    "zod": "3.25.76",
+    "zod-to-json-schema": "3.25.2"
   },
   "devDependencies": {
     "@eslint/js": "9.27.0",
+    "@modelcontextprotocol/client": "2.3.1",
     "@types/cookie-parser": "1.4.8",
     "@types/cors": "2.8.18",
     "@types/express": "5.0.2",

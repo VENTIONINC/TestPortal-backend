@@ -21,6 +21,10 @@ const listMock =
 const getMock = jest.fn<() => Promise<TestScenarioMcpDetailResponse>>();
 const updateMock = jest.fn<() => Promise<TestScenarioResponse>>();
 const deleteMock = jest.fn<() => Promise<TestScenarioMcpDeleteResponse>>();
+const appendStepMock = jest.fn<() => Promise<TestScenarioResponse>>();
+const updateStepMock = jest.fn<() => Promise<TestScenarioResponse>>();
+const deleteStepMock = jest.fn<() => Promise<TestScenarioResponse>>();
+const reorderStepsMock = jest.fn<() => Promise<TestScenarioResponse>>();
 
 jest.mock("@/handlers/mcpTestScenarioHandler", () => ({
   mcpTestScenarioHandler: {
@@ -29,6 +33,10 @@ jest.mock("@/handlers/mcpTestScenarioHandler", () => ({
     getTestScenario: getMock,
     updateTestScenario: updateMock,
     deleteTestScenario: deleteMock,
+    appendTestScenarioStep: appendStepMock,
+    updateTestScenarioStep: updateStepMock,
+    deleteTestScenarioStep: deleteStepMock,
+    reorderTestScenarioSteps: reorderStepsMock,
   },
 }));
 
@@ -38,6 +46,10 @@ import {
   getTestScenario,
   listTestScenarios,
   updateTestScenario,
+  appendTestScenarioStep,
+  updateTestScenarioStep,
+  deleteTestScenarioStep,
+  reorderTestScenarioSteps,
 } from "@/mcp/tools/test-scenarios";
 
 const projectId = "11111111-1111-1111-1111-111111111111";
@@ -126,6 +138,10 @@ describe("Test Scenario MCP tools", () => {
     getMock.mockResolvedValue(detail);
     updateMock.mockResolvedValue(scenario);
     deleteMock.mockResolvedValue({ scenarioId, projectId, deleted: true });
+    appendStepMock.mockResolvedValue(scenario);
+    updateStepMock.mockResolvedValue(scenario);
+    deleteStepMock.mockResolvedValue(scenario);
+    reorderStepsMock.mockResolvedValue(scenario);
   });
 
   it("serializes successful responses as JSON text for all four tools", async () => {
@@ -217,11 +233,88 @@ describe("Test Scenario MCP tools", () => {
       updateTestScenario[0],
       deleteTestScenario[0],
     ]).toEqual([
-      "create-test-scenario",
-      "list-test-scenarios",
-      "get-test-scenario",
-      "update-test-scenario",
-      "delete-test-scenario",
+      "testportal-create-test-scenario",
+      "testportal-list-test-scenarios",
+      "testportal-get-test-scenario",
+      "testportal-update-test-scenario",
+      "testportal-delete-test-scenario",
     ]);
+  });
+
+  it("returns complete scenario success envelopes for all step tools", async () => {
+    const stepId = "44444444-4444-4444-4444-444444444444";
+    const args = { projectId, scenarioId };
+    const responses = await Promise.all([
+      appendTestScenarioStep[3]({ ...args, action: "Open" }),
+      updateTestScenarioStep[3]({ ...args, stepId, action: "Submit" }),
+      deleteTestScenarioStep[3]({ ...args, stepId }),
+      reorderTestScenarioSteps[3]({ ...args, stepIds: [stepId] }),
+    ]);
+    for (const response of responses) {
+      expect(response).not.toHaveProperty("isError", true);
+      await expect(responseData(response as MCPToolResponse)).resolves.toEqual(
+        JSON.parse(JSON.stringify(scenario)) as unknown,
+      );
+    }
+  });
+
+  it("prefixes static and authenticated tool definitions exactly once", () => {
+    const names = [
+      createTestScenarioTool(scenario.createdById)[0],
+      listTestScenarios[0],
+      getTestScenario[0],
+      appendTestScenarioStep[0],
+      updateTestScenarioStep[0],
+      deleteTestScenarioStep[0],
+      reorderTestScenarioSteps[0],
+    ];
+
+    expect(names.every((name) => name.startsWith("testportal-"))).toBe(true);
+    expect(
+      names.every((name) => !name.startsWith("testportal-testportal-")),
+    ).toBe(true);
+    expect(new Set(names).size).toBe(names.length);
+  });
+
+  it("advertises all nine scenario tool names", () => {
+    expect([
+      createTestScenarioTool(scenario.createdById)[0],
+      listTestScenarios[0],
+      getTestScenario[0],
+      updateTestScenario[0],
+      deleteTestScenario[0],
+      appendTestScenarioStep[0],
+      updateTestScenarioStep[0],
+      deleteTestScenarioStep[0],
+      reorderTestScenarioSteps[0],
+    ]).toEqual([
+      "testportal-create-test-scenario",
+      "testportal-list-test-scenarios",
+      "testportal-get-test-scenario",
+      "testportal-update-test-scenario",
+      "testportal-delete-test-scenario",
+      "testportal-append-test-scenario-step",
+      "testportal-update-test-scenario-step",
+      "testportal-delete-test-scenario-step",
+      "testportal-reorder-test-scenario-steps",
+    ]);
+  });
+
+  it("maps failures from each step service through standard MCP error envelopes", async () => {
+    const stepId = "44444444-4444-4444-4444-444444444444";
+    const calls = [
+      [appendTestScenarioStep, appendStepMock, { projectId, scenarioId, action: "Open" }, "appending"],
+      [updateTestScenarioStep, updateStepMock, { projectId, scenarioId, stepId, action: "Open" }, "updating"],
+      [deleteTestScenarioStep, deleteStepMock, { projectId, scenarioId, stepId }, "deleting"],
+      [reorderTestScenarioSteps, reorderStepsMock, { projectId, scenarioId, stepIds: [stepId] }, "reordering"],
+    ] as const;
+    for (const [tool, serviceMock, input, label] of calls) {
+      serviceMock.mockRejectedValueOnce(new Error("service rejected"));
+      const response = await (tool[3] as unknown as (
+        params: unknown,
+      ) => Promise<MCPToolResponse>)(input);
+      expect(response.isError).toBe(true);
+      expect(response.content[0]?.text).toContain(`Error ${label} Test Scenario step`);
+    }
   });
 });

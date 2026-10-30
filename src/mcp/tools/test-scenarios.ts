@@ -5,10 +5,14 @@ import { mcpTestScenarioHandler } from "@/handlers/mcpTestScenarioHandler";
 import { createMcpTool, createSuccessResponse } from "@/mcp/helpers/mcpHelpers";
 import {
   createTestScenarioSchema,
+  appendTestScenarioStepSchema,
+  deleteTestScenarioStepSchema,
   deleteTestScenarioSchema,
   getTestScenarioSchema,
   listTestScenariosSchema,
   updateTestScenarioSchema,
+  updateTestScenarioStepSchema,
+  reorderTestScenarioStepsSchema,
 } from "@/mcp/schemas/testScenarioSchemas";
 import type {
   MCPToolResponse,
@@ -16,6 +20,10 @@ import type {
   TestScenarioMcpGetParams,
   TestScenarioMcpListParams,
   TestScenarioMcpUpdateParams,
+  AppendTestScenarioStepParams,
+  UpdateTestScenarioStepParams,
+  DeleteTestScenarioStepParams,
+  ReorderTestScenarioStepsParams,
 } from "@/types";
 
 export const createTestScenarioTool = (createdById: string) =>
@@ -38,7 +46,7 @@ export const createTestScenarioTool = (createdById: string) =>
 
 export const listTestScenarios = createMcpTool(
   "list-test-scenarios",
-  "List lightweight Test Scenario summaries for a project. Global search and the independent scenarioKey, title, details, folder-path, and creator-name/email filters are combined before sorting and pagination using case-insensitive literal substring matching. Folder filters match the complete displayed path or Unfiled; whitespace-only filters are ignored. sortField supports scenarioKey, title, details, folder, createdBy, createdAt, and updatedAt; sortDirection defaults to desc. With no new sort, default ordering is createdAt DESC then id DESC. Legacy sort presets remain supported but cannot be combined with sortField. Filtering happens before pagination and totals count all matches. Markdown is available from get-test-scenario.",
+  "List lightweight Test Scenario summaries for a project. Global search and the independent scenarioKey, title, details, folder-path, and creator-name/email filters are combined before sorting and pagination using case-insensitive literal substring matching. The folder text filter matches the complete displayed path or Unfiled; folderId accepts a UUID or unfiled, includes descendants by default, and includeDescendants=false restricts to direct assignments. suiteId selects suite members; whitespace-only filters are ignored. sortField supports scenarioKey, title, details, folder, createdBy, createdAt, and updatedAt; sortDirection defaults to desc. With no new sort, default ordering is createdAt DESC then id DESC. Legacy sort presets remain supported but cannot be combined with sortField. Filtering happens before pagination and totals count all matches. Markdown is available from testportal-get-test-scenario.",
   listTestScenariosSchema,
   async (params: TestScenarioMcpListParams): Promise<MCPToolResponse> => {
     const scenarios = await mcpTestScenarioHandler.listTestScenarios(params);
@@ -78,4 +86,48 @@ export const deleteTestScenario = createMcpTool(
     return createSuccessResponse(result);
   },
   "deleting Test Scenario",
+);
+
+export const appendTestScenarioStep = createMcpTool(
+  "append-test-scenario-step",
+  "Append a trimmed nonblank step to a project-scoped Test Scenario. The step ID is generated and the complete updated scenario is returned. Each call is atomic.",
+  appendTestScenarioStepSchema,
+  async (params: AppendTestScenarioStepParams): Promise<MCPToolResponse> =>
+    createSuccessResponse(
+      await mcpTestScenarioHandler.appendTestScenarioStep(params),
+    ),
+  "appending Test Scenario step",
+);
+
+export const updateTestScenarioStep = createMcpTool(
+  "update-test-scenario-step",
+  "Update one identified scenario step. Provide action and/or expectedResult; omitted fields are preserved and expectedResult may be null to clear it. Text must be nonblank after trimming. Returns the complete updated scenario.",
+  updateTestScenarioStepSchema,
+  async (params: UpdateTestScenarioStepParams): Promise<MCPToolResponse> =>
+    createSuccessResponse(
+      await mcpTestScenarioHandler.updateTestScenarioStep(params),
+    ),
+  "updating Test Scenario step",
+);
+
+export const deleteTestScenarioStep = createMcpTool(
+  "delete-test-scenario-step",
+  "Delete one identified scenario step and compact remaining positions. Returns the complete updated scenario.",
+  deleteTestScenarioStepSchema,
+  async (params: DeleteTestScenarioStepParams): Promise<MCPToolResponse> =>
+    createSuccessResponse(
+      await mcpTestScenarioHandler.deleteTestScenarioStep(params),
+    ),
+  "deleting Test Scenario step",
+);
+
+export const reorderTestScenarioSteps = createMcpTool(
+  "reorder-test-scenario-steps",
+  "Reorder a scenario by supplying every current step UUID exactly once. Stale membership is rejected atomically; retrieve the current scenario and resubmit a complete order. An empty array is valid only when the scenario has no steps. Returns the complete updated scenario.",
+  reorderTestScenarioStepsSchema,
+  async (params: ReorderTestScenarioStepsParams): Promise<MCPToolResponse> =>
+    createSuccessResponse(
+      await mcpTestScenarioHandler.reorderTestScenarioSteps(params),
+    ),
+  "reordering Test Scenario steps",
 );
