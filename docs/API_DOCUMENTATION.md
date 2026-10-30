@@ -467,7 +467,7 @@ Both route paths are mounted under `/api`, producing the public endpoints
   - Varies based on the MCP request. Typically MCP `Response` JSON objects.
   - `400 Bad Request`: If `mcp-session-id` is invalid or if the request body is not a valid MCP InitializeRequest when no session ID is provided.
 - **Notes:**
-  - Manages MCP sessions and tool registration (e.g., `testportal-check-status` tool).
+  - Manages MCP sessions and registers `testportal-find-action` and `testportal-execute-action`. For example, invoke the `testportal-check-status` action through `testportal-execute-action` with `{"actionId":"testportal-check-status","arguments":{}}`.
   - Uses `StreamableHTTPServerTransport` for handling communication.
 
 ### GET `/api/v2/mcp`
