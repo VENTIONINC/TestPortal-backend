@@ -11,6 +11,7 @@ import {
 describe("session action catalog", () => {
   it("contains exactly the operations registered by the baseline server", () => {
     expect([...createActionCatalog("actor").keys()].sort()).toEqual([
+      "testportal-add-test-suite-members",
       "testportal-append-test-scenario-step",
       "testportal-assign-issue-to-result-error",
       "testportal-bulk-review-result-errors",
@@ -20,10 +21,14 @@ describe("session action catalog", () => {
       "testportal-create-issue",
       "testportal-create-manual-run-environment-profile",
       "testportal-create-test-scenario",
+      "testportal-create-test-scenario-folder",
+      "testportal-create-test-suite",
       "testportal-current-time",
       "testportal-delete-manual-run-environment-profile",
       "testportal-delete-test-scenario",
+      "testportal-delete-test-scenario-folder",
       "testportal-delete-test-scenario-step",
+      "testportal-delete-test-suite",
       "testportal-get-assumption-by-id",
       "testportal-get-available-projects",
       "testportal-get-execution-by-id",
@@ -36,13 +41,19 @@ describe("session action catalog", () => {
       "testportal-get-results-stats",
       "testportal-get-spec-by-id",
       "testportal-get-test-scenario",
+      "testportal-get-test-suite",
       "testportal-list-active-users",
       "testportal-list-manual-run-environment-profiles",
       "testportal-list-manual-test-runs",
+      "testportal-list-test-scenario-folders",
       "testportal-list-test-scenario-manual-runs",
       "testportal-list-test-scenarios",
+      "testportal-list-test-suites",
+      "testportal-move-test-scenarios-to-folder",
       "testportal-reassign-manual-test-run-executor",
+      "testportal-remove-test-suite-members",
       "testportal-reorder-test-scenario-steps",
+      "testportal-reorder-test-suite-members",
       "testportal-review-result-error",
       "testportal-start-manual-test-run",
       "testportal-update-assumption",
@@ -50,7 +61,9 @@ describe("session action catalog", () => {
       "testportal-update-manual-test-run",
       "testportal-update-manual-test-run-step",
       "testportal-update-test-scenario",
+      "testportal-update-test-scenario-folder",
       "testportal-update-test-scenario-step",
+      "testportal-update-test-suite",
     ]);
   });
 

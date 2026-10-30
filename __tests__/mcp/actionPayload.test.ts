@@ -51,7 +51,7 @@ describe("discovery payload measurement", () => {
       const newList = await clients[1].listTools();
       const baselineBytes = Buffer.byteLength(JSON.stringify(oldList));
       const currentBytes = Buffer.byteLength(JSON.stringify(newList));
-      expect(oldList.tools).toHaveLength(40);
+      expect(oldList.tools).toHaveLength(53);
       expect(newList.tools).toHaveLength(2);
       expect(currentBytes).toBeLessThan(baselineBytes);
       const exact = await clients[1].callTool({

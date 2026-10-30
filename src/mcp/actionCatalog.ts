@@ -45,6 +45,8 @@ import {
   profileTools,
 } from "@/mcp/tools/manual-run-environment-profiles";
 
+import { organizationTools } from "@/mcp/tools/test-scenario-organization";
+
 export type ActionTool = readonly [
   string,
   string,
@@ -88,6 +90,7 @@ export const createActionCatalog = (
     ...manualTestRunTools,
     createProfileTool(userId),
     ...profileTools,
+    ...organizationTools,
   ];
   const catalog = indexActions(tools);
   for (const id of catalog.keys()) actionAreas(id);

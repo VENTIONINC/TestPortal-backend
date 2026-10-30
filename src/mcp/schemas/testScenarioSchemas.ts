@@ -55,6 +55,9 @@ const limit = () => z.number().int().min(1).max(100);
 export const listTestScenariosSchema = z
   .object({
     projectId: uuid().describe("The UUID of the project"),
+    folderId: z.union([uuid(), z.literal("unfiled")]).optional().describe("Folder UUID or unfiled; folder UUIDs include descendants by default"),
+    includeDescendants: z.boolean().optional().describe("Set false to select direct folder assignments only"),
+    suiteId: uuid().optional().describe("Filter to members of this project suite"),
     page: page().default(1),
     limit: limit().default(30),
     search: z

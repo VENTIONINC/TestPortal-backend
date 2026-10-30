@@ -11,6 +11,8 @@ import {
   hashTestScenarioMarkdown,
   renderTestScenarioMarkdown,
 } from "@/lib/testScenarioMarkdown";
+import { createActionCatalog } from "@/mcp/actionCatalog";
+import { executeAction } from "@/mcp/actionExecution";
 import { testScenarioModel } from "@/models/testScenarioModel";
 import { testScenarioService } from "@/services/testScenarioService";
 import { mcpTestScenarioHandler } from "@/handlers/mcpTestScenarioHandler";
@@ -836,6 +838,110 @@ describePostgres("test scenario PostgreSQL aggregate integration", () => {
     expect(persisted.contentMd).not.toMatch(/\r/);
     expect(persisted.contentMd.endsWith("\n")).toBe(true);
     await expectProjectionConsistency(persisted);
+  });
+
+  it("executes organization workflows and list filters through the MCP catalog", async () => {
+    const catalog = createActionCatalog(userId);
+    const call = async (actionId: string, args: Record<string, unknown>) => {
+      const result = await executeAction(catalog, { actionId: `testportal-${actionId}`, arguments: { projectId, ...args } });
+      const first = result.content[0];
+      if (!first || first.type !== "text") throw new Error("Expected MCP text");
+      return { error: result.isError === true, data: result.isError ? first.text : JSON.parse(first.text) };
+    };
+    const root = (await call("create-test-scenario-folder", { name: "MCP root" })).data;
+    const child = (await call("create-test-scenario-folder", { name: "Child", parentId: root.id })).data;
+    expect((await call("list-test-scenario-folders", {})).data[0].children[0].id).toBe(child.id);
+    expect((await call("update-test-scenario-folder", { folderId: child.id, name: "Renamed", position: 2 })).data.name).toBe("Renamed");
+    expect((await call("update-test-scenario-folder", { folderId: root.id, parentId: child.id })).error).toBe(true);
+    const first = await createScenario({ title: "MCP first", folderId: root.id });
+    const second = await createScenario({ title: "MCP second", folderId: child.id });
+    const third = await createScenario({ title: "MCP unfiled" });
+    const suite = (await call("create-test-suite", { name: "MCP suite", release: "R1" })).data;
+    await call("update-test-suite", { suiteId: suite.id, description: "Smoke", release: null });
+    expect((await call("get-test-suite", { suiteId: suite.id })).data).toMatchObject({ description: "Smoke", release: null });
+    expect((await call("list-test-suites", {})).data).toHaveLength(1);
+    await call("add-test-suite-members", { suiteId: suite.id, scenarioIds: [first.id, second.id] });
+    await call("add-test-suite-members", { suiteId: suite.id, scenarioIds: [first.id] });
+    await call("remove-test-suite-members", { suiteId: suite.id, scenarioIds: [third.id] });
+    await call("reorder-test-suite-members", { suiteId: suite.id, scenarioIds: [second.id, first.id] });
+    expect((await call("reorder-test-suite-members", { suiteId: suite.id, scenarioIds: [first.id] })).error).toBe(true);
+    const members = (await call("get-test-suite", { suiteId: suite.id })).data.members;
+    expect(members.map((m: { testScenarioId: string }) => m.testScenarioId)).toEqual([second.id, first.id]);
+    const subtree = (await call("list-test-scenarios", { folderId: root.id, suiteId: suite.id, limit: 1 })).data;
+    expect(subtree).toMatchObject({ total: 2, limit: 1, totalPages: 2 });
+    expect((await call("list-test-scenarios", { folderId: root.id, includeDescendants: false })).data.scenarios.map((v: { id: string }) => v.id)).toEqual([first.id]);
+    expect((await call("list-test-scenarios", { folderId: "unfiled" })).data.scenarios.map((v: { id: string }) => v.id)).toContain(third.id);
+    const foreignFolder = await organization.createFolder({ projectId: otherProjectId, name: "foreign MCP" });
+    const foreignSuite = await organization.createSuite({ projectId: otherProjectId, name: "foreign MCP" });
+    for (const args of [{ folderId: foreignFolder.id }, { suiteId: foreignSuite.id }]) expect((await call("list-test-scenarios", args)).error).toBe(true);
+    expect((await call("get-test-suite", { suiteId: foreignSuite.id })).error).toBe(true);
+    expect((await call("update-test-scenario-folder", { folderId: foreignFolder.id, name: "no" })).error).toBe(true);
+    const foreignScenario = await createScenarioFor(otherProjectId, otherUserId, { title: "foreign" });
+    expect((await call("add-test-suite-members", { suiteId: suite.id, scenarioIds: [third.id, foreignScenario.id] })).error).toBe(true);
+    expect((await call("move-test-scenarios-to-folder", { folderId: root.id, scenarioIds: [second.id, randomUUID()] })).error).toBe(true);
+    expect((await getScenario(second.id)).folderId).toBe(child.id);
+    expect((await call("add-test-suite-members", { suiteId: suite.id, scenarioIds: [third.id, randomUUID()] })).error).toBe(true);
+    expect((await call("get-test-suite", { suiteId: suite.id })).data.members).toHaveLength(2);
+    expect((await call("move-test-scenarios-to-folder", { folderId: null, scenarioIds: [first.id, second.id] })).data).toEqual({ moved: 2 });
+    await call("move-test-scenarios-to-folder", { folderId: child.id, scenarioIds: [third.id] });
+    expect((await call("delete-test-scenario-folder", { folderId: child.id, disposition: "parent" })).data).toEqual({ deleted: true });
+    expect((await getScenario(third.id)).folderId).toBe(root.id);
+    expect((await call("delete-test-scenario-folder", { folderId: root.id, disposition: "unfiled" })).data).toEqual({ deleted: true });
+    expect((await getScenario(third.id)).folderId).toBeNull();
+    expect((await call("delete-test-suite", { suiteId: suite.id })).data).toEqual({ deleted: true });
+    expect(await getScenario(first.id)).toBeDefined();
+  });
+
+  it("preserves other suite memberships and manual run snapshots across MCP organization changes", async () => {
+    const catalog = createActionCatalog(userId);
+    const call = async (action: string, args: Record<string, unknown>) => {
+      const result = await executeAction(catalog, {
+        actionId: `testportal-${action}`,
+        arguments: { projectId, ...args },
+      });
+      expect(result.isError).not.toBe(true);
+      return result;
+    };
+    const root = await organization.createFolder({ projectId, name: "Snapshot root" });
+    const child = await organization.createFolder({ projectId, name: "Snapshot child", parentId: root.id });
+    const scenario = await createScenario({
+      title: "Scenario with historical evidence",
+      folderId: root.id,
+      steps: [{ action: "Open the page", expectedResult: "Page opens" }],
+    });
+    const deletedSuite = await organization.createSuite({ projectId, name: "Suite to delete" });
+    const retainedSuite = await organization.createSuite({ projectId, name: "Suite to retain" });
+    for (const suite of [deletedSuite, retainedSuite]) {
+      await organization.mutateMembers({ projectId, suiteId: suite.id, scenarioIds: [scenario.id], operation: "add" });
+    }
+    const run = await manualTestRunModel.createFromScenario({ projectId, scenarioId: scenario.id, executedById: userId });
+    if (!run) throw new Error("Expected a manual run");
+    const snapshot = await manualTestRunModel.findById(run.id, projectId);
+    if (!snapshot || snapshot.steps.length === 0) throw new Error("Expected a run with snapshot steps");
+    const memberships = await dbClient.testSuiteMember.findMany({
+      where: { testScenarioId: scenario.id },
+      orderBy: { suiteId: "asc" },
+    });
+    expect(memberships).toHaveLength(2);
+    const expectPreserved = async (expectedMemberships: typeof memberships) => {
+      expect(await dbClient.testSuiteMember.findMany({
+        where: { testScenarioId: scenario.id },
+        orderBy: { suiteId: "asc" },
+      })).toEqual(expectedMemberships);
+      expect(await manualTestRunModel.findById(run.id, projectId)).toEqual(snapshot);
+    };
+
+    await call("move-test-scenarios-to-folder", { folderId: child.id, scenarioIds: [scenario.id] });
+    expect((await getScenario(scenario.id)).folderId).toBe(child.id);
+    await expectPreserved(memberships);
+    await call("delete-test-scenario-folder", { folderId: child.id, disposition: "parent" });
+    expect((await getScenario(scenario.id)).folderId).toBe(root.id);
+    await expectPreserved(memberships);
+    await call("delete-test-scenario-folder", { folderId: root.id, disposition: "unfiled" });
+    expect((await getScenario(scenario.id)).folderId).toBeNull();
+    await expectPreserved(memberships);
+    await call("delete-test-suite", { suiteId: deletedSuite.id });
+    await expectPreserved(memberships.filter(({ suiteId }) => suiteId === retainedSuite.id));
   });
 
   it("keeps folder and suite organization project-scoped and supports ordered membership", async () => {
