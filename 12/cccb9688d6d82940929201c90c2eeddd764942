@@ -1,0 +1,19 @@
+docs/API_DOCUMENTATION.md
+  s_4cf252712648ba::t_969488bf83cc70 470
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.18",
+  "base_commit_sha": "12cccb9688d6d82940929201c90c2eeddd764942",
+  "prompts": {},
+  "sessions": {
+    "s_4cf252712648ba": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a187b2-d5a1-7ec0-9be5-07f907b70fd3",
+        "model": "gpt-6.1-terra"
+      },
+      "human_author": "Ihar Mikailau <ihar.mikailau@ventionteams.com>"
+    }
+  }
+}
