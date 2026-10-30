@@ -1,0 +1,65 @@
+__tests__/manual-test-runs/manualTestRunPostgresIntegration.test.ts
+  s_4cf252712648ba::t_4159213302f7ba 102-379,458,464,469
+__tests__/mcp/actionCatalog.test.ts
+  s_4cf252712648ba::t_15e5aa44d4f745 1-122
+__tests__/mcp/actionExecution.test.ts
+  s_4cf252712648ba::t_1c16c453215e3b 1-72
+__tests__/mcp/actionIdentity.test.ts
+  s_4cf252712648ba::t_d76b46177609ef 1-147
+__tests__/mcp/actionPayload.test.ts
+  s_4cf252712648ba::t_f8f5dde847e1d5 1-83
+__tests__/mcp/actionSchemas.test.ts
+  s_4cf252712648ba::t_4bf04e7f19305d 1-66
+__tests__/mcp/actionTransport.test.ts
+  s_4cf252712648ba::t_e0edd85433b764 1-75
+__tests__/mcp/manualTestRunMcpTransport.test.ts
+  s_4cf252712648ba::t_c6c3118eb65355 35-37,78,86-87,91,94,97,100,102,105,110,122,130,135,139-141,154,162,167,172,175,180,184,188
+__tests__/mcp/mcpTransport.test.ts
+  s_4cf252712648ba::t_1de638bdc03180 33-39
+__tests__/mcp/serverRegistration.test.ts
+  s_4cf252712648ba::t_237d1f1c8a7820 26-27,35,44-45,54
+__tests__/mcp/testScenarioMcpTransport.test.ts
+  s_4cf252712648ba::t_da89e38e4c4560 35-37,71,81,153,191,199,236,238,242,246,255,259,267
+docs/MCP_TOOLS.md
+  s_4cf252712648ba::t_6c703f5dc8b4d0 3,5,9,53-54,368-377,380,402-406
+package-lock.json
+  s_4cf252712648ba::t_bf7a79d14808c6 44-45,49,2008-2059
+package.json
+  s_4cf252712648ba::t_223bb72ae78c15 68-69,73
+postman/MCP_API.postman_collection.json
+  s_4cf252712648ba::t_047b80ffade1cf 84,89,146,151,206,211,217,247,252,258,288,293,299,330,335,363,368,390,395,426,431,457,462,490,495
+src/mcp/actionDiscovery.ts
+  s_4cf252712648ba::t_b642318b533a91 1-161
+src/mcp/actionExecution.ts
+  s_4cf252712648ba::t_49c8244f393e02 1-52
+src/mcp/actionMetadata.ts
+  s_4cf252712648ba::t_39d385f9f7986b 1-197
+src/mcp/actionSchemas.ts
+  s_4cf252712648ba::t_d59e9050b5c1b3 1-30
+src/mcp/prompts/developer-code-assistant/v1.0.0.ts
+  s_4cf252712648ba::t_18b7a7a6173381 68,147-149,151
+src/mcp/server.ts
+  s_4cf252712648ba::t_93fae92796444a 17,19-23,52-88,154
+__tests__/mcp/actionDiscovery.test.ts
+  s_4cf252712648ba::t_ef0c92aed04402 1-95
+docs/INSPECT_MCP_SERVER.md
+  s_4cf252712648ba::t_834e5fb888e5fe 42-43,68,70-75,81,103,111,116
+src/mcp/actionCatalog.ts
+  s_4cf252712648ba::t_70eb761f9fe6c6 1-107
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.18",
+  "base_commit_sha": "e0f721936d67dddbcb25aa95a3053921185ca145",
+  "prompts": {},
+  "sessions": {
+    "s_4cf252712648ba": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a187b2-d5a1-7ec0-9be5-07f907b70fd3",
+        "model": "gpt-6.1-terra"
+      },
+      "human_author": "Ihar Mikailau <ihar.mikailau@ventionteams.com>"
+    }
+  }
+}
