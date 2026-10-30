@@ -1,12 +1,12 @@
 # MCP Tools Documentation
 
-This document describes the tools available through the MCP (Model Context Protocol) server. MCP tools are functions or modules that the server can expose to connected clients, allowing them to request specific operations or retrieve specialized data.
+The server exposes `testportal-find-action` and `testportal-execute-action`. The identifiers below are action IDs; discover their contracts and pass the selected ID and its arguments to the executor.
 
-Tools are registered with the MCP server instance and can be invoked by clients using MCP requests that specify the tool name and any required parameters.
+Discovery accepts an optional query, area (`core` or `tms`), exact `actionId`, and query-only limit (1–5, default 3). An empty request returns an overview. Shared project, status and time actions belong to both areas. Unknown IDs and invalid arguments return tool errors; exact lookup can also return an area mismatch. Business responses retain their existing envelopes.
 
 ## Available Tools
 
-Every exposed tool uses the canonical name `testportal-<previous-name>`. Only prefixed names are supported: unprefixed names are unknown and have no aliases or transition period. Reconnect and discover the current catalog, or update hard-coded calls before invoking tools.
+Direct calls to individual prefixed or unprefixed names are removed immediately. Update clients, restart the server to clear old sessions, and reconnect. The executor has conservative destructive and non-idempotent annotations; per-action effects are descriptive metadata and client approval behavior varies.
 ### Status & Health
 
 #### `testportal-check-status`
@@ -50,8 +50,8 @@ Every exposed tool uses the canonical name `testportal-<previous-name>`. Only pr
   - `projectId` (required): Project UUID
   - `category` (optional): Persisted lowercase Issue category: `bug`, `infra`, `performance`, `script`, or `other`
   - `name` (optional): Filter by issue name
-  - `page` (optional): Page number for pagination (default: 1)
-  - `limit` (optional): Number of items per page (default: 30)
+  - `page` (optional): String page number (default: `"1"`)
+  - `limit` (optional): String page size (default: `"10"`)
 - **Response:** Issues with pagination metadata, persisted `category`, and `categorySummary`. `categorySummary.displayCategory` is the persisted Issue category; its distribution describes distinct linked Result categories.
 
 #### `testportal-get-issue-by-id`
@@ -365,19 +365,19 @@ Names are trimmed, nonblank single-line strings up to 100 characters; duplicate 
 For example, call these tools in order, replacing the identifiers with returned values:
 
 ```jsonl
-{"name":"testportal-list-manual-run-environment-profiles","arguments":{"projectId":"11111111-1111-4111-8111-111111111111"}}
-{"name":"testportal-create-manual-run-environment-profile","arguments":{"projectId":"11111111-1111-4111-8111-111111111111","name":"Staging","browser":"Chrome","operatingSystem":"Linux","device":"Laptop","apiEnvironment":"Staging"}}
-{"name":"testportal-start-manual-test-run","arguments":{"projectId":"11111111-1111-4111-8111-111111111111","scenarioId":"22222222-2222-4222-8222-222222222222","environmentProfileId":"33333333-3333-4333-8333-333333333333","browser":"Firefox","device":null,"build":"42","deployment":"canary"}}
-{"name":"testportal-update-manual-run-environment-profile","arguments":{"projectId":"11111111-1111-4111-8111-111111111111","profileId":"33333333-3333-4333-8333-333333333333","operatingSystem":"Windows"}}
-{"name":"testportal-start-manual-test-run","arguments":{"projectId":"11111111-1111-4111-8111-111111111111","scenarioId":"22222222-2222-4222-8222-222222222222","environmentProfileId":"33333333-3333-4333-8333-333333333333"}}
-{"name":"testportal-delete-manual-run-environment-profile","arguments":{"projectId":"11111111-1111-4111-8111-111111111111","profileId":"33333333-3333-4333-8333-333333333333"}}
-{"name":"testportal-get-manual-test-run","arguments":{"projectId":"11111111-1111-4111-8111-111111111111","runId":"44444444-4444-4444-8444-444444444444"}}
-{"name":"testportal-get-manual-test-run","arguments":{"projectId":"11111111-1111-4111-8111-111111111111","runId":"55555555-5555-4555-8555-555555555555"}}
-{"name":"testportal-list-manual-test-runs","arguments":{"projectId":"11111111-1111-4111-8111-111111111111"}}
-{"name":"testportal-list-test-scenario-manual-runs","arguments":{"projectId":"11111111-1111-4111-8111-111111111111","scenarioId":"22222222-2222-4222-8222-222222222222"}}
+{"name":"testportal-execute-action","arguments":{"actionId":"testportal-list-manual-run-environment-profiles","arguments":{"projectId":"11111111-1111-4111-8111-111111111111"}}}
+{"name":"testportal-execute-action","arguments":{"actionId":"testportal-create-manual-run-environment-profile","arguments":{"projectId":"11111111-1111-4111-8111-111111111111","name":"Staging","browser":"Chrome","operatingSystem":"Linux","device":"Laptop","apiEnvironment":"Staging"}}}
+{"name":"testportal-execute-action","arguments":{"actionId":"testportal-start-manual-test-run","arguments":{"projectId":"11111111-1111-4111-8111-111111111111","scenarioId":"22222222-2222-4222-8222-222222222222","environmentProfileId":"33333333-3333-4333-8333-333333333333","browser":"Firefox","device":null,"build":"42","deployment":"canary"}}}
+{"name":"testportal-execute-action","arguments":{"actionId":"testportal-update-manual-run-environment-profile","arguments":{"projectId":"11111111-1111-4111-8111-111111111111","profileId":"33333333-3333-4333-8333-333333333333","operatingSystem":"Windows"}}}
+{"name":"testportal-execute-action","arguments":{"actionId":"testportal-start-manual-test-run","arguments":{"projectId":"11111111-1111-4111-8111-111111111111","scenarioId":"22222222-2222-4222-8222-222222222222","environmentProfileId":"33333333-3333-4333-8333-333333333333"}}}
+{"name":"testportal-execute-action","arguments":{"actionId":"testportal-delete-manual-run-environment-profile","arguments":{"projectId":"11111111-1111-4111-8111-111111111111","profileId":"33333333-3333-4333-8333-333333333333"}}}
+{"name":"testportal-execute-action","arguments":{"actionId":"testportal-get-manual-test-run","arguments":{"projectId":"11111111-1111-4111-8111-111111111111","runId":"44444444-4444-4444-8444-444444444444"}}}
+{"name":"testportal-execute-action","arguments":{"actionId":"testportal-get-manual-test-run","arguments":{"projectId":"11111111-1111-4111-8111-111111111111","runId":"55555555-5555-4555-8555-555555555555"}}}
+{"name":"testportal-execute-action","arguments":{"actionId":"testportal-list-manual-test-runs","arguments":{"projectId":"11111111-1111-4111-8111-111111111111"}}}
+{"name":"testportal-execute-action","arguments":{"actionId":"testportal-list-test-scenario-manual-runs","arguments":{"projectId":"11111111-1111-4111-8111-111111111111","scenarioId":"22222222-2222-4222-8222-222222222222"}}}
 ```
 
-Use the created profile's ID and the started run's ID in subsequent calls. The first run captures Firefox, Linux, null device, Staging, build 42, and canary. A later run started after the update captures Windows instead. Both retain their snapshots after deletion, including in project and scenario history. Build and deployment are run-only. Reconnect and inspect live `tools/list` to determine whether the connected deployment offers these tools.
+Use the created profile's ID and the started run's ID in subsequent calls. The first run captures Firefox, Linux, null device, Staging, build 42, and canary. A later run started after the update captures Windows instead. Both retain their snapshots after deletion, including in project and scenario history. Build and deployment are run-only. Reconnect and use action discovery to check availability.
 
 ## Tool Categories
 
@@ -399,3 +399,8 @@ All tools return standardized responses using the `createSuccessResponse` helper
 ---
 
 _The tool registration in `src/mcp/server.ts` and each tool definition under `src/mcp/tools/` are the source of truth for the available tools and their behavior._
+# Maintaining action discovery metadata
+
+The explicit allowlist in `src/mcp/actionCatalog.ts` is session-bound. When adding an action, include the existing wrapped handler and bind any trusted actor through its factory. Update `src/mcp/actionMetadata.ts` with the action's area, search vocabulary, constraints, effects, response meaning and related action IDs as needed. Keep returned JSON Schema input-oriented and verify catalog coverage, schema export and search tests. Action metadata is navigation information; authorization remains in the existing transport and services.
+
+For example, call `testportal-find-action` with `{"query":"manual step outcome","area":"tms","limit":3}` to retrieve at most three matching contracts. If the action ID is known, call it with `{"actionId":"testportal-update-manual-test-run-step"}` for the exact contract. Discovery does not read project data or execute an action.

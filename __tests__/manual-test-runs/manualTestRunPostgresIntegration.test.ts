@@ -99,6 +99,284 @@ describePostgres("manual test run PostgreSQL integration", () => {
     await dbClient.$disconnect();
   });
 
+  it("preserves scenario, profile and run invariants through the public action interface", async () => {
+    const secret = "action-workflow-integration-secret";
+    const previousSecret = process.env.MCP_SECRET;
+    process.env.MCP_SECRET = secret;
+    jest.useFakeTimers();
+    const { default: router } = await import("@/mcp/server");
+    jest.clearAllTimers();
+    jest.useRealTimers();
+    const app = express();
+    app.use(express.json());
+    app.use("/api", router);
+    const server = createServer(app);
+    const client = new Client({ name: "action-workflow", version: "1" });
+    const foreignProject = randomUUID();
+    try {
+      await dbClient.project.create({
+        data: { id: foreignProject, name: "Foreign", ownerId: userId },
+      });
+      await new Promise<void>((resolve) =>
+        server.listen(0, "127.0.0.1", resolve),
+      );
+      const address = server.address() as AddressInfo;
+      await client.connect(
+        new StreamableHTTPClientTransport(
+          new URL(`http://127.0.0.1:${address.port}/api/v2/mcp`),
+          {
+            requestInit: {
+              headers: {
+                Authorization: `Bearer ${generateMcpToken(userId, secret)}`,
+              },
+            },
+          },
+        ),
+      );
+      let executeCalls = 0;
+      let discoveryCalls = 0;
+      const discoveryBytes: number[] = [];
+      const call = async (actionId: string, args: object) => {
+        executeCalls += 1;
+        return client.callTool({
+          name: "testportal-execute-action",
+          arguments: { actionId, arguments: args },
+        });
+      };
+      const data = (response: Awaited<ReturnType<typeof call>>) => {
+        expect(response.isError).not.toBe(true);
+        const content = response.content[0];
+        if (!content || content.type !== "text")
+          throw new Error("Expected JSON text");
+        return JSON.parse(content.text);
+      };
+      const find = async (query: string, area: "core" | "tms") => {
+        const response = await client.callTool({
+          name: "testportal-find-action",
+          arguments: { query, area, limit: 5 },
+        });
+        discoveryCalls += 1;
+        discoveryBytes.push(Buffer.byteLength(JSON.stringify(response)));
+        return data(response).actions as Array<{ actionId: string }>;
+      };
+      const execution = await dbClient.execution.create({
+        data: {
+          projectId,
+          name: "Action failure",
+          type: "test",
+          environment: "test",
+          version: "1",
+          startedAt: new Date(),
+        },
+      });
+      const spec = await dbClient.spec.create({
+        data: {
+          projectId,
+          key: randomUUID(),
+          file: "checkout.spec.ts",
+          title: "Checkout",
+        },
+      });
+      const failure = await dbClient.result.create({
+        data: {
+          specId: spec.id,
+          executionId: execution.id,
+          retry: 0,
+          status: "failed",
+          duration: 1,
+          startTime: new Date(),
+        },
+      });
+      const error = await dbClient.resultError.create({
+        data: {
+          resultId: failure.id,
+          type: "AssertionError",
+          message: "Expected checkout",
+          callStack: [],
+          location: "checkout.spec.ts",
+        },
+      });
+      expect(
+        (await find("get results", "core")).map(({ actionId }) => actionId),
+      ).toContain("testportal-get-results");
+      expect(
+        JSON.stringify(
+          data(
+            await call("testportal-get-results", {
+              projectId,
+              status: "failed",
+            }),
+          ),
+        ),
+      ).toContain(failure.id);
+      expect(
+        JSON.stringify(
+          data(
+            await call("testportal-get-result-error-by-id", {
+              projectId,
+              resultErrorId: error.id,
+            }),
+          ),
+        ),
+      ).toContain("Expected checkout");
+      expect(
+        (await find("append test scenario step", "tms")).map(
+          ({ actionId }) => actionId,
+        ),
+      ).toContain("testportal-append-test-scenario-step");
+      expect(
+        (await find("manual step outcome", "tms")).map(
+          ({ actionId }) => actionId,
+        ),
+      ).toContain("testportal-update-manual-test-run-step");
+      expect(
+        (
+          await client.callTool({
+            name: "testportal-get-results",
+            arguments: { projectId },
+          })
+        ).isError,
+      ).toBe(true);
+      const scenario = data(
+        await call("testportal-create-test-scenario", {
+          projectId,
+          title: "Action workflow",
+        }),
+      );
+      const edited = data(
+        await call("testportal-append-test-scenario-step", {
+          projectId,
+          scenarioId: scenario.id,
+          action: "Open",
+        }),
+      );
+      expect(edited.steps).toHaveLength(1);
+      expect(
+        (
+          await call("testportal-get-test-scenario", {
+            projectId: foreignProject,
+            scenarioId: scenario.id,
+          })
+        ).isError,
+      ).toBe(true);
+      const profile = data(
+        await call("testportal-create-manual-run-environment-profile", {
+          projectId,
+          name: "Environment",
+          browser: "Chrome",
+          device: "Laptop",
+        }),
+      );
+      expect(
+        (
+          await call("testportal-start-manual-test-run", {
+            projectId: foreignProject,
+            scenarioId: scenario.id,
+            environmentProfileId: profile.id,
+          })
+        ).isError,
+      ).toBe(true);
+      const run = data(
+        await call("testportal-start-manual-test-run", {
+          projectId,
+          scenarioId: scenario.id,
+          environmentProfileId: profile.id,
+          device: null,
+        }),
+      );
+      expect(run).toMatchObject({ browser: "Chrome", device: null });
+      expect(
+        (
+          await call("testportal-complete-manual-test-run", {
+            projectId,
+            runId: run.id,
+            status: "passed",
+          })
+        ).isError,
+      ).toBe(true);
+      data(
+        await call("testportal-update-manual-test-run-step", {
+          projectId,
+          runId: run.id,
+          stepId: run.steps[0].id,
+          status: "passed",
+        }),
+      );
+      data(
+        await call("testportal-complete-manual-test-run", {
+          projectId,
+          runId: run.id,
+          status: "passed",
+        }),
+      );
+      expect(
+        (
+          await call("testportal-update-manual-test-run-step", {
+            projectId,
+            runId: run.id,
+            stepId: run.steps[0].id,
+            status: "failed",
+          })
+        ).isError,
+      ).toBe(true);
+      data(
+        await call("testportal-update-manual-run-environment-profile", {
+          projectId,
+          profileId: profile.id,
+          browser: "Firefox",
+        }),
+      );
+      data(
+        await call("testportal-delete-manual-run-environment-profile", {
+          projectId,
+          profileId: profile.id,
+        }),
+      );
+      data(
+        await call("testportal-delete-test-scenario", {
+          projectId,
+          scenarioId: scenario.id,
+        }),
+      );
+      const saved = data(
+        await call("testportal-get-manual-test-run", {
+          projectId,
+          runId: run.id,
+        }),
+      );
+      expect(saved).toMatchObject({
+        browser: "Chrome",
+        device: null,
+        sourceTestScenarioId: scenario.id,
+        testScenarioId: null,
+        status: "passed",
+      });
+      expect(saved.steps[0]).toMatchObject({
+        action: "Open",
+        status: "passed",
+      });
+      const history = data(
+        await call("testportal-list-manual-test-runs", { projectId }),
+      );
+      expect(history.runs).toEqual(
+        expect.arrayContaining([expect.objectContaining({ id: run.id })]),
+      );
+      console.log(
+        "TP39 workflow measurement",
+        JSON.stringify({ executeCalls, discoveryCalls, discoveryBytes }),
+      );
+    } finally {
+      await client.close();
+      if (server.listening)
+        await new Promise<void>((resolve, reject) =>
+          server.close((error) => (error ? reject(error) : resolve())),
+        );
+      await projectModel.deleteWithCascade(foreignProject);
+      if (previousSecret === undefined) delete process.env.MCP_SECRET;
+      else process.env.MCP_SECRET = previousSecret;
+    }
+  });
+
   it("preserves profile-derived snapshots across update and deletion through MCP adapters", async () => {
     const scenario = await createScenario();
     const profile = await profiles.create({ projectId, name: "Shared", browser: "Chrome", operatingSystem: "Linux", device: "Laptop", apiEnvironment: "Staging" }, userId);
@@ -177,18 +455,18 @@ describePostgres("manual test run PostgreSQL integration", () => {
       }
       const [creator, other] = clients;
       if (!creator || !other) throw new Error("Expected two authenticated clients");
-      const created = await creator.callTool({ name: "testportal-create-manual-run-environment-profile", arguments: { projectId, name: "Shared", browser: "Chrome" } });
+      const created = await creator.callTool({ name: "testportal-execute-action", arguments: { actionId: "testportal-create-manual-run-environment-profile", arguments: { projectId, name: "Shared", browser: "Chrome" } } });
       expect(created.isError).not.toBe(true);
       const content = created.content[0];
       if (!content || content.type !== "text") throw new Error("Expected profile JSON text");
       const profile = JSON.parse(content.text) as { id: string; ownerId: string };
       expect(profile.ownerId).toBe(userId);
-      const listed = await other.callTool({ name: "testportal-list-manual-run-environment-profiles", arguments: { projectId } });
+      const listed = await other.callTool({ name: "testportal-execute-action", arguments: { actionId: "testportal-list-manual-run-environment-profiles", arguments: { projectId } } });
       expect(listed.isError).not.toBe(true);
       const listContent = listed.content[0];
       if (!listContent || listContent.type !== "text") throw new Error("Expected profile list JSON text");
       expect(JSON.parse(listContent.text)).toEqual(expect.arrayContaining([expect.objectContaining({ id: profile.id, ownerId: userId })]));
-      const updated = await other.callTool({ name: "testportal-update-manual-run-environment-profile", arguments: { projectId, profileId: profile.id, browser: "Firefox" } });
+      const updated = await other.callTool({ name: "testportal-execute-action", arguments: { actionId: "testportal-update-manual-run-environment-profile", arguments: { projectId, profileId: profile.id, browser: "Firefox" } } });
       expect(updated.isError).not.toBe(true);
       expect(await profiles.list({ projectId })).toEqual(expect.arrayContaining([expect.objectContaining({ id: profile.id, ownerId: userId, browser: "Firefox" })]));
     } finally {

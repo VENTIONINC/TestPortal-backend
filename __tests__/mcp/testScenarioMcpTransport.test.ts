@@ -32,6 +32,9 @@ jest.mock("@/handlers/mcpTestScenarioHandler", () => ({
 }));
 
 
+const callAction = (client: Client, request: { name: string; arguments?: Record<string, unknown> }) =>
+  client.callTool({ name: "testportal-execute-action", arguments: { actionId: request.name, arguments: request.arguments ?? {} } });
+
 const projectId = "11111111-1111-1111-1111-111111111111";
 const scenarioId = "22222222-2222-2222-2222-222222222222";
 const userId = "33333333-3333-4333-8333-333333333333";
@@ -65,52 +68,7 @@ describe("Test Scenario MCP transport validation", () => {
     try {
       const catalog = await client.listTools();
       const names = catalog.tools.map(({ name }) => name);
-      expect(names.sort()).toEqual([
-        "testportal-append-test-scenario-step",
-        "testportal-assign-issue-to-result-error",
-        "testportal-bulk-review-result-errors",
-        "testportal-check-status",
-        "testportal-complete-manual-test-run",
-        "testportal-create-assumption",
-        "testportal-create-issue",
-        "testportal-create-manual-run-environment-profile",
-        "testportal-create-test-scenario",
-        "testportal-current-time",
-        "testportal-delete-manual-run-environment-profile",
-        "testportal-delete-test-scenario",
-        "testportal-delete-test-scenario-step",
-        "testportal-get-assumption-by-id",
-        "testportal-get-available-projects",
-        "testportal-get-execution-by-id",
-        "testportal-get-issue-by-id",
-        "testportal-get-issues",
-        "testportal-get-manual-test-run",
-        "testportal-get-result-by-id",
-        "testportal-get-result-error-by-id",
-        "testportal-get-results",
-        "testportal-get-results-stats",
-        "testportal-get-spec-by-id",
-        "testportal-get-test-scenario",
-        "testportal-list-active-users",
-        "testportal-list-manual-run-environment-profiles",
-        "testportal-list-manual-test-runs",
-        "testportal-list-test-scenario-manual-runs",
-        "testportal-list-test-scenarios",
-        "testportal-reassign-manual-test-run-executor",
-        "testportal-reorder-test-scenario-steps",
-        "testportal-review-result-error",
-        "testportal-start-manual-test-run",
-        "testportal-update-assumption",
-        "testportal-update-manual-run-environment-profile",
-        "testportal-update-manual-test-run",
-        "testportal-update-manual-test-run-step",
-        "testportal-update-test-scenario",
-        "testportal-update-test-scenario-step",
-      ]);
-      expect(new Set(names).size).toBe(names.length);
-      expect(names.every((name) => name.startsWith("testportal-"))).toBe(true);
-      expect(names.some((name) => name.startsWith("testportal-testportal-"))).toBe(false);
-      expect(names).not.toContain("testportal-get-issues-with-stats");
+      expect(names.sort()).toEqual(["testportal-execute-action", "testportal-find-action"]);
 
       const prompts = await client.listPrompts();
       expect(prompts.prompts.map(({ name }) => name).sort()).toEqual([
@@ -120,7 +78,7 @@ describe("Test Scenario MCP transport validation", () => {
         "software-documentation-assistant",
         "test-portal-report-generator",
       ]);
-      const status = await client.callTool({
+      const status = await callAction(client, {
         name: "testportal-check-status",
         arguments: {},
       });
@@ -192,7 +150,7 @@ describe("Test Scenario MCP transport validation", () => {
     ));
 
     try {
-      const unknownFieldResponse = await client.callTool({
+      const unknownFieldResponse = await callAction(client, {
         name: "testportal-update-test-scenario",
         arguments: {
           scenarioId,
@@ -230,7 +188,7 @@ describe("Test Scenario MCP transport validation", () => {
         ],
       ] as const;
       for (const [name, arguments_] of invalidCases) {
-        const response = await client.callTool({ name, arguments: arguments_ });
+        const response = await callAction(client, { name, arguments: arguments_ });
         expect(response.isError).toBe(true);
       }
       expect(mockAppendScenarioStep).not.toHaveBeenCalled();
@@ -238,7 +196,7 @@ describe("Test Scenario MCP transport validation", () => {
       expect(mockDeleteScenarioStep).not.toHaveBeenCalled();
       expect(mockReorderScenarioSteps).not.toHaveBeenCalled();
 
-      const refinementResponse = await client.callTool({
+      const refinementResponse = await callAction(client, {
         name: "testportal-update-test-scenario",
         arguments: { scenarioId, projectId },
       });
@@ -275,29 +233,17 @@ describe("Test Scenario MCP transport validation", () => {
 
     try {
       const catalog = await client.listTools();
-      expect(catalog.tools.map(({ name }) => name)).toEqual(
-        expect.arrayContaining([
-          "testportal-create-test-scenario",
-          "testportal-list-test-scenarios",
-          "testportal-get-test-scenario",
-          "testportal-update-test-scenario",
-          "testportal-delete-test-scenario",
-          "testportal-append-test-scenario-step",
-          "testportal-update-test-scenario-step",
-          "testportal-delete-test-scenario-step",
-          "testportal-reorder-test-scenario-steps",
-        ]),
-      );
+      expect(catalog.tools.map(({ name }) => name).sort()).toEqual(["testportal-execute-action", "testportal-find-action"]);
       const responses = [];
-      responses.push(await client.callTool({
+      responses.push(await callAction(client, {
         name: "testportal-create-test-scenario",
         arguments: { projectId, title: "Temporary MCP scenario" },
       }));
-      responses.push(await client.callTool({
+      responses.push(await callAction(client, {
         name: "testportal-append-test-scenario-step",
         arguments: { projectId, scenarioId, action: "Open" },
       }));
-      responses.push(await client.callTool({
+      responses.push(await callAction(client, {
         name: "testportal-update-test-scenario-step",
         arguments: {
           projectId,
@@ -306,11 +252,11 @@ describe("Test Scenario MCP transport validation", () => {
           expectedResult: null,
         },
       }));
-      responses.push(await client.callTool({
+      responses.push(await callAction(client, {
         name: "testportal-reorder-test-scenario-steps",
         arguments: { projectId, scenarioId, stepIds: [] },
       }));
-      responses.push(await client.callTool({
+      responses.push(await callAction(client, {
         name: "testportal-delete-test-scenario-step",
         arguments: {
           projectId,
@@ -318,7 +264,7 @@ describe("Test Scenario MCP transport validation", () => {
           stepId: "44444444-4444-4444-8444-444444444444",
         },
       }));
-      responses.push(await client.callTool({
+      responses.push(await callAction(client, {
         name: "testportal-get-test-scenario",
         arguments: { projectId, scenarioId },
       }));

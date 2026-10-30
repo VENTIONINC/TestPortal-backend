@@ -39,10 +39,8 @@ npm run server
 
 After connecting with a valid MCP bearer token:
 
-1. Open the tool list and verify these four tools are present:
-   `testportal-list-test-scenarios`, `testportal-get-test-scenario`, `testportal-update-test-scenario`, and
-   `testportal-delete-test-scenario`.
-2. Inspect each input schema and confirm project and scenario identifiers are
+1. Open the tool list and verify only `testportal-find-action` and `testportal-execute-action` are present. Use discovery to retrieve the list, get, update and delete scenario action contracts.
+2. Inspect each action input schema and confirm project and scenario identifiers are
    UUIDs. Confirm Result and Issue pagination fields are separate and bounded
    from 1 through 100.
 3. Invoke the list tool with a project UUID and no pagination fields. Verify
@@ -67,17 +65,20 @@ The tool-call JSON-RPC shape used by inspector-compatible clients is:
   "id": 2,
   "method": "tools/call",
   "params": {
-    "name": "testportal-list-test-scenarios",
+    "name": "testportal-execute-action",
     "arguments": {
-      "projectId": "11111111-1111-1111-1111-111111111111",
-      "page": 1,
-      "limit": 30
+      "actionId": "testportal-list-test-scenarios",
+      "arguments": {
+        "projectId": "11111111-1111-1111-1111-111111111111",
+        "page": 1,
+        "limit": 30
+      }
     }
   }
 }
 ```
 
-Replace the tool name and arguments to inspect detail, update, and delete
+Replace the action ID and its arguments to inspect detail, update, and delete
 operations. Do not use a production scenario for mutation checks.
 
 ### Manual Run Inspector Checks
@@ -99,21 +100,7 @@ To connect from another MCP-compatible client, configure an HTTP remote server t
 
 1.  **Add MCP Server Configuration:**
 
-    Add a remote MCP server entry using your client's supported configuration format:
-
-    ```json
-    {
-      "mcpServers": {
-        "test-portal": {
-          "command": "npx",
-          "args": [
-            "mcp-remote",
-            "http://localhost:3001/api/v2/mcp"
-          ]
-        }
-      }
-    }
-    ```
+    Add a remote Streamable HTTP server entry using your client's supported configuration format, pointing to `http://localhost:3001/api/v2/mcp`. Configure an `Authorization: Bearer <MCP token>` header securely for every request.
 
 2.  **Restart or Reload the Client:**
 
@@ -121,10 +108,10 @@ To connect from another MCP-compatible client, configure an HTTP remote server t
 
 3.  **Verify Connection:**
 
-    Verify the `test-portal` MCP server appears in the client's available tools or by attempting to use an MCP tool like `testportal-check-status`.
+    Verify the server appears and execute the `testportal-check-status` action through `testportal-execute-action`.
 
 ### Notes
 
 - Ensure the test-portal backend server is running on `http://localhost:3001` before attempting to connect from a client.
-- The `mcp-remote` package must be available globally via npm or the configuration may fail.
+- A stdio-only client requires a separately configured bridge that supports authentication and Streamable HTTP.
 - If you encounter connection issues, check the MCP client logs for error messages.
