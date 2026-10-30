@@ -23,8 +23,8 @@ describe("Test Scenario MCP server registration", () => {
     jest.useRealTimers();
   });
 
-  it("registers all eight non-creation scenario tools with canonical names", async () => {
-    const { registerTestScenarioTools } = await import("@/mcp/server");
+  it("registers the public discovery and execution tools", async () => {
+    const { registerActionTools } = await import("@/mcp/server");
     const [clientTransport, serverTransport] =
       InMemoryTransport.createLinkedPair();
     const client = new Client({ name: "registration-test", version: "1.0.0" });
@@ -32,7 +32,7 @@ describe("Test Scenario MCP server registration", () => {
       name: "registration-test",
       version: "1.0.0",
     });
-    registerTestScenarioTools(server);
+    registerActionTools(server, "actor");
 
     try {
       await Promise.all([
@@ -41,14 +41,8 @@ describe("Test Scenario MCP server registration", () => {
       ]);
       const catalog = await client.listTools();
       expect(catalog.tools.map(({ name }) => name).sort()).toEqual([
-        "testportal-append-test-scenario-step",
-        "testportal-delete-test-scenario",
-        "testportal-delete-test-scenario-step",
-        "testportal-get-test-scenario",
-        "testportal-list-test-scenarios",
-        "testportal-reorder-test-scenario-steps",
-        "testportal-update-test-scenario",
-        "testportal-update-test-scenario-step",
+        "testportal-execute-action",
+        "testportal-find-action",
       ]);
     } finally {
       await Promise.all([client.close(), server.close()]);
@@ -57,9 +51,7 @@ describe("Test Scenario MCP server registration", () => {
 
   it("binds creation to the authenticated session owner and rejects caller creator input", () => {
     expect(serverSource).toMatch(/const reviewedById = req\.mcpUserId/);
-    expect(serverSource).toMatch(
-      /const createTestScenario = createTestScenarioTool\(reviewedById\)/,
-    );
+    expect(serverSource).toMatch(/registerActionTools\(server, reviewedById\)/);
     expect(serverSource).not.toContain("createdById");
     const input = {
       projectId: "11111111-1111-4111-8111-111111111111",

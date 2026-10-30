@@ -8,50 +8,19 @@ import {
   RegisteredTool,
 } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/streamableHttp.js";
-import { z } from "zod/v3";
-import type { MCPToolSchema } from "@/types";
-import type { CallToolResult } from "@modelcontextprotocol/sdk/types.js";
 import { isInitializeRequest } from "@modelcontextprotocol/sdk/types.js";
 import {
   authenticateMcpToken,
   handleMcpSessionRequest,
 } from "@/mcp/middleware/auth";
-import { statusCheck } from "@/mcp/tools/status-check";
-import { currentTime } from "@/mcp/tools/current-time";
-import { getIssues, getIssueById, createIssue } from "@/mcp/tools/issues";
-import {
-  getResults,
-  getResultById,
-  getResultsStats,
-} from "@/mcp/tools/results";
-import {
-  createAssumption,
-  createUpdateAssumptionTool,
-  getAssumptionById,
-} from "@/mcp/tools/assumptions";
 import type { RequestWithMcpUser } from "@/mcp/middleware/auth";
-import { getExecutionById } from "@/mcp/tools/executions";
+import { createActionCatalog } from "@/mcp/actionCatalog";
 import {
-  assignIssue,
-  reviewError,
-  bulkReview,
-  getResultErrorById,
-} from "@/mcp/tools/result-errors";
-import { getSpecById } from "@/mcp/tools/specs";
-import {
-  createTestScenarioTool,
-  appendTestScenarioStep,
-  deleteTestScenarioStep,
-  deleteTestScenario,
-  getTestScenario,
-  listTestScenarios,
-  updateTestScenario,
-  updateTestScenarioStep,
-  reorderTestScenarioSteps,
-} from "@/mcp/tools/test-scenarios";
-import { getAvailableProjects } from "@/mcp/tools/projects";
-import { createStartManualTestRunTool, manualTestRunTools } from "@/mcp/tools/manual-test-runs";
-import { createProfileTool, profileTools } from "@/mcp/tools/manual-run-environment-profiles";
+  findAction,
+  findActionSchema,
+  findActionShape,
+} from "@/mcp/actionDiscovery";
+import { executeAction, executeActionSchema } from "@/mcp/actionExecution";
 import * as testPortalAssistant from "@/mcp/prompts/test-portal-assistant/v1.0.0";
 import * as issueAnalysisAssistant from "@/mcp/prompts/issue-analysis-assistant/v1.0.0";
 import * as environmentPerformanceAssistant from "@/mcp/prompts/environment-performance-assistant/v1.0.0";
@@ -73,13 +42,49 @@ interface TransportStorage {
 
 // Extended MCP server interface to handle tool registration
 interface McpServerWithTools extends McpServer {
-  tool: (...args: unknown[]) => RegisteredTool;
   registerTool: (...args: unknown[]) => RegisteredTool;
   connect: (transport: unknown) => Promise<void>;
 }
 
 const transports: TransportStorage = {};
 const SESSION_TIMEOUT = 30 * 60 * 1000; // 30 minutes
+
+export const registerActionTools = (
+  server: McpServer,
+  userId: string,
+  catalog = createActionCatalog(userId),
+): void => {
+  const compatibleServer = server as McpServerWithTools;
+  compatibleServer.registerTool(
+    "testportal-find-action",
+    {
+      description:
+        "Find action contracts by query or exact ID, or browse the available areas.",
+      inputSchema: findActionShape,
+      annotations: {
+        readOnlyHint: true,
+        destructiveHint: false,
+        idempotentHint: true,
+      },
+    },
+    async (input: unknown) =>
+      findAction(catalog, findActionSchema.parse(input)),
+  );
+  compatibleServer.registerTool(
+    "testportal-execute-action",
+    {
+      description: "Execute one known action with its validated arguments.",
+      inputSchema: executeActionSchema,
+      annotations: {
+        readOnlyHint: false,
+        destructiveHint: true,
+        idempotentHint: false,
+      },
+    },
+    async (input: unknown) =>
+      executeAction(catalog, executeActionSchema.parse(input)),
+  );
+};
 
 // Cleanup interval for stale sessions
 setInterval(() => {
@@ -91,89 +96,6 @@ setInterval(() => {
     }
   }
 }, 60 * 1000); // Check every minute
-
-const strictMcpInputSchema = (schema: MCPToolSchema): unknown => {
-  let candidate: unknown = schema;
-  while (
-    typeof candidate === "object" &&
-    candidate !== null &&
-    "_def" in candidate &&
-    typeof candidate._def === "object" &&
-    candidate._def !== null &&
-    "schema" in candidate._def
-  ) {
-    candidate = candidate._def.schema;
-  }
-
-  if (
-    typeof candidate === "object" &&
-    candidate !== null &&
-    "shape" in candidate
-  ) {
-    return z.object(candidate.shape as z.ZodRawShape).strict();
-  }
-  return schema;
-};
-
-export const registerTestScenarioTools = (server: McpServer): void => {
-  const compatibleServer = server as McpServerWithTools;
-  const register = ([name, description, schema, handler]: readonly [
-    string,
-    string,
-    MCPToolSchema,
-    (input: never) => Promise<unknown>,
-  ]): void => {
-    compatibleServer.registerTool(
-      name,
-      { description, inputSchema: strictMcpInputSchema(schema) },
-      async (input: unknown) => {
-        const validatedInput =
-          typeof schema === "object" &&
-          schema !== null &&
-          "parseAsync" in schema &&
-          typeof schema.parseAsync === "function"
-            ? await schema.parseAsync(input)
-            : input;
-        return (await handler(validatedInput as never)) as CallToolResult;
-      },
-    );
-  };
-
-  register(listTestScenarios);
-  register(getTestScenario);
-  register(updateTestScenario);
-  register(deleteTestScenario);
-  register(appendTestScenarioStep);
-  register(updateTestScenarioStep);
-  register(deleteTestScenarioStep);
-  register(reorderTestScenarioSteps);
-};
-
-export const registerManualTestRunTools = (server: McpServer, executedById: string): void => {
-  const compatibleServer = server as McpServerWithTools;
-  const tools: Array<readonly [string, string, MCPToolSchema, (input: never) => Promise<unknown>]> = [
-    createStartManualTestRunTool(executedById),
-    ...manualTestRunTools,
-    createProfileTool(executedById),
-    ...profileTools,
-  ];
-  for (const [name, description, schema, handler] of tools) {
-    compatibleServer.registerTool(
-      name,
-      { description, inputSchema: strictMcpInputSchema(schema) },
-      async (input: unknown) => {
-        const validatedInput =
-          typeof schema === "object" &&
-          schema !== null &&
-          "parseAsync" in schema &&
-          typeof schema.parseAsync === "function"
-            ? await schema.parseAsync(input)
-            : input;
-        return (await handler(validatedInput as never)) as CallToolResult;
-      },
-    );
-  }
-};
 
 router.post(
   "/v2/mcp",
@@ -229,54 +151,7 @@ router.post(
           version: "0.0.1",
         }) as McpServerWithTools;
 
-        // Register all tools
-        server.tool(...statusCheck);
-        server.tool(...currentTime);
-        server.tool(...getAvailableProjects);
-
-        // Issue tools
-        server.tool(...getIssues);
-        server.tool(...getIssueById);
-        server.tool(...createIssue);
-
-        // Result tools
-        server.tool(...getResults);
-        server.tool(...getResultById);
-        server.tool(...getResultsStats);
-
-        // Assumption tools
-        server.tool(...createAssumption);
-        server.tool(...createUpdateAssumptionTool(reviewedById));
-        server.tool(...getAssumptionById);
-
-        // Execution tools
-        server.tool(...getExecutionById);
-
-        // Result Error tools
-        server.tool(...assignIssue);
-        server.tool(...reviewError);
-        server.tool(...bulkReview);
-        server.tool(...getResultErrorById);
-
-        // Spec tools
-        server.tool(...getSpecById);
-
-        // Bind creation to the authenticated session owner, as with assumption updates.
-        const createTestScenario = createTestScenarioTool(reviewedById);
-        server.registerTool(
-          createTestScenario[0],
-          {
-            description: createTestScenario[1],
-            inputSchema: createTestScenario[2],
-          },
-          createTestScenario[3],
-        );
-
-        // Test Scenario tools
-        registerTestScenarioTools(server);
-
-        // Manual Test Run tools are bound to the authenticated session owner.
-        registerManualTestRunTools(server, reviewedById);
+        registerActionTools(server, reviewedById);
 
         // Test Portal Assistant
         server.registerPrompt(
