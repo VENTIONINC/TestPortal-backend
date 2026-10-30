@@ -7,6 +7,7 @@ import { Prisma } from "@prisma/client";
 import type { TestScenario, TestScenarioStep } from "@prisma/client";
 
 const projectFindUniqueMock = jest.fn<() => Promise<unknown>>();
+const userFindManyMock = jest.fn<(args: unknown) => Promise<unknown>>();
 const scenarioCreateMock = jest.fn<() => Promise<unknown>>();
 const scenarioFindFirstMock = jest.fn<() => Promise<unknown>>();
 const scenarioUpdateMock = jest.fn<() => Promise<unknown>>();
@@ -18,11 +19,12 @@ const stepCreateMock = jest.fn<() => Promise<unknown>>();
 const stepUpdateMock = jest.fn<() => Promise<unknown>>();
 const stepUpdateManyMock = jest.fn<() => Promise<unknown>>();
 const stepDeleteMock = jest.fn<() => Promise<unknown>>();
-const queryRawMock = jest.fn<() => Promise<unknown>>();
+const queryRawMock = jest.fn<(...args: unknown[]) => Promise<unknown>>();
 const transactionMock = jest.fn<(callback: unknown) => Promise<unknown>>();
 
 const tx = {
   project: { findUnique: projectFindUniqueMock },
+  user: { findMany: userFindManyMock },
   testScenario: {
     create: scenarioCreateMock,
     findFirst: scenarioFindFirstMock,
@@ -45,6 +47,7 @@ jest.mock("@/prisma/client", () => ({
   dbClient: {
     $transaction: transactionMock,
     project: { findUnique: projectFindUniqueMock },
+    user: { findMany: userFindManyMock },
     testScenario: {
       findMany: summaryFindManyMock,
       count: countMock,
@@ -100,6 +103,7 @@ describe("testScenarioModel", () => {
     stepDeleteMock.mockResolvedValue(step);
     summaryFindManyMock.mockResolvedValue([]);
     countMock.mockResolvedValue(0);
+    userFindManyMock.mockResolvedValue([]);
   });
 
   it("creates structured fields, initial steps, and a generated projection atomically", async () => {
@@ -169,6 +173,7 @@ describe("testScenarioModel", () => {
     )?.select;
     expect(selection).not.toHaveProperty("contentMd");
     expect(selection).not.toHaveProperty("steps");
+    expect(selection).toHaveProperty("priority", true);
   });
 
   it("builds one literal project-scoped predicate and deterministic order", async () => {
@@ -189,6 +194,58 @@ describe("testScenarioModel", () => {
     expect(summaryFindManyMock).not.toHaveBeenCalledWith(expect.objectContaining({ select: expect.objectContaining({ contentMd: true }) }));
     expect(transactionMock).toHaveBeenCalledWith(expect.any(Function), {
       isolationLevel: Prisma.TransactionIsolationLevel.RepeatableRead,
+    });
+  });
+
+  it("applies exact priority filtering before list pagination", async () => {
+    await testScenarioModel.listSummaries({ projectId: scenario.projectId, page: 1, limit: 10, priority: "high" });
+    const query = queryRawMock.mock.calls[0]?.[0] as { sql?: string; values?: unknown[] } | undefined;
+    expect(query?.sql).toContain('s."priority" =');
+    expect(query?.values).toContain("high");
+    const selection = (summaryFindManyMock.mock.calls[0]?.[0] as { select?: Record<string, unknown> } | undefined)?.select;
+    expect(selection).toHaveProperty("priority", true);
+  });
+
+  it("combines priority, creator, folder, and search before calculating page totals", async () => {
+    const folderId = "66666666-6666-6666-6666-666666666666";
+    queryRawMock.mockResolvedValueOnce([{ id: folderId }]).mockResolvedValueOnce([{ id: scenario.id }]).mockResolvedValueOnce([{ total: 42n }]);
+    summaryFindManyMock.mockResolvedValueOnce([{ ...scenario, folder: { name: "Cases" }, createdBy: { id: scenario.createdById, name: "Creator", email: "creator@example.test" } }]);
+    const result = await testScenarioModel.listSummaries({ projectId: scenario.projectId, page: 2, limit: 10, priority: "high", createdById: scenario.createdById, folderId, search: "login" });
+    const listQuery = queryRawMock.mock.calls[1]?.[0] as { sql?: string; values?: unknown[] } | undefined;
+    expect(listQuery?.sql).toContain('s."priority" =');
+    expect(listQuery?.sql).toContain('s."createdById" =');
+    expect(listQuery?.sql).toContain('s."folderId" IN');
+    expect(listQuery?.sql).toContain('LOWER(COALESCE(s."title"');
+    expect(listQuery?.values).toEqual(expect.arrayContaining(["high", scenario.createdById, "login"]));
+    expect(result.total).toBe(42);
+    expect(result.scenarios).toHaveLength(1);
+  });
+
+  it("resolves unique matching scenario UUIDs without summary reads", async () => {
+    queryRawMock.mockResolvedValueOnce([{ id: scenario.id }, { id: scenario.id }, { id: "55555555-5555-5555-5555-555555555555" }]);
+    const ids = await testScenarioModel.resolveSelection({ projectId: scenario.projectId, priority: "high", search: "login" });
+    expect(ids).toEqual([scenario.id, "55555555-5555-5555-5555-555555555555"]);
+    expect(summaryFindManyMock).not.toHaveBeenCalled();
+    const query = queryRawMock.mock.calls[0]?.[0] as { sql?: string; values?: unknown[] } | undefined;
+    expect(query?.sql).toContain('s."priority" =');
+    expect(query?.values).toContain("high");
+  });
+
+  it.each([0, 1, 100, 237])("resolves the full UUID set for %i matches", async (count) => {
+    const ids = Array.from({ length: count }, (_, index) => ({ id: `00000000-0000-4000-8000-${String(index).padStart(12, "0")}` }));
+    queryRawMock.mockResolvedValueOnce(ids);
+    const result = await testScenarioModel.resolveSelection({ projectId: scenario.projectId, search: "needle" });
+    expect(result).toHaveLength(count);
+    expect(new Set(result).size).toBe(count);
+  });
+
+  it("discovers distinct project creators in stable UUID-identified options", async () => {
+    userFindManyMock.mockResolvedValue([{ id: scenario.createdById, name: "Creator", email: "creator@example.test" }]);
+    await testScenarioModel.listScenarioAuthors(scenario.projectId);
+    expect(userFindManyMock).toHaveBeenCalledWith({
+      where: { testScenariosCreated: { some: { projectId: scenario.projectId } } },
+      select: { id: true, name: true, email: true },
+      orderBy: [{ name: "asc" }, { id: "asc" }],
     });
   });
 

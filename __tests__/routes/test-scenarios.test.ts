@@ -13,6 +13,8 @@ const authMiddlewareMock = jest.fn<
 const controllerMocks = {
   create: jest.fn<(req: Request, res: Response) => void>(),
   list: jest.fn<(req: Request, res: Response) => void>(),
+  listAuthors: jest.fn<(req: Request, res: Response) => void>(),
+  resolveSelection: jest.fn<(req: Request, res: Response) => void>(),
   addSpecLink: jest.fn<(req: Request, res: Response) => void>(),
   listSpecLinks: jest.fn<(req: Request, res: Response) => void>(),
   removeSpecLink: jest.fn<(req: Request, res: Response) => void>(),
@@ -66,6 +68,8 @@ describe("test-scenario routes", () => {
     expect(routes).toEqual([
       "post /v2/test-scenarios",
       "get /v2/test-scenarios",
+      "get /v2/test-scenarios/authors",
+      "get /v2/test-scenarios/selection",
       "post /v2/test-scenarios/:scenarioId/spec-links",
       "get /v2/test-scenarios/:scenarioId/spec-links",
       "delete /v2/test-scenarios/:scenarioId/spec-links/:specId",

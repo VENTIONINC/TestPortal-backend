@@ -9,6 +9,7 @@ import {
   reorderTestScenarioStepsSchema,
   testScenarioIdParamsSchema,
   testScenarioListQuerySchema,
+  testScenarioSelectionQuerySchema,
   testScenarioProjectQuerySchema,
   testScenarioStepParamsSchema,
   updateTestScenarioSchema,
@@ -70,6 +71,20 @@ function sendServiceError(res: Response, error: unknown, operation: string): voi
 }
 
 export const testScenarioController = {
+  async listAuthors(req: Request, res: Response): Promise<void> {
+    const parsed = testScenarioProjectQuerySchema.safeParse(req.query);
+    if (!parsed.success) { sendValidationError(res, validationMessage(parsed.error)); return; }
+    try { res.status(200).json({ authors: await testScenarioService.listScenarioAuthors(parsed.data.projectId) }); }
+    catch (error) { sendServiceError(res, error, "list scenario authors"); }
+  },
+
+  async resolveSelection(req: Request, res: Response): Promise<void> {
+    const parsed = testScenarioSelectionQuerySchema.safeParse(req.query);
+    if (!parsed.success) { sendValidationError(res, validationMessage(parsed.error)); return; }
+    try { res.status(200).json(await testScenarioService.resolveScenarioSelection(parsed.data)); }
+    catch (error) { sendServiceError(res, error, "resolve scenario selection"); }
+  },
+
   async create(req: AuthenticatedRequest, res: Response): Promise<void> {
     if (!req.user) {
       res.status(401).json({ error: "Authentication required" });

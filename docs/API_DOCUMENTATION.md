@@ -112,7 +112,9 @@ the catalog-provided `downloadUrl` or directly to
 
 ### Folders and suites
 
-Organization endpoints use the existing bearer JWT authentication and require an explicit `projectId` on every request. `GET` and `POST /api/v2/test-scenario-folders` list or create project folders; `PATCH` and `DELETE /api/v2/test-scenario-folders/{folderId}` rename/move or remove a folder. Deletion requires `disposition=parent` or `disposition=unfiled`; direct scenarios are reassigned and child folders are promoted.
+Organization endpoints use the existing bearer JWT authentication and require an explicit `projectId` on every request. `GET` and `POST /api/v2/test-scenario-folders` list or create project folders; `PATCH` and `DELETE /api/v2/test-scenario-folders/{folderId}` rename/move or remove a folder. Folder descriptions are optional and nullable: omit `description` in a patch to preserve the stored value, or send `null`/blank text to clear it. Deletion requires `disposition=parent` or `disposition=unfiled`; direct scenarios are reassigned and child folders are promoted.
+
+The lightweight `GET /api/v2/test-scenarios` catalog supports an exact optional `priority=low|medium|high` filter; omitting it includes all priorities, including null. `GET /api/v2/test-scenarios/authors?projectId=...` returns stable UUID-identified creators for scenarios in that project, including authors outside the current page and inactive users. `GET /api/v2/test-scenarios/selection` accepts the catalog's matching project, folder, search, creator, priority, and legacy text filters (without pagination or sorting) and returns `{ "scenarioIds": [...], "total": N }`; the count is derived from the returned unique UUID list. Neither endpoint returns Markdown bodies.
 
 `GET` and `POST /api/v2/test-suites` list or create manually curated suites. `PATCH` and `DELETE /api/v2/test-suites/{suiteId}` update or remove a suite. Add/remove members with `POST`/`DELETE /api/v2/test-suites/{suiteId}/members` and reorder all members with `PUT /api/v2/test-suites/{suiteId}/members/order`; member bodies use `{ "projectId": "…", "scenarioIds": ["…"] }`.
 

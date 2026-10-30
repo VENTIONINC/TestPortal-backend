@@ -1,7 +1,7 @@
 // Copyright 2026 VENSOLUTIONSGROUP LTD
 // SPDX-License-Identifier: Apache-2.0
 
-import { bulkFolderBody, folderDeleteQuery, folderUpdateBody, memberBody } from "@/schemas/testScenarioOrganizationSchemas";
+import { bulkFolderBody, folderCreateBody, folderDeleteQuery, folderUpdateBody, memberBody } from "@/schemas/testScenarioOrganizationSchemas";
 
 const projectId = "11111111-1111-4111-8111-111111111111";
 const id = "22222222-2222-4222-8222-222222222222";
@@ -21,5 +21,13 @@ describe("test scenario organization schemas", () => {
     expect(folderDeleteQuery.safeParse({ projectId }).success).toBe(false);
     expect(folderDeleteQuery.safeParse({ projectId, disposition: "unfiled" }).success).toBe(true);
     expect(folderUpdateBody.safeParse({ projectId }).success).toBe(false);
+  });
+
+  it("accepts optional folder descriptions and normalizes blank values to null", () => {
+    expect(folderCreateBody.parse({ projectId, name: "Specs", description: "  Product coverage  " })).toEqual({ projectId, name: "Specs", description: "Product coverage" });
+    expect(folderCreateBody.parse({ projectId, name: "Specs", description: "   " })).toEqual({ projectId, name: "Specs", description: null });
+    expect(folderUpdateBody.parse({ projectId, description: null })).toEqual({ projectId, description: null });
+    expect(folderUpdateBody.parse({ projectId, description: " " })).toEqual({ projectId, description: null });
+    expect(folderUpdateBody.parse({ projectId, name: "Specs" })).not.toHaveProperty("description");
   });
 });

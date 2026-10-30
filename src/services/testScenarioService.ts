@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { testScenarioPrioritySchema, testScenarioRelatedIssueUrlSchema } from "@/schemas/testScenarioSchemas";
+import type { TestScenarioSelectionQuery } from "@/schemas/testScenarioSchemas";
 import { projectModel } from "@/models/projectModel";
 import { testScenarioModel } from "@/models/testScenarioModel";
 import {
@@ -203,6 +204,7 @@ export const testScenarioService = {
       "title",
       "folderId",
       "createdById",
+      "priority",
       "folderId",
       ...SCENARIO_FIELDS.filter((field) => field !== "title"),
       "steps",
@@ -254,6 +256,7 @@ export const testScenarioService = {
       "limit",
       "search",
       "createdById",
+      "priority",
       "sort",
       "sortField", "sortDirection", "scenarioKey", "title", "details", "folder", "createdBy",
       "folderId",
@@ -268,6 +271,7 @@ export const testScenarioService = {
     if (params.createdById !== undefined) {
       requireUuid(params.createdById, "Creator ID");
     }
+    if (params.priority !== undefined && !["low", "medium", "high"].includes(params.priority)) throw new TestScenarioValidationError("priority is invalid");
     if (params.sortField !== undefined && !(TEST_SCENARIO_SORT_FIELDS as readonly string[]).includes(params.sortField)) throw new TestScenarioValidationError("sortField is invalid");
     if (params.sortDirection !== undefined && params.sortDirection !== "asc" && params.sortDirection !== "desc") throw new TestScenarioValidationError("sortDirection must be asc or desc");
     if (params.sortDirection !== undefined && params.sortField === undefined) throw new TestScenarioValidationError("sortDirection requires sortField");
@@ -295,6 +299,7 @@ export const testScenarioService = {
       ...(params.createdById !== undefined
         ? { createdById: params.createdById }
         : {}),
+      ...(params.priority !== undefined ? { priority: params.priority } : {}),
       sort,
       ...(params.sortField !== undefined ? { sortField: params.sortField } : {}),
       ...(params.sortDirection !== undefined ? { sortDirection: params.sortDirection } : {}),
@@ -315,6 +320,42 @@ export const testScenarioService = {
       limit,
       totalPages: Math.ceil(total / limit),
     };
+  },
+
+  async listScenarioAuthors(projectId: string): Promise<Array<{ id: string; name: string; email: string }>> {
+    requireIdentifier(projectId, "Project ID");
+    if (!(await projectModel.exists(projectId))) throw new TestScenarioNotFoundError(`Project with id '${projectId}' not found`);
+    return await testScenarioModel.listScenarioAuthors(projectId);
+  },
+
+  async resolveScenarioSelection(params: TestScenarioSelectionQuery): Promise<{ scenarioIds: string[]; total: number }> {
+    requireIdentifier(params.projectId, "Project ID");
+    if (params.createdById !== undefined) requireUuid(params.createdById, "Creator ID");
+    const search = normalizeSearch(params.search);
+    const filters = {
+      scenarioKey: normalizeColumnFilter(params.scenarioKey, "scenarioKey"),
+      title: normalizeColumnFilter(params.title, "title"),
+      details: normalizeColumnFilter(params.details, "details"),
+      folder: normalizeColumnFilter(params.folder, "folder"),
+      createdBy: normalizeColumnFilter(params.createdBy, "createdBy"),
+    };
+    if (params.folderId && params.folderId !== "unfiled" && !(await testScenarioModel.folderBelongsToProject(params.folderId, params.projectId))) throw new TestScenarioNotFoundError("Folder not found");
+    if (params.suiteId && !(await testScenarioModel.suiteBelongsToProject(params.suiteId, params.projectId))) throw new TestScenarioNotFoundError("Suite not found");
+    const scenarioIds = await testScenarioModel.resolveSelection({
+      projectId: params.projectId,
+      ...(search !== undefined ? { search } : {}),
+      ...(params.createdById !== undefined ? { createdById: params.createdById } : {}),
+      ...(params.priority !== undefined ? { priority: params.priority } : {}),
+      ...(filters.scenarioKey ? { scenarioKey: filters.scenarioKey } : {}),
+      ...(filters.title ? { title: filters.title } : {}),
+      ...(filters.details ? { details: filters.details } : {}),
+      ...(filters.folder ? { folder: filters.folder } : {}),
+      ...(filters.createdBy ? { createdBy: filters.createdBy } : {}),
+      ...(params.folderId !== undefined ? { folderId: params.folderId } : {}),
+      ...(params.includeDescendants !== undefined ? { includeDescendants: params.includeDescendants } : {}),
+      ...(params.suiteId !== undefined ? { suiteId: params.suiteId } : {}),
+    });
+    return { scenarioIds, total: scenarioIds.length };
   },
 
   async getScenarioById(

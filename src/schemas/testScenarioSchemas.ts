@@ -103,12 +103,13 @@ const positiveIntegerQuerySchema = (defaultValue: number, maximum?: number) => {
   );
 };
 
-export const testScenarioListQuerySchema = z.object({
+const testScenarioListQueryBaseSchema = z.object({
   projectId: uuidSchema,
   page: positiveIntegerQuerySchema(1),
   limit: positiveIntegerQuerySchema(30, 100),
   search: z.string().trim().optional(),
   createdById: uuidSchema.optional(),
+  priority: testScenarioPrioritySchema.optional(),
   sort: z.enum(TEST_SCENARIO_SORT_VALUES).optional(),
   sortField: z.enum(TEST_SCENARIO_SORT_FIELDS).optional(),
   sortDirection: z.enum(["asc", "desc"]).optional(),
@@ -120,10 +121,17 @@ export const testScenarioListQuerySchema = z.object({
   folderId: z.union([uuidSchema, z.literal("unfiled")]).optional(),
   includeDescendants: z.enum(["true", "false"]).transform((value) => value === "true").optional(),
   suiteId: uuidSchema.optional(),
-}).superRefine((value, context) => {
+});
+
+export const testScenarioListQuerySchema = testScenarioListQueryBaseSchema.superRefine((value, context) => {
   if (value.sortDirection && !value.sortField) context.addIssue({ code: "custom", path: ["sortDirection"], message: "sortDirection requires sortField" });
   if (value.sortField && value.sort !== undefined) context.addIssue({ code: "custom", path: ["sort"], message: "sort cannot be combined with sortField" });
 });
+
+export const testScenarioSelectionQuerySchema = testScenarioListQueryBaseSchema
+  .omit({ page: true, limit: true, sort: true, sortField: true, sortDirection: true })
+  .strict();
+export type TestScenarioSelectionQuery = z.infer<typeof testScenarioSelectionQuerySchema>;
 
 export type CreateTestScenarioInput = z.infer<typeof createTestScenarioSchema>;
 export type UpdateTestScenarioInput = z.infer<typeof updateTestScenarioSchema>;
