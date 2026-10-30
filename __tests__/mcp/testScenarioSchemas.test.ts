@@ -17,6 +17,14 @@ const scenarioId = "22222222-2222-2222-2222-222222222222";
 const stepId = "44444444-4444-4444-4444-444444444444";
 
 describe("structured Test Scenario MCP schemas", () => {
+  it("validates organization filters strictly", () => {
+    for (const folderId of [scenarioId, "unfiled"]) {
+      expect(listTestScenariosSchema.parse({ projectId, folderId, suiteId: stepId, includeDescendants: false })).toMatchObject({ folderId, suiteId: stepId, includeDescendants: false });
+    }
+    for (const input of [{ folderId: "bad" }, { suiteId: "bad" }, { includeDescendants: "false" }, { unknown: true }]) {
+      expect(listTestScenariosSchema.safeParse({ projectId, ...input }).success).toBe(false);
+    }
+  });
   it("keeps list and evidence pagination defaults independent", () => {
     expect(listTestScenariosSchema.parse({ projectId })).toEqual({
       projectId,
