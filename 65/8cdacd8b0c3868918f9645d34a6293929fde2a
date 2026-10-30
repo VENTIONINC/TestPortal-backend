@@ -1,0 +1,45 @@
+__tests__/mcp/actionCatalog.test.ts
+  s_a4804319e6be94::t_93fe1b71ed2fe2 14,24-25,29,31,44,48,51-52,54,56,64,66
+__tests__/mcp/actionDiscovery.test.ts
+  s_a4804319e6be94::t_ab19dc2bff593a 84-99
+__tests__/mcp/actionPayload.test.ts
+  s_a4804319e6be94::t_f669b956008036 54
+__tests__/mcp/testScenarioOrganizationSchemas.test.ts
+  s_a4804319e6be94::t_b80799a7f1ba41 1-101
+__tests__/mcp/testScenarioOrganizationTools.test.ts
+  s_a4804319e6be94::t_9feb57cd5806a9 1-133
+src/handlers/mcpTestScenarioOrganizationHandler.ts
+  s_a4804319e6be94::t_d1e238ca304fd8 1-32
+src/mcp/actionCatalog.ts
+  s_a4804319e6be94::t_9f1b06583b4804 48-49,93
+src/mcp/actionMetadata.ts
+  s_a4804319e6be94::t_31e4f9913d973d 29-30,60-72,97,122-126,184-187
+src/mcp/schemas/testScenarioOrganizationSchemas.ts
+  s_a4804319e6be94::t_1c73cf2983ff86 1-84
+src/mcp/tools/test-scenario-organization.ts
+  s_a4804319e6be94::t_aad062e9bcb5d7 1-101
+src/mcp/tools/test-scenarios.ts
+  s_a4804319e6be94::t_d3e40eb1360b5c 49
+__tests__/mcp/testScenarioSchemas.test.ts
+  s_a4804319e6be94::t_944a24d06990e2 20-27
+__tests__/test-scenarios/testScenarioPostgresIntegration.test.ts
+  s_a4804319e6be94::t_d208e72a6d5571 14-15,843-946
+src/mcp/schemas/testScenarioSchemas.ts
+  s_a4804319e6be94::t_7c4006787509ed 58-60
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.18",
+  "base_commit_sha": "658cdacd8b0c3868918f9645d34a6293929fde2a",
+  "prompts": {},
+  "sessions": {
+    "s_a4804319e6be94": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a18c59-279b-7f12-9a8b-ed9d602b0780",
+        "model": "gpt-6.1-terra"
+      },
+      "human_author": "Ihar Mikailau <ihar.mikailau@ventionteams.com>"
+    }
+  }
+}
