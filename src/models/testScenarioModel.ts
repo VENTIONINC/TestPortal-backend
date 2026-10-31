@@ -105,7 +105,7 @@ async function buildSummaryPredicate(
   )` : Prisma.empty;
   const where: Prisma.Sql[] = [Prisma.sql`s."projectId" = ${params.projectId}::uuid`];
   if (params.createdById) where.push(Prisma.sql`s."createdById" = ${params.createdById}::uuid`);
-  if (params.priority) where.push(Prisma.sql`s."priority" = ${params.priority}::"TestScenarioPriority"`);
+  if (params.priority) where.push(Prisma.sql`s."priority" IN (${Prisma.join(params.priority.split(",").map((value) => Prisma.sql`${value}::"TestScenarioPriority"`))})`);
   if (params.search) where.push(Prisma.sql`(POSITION(LOWER(${params.search}) IN LOWER(COALESCE(s."title", ''))) > 0 OR POSITION(LOWER(${params.search}) IN LOWER(COALESCE(s."scenarioKey", ''))) > 0)`);
   if (params.scenarioKey) where.push(Prisma.sql`POSITION(LOWER(${params.scenarioKey}) IN LOWER(COALESCE(s."scenarioKey", ''))) > 0`);
   if (params.title) where.push(Prisma.sql`POSITION(LOWER(${params.title}) IN LOWER(s."title")) > 0`);
@@ -137,7 +137,7 @@ function summaryWhere(
   return {
     projectId: params.projectId,
     ...(params.createdById ? { createdById: params.createdById } : {}),
-    ...(params.priority ? { priority: params.priority } : {}),
+    ...(params.priority ? { priority: { in: params.priority.split(",") as ("low" | "medium" | "high")[] } } : {}),
     ...(organization.length ? { AND: organization } : {}),
     ...(params.search
       ? {

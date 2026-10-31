@@ -23,7 +23,7 @@ describe("structured Test Scenario OpenAPI contract", () => {
       for (const field of ["objective", "expectedResult", "notes"]) expect(schema.properties).not.toHaveProperty(field);
     }
     const listQuery = schemas?.TestScenarioListQuery as { properties?: Record<string, unknown> };
-    expect(listQuery.properties?.priority).toEqual(expect.objectContaining({ type: "string", enum: ["low", "medium", "high"] }));
+    expect(listQuery.properties?.priority).toEqual(expect.objectContaining({ type: "string", pattern: "^(low|medium|high)(,(low|medium|high))*$" }));
   });
   it("publishes folder, suite, membership, and bulk organization operations", () => {
     const spec = generateOpenAPISpec();

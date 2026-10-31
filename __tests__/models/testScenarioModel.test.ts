@@ -200,10 +200,17 @@ describe("testScenarioModel", () => {
   it("applies exact priority filtering before list pagination", async () => {
     await testScenarioModel.listSummaries({ projectId: scenario.projectId, page: 1, limit: 10, priority: "high" });
     const query = queryRawMock.mock.calls[0]?.[0] as { sql?: string; values?: unknown[] } | undefined;
-    expect(query?.sql).toContain('s."priority" =');
+    expect(query?.sql).toContain('s."priority" IN');
     expect(query?.values).toContain("high");
     const selection = (summaryFindManyMock.mock.calls[0]?.[0] as { select?: Record<string, unknown> } | undefined)?.select;
     expect(selection).toHaveProperty("priority", true);
+  });
+
+  it("uses every requested priority in the shared list predicate", async () => {
+    await testScenarioModel.listSummaries({ projectId: scenario.projectId, page: 1, limit: 10, priority: "high,medium" });
+    const query = queryRawMock.mock.calls[0]?.[0] as { sql?: string; values?: unknown[] } | undefined;
+    expect(query?.sql).toContain('s."priority" IN');
+    expect(query?.values).toEqual(expect.arrayContaining(["high", "medium"]));
   });
 
   it("combines priority, creator, folder, and search before calculating page totals", async () => {
@@ -212,7 +219,7 @@ describe("testScenarioModel", () => {
     summaryFindManyMock.mockResolvedValueOnce([{ ...scenario, folder: { name: "Cases" }, createdBy: { id: scenario.createdById, name: "Creator", email: "creator@example.test" } }]);
     const result = await testScenarioModel.listSummaries({ projectId: scenario.projectId, page: 2, limit: 10, priority: "high", createdById: scenario.createdById, folderId, search: "login" });
     const listQuery = queryRawMock.mock.calls[1]?.[0] as { sql?: string; values?: unknown[] } | undefined;
-    expect(listQuery?.sql).toContain('s."priority" =');
+    expect(listQuery?.sql).toContain('s."priority" IN');
     expect(listQuery?.sql).toContain('s."createdById" =');
     expect(listQuery?.sql).toContain('s."folderId" IN');
     expect(listQuery?.sql).toContain('LOWER(COALESCE(s."title"');
@@ -223,12 +230,12 @@ describe("testScenarioModel", () => {
 
   it("resolves unique matching scenario UUIDs without summary reads", async () => {
     queryRawMock.mockResolvedValueOnce([{ id: scenario.id }, { id: scenario.id }, { id: "55555555-5555-5555-5555-555555555555" }]);
-    const ids = await testScenarioModel.resolveSelection({ projectId: scenario.projectId, priority: "high", search: "login" });
+    const ids = await testScenarioModel.resolveSelection({ projectId: scenario.projectId, priority: "high,medium", search: "login" });
     expect(ids).toEqual([scenario.id, "55555555-5555-5555-5555-555555555555"]);
     expect(summaryFindManyMock).not.toHaveBeenCalled();
     const query = queryRawMock.mock.calls[0]?.[0] as { sql?: string; values?: unknown[] } | undefined;
-    expect(query?.sql).toContain('s."priority" =');
-    expect(query?.values).toContain("high");
+    expect(query?.sql).toContain('s."priority" IN');
+    expect(query?.values).toEqual(expect.arrayContaining(["high", "medium"]));
   });
 
   it.each([0, 1, 100, 237])("resolves the full UUID set for %i matches", async (count) => {

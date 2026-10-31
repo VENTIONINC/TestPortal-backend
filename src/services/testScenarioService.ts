@@ -25,6 +25,7 @@ import {
 const DEFAULT_PAGE = 1;
 const DEFAULT_LIMIT = 30;
 const MAX_LIMIT = 100;
+const PRIORITY_FILTER_PATTERN = /^(low|medium|high)(,(low|medium|high))*$/;
 const UUID_PATTERN =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const SCENARIO_FIELDS = [
@@ -271,7 +272,7 @@ export const testScenarioService = {
     if (params.createdById !== undefined) {
       requireUuid(params.createdById, "Creator ID");
     }
-    if (params.priority !== undefined && !["low", "medium", "high"].includes(params.priority)) throw new TestScenarioValidationError("priority is invalid");
+    if (params.priority !== undefined && !PRIORITY_FILTER_PATTERN.test(params.priority)) throw new TestScenarioValidationError("priority is invalid");
     if (params.sortField !== undefined && !(TEST_SCENARIO_SORT_FIELDS as readonly string[]).includes(params.sortField)) throw new TestScenarioValidationError("sortField is invalid");
     if (params.sortDirection !== undefined && params.sortDirection !== "asc" && params.sortDirection !== "desc") throw new TestScenarioValidationError("sortDirection must be asc or desc");
     if (params.sortDirection !== undefined && params.sortField === undefined) throw new TestScenarioValidationError("sortDirection requires sortField");
@@ -331,6 +332,7 @@ export const testScenarioService = {
   async resolveScenarioSelection(params: TestScenarioSelectionQuery): Promise<{ scenarioIds: string[]; total: number }> {
     requireIdentifier(params.projectId, "Project ID");
     if (params.createdById !== undefined) requireUuid(params.createdById, "Creator ID");
+    if (params.priority !== undefined && !PRIORITY_FILTER_PATTERN.test(params.priority)) throw new TestScenarioValidationError("priority is invalid");
     const search = normalizeSearch(params.search);
     const filters = {
       scenarioKey: normalizeColumnFilter(params.scenarioKey, "scenarioKey"),

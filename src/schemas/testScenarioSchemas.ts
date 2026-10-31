@@ -109,7 +109,7 @@ const testScenarioListQueryBaseSchema = z.object({
   limit: positiveIntegerQuerySchema(30, 100),
   search: z.string().trim().optional(),
   createdById: uuidSchema.optional(),
-  priority: testScenarioPrioritySchema.optional(),
+  priority: z.string().regex(/^(low|medium|high)(,(low|medium|high))*$/).optional(),
   sort: z.enum(TEST_SCENARIO_SORT_VALUES).optional(),
   sortField: z.enum(TEST_SCENARIO_SORT_FIELDS).optional(),
   sortDirection: z.enum(["asc", "desc"]).optional(),

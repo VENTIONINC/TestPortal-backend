@@ -199,8 +199,8 @@ const TestScenarioListQueryBaseSchema = z.object({
         "Optional creator User UUID filter. It may identify any user; a valid UUID with no matching scenarios returns an empty page.",
       example: "33333333-3333-4333-8333-333333333333",
     }),
-    priority: z.enum(["low", "medium", "high"]).optional().openapi({
-      description: "Exact scenario priority filter; omitted includes scenarios with any priority, including null.",
+    priority: z.string().regex(/^(low|medium|high)(,(low|medium|high))*$/).optional().openapi({
+      description: "Comma-separated priorities; omitted includes scenarios with any priority, including null.",
       example: "high",
     }),
     sort: z.enum(TEST_SCENARIO_SORT_VALUES).optional().openapi({
