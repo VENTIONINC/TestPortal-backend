@@ -6,6 +6,7 @@ import { jest } from "@jest/globals";
 import { Prisma } from "@prisma/client";
 import type { TestScenario, TestScenarioStep } from "@prisma/client";
 
+const projectUpdateMock = jest.fn<() => Promise<unknown>>();
 const projectFindUniqueMock = jest.fn<() => Promise<unknown>>();
 const scenarioCreateMock = jest.fn<() => Promise<unknown>>();
 const scenarioFindFirstMock = jest.fn<() => Promise<unknown>>();
@@ -22,7 +23,7 @@ const queryRawMock = jest.fn<() => Promise<unknown>>();
 const transactionMock = jest.fn<(callback: unknown) => Promise<unknown>>();
 
 const tx = {
-  project: { findUnique: projectFindUniqueMock },
+  project: { findUnique: projectFindUniqueMock, update: projectUpdateMock },
   testScenario: {
     create: scenarioCreateMock,
     findFirst: scenarioFindFirstMock,
@@ -44,7 +45,7 @@ const tx = {
 jest.mock("@/prisma/client", () => ({
   dbClient: {
     $transaction: transactionMock,
-    project: { findUnique: projectFindUniqueMock },
+    project: { findUnique: projectFindUniqueMock, update: projectUpdateMock },
     testScenario: {
       findMany: summaryFindManyMock,
       count: countMock,
@@ -60,11 +61,14 @@ const scenario: TestScenario = {
   folderId: null,
   createdById: "33333333-3333-3333-3333-333333333333",
   title: "Login",
-  scenarioKey: null,
+  scenarioKey: "TMS-1",
+  scenarioNumber: 1,
+  revision: 1,
+  updatedById: null,
   details: null,
   preconditions: null,
   testData: null,
-  priority: null,
+  priority: "medium",
   relatedIssueUrl: null,
   contentMd: "# Login\n\n## Steps\n_No steps defined._\n",
   contentMdHash: "a".repeat(64),
@@ -79,7 +83,17 @@ const step: TestScenarioStep = {
   action: "Open login",
   expectedResult: null,
 };
-const aggregate = { ...scenario, steps: [step] };
+const aggregate = {
+  ...scenario,
+  steps: [step],
+  createdBy: {
+    id: scenario.createdById,
+    name: "Creator",
+    email: "creator@example.test",
+  },
+  updatedBy: null,
+  suiteMemberships: [],
+};
 
 describe("testScenarioModel", () => {
   beforeEach(() => {
@@ -87,6 +101,7 @@ describe("testScenarioModel", () => {
     transactionMock.mockImplementation(async (callback: unknown) =>
       (callback as (client: Prisma.TransactionClient) => Promise<unknown>)(tx),
     );
+    projectUpdateMock.mockResolvedValue({ lastScenarioNumber: 1 });
     projectFindUniqueMock.mockResolvedValue({ id: scenario.projectId });
     scenarioCreateMock.mockResolvedValue(scenario);
     scenarioFindFirstMock.mockResolvedValue(aggregate);
@@ -134,23 +149,59 @@ describe("testScenarioModel", () => {
     expect(result?.steps[0]?.id).toBe(step.id);
   });
 
-  it("defaults omitted metadata to null and exposes persisted metadata on detail", async () => {
-    await testScenarioModel.create({ projectId: scenario.projectId, createdById: scenario.createdById, title: "Login" });
-    expect(scenarioCreateMock).toHaveBeenCalledWith({ data: expect.objectContaining({ priority: null, relatedIssueUrl: null }) });
-    scenarioFindFirstMock.mockResolvedValue({ ...aggregate, priority: "medium", relatedIssueUrl: "https://example.com/1" });
-    const result = await testScenarioModel.findById(scenario.id, scenario.projectId, tx);
-    expect(result).toMatchObject({ priority: "medium", relatedIssueUrl: "https://example.com/1" });
+  it("defaults priority to medium and exposes persisted metadata on detail", async () => {
+    await testScenarioModel.create({
+      projectId: scenario.projectId,
+      createdById: scenario.createdById,
+      title: "Login",
+    });
+    expect(scenarioCreateMock).toHaveBeenCalledWith({
+      data: expect.objectContaining({
+        priority: "medium",
+        relatedIssueUrl: null,
+      }),
+    });
+    scenarioFindFirstMock.mockResolvedValue({
+      ...aggregate,
+      priority: "medium",
+      relatedIssueUrl: "https://example.com/1",
+    });
+    const result = await testScenarioModel.findById(
+      scenario.id,
+      scenario.projectId,
+      tx,
+    );
+    expect(result).toMatchObject({
+      priority: "medium",
+      relatedIssueUrl: "https://example.com/1",
+    });
     expect(result).not.toHaveProperty("objective");
     expect(result).not.toHaveProperty("expectedResult");
     expect(result).not.toHaveProperty("notes");
   });
 
   it("persists create metadata and clears only the supplied metadata field", async () => {
-    await testScenarioModel.create({ projectId: scenario.projectId, createdById: scenario.createdById, title: "Login", priority: "low", relatedIssueUrl: "https://example.com/1" });
-    expect(scenarioCreateMock).toHaveBeenCalledWith({ data: expect.objectContaining({ priority: "low", relatedIssueUrl: "https://example.com/1" }) });
+    await testScenarioModel.create({
+      projectId: scenario.projectId,
+      createdById: scenario.createdById,
+      title: "Login",
+      priority: "low",
+      relatedIssueUrl: "https://example.com/1",
+    });
+    expect(scenarioCreateMock).toHaveBeenCalledWith({
+      data: expect.objectContaining({
+        priority: "low",
+        relatedIssueUrl: "https://example.com/1",
+      }),
+    });
     scenarioUpdateMock.mockClear();
-    await testScenarioModel.update(scenario.id, scenario.projectId, { relatedIssueUrl: null });
-    expect(scenarioUpdateMock).toHaveBeenNthCalledWith(1, { where: { id: scenario.id }, data: { relatedIssueUrl: null } });
+    await testScenarioModel.update(scenario.id, scenario.projectId, {
+      relatedIssueUrl: null,
+    });
+    expect(scenarioUpdateMock).toHaveBeenNthCalledWith(1, {
+      where: { id: scenario.id },
+      data: expect.objectContaining({ relatedIssueUrl: null }),
+    });
   });
 
   it("keeps summary selection lightweight", async () => {
@@ -172,8 +223,20 @@ describe("testScenarioModel", () => {
   });
 
   it("builds one literal project-scoped predicate and deterministic order", async () => {
-    summaryFindManyMock.mockResolvedValue([{ ...scenario, folder: null, createdBy: { id: scenario.createdById, name: "Creator", email: "creator@example.test" } }]);
-    queryRawMock.mockResolvedValueOnce([{ id: scenario.id }]).mockResolvedValueOnce([{ total: 1n }]);
+    summaryFindManyMock.mockResolvedValue([
+      {
+        ...scenario,
+        folder: null,
+        createdBy: {
+          id: scenario.createdById,
+          name: "Creator",
+          email: "creator@example.test",
+        },
+      },
+    ]);
+    queryRawMock
+      .mockResolvedValueOnce([{ id: scenario.id }])
+      .mockResolvedValueOnce([{ total: 1n }]);
 
     await testScenarioModel.listSummaries({
       projectId: scenario.projectId,
@@ -185,8 +248,16 @@ describe("testScenarioModel", () => {
     });
 
     expect(queryRawMock).toHaveBeenCalledTimes(2);
-    expect(summaryFindManyMock).toHaveBeenCalledWith(expect.objectContaining({ where: { id: { in: [scenario.id] }, projectId: scenario.projectId } }));
-    expect(summaryFindManyMock).not.toHaveBeenCalledWith(expect.objectContaining({ select: expect.objectContaining({ contentMd: true }) }));
+    expect(summaryFindManyMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: { id: { in: [scenario.id] }, projectId: scenario.projectId },
+      }),
+    );
+    expect(summaryFindManyMock).not.toHaveBeenCalledWith(
+      expect.objectContaining({
+        select: expect.objectContaining({ contentMd: true }),
+      }),
+    );
     expect(transactionMock).toHaveBeenCalledWith(expect.any(Function), {
       isolationLevel: Prisma.TransactionIsolationLevel.RepeatableRead,
     });
@@ -201,30 +272,20 @@ describe("testScenarioModel", () => {
     expect(queryRawMock).toHaveBeenCalled();
     expect(scenarioUpdateMock).toHaveBeenCalledWith({
       where: { id: scenario.id },
-      data: { priority: "high" },
+      data: expect.objectContaining({ priority: "high" }),
     });
     expect(result?.contentMdHash).toHaveLength(64);
   });
 
-  it("updates only the key without regenerating the Markdown projection", async () => {
-    const result = await testScenarioModel.update(
-      scenario.id,
-      scenario.projectId,
-      { scenarioKey: "R2" },
-    );
-    expect(scenarioUpdateMock).toHaveBeenCalledTimes(1);
-    expect(scenarioUpdateMock).toHaveBeenCalledWith({
-      where: { id: scenario.id },
-      data: { scenarioKey: "R2" },
-    });
-    expect(result?.contentMd).toBe(scenario.contentMd);
-    expect(result?.contentMdHash).toBe(scenario.contentMdHash);
-    expect(result?.contentMdFormatVersion).toBe(scenario.contentMdFormatVersion);
-  });
-
   it("does not update metadata outside the requested project", async () => {
     queryRawMock.mockResolvedValueOnce([]);
-    await expect(testScenarioModel.update(scenario.id, "99999999-9999-4999-8999-999999999999", { priority: "high", relatedIssueUrl: "https://example.com/1" })).resolves.toBeNull();
+    await expect(
+      testScenarioModel.update(
+        scenario.id,
+        "99999999-9999-4999-8999-999999999999",
+        { priority: "high", relatedIssueUrl: "https://example.com/1" },
+      ),
+    ).resolves.toBeNull();
     expect(scenarioUpdateMock).not.toHaveBeenCalled();
   });
 

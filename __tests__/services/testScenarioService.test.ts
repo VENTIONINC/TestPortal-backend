@@ -65,12 +65,20 @@ const scenario: TestScenarioResponse = {
   id: scenarioId,
   projectId,
   createdById: "44444444-4444-4444-4444-444444444444",
+  revision: 1,
+  createdBy: {
+    id: "44444444-4444-4444-4444-444444444444",
+    name: "Creator",
+    email: "creator@example.com",
+  },
+  updatedBy: null,
+  suites: [],
   title: "Login",
-  scenarioKey: null,
+  scenarioKey: "TMS-1",
   details: null,
   preconditions: null,
   testData: null,
-  priority: null,
+  priority: "medium",
   relatedIssueUrl: null,
   steps: [
     { id: stepId, position: 0, action: "Open login", expectedResult: null },
@@ -115,7 +123,6 @@ describe("testScenarioService", () => {
       folderId: null,
       createdById: scenario.createdById,
       title: "Login",
-      scenarioKey: null,
       details: "Details",
       priority: "high",
       relatedIssueUrl: "https://example.com/issue/1",
@@ -145,31 +152,85 @@ describe("testScenarioService", () => {
     expect(createMock).not.toHaveBeenCalled();
   });
 
-  it("creates without implicit metadata and scopes metadata writes and reads", async () => {
-    await testScenarioService.createScenario({ projectId, createdById: scenario.createdById, title: "Login" });
-    expect(createMock).toHaveBeenCalledWith(expect.objectContaining({ priority: null, relatedIssueUrl: null }));
+  it("defaults priority to medium and scopes metadata writes and reads", async () => {
+    await testScenarioService.createScenario({
+      projectId,
+      createdById: scenario.createdById,
+      title: "Login",
+    });
+    expect(createMock).toHaveBeenCalledWith(
+      expect.objectContaining({ priority: "medium", relatedIssueUrl: null }),
+    );
     const otherProjectId = "99999999-9999-4999-8999-999999999999";
     updateMock.mockResolvedValueOnce(null);
-    await expect(testScenarioService.updateScenario({ scenarioId, projectId: otherProjectId, priority: "medium" })).rejects.toBeInstanceOf(TestScenarioNotFoundError);
-    expect(updateMock).toHaveBeenCalledWith(scenarioId, otherProjectId, { priority: "medium" });
+    await expect(
+      testScenarioService.updateScenario({
+        scenarioId,
+        projectId: otherProjectId,
+        priority: "medium",
+      }),
+    ).rejects.toBeInstanceOf(TestScenarioNotFoundError);
+    expect(updateMock).toHaveBeenCalledWith(scenarioId, otherProjectId, {
+      priority: "medium",
+    });
     findByIdMock.mockResolvedValueOnce(null);
-    await expect(testScenarioService.getScenarioById(scenarioId, otherProjectId)).rejects.toBeInstanceOf(TestScenarioNotFoundError);
+    await expect(
+      testScenarioService.getScenarioById(scenarioId, otherProjectId),
+    ).rejects.toBeInstanceOf(TestScenarioNotFoundError);
     expect(findByIdMock).toHaveBeenCalledWith(scenarioId, otherProjectId);
   });
 
   it("preserves omitted metadata and clears only a supplied field", async () => {
-    await testScenarioService.updateScenario({ scenarioId, projectId, priority: null });
-    expect(updateMock).toHaveBeenCalledWith(scenarioId, projectId, { priority: null });
-    await testScenarioService.updateScenario({ scenarioId, projectId, relatedIssueUrl: " http://example.com/1 " });
-    expect(updateMock).toHaveBeenLastCalledWith(scenarioId, projectId, { relatedIssueUrl: "http://example.com/1" });
+    await expect(
+      testScenarioService.updateScenario({
+        scenarioId,
+        projectId,
+        priority: null,
+      }),
+    ).rejects.toBeInstanceOf(TestScenarioValidationError);
+    await testScenarioService.updateScenario({
+      scenarioId,
+      projectId,
+      relatedIssueUrl: " http://example.com/1 ",
+    });
+    expect(updateMock).toHaveBeenLastCalledWith(scenarioId, projectId, {
+      relatedIssueUrl: "http://example.com/1",
+    });
   });
 
-  it.each([{ priority: "urgent" }, { relatedIssueUrl: "/relative" }, { relatedIssueUrl: "ftp://example.com" }, { objective: "removed" }, { expectedResult: "removed" }, { notes: "removed" }])("rejects invalid metadata and removed fields before writes: %j", async (fields) => {
-    await expect(testScenarioService.createScenario({ projectId, createdById: scenario.createdById, title: "Login", ...fields } as unknown as Parameters<typeof testScenarioService.createScenario>[0])).rejects.toBeInstanceOf(TestScenarioValidationError);
-    await expect(testScenarioService.updateScenario({ scenarioId, projectId, ...fields } as unknown as Parameters<typeof testScenarioService.updateScenario>[0])).rejects.toBeInstanceOf(TestScenarioValidationError);
-    expect(createMock).not.toHaveBeenCalled();
-    expect(updateMock).not.toHaveBeenCalled();
-  });
+  it.each([
+    { priority: "urgent" },
+    { relatedIssueUrl: "/relative" },
+    { relatedIssueUrl: "ftp://example.com" },
+    { objective: "removed" },
+    { expectedResult: "removed" },
+    { notes: "removed" },
+  ])(
+    "rejects invalid metadata and removed fields before writes: %j",
+    async (fields) => {
+      await expect(
+        testScenarioService.createScenario({
+          projectId,
+          createdById: scenario.createdById,
+          title: "Login",
+          ...fields,
+        } as unknown as Parameters<
+          typeof testScenarioService.createScenario
+        >[0]),
+      ).rejects.toBeInstanceOf(TestScenarioValidationError);
+      await expect(
+        testScenarioService.updateScenario({
+          scenarioId,
+          projectId,
+          ...fields,
+        } as unknown as Parameters<
+          typeof testScenarioService.updateScenario
+        >[0]),
+      ).rejects.toBeInstanceOf(TestScenarioValidationError);
+      expect(createMock).not.toHaveBeenCalled();
+      expect(updateMock).not.toHaveBeenCalled();
+    },
+  );
 
   it("normalizes list filters and defaults sort before persistence", async () => {
     await testScenarioService.listScenarios({
@@ -191,11 +252,27 @@ describe("testScenarioService", () => {
   });
 
   it("forwards independent column filters and selected column sorting", async () => {
-    await testScenarioService.listScenarios({ projectId, sortField: "createdBy", sortDirection: "asc", scenarioKey: " KEY ", title: " Login ", details: "  ", folder: " Root / Child ", createdBy: " alice@example.test " });
-    expect(listSummariesMock).toHaveBeenCalledWith(expect.objectContaining({
-      sort: "recently_created", sortField: "createdBy", sortDirection: "asc",
-      scenarioKey: "KEY", title: "Login", folder: "Root / Child", createdBy: "alice@example.test",
-    }));
+    await testScenarioService.listScenarios({
+      projectId,
+      sortField: "createdBy",
+      sortDirection: "asc",
+      scenarioKey: " KEY ",
+      title: " Login ",
+      details: "  ",
+      folder: " Root / Child ",
+      createdBy: " alice@example.test ",
+    });
+    expect(listSummariesMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        sort: "recently_created",
+        sortField: "createdBy",
+        sortDirection: "asc",
+        scenarioKey: "KEY",
+        title: "Login",
+        folder: "Root / Child",
+        createdBy: "alice@example.test",
+      }),
+    );
     expect(listSummariesMock.mock.calls[0]?.[0]).not.toHaveProperty("details");
   });
 
@@ -204,7 +281,9 @@ describe("testScenarioService", () => {
     { sortField: "title", sort: "recently_created" },
     { sortField: "unknown" },
   ])("rejects ambiguous or unsupported new sorting %#", async (params) => {
-    await expect(testScenarioService.listScenarios({ projectId, ...params } as never)).rejects.toBeInstanceOf(TestScenarioValidationError);
+    await expect(
+      testScenarioService.listScenarios({ projectId, ...params } as never),
+    ).rejects.toBeInstanceOf(TestScenarioValidationError);
     expect(listSummariesMock).not.toHaveBeenCalled();
   });
 
@@ -250,36 +329,45 @@ describe("testScenarioService", () => {
     });
   });
 
-  it("normalizes optional labels on create and key-only edits", async () => {
-    await testScenarioService.createScenario({
-      projectId,
-      createdById: scenario.createdById,
-      title: "Login",
-      scenarioKey: "  R1  ",
-    });
-    expect(createMock).toHaveBeenCalledWith(expect.objectContaining({ scenarioKey: "R1" }));
-
-    await testScenarioService.updateScenario({ scenarioId, projectId, scenarioKey: " R2 " });
-    expect(updateMock).toHaveBeenCalledWith(scenarioId, projectId, { scenarioKey: "R2" });
-    await testScenarioService.updateScenario({ scenarioId, projectId, scenarioKey: null });
-    expect(updateMock).toHaveBeenLastCalledWith(scenarioId, projectId, { scenarioKey: null });
-  });
-
-  it("allows duplicate scenario labels", async () => {
-    await testScenarioService.createScenario({ projectId, createdById: scenario.createdById, title: "First", scenarioKey: "R1" });
-    await testScenarioService.createScenario({ projectId, createdById: scenario.createdById, title: "Second", scenarioKey: "R1" });
-    expect(createMock).toHaveBeenCalledTimes(2);
+  it("rejects all caller-supplied labels on create and update", async () => {
+    for (const scenarioKey of ["R1", null]) {
+      await expect(
+        testScenarioService.createScenario({
+          projectId,
+          createdById: scenario.createdById,
+          title: "Login",
+          scenarioKey,
+        }),
+      ).rejects.toBeInstanceOf(TestScenarioValidationError);
+      await expect(
+        testScenarioService.updateScenario({
+          scenarioId,
+          projectId,
+          scenarioKey,
+        }),
+      ).rejects.toBeInstanceOf(TestScenarioValidationError);
+    }
+    expect(createMock).not.toHaveBeenCalled();
+    expect(updateMock).not.toHaveBeenCalled();
   });
 
   it("rejects malformed scenario labels before persistence", async () => {
     for (const scenarioKey of [" ", "R1\nR2", "x".repeat(101)]) {
-      await expect(testScenarioService.createScenario({
-        projectId,
-        createdById: scenario.createdById,
-        title: "Login",
-        scenarioKey,
-      })).rejects.toBeInstanceOf(TestScenarioValidationError);
-      await expect(testScenarioService.updateScenario({ scenarioId, projectId, scenarioKey })).rejects.toBeInstanceOf(TestScenarioValidationError);
+      await expect(
+        testScenarioService.createScenario({
+          projectId,
+          createdById: scenario.createdById,
+          title: "Login",
+          scenarioKey,
+        }),
+      ).rejects.toBeInstanceOf(TestScenarioValidationError);
+      await expect(
+        testScenarioService.updateScenario({
+          scenarioId,
+          projectId,
+          scenarioKey,
+        }),
+      ).rejects.toBeInstanceOf(TestScenarioValidationError);
     }
     expect(createMock).not.toHaveBeenCalled();
     expect(updateMock).not.toHaveBeenCalled();

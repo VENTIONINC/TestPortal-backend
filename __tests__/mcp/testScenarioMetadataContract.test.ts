@@ -29,9 +29,14 @@ describe("scenario MCP metadata", () => {
   });
   it("supports metadata-only updates and null clears while rejecting invalid metadata", () => {
     expect(
-      updateTestScenarioSchema.parse({ projectId, scenarioId, priority: null }),
-    ).toEqual({ projectId, scenarioId, priority: null });
+      updateTestScenarioSchema.parse({
+        projectId,
+        scenarioId,
+        relatedIssueUrl: null,
+      }),
+    ).toEqual({ projectId, scenarioId, relatedIssueUrl: null });
     for (const metadata of [
+      { priority: null },
       { priority: "urgent" },
       { relatedIssueUrl: "/TP-20" },
       { relatedIssueUrl: "ftp://example.com" },

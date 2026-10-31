@@ -151,10 +151,10 @@ describe("test-scenario persistence contract", () => {
     );
   });
 
-  it("uses nullable TP-20 metadata and removes only obsolete scenario snapshots", () => {
+  it("retains nullable URL metadata and non-null medium priority while removing obsolete scenario snapshots", () => {
     const scenario = schema.match(/model TestScenario \{([\s\S]*?)\n\}/)?.[1] ?? "";
     const run = schema.match(/model ManualTestRun \{([\s\S]*?)\n\}/)?.[1] ?? "";
-    expect(scenario).toMatch(/priority\s+TestScenarioPriority\?/);
+    expect(scenario).toMatch(/priority\s+TestScenarioPriority\s+@default\(medium\)/);
     expect(scenario).toMatch(/relatedIssueUrl\s+String\?\s+@db\.Text/);
     expect(scenario).not.toMatch(/\n\s+(objective|expectedResult|notes)\s/);
     expect(run).not.toMatch(/\n\s+(objective|expectedResult|scenarioNotes)\s/);

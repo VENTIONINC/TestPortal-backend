@@ -21,7 +21,7 @@ import type {
 export const createTestScenarioTool = (createdById: string) =>
   createMcpTool(
     "create-test-scenario",
-    "Create a project-scoped Test Scenario with optional initial steps, nullable low/medium/high priority and an absolute HTTP(S) related issue URL. The authenticated user is the creator. Omitted metadata defaults to null.",
+    "Create a project-scoped Test Scenario with optional initial steps, low/medium/high priority and an absolute HTTP(S) related issue URL. The authenticated user is the creator. Priority defaults to medium; keys are assigned by the server. Other omitted metadata defaults to null.",
     createTestScenarioSchema,
     async (
       params: import("@/schemas/testScenarioSchemas").CreateTestScenarioInput,
@@ -58,16 +58,20 @@ export const getTestScenario = createMcpTool(
   "fetching Test Scenario",
 );
 
-export const updateTestScenario = createMcpTool(
-  "update-test-scenario",
-  "Partially update structured fields on a project-scoped Test Scenario. At least one editable field is required; optional fields are trimmed, null clears them, and omitted fields are preserved. Generated Markdown and steps are read-only here.",
-  updateTestScenarioSchema,
-  async (params: TestScenarioMcpUpdateParams): Promise<MCPToolResponse> => {
-    const scenario = await mcpTestScenarioHandler.updateTestScenario(params);
-    return createSuccessResponse(scenario);
-  },
-  "updating Test Scenario",
-);
+export const createUpdateTestScenarioTool = (actorId?: string) =>
+  createMcpTool(
+    "update-test-scenario",
+    "Partially update structured fields on a project-scoped Test Scenario. At least one editable field is required; optional fields are trimmed, null clears them, and omitted fields are preserved. Generated Markdown and steps are read-only here.",
+    updateTestScenarioSchema,
+    async (params: TestScenarioMcpUpdateParams): Promise<MCPToolResponse> => {
+      const scenario = await mcpTestScenarioHandler.updateTestScenario({
+        ...params,
+        ...(actorId ? { actorId } : {}),
+      });
+      return createSuccessResponse(scenario);
+    },
+    "updating Test Scenario",
+  );
 
 export const deleteTestScenario = createMcpTool(
   "delete-test-scenario",
@@ -79,3 +83,6 @@ export const deleteTestScenario = createMcpTool(
   },
   "deleting Test Scenario",
 );
+
+// Unbound definition retained for schema/documentation consumers; runtime binds auth.
+export const updateTestScenario = createUpdateTestScenarioTool();

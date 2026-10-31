@@ -532,4 +532,11 @@ Before committing:
 
 ---
 
-**Happy coding with TypeScript! 🚀** 
+**Happy coding with TypeScript! 🚀**
+## Scenario editor identity migration (TP-43)
+
+Back up affected data and pause scenario writers for the coordinated breaking migration. Never run old binaries against the new constraints. Assign scenario numbers independently per project by `createdAt`, then UUID ascending, replacing old live keys with `TMS-N`; preserve UUIDs, step identities, relationships, historical run content and captured keys. Set each project high-water counter to its migrated maximum or zero; deletion never resets it. Backfill null priority to medium, initialize revision to 1, and leave legacy updater unknown. Do not regenerate historical Markdown in bulk. Deploy backend validation, REST/OpenAPI, MCP and regenerated client contracts together.
+
+Roll forward schema corrections. Restoring editable original labels requires a pre-migration backup and compatible binaries: replacement numbers cannot reconstruct them. Never roll back by resetting counters or relabeling historical snapshots.
+
+Acquire locks globally in this order: project row for allocation only, scenario UUIDs ascending, suite UUIDs ascending. Revalidate discovered affected sets after locking. Retry only failed transactions for bounded serialization/deadlock or affected-set discovery conflicts; never retry validation/stale-revision conflicts or automatically replay an uncertain committed create. Editor collection saves create pending suites, preserve retained step IDs and replace requested memberships atomically; stale revisions require explicit reload.

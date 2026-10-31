@@ -263,14 +263,14 @@ describePostgres("test scenario PostgreSQL aggregate integration", () => {
   it("combines column filters and sorts summaries by displayed folder paths before pagination", async () => {
     const root = await organization.createFolder({ projectId, name: "Root" });
     const child = await organization.createFolder({ projectId, name: "Child", parentId: root.id });
-    const nested = await createScenario({ title: "Alpha nested", scenarioKey: "KEY-1", details: "Special detail", folderId: child.id });
-    const nestedSecond = await createScenario({ title: "Alpha second", scenarioKey: "KEY-1", details: "Special detail", folderId: child.id });
-    const unfiled = await createScenario({ title: "Beta unfiled", scenarioKey: "KEY-2", details: "Special detail" });
-    await createScenarioFor(otherProjectId, otherUserId, { title: "Alpha foreign", scenarioKey: "KEY-1", folderId: (await organization.createFolder({ projectId: otherProjectId, name: "Root" })).id });
+    const nested = await createScenario({ title: "Alpha nested", details: "Special detail", folderId: child.id });
+    const nestedSecond = await createScenario({ title: "Alpha second", details: "Special detail", folderId: child.id });
+    const unfiled = await createScenario({ title: "Beta unfiled", details: "Special detail" });
+    await createScenarioFor(otherProjectId, otherUserId, { title: "Alpha foreign", folderId: (await organization.createFolder({ projectId: otherProjectId, name: "Root" })).id });
 
     const combined = await testScenarioService.listScenarios({
       projectId,
-      scenarioKey: "key-1",
+      scenarioKey: "tms-",
       title: "ALPHA",
       details: "special",
       createdBy: "test-scenario-postgres-",
@@ -282,7 +282,7 @@ describePostgres("test scenario PostgreSQL aggregate integration", () => {
     expect(combined.total).toBe(2);
     expect(combined.totalPages).toBe(2);
     expect(combined.scenarios.map(({ id }) => id)).toEqual([nested.id]);
-    const combinedSecondPage = await testScenarioService.listScenarios({ projectId, scenarioKey: "key-1", title: "ALPHA", details: "special", createdBy: "test-scenario-postgres-", sortField: "title", sortDirection: "asc", page: 2, limit: 1 });
+    const combinedSecondPage = await testScenarioService.listScenarios({ projectId, scenarioKey: "tms-", title: "ALPHA", details: "special", createdBy: "test-scenario-postgres-", sortField: "title", sortDirection: "asc", page: 2, limit: 1 });
     expect(combinedSecondPage.scenarios.map(({ id }) => id)).toEqual([nestedSecond.id]);
 
     const nestedPath = await testScenarioService.listScenarios({ projectId, folder: "root / child", sortField: "title", sortDirection: "asc" });
@@ -296,8 +296,8 @@ describePostgres("test scenario PostgreSQL aggregate integration", () => {
 
   it("sorts every supported column in both directions with stable defaults", async () => {
     const alphaFolder = await organization.createFolder({ projectId, name: "Alpha folder" });
-    const alpha = await createScenario({ title: "Alpha", scenarioKey: "A", details: "A detail", folderId: alphaFolder.id });
-    const zeta = await createScenarioFor(projectId, otherUserId, { title: "Zeta", scenarioKey: "Z", details: "Z detail" });
+    const alpha = await createScenario({ title: "Alpha", details: "A detail", folderId: alphaFolder.id });
+    const zeta = await createScenarioFor(projectId, otherUserId, { title: "Zeta", details: "Z detail" });
     await dbClient.testScenario.update({ where: { id: alpha.id }, data: { createdAt: new Date("2026-01-01T00:00:00Z"), updatedAt: new Date("2026-01-02T00:00:00Z") } });
     await dbClient.testScenario.update({ where: { id: zeta.id }, data: { createdAt: new Date("2026-01-03T00:00:00Z"), updatedAt: new Date("2026-01-04T00:00:00Z") } });
 
@@ -319,94 +319,42 @@ describePostgres("test scenario PostgreSQL aggregate integration", () => {
     expect(defaultOrder.scenarios.map(({ id }) => id)).toEqual([zeta.id, alpha.id]);
   });
 
-  it("orders nullable keys and details using PostgreSQL null ordering and stable ID ties", async () => {
-    const keyed = await createScenario({ title: "Nullable keyed", scenarioKey: "A", details: "Present" });
-    const noKey = await createScenario({ title: "Nullable without key", scenarioKey: null });
+  it("orders generated keys and nullable details with stable ID ties", async () => {
+    const keyed = await createScenario({ title: "Nullable keyed", details: "Present" });
+    const noKey = await createScenario({ title: "Nullable without key" });
     const tiedFirst = await createScenario({ title: "Tie" });
     const tiedSecond = await createScenario({ title: "Tie" });
 
     const keyAscending = await testScenarioService.listScenarios({ projectId, title: "Nullable", sortField: "scenarioKey", sortDirection: "asc" });
-    expect(keyAscending.scenarios.map(({ id }) => id)).toEqual([keyed.id, noKey.id]);
+    expect(keyAscending.scenarios.map(({ id }) => id)).toEqual([keyed, noKey].sort((a, b) => a.scenarioKey.localeCompare(b.scenarioKey)).map(({ id }) => id));
     const keyDescending = await testScenarioService.listScenarios({ projectId, title: "Nullable", sortField: "scenarioKey", sortDirection: "desc" });
-    expect(keyDescending.scenarios.map(({ id }) => id)).toEqual([noKey.id, keyed.id]);
+    expect(keyDescending.scenarios.map(({ id }) => id)).toEqual([keyed, noKey].sort((a, b) => b.scenarioKey.localeCompare(a.scenarioKey)).map(({ id }) => id));
     const detailsAscending = await testScenarioService.listScenarios({ projectId, title: "Nullable", sortField: "details", sortDirection: "asc" });
     expect(detailsAscending.scenarios.map(({ id }) => id)).toEqual([keyed.id, noKey.id]);
     const titleTies = await testScenarioService.listScenarios({ projectId, title: "Tie", sortField: "title", sortDirection: "asc" });
     expect(titleTies.scenarios.map(({ id }) => id)).toEqual([tiedFirst.id, tiedSecond.id].sort());
   });
 
-  it("searches keys literally and case-insensitively without duplicating overlapping matches", async () => {
-    const keyOnly = await createScenario({
-      title: "Payment history",
-      scenarioKey: "PAY-Case-42",
-    });
-    const overlap = await createScenario({
-      title: "Checkout DUP-42 flow",
-      scenarioKey: "DUP-42",
-    });
-    const duplicateKey = await createScenarioFor(projectId, otherUserId, {
-      title: "Refund flow",
-      scenarioKey: "DUP-42",
-    });
-    const specialKey = await createScenario({
-      title: "Special key lookup",
-      scenarioKey: "R%_\\\\-alpha",
-    });
-    await createScenarioFor(otherProjectId, otherUserId, {
-      title: "Foreign duplicate key",
-      scenarioKey: "DUP-42",
-    });
-    const nullKey = await createScenario({
-      title: "Null-key registration",
-      scenarioKey: null,
-    });
-    await createScenario({
-      title: "Billing details only",
-      details: "PAY-Case-42 appears only in details",
-    });
+  it("searches generated keys case-insensitively without duplicating overlapping title matches", async () => {
+    const keyOnly = await createScenario({ title: "Payment history" });
+    const overlap = await createScenario({ title: "Checkout flow" });
+    await testScenarioModel.update(overlap.id, projectId, { title: `Checkout ${overlap.scenarioKey} flow` });
+    const otherCreator = await createScenarioFor(projectId, otherUserId, { title: "Refund flow" });
+    await createScenarioFor(otherProjectId, otherUserId, { title: "Foreign key lookup" });
+    const literalTitle = await createScenario({ title: "R%_\\\\-alpha" });
+    await createScenario({ title: "Billing details only", details: "PAY-Case-42 appears only in details" });
 
-    const keyMatches = await testScenarioService.listScenarios({
-      projectId,
-      search: "pay-case",
-    });
-    expect(keyMatches.total).toBe(1);
-    expect(keyMatches.scenarios[0]?.id).toBe(keyOnly.id);
-
-    const duplicateMatches = await testScenarioService.listScenarios({
-      projectId,
-      search: "dup-42",
-    });
-    expect(duplicateMatches.total).toBe(2);
-    expect(duplicateMatches.scenarios.map(({ id }) => id).sort()).toEqual(
-      [overlap.id, duplicateKey.id].sort(),
-    );
-
-    const creatorMatches = await testScenarioService.listScenarios({
-      projectId,
-      search: "DUP-42",
-      createdById: otherUserId,
-    });
+    const keyMatches = await testScenarioService.listScenarios({ projectId, search: keyOnly.scenarioKey.toLowerCase() });
+    expect(keyMatches.scenarios.map(({ id }) => id)).toEqual([keyOnly.id]);
+    const overlapMatches = await testScenarioService.listScenarios({ projectId, search: overlap.scenarioKey.toLowerCase() });
+    expect(overlapMatches.total).toBe(1);
+    expect(overlapMatches.scenarios[0]?.id).toBe(overlap.id);
+    const creatorMatches = await testScenarioService.listScenarios({ projectId, search: "TMS-", createdById: otherUserId });
     expect(creatorMatches.total).toBe(1);
-    expect(creatorMatches.scenarios[0]?.id).toBe(duplicateKey.id);
-
-    const literalKeyMatches = await testScenarioService.listScenarios({
-      projectId,
-      search: "R%_\\\\",
-    });
-    expect(literalKeyMatches.total).toBe(1);
-    expect(literalKeyMatches.scenarios[0]?.id).toBe(specialKey.id);
-
-    const nullKeyTitleMatch = await testScenarioService.listScenarios({
-      projectId,
-      search: "NULL-KEY",
-    });
-    expect(nullKeyTitleMatch.total).toBe(1);
-    expect(nullKeyTitleMatch.scenarios[0]?.id).toBe(nullKey.id);
-
-    const detailsOnly = await testScenarioService.listScenarios({
-      projectId,
-      search: "PAY-Case-42 appears only in details",
-    });
+    expect(creatorMatches.scenarios[0]?.id).toBe(otherCreator.id);
+    const literalMatches = await testScenarioService.listScenarios({ projectId, search: "R%_\\\\" });
+    expect(literalMatches.scenarios.map(({ id }) => id)).toEqual([literalTitle.id]);
+    const detailsOnly = await testScenarioService.listScenarios({ projectId, search: "PAY-Case-42 appears only in details" });
     expect(detailsOnly.total).toBe(0);
   });
 
@@ -667,7 +615,7 @@ describePostgres("test scenario PostgreSQL aggregate integration", () => {
       organization.mutateMembers({ projectId, suiteId: suite.id, scenarioIds: [third.id], operation: "add" }),
       organization.mutateMembers({ projectId, suiteId: suite.id, scenarioIds: [third.id], operation: "add" }),
     ]);
-    await expect(organization.mutateMembers({ projectId, suiteId: suite.id, scenarioIds: [first.id, randomUUID()], operation: "add" })).rejects.toMatchObject({ status: 404 });
+    await expect(organization.mutateMembers({ projectId, suiteId: suite.id, scenarioIds: [first.id, randomUUID()], operation: "add" })).rejects.toMatchObject({ code: "TEST_SCENARIO_NOT_FOUND" });
     const nonMember = await createScenario({ title: "Not in this suite" });
     await organization.mutateMembers({ projectId, suiteId: suite.id, scenarioIds: [nonMember.id], operation: "remove" });
 
@@ -682,7 +630,7 @@ describePostgres("test scenario PostgreSQL aggregate integration", () => {
     expect(direct.scenarios.map(({ id }) => id)).toEqual([second.id]);
     const outOfRange = await testScenarioService.listScenarios({ projectId, folderId: root.id, suiteId: suite.id, page: 3, limit: 1 });
     expect(outOfRange).toMatchObject({ scenarios: [], total: 2, page: 3, limit: 1, totalPages: 2 });
-    await expect(organization.moveScenarios({ projectId, scenarioIds: [first.id, randomUUID()], folderId: root.id })).rejects.toMatchObject({ status: 404 });
+    await expect(organization.moveScenarios({ projectId, scenarioIds: [first.id, randomUUID()], folderId: root.id })).rejects.toMatchObject({ code: "TEST_SCENARIO_NOT_FOUND" });
     expect((await getScenario(first.id)).folderId).toBe(child.id);
     expect(await organization.moveScenarios({ projectId, scenarioIds: [second.id], folderId: null })).toEqual({ moved: 1 });
     expect((await getScenario(second.id)).folderId).toBeNull();
