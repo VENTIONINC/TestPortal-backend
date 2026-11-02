@@ -216,6 +216,14 @@ Postman collection for that workflow.
 
 ### Specifications
 
+#### `testportal-list-specs`
+
+- **Parameters:** `projectId` UUID; optional `search` string, numeric `page` (default 1), and numeric `limit` (default 30, maximum 100).
+- **Behavior:** Lists project Specs independently of Results. Trimmed search is a case-insensitive literal substring of key, title or file. Results are ordered by creation time and UUID descending.
+- **Response:** `{ projectId, specs, total, page, limit, totalPages }`. Each Spec has `id`, `projectId`, `key`, `title`, `file`, `createdAt`, `updatedAt`, normalized `tags` and `annotations`. Use the database UUID `id` as `specId`; `key` is a separate project-local identity. There is no new REST listing endpoint.
+
+Example executor arguments: `{"actionId":"testportal-list-specs","arguments":{"projectId":"11111111-1111-4111-8111-111111111111","search":"login","page":1,"limit":30}}`.
+
 #### `testportal-get-spec-by-id`
 
 - **Source File:** `src/mcp/tools/specs.js`
@@ -227,6 +235,20 @@ Postman collection for that workflow.
 ---
 
 ### Test Scenario Management
+
+#### Scenario automation links
+
+Use `testportal-find-action` with `{"query":"scenario automation links","area":"tms"}` to discover link actions. Pass the following executor arguments in order, replacing synthetic IDs with UUIDs from the same project:
+
+```jsonl
+{"actionId":"testportal-list-specs","arguments":{"projectId":"11111111-1111-4111-8111-111111111111","page":1,"limit":30}}
+{"actionId":"testportal-add-test-scenario-spec-link","arguments":{"projectId":"11111111-1111-4111-8111-111111111111","scenarioId":"22222222-2222-4222-8222-222222222222","specId":"33333333-3333-4333-8333-333333333333"}}
+{"actionId":"testportal-list-test-scenario-spec-links","arguments":{"projectId":"11111111-1111-4111-8111-111111111111","scenarioId":"22222222-2222-4222-8222-222222222222","page":1,"limit":30}}
+{"actionId":"testportal-get-test-scenario","arguments":{"projectId":"11111111-1111-4111-8111-111111111111","scenarioId":"22222222-2222-4222-8222-222222222222"}}
+{"actionId":"testportal-remove-test-scenario-spec-link","arguments":{"projectId":"11111111-1111-4111-8111-111111111111","scenarioId":"22222222-2222-4222-8222-222222222222","specId":"33333333-3333-4333-8333-333333333333"}}
+```
+
+List links returns `{ scenarioId, projectId, specs, total, page, limit, totalPages }`. Add returns `{ scenarioId, specId }`, and removal returns `{ projectId, scenarioId, specId, removed: true }`. List pagination is numeric, defaults to 1 and 30, and limits to 100. Duplicate additions and missing links fail; list links before retrying an uncertain mutation. Unlinking removes only the association, preserving Specs, Results, Issues, other links and manual-run snapshots. Read scenario detail again to inspect current evidence. An authored `relatedIssueUrl` is metadata, not an observed Issue; these actions do not execute tests.
 
 All Test Scenario tools require the authenticated MCP transport and a
 project-scoped UUID. Service validation and project ownership errors are

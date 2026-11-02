@@ -11,6 +11,7 @@ import {
 describe("session action catalog", () => {
   it("contains exactly the operations registered by the baseline server", () => {
     expect([...createActionCatalog("actor").keys()].sort()).toEqual([
+      "testportal-add-test-scenario-spec-link",
       "testportal-add-test-suite-members",
       "testportal-append-test-scenario-step",
       "testportal-assign-issue-to-result-error",
@@ -45,12 +46,15 @@ describe("session action catalog", () => {
       "testportal-list-active-users",
       "testportal-list-manual-run-environment-profiles",
       "testportal-list-manual-test-runs",
+      "testportal-list-specs",
       "testportal-list-test-scenario-folders",
       "testportal-list-test-scenario-manual-runs",
+      "testportal-list-test-scenario-spec-links",
       "testportal-list-test-scenarios",
       "testportal-list-test-suites",
       "testportal-move-test-scenarios-to-folder",
       "testportal-reassign-manual-test-run-executor",
+      "testportal-remove-test-scenario-spec-link",
       "testportal-remove-test-suite-members",
       "testportal-reorder-test-scenario-steps",
       "testportal-reorder-test-suite-members",

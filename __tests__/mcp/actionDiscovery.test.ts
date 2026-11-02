@@ -11,6 +11,27 @@ const response = (input: unknown) => {
 };
 
 describe("action discovery", () => {
+  it("describes automation link effects and finds them in TMS", () => {
+    for (const verb of ["list", "add", "remove"]) {
+      const id = `testportal-${verb}-test-scenario-spec-link${verb === "list" ? "s" : ""}`;
+      const action = response({ actionId: id, area: "tms" }).data.actions[0];
+      expect(action.areas).toEqual(["tms"]);
+      expect(action.responseSummary).toContain(verb === "list" ? "paginated" : verb === "add" ? "scenarioId" : "removed");
+      expect(action.relatedActionIds).toContain("testportal-list-specs");
+      expect(response({ query: `${verb} scenario automation links`, area: "tms", limit: 5 }).data.actions.map((item: { actionId: string }) => item.actionId)).toContain(id);
+    }
+    const removal = response({ actionId: "testportal-remove-test-scenario-spec-link" }).data.actions[0];
+    expect(removal.effects[0]).toContain("association");
+    expect(removal.effects[0]).toContain("preserved");
+  });
+  it("discovers the shared Spec catalog exactly once and in both areas", () => {
+    const id = "testportal-list-specs";
+    expect(response({ actionId: id }).data.actions[0]).toMatchObject({ actionId: id, areas: ["core", "tms"], responseSummary: expect.stringContaining("paginated") });
+    for (const area of ["core", "tms"]) {
+      expect(response({ query: "automated specs", area }).data.actions.map((action: { actionId: string }) => action.actionId)).toContain(id);
+    }
+    expect(response({ query: "automated specs" }).data.actions.filter((action: { actionId: string }) => action.actionId === id)).toHaveLength(1);
+  });
   it("validates envelopes and supports overview, search and lookup", () => {
     expect(response({}).data).toMatchObject({
       mode: "overview",

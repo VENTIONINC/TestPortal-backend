@@ -13,6 +13,8 @@ import {
 } from "@/lib/testScenarioMarkdown";
 import { createActionCatalog } from "@/mcp/actionCatalog";
 import { executeAction } from "@/mcp/actionExecution";
+import { findAction } from "@/mcp/actionDiscovery";
+import { specService } from "@/services/specService";
 import { testScenarioModel } from "@/models/testScenarioModel";
 import { testScenarioService } from "@/services/testScenarioService";
 import { mcpTestScenarioHandler } from "@/handlers/mcpTestScenarioHandler";
@@ -166,6 +168,78 @@ describePostgres("test scenario PostgreSQL aggregate integration", () => {
     await dbClient.testScenario.deleteMany({
       where: { projectId: { in: [projectId, otherProjectId] } },
     });
+  });
+
+  it("discovers Specs and preserves persisted evidence and manual runs across dispatcher unlink", async () => {
+    const scenario = await createScenario({ title: "Automation workflow", relatedIssueUrl: "https://example.test/authored", steps: [{ action: "Check", expectedResult: "Pass" }] });
+    const otherScenario = await createScenario({ title: "Other association" });
+    const stamp = new Date("2026-02-01T00:00:00Z");
+    const prefix = `literal-${randomUUID()}`;
+    const unused = await dbClient.spec.create({ data: { projectId, key: `${prefix}%_\\unused`, title: "Unused", file: "unused.spec.ts", createdAt: stamp } });
+    const first = await dbClient.spec.create({ data: { projectId, key: `${prefix}%_\\first`, title: "First", file: "first.spec.ts", createdAt: stamp } });
+    const second = await dbClient.spec.create({ data: { projectId, key: `${prefix}%_\\second`, title: "Second", file: "second.spec.ts", createdAt: stamp } });
+    await dbClient.spec.create({ data: { projectId, key: `${prefix}XXdecoy`, title: "Decoy", file: "decoy.spec.ts", createdAt: stamp } });
+    await dbClient.spec.create({ data: { projectId: otherProjectId, key: `${prefix}%_\\foreign`, title: "Foreign", file: "foreign.spec.ts", createdAt: stamp } });
+    const execution = await dbClient.execution.create({ data: { projectId, type: "e2e", name: prefix, environment: "test", version: "1", startedAt: stamp } });
+    const issue = await dbClient.issue.create({ data: { projectId, name: prefix, category: "bug" } });
+    for (const spec of [first, first, second]) {
+      const result = await dbClient.result.create({ data: { specId: spec.id, executionId: execution.id, retry: 0, status: "failed", duration: 1, startTime: stamp } });
+      const error = await dbClient.resultError.create({ data: { resultId: result.id, type: "failure", message: "failed", callStack: [], location: "test" } });
+      await dbClient.assumption.create({ data: { resultErrorId: error.id, issueId: issue.id, isConfirmed: true, score: 1, madeBy: "test" } });
+    }
+    const run = await manualTestRunModel.createFromScenario({ projectId, scenarioId: scenario.id, executedById: userId });
+    if (!run) throw new Error("Expected manual run");
+    await dbClient.manualTestRunStep.updateMany({ where: { manualTestRunId: run.id }, data: { status: "passed", notes: "recorded" } });
+    const catalog = createActionCatalog(userId);
+    const discovery = findAction(catalog, { actionId: "testportal-list-specs" });
+    expect(discovery.isError).not.toBe(true);
+    const call = async (actionId: string, args: Record<string, unknown>) => {
+      const response = await executeAction(catalog, { actionId: `testportal-${actionId}`, arguments: args });
+      expect(response.isError).not.toBe(true);
+      const block = response.content[0];
+      if (!block || block.type !== "text") throw new Error("Expected text response");
+      return JSON.parse(block.text);
+    };
+    const search = `${prefix}%_\\`;
+    const listing = await call("list-specs", { projectId, search, page: 1, limit: 30 });
+    expect(listing.total).toBe(3);
+    expect(listing.specs.map((spec: { id: string }) => spec.id)).toEqual([unused.id, first.id, second.id].sort().reverse());
+    expect((await specService.listSpecs({ projectId, search: search.toUpperCase(), page: 1, limit: 2 })).total).toBe(3);
+    expect((await specService.listSpecs({ projectId, search, page: 2, limit: 2 })).specs).toHaveLength(1);
+    expect((await specService.listSpecs({ projectId, search: `${prefix}X` })).total).toBe(1);
+    expect(listing.specs.filter((spec: { id: string }) => spec.id === first.id)).toHaveLength(1);
+    const ctx = { projectId, scenarioId: scenario.id };
+    const initial = await call("get-test-scenario", ctx);
+    expect(initial.scenario.relatedIssueUrl).toBe("https://example.test/authored");
+    expect(initial.issueEvidence.total).toBe(0);
+    for (const spec of [unused, first, second]) await call("add-test-scenario-spec-link", { ...ctx, specId: spec.id });
+    await call("add-test-scenario-spec-link", { projectId, scenarioId: otherScenario.id, specId: first.id });
+    expect((await call("list-test-scenario-spec-links", ctx)).total).toBe(3);
+    const before = await call("get-test-scenario", ctx);
+    expect(before.resultEvidence.total).toBe(3);
+    expect(before.issueEvidence.total).toBe(1);
+    const snapshot = {
+      scenarios: await dbClient.testScenario.findMany({ where: { id: { in: [scenario.id, otherScenario.id] } }, orderBy: { id: "asc" } }),
+      specs: await dbClient.spec.findMany({ where: { id: { in: [unused.id, first.id, second.id] } }, orderBy: { id: "asc" } }),
+      results: await dbClient.result.findMany({ where: { executionId: execution.id }, orderBy: { id: "asc" } }),
+      errors: await dbClient.resultError.findMany({ where: { result: { executionId: execution.id } }, orderBy: { id: "asc" } }),
+      assumptions: await dbClient.assumption.findMany({ where: { issueId: issue.id }, orderBy: { id: "asc" } }),
+      issue: await dbClient.issue.findUnique({ where: { id: issue.id } }),
+      run: await manualTestRunModel.findById(run.id, projectId),
+    };
+    await call("remove-test-scenario-spec-link", { ...ctx, specId: first.id });
+    const after = await call("get-test-scenario", ctx);
+    expect(after.resultEvidence.total).toBe(1);
+    expect(after.issueEvidence.total).toBe(1);
+    expect(await dbClient.testScenario.findMany({ where: { id: { in: [scenario.id, otherScenario.id] } }, orderBy: { id: "asc" } })).toEqual(snapshot.scenarios);
+    expect(await dbClient.spec.findMany({ where: { id: { in: [unused.id, first.id, second.id] } }, orderBy: { id: "asc" } })).toEqual(snapshot.specs);
+    expect(await dbClient.result.findMany({ where: { executionId: execution.id }, orderBy: { id: "asc" } })).toEqual(snapshot.results);
+    expect(await dbClient.resultError.findMany({ where: { result: { executionId: execution.id } }, orderBy: { id: "asc" } })).toEqual(snapshot.errors);
+    expect(await dbClient.assumption.findMany({ where: { issueId: issue.id }, orderBy: { id: "asc" } })).toEqual(snapshot.assumptions);
+    expect(await dbClient.issue.findUnique({ where: { id: issue.id } })).toEqual(snapshot.issue);
+    expect(await manualTestRunModel.findById(run.id, projectId)).toEqual(snapshot.run);
+    expect(await dbClient.testScenarioSpecLink.count({ where: { testScenarioId: otherScenario.id, specId: first.id } })).toBe(1);
+    expect((await call("list-test-scenario-spec-links", ctx)).total).toBe(2);
   });
 
   it("authors steps through MCP handlers with shared PostgreSQL persistence", async () => {

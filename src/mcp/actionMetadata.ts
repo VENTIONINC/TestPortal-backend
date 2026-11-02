@@ -29,6 +29,8 @@ export const actionKeywords = (id: string): string[] => {
   if (id.includes("folder")) words.push("folder", "folders", "hierarchy", "unfiled");
   if (id.includes("suite")) words.push("suite", "suites", "membership");
   if (id.includes("environment-profile")) words.push("environment", "profile");
+  if (id === "testportal-list-specs") words.push("automated specs", "automation", "test coverage", "discover specs");
+  if (id.includes("test-scenario-spec-link")) words.push("scenario automation links", "automated specs", "coverage association", "link automated test");
   if (id === "testportal-get-available-projects")
     words.push("projects", "project discovery", "available projects");
   return words;
@@ -38,6 +40,7 @@ const shared = new Set([
   "testportal-check-status",
   "testportal-current-time",
   "testportal-get-available-projects",
+  "testportal-list-specs",
 ]);
 const core = new Set([
   "testportal-get-issues",
@@ -57,6 +60,9 @@ const core = new Set([
   "testportal-get-spec-by-id",
 ]);
 const tms = new Set([
+  "testportal-list-test-scenario-spec-links",
+  "testportal-add-test-scenario-spec-link",
+  "testportal-remove-test-scenario-spec-link",
   "testportal-list-test-scenario-folders",
   "testportal-create-test-scenario-folder",
   "testportal-update-test-scenario-folder",
@@ -98,6 +104,10 @@ const mutation =
 const destructive = /testportal-delete-/;
 
 const responseSummary = (id: string): string => {
+  if (id === "testportal-list-specs") return "Returns a paginated project Spec catalog with UUIDs, keys and normalized metadata.";
+  if (id === "testportal-list-test-scenario-spec-links") return "Returns a paginated list of Specs linked to the scenario.";
+  if (id === "testportal-add-test-scenario-spec-link") return "Returns the linked scenarioId and specId.";
+  if (id === "testportal-remove-test-scenario-spec-link") return "Returns projectId, scenarioId, specId and removed confirmation.";
   if (id === "testportal-get-available-projects")
     return "Returns active projects and their IDs.";
   if (id === "testportal-check-status")
@@ -194,7 +204,11 @@ export const describeAction = ([
       "Records manual execution; browser and API tests run on the client.",
     );
   const effects =
-    actionId === "testportal-update-assumption"
+    actionId === "testportal-add-test-scenario-spec-link"
+      ? ["Creates one scenario–Spec association without creating either record."]
+      : actionId === "testportal-remove-test-scenario-spec-link"
+        ? ["Removes one association; Specs, execution evidence and other links are preserved."]
+      : actionId === "testportal-update-assumption"
       ? ["Changes an assumption; setting isConfirmed to false deletes it."]
       : mutation.test(actionId)
         ? [destructive.test(actionId) ? "Deletes data." : "Changes data."]
@@ -212,8 +226,14 @@ export const describeAction = ([
     effects,
     responseSummary: responseSummary(actionId),
     relatedActionIds:
-      actionId === "testportal-get-test-scenario"
-        ? ["testportal-get-result-by-id", "testportal-get-issue-by-id"]
+      actionId === "testportal-list-specs"
+        ? ["testportal-get-spec-by-id", "testportal-list-test-scenario-spec-links", "testportal-add-test-scenario-spec-link"]
+        : actionId === "testportal-get-spec-by-id"
+          ? ["testportal-list-specs", "testportal-add-test-scenario-spec-link"]
+        : actionId.includes("test-scenario-spec-link")
+          ? ["testportal-list-specs", "testportal-list-test-scenario-spec-links", "testportal-add-test-scenario-spec-link", "testportal-remove-test-scenario-spec-link", "testportal-get-test-scenario"].filter((id) => id !== actionId)
+        : actionId === "testportal-get-test-scenario"
+        ? ["testportal-get-result-by-id", "testportal-get-issue-by-id", "testportal-list-test-scenario-spec-links", "testportal-list-specs"]
         : actionId.includes("manual-test-run")
           ? ["testportal-get-test-scenario"]
           : [],

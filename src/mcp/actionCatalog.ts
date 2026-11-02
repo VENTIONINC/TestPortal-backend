@@ -24,7 +24,7 @@ import {
   bulkReview,
   getResultErrorById,
 } from "@/mcp/tools/result-errors";
-import { getSpecById } from "@/mcp/tools/specs";
+import { getSpecById, listSpecs } from "@/mcp/tools/specs";
 import {
   createTestScenarioTool,
   listTestScenarios,
@@ -46,6 +46,7 @@ import {
 } from "@/mcp/tools/manual-run-environment-profiles";
 
 import { organizationTools } from "@/mcp/tools/test-scenario-organization";
+import { listTestScenarioSpecLinks, addTestScenarioSpecLink, removeTestScenarioSpecLink } from "@/mcp/tools/test-scenario-spec-links";
 
 export type ActionTool = readonly [
   string,
@@ -77,6 +78,10 @@ export const createActionCatalog = (
     bulkReview,
     getResultErrorById,
     getSpecById,
+    listSpecs,
+    listTestScenarioSpecLinks,
+    addTestScenarioSpecLink,
+    removeTestScenarioSpecLink,
     createTestScenarioTool(userId),
     listTestScenarios,
     getTestScenario,

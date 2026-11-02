@@ -125,7 +125,7 @@ export const findAction = (
           ? { core: "Results, issues, assumptions, executions and Specs" }
           : {}),
         ...(areas.includes("tms")
-          ? { tms: "Scenarios, manual run history and environment profiles" }
+          ? { tms: "Scenarios, automation links, Spec discovery, manual run history and environment profiles" }
           : {}),
         shared: "Project discovery, status and current time",
       },
