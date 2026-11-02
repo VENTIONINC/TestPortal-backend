@@ -188,6 +188,8 @@ jest.mock("@/services/issueService", () => ({
 import { specService } from "@/services/specService";
 import { testScenarioService } from "@/services/testScenarioService";
 import { testScenarioIntegrationService } from "@/services/testScenarioIntegrationService";
+import { createActionCatalog } from "@/mcp/actionCatalog";
+import { executeAction } from "@/mcp/actionExecution";
 
 describe("test scenario execution evidence workflow", () => {
   beforeEach(() => {
@@ -398,6 +400,25 @@ describe("test scenario execution evidence workflow", () => {
         };
       },
     );
+  });
+
+  it("dispatches many-to-many links and rejects invalid, duplicate, foreign and repeated mutations", async () => {
+    const catalog = createActionCatalog("actor");
+    const call = (verb: string, args: Record<string, unknown>) => executeAction(catalog, { actionId: `testportal-${verb}-test-scenario-spec-link${verb === "list" ? "s" : ""}`, arguments: args });
+    const pair = { projectId: projectA, scenarioId: scenarioA, specId: specA };
+    expect((await call("list", { projectId: projectA, scenarioId: scenarioA })).isError).not.toBe(true);
+    expect((await call("add", pair)).isError).not.toBe(true);
+    expect((await call("add", { ...pair, specId: specB })).isError).not.toBe(true);
+    expect((await call("add", { ...pair, scenarioId: scenarioB })).isError).not.toBe(true);
+    expect((await call("add", pair)).isError).toBe(true);
+    expect((await call("add", { ...pair, projectId: "77777777-7777-4777-8777-777777777777" })).isError).toBe(true);
+    const calls = linkCreateMock.mock.calls.length;
+    expect((await call("add", { ...pair, extra: true })).isError).toBe(true);
+    expect(linkCreateMock).toHaveBeenCalledTimes(calls);
+    expect((await call("remove", pair)).isError).not.toBe(true);
+    expect((await call("remove", pair)).isError).toBe(true);
+    expect(links).toEqual(expect.arrayContaining([{ testScenarioId: scenarioA, specId: specB }, { testScenarioId: scenarioB, specId: specA }]));
+    expect(links).toHaveLength(2);
   });
 
   it("links multiple scenarios and Specs with independent Result and Issue pagination", async () => {
