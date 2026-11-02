@@ -395,6 +395,7 @@ export const testScenarioService = {
     };
     if (params.folderId && params.folderId !== "unfiled" && !(await testScenarioModel.folderBelongsToProject(params.folderId, params.projectId))) throw new TestScenarioNotFoundError("Folder not found");
     if (params.suiteId && !(await testScenarioModel.suiteBelongsToProject(params.suiteId, params.projectId))) throw new TestScenarioNotFoundError("Suite not found");
+    if (!(await projectModel.exists(params.projectId))) throw new TestScenarioNotFoundError(`Project with id '${params.projectId}' not found`);
     const scenarioIds = await testScenarioModel.resolveSelection({
       projectId: params.projectId,
       ...(search !== undefined ? { search } : {}),

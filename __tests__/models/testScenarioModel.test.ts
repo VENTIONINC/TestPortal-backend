@@ -7,7 +7,6 @@ import { Prisma } from "@prisma/client";
 import type { TestScenario, TestScenarioStep } from "@prisma/client";
 
 const projectFindUniqueMock = jest.fn<() => Promise<unknown>>();
-const userFindManyMock = jest.fn<(args: unknown) => Promise<unknown>>();
 const scenarioCreateMock = jest.fn<() => Promise<unknown>>();
 const scenarioFindFirstMock = jest.fn<() => Promise<unknown>>();
 const scenarioUpdateMock = jest.fn<() => Promise<unknown>>();
@@ -24,7 +23,6 @@ const transactionMock = jest.fn<(callback: unknown) => Promise<unknown>>();
 
 const tx = {
   project: { findUnique: projectFindUniqueMock },
-  user: { findMany: userFindManyMock },
   testScenario: {
     create: scenarioCreateMock,
     findFirst: scenarioFindFirstMock,
@@ -47,7 +45,6 @@ jest.mock("@/prisma/client", () => ({
   dbClient: {
     $transaction: transactionMock,
     project: { findUnique: projectFindUniqueMock },
-    user: { findMany: userFindManyMock },
     testScenario: {
       findMany: summaryFindManyMock,
       count: countMock,
@@ -103,7 +100,6 @@ describe("testScenarioModel", () => {
     stepDeleteMock.mockResolvedValue(step);
     summaryFindManyMock.mockResolvedValue([]);
     countMock.mockResolvedValue(0);
-    userFindManyMock.mockResolvedValue([]);
   });
 
   it("creates structured fields, initial steps, and a generated projection atomically", async () => {
@@ -246,13 +242,27 @@ describe("testScenarioModel", () => {
     expect(new Set(result).size).toBe(count);
   });
 
-  it("discovers distinct project creators in stable UUID-identified options", async () => {
-    userFindManyMock.mockResolvedValue([{ id: scenario.createdById, name: "Creator", email: "creator@example.test" }]);
-    await testScenarioModel.listScenarioAuthors(scenario.projectId);
-    expect(userFindManyMock).toHaveBeenCalledWith({
-      where: { testScenariosCreated: { some: { projectId: scenario.projectId } } },
-      select: { id: true, name: true, email: true },
-      orderBy: [{ name: "asc" }, { id: "asc" }],
+  it("returns project creators with counts from the filtered scenario set", async () => {
+    const authors = [
+      { id: scenario.createdById, name: "Creator", email: "creator@example.test", scenarioCount: 2 },
+      { id: "55555555-5555-5555-5555-555555555555", name: "Other Creator", email: "other@example.test", scenarioCount: 0 },
+    ];
+    queryRawMock.mockResolvedValueOnce(authors);
+
+    const result = await testScenarioModel.listScenarioAuthors(scenario.projectId, {
+      search: "login",
+      priority: "high,medium",
+    });
+
+    expect(result).toEqual(authors);
+    expect(queryRawMock).toHaveBeenCalledTimes(1);
+    const query = queryRawMock.mock.calls[0]?.[0] as { sql?: string; values?: unknown[] } | undefined;
+    expect(query?.sql).toContain('project_scenario."projectId"');
+    expect(query?.sql).toContain('COALESCE(author_counts.total, 0)::int AS "scenarioCount"');
+    expect(query?.sql).toContain('s."priority" IN');
+    expect(query?.values).toEqual(expect.arrayContaining([scenario.projectId, "high", "medium", "login"]));
+    expect(transactionMock).toHaveBeenCalledWith(expect.any(Function), {
+      isolationLevel: Prisma.TransactionIsolationLevel.RepeatableRead,
     });
   });
 
