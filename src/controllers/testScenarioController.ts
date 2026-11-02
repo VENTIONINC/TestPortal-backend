@@ -10,6 +10,7 @@ import {
   testScenarioIdParamsSchema,
   testScenarioListQuerySchema,
   testScenarioSelectionQuerySchema,
+  testScenarioAuthorsQuerySchema,
   testScenarioProjectQuerySchema,
   testScenarioStepParamsSchema,
   updateTestScenarioSchema,
@@ -72,9 +73,9 @@ function sendServiceError(res: Response, error: unknown, operation: string): voi
 
 export const testScenarioController = {
   async listAuthors(req: Request, res: Response): Promise<void> {
-    const parsed = testScenarioProjectQuerySchema.safeParse(req.query);
+    const parsed = testScenarioAuthorsQuerySchema.safeParse(req.query);
     if (!parsed.success) { sendValidationError(res, validationMessage(parsed.error)); return; }
-    try { res.status(200).json({ authors: await testScenarioService.listScenarioAuthors(parsed.data.projectId) }); }
+    try { res.status(200).json({ authors: await testScenarioService.listScenarioAuthors(parsed.data) }); }
     catch (error) { sendServiceError(res, error, "list scenario authors"); }
   },
 

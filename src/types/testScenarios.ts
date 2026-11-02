@@ -150,6 +150,7 @@ export interface ListTestScenariosParams {
   limit?: number | undefined;
   search?: string | undefined;
   createdById?: string | undefined;
+  createdByIds?: string | undefined;
   priority?: string | undefined;
   sort?: TestScenarioSort | undefined;
   sortField?: TestScenarioSortField | undefined;

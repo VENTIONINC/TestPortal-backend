@@ -62,8 +62,12 @@ const summarySelect = {
 
 type SummaryListParams = Pick<
   ListTestScenariosParams,
-  "projectId" | "page" | "limit" | "search" | "createdById" | "priority" | "sort" | "folderId" | "includeDescendants" | "suiteId" | "sortField" | "sortDirection" | "scenarioKey" | "title" | "details" | "folder" | "createdBy"
+  "projectId" | "page" | "limit" | "search" | "createdById" | "createdByIds" | "priority" | "sort" | "folderId" | "includeDescendants" | "suiteId" | "sortField" | "sortDirection" | "scenarioKey" | "title" | "details" | "folder" | "createdBy"
 > & { _folderIds?: string[] };
+
+type ScenarioAuthorCountFilters = Pick<SummaryListParams,
+  "search" | "priority" | "folderId" | "includeDescendants" | "suiteId" | "scenarioKey" | "title" | "details" | "folder" | "createdBy"
+>;
 
 interface SummaryPredicate {
   folderCte: Prisma.Sql;
@@ -104,7 +108,8 @@ async function buildSummaryPredicate(
     WHERE child."projectId" = ${params.projectId}::uuid
   )` : Prisma.empty;
   const where: Prisma.Sql[] = [Prisma.sql`s."projectId" = ${params.projectId}::uuid`];
-  if (params.createdById) where.push(Prisma.sql`s."createdById" = ${params.createdById}::uuid`);
+  if (params.createdByIds) where.push(Prisma.sql`s."createdById" IN (${Prisma.join(params.createdByIds.split(",").map((id) => Prisma.sql`${id}::uuid`))})`);
+  else if (params.createdById) where.push(Prisma.sql`s."createdById" = ${params.createdById}::uuid`);
   if (params.priority) where.push(Prisma.sql`s."priority" IN (${Prisma.join(params.priority.split(",").map((value) => Prisma.sql`${value}::"TestScenarioPriority"`))})`);
   if (params.search) where.push(Prisma.sql`(POSITION(LOWER(${params.search}) IN LOWER(COALESCE(s."title", ''))) > 0 OR POSITION(LOWER(${params.search}) IN LOWER(COALESCE(s."scenarioKey", ''))) > 0)`);
   if (params.scenarioKey) where.push(Prisma.sql`POSITION(LOWER(${params.scenarioKey}) IN LOWER(COALESCE(s."scenarioKey", ''))) > 0`);
@@ -136,7 +141,9 @@ function summaryWhere(
   if (params.suiteId) organization.push({ suiteMemberships: { some: { suiteId: params.suiteId } } });
   return {
     projectId: params.projectId,
-    ...(params.createdById ? { createdById: params.createdById } : {}),
+    ...(params.createdByIds
+      ? { createdById: { in: params.createdByIds.split(",") } }
+      : params.createdById ? { createdById: params.createdById } : {}),
     ...(params.priority ? { priority: { in: params.priority.split(",") as ("low" | "medium" | "high")[] } } : {}),
     ...(organization.length ? { AND: organization } : {}),
     ...(params.search
@@ -455,12 +462,42 @@ export const testScenarioModel = {
     }, { isolationLevel: Prisma.TransactionIsolationLevel.RepeatableRead });
   },
 
-  async listScenarioAuthors(projectId: string): Promise<Array<{ id: string; name: string; email: string }>> {
-    return await dbClient.user.findMany({
-      where: { testScenariosCreated: { some: { projectId } } },
-      select: { id: true, name: true, email: true },
-      orderBy: [{ name: "asc" }, { id: "asc" }],
-    });
+  async listScenarioAuthors(
+    projectId: string,
+    filters: ScenarioAuthorCountFilters = {},
+  ): Promise<Array<{ id: string; name: string; email: string; scenarioCount: number }>> {
+    return await dbClient.$transaction(async (transaction) => {
+      const predicate = await buildSummaryPredicate(transaction, {
+        projectId,
+        page: 1,
+        limit: 1,
+        ...filters,
+      });
+      const rows = await transaction.$queryRaw<Array<{
+        id: string;
+        name: string;
+        email: string;
+        scenarioCount: number;
+      }>>(Prisma.sql`
+        ${predicate.folderCte}
+        SELECT project_authors.id, project_authors.name, project_authors.email,
+          COALESCE(author_counts.total, 0)::int AS "scenarioCount"
+        FROM (
+          SELECT DISTINCT author."id", author."name", author."email"
+          FROM "User" author
+          JOIN "TestScenario" project_scenario ON project_scenario."createdById" = author."id"
+          WHERE project_scenario."projectId" = ${projectId}::uuid
+        ) project_authors
+        LEFT JOIN (
+          SELECT s."createdById", COUNT(*) AS total
+          ${predicate.from}
+          WHERE ${predicate.where}
+          GROUP BY s."createdById"
+        ) author_counts ON author_counts."createdById" = project_authors.id
+        ORDER BY project_authors.name ASC, project_authors.id ASC
+      `);
+      return rows;
+    }, { isolationLevel: Prisma.TransactionIsolationLevel.RepeatableRead });
   },
 
   async folderBelongsToProject(folderId: string, projectId: string): Promise<boolean> {
