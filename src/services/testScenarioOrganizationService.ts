@@ -47,7 +47,7 @@ export const testScenarioOrganizationService = {
     return roots.map(build);
   },
 
-  async createFolder(input: { projectId: string; name: string; parentId?: string | null; position?: number }) {
+  async createFolder(input: { projectId: string; name: string; description?: string | null; parentId?: string | null; position?: number }) {
     const name = input.name.trim();
     if (!name || name.length > 200) throw invalid("Folder name must contain 1 to 200 characters");
     try { return await dbClient.$transaction(async (tx) => {
@@ -60,12 +60,13 @@ export const testScenarioOrganizationService = {
         while (parent.parentId) { depth++; parent = await tx.testScenarioFolder.findFirst({ where: { id: parent.parentId, projectId: input.projectId } }); if (!parent) throw notFound(); }
         if (depth >= 5) throw invalid("Folder depth cannot exceed five levels");
       }
-      return await tx.testScenarioFolder.create({ data: { projectId: input.projectId, name, parentId: input.parentId ?? null, position: input.position ?? 0 } });
+      const description = input.description?.trim() || null;
+      return await tx.testScenarioFolder.create({ data: { projectId: input.projectId, name, description, parentId: input.parentId ?? null, position: input.position ?? 0 } });
     }); }
     catch (error) { if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002") throw new OrganizationError("A sibling folder already has this name", 409); throw error; }
   },
 
-  async updateFolder(input: { projectId: string; folderId: string; name?: string; parentId?: string | null; position?: number }) {
+  async updateFolder(input: { projectId: string; folderId: string; name?: string; description?: string | null; parentId?: string | null; position?: number }) {
     return await dbClient.$transaction(async (tx) => {
       await tx.$queryRaw(Prisma.sql`SELECT "id" FROM "Project" WHERE "id" = ${input.projectId}::uuid FOR UPDATE`);
       if (input.name !== undefined && (!input.name.trim() || input.name.trim().length > 200)) throw invalid("Folder name must contain 1 to 200 characters");
@@ -81,7 +82,8 @@ export const testScenarioOrganizationService = {
         const deepest = await tx.$queryRaw<Array<{ depth: number }>>(Prisma.sql`WITH RECURSIVE t AS (SELECT "id", 1 AS depth FROM "TestScenarioFolder" WHERE "id" = ${folder.id}::uuid UNION ALL SELECT c."id", t.depth + 1 FROM "TestScenarioFolder" c JOIN t ON c."parentId" = t."id") SELECT MAX(depth)::int AS depth FROM t`);
         if (level + (deepest[0]?.depth ?? subtree.length) > 5) throw invalid("Folder depth cannot exceed five levels");
       }
-      try { return await tx.testScenarioFolder.update({ where: { id: folder.id }, data: { ...(input.name !== undefined ? { name: input.name.trim() } : {}), parentId, ...(input.position !== undefined ? { position: input.position } : {}) } }); }
+      const description = input.description === undefined ? undefined : input.description?.trim() || null;
+      try { return await tx.testScenarioFolder.update({ where: { id: folder.id }, data: { ...(input.name !== undefined ? { name: input.name.trim() } : {}), ...(description !== undefined ? { description } : {}), parentId, ...(input.position !== undefined ? { position: input.position } : {}) } }); }
       catch (error) { if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002") throw new OrganizationError("A sibling folder already has this name", 409); throw error; }
     });
   },

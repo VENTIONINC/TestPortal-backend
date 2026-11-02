@@ -17,6 +17,8 @@ router.get(
   authMiddleware,
   testScenarioController.list,
 );
+router.get("/v2/test-scenarios/authors", authMiddleware, testScenarioController.listAuthors);
+router.get("/v2/test-scenarios/selection", authMiddleware, testScenarioController.resolveSelection);
 router.post(
   "/v2/test-scenarios/:scenarioId/spec-links",
   authMiddleware,

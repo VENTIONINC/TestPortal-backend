@@ -283,6 +283,7 @@ model TestScenarioFolder {
   projectId String   @db.Uuid
   parentId  String?  @db.Uuid
   name      String
+  description String? @db.Text
   position  Int      @default(0)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
