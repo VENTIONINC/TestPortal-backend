@@ -54,6 +54,7 @@ export interface TestScenarioSummary {
   title: string;
   scenarioKey: string;
   details: string | null;
+  priority: TestScenarioPriority | null;
   createdBy: TestScenarioCreatorSummary;
   createdAt: Date;
   updatedAt: Date;
@@ -176,6 +177,8 @@ export interface ListTestScenariosParams {
   limit?: number | undefined;
   search?: string | undefined;
   createdById?: string | undefined;
+  createdByIds?: string | undefined;
+  priority?: string | undefined;
   sort?: TestScenarioSort | undefined;
   sortField?: TestScenarioSortField | undefined;
   sortDirection?: TestScenarioSortDirection | undefined;

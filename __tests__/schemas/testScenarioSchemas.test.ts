@@ -6,6 +6,7 @@ import {
   createTestScenarioSchema,
   reorderTestScenarioStepsSchema,
   testScenarioListQuerySchema,
+  testScenarioSelectionQuerySchema,
   updateTestScenarioSchema,
   updateTestScenarioStepSchema,
 } from "@/schemas/testScenarioSchemas";
@@ -209,30 +210,17 @@ describe("structured Test Scenario schemas", () => {
     expect(
       testScenarioListQuerySchema.safeParse({ projectId, sort: "bad" }).success,
     ).toBe(false);
-    expect(
-      testScenarioListQuerySchema.parse({
-        projectId,
-        sortField: "title",
-        title: "  Login ",
-      }),
-    ).toMatchObject({ sortField: "title", title: "Login" });
-    expect(
-      testScenarioListQuerySchema.parse({ projectId, folder: "  " }).folder,
-    ).toBeUndefined();
-    expect(
-      testScenarioListQuerySchema.safeParse({ projectId, sortField: "bad" })
-        .success,
-    ).toBe(false);
-    expect(
-      testScenarioListQuerySchema.safeParse({ projectId, sortDirection: "asc" })
-        .success,
-    ).toBe(false);
-    expect(
-      testScenarioListQuerySchema.safeParse({
-        projectId,
-        sortField: "title",
-        sort: "title_asc",
-      }).success,
-    ).toBe(false);
+    expect(testScenarioListQuerySchema.parse({ projectId, sortField: "title", title: "  Login " })).toMatchObject({ sortField: "title", title: "Login" });
+    expect(testScenarioListQuerySchema.parse({ projectId, folder: "  " }).folder).toBeUndefined();
+    expect(testScenarioListQuerySchema.safeParse({ projectId, sortField: "bad" }).success).toBe(false);
+    expect(testScenarioListQuerySchema.safeParse({ projectId, sortDirection: "asc" }).success).toBe(false);
+    expect(testScenarioListQuerySchema.safeParse({ projectId, sortField: "title", sort: "title_asc" }).success).toBe(false);
+    expect(testScenarioListQuerySchema.parse({ projectId, priority: "low" })).toMatchObject({ priority: "low" });
+    expect(testScenarioListQuerySchema.safeParse({ projectId, priority: "LOW" }).success).toBe(false);
+    expect(testScenarioListQuerySchema.parse({ projectId, priority: "high,medium" })).toMatchObject({ priority: "high,medium" });
+    expect(testScenarioSelectionQuerySchema.safeParse({ projectId, priority: "high,invalid" }).success).toBe(false);
+    expect(testScenarioSelectionQuerySchema.parse({ projectId, priority: "high", search: " login " })).toMatchObject({ priority: "high", search: "login" });
+    expect(testScenarioSelectionQuerySchema.safeParse({ projectId, page: 2 }).success).toBe(false);
+    expect(testScenarioSelectionQuerySchema.safeParse({ projectId, sortField: "title" }).success).toBe(false);
   });
 });

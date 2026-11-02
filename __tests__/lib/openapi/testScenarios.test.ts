@@ -52,9 +52,12 @@ describe("structured Test Scenario OpenAPI contract", () => {
       for (const field of ["objective", "expectedResult", "notes"])
         expect(schema.properties).not.toHaveProperty(field);
     }
+    const listQuery = schemas?.TestScenarioListQuery as { properties?: Record<string, unknown> };
+    expect(listQuery.properties?.priority).toEqual(expect.objectContaining({ type: "string", pattern: "^(low|medium|high)(,(low|medium|high))*$" }));
   });
   it("publishes folder, suite, membership, and bulk organization operations", () => {
-    const paths = generateOpenAPISpec().paths ?? {};
+    const spec = generateOpenAPISpec();
+    const paths = spec.paths ?? {};
     for (const [path, method] of [
       ["/api/v2/test-scenario-folders", "get"],
       ["/api/v2/test-scenario-folders", "post"],
@@ -84,21 +87,24 @@ describe("structured Test Scenario OpenAPI contract", () => {
         ]?.content?.["application/json"]?.schema,
       ).toBeDefined();
     }
-    expect(
-      paths["/api/v2/test-suites/{suiteId}/members"]?.delete?.requestBody,
-    ).toBeDefined();
-    expect(
-      paths["/api/v2/test-scenario-folders/{folderId}"]?.delete?.parameters,
-    ).toEqual(
-      expect.arrayContaining([
-        expect.objectContaining({ name: "disposition", in: "query" }),
-      ]),
-    );
-    const query = generateOpenAPISpec().components?.schemas
-      ?.TestScenarioListQuery as { properties?: Record<string, unknown> };
+    expect(paths["/api/v2/test-suites/{suiteId}/members"]?.delete?.requestBody).toBeDefined();
+    expect(paths["/api/v2/test-scenario-folders/{folderId}"]?.delete?.parameters).toEqual(expect.arrayContaining([expect.objectContaining({ name: "disposition", in: "query" })]));
+    const folderSchema = spec.components?.schemas?.TestScenarioFolderResponse as { properties?: Record<string, unknown> };
+    expect(folderSchema.properties?.description).toEqual({ type: ["string", "null"] });
+    const query = generateOpenAPISpec().components?.schemas?.TestScenarioListQuery as { properties?: Record<string, unknown> };
     expect(query.properties?.folderId).toBeDefined();
     expect(query.properties?.includeDescendants).toBeDefined();
     expect(query.properties?.suiteId).toBeDefined();
+  });
+
+  it("publishes project-scoped author discovery and all-result UUID resolution", () => {
+    const spec = generateOpenAPISpec();
+    expect(spec.paths?.["/api/v2/test-scenarios/authors"]?.get).toBeDefined();
+    expect(spec.paths?.["/api/v2/test-scenarios/selection"]?.get).toBeDefined();
+    const selectionQuery = spec.components?.schemas?.TestScenarioSelectionQuery as { properties?: Record<string, unknown> };
+    expect(selectionQuery.properties).toHaveProperty("priority");
+    expect(selectionQuery.properties).not.toHaveProperty("page");
+    expect(selectionQuery.properties).not.toHaveProperty("sortField");
   });
 
   it("publishes CRUD and all four authenticated step operations", () => {
@@ -167,6 +173,7 @@ describe("structured Test Scenario OpenAPI contract", () => {
     expect(create.properties?.scenarioKey).toBeUndefined();
     expect(update.properties?.scenarioKey).toBeUndefined();
     expect(summary.properties?.steps).toBeUndefined();
+    expect(summary.properties?.priority).toEqual({ anyOf: expect.arrayContaining([{ type: "string", enum: ["low", "medium", "high"] }, { type: "null" }]) });
   });
 
   it("documents title and key search on the REST catalog operation", () => {

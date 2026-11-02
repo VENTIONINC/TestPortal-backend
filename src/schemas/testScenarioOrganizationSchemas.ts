@@ -5,9 +5,10 @@ import { z } from "zod";
 
 const uuid = z.string().uuid();
 const name = z.string().trim().min(1).max(200);
+const folderDescription = z.string().trim().transform((value) => value || null).nullable().optional();
 export const organizationProjectQuery = z.object({ projectId: uuid });
-export const folderCreateBody = z.object({ projectId: uuid, name, parentId: uuid.nullable().optional(), position: z.number().int().nonnegative().optional() }).strict();
-export const folderUpdateBody = z.object({ projectId: uuid, name: name.optional(), parentId: uuid.nullable().optional(), position: z.number().int().nonnegative().optional() }).strict().refine((value) => value.name !== undefined || value.parentId !== undefined || value.position !== undefined);
+export const folderCreateBody = z.object({ projectId: uuid, name, description: folderDescription, parentId: uuid.nullable().optional(), position: z.number().int().nonnegative().optional() }).strict();
+export const folderUpdateBody = z.object({ projectId: uuid, name: name.optional(), description: folderDescription, parentId: uuid.nullable().optional(), position: z.number().int().nonnegative().optional() }).strict().refine((value) => value.name !== undefined || value.description !== undefined || value.parentId !== undefined || value.position !== undefined);
 export const folderDeleteQuery = z.object({ projectId: uuid, disposition: z.enum(["parent", "unfiled"]) });
 export const suiteCreateBody = z.object({ projectId: uuid, name, description: z.string().nullable().optional(), purpose: z.string().nullable().optional(), release: z.string().nullable().optional() }).strict();
 export const suiteUpdateBody = z.object({ projectId: uuid, name: name.optional(), description: z.string().nullable().optional(), purpose: z.string().nullable().optional(), release: z.string().nullable().optional() }).strict().refine((value) => Object.keys(value).some((key) => key !== "projectId"));

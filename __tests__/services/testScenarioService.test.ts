@@ -32,6 +32,7 @@ const deleteStepMock =
   jest.fn<(...args: never[]) => Promise<TestScenarioResponse | null>>();
 const reorderStepsMock = jest.fn<(...args: never[]) => Promise<unknown>>();
 const deleteMock = jest.fn<(...args: never[]) => Promise<number>>();
+const resolveSelectionMock = jest.fn<(...args: never[]) => Promise<string[]>>();
 
 jest.mock("@/models/projectModel", () => ({
   projectModel: { exists: projectExistsMock },
@@ -40,6 +41,7 @@ jest.mock("@/models/testScenarioModel", () => ({
   testScenarioModel: {
     create: createMock,
     listSummaries: listSummariesMock,
+    resolveSelection: resolveSelectionMock,
     findManySummaries: findManySummariesMock,
     count: countMock,
     findById: findByIdMock,
@@ -105,6 +107,12 @@ describe("testScenarioService", () => {
     deleteStepMock.mockResolvedValue(scenario);
     reorderStepsMock.mockResolvedValue({ kind: "success", scenario });
     deleteMock.mockResolvedValue(1);
+  });
+
+  it("rejects selection for a nonexistent project", async () => {
+    projectExistsMock.mockResolvedValue(false);
+    resolveSelectionMock.mockResolvedValue([]);
+    await expect(testScenarioService.resolveScenarioSelection({ projectId })).rejects.toBeInstanceOf(TestScenarioNotFoundError);
   });
 
   it("normalizes structured creation and keeps initial step order", async () => {

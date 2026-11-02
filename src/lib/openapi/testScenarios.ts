@@ -110,6 +110,7 @@ const TestScenarioSummarySchema = z
     title: z.string(),
     scenarioKey: z.string().regex(/^TMS-[1-9][0-9]*$/),
     details: z.string().nullable(),
+    priority: z.union([testScenarioPrioritySchema, z.null()]),
     createdBy: TestScenarioCreatorSummarySchema,
     createdAt: z.string(),
     updatedAt: z.string(),
@@ -236,8 +237,7 @@ const TestScenarioProjectQuerySchema = z
   })
   .openapi("TestScenarioProjectQuery");
 
-const TestScenarioListQuerySchema = z
-  .object({
+const TestScenarioListQueryBaseSchema = z.object({
     projectId: z.string().uuid(),
     page: z.number().int().min(1).default(1).optional(),
     limit: z.number().int().min(1).max(100).default(30).optional(),
@@ -250,6 +250,14 @@ const TestScenarioListQuerySchema = z
       description:
         "Optional creator User UUID filter. It may identify any user; a valid UUID with no matching scenarios returns an empty page.",
       example: "33333333-3333-4333-8333-333333333333",
+    }),
+    createdByIds: z.string().regex(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}(,[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})*$/i).optional().openapi({
+      description: "Optional comma-separated creator User UUIDs. Scenarios matching any listed creator are included; cannot be combined with createdById.",
+      example: "33333333-3333-4333-8333-333333333333,44444444-4444-4444-8444-444444444444",
+    }),
+    priority: z.string().regex(/^(low|medium|high)(,(low|medium|high))*$/).optional().openapi({
+      description: "Comma-separated priorities; omitted includes scenarios with any priority, including null.",
+      example: "high",
     }),
     sort: z.enum(TEST_SCENARIO_SORT_VALUES).optional().openapi({
       description:
@@ -289,8 +297,12 @@ const TestScenarioListQuerySchema = z
     folderId: z.union([z.string().uuid(), z.literal("unfiled")]).optional(),
     includeDescendants: z.boolean().optional(),
     suiteId: z.string().uuid().optional(),
-  })
+  });
+
+const TestScenarioListQuerySchema = TestScenarioListQueryBaseSchema
   .superRefine((value, context) => {
+    if (value.createdById && value.createdByIds)
+      context.addIssue({ code: "custom", path: ["createdByIds"], message: "Use createdById or createdByIds, not both" });
     if (value.sortDirection && !value.sortField)
       context.addIssue({
         code: "custom",
@@ -316,17 +328,32 @@ const TestScenarioListResponseSchema = z
   })
   .openapi("TestScenarioListResponse");
 
+const TestScenarioSelectionQuerySchema = TestScenarioListQueryBaseSchema.omit({ page: true, limit: true, sort: true, sortField: true, sortDirection: true }).strict().superRefine((value, context) => {
+  if (value.createdById && value.createdByIds) context.addIssue({ code: "custom", path: ["createdByIds"], message: "Use createdById or createdByIds, not both" });
+}).openapi("TestScenarioSelectionQuery");
+const TestScenarioSelectionResponseSchema = z.object({ scenarioIds: z.array(z.string().uuid()), total: z.number().int().nonnegative() }).strict().openapi("TestScenarioSelectionResponse");
+const TestScenarioAuthorsQuerySchema = TestScenarioListQueryBaseSchema.omit({ page: true, limit: true, createdById: true, createdByIds: true, sort: true, sortField: true, sortDirection: true }).strict().openapi("TestScenarioAuthorsQuery");
+const TestScenarioAuthorOptionSchema = z.object({
+  id: z.string().uuid(),
+  name: z.string(),
+  email: z.string(),
+  scenarioCount: z.number().int().nonnegative(),
+}).strict().openapi("TestScenarioAuthorOption");
+const TestScenarioAuthorsResponseSchema = z.object({ authors: z.array(TestScenarioAuthorOptionSchema) }).strict().openapi("TestScenarioAuthorsResponse");
+
 const OrganizationProjectQuerySchema = z.object({
   projectId: z.string().uuid(),
 });
 const FolderBodySchema = z.object({
   projectId: z.string().uuid(),
   name: z.string().min(1),
+  description: z.string().nullable().optional().openapi({ description: "Optional folder description. Omission leaves it unchanged; null or blank clears it." }),
   parentId: z.string().uuid().nullable().optional(),
   position: z.number().int().nonnegative().optional(),
 });
 const FolderUpdateBodySchema = z.object({
   name: z.string().min(1).optional(),
+  description: z.string().nullable().optional().openapi({ description: "Optional folder description. Omission leaves it unchanged; null or blank clears it." }),
   parentId: z.string().uuid().nullable().optional(),
   position: z.number().int().nonnegative().optional(),
 });
@@ -361,6 +388,7 @@ const FolderResponseSchema: ZodTypeAny = z.object({
   projectId: z.string().uuid(),
   parentId: z.string().uuid().nullable(),
   name: z.string(),
+  description: z.string().nullable(),
   position: z.number().int(),
   createdAt: z.string(),
   updatedAt: z.string(),
@@ -373,6 +401,7 @@ const FolderRecordResponseSchema = z.object({
   projectId: z.string().uuid(),
   parentId: z.string().uuid().nullable(),
   name: z.string(),
+  description: z.string().nullable(),
   position: z.number().int(),
   createdAt: z.string(),
   updatedAt: z.string(),
@@ -568,6 +597,9 @@ export function registerTestScenarioRoutes(registry: OpenAPIRegistry): void {
   registry.register("TestScenarioProjectQuery", TestScenarioProjectQuerySchema);
   registry.register("TestScenarioListQuery", TestScenarioListQuerySchema);
   registry.register("TestScenarioListResponse", TestScenarioListResponseSchema);
+  registry.register("TestScenarioSelectionQuery", TestScenarioSelectionQuerySchema);
+  registry.register("TestScenarioSelectionResponse", TestScenarioSelectionResponseSchema);
+  registry.register("TestScenarioAuthorsResponse", TestScenarioAuthorsResponseSchema);
   registry.register("TestScenarioSpecLinkBody", TestScenarioSpecLinkBodySchema);
   registry.register(
     "TestScenarioSpecLinkResponse",
@@ -975,6 +1007,26 @@ export function registerTestScenarioRoutes(registry: OpenAPIRegistry): void {
     },
     tags: ["Test Scenarios"],
   });
+
+  for (const [path, query, responseSchema, description] of [
+    ["/api/v2/test-scenarios/authors", TestScenarioAuthorsQuerySchema, TestScenarioAuthorsResponseSchema, "Returns project creators and counts matching the supplied catalog scope and filters, excluding author selection and pagination."],
+    ["/api/v2/test-scenarios/selection", TestScenarioSelectionQuerySchema, TestScenarioSelectionResponseSchema, "Resolves all unique matching scenario UUIDs using the catalog filters, without returning summary or Markdown content."],
+  ] as const) {
+    registry.registerPath({
+      method: "get",
+      path,
+      description,
+      request: { query },
+      security: [{ BearerAuth: [] }],
+      responses: {
+        200: { description: "Scenario catalog lookup succeeded", content: { "application/json": { schema: responseSchema } } },
+        400: { description: "Invalid project or filter", content: { "application/json": { schema: ErrorResponseSchema } } },
+        401: { description: "Unauthorized", content: { "application/json": { schema: ErrorResponseSchema } } },
+        404: { description: "Project, folder, or suite not found", content: { "application/json": { schema: ErrorResponseSchema } } },
+      },
+      tags: ["Test Scenarios"],
+    });
+  }
 
   registry.registerPath({
     method: "get",
