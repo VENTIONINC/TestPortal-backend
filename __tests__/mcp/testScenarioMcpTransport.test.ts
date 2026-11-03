@@ -50,7 +50,7 @@ describe("Test Scenario MCP transport validation", () => {
     jest.useRealTimers();
   });
 
-  it("discovers the complete prefixed tool catalog and unchanged prompts", async () => {
+  it("discovers the public tools and existing and TMS prompts", async () => {
     const { default: mcpRouter } = await import("@/mcp/server");
     const app = express();
     app.use(express.json());
@@ -77,6 +77,7 @@ describe("Test Scenario MCP transport validation", () => {
         "issue-analysis-assistant",
         "software-documentation-assistant",
         "test-portal-report-generator",
+        "tms-workflow-assistant",
       ]);
       const status = await callAction(client, {
         name: "testportal-check-status",

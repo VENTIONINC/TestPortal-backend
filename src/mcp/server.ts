@@ -14,6 +14,7 @@ import {
   handleMcpSessionRequest,
 } from "@/mcp/middleware/auth";
 import type { RequestWithMcpUser } from "@/mcp/middleware/auth";
+import { normalizePromptRequest } from "@/mcp/normalizePromptRequest";
 import { createActionCatalog } from "@/mcp/actionCatalog";
 import {
   findAction,
@@ -26,6 +27,7 @@ import * as issueAnalysisAssistant from "@/mcp/prompts/issue-analysis-assistant/
 import * as environmentPerformanceAssistant from "@/mcp/prompts/environment-performance-assistant/v1.0.0";
 import * as developerCodeAssistant from "@/mcp/prompts/developer-code-assistant/v1.0.0";
 import * as documentationArchitect from "@/mcp/prompts/documentation-architect/v1.0.0";
+import * as tmsWorkflowAssistant from "@/mcp/prompts/tms-workflow-assistant/v1.0.0";
 
 const router = Router();
 
@@ -86,6 +88,93 @@ export const registerActionTools = (
   );
 };
 
+export const registerPrompts = (server: McpServer): void => {
+  // Test Portal Assistant
+  server.registerPrompt(
+    testPortalAssistant.testPortalAssistantName,
+    testPortalAssistant.testPortalAssistantParameters,
+    ({
+      time_period = "today",
+      report_type = "summary",
+      project_system = "jira",
+    }) =>
+      testPortalAssistant.testPortalAssistantPrompt({
+        time_period,
+        report_type,
+        project_system,
+      }),
+  );
+
+  // Issue Analysis Assistant
+  server.registerPrompt(
+    issueAnalysisAssistant.issueAnalysisAssistantName,
+    issueAnalysisAssistant.issueAnalysisAssistantParameters,
+    ({
+      analysis_scope = "recent executions",
+      error_context = "",
+      target_system = "",
+    }) =>
+      issueAnalysisAssistant.issueAnalysisAssistantPrompt({
+        analysis_scope,
+        error_context,
+        target_system,
+      }),
+  );
+
+  // Environment & Performance Assistant
+  server.registerPrompt(
+    environmentPerformanceAssistant.environmentPerformanceAssistantName,
+    environmentPerformanceAssistant.environmentPerformanceAssistantParameters,
+    ({
+      environment_scope = "all environments",
+      performance_metric = "",
+      time_range = "",
+    }) =>
+      environmentPerformanceAssistant.environmentPerformanceAssistantPrompt(
+        {
+          environment_scope,
+          performance_metric,
+          time_range,
+        },
+      ),
+  );
+
+  // Developer Code Assistant
+  server.registerPrompt(
+    developerCodeAssistant.developerCodeAssistantName,
+    developerCodeAssistant.developerCodeAssistantParameters,
+    ({ result_id = "", error_id = "", context_scope = "" }) =>
+      developerCodeAssistant.developerCodeAssistantPrompt({
+        result_id,
+        error_id,
+        context_scope,
+      }),
+  );
+
+  // Documentation Architect
+  server.registerPrompt(
+    documentationArchitect.softwareDocumentationAssistantName,
+    documentationArchitect.softwareDocumentationAssistantParameters,
+    ({
+      file_paths = "",
+      documentation_type = "",
+      target_audience = "",
+      scope = "",
+      publish = "",
+    }) =>
+      documentationArchitect.softwareDocumentationAssistantPrompt({
+        file_paths,
+        documentation_type,
+        target_audience,
+        scope,
+        publish,
+      }),
+  );
+
+
+  server.registerPrompt(tmsWorkflowAssistant.name, tmsWorkflowAssistant.parameters, tmsWorkflowAssistant.render);
+};
+
 // Cleanup interval for stale sessions
 setInterval(() => {
   const now = Date.now();
@@ -110,7 +199,7 @@ router.post(
         transport = entry.transport;
         await handleMcpSessionRequest(entry.userId, req, res, async () => {
           entry.lastActive = Date.now();
-          await transport.handleRequest(req, res, req.body);
+          await transport.handleRequest(req, res, normalizePromptRequest(req.body));
         });
         return;
       }
@@ -153,87 +242,7 @@ router.post(
 
         registerActionTools(server, reviewedById);
 
-        // Test Portal Assistant
-        server.registerPrompt(
-          testPortalAssistant.testPortalAssistantName,
-          testPortalAssistant.testPortalAssistantParameters,
-          ({
-            time_period = "today",
-            report_type = "summary",
-            project_system = "jira",
-          }) =>
-            testPortalAssistant.testPortalAssistantPrompt({
-              time_period,
-              report_type,
-              project_system,
-            }),
-        );
-
-        // Issue Analysis Assistant
-        server.registerPrompt(
-          issueAnalysisAssistant.issueAnalysisAssistantName,
-          issueAnalysisAssistant.issueAnalysisAssistantParameters,
-          ({
-            analysis_scope = "recent executions",
-            error_context = "",
-            target_system = "",
-          }) =>
-            issueAnalysisAssistant.issueAnalysisAssistantPrompt({
-              analysis_scope,
-              error_context,
-              target_system,
-            }),
-        );
-
-        // Environment & Performance Assistant
-        server.registerPrompt(
-          environmentPerformanceAssistant.environmentPerformanceAssistantName,
-          environmentPerformanceAssistant.environmentPerformanceAssistantParameters,
-          ({
-            environment_scope = "all environments",
-            performance_metric = "",
-            time_range = "",
-          }) =>
-            environmentPerformanceAssistant.environmentPerformanceAssistantPrompt(
-              {
-                environment_scope,
-                performance_metric,
-                time_range,
-              },
-            ),
-        );
-
-        // Developer Code Assistant
-        server.registerPrompt(
-          developerCodeAssistant.developerCodeAssistantName,
-          developerCodeAssistant.developerCodeAssistantParameters,
-          ({ result_id = "", error_id = "", context_scope = "" }) =>
-            developerCodeAssistant.developerCodeAssistantPrompt({
-              result_id,
-              error_id,
-              context_scope,
-            }),
-        );
-
-        // Documentation Architect
-        server.registerPrompt(
-          documentationArchitect.softwareDocumentationAssistantName,
-          documentationArchitect.softwareDocumentationAssistantParameters,
-          ({
-            file_paths = "",
-            documentation_type = "",
-            target_audience = "",
-            scope = "",
-            publish = "",
-          }) =>
-            documentationArchitect.softwareDocumentationAssistantPrompt({
-              file_paths,
-              documentation_type,
-              target_audience,
-              scope,
-              publish,
-            }),
-        );
+        registerPrompts(server);
 
         try {
           await server.connect(transport);
