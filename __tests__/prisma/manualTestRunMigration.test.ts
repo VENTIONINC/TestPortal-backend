@@ -45,8 +45,8 @@ describe("manual test run persistence contract", () => {
     expect(migration).not.toContain("DELETE FROM");
   });
 
-  it("adds nullable nonunique management labels and a captured-key history index", () => {
-    expect(schema).toContain("scenarioKey           String?            @db.VarChar(100)");
+  it("preserves nullable run labels and captured-key history alongside generated scenario keys", () => {
+    expect(schema).toMatch(/scenarioKey\s+String\s+@db\.VarChar\(100\)/);
     expect(schema).toContain("runKey               String?             @db.VarChar(100)");
     expect(schema).toContain("sourceScenarioKey    String?             @db.VarChar(100)");
     expect(keysMigration).toContain('ADD COLUMN "scenarioKey" VARCHAR(100)');

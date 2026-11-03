@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { Prisma } from "@prisma/client";
-import type { TestScenario, TestScenarioStep } from "@prisma/client";
+import type { TestScenarioStep } from "@prisma/client";
 import { dbClient } from "@/prisma/client";
 import {
   hashTestScenarioMarkdown,
@@ -25,6 +25,15 @@ import type {
   UpdateTestScenarioStepParams,
 } from "@/types/testScenarios";
 
+import { withScenarioTransaction } from "@/models/testScenarioTransactions";
+import {
+  replaceScenarioSteps,
+  replaceScenarioSuites,
+  validateScenarioFolder,
+  validateScenarioActor,
+} from "@/models/testScenarioEditorModel";
+import { TestScenarioConflictError } from "@/types/testScenarios";
+
 export interface CreateTestScenarioData extends CreateTestScenarioParams {}
 
 export type UpdateTestScenarioData = Omit<
@@ -32,7 +41,19 @@ export type UpdateTestScenarioData = Omit<
   "scenarioId" | "projectId"
 >;
 
-type ScenarioAggregate = TestScenario & { steps: TestScenarioStep[] };
+const safeAuthorSelect = { id: true, name: true, email: true } as const;
+const aggregateInclude = {
+  steps: { orderBy: { position: "asc" as const } },
+  createdBy: { select: safeAuthorSelect },
+  updatedBy: { select: safeAuthorSelect },
+  suiteMemberships: {
+    include: { suite: { select: { id: true, name: true } } },
+    orderBy: { suiteId: "asc" as const },
+  },
+} satisfies Prisma.TestScenarioInclude;
+type ScenarioAggregate = Prisma.TestScenarioGetPayload<{
+  include: typeof aggregateInclude;
+}>;
 
 export type ReorderTestScenarioResult =
   | { kind: "not-found" }
@@ -137,8 +158,14 @@ function summaryWhere(
 ): Prisma.TestScenarioWhereInput {
   const organization: Prisma.TestScenarioWhereInput[] = [];
   if (params.folderId === "unfiled") organization.push({ folderId: null });
-  else if (params.folderId) organization.push({ folderId: { in: params._folderIds ?? [params.folderId] } } as Prisma.TestScenarioWhereInput);
-  if (params.suiteId) organization.push({ suiteMemberships: { some: { suiteId: params.suiteId } } });
+  else if (params.folderId)
+    organization.push({
+      folderId: { in: params._folderIds ?? [params.folderId] },
+    } as Prisma.TestScenarioWhereInput);
+  if (params.suiteId)
+    organization.push({
+      suiteMemberships: { some: { suiteId: params.suiteId } },
+    });
   return {
     projectId: params.projectId,
     ...(params.createdByIds
@@ -164,10 +191,40 @@ function summaryWhere(
           ],
         }
       : {}),
-    ...(params.scenarioKey ? { scenarioKey: { contains: params.scenarioKey, mode: "insensitive" as const } } : {}),
-    ...(params.title ? { title: { contains: params.title, mode: "insensitive" as const } } : {}),
-    ...(params.details ? { details: { contains: params.details, mode: "insensitive" as const } } : {}),
-    ...(params.createdBy ? { createdBy: { OR: [{ name: { contains: params.createdBy, mode: "insensitive" as const } }, { email: { contains: params.createdBy, mode: "insensitive" as const } }] } } : {}),
+    ...(params.scenarioKey
+      ? {
+          scenarioKey: {
+            contains: params.scenarioKey,
+            mode: "insensitive" as const,
+          },
+        }
+      : {}),
+    ...(params.title
+      ? { title: { contains: params.title, mode: "insensitive" as const } }
+      : {}),
+    ...(params.details
+      ? { details: { contains: params.details, mode: "insensitive" as const } }
+      : {}),
+    ...(params.createdBy
+      ? {
+          createdBy: {
+            OR: [
+              {
+                name: {
+                  contains: params.createdBy,
+                  mode: "insensitive" as const,
+                },
+              },
+              {
+                email: {
+                  contains: params.createdBy,
+                  mode: "insensitive" as const,
+                },
+              },
+            ],
+          },
+        }
+      : {}),
   };
 }
 
@@ -201,6 +258,10 @@ function toResponse(scenario: ScenarioAggregate): TestScenarioResponse {
     testData: scenario.testData,
     priority: scenario.priority,
     relatedIssueUrl: scenario.relatedIssueUrl,
+    revision: scenario.revision,
+    createdBy: scenario.createdBy,
+    updatedBy: scenario.updatedBy,
+    suites: scenario.suiteMemberships.map(({ suite }) => suite),
     steps: scenario.steps.map(({ id, position, action, expectedResult }) => ({
       id,
       position,
@@ -222,7 +283,7 @@ async function findAggregate(
 ): Promise<ScenarioAggregate | null> {
   return await client.testScenario.findFirst({
     where: { id, projectId },
-    include: { steps: { orderBy: { position: "asc" } } },
+    include: aggregateInclude,
   });
 }
 
@@ -255,13 +316,16 @@ async function withLockedAggregate<T>(
     scenario: ScenarioAggregate,
   ) => Promise<T>,
   tx?: Prisma.TransactionClient,
+  actorId?: string,
 ): Promise<T | null> {
   if (tx) {
+    await validateScenarioActor(tx, actorId);
     const scenario = await lockAggregate(tx, id, projectId);
     return scenario ? await callback(tx, scenario) : null;
   }
 
-  return await dbClient.$transaction(async (transaction) => {
+  return await withScenarioTransaction(async (transaction) => {
+    await validateScenarioActor(transaction, actorId);
     const scenario = await lockAggregate(transaction, id, projectId);
     return scenario ? await callback(transaction, scenario) : null;
   });
@@ -271,6 +335,8 @@ async function refreshProjection(
   client: Prisma.TransactionClient,
   id: string,
   projectId: string,
+  actorId?: string,
+  advanceRevision = false,
 ): Promise<TestScenarioResponse> {
   const aggregate = await findAggregate(client, id, projectId);
   if (!aggregate) {
@@ -281,13 +347,19 @@ async function refreshProjection(
   const updated = await client.testScenario.update({
     where: { id: aggregate.id },
     data: {
+      ...(advanceRevision
+        ? { revision: { increment: 1 }, updatedById: actorId ?? null }
+        : {}),
       contentMd,
       contentMdHash: hashTestScenarioMarkdown(contentMd),
       contentMdFormatVersion: TEST_SCENARIO_MARKDOWN_FORMAT_VERSION,
     },
   });
 
-  return toResponse({ ...aggregate, ...updated });
+  const refreshed = await findAggregate(client, updated.id, projectId);
+  if (!refreshed)
+    throw new Error("Test Scenario disappeared during projection refresh");
+  return toResponse(refreshed);
 }
 
 async function compactSteps(
@@ -317,16 +389,19 @@ async function compactSteps(
 function contentCreateData(
   data: CreateTestScenarioData,
   contentMd: string,
+  scenarioNumber: number,
 ): Prisma.TestScenarioUncheckedCreateInput {
   return {
     projectId: data.projectId,
     folderId: data.folderId ?? null,
     title: data.title,
-    scenarioKey: data.scenarioKey ?? null,
+    scenarioKey: `TMS-${scenarioNumber}`,
+    scenarioNumber,
+    updatedById: data.createdById,
     details: data.details ?? null,
     preconditions: data.preconditions ?? null,
     testData: data.testData ?? null,
-    priority: data.priority ?? null,
+    priority: data.priority ?? "medium",
     relatedIssueUrl: data.relatedIssueUrl ?? null,
     contentMd,
     contentMdHash: hashTestScenarioMarkdown(contentMd),
@@ -351,6 +426,12 @@ export const testScenarioModel = {
         return null;
       }
 
+      const allocation = await client.project.update({
+        where: { id: data.projectId },
+        data: { lastScenarioNumber: { increment: 1 } },
+        select: { lastScenarioNumber: true },
+      });
+      await validateScenarioFolder(client, data.projectId, data.folderId);
       const steps = data.steps ?? [];
       const contentMd = renderTestScenarioMarkdown({
         title: data.title,
@@ -361,11 +442,11 @@ export const testScenarioModel = {
           action: step.action,
           expectedResult: step.expectedResult ?? null,
         })),
-        priority: data.priority ?? null,
+        priority: data.priority ?? "medium",
         relatedIssueUrl: data.relatedIssueUrl ?? null,
       });
       const scenario = await client.testScenario.create({
-        data: contentCreateData(data, contentMd),
+        data: contentCreateData(data, contentMd, allocation.lastScenarioNumber),
       });
 
       if (steps.length > 0) {
@@ -379,6 +460,15 @@ export const testScenarioModel = {
         });
       }
 
+      if (data.suiteIds !== undefined || data.newSuites !== undefined) {
+        await replaceScenarioSuites(
+          client,
+          data.projectId,
+          scenario.id,
+          data.suiteIds ?? [],
+          data.newSuites ?? [],
+        );
+      }
       const detail = await findAggregate(client, scenario.id, data.projectId);
       return detail ? toResponse(detail) : null;
     };
@@ -387,7 +477,11 @@ export const testScenarioModel = {
       return await createWithinTransaction(tx);
     }
 
-    return await dbClient.$transaction(createWithinTransaction);
+    // The project increment serializes new identities without a stale serializable snapshot.
+    return await withScenarioTransaction(
+      createWithinTransaction,
+      Prisma.TransactionIsolationLevel.ReadCommitted,
+    );
   },
 
   async findManySummaries(
@@ -412,16 +506,26 @@ export const testScenarioModel = {
     const page = params.page ?? 1;
     const limit = params.limit ?? 30;
     const sortField = params.sortField;
-    const direction: TestScenarioSortDirection = params.sortDirection ??
-      (params.sort === "title_asc" ? "asc" : "desc");
-    const sortColumn = sortField === "scenarioKey" ? Prisma.sql`s."scenarioKey"`
-      : sortField === "title" ? Prisma.sql`s."title"`
-      : sortField === "details" ? Prisma.sql`s."details"`
-      : sortField === "folder" ? Prisma.sql`COALESCE(fp.path, 'Unfiled')`
-      : sortField === "createdBy" ? Prisma.sql`COALESCE(u."name", u."email", '')`
-      : sortField === "updatedAt" || (!sortField && params.sort === "recently_updated") ? Prisma.sql`s."updatedAt"`
-      : sortField === "createdAt" || (!sortField && params.sort !== "title_asc") ? Prisma.sql`s."createdAt"`
-      : Prisma.sql`s."title"`;
+    const direction: TestScenarioSortDirection =
+      params.sortDirection ?? (params.sort === "title_asc" ? "asc" : "desc");
+    const sortColumn =
+      sortField === "scenarioKey"
+        ? Prisma.sql`s."scenarioKey"`
+        : sortField === "title"
+          ? Prisma.sql`s."title"`
+          : sortField === "details"
+            ? Prisma.sql`s."details"`
+            : sortField === "folder"
+              ? Prisma.sql`COALESCE(fp.path, 'Unfiled')`
+              : sortField === "createdBy"
+                ? Prisma.sql`COALESCE(u."name", u."email", '')`
+                : sortField === "updatedAt" ||
+                    (!sortField && params.sort === "recently_updated")
+                  ? Prisma.sql`s."updatedAt"`
+                  : sortField === "createdAt" ||
+                      (!sortField && params.sort !== "title_asc")
+                    ? Prisma.sql`s."createdAt"`
+                    : Prisma.sql`s."title"`;
     const sqlDirection = Prisma.raw(direction.toUpperCase());
     const orderBy = sortField
       ? Prisma.sql`ORDER BY ${sortColumn} ${sqlDirection}, s."id" ASC`
@@ -439,8 +543,22 @@ export const testScenarioModel = {
           transaction.$queryRaw<Array<{ total: bigint }>>(Prisma.sql`${predicate.folderCte} SELECT COUNT(*) AS total ${predicate.from} WHERE ${predicate.where}`),
         ]);
         const ids = idRows.map(({ id }) => id);
-        const rows = ids.length ? await transaction.testScenario.findMany({ where: { id: { in: ids }, projectId: params.projectId }, select: summarySelect }) : [];
-        const byId = new Map(rows.map(({ folder, ...row }) => [row.id, { ...row, folderName: folder?.name ?? null, matchedSuiteId: params.suiteId ?? null }]));
+        const rows = ids.length
+          ? await transaction.testScenario.findMany({
+              where: { id: { in: ids }, projectId: params.projectId },
+              select: summarySelect,
+            })
+          : [];
+        const byId = new Map(
+          rows.map(({ folder, ...row }) => [
+            row.id,
+            {
+              ...row,
+              folderName: folder?.name ?? null,
+              matchedSuiteId: params.suiteId ?? null,
+            },
+          ]),
+        );
         const scenarios: TestScenarioSummary[] = [];
         for (const id of ids) {
           const row = byId.get(id);
@@ -504,8 +622,16 @@ export const testScenarioModel = {
     return (await dbClient.testScenarioFolder.findFirst({ where: { id: folderId, projectId }, select: { id: true } })) !== null;
   },
 
-  async suiteBelongsToProject(suiteId: string, projectId: string): Promise<boolean> {
-    return (await dbClient.testSuite.findFirst({ where: { id: suiteId, projectId }, select: { id: true } })) !== null;
+  async suiteBelongsToProject(
+    suiteId: string,
+    projectId: string,
+  ): Promise<boolean> {
+    return (
+      (await dbClient.testSuite.findFirst({
+        where: { id: suiteId, projectId },
+        select: { id: true },
+      })) !== null
+    );
   },
 
   async count(
@@ -545,32 +671,85 @@ export const testScenarioModel = {
       id,
       projectId,
       async (client, scenario) => {
+        if (
+          data.expectedRevision !== undefined &&
+          data.expectedRevision !== scenario.revision
+        )
+          throw new TestScenarioConflictError();
+        await validateScenarioFolder(client, projectId, data.folderId);
+        const stepsChanged =
+          data.steps !== undefined &&
+          (data.steps.length !== scenario.steps.length ||
+            data.steps.some((step, index) => {
+              const previous = scenario.steps[index];
+              return (
+                !previous ||
+                previous.id !== step.id ||
+                previous.action !== step.action ||
+                previous.expectedResult !== (step.expectedResult ?? null)
+              );
+            }));
+        if (stepsChanged && data.steps)
+          await replaceScenarioSteps(client, id, data.steps);
+        if (data.suiteIds !== undefined || data.newSuites !== undefined)
+          await replaceScenarioSuites(
+            client,
+            projectId,
+            id,
+            data.suiteIds ?? [],
+            data.newSuites ?? [],
+          );
         const updateData: Prisma.TestScenarioUpdateInput = {
-          ...(data.scenarioKey !== undefined ? { scenarioKey: data.scenarioKey } : {}),
+          revision: { increment: 1 },
+          updatedBy: data.actorId
+            ? { connect: { id: data.actorId } }
+            : { disconnect: true },
           ...(data.title !== undefined ? { title: data.title } : {}),
           ...(data.details !== undefined ? { details: data.details } : {}),
           ...(data.preconditions !== undefined
             ? { preconditions: data.preconditions }
             : {}),
           ...(data.testData !== undefined ? { testData: data.testData } : {}),
-          ...(data.priority !== undefined ? { priority: data.priority } : {}),
-          ...(data.relatedIssueUrl !== undefined ? { relatedIssueUrl: data.relatedIssueUrl } : {}),
-          ...(data.folderId !== undefined ? { folder: data.folderId ? { connect: { id: data.folderId } } : { disconnect: true } } : {}),
+          ...(data.priority !== undefined
+            ? { priority: data.priority ?? "medium" }
+            : {}),
+          ...(data.relatedIssueUrl !== undefined
+            ? { relatedIssueUrl: data.relatedIssueUrl }
+            : {}),
+          ...(data.folderId !== undefined
+            ? {
+                folder: data.folderId
+                  ? { connect: { id: data.folderId } }
+                  : { disconnect: true },
+              }
+            : {}),
         };
         await client.testScenario.update({
           where: { id: scenario.id },
           data: updateData,
         });
-        const contentFields: readonly (keyof UpdateTestScenarioData)[] = [
-          "title", "details", "preconditions", "testData", "priority", "relatedIssueUrl",
-        ];
-        if (!contentFields.some((field) => data[field] !== undefined)) {
+        const contentFields = [
+          "title",
+          "details",
+          "preconditions",
+          "testData",
+          "priority",
+          "relatedIssueUrl",
+        ] as const;
+        if (
+          !stepsChanged &&
+          !contentFields.some(
+            (field) =>
+              data[field] !== undefined && data[field] !== scenario[field],
+          )
+        ) {
           const updated = await findAggregate(client, id, projectId);
           return updated ? toResponse(updated) : null;
         }
         return await refreshProjection(client, id, projectId);
       },
       tx,
+      data.actorId,
     );
   },
 
@@ -598,9 +777,12 @@ export const testScenarioModel = {
           client,
           params.scenarioId,
           params.projectId,
+          params.actorId,
+          true,
         );
       },
       tx,
+      params.actorId,
     );
   },
 
@@ -630,9 +812,12 @@ export const testScenarioModel = {
           client,
           params.scenarioId,
           params.projectId,
+          params.actorId,
+          true,
         );
       },
       tx,
+      params.actorId,
     );
   },
 
@@ -659,9 +844,12 @@ export const testScenarioModel = {
           client,
           params.scenarioId,
           params.projectId,
+          params.actorId,
+          true,
         );
       },
       tx,
+      params.actorId,
     );
   },
 
@@ -695,10 +883,13 @@ export const testScenarioModel = {
             client,
             params.scenarioId,
             params.projectId,
+            params.actorId,
+            true,
           ),
         };
       },
       tx,
+      params.actorId,
     );
 
     return result ?? { kind: "not-found" };

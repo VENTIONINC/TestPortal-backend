@@ -2,8 +2,10 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { z } from "zod";
-import { editableTestManagementKeySchema } from "@/schemas/testManagementKeySchemas";
-import { TEST_SCENARIO_SORT_FIELDS, TEST_SCENARIO_SORT_VALUES } from "@/types/testScenarios";
+import {
+  TEST_SCENARIO_SORT_FIELDS,
+  TEST_SCENARIO_SORT_VALUES,
+} from "@/types/testScenarios";
 
 const uuidSchema = z.string().uuid("Must be a valid UUID");
 const nonBlankText = z.string().trim().min(1, "Value must not be blank");
@@ -20,14 +22,21 @@ const commaSeparatedUuidSchema = z.string().min(1).superRefine((value, context) 
 });
 
 export const testScenarioPrioritySchema = z.enum(["low", "medium", "high"]);
-export const testScenarioRelatedIssueUrlSchema = z.string().trim().url().refine((value) => {
-  try {
-    const url = new URL(value);
-    return /^https?:\/\//i.test(value) && ["http:", "https:"].includes(url.protocol);
-  } catch {
-    return false;
-  }
-}, "Must be an absolute HTTP(S) URL");
+export const testScenarioRelatedIssueUrlSchema = z
+  .string()
+  .trim()
+  .url()
+  .refine((value) => {
+    try {
+      const url = new URL(value);
+      return (
+        /^https?:\/\//i.test(value) &&
+        ["http:", "https:"].includes(url.protocol)
+      );
+    } catch {
+      return false;
+    }
+  }, "Must be an absolute HTTP(S) URL");
 
 const createStepSchema = z
   .object({
@@ -36,18 +45,38 @@ const createStepSchema = z
   })
   .strict();
 
+export const editorStepSchema = z
+  .object({
+    id: uuidSchema.optional(),
+    action: nonBlankText,
+    expectedResult: nonBlankText.nullable().optional(),
+  })
+  .strict();
+export const scenarioSuiteIdsSchema = z
+  .array(uuidSchema)
+  .refine((ids) => new Set(ids).size === ids.length, "Duplicate suite IDs");
+export const scenarioNewSuitesSchema = z
+  .array(z.object({ name: nonBlankText.max(200) }).strict())
+  .refine(
+    (suites) =>
+      new Set(suites.map(({ name }) => name.toLowerCase())).size ===
+      suites.length,
+    "Duplicate suite names",
+  );
+
 export const createTestScenarioSchema = z
   .object({
     projectId: uuidSchema,
     folderId: uuidSchema.nullable().optional(),
     title: nonBlankText,
-    scenarioKey: editableTestManagementKeySchema.optional(),
     details: nonBlankText.optional(),
     preconditions: nonBlankText.optional(),
     testData: nonBlankText.optional(),
-    priority: testScenarioPrioritySchema.nullable().optional(),
+    priority: testScenarioPrioritySchema.default("medium"),
     relatedIssueUrl: testScenarioRelatedIssueUrlSchema.nullable().optional(),
     steps: z.array(createStepSchema).default([]),
+    suiteIds: scenarioSuiteIdsSchema.optional(),
+    newSuites: scenarioNewSuitesSchema.optional(),
   })
   .strict();
 
@@ -57,16 +86,41 @@ export const updateTestScenarioSchema = z
   .object({
     folderId: uuidSchema.nullable().optional(),
     title: nonBlankText.optional(),
-    scenarioKey: editableTestManagementKeySchema.optional(),
     details: updateFieldSchema.optional(),
     preconditions: updateFieldSchema.optional(),
     testData: updateFieldSchema.optional(),
-    priority: testScenarioPrioritySchema.nullable().optional(),
+    priority: testScenarioPrioritySchema.optional(),
     relatedIssueUrl: testScenarioRelatedIssueUrlSchema.nullable().optional(),
+    steps: z
+      .array(editorStepSchema)
+      .refine((steps) => {
+        const ids = steps.flatMap((step) => (step.id ? [step.id] : []));
+        return new Set(ids).size === ids.length;
+      }, "Duplicate step IDs")
+      .optional(),
+    suiteIds: scenarioSuiteIdsSchema.optional(),
+    newSuites: scenarioNewSuitesSchema.optional(),
+    expectedRevision: z.number().int().positive().optional(),
   })
   .strict()
   .refine((value) => Object.keys(value).length > 0, {
     message: "At least one editable field is required",
+  })
+  .superRefine((value, context) => {
+    const supplied = [value.steps, value.suiteIds, value.newSuites].filter(
+      (item) => item !== undefined,
+    ).length;
+    if (
+      (supplied > 0 &&
+        (supplied !== 3 || value.expectedRevision === undefined)) ||
+      (supplied === 0 && value.expectedRevision !== undefined)
+    ) {
+      context.addIssue({
+        code: "custom",
+        message:
+          "Editor saves require steps, suiteIds, newSuites and expectedRevision together",
+      });
+    }
   });
 
 export const appendTestScenarioStepSchema = z

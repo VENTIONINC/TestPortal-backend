@@ -21,12 +21,16 @@ export interface TestScenarioResponse {
   folderId?: string | null;
   createdById: string;
   title: string;
-  scenarioKey: string | null;
+  scenarioKey: string;
   details: string | null;
   preconditions: string | null;
   testData: string | null;
-  priority: TestScenarioPriority | null;
+  priority: TestScenarioPriority;
   relatedIssueUrl: string | null;
+  revision: number;
+  createdBy: TestScenarioCreatorSummary;
+  updatedBy: TestScenarioCreatorSummary | null;
+  suites: Array<{ id: string; name: string }>;
   steps: TestScenarioStepResponse[];
   contentMd: string;
   contentMdHash: string;
@@ -48,7 +52,7 @@ export interface TestScenarioSummary {
   projectId: string;
   createdById: string;
   title: string;
-  scenarioKey: string | null;
+  scenarioKey: string;
   details: string | null;
   priority: TestScenarioPriority | null;
   createdBy: TestScenarioCreatorSummary;
@@ -62,7 +66,7 @@ export interface TestScenarioSummary {
 export interface RelatedTestScenarioSummary {
   id: string;
   title: string;
-  scenarioKey: string | null;
+  scenarioKey: string;
   details: string | null;
   contentMd: string;
 }
@@ -86,9 +90,22 @@ export interface CreateTestScenarioParams {
   priority?: TestScenarioPriority | null | undefined;
   relatedIssueUrl?: string | null | undefined;
   steps?: CreateTestScenarioStepInput[] | undefined;
+  suiteIds?: string[] | undefined;
+  newSuites?: Array<{ name: string }> | undefined;
 }
 
 export interface UpdateTestScenarioParams {
+  actorId?: string | undefined;
+  expectedRevision?: number | undefined;
+  steps?:
+    | Array<{
+        id?: string | undefined;
+        action: string;
+        expectedResult?: string | null | undefined;
+      }>
+    | undefined;
+  suiteIds?: string[] | undefined;
+  newSuites?: Array<{ name: string }> | undefined;
   scenarioId: string;
   projectId: string;
   folderId?: string | null | undefined;
@@ -104,6 +121,7 @@ export interface UpdateTestScenarioParams {
 }
 
 export interface AppendTestScenarioStepParams {
+  actorId?: string | undefined;
   scenarioId: string;
   projectId: string;
   action: string;
@@ -111,6 +129,7 @@ export interface AppendTestScenarioStepParams {
 }
 
 export interface UpdateTestScenarioStepParams {
+  actorId?: string | undefined;
   scenarioId: string;
   projectId: string;
   stepId: string;
@@ -119,12 +138,14 @@ export interface UpdateTestScenarioStepParams {
 }
 
 export interface DeleteTestScenarioStepParams {
+  actorId?: string | undefined;
   scenarioId: string;
   projectId: string;
   stepId: string;
 }
 
 export interface ReorderTestScenarioStepsParams {
+  actorId?: string | undefined;
   scenarioId: string;
   projectId: string;
   stepIds: string[];
@@ -139,7 +160,13 @@ export const TEST_SCENARIO_SORT_VALUES = [
 export type TestScenarioSort = (typeof TEST_SCENARIO_SORT_VALUES)[number];
 
 export const TEST_SCENARIO_SORT_FIELDS = [
-  "scenarioKey", "title", "details", "folder", "createdBy", "createdAt", "updatedAt",
+  "scenarioKey",
+  "title",
+  "details",
+  "folder",
+  "createdBy",
+  "createdAt",
+  "updatedAt",
 ] as const;
 export type TestScenarioSortField = (typeof TEST_SCENARIO_SORT_FIELDS)[number];
 export type TestScenarioSortDirection = "asc" | "desc";
@@ -220,5 +247,15 @@ export class TestScenarioNotFoundError extends Error {
   constructor(message: string) {
     super(message);
     this.name = "TestScenarioNotFoundError";
+  }
+}
+
+export class TestScenarioConflictError extends Error {
+  readonly code = "TEST_SCENARIO_CONFLICT" as const;
+  constructor(
+    message = "Scenario changed since this draft was loaded. Reload explicitly before saving.",
+  ) {
+    super(message);
+    this.name = "TestScenarioConflictError";
   }
 }

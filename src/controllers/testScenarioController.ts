@@ -28,6 +28,7 @@ import {
 import { testScenarioService } from "@/services/testScenarioService";
 import { testScenarioIntegrationService } from "@/services/testScenarioIntegrationService";
 import {
+  TestScenarioConflictError,
   TestScenarioNotFoundError,
   TestScenarioValidationError,
 } from "@/types/testScenarios";
@@ -37,7 +38,9 @@ import {
   TestScenarioSpecLinkNotFoundError,
 } from "@/types/testScenarioIntegration";
 
-function validationMessage(error: { issues: Array<{ message: string }> }): string {
+function validationMessage(error: {
+  issues: Array<{ message: string }>;
+}): string {
   return error.issues[0]?.message ?? "Invalid request";
 }
 
@@ -45,7 +48,11 @@ function sendValidationError(res: Response, message: string): void {
   res.status(400).json({ error: message });
 }
 
-function sendServiceError(res: Response, error: unknown, operation: string): void {
+function sendServiceError(
+  res: Response,
+  error: unknown,
+  operation: string,
+): void {
   if (
     error instanceof TestScenarioValidationError ||
     error instanceof TestScenarioIntegrationValidationError
@@ -62,7 +69,10 @@ function sendServiceError(res: Response, error: unknown, operation: string): voi
     return;
   }
 
-  if (error instanceof TestScenarioSpecLinkConflictError) {
+  if (
+    error instanceof TestScenarioSpecLinkConflictError ||
+    error instanceof TestScenarioConflictError
+  ) {
     res.status(409).json({ error: error.message });
     return;
   }
@@ -152,7 +162,7 @@ export const testScenarioController = {
   },
 
   async update(
-    req: Request<{ scenarioId: string }>,
+    req: AuthenticatedRequest<{ scenarioId: string }>,
     res: Response,
   ): Promise<void> {
     const params = testScenarioIdParamsSchema.safeParse(req.params);
@@ -175,6 +185,7 @@ export const testScenarioController = {
 
     try {
       const scenario = await testScenarioService.updateScenario({
+        actorId: req.user?.id,
         scenarioId: params.data.scenarioId,
         projectId: query.data.projectId,
         ...body.data,
@@ -186,7 +197,7 @@ export const testScenarioController = {
   },
 
   async appendStep(
-    req: Request<{ scenarioId: string }>,
+    req: AuthenticatedRequest<{ scenarioId: string }>,
     res: Response,
   ): Promise<void> {
     const params = testScenarioIdParamsSchema.safeParse(req.params);
@@ -207,6 +218,7 @@ export const testScenarioController = {
 
     try {
       const scenario = await testScenarioService.appendStep({
+        actorId: req.user?.id,
         scenarioId: params.data.scenarioId,
         projectId: query.data.projectId,
         ...body.data,
@@ -218,7 +230,7 @@ export const testScenarioController = {
   },
 
   async updateStep(
-    req: Request<{ scenarioId: string; stepId: string }>,
+    req: AuthenticatedRequest<{ scenarioId: string; stepId: string }>,
     res: Response,
   ): Promise<void> {
     const params = testScenarioStepParamsSchema.safeParse(req.params);
@@ -239,6 +251,7 @@ export const testScenarioController = {
 
     try {
       const scenario = await testScenarioService.updateStep({
+        actorId: req.user?.id,
         scenarioId: params.data.scenarioId,
         projectId: query.data.projectId,
         stepId: params.data.stepId,
@@ -251,7 +264,7 @@ export const testScenarioController = {
   },
 
   async deleteStep(
-    req: Request<{ scenarioId: string; stepId: string }>,
+    req: AuthenticatedRequest<{ scenarioId: string; stepId: string }>,
     res: Response,
   ): Promise<void> {
     const params = testScenarioStepParamsSchema.safeParse(req.params);
@@ -267,6 +280,7 @@ export const testScenarioController = {
 
     try {
       const scenario = await testScenarioService.deleteStep({
+        actorId: req.user?.id,
         scenarioId: params.data.scenarioId,
         projectId: query.data.projectId,
         stepId: params.data.stepId,
@@ -278,7 +292,7 @@ export const testScenarioController = {
   },
 
   async reorderSteps(
-    req: Request<{ scenarioId: string }>,
+    req: AuthenticatedRequest<{ scenarioId: string }>,
     res: Response,
   ): Promise<void> {
     const params = testScenarioIdParamsSchema.safeParse(req.params);
@@ -299,6 +313,7 @@ export const testScenarioController = {
 
     try {
       const scenario = await testScenarioService.reorderSteps({
+        actorId: req.user?.id,
         scenarioId: params.data.scenarioId,
         projectId: query.data.projectId,
         ...body.data,

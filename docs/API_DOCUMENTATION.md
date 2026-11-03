@@ -127,26 +127,13 @@ Create folder example:
 Move up to 100 scenarios atomically with `PATCH /api/v2/test-scenarios/bulk-folder` and `{ "projectId": "…", "scenarioIds": ["…"], "folderId": null }` to unfile them. The scenario list accepts `folderId=<UUID|unfiled>`, `includeDescendants=false`, and `suiteId=<UUID>`; filters are applied before pagination. Scenario summaries add nullable `folderId` and `folderName`. Suite membership is mutable current organization; only run snapshots represent historical execution state.
 
 Test Scenario list responses are lightweight summaries. Each item contains
-`id`, `projectId`, `createdById`, `title`, nullable `scenarioKey`, nullable plain-text `details`, a
+`id`, `projectId`, `createdById`, `title`, generated `scenarioKey`, nullable plain-text `details`, a
 `createdBy` object containing only `id`, `name`, and `email`, `createdAt`, and
 `updatedAt`; list items no longer contain `contentMd`.
 
-This is a breaking REST response change for dependent clients. Regenerate
-client types and hooks from the final `/api/openapi.json` document. Create
-requests use structured `details`, `preconditions`, `testData`, nullable
-`priority` (`low`, `medium`, or `high`), nullable `relatedIssueUrl` (trimmed
-absolute HTTP(S) URL), and optional initial `steps`; `contentMd`, its hash,
-and its format version are read-only detail fields. Details and structured text
-are trimmed and must be nonblank when supplied; PATCH accepts `null` for
-clearing nullable fields and preserves omitted fields. `scenarioKey` is an
-optional editable single-line label up to 100 characters; it is trimmed, may
-be cleared with `null`, and may be duplicated. UUIDs remain scenario
-identifiers. Omitted priority and related issue URL default to null on create;
-omission preserves their values on PATCH, and null clears them. Scenario-level
-objective, expectedResult, and notes fields and the corresponding run snapshot
-fields are removed; step expectedResult and execution notes remain supported.
-A key-only PATCH preserves generated Markdown, its hash, and its
-format version.
+This is a breaking REST/MCP contract change. Regenerate client types and hooks from the final `/api/openapi.json` document. Keys are immutable server-generated `TMS-N` labels numbered independently per project. Create and update reject `scenarioKey`; UUIDs remain relationship and route identity. Priority is non-null (`low`, `medium`, `high`) and defaults to `medium` on create; null is rejected. Nullable structured text and related issue URLs retain explicit clearing support.
+
+Detail responses include positive `revision`, safe `createdBy` and nullable `updatedBy` projections containing only `id`, `name`, `email`, and current `suites` containing `id` and `name`. Legacy updater attribution remains unknown. Create accepts optional existing `suiteIds` and pending `newSuites: [{name}]` alongside initial steps without IDs. PATCH supports ordinary fields alone, or an atomic editor save containing all of `steps`, `suiteIds`, `newSuites`, and positive `expectedRevision`. Editor steps accept optional retained UUID, nonblank action, and optional nullable expected result. Array order determines positions; duplicate IDs/names and foreign IDs are rejected. Empty arrays clear the corresponding collection; omitted collections preserve it. Pending suites are created only in the final transaction. A stale revision or suite-name collision returns 409 with no draft changes saved; reload explicitly before retrying stale data. Every committed field, step, folder, or membership mutation advances revision and records the authenticated actor internally. Generated content, positions, timestamps and actor IDs are never accepted editor input.
 
 `GET /api/v2/test-scenarios` accepts `page` (default `1`), `limit` (default
 `30`, maximum `100`), optional global `search`, optional `createdById`, and
@@ -172,7 +159,7 @@ sorting and pagination, so `total` and `totalPages` describe the matching set.
 Example: `GET /api/v2/test-scenarios?projectId=…&title=login&folder=Root%20%2F%20Auth&sortField=updatedAt&sortDirection=desc`
 
 `POST /api/v2/test-scenarios` and `PATCH /api/v2/test-scenarios/{scenarioId}`
-return the complete scenario detail. Step edits are independent operations and
+return the complete scenario detail. Integrations may also use standalone step operations, which
 require `projectId` query context:
 
 - `POST /api/v2/test-scenarios/{scenarioId}/steps` appends a step and returns 201.
@@ -189,7 +176,7 @@ Issues, projects, and users are preserved.
 
 `GET /api/v2/results/{resultId}?projectId=...` requires bearer authentication
 and returns the existing Result detail fields plus `relatedTestScenarios`.
-Each related scenario contains its `id`, `title`, nullable `scenarioKey`,
+Each related scenario contains its `id`, `title`, generated `scenarioKey`,
 nullable `details`, and the current generated Markdown in the `contentMd` JSON
 string field. For example,
 the added portion of a Result response is:

@@ -50,6 +50,7 @@ model Project {
   description     String?
   isActive        Boolean  @default(true)
   categoryWeights Json?
+  lastScenarioNumber Int @default(0)
 
   // Simple ownership
   owner   User   @relation(fields: [ownerId], references: [id])
@@ -208,6 +209,7 @@ model User {
   issuesCreated        Issue[]        @relation("IssuesCreated")
   issuesUpdated        Issue[]        @relation("IssuesUpdated")
   testScenariosCreated TestScenario[] @relation("TestScenarioCreatedBy")
+  testScenariosUpdated TestScenario[] @relation("TestScenarioUpdatedBy")
   manualTestRunsExecuted ManualTestRun[] @relation("ManualTestRunExecutedBy")
   manualRunEnvironmentProfiles ManualRunEnvironmentProfile[]
   uploadApiKeys        UploadApiKey[]
@@ -250,8 +252,11 @@ model TestScenario {
   createdAt             DateTime           @default(now())
   updatedAt             DateTime           @updatedAt
   title                 String
-  scenarioKey           String?            @db.VarChar(100)
-  priority              TestScenarioPriority?
+  scenarioKey           String             @db.VarChar(100)
+  scenarioNumber        Int
+  revision              Int                @default(1)
+  updatedById           String?            @db.Uuid
+  priority              TestScenarioPriority @default(medium)
   relatedIssueUrl       String?            @db.Text
   details               String?            @db.Text
   preconditions         String?            @db.Text
@@ -266,6 +271,7 @@ model TestScenario {
   folderId  String? @db.Uuid
   folder    TestScenarioFolder? @relation(fields: [folderId], references: [id], onDelete: SetNull)
   createdBy User    @relation("TestScenarioCreatedBy", fields: [createdById], references: [id])
+  updatedBy User?   @relation("TestScenarioUpdatedBy", fields: [updatedById], references: [id], onDelete: SetNull)
 
   specLinks TestScenarioSpecLink[]
   steps     TestScenarioStep[]
@@ -276,6 +282,7 @@ model TestScenario {
   @@index([projectId, createdAt])
   @@index([projectId, folderId])
   @@index([createdById])
+  @@unique([projectId, scenarioNumber])
 }
 
 model TestScenarioFolder {

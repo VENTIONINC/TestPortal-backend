@@ -27,12 +27,23 @@ const TestScenarioSchema = z
     projectId: z.string().uuid(),
     folderId: z.string().uuid().nullable(),
     createdById: z.string().uuid(),
+    revision: z.number().int().positive(),
+    createdBy: z
+      .object({ id: z.string().uuid(), name: z.string(), email: z.string() })
+      .strict(),
+    updatedBy: z
+      .object({ id: z.string().uuid(), name: z.string(), email: z.string() })
+      .strict()
+      .nullable(),
+    suites: z.array(
+      z.object({ id: z.string().uuid(), name: z.string() }).strict(),
+    ),
     title: z.string(),
-    scenarioKey: z.string().max(100).nullable(),
+    scenarioKey: z.string().regex(/^TMS-[1-9][0-9]*$/),
     details: z.string().nullable(),
     preconditions: z.string().nullable(),
     testData: z.string().nullable(),
-    priority: z.union([testScenarioPrioritySchema, z.null()]),
+    priority: testScenarioPrioritySchema,
     relatedIssueUrl: testScenarioRelatedIssueUrlSchema.nullable(),
     steps: z.array(
       z
@@ -68,20 +79,16 @@ const CreateTestScenarioRequestSchema = z
     projectId: z.string().uuid(),
     folderId: z.string().uuid().nullable().optional(),
     title: z.string().min(1).regex(/\S/),
-    scenarioKey: z
-      .string()
-      .trim()
-      .min(1)
-      .max(100)
-      .regex(/^[^\r\n]+$/)
-      .nullable()
-      .optional(),
     details: z.string().min(1).regex(/\S/).optional(),
     preconditions: z.string().min(1).regex(/\S/).optional(),
     testData: z.string().min(1).regex(/\S/).optional(),
-    priority: z.union([testScenarioPrioritySchema, z.null()]).optional(),
+    priority: testScenarioPrioritySchema.default("medium"),
     relatedIssueUrl: testScenarioRelatedIssueUrlSchema.nullable().optional(),
     steps: z.array(CreateTestScenarioStepSchema).default([]),
+    suiteIds: z.array(z.string().uuid()).optional(),
+    newSuites: z
+      .array(z.object({ name: z.string().trim().min(1) }).strict())
+      .optional(),
   })
   .strict()
   .openapi("CreateTestScenarioRequest");
@@ -101,7 +108,7 @@ const TestScenarioSummarySchema = z
     projectId: z.string().uuid(),
     createdById: z.string().uuid(),
     title: z.string(),
-    scenarioKey: z.string().max(100).nullable(),
+    scenarioKey: z.string().regex(/^TMS-[1-9][0-9]*$/),
     details: z.string().nullable(),
     priority: z.union([testScenarioPrioritySchema, z.null()]),
     createdBy: TestScenarioCreatorSummarySchema,
@@ -119,26 +126,71 @@ const UpdateTestScenarioFieldSchema = z.string().min(1).regex(/\S/).nullable();
 const updateTestScenarioFields = {
   folderId: z.string().uuid().nullable().optional(),
   title: z.string().min(1).regex(/\S/).optional(),
-  scenarioKey: z
-    .string()
-    .trim()
-    .min(1)
-    .max(100)
-    .regex(/^[^\r\n]+$/)
-    .nullable()
-    .optional(),
   details: UpdateTestScenarioFieldSchema.optional(),
   preconditions: UpdateTestScenarioFieldSchema.optional(),
   testData: UpdateTestScenarioFieldSchema.optional(),
-  priority: z.union([testScenarioPrioritySchema, z.null()]).optional(),
+  priority: testScenarioPrioritySchema.optional(),
   relatedIssueUrl: testScenarioRelatedIssueUrlSchema.nullable().optional(),
 };
 
 const UpdateTestScenarioRequestSchema = z
-  .object(updateTestScenarioFields)
+  .object({
+    ...updateTestScenarioFields,
+    expectedRevision: z.number().int().positive().optional(),
+    steps: z
+      .array(
+        z
+          .object({
+            id: z.string().uuid().optional(),
+            action: z.string().min(1).regex(/\S/),
+            expectedResult: z.string().nullable().optional(),
+          })
+          .strict(),
+      )
+      .optional(),
+    suiteIds: z.array(z.string().uuid()).optional(),
+    newSuites: z
+      .array(z.object({ name: z.string().trim().min(1) }).strict())
+      .optional(),
+  })
   .strict()
   .refine((value) => Object.keys(value).length > 0, {
     message: "At least one editable field is required",
+  })
+  .superRefine((value, context) => {
+    const collections = [value.steps, value.suiteIds, value.newSuites];
+    if (
+      collections.some((collection) => collection !== undefined) &&
+      (collections.some((collection) => collection === undefined) ||
+        value.expectedRevision === undefined)
+    ) {
+      context.addIssue({
+        code: "custom",
+        message:
+          "Editor saves require steps, suiteIds, newSuites and expectedRevision together",
+      });
+    }
+    if (
+      value.expectedRevision !== undefined &&
+      collections.every((collection) => collection === undefined)
+    ) {
+      context.addIssue({
+        code: "custom",
+        message: "expectedRevision requires editor collections",
+      });
+    }
+    for (const [path, ids] of [
+      ["steps", value.steps?.flatMap((step) => (step.id ? [step.id] : []))],
+      ["suiteIds", value.suiteIds],
+      ["newSuites", value.newSuites?.map((suite) => suite.name.toLowerCase())],
+    ] as const) {
+      if (ids && new Set(ids).size !== ids.length)
+        context.addIssue({
+          code: "custom",
+          path: [path],
+          message: "Duplicates are not allowed",
+        });
+    }
   })
   .openapi("UpdateTestScenarioRequest");
 
@@ -212,62 +264,36 @@ const TestScenarioListQueryBaseSchema = z.object({
         "Ordering: recently_created (createdAt DESC, id DESC), recently_updated (updatedAt DESC, id DESC), or title_asc (title ASC, id ASC).",
       example: "title_asc",
     }),
-    sortField: z
-      .enum(TEST_SCENARIO_SORT_FIELDS)
-      .optional()
-      .openapi({
-        description:
-          "Single sort column. Defaults to createdAt descending when omitted. Cannot be combined with legacy sort.",
-        example: "scenarioKey",
-      }),
-    sortDirection: z
-      .enum(["asc", "desc"])
-      .optional()
-      .openapi({
-        description:
-          "Sort direction; defaults to desc when sortField is supplied. Requires sortField.",
-        example: "asc",
-      }),
-    scenarioKey: z
-      .string()
-      .trim()
-      .optional()
-      .openapi({
-        description:
-          "Case-insensitive literal substring filter for the persisted scenario key; whitespace-only values are ignored.",
-      }),
-    title: z
-      .string()
-      .trim()
-      .optional()
-      .openapi({
-        description:
-          "Case-insensitive literal substring filter for title; whitespace-only values are ignored.",
-      }),
-    details: z
-      .string()
-      .trim()
-      .optional()
-      .openapi({
-        description:
-          "Case-insensitive literal substring filter for persisted details; whitespace-only values are ignored.",
-      }),
-    folder: z
-      .string()
-      .trim()
-      .optional()
-      .openapi({
-        description:
-          "Case-insensitive literal substring filter for the displayed full folder path or Unfiled value; whitespace-only values are ignored.",
-      }),
-    createdBy: z
-      .string()
-      .trim()
-      .optional()
-      .openapi({
-        description:
-          "Case-insensitive literal substring filter for creator display name or email; whitespace-only values are ignored.",
-      }),
+    sortField: z.enum(TEST_SCENARIO_SORT_FIELDS).optional().openapi({
+      description:
+        "Single sort column. Defaults to createdAt descending when omitted. Cannot be combined with legacy sort.",
+      example: "scenarioKey",
+    }),
+    sortDirection: z.enum(["asc", "desc"]).optional().openapi({
+      description:
+        "Sort direction; defaults to desc when sortField is supplied. Requires sortField.",
+      example: "asc",
+    }),
+    scenarioKey: z.string().trim().optional().openapi({
+      description:
+        "Case-insensitive literal substring filter for the persisted scenario key; whitespace-only values are ignored.",
+    }),
+    title: z.string().trim().optional().openapi({
+      description:
+        "Case-insensitive literal substring filter for title; whitespace-only values are ignored.",
+    }),
+    details: z.string().trim().optional().openapi({
+      description:
+        "Case-insensitive literal substring filter for persisted details; whitespace-only values are ignored.",
+    }),
+    folder: z.string().trim().optional().openapi({
+      description:
+        "Case-insensitive literal substring filter for the displayed full folder path or Unfiled value; whitespace-only values are ignored.",
+    }),
+    createdBy: z.string().trim().optional().openapi({
+      description:
+        "Case-insensitive literal substring filter for creator display name or email; whitespace-only values are ignored.",
+    }),
     folderId: z.union([z.string().uuid(), z.literal("unfiled")]).optional(),
     includeDescendants: z.boolean().optional(),
     suiteId: z.string().uuid().optional(),
@@ -651,7 +677,7 @@ export function registerTestScenarioRoutes(registry: OpenAPIRegistry): void {
     method: "patch",
     path: "/api/v2/test-scenarios/{scenarioId}",
     description:
-      "Partially updates structured Test Scenario fields within a project context. Omitted fields are preserved, nullable fields may be cleared, and generated Markdown and steps are read-only.",
+      "Atomically updates structured fields or the complete editor aggregate. Editor saves require steps, suiteIds, newSuites and expectedRevision together; array order sets step positions and retained step IDs are preserved. Empty collections clear them; omitted collections preserve them. Generated keys and Markdown are read-only. A stale revision returns 409 and requires explicit reload.",
     request: {
       params: TestScenarioIdParamsSchema,
       query: TestScenarioProjectQuerySchema,
@@ -673,6 +699,9 @@ export function registerTestScenarioRoutes(registry: OpenAPIRegistry): void {
       400: errorResponse("Invalid scenario, project, or update input"),
       401: errorResponse("Unauthorized"),
       404: errorResponse("Test scenario not found in the requested project"),
+      409: errorResponse(
+        "Stale scenario revision: reload explicitly, or pending suite name collision; no changes saved",
+      ),
       500: errorResponse("Internal server error"),
     },
     tags: ["Test Scenarios"],
@@ -927,6 +956,9 @@ export function registerTestScenarioRoutes(registry: OpenAPIRegistry): void {
           "application/json": { schema: ErrorResponseSchema },
         },
       },
+      409: errorResponse(
+        "Pending suite name already exists; no scenario or suite changes saved",
+      ),
       500: {
         description: "Internal server error",
         content: {
