@@ -4,6 +4,16 @@ The server exposes `testportal-find-action` and `testportal-execute-action`. The
 
 Discovery accepts an optional query, area (`core` or `tms`), exact `actionId`, and query-only limit (1–5, default 3). An empty request returns an overview. Shared project, status and time actions belong to both areas. Unknown IDs and invalid arguments return tool errors; exact lookup can also return an area mismatch. Business responses retain their existing envelopes.
 
+## TMS workflow prompt
+
+Clients supporting MCP prompts can use `prompts/list` to discover `tms-workflow-assistant` and `prompts/get` to retrieve it. Live discovery determines whether an instance provides it. For example:
+
+```json
+{"jsonrpc":"2.0","id":2,"method":"prompts/get","params":{"name":"tms-workflow-assistant"}}
+```
+
+The `arguments` property may be omitted or `{}`. It can contain optional strings `project_id` (UUID), `task` (nonblank), and `execution_mode` (`human_guided` or `client_executed`). For example, `{"project_id":"11111111-1111-4111-8111-111111111111","task":"Retest a failed scenario","execution_mode":"human_guided"}` uses a synthetic UUID. Invalid supplied values are rejected. The prompt returns instructions; it neither executes tests nor writes records. Discover action contracts using the two public tools, and reconnect after server upgrades.
+
 ## Available Tools
 
 Direct calls to individual prefixed or unprefixed names are removed immediately. Update clients, restart the server to clear old sessions, and reconnect. The executor has conservative destructive and non-idempotent annotations; per-action effects are descriptive metadata and client approval behavior varies.
