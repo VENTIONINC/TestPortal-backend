@@ -11,6 +11,7 @@ const PromptParameterSchema = z
     required: z.boolean(),
     description: z.string(),
     example: z.string().optional(),
+    enum: z.array(z.string()).optional(),
   })
   .openapi("PromptParameter");
 
@@ -31,8 +32,17 @@ const PromptsListResponseSchema = z
   .openapi("PromptsListResponse");
 
 const GeneratePromptRequestSchema = z
-  .record(z.string(), z.any())
+  .object({
+    project_id: z.string().uuid().optional(),
+    task: z.string().min(1).optional(),
+    execution_mode: z.enum(["human_guided", "client_executed"]).optional(),
+  }).catchall(z.any())
   .openapi("GeneratePromptRequest");
+
+const PromptValidationErrorSchema = z.object({
+  error: z.string(),
+  fields: z.array(z.object({ field: z.string(), message: z.string() })).optional(),
+}).openapi("PromptValidationError");
 
 const GeneratePromptResponseSchema = z
   .object({
@@ -48,6 +58,7 @@ export function registerPromptRoutes(registry: OpenAPIRegistry) {
   registry.register("PromptsListResponse", PromptsListResponseSchema);
   registry.register("GeneratePromptRequest", GeneratePromptRequestSchema);
   registry.register("GeneratePromptResponse", GeneratePromptResponseSchema);
+  registry.register("PromptValidationError", PromptValidationErrorSchema);
 
   registry.registerPath({
     method: "get",
@@ -97,6 +108,7 @@ export function registerPromptRoutes(registry: OpenAPIRegistry) {
           "issue-analysis-assistant",
           "environment-performance-assistant",
           "software-documentation-assistant",
+          "tms-workflow-assistant",
         ]),
       }),
     },
@@ -159,6 +171,7 @@ export function registerPromptRoutes(registry: OpenAPIRegistry) {
           "issue-analysis-assistant",
           "environment-performance-assistant",
           "software-documentation-assistant",
+          "tms-workflow-assistant",
         ]),
       }),
       body: {
@@ -180,10 +193,10 @@ export function registerPromptRoutes(registry: OpenAPIRegistry) {
         },
       },
       400: {
-        description: "Bad request - prompt name is required",
+        description: "Bad request - invalid prompt parameters or missing name",
         content: {
           "application/json": {
-            schema: ErrorResponseSchema,
+            schema: PromptValidationErrorSchema,
           },
         },
       },
