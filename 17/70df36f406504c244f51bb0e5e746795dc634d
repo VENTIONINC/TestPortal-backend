@@ -1,0 +1,33 @@
+src/services/promptParameterService.ts
+  s_b4a8323e57813d::t_06f3533232b33a 9-10,26,32-42,227
+src/controllers/promptController.ts
+  s_b4a8323e57813d::t_29bf1d284c4a22 5,81-84
+__tests__/routes/promptRoutes.test.ts
+  s_b4a8323e57813d::t_cde667e549e16e 1-39
+src/lib/openapi/prompts.ts
+  s_b4a8323e57813d::t_4cd954bc075abc 14,35-39,42-46,61,111,174,196,199
+__tests__/controllers/promptController.test.ts
+  s_b4a8323e57813d::t_29bf1d284c4a22 5,140-147
+__tests__/lib/openapi/prompts.test.ts
+  s_b4a8323e57813d::t_d21a3da5d7cf50 1-20
+__tests__/services/promptParameterService.test.ts
+  s_b4a8323e57813d::t_06f3533232b33a 5,34,42-43,103-110,341
+docs/MCP_TOOLS.md
+  s_b4a8323e57813d::t_611b508ebcdf72 17-18
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "1770df36f406504c244f51bb0e5e746795dc634d",
+  "prompts": {},
+  "sessions": {
+    "s_b4a8323e57813d": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a1a0f5-9489-79d0-b1ea-68ac0d6ef055",
+        "model": "gpt-6.1-terra"
+      },
+      "human_author": "Ihar Mikailau <ihar.mikailau@ventionteams.com>"
+    }
+  }
+}
