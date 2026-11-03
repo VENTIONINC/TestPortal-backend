@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import type { Request, Response } from "express";
+import { ZodError } from "zod/v3";
 import { PromptParameterService } from "@/services/promptParameterService";
 
 type PromptNameParams = {
@@ -77,6 +78,10 @@ export class PromptController {
         generated_prompt: generatedPrompt,
       });
     } catch (error) {
+      if (req.params.name === "tms-workflow-assistant" && error instanceof ZodError) {
+        res.status(400).json({ error: "Invalid prompt parameters", fields: error.issues.map(issue => ({ field: issue.path.join("."), message: issue.message })) });
+        return;
+      }
       console.error("Error generating prompt:", error);
       res.status(500).json({ error: "Internal server error" });
     }

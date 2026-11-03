@@ -6,6 +6,8 @@
  */
 
 import type { GetPromptResult } from "@modelcontextprotocol/sdk/types";
+import z from "zod/v3";
+import * as tmsWorkflow from "@/mcp/prompts/tms-workflow-assistant/v1.0.0";
 import { developerCodeAssistantPrompt } from "@/mcp/prompts/developer-code-assistant/v1.0.0";
 import { testPortalAssistantPrompt } from "@/mcp/prompts/test-portal-assistant/v1.0.0";
 import { issueAnalysisAssistantPrompt } from "@/mcp/prompts/issue-analysis-assistant/v1.0.0";
@@ -21,11 +23,23 @@ interface PromptConfig {
     required: boolean;
     description: string;
     example?: string;
+    enum?: string[];
   }>;
   generator: (params: Record<string, unknown>) => GetPromptResult;
 }
 
 const PROMPTS: Record<string, PromptConfig> = {
+  'tms-workflow-assistant': {
+    title: tmsWorkflow.parameters.title,
+    description: tmsWorkflow.parameters.description,
+    category: 'analysis',
+    parameters: {
+      project_id: { type: 'string', required: false, description: 'Candidate project UUID' },
+      task: { type: 'string', required: false, description: 'Requested task' },
+      execution_mode: { type: 'string', required: false, description: 'Observation source for execution', enum: ['human_guided', 'client_executed'] }
+    },
+    generator: (params) => tmsWorkflow.render(z.object(tmsWorkflow.parameters.argsSchema).parse(params))
+  },
   'developer-code-assistant': {
     title: 'Developer Code Analysis Assistant',
     description: 'Analyzes source code issues identified through test failures and provides specific fix recommendations',

@@ -14,6 +14,8 @@ Clients supporting MCP prompts can use `prompts/list` to discover `tms-workflow-
 
 The `arguments` property may be omitted or `{}`. It can contain optional strings `project_id` (UUID), `task` (nonblank), and `execution_mode` (`human_guided` or `client_executed`). For example, `{"project_id":"11111111-1111-4111-8111-111111111111","task":"Retest a failed scenario","execution_mode":"human_guided"}` uses a synthetic UUID. Invalid supplied values are rejected. The prompt returns instructions; it neither executes tests nor writes records. Discover action contracts using the two public tools, and reconnect after server upgrades.
 
+Authenticated REST clients can discover the same prompt with `GET /api/v2/prompts` or `GET /api/v2/prompts/tms-workflow-assistant`, and generate it with `POST /api/v2/prompts/tms-workflow-assistant/generate`. The POST body is the arguments object described above; `{}` is valid and does not choose a mode. Invalid supplied values return HTTP 400 with field feedback. REST generation uses the same renderer as MCP and performs no test execution or TMS mutation.
+
 ## Available Tools
 
 Direct calls to individual prefixed or unprefixed names are removed immediately. Update clients, restart the server to clear old sessions, and reconnect. The executor has conservative destructive and non-idempotent annotations; per-action effects are descriptive metadata and client approval behavior varies.
