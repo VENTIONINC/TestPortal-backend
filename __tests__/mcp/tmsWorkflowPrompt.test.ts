@@ -46,4 +46,3 @@ describe("TMS workflow prompt registration", () => {
     }
   });
 });
-

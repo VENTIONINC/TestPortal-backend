@@ -57,4 +57,3 @@ describe("authenticated prompt HTTP protocol", () => {
     }
   });
 });
-

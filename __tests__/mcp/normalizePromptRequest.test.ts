@@ -25,4 +25,3 @@ describe("prompt request compatibility", () => {
     for (const input of cases) expect(normalizePromptRequest(input)).toBe(input);
   });
 });
-

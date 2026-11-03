@@ -13,4 +13,3 @@ export const normalizePromptRequest = (body: unknown): unknown => {
   if (Object.prototype.hasOwnProperty.call(params, "arguments")) return body;
   return { ...envelope, params: { ...params, arguments: {} } };
 };
-
