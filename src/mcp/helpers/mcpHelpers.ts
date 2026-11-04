@@ -74,5 +74,13 @@ export const createMcpTool = <TInput = unknown>(
   handler: (params: TInput) => Promise<MCPToolResponse>,
   operation: string,
 ): [string, string, MCPToolSchema, MCPToolHandler<TInput>] => {
-  return [name, description, schema, withErrorHandling(handler, operation)];
+  const canonicalName = name.startsWith("testportal-")
+    ? name
+    : `testportal-${name}`;
+  return [
+    canonicalName,
+    description,
+    schema,
+    withErrorHandling(handler, operation),
+  ];
 };

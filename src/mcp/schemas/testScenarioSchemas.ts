@@ -55,6 +55,9 @@ const limit = () => z.number().int().min(1).max(100);
 export const listTestScenariosSchema = z
   .object({
     projectId: uuid().describe("The UUID of the project"),
+    folderId: z.union([uuid(), z.literal("unfiled")]).optional().describe("Folder UUID or unfiled; folder UUIDs include descendants by default"),
+    includeDescendants: z.boolean().optional().describe("Set false to select direct folder assignments only"),
+    suiteId: uuid().optional().describe("Filter to members of this project suite"),
     page: page().default(1),
     limit: limit().default(30),
     search: z
@@ -163,5 +166,44 @@ export const deleteTestScenarioSchema = z
   .object({
     scenarioId: uuid().describe("The UUID of the Test Scenario"),
     projectId: uuid().describe("The UUID of the project"),
+  })
+  .strict() satisfies MCPToolSchema;
+
+export const appendTestScenarioStepSchema = z
+  .object({
+    projectId: uuid().describe("The UUID of the project"),
+    scenarioId: uuid().describe("The UUID of the Test Scenario"),
+    action: z.string().trim().min(1),
+    expectedResult: z.string().trim().min(1).optional(),
+  })
+  .strict() satisfies MCPToolSchema;
+
+export const updateTestScenarioStepSchema = z
+  .object({
+    projectId: uuid().describe("The UUID of the project"),
+    scenarioId: uuid().describe("The UUID of the Test Scenario"),
+    stepId: uuid().describe("The UUID of the scenario step"),
+    action: z.string().trim().min(1).optional(),
+    expectedResult: z.string().trim().min(1).nullable().optional(),
+  })
+  .strict()
+  .refine(
+    (value) => value.action !== undefined || value.expectedResult !== undefined,
+    { message: "At least one step field is required" },
+  ) satisfies MCPToolSchema;
+
+export const deleteTestScenarioStepSchema = z
+  .object({
+    projectId: uuid().describe("The UUID of the project"),
+    scenarioId: uuid().describe("The UUID of the Test Scenario"),
+    stepId: uuid().describe("The UUID of the scenario step"),
+  })
+  .strict() satisfies MCPToolSchema;
+
+export const reorderTestScenarioStepsSchema = z
+  .object({
+    projectId: uuid().describe("The UUID of the project"),
+    scenarioId: uuid().describe("The UUID of the Test Scenario"),
+    stepIds: z.array(uuid()).describe("Every current step UUID exactly once, in the desired order"),
   })
   .strict() satisfies MCPToolSchema;

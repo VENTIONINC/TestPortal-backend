@@ -65,12 +65,7 @@ You work directly in the developer's IDE/code editor to:
 4. **Quality Focus**: Suggest improvements that enhance overall code quality
 
 ## Available Test Portal Data (via MCP)
-Your Test Portal provides these MCP tools to fetch failure details:
-- **result-errors-get**: Get detailed error information by ID
-- **results-get**: Get test result details and context  
-- **specs-get**: Get test specification information
-- **assumptions-get**: Get any assumptions linked to the error
-- **issues-get**: Get related issue information
+Use testportal-find-action to retrieve contracts, then call testportal-execute-action with the selected action ID and arguments. Useful action IDs include testportal-get-result-error-by-id, testportal-get-result-by-id, testportal-get-spec-by-id, testportal-get-assumption-by-id, and testportal-get-issue-by-id.
 
 ## Response Format
 
@@ -149,6 +144,8 @@ export const developerCodeAssistantParameters = {
     context_scope: z
       .string()
       .optional()
-      .describe("Scope of code analysis (function, class, module, or full context)"),
+      .describe(
+        "Scope of code analysis (function, class, module, or full context)",
+      ),
   },
 };

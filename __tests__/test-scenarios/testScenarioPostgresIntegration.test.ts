@@ -11,8 +11,14 @@ import {
   hashTestScenarioMarkdown,
   renderTestScenarioMarkdown,
 } from "@/lib/testScenarioMarkdown";
+import { createActionCatalog } from "@/mcp/actionCatalog";
+import { executeAction } from "@/mcp/actionExecution";
+import { findAction } from "@/mcp/actionDiscovery";
+import { specService } from "@/services/specService";
 import { testScenarioModel } from "@/models/testScenarioModel";
 import { testScenarioService } from "@/services/testScenarioService";
+import { mcpTestScenarioHandler } from "@/handlers/mcpTestScenarioHandler";
+import { manualTestRunModel } from "@/models/manualTestRunModel";
 import { testScenarioOrganizationService as organization } from "@/services/testScenarioOrganizationService";
 import { projectModel } from "@/models/projectModel";
 import { TestScenarioNotFoundError } from "@/types/testScenarios";
@@ -162,6 +168,222 @@ describePostgres("test scenario PostgreSQL aggregate integration", () => {
     await dbClient.testScenario.deleteMany({
       where: { projectId: { in: [projectId, otherProjectId] } },
     });
+  });
+
+  it("discovers Specs and preserves persisted evidence and manual runs across dispatcher unlink", async () => {
+    const scenario = await createScenario({ title: "Automation workflow", relatedIssueUrl: "https://example.test/authored", steps: [{ action: "Check", expectedResult: "Pass" }] });
+    const otherScenario = await createScenario({ title: "Other association" });
+    const stamp = new Date("2026-02-01T00:00:00Z");
+    const prefix = `literal-${randomUUID()}`;
+    const unused = await dbClient.spec.create({ data: { projectId, key: `${prefix}%_\\unused`, title: "Unused", file: "unused.spec.ts", createdAt: stamp } });
+    const first = await dbClient.spec.create({ data: { projectId, key: `${prefix}%_\\first`, title: "First", file: "first.spec.ts", createdAt: stamp } });
+    const second = await dbClient.spec.create({ data: { projectId, key: `${prefix}%_\\second`, title: "Second", file: "second.spec.ts", createdAt: stamp } });
+    await dbClient.spec.create({ data: { projectId, key: `${prefix}XXdecoy`, title: "Decoy", file: "decoy.spec.ts", createdAt: stamp } });
+    await dbClient.spec.create({ data: { projectId: otherProjectId, key: `${prefix}%_\\foreign`, title: "Foreign", file: "foreign.spec.ts", createdAt: stamp } });
+    const execution = await dbClient.execution.create({ data: { projectId, type: "e2e", name: prefix, environment: "test", version: "1", startedAt: stamp } });
+    const issue = await dbClient.issue.create({ data: { projectId, name: prefix, category: "bug" } });
+    for (const spec of [first, first, second]) {
+      const result = await dbClient.result.create({ data: { specId: spec.id, executionId: execution.id, retry: 0, status: "failed", duration: 1, startTime: stamp } });
+      const error = await dbClient.resultError.create({ data: { resultId: result.id, type: "failure", message: "failed", callStack: [], location: "test" } });
+      await dbClient.assumption.create({ data: { resultErrorId: error.id, issueId: issue.id, isConfirmed: true, score: 1, madeBy: "test" } });
+    }
+    const run = await manualTestRunModel.createFromScenario({ projectId, scenarioId: scenario.id, executedById: userId });
+    if (!run) throw new Error("Expected manual run");
+    await dbClient.manualTestRunStep.updateMany({ where: { manualTestRunId: run.id }, data: { status: "passed", notes: "recorded" } });
+    const catalog = createActionCatalog(userId);
+    const discovery = findAction(catalog, { actionId: "testportal-list-specs" });
+    expect(discovery.isError).not.toBe(true);
+    const call = async (actionId: string, args: Record<string, unknown>) => {
+      const response = await executeAction(catalog, { actionId: `testportal-${actionId}`, arguments: args });
+      expect(response.isError).not.toBe(true);
+      const block = response.content[0];
+      if (!block || block.type !== "text") throw new Error("Expected text response");
+      return JSON.parse(block.text);
+    };
+    const search = `${prefix}%_\\`;
+    const listing = await call("list-specs", { projectId, search, page: 1, limit: 30 });
+    expect(listing.total).toBe(3);
+    expect(listing.specs.map((spec: { id: string }) => spec.id)).toEqual([unused.id, first.id, second.id].sort().reverse());
+    expect((await specService.listSpecs({ projectId, search: search.toUpperCase(), page: 1, limit: 2 })).total).toBe(3);
+    expect((await specService.listSpecs({ projectId, search, page: 2, limit: 2 })).specs).toHaveLength(1);
+    expect((await specService.listSpecs({ projectId, search: `${prefix}X` })).total).toBe(1);
+    expect(listing.specs.filter((spec: { id: string }) => spec.id === first.id)).toHaveLength(1);
+    const ctx = { projectId, scenarioId: scenario.id };
+    const initial = await call("get-test-scenario", ctx);
+    expect(initial.scenario.relatedIssueUrl).toBe("https://example.test/authored");
+    expect(initial.issueEvidence.total).toBe(0);
+    for (const spec of [unused, first, second]) await call("add-test-scenario-spec-link", { ...ctx, specId: spec.id });
+    await call("add-test-scenario-spec-link", { projectId, scenarioId: otherScenario.id, specId: first.id });
+    expect((await call("list-test-scenario-spec-links", ctx)).total).toBe(3);
+    const before = await call("get-test-scenario", ctx);
+    expect(before.resultEvidence.total).toBe(3);
+    expect(before.issueEvidence.total).toBe(1);
+    const snapshot = {
+      scenarios: await dbClient.testScenario.findMany({ where: { id: { in: [scenario.id, otherScenario.id] } }, orderBy: { id: "asc" } }),
+      specs: await dbClient.spec.findMany({ where: { id: { in: [unused.id, first.id, second.id] } }, orderBy: { id: "asc" } }),
+      results: await dbClient.result.findMany({ where: { executionId: execution.id }, orderBy: { id: "asc" } }),
+      errors: await dbClient.resultError.findMany({ where: { result: { executionId: execution.id } }, orderBy: { id: "asc" } }),
+      assumptions: await dbClient.assumption.findMany({ where: { issueId: issue.id }, orderBy: { id: "asc" } }),
+      issue: await dbClient.issue.findUnique({ where: { id: issue.id } }),
+      run: await manualTestRunModel.findById(run.id, projectId),
+    };
+    await call("remove-test-scenario-spec-link", { ...ctx, specId: first.id });
+    const after = await call("get-test-scenario", ctx);
+    expect(after.resultEvidence.total).toBe(1);
+    expect(after.issueEvidence.total).toBe(1);
+    expect(await dbClient.testScenario.findMany({ where: { id: { in: [scenario.id, otherScenario.id] } }, orderBy: { id: "asc" } })).toEqual(snapshot.scenarios);
+    expect(await dbClient.spec.findMany({ where: { id: { in: [unused.id, first.id, second.id] } }, orderBy: { id: "asc" } })).toEqual(snapshot.specs);
+    expect(await dbClient.result.findMany({ where: { executionId: execution.id }, orderBy: { id: "asc" } })).toEqual(snapshot.results);
+    expect(await dbClient.resultError.findMany({ where: { result: { executionId: execution.id } }, orderBy: { id: "asc" } })).toEqual(snapshot.errors);
+    expect(await dbClient.assumption.findMany({ where: { issueId: issue.id }, orderBy: { id: "asc" } })).toEqual(snapshot.assumptions);
+    expect(await dbClient.issue.findUnique({ where: { id: issue.id } })).toEqual(snapshot.issue);
+    expect(await manualTestRunModel.findById(run.id, projectId)).toEqual(snapshot.run);
+    expect(await dbClient.testScenarioSpecLink.count({ where: { testScenarioId: otherScenario.id, specId: first.id } })).toBe(1);
+    expect((await call("list-test-scenario-spec-links", ctx)).total).toBe(2);
+  });
+
+  it("authors steps through MCP handlers with shared PostgreSQL persistence", async () => {
+    const created = await createScenario({
+      title: "MCP persisted step lifecycle",
+      details: "Preserve scenario metadata",
+      preconditions: "User is signed in",
+      priority: "high",
+      steps: [
+        { action: "Open settings", expectedResult: "Settings are visible" },
+        { action: "Choose profile" },
+      ],
+    });
+    const spec = await dbClient.spec.create({
+      data: {
+        projectId,
+        key: `MCP-${randomUUID()}`,
+        title: "MCP linked evidence spec",
+        file: "mcp-linked-evidence.spec.ts",
+      },
+    });
+    await dbClient.testScenarioSpecLink.create({
+      data: { testScenarioId: created.id, specId: spec.id },
+    });
+    const execution = await dbClient.execution.create({
+      data: {
+        projectId,
+        type: "playwright",
+        name: `MCP evidence ${randomUUID()}`,
+        environment: "integration",
+        version: "1",
+        startedAt: new Date("2026-01-01T00:00:00.000Z"),
+      },
+    });
+    await dbClient.result.create({
+      data: {
+        specId: spec.id,
+        executionId: execution.id,
+        retry: 0,
+        status: "passed",
+        duration: 1,
+        startTime: new Date("2026-01-01T00:00:00.000Z"),
+      },
+    });
+    const manualRun = await manualTestRunModel.createFromScenario({
+      projectId,
+      scenarioId: created.id,
+      executedById: userId,
+    });
+    if (!manualRun) throw new Error("Failed to create MCP lifecycle manual run");
+    const evidenceBefore = await mcpTestScenarioHandler.getTestScenario({
+      projectId,
+      scenarioId: created.id,
+    });
+    const manualRunBefore = await manualTestRunModel.findById(manualRun.id, projectId);
+    if (!manualRunBefore) throw new Error("Failed to retrieve MCP lifecycle manual run");
+    const originalIds = created.steps.map(({ id }) => id);
+    const firstOriginalId = originalIds[0];
+    const secondOriginalId = originalIds[1];
+    if (!firstOriginalId || !secondOriginalId) {
+      throw new Error("Expected two initial scenario steps");
+    }
+
+    const appended = await mcpTestScenarioHandler.appendTestScenarioStep({
+      projectId,
+      scenarioId: created.id,
+      action: "Save changes",
+      expectedResult: "Changes are saved",
+    });
+    const appendedId = appended.steps[2]?.id;
+    if (!appendedId) throw new Error("Expected appended step ID");
+    expect(appended.steps.slice(0, 2).map(({ id }) => id)).toEqual(originalIds);
+
+    const actionEdited = await mcpTestScenarioHandler.updateTestScenarioStep({
+      projectId,
+      scenarioId: created.id,
+      stepId: firstOriginalId,
+      action: "Open account settings",
+    });
+    expect(actionEdited.steps[0]).toMatchObject({
+      id: originalIds[0],
+      action: "Open account settings",
+      expectedResult: "Settings are visible",
+    });
+
+    const cleared = await mcpTestScenarioHandler.updateTestScenarioStep({
+      projectId,
+      scenarioId: created.id,
+      stepId: appendedId,
+      expectedResult: null,
+    });
+    expect(cleared.steps[2]).toMatchObject({
+      id: appendedId,
+      action: "Save changes",
+      expectedResult: null,
+    });
+
+    const reordered = await mcpTestScenarioHandler.reorderTestScenarioSteps({
+      projectId,
+      scenarioId: created.id,
+      stepIds: [appendedId, secondOriginalId, firstOriginalId],
+    });
+    const deleted = await mcpTestScenarioHandler.deleteTestScenarioStep({
+      projectId,
+      scenarioId: created.id,
+      stepId: secondOriginalId,
+    });
+    const persisted = await getScenario(created.id);
+    const evidenceAfter = await mcpTestScenarioHandler.getTestScenario({
+      projectId,
+      scenarioId: created.id,
+    });
+    const manualRunAfter = await manualTestRunModel.findById(manualRun.id, projectId);
+
+    expect(reordered.steps.map(({ id, position }) => [id, position])).toEqual([
+      [appendedId, 0],
+      [originalIds[1], 1],
+      [originalIds[0], 2],
+    ]);
+    expect(deleted.steps.map(({ id, position }) => [id, position])).toEqual([
+      [appendedId, 0],
+      [originalIds[0], 1],
+    ]);
+    expect(persisted).toMatchObject({
+      title: created.title,
+      details: created.details,
+      preconditions: created.preconditions,
+      priority: created.priority,
+    });
+    expect(await dbClient.testScenarioSpecLink.findMany({
+      where: { testScenarioId: created.id },
+    })).toEqual([{ testScenarioId: created.id, specId: spec.id }]);
+    expect(evidenceAfter.resultEvidence).toEqual(evidenceBefore.resultEvidence);
+    expect(evidenceAfter.scenario).toMatchObject({ id: created.id, steps: persisted.steps });
+    expect(manualRunAfter).toEqual(manualRunBefore);
+    await expectProjectionConsistency(persisted);
+    await expect(
+      mcpTestScenarioHandler.appendTestScenarioStep({
+        projectId: otherProjectId,
+        scenarioId: created.id,
+        action: "Wrong project",
+      }),
+    ).rejects.toThrow();
+    expect(await getScenario(created.id)).toEqual(persisted);
   });
 
   afterAll(async () => {
@@ -486,6 +708,45 @@ describePostgres("test scenario PostgreSQL aggregate integration", () => {
     await expectProjectionConsistency(finalScenario);
   });
 
+  it("preserves concurrent appends alongside an unrelated scenario-field edit", async () => {
+    const scenario = await createScenario({
+      title: "Concurrent append and metadata edit",
+      steps: [{ action: "Initial" }],
+    });
+
+    const [firstAppend, secondAppend, metadataEdit] = await Promise.all([
+      testScenarioService.appendStep({
+        scenarioId: scenario.id,
+        projectId,
+        action: "Concurrent one",
+      }),
+      testScenarioService.appendStep({
+        scenarioId: scenario.id,
+        projectId,
+        action: "Concurrent two",
+      }),
+      testScenarioService.updateScenario({
+        scenarioId: scenario.id,
+        projectId,
+        details: "Metadata edit survives appends",
+      }),
+    ]);
+
+    expect(firstAppend.steps.length).toBeGreaterThanOrEqual(2);
+    expect(secondAppend.steps.length).toBeGreaterThanOrEqual(2);
+    expect(metadataEdit.details).toBe("Metadata edit survives appends");
+    const finalScenario = await getScenario(scenario.id);
+    expect(finalScenario.details).toBe("Metadata edit survives appends");
+    expect(finalScenario.steps).toHaveLength(3);
+    expect(finalScenario.steps.map(({ position }) => position)).toEqual([0, 1, 2]);
+    expect(finalScenario.steps.map(({ action }) => action).sort()).toEqual([
+      "Concurrent one",
+      "Concurrent two",
+      "Initial",
+    ]);
+    await expectProjectionConsistency(finalScenario);
+  });
+
   it("keeps append and reorder races lossless", async () => {
     const scenario = await createScenario({
       title: "Reorder versus append",
@@ -516,6 +777,33 @@ describePostgres("test scenario PostgreSQL aggregate integration", () => {
       ["First", "Second", "Third", "Appended"].sort(),
     );
     await expectProjectionConsistency(finalScenario);
+  });
+
+  it("rejects stale step membership atomically after a persisted append", async () => {
+    const scenario = await createScenario({
+      title: "Stale reorder membership",
+      steps: [{ action: "Existing" }],
+    });
+    const staleIds = scenario.steps.map(({ id }) => id);
+    const appended = await testScenarioModel.appendStep({
+      scenarioId: scenario.id,
+      projectId,
+      action: "Added after the client read",
+    });
+    if (!appended) throw new Error("Failed to append stale reorder fixture");
+    const beforeRejectedReorder = await getScenario(scenario.id);
+
+    await expect(
+      testScenarioModel.reorderSteps({
+        scenarioId: scenario.id,
+        projectId,
+        stepIds: staleIds,
+      }),
+    ).resolves.toMatchObject({ kind: "invalid-order" });
+
+    const afterRejectedReorder = await getScenario(scenario.id);
+    expect(afterRejectedReorder).toEqual(beforeRejectedReorder);
+    await expectProjectionConsistency(afterRejectedReorder);
   });
 
   it("keeps delete and reorder races lossless", async () => {
@@ -624,6 +912,110 @@ describePostgres("test scenario PostgreSQL aggregate integration", () => {
     expect(persisted.contentMd).not.toMatch(/\r/);
     expect(persisted.contentMd.endsWith("\n")).toBe(true);
     await expectProjectionConsistency(persisted);
+  });
+
+  it("executes organization workflows and list filters through the MCP catalog", async () => {
+    const catalog = createActionCatalog(userId);
+    const call = async (actionId: string, args: Record<string, unknown>) => {
+      const result = await executeAction(catalog, { actionId: `testportal-${actionId}`, arguments: { projectId, ...args } });
+      const first = result.content[0];
+      if (!first || first.type !== "text") throw new Error("Expected MCP text");
+      return { error: result.isError === true, data: result.isError ? first.text : JSON.parse(first.text) };
+    };
+    const root = (await call("create-test-scenario-folder", { name: "MCP root" })).data;
+    const child = (await call("create-test-scenario-folder", { name: "Child", parentId: root.id })).data;
+    expect((await call("list-test-scenario-folders", {})).data[0].children[0].id).toBe(child.id);
+    expect((await call("update-test-scenario-folder", { folderId: child.id, name: "Renamed", position: 2 })).data.name).toBe("Renamed");
+    expect((await call("update-test-scenario-folder", { folderId: root.id, parentId: child.id })).error).toBe(true);
+    const first = await createScenario({ title: "MCP first", folderId: root.id });
+    const second = await createScenario({ title: "MCP second", folderId: child.id });
+    const third = await createScenario({ title: "MCP unfiled" });
+    const suite = (await call("create-test-suite", { name: "MCP suite", release: "R1" })).data;
+    await call("update-test-suite", { suiteId: suite.id, description: "Smoke", release: null });
+    expect((await call("get-test-suite", { suiteId: suite.id })).data).toMatchObject({ description: "Smoke", release: null });
+    expect((await call("list-test-suites", {})).data).toHaveLength(1);
+    await call("add-test-suite-members", { suiteId: suite.id, scenarioIds: [first.id, second.id] });
+    await call("add-test-suite-members", { suiteId: suite.id, scenarioIds: [first.id] });
+    await call("remove-test-suite-members", { suiteId: suite.id, scenarioIds: [third.id] });
+    await call("reorder-test-suite-members", { suiteId: suite.id, scenarioIds: [second.id, first.id] });
+    expect((await call("reorder-test-suite-members", { suiteId: suite.id, scenarioIds: [first.id] })).error).toBe(true);
+    const members = (await call("get-test-suite", { suiteId: suite.id })).data.members;
+    expect(members.map((m: { testScenarioId: string }) => m.testScenarioId)).toEqual([second.id, first.id]);
+    const subtree = (await call("list-test-scenarios", { folderId: root.id, suiteId: suite.id, limit: 1 })).data;
+    expect(subtree).toMatchObject({ total: 2, limit: 1, totalPages: 2 });
+    expect((await call("list-test-scenarios", { folderId: root.id, includeDescendants: false })).data.scenarios.map((v: { id: string }) => v.id)).toEqual([first.id]);
+    expect((await call("list-test-scenarios", { folderId: "unfiled" })).data.scenarios.map((v: { id: string }) => v.id)).toContain(third.id);
+    const foreignFolder = await organization.createFolder({ projectId: otherProjectId, name: "foreign MCP" });
+    const foreignSuite = await organization.createSuite({ projectId: otherProjectId, name: "foreign MCP" });
+    for (const args of [{ folderId: foreignFolder.id }, { suiteId: foreignSuite.id }]) expect((await call("list-test-scenarios", args)).error).toBe(true);
+    expect((await call("get-test-suite", { suiteId: foreignSuite.id })).error).toBe(true);
+    expect((await call("update-test-scenario-folder", { folderId: foreignFolder.id, name: "no" })).error).toBe(true);
+    const foreignScenario = await createScenarioFor(otherProjectId, otherUserId, { title: "foreign" });
+    expect((await call("add-test-suite-members", { suiteId: suite.id, scenarioIds: [third.id, foreignScenario.id] })).error).toBe(true);
+    expect((await call("move-test-scenarios-to-folder", { folderId: root.id, scenarioIds: [second.id, randomUUID()] })).error).toBe(true);
+    expect((await getScenario(second.id)).folderId).toBe(child.id);
+    expect((await call("add-test-suite-members", { suiteId: suite.id, scenarioIds: [third.id, randomUUID()] })).error).toBe(true);
+    expect((await call("get-test-suite", { suiteId: suite.id })).data.members).toHaveLength(2);
+    expect((await call("move-test-scenarios-to-folder", { folderId: null, scenarioIds: [first.id, second.id] })).data).toEqual({ moved: 2 });
+    await call("move-test-scenarios-to-folder", { folderId: child.id, scenarioIds: [third.id] });
+    expect((await call("delete-test-scenario-folder", { folderId: child.id, disposition: "parent" })).data).toEqual({ deleted: true });
+    expect((await getScenario(third.id)).folderId).toBe(root.id);
+    expect((await call("delete-test-scenario-folder", { folderId: root.id, disposition: "unfiled" })).data).toEqual({ deleted: true });
+    expect((await getScenario(third.id)).folderId).toBeNull();
+    expect((await call("delete-test-suite", { suiteId: suite.id })).data).toEqual({ deleted: true });
+    expect(await getScenario(first.id)).toBeDefined();
+  });
+
+  it("preserves other suite memberships and manual run snapshots across MCP organization changes", async () => {
+    const catalog = createActionCatalog(userId);
+    const call = async (action: string, args: Record<string, unknown>) => {
+      const result = await executeAction(catalog, {
+        actionId: `testportal-${action}`,
+        arguments: { projectId, ...args },
+      });
+      expect(result.isError).not.toBe(true);
+      return result;
+    };
+    const root = await organization.createFolder({ projectId, name: "Snapshot root" });
+    const child = await organization.createFolder({ projectId, name: "Snapshot child", parentId: root.id });
+    const scenario = await createScenario({
+      title: "Scenario with historical evidence",
+      folderId: root.id,
+      steps: [{ action: "Open the page", expectedResult: "Page opens" }],
+    });
+    const deletedSuite = await organization.createSuite({ projectId, name: "Suite to delete" });
+    const retainedSuite = await organization.createSuite({ projectId, name: "Suite to retain" });
+    for (const suite of [deletedSuite, retainedSuite]) {
+      await organization.mutateMembers({ projectId, suiteId: suite.id, scenarioIds: [scenario.id], operation: "add" });
+    }
+    const run = await manualTestRunModel.createFromScenario({ projectId, scenarioId: scenario.id, executedById: userId });
+    if (!run) throw new Error("Expected a manual run");
+    const snapshot = await manualTestRunModel.findById(run.id, projectId);
+    if (!snapshot || snapshot.steps.length === 0) throw new Error("Expected a run with snapshot steps");
+    const memberships = await dbClient.testSuiteMember.findMany({
+      where: { testScenarioId: scenario.id },
+      orderBy: { suiteId: "asc" },
+    });
+    expect(memberships).toHaveLength(2);
+    const expectPreserved = async (expectedMemberships: typeof memberships) => {
+      expect(await dbClient.testSuiteMember.findMany({
+        where: { testScenarioId: scenario.id },
+        orderBy: { suiteId: "asc" },
+      })).toEqual(expectedMemberships);
+      expect(await manualTestRunModel.findById(run.id, projectId)).toEqual(snapshot);
+    };
+
+    await call("move-test-scenarios-to-folder", { folderId: child.id, scenarioIds: [scenario.id] });
+    expect((await getScenario(scenario.id)).folderId).toBe(child.id);
+    await expectPreserved(memberships);
+    await call("delete-test-scenario-folder", { folderId: child.id, disposition: "parent" });
+    expect((await getScenario(scenario.id)).folderId).toBe(root.id);
+    await expectPreserved(memberships);
+    await call("delete-test-scenario-folder", { folderId: root.id, disposition: "unfiled" });
+    expect((await getScenario(scenario.id)).folderId).toBeNull();
+    await expectPreserved(memberships);
+    await call("delete-test-suite", { suiteId: deletedSuite.id });
+    await expectPreserved(memberships.filter(({ suiteId }) => suiteId === retainedSuite.id));
   });
 
   it("keeps folder and suite organization project-scoped and supports ordered membership", async () => {

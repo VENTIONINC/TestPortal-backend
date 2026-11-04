@@ -3,6 +3,10 @@
 
 import { Request, Response, NextFunction } from "express";
 import { validateMcpToken } from "@/lib/mcp-token";
+import getLogger from "@/lib/logger";
+import { userService } from "@/services/userService";
+
+const logger = getLogger("mcp-auth");
 
 // Extended request interface with mcpUserId
 export interface RequestWithMcpUser extends Request {
@@ -40,11 +44,11 @@ export const handleMcpSessionRequest = async (
 };
 
 // MCP token validation middleware
-export const authenticateMcpToken = (
+export const authenticateMcpToken = async (
   req: RequestWithMcpUser,
   res: Response,
   next: NextFunction,
-): void => {
+): Promise<void> => {
   const authHeader = req.headers.authorization;
 
   if (!authHeader?.startsWith("Bearer ")) {
@@ -77,7 +81,22 @@ export const authenticateMcpToken = (
 
   const validation = validateMcpToken(token, mcpSecret);
 
-  if (!validation) {
+  let current = false;
+  if (validation) {
+    try {
+      current = await userService.validateMcpCredential(validation.userId, token);
+    } catch {
+      logger.error("MCP credential lookup failed for user", validation.userId);
+      res.status(500).json({
+        jsonrpc: "2.0",
+        error: { code: -32603, message: "Internal server error" },
+        id: null,
+      });
+      return;
+    }
+  }
+
+  if (!validation || !current) {
     res.status(401).json({
       jsonrpc: "2.0",
       error: {

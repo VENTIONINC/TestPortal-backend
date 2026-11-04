@@ -59,6 +59,42 @@ describe("userService", () => {
     delete process.env.MCP_SECRET;
   });
 
+  describe("validateMcpCredential", () => {
+    it.each([
+      [{ mcpToken: "current" }, "current", true],
+      [{ mcpToken: "current" }, "old", false],
+      [{ mcpToken: "" }, "", false],
+      [{ mcpToken: null }, "current", false],
+      [null, "current", false],
+    ])("validates the current non-empty credential", async (record, token, expected) => {
+      mockUserModel.findMcpCredential.mockResolvedValue(record);
+      await expect(userService.validateMcpCredential("user-1", token)).resolves.toBe(expected);
+      expect(mockUserModel.findMcpCredential).toHaveBeenCalledWith("user-1");
+    });
+
+    it("propagates credential store failures", async () => {
+      const failure = new Error("database unavailable");
+      mockUserModel.findMcpCredential.mockRejectedValue(failure);
+      await expect(userService.validateMcpCredential("user-1", "token")).rejects.toBe(failure);
+    });
+  });
+
+  describe("suspendUser", () => {
+    it.each(["active", "suspended"] as const)("clears the token atomically for a %s user", async (status) => {
+      const user = { id: "user-1", role: "member", status, mcpToken: "old" } as PrismaUser;
+      mockUserModel.findById.mockResolvedValue(user);
+      mockUserModel.update.mockResolvedValue({ ...user, status: "suspended", mcpToken: null });
+      await expect(userService.suspendUser(user.id)).resolves.toMatchObject({ status: "suspended", mcpToken: null });
+      expect(mockUserModel.update).toHaveBeenCalledWith(user.id, { status: "suspended", mcpToken: null }, mockTx);
+    });
+
+    it("does not report success when the transactional write fails", async () => {
+      mockUserModel.findById.mockResolvedValue({ id: "user-1", role: "member", status: "active" } as PrismaUser);
+      mockUserModel.update.mockRejectedValue(new Error("write failed"));
+      await expect(userService.suspendUser("user-1")).rejects.toThrow("write failed");
+    });
+  });
+
   describe("signup", () => {
     const validUserParams = {
       name: "Test User",
@@ -252,9 +288,7 @@ describe("userService", () => {
           mockUser as unknown as PrismaUser,
         );
         mockGenerateMcpToken.mockReturnValue(mockMcpToken);
-        mockUserModel.update.mockResolvedValue(
-          undefined as unknown as PrismaUser,
-        );
+        mockUserModel.storeMcpTokenForActiveUser.mockResolvedValue(1);
 
         const result = await userService.generateMcpToken(mockUserId);
 
@@ -263,9 +297,7 @@ describe("userService", () => {
           mockUserId,
           "test-secret",
         );
-        expect(mockUserModel.update).toHaveBeenCalledWith(mockUserId, {
-          mcpToken: mockMcpToken,
-        });
+        expect(mockUserModel.storeMcpTokenForActiveUser).toHaveBeenCalledWith(mockUserId, mockMcpToken);
         expect(result).toBe(mockMcpToken);
       });
 
@@ -276,9 +308,7 @@ describe("userService", () => {
           differentUser as unknown as PrismaUser,
         );
         mockGenerateMcpToken.mockReturnValue(mockMcpToken);
-        mockUserModel.update.mockResolvedValue(
-          undefined as unknown as PrismaUser,
-        );
+        mockUserModel.storeMcpTokenForActiveUser.mockResolvedValue(1);
 
         const result = await userService.generateMcpToken(differentUserId);
 
@@ -291,6 +321,13 @@ describe("userService", () => {
           "test-secret",
         );
         expect(result).toBe(mockMcpToken);
+      });
+
+      it.each(["pending", "suspended"] as const)("rejects %s users when the conditional write affects no rows", async (status) => {
+        mockUserModel.findById.mockResolvedValue({ ...mockUser, status } as unknown as PrismaUser);
+        mockGenerateMcpToken.mockReturnValue(mockMcpToken);
+        mockUserModel.storeMcpTokenForActiveUser.mockResolvedValue(0);
+        await expect(userService.generateMcpToken(mockUserId)).rejects.toMatchObject({ statusCode: 403 });
       });
 
       it("should throw error when userId is not provided", async () => {
@@ -329,7 +366,7 @@ describe("userService", () => {
           mockUser as unknown as PrismaUser,
         );
         mockGenerateMcpToken.mockReturnValue(mockMcpToken);
-        mockUserModel.update.mockRejectedValue(new Error("Database error"));
+        mockUserModel.storeMcpTokenForActiveUser.mockRejectedValue(new Error("Database error"));
 
         await expect(userService.generateMcpToken(mockUserId)).rejects.toThrow(
           "Database error",
@@ -350,7 +387,7 @@ describe("userService", () => {
 
         expect(mockUserModel.findById).toHaveBeenCalledWith(mockUserId, undefined);
         expect(mockUserModel.update).toHaveBeenCalledWith(mockUserId, {
-          mcpToken: "",
+          mcpToken: null,
         });
       });
 
@@ -370,7 +407,7 @@ describe("userService", () => {
           undefined,
         );
         expect(mockUserModel.update).toHaveBeenCalledWith(stringUserId, {
-          mcpToken: "",
+          mcpToken: null,
         });
       });
 
@@ -406,7 +443,7 @@ describe("userService", () => {
       });
 
       it("should successfully revoke token even if user has no existing token", async () => {
-        const userWithoutToken = { ...mockUser, mcpToken: "" };
+        const userWithoutToken = { ...mockUser, mcpToken: null };
         mockUserModel.findById.mockResolvedValue(
           userWithoutToken as unknown as PrismaUser,
         );
@@ -418,7 +455,7 @@ describe("userService", () => {
           userService.revokeMcpToken(mockUserId),
         ).resolves.not.toThrow();
         expect(mockUserModel.update).toHaveBeenCalledWith(mockUserId, {
-          mcpToken: "",
+          mcpToken: null,
         });
       });
     });

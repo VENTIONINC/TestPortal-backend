@@ -13,41 +13,21 @@ import {
   authenticateMcpToken,
   handleMcpSessionRequest,
 } from "@/mcp/middleware/auth";
-import { statusCheck } from "@/mcp/tools/status-check";
-import { currentTime } from "@/mcp/tools/current-time";
-import { getIssues, getIssueById, createIssue } from "@/mcp/tools/issues";
-import {
-  getResults,
-  getResultById,
-  getResultsStats,
-} from "@/mcp/tools/results";
-import {
-  createAssumption,
-  createUpdateAssumptionTool,
-  getAssumptionById,
-} from "@/mcp/tools/assumptions";
 import type { RequestWithMcpUser } from "@/mcp/middleware/auth";
-import { getExecutionById } from "@/mcp/tools/executions";
+import { normalizePromptRequest } from "@/mcp/normalizePromptRequest";
+import { createActionCatalog } from "@/mcp/actionCatalog";
 import {
-  assignIssue,
-  reviewError,
-  bulkReview,
-  getResultErrorById,
-} from "@/mcp/tools/result-errors";
-import { getSpecById } from "@/mcp/tools/specs";
-import {
-  createTestScenarioTool,
-  deleteTestScenario,
-  getTestScenario,
-  listTestScenarios,
-  updateTestScenario,
-} from "@/mcp/tools/test-scenarios";
-import { getAvailableProjects } from "@/mcp/tools/projects";
+  findAction,
+  findActionSchema,
+  findActionShape,
+} from "@/mcp/actionDiscovery";
+import { executeAction, executeActionSchema } from "@/mcp/actionExecution";
 import * as testPortalAssistant from "@/mcp/prompts/test-portal-assistant/v1.0.0";
 import * as issueAnalysisAssistant from "@/mcp/prompts/issue-analysis-assistant/v1.0.0";
 import * as environmentPerformanceAssistant from "@/mcp/prompts/environment-performance-assistant/v1.0.0";
 import * as developerCodeAssistant from "@/mcp/prompts/developer-code-assistant/v1.0.0";
 import * as documentationArchitect from "@/mcp/prompts/documentation-architect/v1.0.0";
+import * as tmsWorkflowAssistant from "@/mcp/prompts/tms-workflow-assistant/v1.0.0";
 
 const router = Router();
 
@@ -64,13 +44,136 @@ interface TransportStorage {
 
 // Extended MCP server interface to handle tool registration
 interface McpServerWithTools extends McpServer {
-  tool: (...args: unknown[]) => RegisteredTool;
   registerTool: (...args: unknown[]) => RegisteredTool;
   connect: (transport: unknown) => Promise<void>;
 }
 
 const transports: TransportStorage = {};
 const SESSION_TIMEOUT = 30 * 60 * 1000; // 30 minutes
+
+export const registerActionTools = (
+  server: McpServer,
+  userId: string,
+  catalog = createActionCatalog(userId),
+): void => {
+  const compatibleServer = server as McpServerWithTools;
+  compatibleServer.registerTool(
+    "testportal-find-action",
+    {
+      description:
+        "Find action contracts by query or exact ID, or browse the available areas.",
+      inputSchema: findActionShape,
+      annotations: {
+        readOnlyHint: true,
+        destructiveHint: false,
+        idempotentHint: true,
+      },
+    },
+    async (input: unknown) =>
+      findAction(catalog, findActionSchema.parse(input)),
+  );
+  compatibleServer.registerTool(
+    "testportal-execute-action",
+    {
+      description: "Execute one known action with its validated arguments.",
+      inputSchema: executeActionSchema,
+      annotations: {
+        readOnlyHint: false,
+        destructiveHint: true,
+        idempotentHint: false,
+      },
+    },
+    async (input: unknown) =>
+      executeAction(catalog, executeActionSchema.parse(input)),
+  );
+};
+
+export const registerPrompts = (server: McpServer): void => {
+  // Test Portal Assistant
+  server.registerPrompt(
+    testPortalAssistant.testPortalAssistantName,
+    testPortalAssistant.testPortalAssistantParameters,
+    ({
+      time_period = "today",
+      report_type = "summary",
+      project_system = "jira",
+    }) =>
+      testPortalAssistant.testPortalAssistantPrompt({
+        time_period,
+        report_type,
+        project_system,
+      }),
+  );
+
+  // Issue Analysis Assistant
+  server.registerPrompt(
+    issueAnalysisAssistant.issueAnalysisAssistantName,
+    issueAnalysisAssistant.issueAnalysisAssistantParameters,
+    ({
+      analysis_scope = "recent executions",
+      error_context = "",
+      target_system = "",
+    }) =>
+      issueAnalysisAssistant.issueAnalysisAssistantPrompt({
+        analysis_scope,
+        error_context,
+        target_system,
+      }),
+  );
+
+  // Environment & Performance Assistant
+  server.registerPrompt(
+    environmentPerformanceAssistant.environmentPerformanceAssistantName,
+    environmentPerformanceAssistant.environmentPerformanceAssistantParameters,
+    ({
+      environment_scope = "all environments",
+      performance_metric = "",
+      time_range = "",
+    }) =>
+      environmentPerformanceAssistant.environmentPerformanceAssistantPrompt(
+        {
+          environment_scope,
+          performance_metric,
+          time_range,
+        },
+      ),
+  );
+
+  // Developer Code Assistant
+  server.registerPrompt(
+    developerCodeAssistant.developerCodeAssistantName,
+    developerCodeAssistant.developerCodeAssistantParameters,
+    ({ result_id = "", error_id = "", context_scope = "" }) =>
+      developerCodeAssistant.developerCodeAssistantPrompt({
+        result_id,
+        error_id,
+        context_scope,
+      }),
+  );
+
+  // Documentation Architect
+  server.registerPrompt(
+    documentationArchitect.softwareDocumentationAssistantName,
+    documentationArchitect.softwareDocumentationAssistantParameters,
+    ({
+      file_paths = "",
+      documentation_type = "",
+      target_audience = "",
+      scope = "",
+      publish = "",
+    }) =>
+      documentationArchitect.softwareDocumentationAssistantPrompt({
+        file_paths,
+        documentation_type,
+        target_audience,
+        scope,
+        publish,
+      }),
+  );
+
+
+  server.registerPrompt(tmsWorkflowAssistant.name, tmsWorkflowAssistant.parameters, tmsWorkflowAssistant.render);
+};
 
 // Cleanup interval for stale sessions
 setInterval(() => {
@@ -96,7 +199,7 @@ router.post(
         transport = entry.transport;
         await handleMcpSessionRequest(entry.userId, req, res, async () => {
           entry.lastActive = Date.now();
-          await transport.handleRequest(req, res, req.body);
+          await transport.handleRequest(req, res, normalizePromptRequest(req.body));
         });
         return;
       }
@@ -137,164 +240,9 @@ router.post(
           version: "0.0.1",
         }) as McpServerWithTools;
 
-        // Register all tools
-        server.tool(...statusCheck);
-        server.tool(...currentTime);
-        server.tool(...getAvailableProjects);
+        registerActionTools(server, reviewedById);
 
-        // Issue tools
-        server.tool(...getIssues);
-        server.tool(...getIssueById);
-        server.tool(...createIssue);
-
-        // Result tools
-        server.tool(...getResults);
-        server.tool(...getResultById);
-        server.tool(...getResultsStats);
-
-        // Assumption tools
-        server.tool(...createAssumption);
-        server.tool(...createUpdateAssumptionTool(reviewedById));
-        server.tool(...getAssumptionById);
-
-        // Execution tools
-        server.tool(...getExecutionById);
-
-        // Result Error tools
-        server.tool(...assignIssue);
-        server.tool(...reviewError);
-        server.tool(...bulkReview);
-        server.tool(...getResultErrorById);
-
-        // Spec tools
-        server.tool(...getSpecById);
-
-        // Bind creation to the authenticated session owner, as with assumption updates.
-        const createTestScenario = createTestScenarioTool(reviewedById);
-        server.registerTool(
-          createTestScenario[0],
-          {
-            description: createTestScenario[1],
-            inputSchema: createTestScenario[2],
-          },
-          createTestScenario[3],
-        );
-
-        // Test Scenario tools
-        server.registerTool(
-          listTestScenarios[0],
-          {
-            description: listTestScenarios[1],
-            inputSchema: listTestScenarios[2],
-          },
-          listTestScenarios[3],
-        );
-        server.registerTool(
-          getTestScenario[0],
-          {
-            description: getTestScenario[1],
-            inputSchema: getTestScenario[2],
-          },
-          getTestScenario[3],
-        );
-        server.registerTool(
-          updateTestScenario[0],
-          {
-            description: updateTestScenario[1],
-            inputSchema: updateTestScenario[2],
-          },
-          updateTestScenario[3],
-        );
-        server.registerTool(
-          deleteTestScenario[0],
-          {
-            description: deleteTestScenario[1],
-            inputSchema: deleteTestScenario[2],
-          },
-          deleteTestScenario[3],
-        );
-
-        // Test Portal Assistant
-        server.registerPrompt(
-          testPortalAssistant.testPortalAssistantName,
-          testPortalAssistant.testPortalAssistantParameters,
-          ({
-            time_period = "today",
-            report_type = "summary",
-            project_system = "jira",
-          }) =>
-            testPortalAssistant.testPortalAssistantPrompt({
-              time_period,
-              report_type,
-              project_system,
-            }),
-        );
-
-        // Issue Analysis Assistant
-        server.registerPrompt(
-          issueAnalysisAssistant.issueAnalysisAssistantName,
-          issueAnalysisAssistant.issueAnalysisAssistantParameters,
-          ({
-            analysis_scope = "recent executions",
-            error_context = "",
-            target_system = "",
-          }) =>
-            issueAnalysisAssistant.issueAnalysisAssistantPrompt({
-              analysis_scope,
-              error_context,
-              target_system,
-            }),
-        );
-
-        // Environment & Performance Assistant
-        server.registerPrompt(
-          environmentPerformanceAssistant.environmentPerformanceAssistantName,
-          environmentPerformanceAssistant.environmentPerformanceAssistantParameters,
-          ({
-            environment_scope = "all environments",
-            performance_metric = "",
-            time_range = "",
-          }) =>
-            environmentPerformanceAssistant.environmentPerformanceAssistantPrompt(
-              {
-                environment_scope,
-                performance_metric,
-                time_range,
-              },
-            ),
-        );
-
-        // Developer Code Assistant
-        server.registerPrompt(
-          developerCodeAssistant.developerCodeAssistantName,
-          developerCodeAssistant.developerCodeAssistantParameters,
-          ({ result_id = "", error_id = "", context_scope = "" }) =>
-            developerCodeAssistant.developerCodeAssistantPrompt({
-              result_id,
-              error_id,
-              context_scope,
-            }),
-        );
-
-        // Documentation Architect
-        server.registerPrompt(
-          documentationArchitect.softwareDocumentationAssistantName,
-          documentationArchitect.softwareDocumentationAssistantParameters,
-          ({
-            file_paths = "",
-            documentation_type = "",
-            target_audience = "",
-            scope = "",
-            publish = "",
-          }) =>
-            documentationArchitect.softwareDocumentationAssistantPrompt({
-              file_paths,
-              documentation_type,
-              target_audience,
-              scope,
-              publish,
-            }),
-        );
+        registerPrompts(server);
 
         try {
           await server.connect(transport);
