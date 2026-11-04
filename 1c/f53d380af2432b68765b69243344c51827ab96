@@ -1,0 +1,67 @@
+src/models/userModel.ts
+  s_4432af1c81979a::t_5eeba5e195aafc 28-36
+  s_4432af1c81979a::t_fe707094a7a94c 15
+  s_4432af1c81979a::t_2aabc15ffa409e 37-44
+prisma/migrations/20261104110000_clear_inactive_mcp_tokens/migration.sql
+  s_4432af1c81979a::t_633ba7139c18d8 1-4
+__tests__/lib/openapi/users.test.ts
+  s_4432af1c81979a::t_8e61d7f724ebe8 9-14,16-19
+  s_4432af1c81979a::t_2ea6a57ee70fdf 15
+__tests__/services/userService.test.ts
+  s_4432af1c81979a::t_5eeba5e195aafc 62-81
+  s_4432af1c81979a::t_c66cc1343d9c1d 82-97,291,300,311,326-332,369,390,410,446,458
+__tests__/mcp/mcpTransport.test.ts
+  s_4432af1c81979a::t_09c292afdd64ca 9-10,105-126
+  s_4432af1c81979a::t_7e8ddc41583a6b 8,11-13,18,20-23,27,63,72-92
+  s_4432af1c81979a::t_df430dcedca9ec 93-104,127
+src/services/userService.ts
+  s_4432af1c81979a::t_5eeba5e195aafc 101-105
+  s_4432af1c81979a::t_24055c17791629 471-475
+  s_4432af1c81979a::t_2aabc15ffa409e 304-307
+  s_4432af1c81979a::t_fe707094a7a94c 319
+__tests__/users/mcpCredentialPostgresIntegration.test.ts
+  s_4432af1c81979a::t_ebc14fef965eb0 9,114-181
+  s_4432af1c81979a::t_cb8dc1c36223fc 1-8,13-52,182-184
+  s_4432af1c81979a::t_5d4ac023da0e0e 12,65,71,84-85
+  s_4432af1c81979a::t_dd913f50016930 10-11,53-64,66-70,72-83,86-113
+__tests__/models/userModel.test.ts
+  s_4432af1c81979a::t_0731c3bac98838 9,20-26
+  s_4432af1c81979a::t_e44cf8bbae9cb8 1-8,10-19,27-28
+__tests__/routes/users.test.ts
+  s_4432af1c81979a::t_0731c3bac98838 622-624,639-641
+  s_4432af1c81979a::t_fe707094a7a94c 475
+  s_4432af1c81979a::t_2aabc15ffa409e 108-113
+  s_4432af1c81979a::t_9f6c9529bb0add 671-688
+  s_4432af1c81979a::t_7ed05c83372240 670
+src/lib/openapi/users.ts
+  s_4432af1c81979a::t_e0c42326ab9f0e 281,328,361,415,420
+src/mcp/middleware/auth.ts
+  s_4432af1c81979a::t_7e8ddc41583a6b 6-9,47,51,84-99
+docs/INSPECT_MCP_SERVER.md
+  s_4432af1c81979a::t_1e0e68f3c1fecc 38-40
+  s_4432af1c81979a::t_70d4920fd3a4d9 34-37,41,111
+__tests__/manual-test-runs/manualTestRunPostgresIntegration.test.ts
+  s_4432af1c81979a::t_f049ee35cb91bb 124-125,132,456-458
+__tests__/mcp/manualTestRunMcpTransport.test.ts
+  s_4432af1c81979a::t_0ae8074e29e438 10-21,76,120,164
+__tests__/mcp/testScenarioMcpTransport.test.ts
+  s_4432af1c81979a::t_821201bbe7aa6e 9-20,77,124,162,237
+__tests__/mcp/tmsPromptHttp.test.ts
+  s_4432af1c81979a::t_1070476eaf329c 7-18,22,36,65
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "1cf53d380af2432b68765b69243344c51827ab96",
+  "prompts": {},
+  "sessions": {
+    "s_4432af1c81979a": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a1a602-ef1a-7a53-85dc-882d960a8367",
+        "model": "gpt-6.1-terra"
+      },
+      "human_author": "Ihar Mikailau <ihar.mikailau@ventionteams.com>"
+    }
+  }
+}
