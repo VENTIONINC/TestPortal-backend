@@ -278,7 +278,7 @@ export function registerUserRoutes(registry: OpenAPIRegistry) {
     method: "post",
     path: "/api/v2/users/{userId}/mcp-token",
     description:
-      "Generates a new MCP token for the user (requires authentication)",
+      "Generates a current MCP token for an active user, replacing and invalidating any previous token (requires authentication)",
     request: {
       params: z.object({
         userId: z.string().uuid(),
@@ -325,7 +325,7 @@ export function registerUserRoutes(registry: OpenAPIRegistry) {
   registry.registerPath({
     method: "delete",
     path: "/api/v2/users/{userId}/mcp-token",
-    description: "Revokes the user's MCP token (requires authentication)",
+    description: "Revokes the user's current MCP token for subsequent requests, including existing sessions (requires authentication)",
     request: {
       params: z.object({
         userId: z.string().uuid(),
@@ -358,7 +358,7 @@ export function registerUserRoutes(registry: OpenAPIRegistry) {
         },
       },
       404: {
-        description: "User not found or no MCP token to revoke",
+        description: "User not found",
         content: {
           "application/json": {
             schema: ErrorResponseSchema,
@@ -412,12 +412,12 @@ export function registerUserRoutes(registry: OpenAPIRegistry) {
     {
       method: "post" as const,
       path: "/api/v2/admin/users/{userId}/suspend",
-      description: "Suspends a user account",
+      description: "Suspends a user account and revokes its MCP token in the same operation",
     },
     {
       method: "post" as const,
       path: "/api/v2/admin/users/{userId}/restore",
-      description: "Restores a suspended user account",
+      description: "Restores a suspended user account; MCP access requires a newly generated token",
     },
   ]) {
     registry.registerPath({

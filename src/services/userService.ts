@@ -98,6 +98,11 @@ export const toSafeUser = (user: PrismaUser): SafeUser => {
 export const userService = {
   LOCAL_SIGNUP_PENDING_MESSAGE,
 
+  async validateMcpCredential(userId: string, token: string): Promise<boolean> {
+    const credential = await userModel.findMcpCredential(userId);
+    return Boolean(credential?.mcpToken && credential.mcpToken === token);
+  },
+
   createAuthResponse(
     user: PrismaUser,
     options: { cognitoSession?: unknown } = {},
@@ -296,7 +301,10 @@ export const userService = {
 
     const mcpToken = generateMcpToken(user.id, mcpTokenSecret);
 
-    await userModel.update(user.id, { mcpToken });
+    const updated = await userModel.storeMcpTokenForActiveUser(user.id, mcpToken);
+    if (updated !== 1) {
+      throw new UserServiceError("MCP tokens can only be generated for active users", 403);
+    }
 
     return mcpToken;
   },
@@ -308,7 +316,7 @@ export const userService = {
 
     await this.getUserById(userId); // Verify user exists
 
-    await userModel.update(userId, { mcpToken: "" });
+    await userModel.update(userId, { mcpToken: null });
   },
 
   // Cognito-specific methods
@@ -460,11 +468,11 @@ export const userService = {
         );
       }
 
-      if (user.status === UserStatus.suspended) {
-        return user;
-      }
-
-      return await userModel.update(userId, { status: UserStatus.suspended }, tx);
+      return await userModel.update(
+        userId,
+        { status: UserStatus.suspended, mcpToken: null },
+        tx,
+      );
     });
   },
 

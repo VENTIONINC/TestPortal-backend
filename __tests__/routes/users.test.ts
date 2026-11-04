@@ -105,6 +105,12 @@ jest.mock("@/models/userModel", () => ({
           .length,
       ),
     ),
+    storeMcpTokenForActiveUser: jest.fn((id: string, token: string) => {
+      const user = users.find((item) => item.id === id && item.status === "active");
+      if (!user) return Promise.resolve(0);
+      user.mcpToken = token;
+      return Promise.resolve(1);
+    }),
     create: jest.fn((data: CreateUserData) => {
       if (shouldThrowDatabaseError) {
         throw new Error(databaseErrorMessage);
@@ -466,7 +472,7 @@ describe("Users Routes", () => {
         },
       );
       expect(revokeTokenRes.statusCode).toBe(200);
-      expect(users.find((user) => user.id === ownerUserId)?.mcpToken).toBe("");
+      expect(users.find((user) => user.id === ownerUserId)?.mcpToken).toBeNull();
       expect(users.find((user) => user.id === otherUserId)?.mcpToken).toBeNull();
     });
   });
@@ -613,6 +619,9 @@ describe("Users Routes", () => {
         },
       );
       expect(pendingRes.statusCode).toBe(403);
+      const pendingGeneration = await executeProtectedController(userController.generateMcpToken, { method: "POST", params: { userId }, token });
+      expect(pendingGeneration.statusCode).toBe(403);
+      expect(user?.mcpToken).toBeNull();
 
       if (user) {
         user.status = "suspended";
@@ -627,6 +636,9 @@ describe("Users Routes", () => {
         },
       );
       expect(suspendedRes.statusCode).toBe(403);
+      const suspendedGeneration = await executeProtectedController(userController.generateMcpToken, { method: "POST", params: { userId }, token });
+      expect(suspendedGeneration.statusCode).toBe(403);
+      expect(user?.mcpToken).toBeNull();
     });
   });
 
@@ -655,6 +667,25 @@ describe("Users Routes", () => {
 
       return String(loginRes.body?.accessToken);
     };
+
+    it("clears credentials on repeated suspension and does not restore them", async () => {
+      const admin = await createActiveUser("Admin", "admin-suspend@ventionteams.com");
+      const member = await createActiveUser("Member", "member-suspend@ventionteams.com");
+      const adminRecord = users.find((user) => user.id === admin.id);
+      const record = users.find((user) => user.id === member.id);
+      if (!adminRecord || !record) throw new Error("Expected users");
+      adminRecord.role = "admin";
+      record.mcpToken = "old-token";
+      const token = await loginActiveUser(admin.email);
+      for (let i = 0; i < 2; i++) {
+        const response = await executeAdminProtectedController(userController.suspendUser, { method: "POST", params: { userId: member.id }, token });
+        expect(response.statusCode).toBe(200);
+        expect(record).toMatchObject({ status: "suspended", mcpToken: null });
+      }
+      const restored = await executeAdminProtectedController(userController.restoreUser, { method: "POST", params: { userId: member.id }, token });
+      expect(restored.statusCode).toBe(200);
+      expect(record).toMatchObject({ status: "active", mcpToken: null });
+    });
 
     it("allows active admins to list users and manage pending users", async () => {
       const admin = await createActiveUser("Admin", "admin@ventionteams.com");

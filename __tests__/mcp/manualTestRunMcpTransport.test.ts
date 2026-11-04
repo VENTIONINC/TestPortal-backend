@@ -7,6 +7,18 @@ import express from "express";
 import request from "supertest";
 import { Client, StreamableHTTPClientTransport } from "@modelcontextprotocol/client";
 import { generateMcpToken } from "@/lib/mcp-token";
+import { userModel } from "@/models/userModel";
+
+const credentials = new Map<string, string>();
+const issueFixtureToken = (id: string, secret: string) => {
+  const token = generateMcpToken(id, secret);
+  credentials.set(id, token);
+  return token;
+};
+jest.spyOn(userModel, "findMcpCredential").mockImplementation(async (id) => {
+  const token = credentials.get(id);
+  return token ? { mcpToken: token } : null;
+});
 
 const mockStart = jest.fn();
 const mockGet = jest.fn();
@@ -61,7 +73,7 @@ describe("manual run Streamable HTTP MCP transport", () => {
     client = new Client({ name: "manual-run-transport-test", version: "1.0.0" });
     transport = new StreamableHTTPClientTransport(
       new URL(`http://127.0.0.1:${address.port}/api/v2/mcp`),
-      { requestInit: { headers: { Authorization: `Bearer ${generateMcpToken(userId, secret)}` } } },
+      { requestInit: { headers: { Authorization: `Bearer ${issueFixtureToken(userId, secret)}` } } },
     );
     await client.connect(transport);
   });
@@ -105,7 +117,7 @@ describe("manual run Streamable HTTP MCP transport", () => {
     expect((await callAction(client, { name: "testportal-list-manual-run-environment-profiles", arguments: { projectId } })).isError).toBe(true);
     const address = server.address() as AddressInfo;
     const foreign = await request(`http://127.0.0.1:${address.port}`).post("/api/v2/mcp")
-      .set("Authorization", `Bearer ${generateMcpToken("66666666-6666-4666-8666-666666666666", secret)}`)
+      .set("Authorization", `Bearer ${issueFixtureToken("66666666-6666-4666-8666-666666666666", secret)}`)
       .set("mcp-session-id", String(Reflect.get(transport, "sessionId")))
       .send({ jsonrpc: "2.0", id: 1, method: "tools/call", params: { name: "testportal-execute-action", arguments: { actionId: create, arguments: { projectId, name: "x" } } } });
     expect(foreign.status).toBe(403);
@@ -149,7 +161,7 @@ describe("manual run Streamable HTTP MCP transport", () => {
     expect(typeof sessionId).toBe("string");
     const response = await request(`http://127.0.0.1:${address.port}`)
       .post("/api/v2/mcp")
-      .set("Authorization", `Bearer ${generateMcpToken("66666666-6666-4666-8666-666666666666", secret)}`)
+      .set("Authorization", `Bearer ${issueFixtureToken("66666666-6666-4666-8666-666666666666", secret)}`)
       .set("mcp-session-id", String(sessionId))
       .send({ jsonrpc: "2.0", id: 1, method: "tools/call", params: { name: "testportal-execute-action", arguments: { actionId: "testportal-start-manual-test-run", arguments: { projectId, scenarioId } } } });
     expect(response.status).toBe(403);

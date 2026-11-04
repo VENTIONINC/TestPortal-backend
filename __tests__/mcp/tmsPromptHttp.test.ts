@@ -4,10 +4,22 @@
 import express from "express";
 import request from "supertest";
 import { generateMcpToken } from "@/lib/mcp-token";
+import { userModel } from "@/models/userModel";
+
+const credentials = new Map<string, string>();
+const issueFixtureToken = (id: string, secret: string) => {
+  const token = generateMcpToken(id, secret);
+  credentials.set(id, token);
+  return token;
+};
+jest.spyOn(userModel, "findMcpCredential").mockImplementation(async (id) => {
+  const token = credentials.get(id);
+  return token ? { mcpToken: token } : null;
+});
 
 const secret = "prompt-http-test-secret";
 const user = "11111111-1111-4111-8111-111111111111";
-const token = () => generateMcpToken(user, secret);
+const token = issueFixtureToken(user, secret);
 const envelope = (id: number, name: string, args?: unknown) => ({ jsonrpc: "2.0", id, method: "prompts/get", params: { name, ...(args === undefined ? {} : { arguments: args }) } });
 const messages = (text: string) => text.split("\n").filter((line) => line.startsWith("data: ")).map((line) => JSON.parse(line.slice(6)));
 
@@ -21,7 +33,7 @@ describe("authenticated prompt HTTP protocol", () => {
     const app = express();
     app.use(express.json());
     app.use("/api", router);
-    const post = () => request(app).post("/api/v2/mcp").set("Accept", "application/json, text/event-stream").set("Authorization", `Bearer ${token()}`);
+    const post = () => request(app).post("/api/v2/mcp").set("Accept", "application/json, text/event-stream").set("Authorization", `Bearer ${token}`);
     try {
       const init = await post().send({ jsonrpc: "2.0", id: 1, method: "initialize", params: { protocolVersion: "2025-03-26", capabilities: {}, clientInfo: { name: "test", version: "1" } } });
       const session = init.headers["mcp-session-id"] as string;
@@ -50,7 +62,7 @@ describe("authenticated prompt HTTP protocol", () => {
       const prompts = messages((await call({ jsonrpc: "2.0", id: 25, method: "prompts/list" })).text)[0].result.prompts;
       expect(prompts).toHaveLength(6);
       expect((await request(app).post("/api/v2/mcp").send(envelope(26, "tms-workflow-assistant"))).status).toBe(401);
-      const foreign = await request(app).post("/api/v2/mcp").set("Authorization", `Bearer ${generateMcpToken("22222222-2222-4222-8222-222222222222", secret)}`).set("mcp-session-id", session).send(envelope(27, "tms-workflow-assistant"));
+      const foreign = await request(app).post("/api/v2/mcp").set("Authorization", `Bearer ${issueFixtureToken("22222222-2222-4222-8222-222222222222", secret)}`).set("mcp-session-id", session).send(envelope(27, "tms-workflow-assistant"));
       expect(foreign.status).toBe(403);
     } finally {
       delete process.env.MCP_SECRET;

@@ -31,6 +31,14 @@ npm run server
 
     `http://localhost:3001/api/v2/mcp`
 
+    Configure the current MCP token as a bearer token. Every HTTP request,
+    including requests in an existing session, verifies that the token remains
+    the user's current stored credential. A revoked or replaced token cannot be
+    used to initialize or continue a session.
+    Only active users can issue tokens. Generating a token replaces the old one;
+    revocation or account suspension invalidates it. Restoring an account does
+    not restore its token, so generate a fresh token after restoration.
+
 3.  **Inspect:**
 
     After successful connection, you should be able to see the MCP server's tools, ongoing sessions, and other relevant information, allowing you to inspect its behavior.
@@ -100,7 +108,7 @@ To connect from another MCP-compatible client, configure an HTTP remote server t
 
 1.  **Add MCP Server Configuration:**
 
-    Add a remote Streamable HTTP server entry using your client's supported configuration format, pointing to `http://localhost:3001/api/v2/mcp`. Configure an `Authorization: Bearer <MCP token>` header securely for every request.
+    Add a remote Streamable HTTP server entry using your client's supported configuration format, pointing to `http://localhost:3001/api/v2/mcp`. Configure an `Authorization: Bearer <MCP token>` header securely for every request. Use the current token; an existing session does not bypass credential verification.
 
 2.  **Restart or Reload the Client:**
 
