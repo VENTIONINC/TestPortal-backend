@@ -6,6 +6,18 @@ import type { AddressInfo } from "node:net";
 import express from "express";
 import { Client, StreamableHTTPClientTransport } from "@modelcontextprotocol/client";
 import { generateMcpToken } from "@/lib/mcp-token";
+import { userModel } from "@/models/userModel";
+
+const credentials = new Map<string, string>();
+const issueFixtureToken = (id: string, secret: string) => {
+  const token = generateMcpToken(id, secret);
+  credentials.set(id, token);
+  return token;
+};
+jest.spyOn(userModel, "findMcpCredential").mockImplementation(async (id) => {
+  const token = credentials.get(id);
+  return token ? { mcpToken: token } : null;
+});
 
 const mockListTestScenarios = jest.fn();
 const mockGetTestScenario = jest.fn();
@@ -62,7 +74,7 @@ describe("Test Scenario MCP transport validation", () => {
     process.env.MCP_SECRET = secret;
     await client.connect(new StreamableHTTPClientTransport(
       new URL(`http://127.0.0.1:${address.port}/api/v2/mcp`),
-      { requestInit: { headers: { Authorization: `Bearer ${generateMcpToken(userId, secret)}` } } },
+      { requestInit: { headers: { Authorization: `Bearer ${issueFixtureToken(userId, secret)}` } } },
     ));
 
     try {
@@ -109,7 +121,7 @@ describe("Test Scenario MCP transport validation", () => {
     process.env.MCP_SECRET = secret;
     await client.connect(new StreamableHTTPClientTransport(
       new URL(`http://127.0.0.1:${address.port}/api/v2/mcp`),
-      { requestInit: { headers: { Authorization: `Bearer ${generateMcpToken(userId, secret)}` } } },
+      { requestInit: { headers: { Authorization: `Bearer ${issueFixtureToken(userId, secret)}` } } },
     ));
 
     try {
@@ -147,7 +159,7 @@ describe("Test Scenario MCP transport validation", () => {
     process.env.MCP_SECRET = secret;
     await client.connect(new StreamableHTTPClientTransport(
       new URL(`http://127.0.0.1:${address.port}/api/v2/mcp`),
-      { requestInit: { headers: { Authorization: `Bearer ${generateMcpToken(userId, secret)}` } } },
+      { requestInit: { headers: { Authorization: `Bearer ${issueFixtureToken(userId, secret)}` } } },
     ));
 
     try {
@@ -222,7 +234,7 @@ describe("Test Scenario MCP transport validation", () => {
     process.env.MCP_SECRET = secret;
     await client.connect(new StreamableHTTPClientTransport(
       new URL(`http://127.0.0.1:${address.port}/api/v2/mcp`),
-      { requestInit: { headers: { Authorization: `Bearer ${generateMcpToken(userId, secret)}` } } },
+      { requestInit: { headers: { Authorization: `Bearer ${issueFixtureToken(userId, secret)}` } } },
     ));
     const fullScenario = { id: scenarioId, projectId, steps: [] };
     mockCreateTestScenario.mockResolvedValue(fullScenario);

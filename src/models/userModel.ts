@@ -12,7 +12,7 @@ interface CreateUserData {
   role?: UserRole;
   passwordHash?: string;
   cognitoUserId?: string;
-  mcpToken?: string;
+  mcpToken?: string | null;
   reportPortalUrl?: string | null;
   reportPortalEnabled?: boolean;
   monitoringPortalUrl?: string | null;
@@ -25,6 +25,23 @@ interface ListUsersOptions {
 }
 
 export const userModel = {
+  findMcpCredential: async (
+    id: string,
+  ): Promise<{ mcpToken: string | null } | null> => {
+    return await dbClient.user.findUnique({
+      where: { id },
+      select: { mcpToken: true },
+    });
+  },
+
+  storeMcpTokenForActiveUser: async (id: string, mcpToken: string): Promise<number> => {
+    const result = await dbClient.user.updateMany({
+      where: { id, status: UserStatus.active },
+      data: { mcpToken },
+    });
+    return result.count;
+  },
+
   findById: async (
     id: string,
     tx?: Prisma.TransactionClient,

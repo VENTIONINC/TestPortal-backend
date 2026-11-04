@@ -121,13 +121,15 @@ describePostgres("manual test run PostgreSQL integration", () => {
         server.listen(0, "127.0.0.1", resolve),
       );
       const address = server.address() as AddressInfo;
+      const token = generateMcpToken(userId, secret);
+      await dbClient.user.update({ where: { id: userId }, data: { mcpToken: token } });
       await client.connect(
         new StreamableHTTPClientTransport(
           new URL(`http://127.0.0.1:${address.port}/api/v2/mcp`),
           {
             requestInit: {
               headers: {
-                Authorization: `Bearer ${generateMcpToken(userId, secret)}`,
+                Authorization: `Bearer ${token}`,
               },
             },
           },
@@ -451,7 +453,9 @@ describePostgres("manual test run PostgreSQL integration", () => {
       for (const actor of [userId, otherUserId]) {
         const client = new Client({ name: "profile-sharing-test", version: "1.0.0" });
         clients.push(client);
-        await client.connect(new StreamableHTTPClientTransport(new URL(`http://127.0.0.1:${address.port}/api/v2/mcp`), { requestInit: { headers: { Authorization: `Bearer ${generateMcpToken(actor, secret)}` } } }));
+        const token = generateMcpToken(actor, secret);
+        await dbClient.user.update({ where: { id: actor }, data: { mcpToken: token } });
+        await client.connect(new StreamableHTTPClientTransport(new URL(`http://127.0.0.1:${address.port}/api/v2/mcp`), { requestInit: { headers: { Authorization: `Bearer ${token}` } } }));
       }
       const [creator, other] = clients;
       if (!creator || !other) throw new Error("Expected two authenticated clients");
