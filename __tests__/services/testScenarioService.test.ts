@@ -9,6 +9,8 @@ import type {
 } from "@/types/testScenarios";
 
 const projectExistsMock = jest.fn<() => Promise<boolean>>();
+const suiteBelongsToProjectMock = jest.fn<() => Promise<boolean>>();
+const priorityCountsMock = jest.fn<(...args: never[]) => Promise<{ low: number; medium: number; high: number; unprioritized: number }>>();
 const createMock =
   jest.fn<(...args: never[]) => Promise<TestScenarioResponse | null>>();
 const listSummariesMock =
@@ -41,6 +43,8 @@ jest.mock("@/models/testScenarioModel", () => ({
   testScenarioModel: {
     create: createMock,
     listSummaries: listSummariesMock,
+    suiteBelongsToProject: suiteBelongsToProjectMock,
+    listScenarioPriorityCounts: priorityCountsMock,
     resolveSelection: resolveSelectionMock,
     findManySummaries: findManySummariesMock,
     count: countMock,
@@ -96,6 +100,7 @@ describe("testScenarioService", () => {
   beforeEach(() => {
     jest.clearAllMocks();
     projectExistsMock.mockResolvedValue(true);
+    suiteBelongsToProjectMock.mockResolvedValue(true);
     createMock.mockResolvedValue(scenario);
     listSummariesMock.mockResolvedValue({ scenarios: [], total: 0 });
     findManySummariesMock.mockResolvedValue([]);
@@ -113,6 +118,13 @@ describe("testScenarioService", () => {
     projectExistsMock.mockResolvedValue(false);
     resolveSelectionMock.mockResolvedValue([]);
     await expect(testScenarioService.resolveScenarioSelection({ projectId })).rejects.toBeInstanceOf(TestScenarioNotFoundError);
+  });
+
+  it("scopes priority counts to the selected authors", async () => {
+    const counts = { low: 1, medium: 0, high: 0, unprioritized: 0 };
+    priorityCountsMock.mockResolvedValue(counts);
+    await expect(testScenarioService.listScenarioPriorityCounts({ projectId, createdByIds: scenario.createdById })).resolves.toEqual(counts);
+    expect(priorityCountsMock).toHaveBeenCalledWith(projectId, { createdByIds: scenario.createdById });
   });
 
   it("normalizes structured creation and keeps initial step order", async () => {
@@ -257,6 +269,12 @@ describe("testScenarioService", () => {
       createdById: scenario.createdById,
       sort: "recently_created",
     });
+  });
+
+  it("uses suite membership order when no sort is requested", async () => {
+    await testScenarioService.listScenarios({ projectId, suiteId: scenarioId });
+    expect(listSummariesMock).toHaveBeenCalledWith(expect.objectContaining({ suiteId: scenarioId }));
+    expect(listSummariesMock.mock.calls[0]?.[0]).not.toHaveProperty("sort");
   });
 
   it("forwards independent column filters and selected column sorting", async () => {

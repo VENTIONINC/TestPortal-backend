@@ -606,11 +606,18 @@ describePostgres("test scenario PostgreSQL aggregate integration", () => {
     await expect(testScenarioService.updateScenario({ scenarioId: third.id, projectId, folderId: foreignAssignment.id })).rejects.toBeInstanceOf(TestScenarioNotFoundError);
     await expect(organization.createFolder({ projectId, name: "product" })).rejects.toMatchObject({ status: 409 });
     const suite = await organization.createSuite({ projectId, name: "Smoke", purpose: "Critical route" });
-    await expect(organization.createSuite({ projectId, name: "smoke" })).rejects.toMatchObject({ status: 409 });
+    const duplicateSuite = await organization.createSuite({ projectId, name: "smoke" });
+    expect(duplicateSuite.id).not.toBe(suite.id);
+    await organization.updateSuite({ projectId, suiteId: duplicateSuite.id, name: "SMOKE" });
+    await organization.mutateMembers({ projectId, suiteId: suite.id, scenarioIds: [first.id], operation: "add" });
+    expect((await organization.getSuite(projectId, suite.id)).members.map(({ testScenarioId }) => testScenarioId)).toEqual([first.id]);
+    expect((await organization.getSuite(projectId, duplicateSuite.id)).members).toEqual([]);
     await organization.mutateMembers({ projectId, suiteId: suite.id, scenarioIds: [first.id, second.id], operation: "add" });
     await organization.mutateMembers({ projectId, suiteId: suite.id, scenarioIds: [first.id], operation: "add" });
-    await organization.reorderMembers({ projectId, suiteId: suite.id, scenarioIds: [second.id, first.id] });
-    await expect(organization.reorderMembers({ projectId, suiteId: suite.id, scenarioIds: [first.id] })).rejects.toMatchObject({ status: 400 });
+    const suiteBeforeOrder = await organization.getSuite(projectId, suite.id);
+    await organization.reorderMembers({ projectId, suiteId: suite.id, expectedMembershipRevision: suiteBeforeOrder.membershipRevision, expectedScenarioIds: suiteBeforeOrder.members.map(({ testScenarioId }) => testScenarioId), scenarioIds: [second.id, first.id] });
+    const suiteAfterOrder = await organization.getSuite(projectId, suite.id);
+    await expect(organization.reorderMembers({ projectId, suiteId: suite.id, expectedMembershipRevision: suiteAfterOrder.membershipRevision, expectedScenarioIds: suiteAfterOrder.members.map(({ testScenarioId }) => testScenarioId), scenarioIds: [first.id] })).rejects.toMatchObject({ status: 400 });
     await Promise.all([
       organization.mutateMembers({ projectId, suiteId: suite.id, scenarioIds: [third.id], operation: "add" }),
       organization.mutateMembers({ projectId, suiteId: suite.id, scenarioIds: [third.id], operation: "add" }),
@@ -630,6 +637,9 @@ describePostgres("test scenario PostgreSQL aggregate integration", () => {
     expect(direct.scenarios.map(({ id }) => id)).toEqual([second.id]);
     const outOfRange = await testScenarioService.listScenarios({ projectId, folderId: root.id, suiteId: suite.id, page: 3, limit: 1 });
     expect(outOfRange).toMatchObject({ scenarios: [], total: 2, page: 3, limit: 1, totalPages: 2 });
+    const suitePageOne = await testScenarioService.listScenarios({ projectId, suiteId: suite.id, page: 1, limit: 1 });
+    const suitePageTwo = await testScenarioService.listScenarios({ projectId, suiteId: suite.id, page: 2, limit: 1 });
+    expect([...suitePageOne.scenarios, ...suitePageTwo.scenarios].map(({ id }) => id)).toEqual([second.id, first.id]);
     await expect(organization.moveScenarios({ projectId, scenarioIds: [first.id, randomUUID()], folderId: root.id })).rejects.toMatchObject({ code: "TEST_SCENARIO_NOT_FOUND" });
     expect((await getScenario(first.id)).folderId).toBe(child.id);
     expect(await organization.moveScenarios({ projectId, scenarioIds: [second.id], folderId: null })).toEqual({ moved: 1 });
@@ -687,7 +697,8 @@ describePostgres("test scenario PostgreSQL aggregate integration", () => {
     await request(app).patch(`/api/v2/test-scenario-folders/${folder.body.id}?projectId=${projectId}`).set("Authorization", `Bearer ${token}`).send({ description: "Cross-project" }).expect(404);
     const suite = await request(app).post("/api/v2/test-suites").set("Authorization", `Bearer ${token}`).send({ projectId: routeProjectId, name: "REST suite", purpose: "API contract", release: "R2" }).expect(201);
     expect(suite.body).toMatchObject({ purpose: "API contract", release: "R2" });
-    await request(app).post("/api/v2/test-suites").set("Authorization", `Bearer ${token}`).send({ projectId: routeProjectId, name: "rest suite" }).expect(409);
+    const duplicateSuite = await request(app).post("/api/v2/test-suites").set("Authorization", `Bearer ${token}`).send({ projectId: routeProjectId, name: "rest suite" }).expect(201);
+    expect(duplicateSuite.body.id).not.toBe(suite.body.id);
     const routeScenario = await createScenarioFor(routeProjectId, otherUserId, { title: "REST member" });
     const authors = await request(app).get(`/api/v2/test-scenarios/authors?projectId=${routeProjectId}`).set("Authorization", `Bearer ${token}`).expect(200);
     expect(authors.body.authors).toEqual(expect.arrayContaining([expect.objectContaining({ id: otherUserId })]));

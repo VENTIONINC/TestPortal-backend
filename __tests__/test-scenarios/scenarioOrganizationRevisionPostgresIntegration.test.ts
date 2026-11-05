@@ -9,11 +9,15 @@ const describePostgres =
   process.env.RUN_POSTGRES_INTEGRATION_TESTS === "1" ? describe : describe.skip;
 describePostgres("organization scenario revisions", () => {
   const userId = randomUUID(),
+    otherUserId = randomUUID(),
     projectId = randomUUID(),
     scenarioId = randomUUID();
   beforeAll(async () => {
     await dbClient.user.create({
       data: { id: userId, name: "Editor", email: `${userId}@example.test` },
+    });
+    await dbClient.user.create({
+      data: { id: otherUserId, name: "Other editor", email: `${otherUserId}@example.test` },
     });
     await dbClient.project.create({
       data: {
@@ -39,6 +43,7 @@ describePostgres("organization scenario revisions", () => {
   afterAll(async () => {
     await dbClient.project.delete({ where: { id: projectId } });
     await dbClient.user.delete({ where: { id: userId } });
+    await dbClient.user.delete({ where: { id: otherUserId } });
     await dbClient.$disconnect();
   });
   it("invalidates only changed memberships, preserves unknown actor and leaves reorder revision intact", async () => {
@@ -62,9 +67,12 @@ describePostgres("organization scenario revisions", () => {
       scenarioIds: [scenarioId],
       operation: "add",
     });
+    const suiteBeforeOrder = await service.getSuite(projectId, suite.id);
     await service.reorderMembers({
       projectId,
       suiteId: suite.id,
+      expectedMembershipRevision: suiteBeforeOrder.membershipRevision,
+      expectedScenarioIds: suiteBeforeOrder.members.map(({ testScenarioId }) => testScenarioId),
       scenarioIds: [scenarioId],
     });
     expect(await revision()).toBe(2);
@@ -183,6 +191,141 @@ describePostgres("organization scenario revisions", () => {
         })
       ).revision,
     ).toBe(before.revision + 3);
+  });
+  it("stages suite additions and removals atomically and conditionally restores original positions", async () => {
+    const suite = await service.createSuite({ projectId, name: "Staged changes" });
+    const added = await scenarios.createScenario({ projectId, createdById: userId, title: "Staged addition" });
+    await service.mutateMembers({ projectId, suiteId: suite.id, scenarioIds: [scenarioId], operation: "add" });
+    const before = await service.getSuite(projectId, suite.id);
+    const changed = await service.changeSuiteMembership({
+      projectId,
+      suiteId: suite.id,
+      expectedMembershipRevision: before.membershipRevision,
+      expectedScenarioIds: before.members.map(({ testScenarioId }) => testScenarioId),
+      addScenarioIds: [added.id],
+      removeScenarioIds: [scenarioId],
+      updatedById: userId,
+    });
+    expect(changed.scenarioIds).toEqual([added.id]);
+    const restored = await service.restoreSuiteMembership({
+      projectId,
+      suiteId: suite.id,
+      expectedMembershipRevision: changed.membershipRevision,
+      expectedScenarioIds: changed.scenarioIds,
+      restoreData: changed.restoreData,
+      updatedById: userId,
+    });
+    expect(restored.scenarioIds).toEqual([scenarioId]);
+    await expect(service.restoreSuiteMembership({
+      projectId,
+      suiteId: suite.id,
+      expectedMembershipRevision: changed.membershipRevision,
+      expectedScenarioIds: changed.scenarioIds,
+      restoreData: changed.restoreData,
+      updatedById: userId,
+    })).rejects.toMatchObject({ status: 409 });
+    expect((await service.getSuite(projectId, suite.id)).members.map(({ testScenarioId }) => testScenarioId)).toEqual([scenarioId]);
+  });
+  it("restores a removed member after a no-op legacy reorder", async () => {
+    const suite = await service.createSuite({ projectId, name: "No-op reorder undo" });
+    const second = await scenarios.createScenario({ projectId, createdById: userId, title: "Second member" });
+    const third = await scenarios.createScenario({ projectId, createdById: userId, title: "Third member" });
+    await service.mutateMembers({ projectId, suiteId: suite.id, scenarioIds: [scenarioId, second.id, third.id], operation: "add" });
+    const before = await service.getSuite(projectId, suite.id);
+    const changed = await service.changeSuiteMembership({ projectId, suiteId: suite.id, expectedMembershipRevision: before.membershipRevision, expectedScenarioIds: before.members.map(({ testScenarioId }) => testScenarioId), addScenarioIds: [], removeScenarioIds: [second.id] });
+    await service.reorderMembers({ projectId, suiteId: suite.id, scenarioIds: changed.scenarioIds });
+    const restored = await service.restoreSuiteMembership({ projectId, suiteId: suite.id, expectedMembershipRevision: changed.membershipRevision, expectedScenarioIds: changed.scenarioIds, restoreData: changed.restoreData });
+    expect(restored.scenarioIds).toEqual([scenarioId, second.id, third.id]);
+  });
+  it("moves memberships atomically and restores only destination links created by the move", async () => {
+    const [source, destination] = await Promise.all([
+      service.createSuite({ projectId, name: "Move source" }),
+      service.createSuite({ projectId, name: "Move destination" }),
+    ]);
+    const second = await scenarios.createScenario({ projectId, createdById: userId, title: "Move second" });
+    await service.mutateMembers({ projectId, suiteId: source.id, scenarioIds: [scenarioId, second.id], operation: "add" });
+    await service.mutateMembers({ projectId, suiteId: destination.id, scenarioIds: [scenarioId], operation: "add" });
+    const [sourceBefore, destinationBefore] = await Promise.all([service.getSuite(projectId, source.id), service.getSuite(projectId, destination.id)]);
+    const moved = await service.moveSuiteMembership({
+      projectId,
+      sourceSuiteId: source.id,
+      destinationSuiteId: destination.id,
+      scenarioIds: [scenarioId, second.id],
+      expectedSourceMembershipRevision: sourceBefore.membershipRevision,
+      expectedDestinationMembershipRevision: destinationBefore.membershipRevision,
+      expectedSourceScenarioIds: sourceBefore.members.map(({ testScenarioId }) => testScenarioId),
+      expectedDestinationScenarioIds: destinationBefore.members.map(({ testScenarioId }) => testScenarioId),
+      updatedById: userId,
+    });
+    expect(moved.alreadyInDestination).toEqual([scenarioId]);
+    expect(moved.restoreData.destinationAddedScenarioIds).toEqual([second.id]);
+    const restored = await service.restoreSuiteMove({
+      projectId,
+      expectedSourceMembershipRevision: moved.sourceMembershipRevision,
+      expectedDestinationMembershipRevision: moved.destinationMembershipRevision,
+      expectedSourceScenarioIds: moved.sourceScenarioIds,
+      expectedDestinationScenarioIds: moved.destinationScenarioIds,
+      restoreData: moved.restoreData,
+      updatedById: userId,
+    });
+    expect(restored.sourceScenarioIds).toEqual([scenarioId, second.id]);
+    expect(restored.destinationScenarioIds).toEqual([scenarioId]);
+  });
+  it("returns suite-scoped priority and author counts for the active search", async () => {
+    const suite = await service.createSuite({ projectId, name: "Facet counts" });
+    const [low, high, unrelated] = await Promise.all([
+      scenarios.createScenario({ projectId, createdById: userId, title: "Facet low", priority: "low" }),
+      scenarios.createScenario({ projectId, createdById: otherUserId, title: "Facet high", priority: "high" }),
+      scenarios.createScenario({ projectId, createdById: userId, title: "Other medium", priority: "medium" }),
+    ]);
+    await service.mutateMembers({ projectId, suiteId: suite.id, scenarioIds: [low.id, high.id], operation: "add" });
+    const query = { projectId, suiteId: suite.id, search: "Facet" };
+    await expect(scenarios.listScenarioPriorityCounts(query)).resolves.toEqual({ low: 1, medium: 0, high: 1, unprioritized: 0 });
+    await expect(scenarios.listScenarioPriorityCounts({ ...query, createdByIds: userId })).resolves.toEqual({ low: 1, medium: 0, high: 0, unprioritized: 0 });
+    await expect(scenarios.listScenarioPriorityCounts({ ...query, createdById: otherUserId })).resolves.toEqual({ low: 0, medium: 0, high: 1, unprioritized: 0 });
+    await expect(scenarios.listScenarioAuthors(query)).resolves.toEqual(expect.arrayContaining([expect.objectContaining({ id: userId, scenarioCount: 1 }), expect.objectContaining({ id: otherUserId, scenarioCount: 1 })]));
+    expect((await service.getSuite(projectId, suite.id)).members).toHaveLength(2);
+    expect(unrelated.projectId).toBe(projectId);
+  });
+  it("handles complete selections above 100 while keeping legacy membership requests bounded", async () => {
+    const suite = await service.createSuite({ projectId, name: "Large staged set" });
+    const scenarioIds = Array.from({ length: 101 }, () => randomUUID());
+    await dbClient.testScenario.createMany({
+      data: scenarioIds.map((id, index) => ({
+        id,
+        projectId,
+        createdById: userId,
+        title: `Large selection ${index}`,
+        scenarioKey: `TMS-${100_000 + index}`,
+        scenarioNumber: 100_000 + index,
+        contentMd: "",
+        contentMdHash: "0".repeat(64),
+      })),
+    });
+    const added = await service.changeSuiteMembership({
+      projectId,
+      suiteId: suite.id,
+      expectedMembershipRevision: 0,
+      expectedScenarioIds: [],
+      addScenarioIds: scenarioIds,
+      removeScenarioIds: [],
+      updatedById: userId,
+    });
+    expect(added.scenarioIds).toHaveLength(101);
+    expect(added.scenarioIds).toEqual(scenarioIds);
+    await expect(service.mutateMembers({ projectId, suiteId: suite.id, scenarioIds, operation: "remove", updatedById: userId })).rejects.toMatchObject({ status: 400 });
+    await expect(service.changeSuiteMembership({
+      projectId,
+      suiteId: suite.id,
+      expectedMembershipRevision: added.membershipRevision,
+      expectedScenarioIds: added.scenarioIds,
+      addScenarioIds: [randomUUID()],
+      removeScenarioIds: [scenarioIds[0] ?? ""],
+      updatedById: userId,
+    })).rejects.toMatchObject({ code: "TEST_SCENARIO_NOT_FOUND" });
+    const current = await service.getSuite(projectId, suite.id);
+    expect(current.membershipRevision).toBe(added.membershipRevision);
+    expect(current.members).toHaveLength(101);
   });
   it.each(["add", "remove", "deleteSuite", "deleteFolder"] as const)(
     "serializes editor save against %s without partial content or unrelated-member damage",

@@ -61,6 +61,17 @@ export async function replaceScenarioSuites(
     const suite = await tx.testSuite.create({ data: { projectId, name } });
     resolvedIds.push(suite.id);
   }
+  const existingSuiteIds = new Set(previous.map(({ suiteId }) => suiteId));
+  const nextSuiteIds = new Set(resolvedIds);
+  const changedExistingSuiteIds = [
+    ...[...existingSuiteIds].filter((id) => !nextSuiteIds.has(id)),
+    ...resolvedIds.filter((id) => !existingSuiteIds.has(id) && suiteIds.includes(id)),
+  ];
+  if (changedExistingSuiteIds.length)
+    await tx.testSuite.updateMany({
+      where: { projectId, id: { in: changedExistingSuiteIds } },
+      data: { membershipRevision: { increment: 1 } },
+    });
   await tx.testSuiteMember.deleteMany({
     where: { testScenarioId: scenarioId, suiteId: { notIn: resolvedIds } },
   });
@@ -69,7 +80,9 @@ export async function replaceScenarioSuites(
     const maximum = await tx.testSuiteMember.aggregate({
       where: { suiteId },
       _max: { position: true },
+      _count: true,
     });
+    if (maximum._count >= 10_000) throw new TestScenarioValidationError("Resulting membership exceeds 10000 scenarios");
     await tx.testSuiteMember.create({
       data: {
         suiteId,

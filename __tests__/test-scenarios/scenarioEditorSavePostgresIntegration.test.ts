@@ -114,29 +114,18 @@ describePostgres("atomic scenario editor", () => {
       "Updated",
     );
   });
-  it("rolls fields, steps, suites and numbering back when a deferred suite collides", async () => {
+  it("creates duplicate-named suites independently and rolls back invalid aggregate writes", async () => {
     const before = await dbClient.project.findUniqueOrThrow({
       where: { id: projectId },
     });
-    await expect(
-      service.createScenario({
-        projectId,
-        createdById,
-        title: "Rollback",
-        steps: [{ action: "Action" }],
-        newSuites: [{ name: "deferred" }],
-        suiteIds: [],
-      }),
-    ).rejects.toMatchObject({ code: "TEST_SCENARIO_CONFLICT" });
-    expect(
-      await dbClient.testScenario.count({
-        where: { projectId, title: "Rollback" },
-      }),
-    ).toBe(0);
+    const first = await service.createScenario({ projectId, createdById, title: "First duplicate", newSuites: [{ name: "Deferred" }], suiteIds: [] });
+    const duplicate = await service.createScenario({ projectId, createdById, title: "Second duplicate", newSuites: [{ name: "deferred" }], suiteIds: [] });
+    expect(first.suites[0]?.id).not.toBe(duplicate.suites[0]?.id);
+    expect(await dbClient.testSuite.count({ where: { projectId, name: { in: ["Deferred", "deferred"] } } })).toBe(2);
     expect(
       (await dbClient.project.findUniqueOrThrow({ where: { id: projectId } }))
         .lastScenarioNumber,
-    ).toBe(before.lastScenarioNumber);
+    ).toBe(before.lastScenarioNumber + 2);
     const scenario = await service.createScenario({
       projectId,
       createdById,

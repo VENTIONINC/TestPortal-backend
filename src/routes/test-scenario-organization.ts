@@ -17,6 +17,10 @@ router.patch("/v2/test-suites/:suiteId", authMiddleware, controller.updateSuite)
 router.delete("/v2/test-suites/:suiteId", authMiddleware, controller.deleteSuite);
 router.post("/v2/test-suites/:suiteId/members", authMiddleware, controller.addMembers);
 router.delete("/v2/test-suites/:suiteId/members", authMiddleware, controller.removeMembers);
+router.post("/v2/test-suites/:suiteId/membership-changes", authMiddleware, controller.changeSuiteMembership);
+router.post("/v2/test-suites/:suiteId/membership-restoration", authMiddleware, controller.restoreSuiteMembership);
+router.post("/v2/test-suites/moves", authMiddleware, controller.moveSuiteMembership);
+router.post("/v2/test-suites/move-restoration", authMiddleware, controller.restoreSuiteMove);
 router.put("/v2/test-suites/:suiteId/members/order", authMiddleware, controller.orderMembers);
 router.patch("/v2/test-scenarios/bulk-folder", authMiddleware, controller.bulkFolder);
 export default router;
