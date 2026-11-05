@@ -11,6 +11,7 @@ import {
   testScenarioListQuerySchema,
   testScenarioSelectionQuerySchema,
   testScenarioAuthorsQuerySchema,
+  testScenarioPriorityCountsQuerySchema,
   testScenarioProjectQuerySchema,
   testScenarioStepParamsSchema,
   updateTestScenarioSchema,
@@ -82,6 +83,13 @@ function sendServiceError(
 }
 
 export const testScenarioController = {
+  async listPriorityCounts(req: Request, res: Response): Promise<void> {
+    const parsed = testScenarioPriorityCountsQuerySchema.safeParse(req.query);
+    if (!parsed.success) { sendValidationError(res, validationMessage(parsed.error)); return; }
+    try { res.status(200).json(await testScenarioService.listScenarioPriorityCounts(parsed.data)); }
+    catch (error) { sendServiceError(res, error, "list scenario priority counts"); }
+  },
+
   async listAuthors(req: Request, res: Response): Promise<void> {
     const parsed = testScenarioAuthorsQuerySchema.safeParse(req.query);
     if (!parsed.success) { sendValidationError(res, validationMessage(parsed.error)); return; }

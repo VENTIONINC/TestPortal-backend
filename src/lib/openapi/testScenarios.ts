@@ -333,6 +333,7 @@ const TestScenarioSelectionQuerySchema = TestScenarioListQueryBaseSchema.omit({ 
 }).openapi("TestScenarioSelectionQuery");
 const TestScenarioSelectionResponseSchema = z.object({ scenarioIds: z.array(z.string().uuid()), total: z.number().int().nonnegative() }).strict().openapi("TestScenarioSelectionResponse");
 const TestScenarioAuthorsQuerySchema = TestScenarioListQueryBaseSchema.omit({ page: true, limit: true, createdById: true, createdByIds: true, sort: true, sortField: true, sortDirection: true }).strict().openapi("TestScenarioAuthorsQuery");
+const TestScenarioPriorityCountsQuerySchema = TestScenarioAuthorsQuerySchema.omit({ priority: true }).strict().openapi("TestScenarioPriorityCountsQuery");
 const TestScenarioAuthorOptionSchema = z.object({
   id: z.string().uuid(),
   name: z.string(),
@@ -340,6 +341,7 @@ const TestScenarioAuthorOptionSchema = z.object({
   scenarioCount: z.number().int().nonnegative(),
 }).strict().openapi("TestScenarioAuthorOption");
 const TestScenarioAuthorsResponseSchema = z.object({ authors: z.array(TestScenarioAuthorOptionSchema) }).strict().openapi("TestScenarioAuthorsResponse");
+const TestScenarioPriorityCountsResponseSchema = z.object({ low: z.number().int().nonnegative(), medium: z.number().int().nonnegative(), high: z.number().int().nonnegative(), unprioritized: z.number().int().nonnegative() }).strict().openapi("TestScenarioPriorityCountsResponse");
 
 const OrganizationProjectQuerySchema = z.object({
   projectId: z.string().uuid(),
@@ -359,7 +361,7 @@ const FolderUpdateBodySchema = z.object({
 });
 const SuiteBodySchema = z.object({
   projectId: z.string().uuid(),
-  name: z.string().min(1),
+  name: z.string().min(1).openapi({ description: "Nonblank suite name. Names may repeat within the project; suite UUIDs identify suites." }),
   description: z.string().nullable().optional(),
   purpose: z.string().nullable().optional(),
   release: z.string().nullable().optional(),
@@ -374,10 +376,19 @@ const MembersBodySchema = z.object({
   projectId: z.string().uuid(),
   scenarioIds: z.array(z.string().uuid()).min(1).max(100),
 });
+const CompleteMemberOrderSchema = z.array(z.string().uuid()).max(10_000);
 const MemberOrderBodySchema = z.object({
   projectId: z.string().uuid(),
+  expectedMembershipRevision: z.number().int().nonnegative(),
+  expectedScenarioIds: CompleteMemberOrderSchema,
   scenarioIds: z.array(z.string().uuid()),
 });
+const MembershipUndoSchema = z.object({ suiteId: z.string().uuid(), addedScenarioIds: z.array(z.string().uuid()).max(10_000), removedMembers: z.array(z.object({ scenarioId: z.string().uuid(), position: z.number().int().nonnegative() })).max(10_000) });
+const MembershipChangeBodySchema = z.object({ projectId: z.string().uuid(), expectedMembershipRevision: z.number().int().nonnegative(), expectedScenarioIds: CompleteMemberOrderSchema, addScenarioIds: z.array(z.string().uuid()).max(10_000), removeScenarioIds: z.array(z.string().uuid()).max(10_000) });
+const MembershipRestoreBodySchema = z.object({ projectId: z.string().uuid(), expectedMembershipRevision: z.number().int().nonnegative(), expectedScenarioIds: CompleteMemberOrderSchema, restoreData: MembershipUndoSchema });
+const MoveUndoSchema = z.object({ sourceSuiteId: z.string().uuid(), destinationSuiteId: z.string().uuid(), sourceMembers: z.array(z.object({ scenarioId: z.string().uuid(), position: z.number().int().nonnegative() })).max(10_000), destinationAddedScenarioIds: z.array(z.string().uuid()).max(10_000) });
+const SuiteMoveBodySchema = z.object({ projectId: z.string().uuid(), sourceSuiteId: z.string().uuid(), destinationSuiteId: z.string().uuid(), expectedSourceMembershipRevision: z.number().int().nonnegative(), expectedDestinationMembershipRevision: z.number().int().nonnegative(), scenarioIds: z.array(z.string().uuid()).min(1).max(10_000), expectedSourceScenarioIds: CompleteMemberOrderSchema, expectedDestinationScenarioIds: CompleteMemberOrderSchema });
+const SuiteMoveRestoreBodySchema = z.object({ projectId: z.string().uuid(), expectedSourceMembershipRevision: z.number().int().nonnegative(), expectedDestinationMembershipRevision: z.number().int().nonnegative(), expectedSourceScenarioIds: CompleteMemberOrderSchema, expectedDestinationScenarioIds: CompleteMemberOrderSchema, restoreData: MoveUndoSchema });
 const BulkFolderBodySchema = z.object({
   projectId: z.string().uuid(),
   scenarioIds: z.array(z.string().uuid()).min(1).max(100),
@@ -419,6 +430,7 @@ const SuiteResponseSchema = z.object({
   description: z.string().nullable(),
   purpose: z.string().nullable(),
   release: z.string().nullable(),
+  membershipRevision: z.number().int().nonnegative(),
   createdAt: z.string(),
   updatedAt: z.string(),
   members: z.array(SuiteMemberResponseSchema).optional(),
@@ -428,11 +440,19 @@ const MovedResponseSchema = z.object({ moved: z.number().int().nonnegative() });
 const MemberOrderResponseSchema = z.object({
   scenarioIds: z.array(z.string().uuid()),
 });
+const MembershipChangeResponseSchema = z.object({ scenarioIds: z.array(z.string().uuid()), membershipRevision: z.number().int().nonnegative(), restoreData: MembershipUndoSchema });
+const MembershipRestoreResponseSchema = z.object({ scenarioIds: z.array(z.string().uuid()), membershipRevision: z.number().int().nonnegative() });
+const SuiteMoveResponseSchema = z.object({ sourceScenarioIds: z.array(z.string().uuid()), destinationScenarioIds: z.array(z.string().uuid()), sourceMembershipRevision: z.number().int().nonnegative(), destinationMembershipRevision: z.number().int().nonnegative(), restoreData: MoveUndoSchema, alreadyInDestination: z.array(z.string().uuid()) });
+const SuiteMoveRestoreResponseSchema = z.object({ sourceScenarioIds: z.array(z.string().uuid()), destinationScenarioIds: z.array(z.string().uuid()), sourceMembershipRevision: z.number().int().nonnegative(), destinationMembershipRevision: z.number().int().nonnegative() });
 const FolderDeleteQuerySchema = OrganizationProjectQuerySchema.extend({
   disposition: z.enum(["parent", "unfiled"]),
 });
 
 function organizationResponseSchema(path: string, method: string): ZodTypeAny {
+  if (path.endsWith("/membership-changes")) return MembershipChangeResponseSchema;
+  if (path.endsWith("/membership-restoration")) return MembershipRestoreResponseSchema;
+  if (path.endsWith("/moves")) return SuiteMoveResponseSchema;
+  if (path.endsWith("/move-restoration")) return SuiteMoveRestoreResponseSchema;
   if (path.includes("bulk-folder")) return MovedResponseSchema;
   if (path.endsWith("/members/order")) return MemberOrderResponseSchema;
   if (path.endsWith("/members")) return z.array(SuiteMemberResponseSchema);
@@ -600,6 +620,7 @@ export function registerTestScenarioRoutes(registry: OpenAPIRegistry): void {
   registry.register("TestScenarioSelectionQuery", TestScenarioSelectionQuerySchema);
   registry.register("TestScenarioSelectionResponse", TestScenarioSelectionResponseSchema);
   registry.register("TestScenarioAuthorsResponse", TestScenarioAuthorsResponseSchema);
+  registry.register("TestScenarioPriorityCountsResponse", TestScenarioPriorityCountsResponseSchema);
   registry.register("TestScenarioSpecLinkBody", TestScenarioSpecLinkBodySchema);
   registry.register(
     "TestScenarioSpecLinkResponse",
@@ -700,7 +721,7 @@ export function registerTestScenarioRoutes(registry: OpenAPIRegistry): void {
       401: errorResponse("Unauthorized"),
       404: errorResponse("Test scenario not found in the requested project"),
       409: errorResponse(
-        "Stale scenario revision: reload explicitly, or pending suite name collision; no changes saved",
+        "Stale scenario revision; reload explicitly before saving",
       ),
       500: errorResponse("Internal server error"),
     },
@@ -957,7 +978,7 @@ export function registerTestScenarioRoutes(registry: OpenAPIRegistry): void {
         },
       },
       409: errorResponse(
-        "Pending suite name already exists; no scenario or suite changes saved",
+        "Scenario revision conflict; no scenario or suite changes saved",
       ),
       500: {
         description: "Internal server error",
@@ -1010,6 +1031,7 @@ export function registerTestScenarioRoutes(registry: OpenAPIRegistry): void {
 
   for (const [path, query, responseSchema, description] of [
     ["/api/v2/test-scenarios/authors", TestScenarioAuthorsQuerySchema, TestScenarioAuthorsResponseSchema, "Returns project creators and counts matching the supplied catalog scope and filters, excluding author selection and pagination."],
+    ["/api/v2/test-scenarios/priority-counts", TestScenarioPriorityCountsQuerySchema, TestScenarioPriorityCountsResponseSchema, "Returns priority counts matching the supplied catalog scope and filters, excluding priority, author selection, and pagination."],
     ["/api/v2/test-scenarios/selection", TestScenarioSelectionQuerySchema, TestScenarioSelectionResponseSchema, "Resolves all unique matching scenario UUIDs using the catalog filters, without returning summary or Markdown content."],
   ] as const) {
     registry.registerPath({
@@ -1142,7 +1164,7 @@ export function registerTestScenarioRoutes(registry: OpenAPIRegistry): void {
       content: { "application/json": { schema: ErrorResponseSchema } },
     },
     409: {
-      description: "Name conflict",
+      description: "Membership order conflict or folder name conflict",
       content: { "application/json": { schema: ErrorResponseSchema } },
     },
     500: {
@@ -1157,6 +1179,10 @@ export function registerTestScenarioRoutes(registry: OpenAPIRegistry): void {
     "/api/v2/test-suites": ["get", "post"],
     "/api/v2/test-suites/{suiteId}": ["get", "patch", "delete"],
     "/api/v2/test-suites/{suiteId}/members": ["post", "delete"],
+    "/api/v2/test-suites/{suiteId}/membership-changes": ["post"],
+    "/api/v2/test-suites/{suiteId}/membership-restoration": ["post"],
+    "/api/v2/test-suites/moves": ["post"],
+    "/api/v2/test-suites/move-restoration": ["post"],
     "/api/v2/test-suites/{suiteId}/members/order": ["put"],
     "/api/v2/test-scenarios/bulk-folder": ["patch"],
   })) {
@@ -1195,6 +1221,14 @@ export function registerTestScenarioRoutes(registry: OpenAPIRegistry): void {
                     "application/json": {
                       schema: path.includes("bulk-folder")
                         ? BulkFolderBodySchema
+                        : path.endsWith("/membership-changes")
+                          ? MembershipChangeBodySchema
+                          : path.endsWith("/membership-restoration")
+                            ? MembershipRestoreBodySchema
+                            : path.endsWith("/moves")
+                              ? SuiteMoveBodySchema
+                              : path.endsWith("/move-restoration")
+                                ? SuiteMoveRestoreBodySchema
                         : path.endsWith("/members/order")
                           ? MemberOrderBodySchema
                           : path.includes("members")

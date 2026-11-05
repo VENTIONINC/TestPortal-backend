@@ -71,6 +71,10 @@ describe("structured Test Scenario OpenAPI contract", () => {
       ["/api/v2/test-suites/{suiteId}/members", "post"],
       ["/api/v2/test-suites/{suiteId}/members", "delete"],
       ["/api/v2/test-suites/{suiteId}/members/order", "put"],
+      ["/api/v2/test-suites/{suiteId}/membership-changes", "post"],
+      ["/api/v2/test-suites/{suiteId}/membership-restoration", "post"],
+      ["/api/v2/test-suites/moves", "post"],
+      ["/api/v2/test-suites/move-restoration", "post"],
       ["/api/v2/test-scenarios/bulk-folder", "patch"],
     ] as const) {
       const operation = paths[path]?.[method];
@@ -88,6 +92,12 @@ describe("structured Test Scenario OpenAPI contract", () => {
       ).toBeDefined();
     }
     expect(paths["/api/v2/test-suites/{suiteId}/members"]?.delete?.requestBody).toBeDefined();
+    const memberOrderRequest = paths["/api/v2/test-suites/{suiteId}/members/order"]?.put?.requestBody;
+    expect(memberOrderRequest).toBeDefined();
+    const memberOrderBody = memberOrderRequest && "content" in memberOrderRequest
+      ? memberOrderRequest.content?.["application/json"]?.schema as { required?: string[] }
+      : undefined;
+    expect(memberOrderBody?.required).toEqual(expect.arrayContaining(["expectedMembershipRevision", "expectedScenarioIds", "scenarioIds"]));
     expect(paths["/api/v2/test-scenario-folders/{folderId}"]?.delete?.parameters).toEqual(expect.arrayContaining([expect.objectContaining({ name: "disposition", in: "query" })]));
     const folderSchema = spec.components?.schemas?.TestScenarioFolderResponse as { properties?: Record<string, unknown> };
     expect(folderSchema.properties?.description).toEqual({ type: ["string", "null"] });
@@ -100,6 +110,7 @@ describe("structured Test Scenario OpenAPI contract", () => {
   it("publishes project-scoped author discovery and all-result UUID resolution", () => {
     const spec = generateOpenAPISpec();
     expect(spec.paths?.["/api/v2/test-scenarios/authors"]?.get).toBeDefined();
+    expect(spec.paths?.["/api/v2/test-scenarios/priority-counts"]?.get).toBeDefined();
     expect(spec.paths?.["/api/v2/test-scenarios/selection"]?.get).toBeDefined();
     const selectionQuery = spec.components?.schemas?.TestScenarioSelectionQuery as { properties?: Record<string, unknown> };
     expect(selectionQuery.properties).toHaveProperty("priority");

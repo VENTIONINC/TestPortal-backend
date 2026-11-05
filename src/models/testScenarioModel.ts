@@ -1,8 +1,8 @@
 // Copyright 2026 VENSOLUTIONSGROUP LTD
 // SPDX-License-Identifier: Apache-2.0
 
-import { Prisma } from "@prisma/client";
 import type { TestScenarioStep } from "@prisma/client";
+import { Prisma } from "@prisma/client";
 import { dbClient } from "@/prisma/client";
 import {
   hashTestScenarioMarkdown,
@@ -10,29 +10,27 @@ import {
   TEST_SCENARIO_MARKDOWN_FORMAT_VERSION,
 } from "@/lib/testScenarioMarkdown";
 import type {
-  ListTestScenariosParams,
-  TestScenarioSortDirection,
-  TestScenarioSort,
-} from "@/types/testScenarios";
-import type {
   AppendTestScenarioStepParams,
   CreateTestScenarioParams,
   DeleteTestScenarioStepParams,
+  ListTestScenariosParams,
   ReorderTestScenarioStepsParams,
   TestScenarioResponse,
+  TestScenarioSort,
+  TestScenarioSortDirection,
   TestScenarioSummary,
   UpdateTestScenarioParams,
   UpdateTestScenarioStepParams,
 } from "@/types/testScenarios";
+import { TestScenarioConflictError } from "@/types/testScenarios";
 
 import { withScenarioTransaction } from "@/models/testScenarioTransactions";
 import {
   replaceScenarioSteps,
   replaceScenarioSuites,
-  validateScenarioFolder,
   validateScenarioActor,
+  validateScenarioFolder,
 } from "@/models/testScenarioEditorModel";
-import { TestScenarioConflictError } from "@/types/testScenarios";
 
 export interface CreateTestScenarioData extends CreateTestScenarioParams {}
 
@@ -89,6 +87,7 @@ type SummaryListParams = Pick<
 type ScenarioAuthorCountFilters = Pick<SummaryListParams,
   "search" | "priority" | "folderId" | "includeDescendants" | "suiteId" | "scenarioKey" | "title" | "details" | "folder" | "createdBy"
 >;
+type ScenarioPriorityCountFilters = Omit<ScenarioAuthorCountFilters, "priority">;
 
 interface SummaryPredicate {
   folderCte: Prisma.Sql;
@@ -239,8 +238,7 @@ function summaryOrderBy(
     case "recently_created":
       return [{ createdAt: "desc" }, { id: "desc" }];
     default: {
-      const exhaustiveSort: never = sort;
-      return exhaustiveSort;
+      return sort;
     }
   }
 }
@@ -527,13 +525,15 @@ export const testScenarioModel = {
                     ? Prisma.sql`s."createdAt"`
                     : Prisma.sql`s."title"`;
     const sqlDirection = Prisma.raw(direction.toUpperCase());
-    const orderBy = sortField
-      ? Prisma.sql`ORDER BY ${sortColumn} ${sqlDirection}, s."id" ASC`
-      : params.sort === "title_asc"
-        ? Prisma.sql`ORDER BY s."title" ASC, s."id" ASC`
-        : params.sort === "recently_updated"
-          ? Prisma.sql`ORDER BY s."updatedAt" DESC, s."id" DESC`
-          : Prisma.sql`ORDER BY s."createdAt" DESC, s."id" DESC`;
+    const orderBy = params.suiteId && !sortField && !params.sort
+      ? Prisma.sql`ORDER BY (SELECT sm."position" FROM "TestSuiteMember" sm WHERE sm."suiteId" = ${params.suiteId}::uuid AND sm."testScenarioId" = s."id") ASC, s."id" ASC`
+      : sortField
+        ? Prisma.sql`ORDER BY ${sortColumn} ${sqlDirection}, s."id" ASC`
+        : params.sort === "title_asc"
+          ? Prisma.sql`ORDER BY s."title" ASC, s."id" ASC`
+          : params.sort === "recently_updated"
+            ? Prisma.sql`ORDER BY s."updatedAt" DESC, s."id" DESC`
+            : Prisma.sql`ORDER BY s."createdAt" DESC, s."id" DESC`;
 
     return await dbClient.$transaction(
       async (transaction) => {
@@ -591,12 +591,15 @@ export const testScenarioModel = {
         limit: 1,
         ...filters,
       });
-      const rows = await transaction.$queryRaw<Array<{
-        id: string;
-        name: string;
-        email: string;
-        scenarioCount: number;
-      }>>(Prisma.sql`
+
+      return await transaction.$queryRaw<
+        Array<{
+          id: string;
+          name: string;
+          email: string;
+          scenarioCount: number;
+        }>
+      >(Prisma.sql`
         ${predicate.folderCte}
         SELECT project_authors.id, project_authors.name, project_authors.email,
           COALESCE(author_counts.total, 0)::int AS "scenarioCount"
@@ -614,7 +617,28 @@ export const testScenarioModel = {
         ) author_counts ON author_counts."createdById" = project_authors.id
         ORDER BY project_authors.name ASC, project_authors.id ASC
       `);
-      return rows;
+    }, { isolationLevel: Prisma.TransactionIsolationLevel.RepeatableRead });
+  },
+
+  async listScenarioPriorityCounts(
+    projectId: string,
+    filters: ScenarioPriorityCountFilters = {},
+  ): Promise<{ low: number; medium: number; high: number; unprioritized: number }> {
+    return await dbClient.$transaction(async (transaction) => {
+      const predicate = await buildSummaryPredicate(transaction, { projectId, page: 1, limit: 1, ...filters });
+      const rows = await transaction.$queryRaw<Array<{ priority: "low" | "medium" | "high" | null; count: number }>>(Prisma.sql`
+        ${predicate.folderCte}
+        SELECT s."priority", COUNT(*)::int AS "count"
+        ${predicate.from}
+        WHERE ${predicate.where}
+        GROUP BY s."priority"
+      `);
+      const counts = { low: 0, medium: 0, high: 0, unprioritized: 0 };
+      for (const row of rows) {
+        if (row.priority === null) counts.unprioritized = row.count;
+        else counts[row.priority] = row.count;
+      }
+      return counts;
     }, { isolationLevel: Prisma.TransactionIsolationLevel.RepeatableRead });
   },
 

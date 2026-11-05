@@ -3,7 +3,7 @@
 
 import { Prisma } from "@prisma/client";
 import { dbClient } from "@/prisma/client";
-import { testScenarioOrganizationWrites, deleteScenarioSuite } from "@/models/testScenarioOrganizationWrites";
+import { testScenarioOrganizationWrites, deleteScenarioSuite, mutateSuiteMembership, moveSuiteMembership, restoreSuiteMembership, restoreSuiteMove } from "@/models/testScenarioOrganizationWrites";
 import { OrganizationError } from "@/models/testScenarioOrganizationErrors";
 export { OrganizationError } from "@/models/testScenarioOrganizationErrors";
 
@@ -101,15 +101,13 @@ export const testScenarioOrganizationService = {
   async createSuite(input: { projectId: string; name: string; description?: string | null; purpose?: string | null; release?: string | null }) {
     await requireProject(input.projectId);
     if (!input.name.trim()) throw invalid("Suite name must not be blank");
-    try { return await dbClient.testSuite.create({ data: { ...input, name: input.name.trim() } }); }
-    catch (error) { if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002") throw new OrganizationError("A suite with this name already exists", 409); throw error; }
+    return await dbClient.testSuite.create({ data: { ...input, name: input.name.trim() } });
   },
 
   async updateSuite(input: { projectId: string; suiteId: string; name?: string; description?: string | null; purpose?: string | null; release?: string | null }) {
     if (input.name !== undefined && (!input.name.trim() || input.name.trim().length > 200)) throw invalid("Suite name must contain 1 to 200 characters");
     const suite = await dbClient.testSuite.findFirst({ where: { id: input.suiteId, projectId: input.projectId } }); if (!suite) throw notFound();
-    try { return await dbClient.testSuite.update({ where: { id: suite.id }, data: { ...(input.name !== undefined ? { name: input.name.trim() } : {}), ...(input.description !== undefined ? { description: input.description } : {}), ...(input.purpose !== undefined ? { purpose: input.purpose } : {}), ...(input.release !== undefined ? { release: input.release } : {}) } }); }
-    catch (error) { if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002") throw new OrganizationError("A suite with this name already exists", 409); throw error; }
+    return await dbClient.testSuite.update({ where: { id: suite.id }, data: { ...(input.name !== undefined ? { name: input.name.trim() } : {}), ...(input.description !== undefined ? { description: input.description } : {}), ...(input.purpose !== undefined ? { purpose: input.purpose } : {}), ...(input.release !== undefined ? { release: input.release } : {}) } });
   },
 
   async deleteSuite(projectId: string, suiteId: string, updatedById?: string) {
@@ -132,9 +130,31 @@ export const testScenarioOrganizationService = {
     return await testScenarioOrganizationWrites.mutateMembers(input);
   },
 
+  async changeSuiteMembership(input: { projectId: string; suiteId: string; expectedMembershipRevision: number; expectedScenarioIds: string[]; addScenarioIds: string[]; removeScenarioIds: string[]; updatedById?: string }) {
+    if (input.expectedScenarioIds.length > 10_000 || input.addScenarioIds.length > 10_000 || input.removeScenarioIds.length > 10_000) throw invalid("Membership changes are limited to 10000 scenarios");
+    return await mutateSuiteMembership(input);
+  },
+
+  async restoreSuiteMembership(input: { projectId: string; suiteId: string; expectedMembershipRevision: number; expectedScenarioIds: string[]; restoreData: { suiteId: string; addedScenarioIds: string[]; removedMembers: Array<{ scenarioId: string; position: number }> }; updatedById?: string }) {
+    if (input.expectedScenarioIds.length > 10_000) throw invalid("Membership changes are limited to 10000 scenarios");
+    return await restoreSuiteMembership(input);
+  },
+
+  async moveSuiteMembership(input: { projectId: string; sourceSuiteId: string; destinationSuiteId: string; scenarioIds: string[]; expectedSourceScenarioIds: string[]; expectedDestinationScenarioIds: string[]; expectedSourceMembershipRevision: number; expectedDestinationMembershipRevision: number; updatedById?: string }) {
+    if ([input.scenarioIds, input.expectedSourceScenarioIds, input.expectedDestinationScenarioIds].some((ids) => ids.length > 10_000)) throw invalid("Membership changes are limited to 10000 scenarios");
+    return await moveSuiteMembership(input);
+  },
+
+  async restoreSuiteMove(input: { projectId: string; expectedSourceScenarioIds: string[]; expectedDestinationScenarioIds: string[]; expectedSourceMembershipRevision: number; expectedDestinationMembershipRevision: number; restoreData: { sourceSuiteId: string; destinationSuiteId: string; sourceMembers: Array<{ scenarioId: string; position: number }>; destinationAddedScenarioIds: string[] }; updatedById?: string }) {
+    if ([input.expectedSourceScenarioIds, input.expectedDestinationScenarioIds].some((ids) => ids.length > 10_000)) throw invalid("Membership changes are limited to 10000 scenarios");
+    return await restoreSuiteMove(input);
+  },
+
   async reorderMembers(input: {
     projectId: string;
     suiteId: string;
+    expectedMembershipRevision: number;
+    expectedScenarioIds: string[];
     scenarioIds: string[];
   }) {
     return await testScenarioOrganizationWrites.reorderMembers(input);

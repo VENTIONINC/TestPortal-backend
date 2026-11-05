@@ -1,7 +1,6 @@
 // Copyright 2026 VENSOLUTIONSGROUP LTD
 // SPDX-License-Identifier: Apache-2.0
 
-import { Prisma } from "@prisma/client";
 import {
   editorStepSchema,
   scenarioSuiteIdsSchema,
@@ -9,11 +8,10 @@ import {
   testScenarioPrioritySchema,
   testScenarioRelatedIssueUrlSchema,
 } from "@/schemas/testScenarioSchemas";
-import type { TestScenarioAuthorsQuery, TestScenarioSelectionQuery } from "@/schemas/testScenarioSchemas";
+import type { TestScenarioAuthorsQuery, TestScenarioPriorityCountsQuery, TestScenarioSelectionQuery } from "@/schemas/testScenarioSchemas";
 import { projectModel } from "@/models/projectModel";
 import { testScenarioModel } from "@/models/testScenarioModel";
 import {
-  TestScenarioConflictError,
   TestScenarioNotFoundError,
   TestScenarioValidationError,
   type AppendTestScenarioStepParams,
@@ -226,18 +224,7 @@ function normalizeSuites(params: {
 }
 
 async function scenarioWrite<T>(write: () => Promise<T>): Promise<T> {
-  try {
-    return await write();
-  } catch (error) {
-    if (
-      error instanceof Prisma.PrismaClientKnownRequestError &&
-      error.code === "P2002"
-    )
-      throw new TestScenarioConflictError(
-        "A suite with this name already exists. Select it explicitly or change the name.",
-      );
-    throw error;
-  }
+  return await write();
 }
 
 function scenarioNotFound(scenarioId: string): TestScenarioNotFoundError {
@@ -381,7 +368,7 @@ export const testScenarioService = {
         : {}),
       ...(createdByIds !== undefined ? { createdByIds } : {}),
       ...(params.priority !== undefined ? { priority: params.priority } : {}),
-      sort,
+      ...(!params.suiteId || params.sort !== undefined ? { sort } : {}),
       ...(params.sortField !== undefined
         ? { sortField: params.sortField }
         : {}),
@@ -433,6 +420,33 @@ export const testScenarioService = {
     return await testScenarioModel.listScenarioAuthors(params.projectId, {
       ...(search !== undefined ? { search } : {}),
       ...(params.priority !== undefined ? { priority: params.priority } : {}),
+      ...(filters.scenarioKey ? { scenarioKey: filters.scenarioKey } : {}),
+      ...(filters.title ? { title: filters.title } : {}),
+      ...(filters.details ? { details: filters.details } : {}),
+      ...(filters.folder ? { folder: filters.folder } : {}),
+      ...(filters.createdBy ? { createdBy: filters.createdBy } : {}),
+      ...(params.folderId !== undefined ? { folderId: params.folderId } : {}),
+      ...(params.includeDescendants !== undefined ? { includeDescendants: params.includeDescendants } : {}),
+      ...(params.suiteId !== undefined ? { suiteId: params.suiteId } : {}),
+    });
+  },
+
+  async listScenarioPriorityCounts(params: TestScenarioPriorityCountsQuery): Promise<{ low: number; medium: number; high: number; unprioritized: number }> {
+    validateKeys(params as unknown as Record<string, unknown>, ["projectId", "search", "scenarioKey", "title", "details", "folder", "createdBy", "folderId", "includeDescendants", "suiteId"]);
+    requireIdentifier(params.projectId, "Project ID");
+    const search = normalizeSearch(params.search);
+    const filters = {
+      scenarioKey: normalizeColumnFilter(params.scenarioKey, "scenarioKey"),
+      title: normalizeColumnFilter(params.title, "title"),
+      details: normalizeColumnFilter(params.details, "details"),
+      folder: normalizeColumnFilter(params.folder, "folder"),
+      createdBy: normalizeColumnFilter(params.createdBy, "createdBy"),
+    };
+    if (params.folderId && params.folderId !== "unfiled" && !(await testScenarioModel.folderBelongsToProject(params.folderId, params.projectId))) throw new TestScenarioNotFoundError("Folder not found");
+    if (params.suiteId && !(await testScenarioModel.suiteBelongsToProject(params.suiteId, params.projectId))) throw new TestScenarioNotFoundError("Suite not found");
+    if (!(await projectModel.exists(params.projectId))) throw new TestScenarioNotFoundError(`Project with id '${params.projectId}' not found`);
+    return await testScenarioModel.listScenarioPriorityCounts(params.projectId, {
+      ...(search !== undefined ? { search } : {}),
       ...(filters.scenarioKey ? { scenarioKey: filters.scenarioKey } : {}),
       ...(filters.title ? { title: filters.title } : {}),
       ...(filters.details ? { details: filters.details } : {}),
