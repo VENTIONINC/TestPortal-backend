@@ -333,7 +333,9 @@ const TestScenarioSelectionQuerySchema = TestScenarioListQueryBaseSchema.omit({ 
 }).openapi("TestScenarioSelectionQuery");
 const TestScenarioSelectionResponseSchema = z.object({ scenarioIds: z.array(z.string().uuid()), total: z.number().int().nonnegative() }).strict().openapi("TestScenarioSelectionResponse");
 const TestScenarioAuthorsQuerySchema = TestScenarioListQueryBaseSchema.omit({ page: true, limit: true, createdById: true, createdByIds: true, sort: true, sortField: true, sortDirection: true }).strict().openapi("TestScenarioAuthorsQuery");
-const TestScenarioPriorityCountsQuerySchema = TestScenarioAuthorsQuerySchema.omit({ priority: true }).strict().openapi("TestScenarioPriorityCountsQuery");
+const TestScenarioPriorityCountsQuerySchema = TestScenarioListQueryBaseSchema.omit({ page: true, limit: true, priority: true, sort: true, sortField: true, sortDirection: true }).strict().superRefine((value, context) => {
+  if (value.createdById && value.createdByIds) context.addIssue({ code: "custom", path: ["createdByIds"], message: "Use createdById or createdByIds, not both" });
+}).openapi("TestScenarioPriorityCountsQuery");
 const TestScenarioAuthorOptionSchema = z.object({
   id: z.string().uuid(),
   name: z.string(),
@@ -379,8 +381,8 @@ const MembersBodySchema = z.object({
 const CompleteMemberOrderSchema = z.array(z.string().uuid()).max(10_000);
 const MemberOrderBodySchema = z.object({
   projectId: z.string().uuid(),
-  expectedMembershipRevision: z.number().int().nonnegative(),
-  expectedScenarioIds: CompleteMemberOrderSchema,
+  expectedMembershipRevision: z.number().int().nonnegative().optional(),
+  expectedScenarioIds: CompleteMemberOrderSchema.optional(),
   scenarioIds: z.array(z.string().uuid()),
 });
 const MembershipUndoSchema = z.object({ suiteId: z.string().uuid(), addedScenarioIds: z.array(z.string().uuid()).max(10_000), removedMembers: z.array(z.object({ scenarioId: z.string().uuid(), position: z.number().int().nonnegative() })).max(10_000) });
@@ -1031,7 +1033,7 @@ export function registerTestScenarioRoutes(registry: OpenAPIRegistry): void {
 
   for (const [path, query, responseSchema, description] of [
     ["/api/v2/test-scenarios/authors", TestScenarioAuthorsQuerySchema, TestScenarioAuthorsResponseSchema, "Returns project creators and counts matching the supplied catalog scope and filters, excluding author selection and pagination."],
-    ["/api/v2/test-scenarios/priority-counts", TestScenarioPriorityCountsQuerySchema, TestScenarioPriorityCountsResponseSchema, "Returns priority counts matching the supplied catalog scope and filters, excluding priority, author selection, and pagination."],
+    ["/api/v2/test-scenarios/priority-counts", TestScenarioPriorityCountsQuerySchema, TestScenarioPriorityCountsResponseSchema, "Returns priority counts matching the supplied catalog scope and filters, excluding priority and pagination."],
     ["/api/v2/test-scenarios/selection", TestScenarioSelectionQuerySchema, TestScenarioSelectionResponseSchema, "Resolves all unique matching scenario UUIDs using the catalog filters, without returning summary or Markdown content."],
   ] as const) {
     registry.registerPath({

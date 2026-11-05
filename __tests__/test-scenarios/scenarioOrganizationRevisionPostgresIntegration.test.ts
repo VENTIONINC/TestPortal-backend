@@ -9,11 +9,15 @@ const describePostgres =
   process.env.RUN_POSTGRES_INTEGRATION_TESTS === "1" ? describe : describe.skip;
 describePostgres("organization scenario revisions", () => {
   const userId = randomUUID(),
+    otherUserId = randomUUID(),
     projectId = randomUUID(),
     scenarioId = randomUUID();
   beforeAll(async () => {
     await dbClient.user.create({
       data: { id: userId, name: "Editor", email: `${userId}@example.test` },
+    });
+    await dbClient.user.create({
+      data: { id: otherUserId, name: "Other editor", email: `${otherUserId}@example.test` },
     });
     await dbClient.project.create({
       data: {
@@ -39,6 +43,7 @@ describePostgres("organization scenario revisions", () => {
   afterAll(async () => {
     await dbClient.project.delete({ where: { id: projectId } });
     await dbClient.user.delete({ where: { id: userId } });
+    await dbClient.user.delete({ where: { id: otherUserId } });
     await dbClient.$disconnect();
   });
   it("invalidates only changed memberships, preserves unknown actor and leaves reorder revision intact", async () => {
@@ -221,6 +226,17 @@ describePostgres("organization scenario revisions", () => {
     })).rejects.toMatchObject({ status: 409 });
     expect((await service.getSuite(projectId, suite.id)).members.map(({ testScenarioId }) => testScenarioId)).toEqual([scenarioId]);
   });
+  it("restores a removed member after a no-op legacy reorder", async () => {
+    const suite = await service.createSuite({ projectId, name: "No-op reorder undo" });
+    const second = await scenarios.createScenario({ projectId, createdById: userId, title: "Second member" });
+    const third = await scenarios.createScenario({ projectId, createdById: userId, title: "Third member" });
+    await service.mutateMembers({ projectId, suiteId: suite.id, scenarioIds: [scenarioId, second.id, third.id], operation: "add" });
+    const before = await service.getSuite(projectId, suite.id);
+    const changed = await service.changeSuiteMembership({ projectId, suiteId: suite.id, expectedMembershipRevision: before.membershipRevision, expectedScenarioIds: before.members.map(({ testScenarioId }) => testScenarioId), addScenarioIds: [], removeScenarioIds: [second.id] });
+    await service.reorderMembers({ projectId, suiteId: suite.id, scenarioIds: changed.scenarioIds });
+    const restored = await service.restoreSuiteMembership({ projectId, suiteId: suite.id, expectedMembershipRevision: changed.membershipRevision, expectedScenarioIds: changed.scenarioIds, restoreData: changed.restoreData });
+    expect(restored.scenarioIds).toEqual([scenarioId, second.id, third.id]);
+  });
   it("moves memberships atomically and restores only destination links created by the move", async () => {
     const [source, destination] = await Promise.all([
       service.createSuite({ projectId, name: "Move source" }),
@@ -259,13 +275,15 @@ describePostgres("organization scenario revisions", () => {
     const suite = await service.createSuite({ projectId, name: "Facet counts" });
     const [low, high, unrelated] = await Promise.all([
       scenarios.createScenario({ projectId, createdById: userId, title: "Facet low", priority: "low" }),
-      scenarios.createScenario({ projectId, createdById: userId, title: "Facet high", priority: "high" }),
+      scenarios.createScenario({ projectId, createdById: otherUserId, title: "Facet high", priority: "high" }),
       scenarios.createScenario({ projectId, createdById: userId, title: "Other medium", priority: "medium" }),
     ]);
     await service.mutateMembers({ projectId, suiteId: suite.id, scenarioIds: [low.id, high.id], operation: "add" });
     const query = { projectId, suiteId: suite.id, search: "Facet" };
     await expect(scenarios.listScenarioPriorityCounts(query)).resolves.toEqual({ low: 1, medium: 0, high: 1, unprioritized: 0 });
-    await expect(scenarios.listScenarioAuthors(query)).resolves.toEqual([expect.objectContaining({ id: userId, scenarioCount: 2 })]);
+    await expect(scenarios.listScenarioPriorityCounts({ ...query, createdByIds: userId })).resolves.toEqual({ low: 1, medium: 0, high: 0, unprioritized: 0 });
+    await expect(scenarios.listScenarioPriorityCounts({ ...query, createdById: otherUserId })).resolves.toEqual({ low: 0, medium: 0, high: 1, unprioritized: 0 });
+    await expect(scenarios.listScenarioAuthors(query)).resolves.toEqual(expect.arrayContaining([expect.objectContaining({ id: userId, scenarioCount: 1 }), expect.objectContaining({ id: otherUserId, scenarioCount: 1 })]));
     expect((await service.getSuite(projectId, suite.id)).members).toHaveLength(2);
     expect(unrelated.projectId).toBe(projectId);
   });

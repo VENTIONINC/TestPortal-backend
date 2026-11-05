@@ -211,7 +211,10 @@ export const testScenarioSelectionQuerySchema = testScenarioListQueryBaseSchema
 export const testScenarioAuthorsQuerySchema = testScenarioListQueryBaseSchema
   .omit({ page: true, limit: true, createdById: true, createdByIds: true, sort: true, sortField: true, sortDirection: true })
   .strict();
-export const testScenarioPriorityCountsQuerySchema = testScenarioAuthorsQuerySchema.omit({ priority: true }).strict();
+export const testScenarioPriorityCountsQuerySchema = testScenarioListQueryBaseSchema
+  .omit({ page: true, limit: true, priority: true, sort: true, sortField: true, sortDirection: true })
+  .strict()
+  .superRefine(validateScenarioAuthorFilter);
 export type TestScenarioSelectionQuery = z.infer<typeof testScenarioSelectionQuerySchema>;
 export type TestScenarioAuthorsQuery = z.infer<typeof testScenarioAuthorsQuerySchema>;
 export type TestScenarioPriorityCountsQuery = z.infer<typeof testScenarioPriorityCountsQuerySchema>;

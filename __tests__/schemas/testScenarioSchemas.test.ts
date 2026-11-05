@@ -7,6 +7,7 @@ import {
   reorderTestScenarioStepsSchema,
   testScenarioListQuerySchema,
   testScenarioSelectionQuerySchema,
+  testScenarioPriorityCountsQuerySchema,
   updateTestScenarioSchema,
   updateTestScenarioStepSchema,
 } from "@/schemas/testScenarioSchemas";
@@ -15,6 +16,11 @@ const projectId = "11111111-1111-1111-1111-111111111111";
 const stepId = "22222222-2222-2222-2222-222222222222";
 
 describe("structured Test Scenario schemas", () => {
+  it("accepts one author filter for priority counts", () => {
+    const createdById = "44444444-4444-4444-8444-444444444444";
+    expect(testScenarioPriorityCountsQuerySchema.safeParse({ projectId, createdByIds: createdById }).success).toBe(true);
+    expect(testScenarioPriorityCountsQuerySchema.safeParse({ projectId, createdById, createdByIds: createdById }).success).toBe(false);
+  });
   it("trims structured creation fields and defaults steps", () => {
     expect(
       createTestScenarioSchema.parse({

@@ -97,7 +97,9 @@ describe("structured Test Scenario OpenAPI contract", () => {
     const memberOrderBody = memberOrderRequest && "content" in memberOrderRequest
       ? memberOrderRequest.content?.["application/json"]?.schema as { required?: string[] }
       : undefined;
-    expect(memberOrderBody?.required).toEqual(expect.arrayContaining(["expectedMembershipRevision", "expectedScenarioIds", "scenarioIds"]));
+    expect(memberOrderBody?.required).toEqual(expect.arrayContaining(["projectId", "scenarioIds"]));
+    expect(memberOrderBody?.required).not.toContain("expectedMembershipRevision");
+    expect(memberOrderBody?.required).not.toContain("expectedScenarioIds");
     expect(paths["/api/v2/test-scenario-folders/{folderId}"]?.delete?.parameters).toEqual(expect.arrayContaining([expect.objectContaining({ name: "disposition", in: "query" })]));
     const folderSchema = spec.components?.schemas?.TestScenarioFolderResponse as { properties?: Record<string, unknown> };
     expect(folderSchema.properties?.description).toEqual({ type: ["string", "null"] });

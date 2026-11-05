@@ -153,8 +153,8 @@ export const testScenarioOrganizationService = {
   async reorderMembers(input: {
     projectId: string;
     suiteId: string;
-    expectedMembershipRevision: number;
-    expectedScenarioIds: string[];
+    expectedMembershipRevision?: number;
+    expectedScenarioIds?: string[];
     scenarioIds: string[];
   }) {
     return await testScenarioOrganizationWrites.reorderMembers(input);

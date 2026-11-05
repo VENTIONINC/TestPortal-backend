@@ -432,8 +432,11 @@ export const testScenarioService = {
   },
 
   async listScenarioPriorityCounts(params: TestScenarioPriorityCountsQuery): Promise<{ low: number; medium: number; high: number; unprioritized: number }> {
-    validateKeys(params as unknown as Record<string, unknown>, ["projectId", "search", "scenarioKey", "title", "details", "folder", "createdBy", "folderId", "includeDescendants", "suiteId"]);
+    validateKeys(params as unknown as Record<string, unknown>, ["projectId", "search", "scenarioKey", "title", "details", "folder", "createdBy", "createdById", "createdByIds", "folderId", "includeDescendants", "suiteId"]);
     requireIdentifier(params.projectId, "Project ID");
+    if (params.createdById !== undefined) requireUuid(params.createdById, "Creator ID");
+    const createdByIds = normalizeCreatorIds(params.createdByIds);
+    if (params.createdById !== undefined && createdByIds !== undefined) throw new TestScenarioValidationError("Use createdById or createdByIds, not both");
     const search = normalizeSearch(params.search);
     const filters = {
       scenarioKey: normalizeColumnFilter(params.scenarioKey, "scenarioKey"),
@@ -446,6 +449,8 @@ export const testScenarioService = {
     if (params.suiteId && !(await testScenarioModel.suiteBelongsToProject(params.suiteId, params.projectId))) throw new TestScenarioNotFoundError("Suite not found");
     if (!(await projectModel.exists(params.projectId))) throw new TestScenarioNotFoundError(`Project with id '${params.projectId}' not found`);
     return await testScenarioModel.listScenarioPriorityCounts(params.projectId, {
+      ...(params.createdById !== undefined ? { createdById: params.createdById } : {}),
+      ...(createdByIds !== undefined ? { createdByIds } : {}),
       ...(search !== undefined ? { search } : {}),
       ...(filters.scenarioKey ? { scenarioKey: filters.scenarioKey } : {}),
       ...(filters.title ? { title: filters.title } : {}),

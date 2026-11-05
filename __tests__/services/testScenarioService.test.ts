@@ -10,6 +10,7 @@ import type {
 
 const projectExistsMock = jest.fn<() => Promise<boolean>>();
 const suiteBelongsToProjectMock = jest.fn<() => Promise<boolean>>();
+const priorityCountsMock = jest.fn<(...args: never[]) => Promise<{ low: number; medium: number; high: number; unprioritized: number }>>();
 const createMock =
   jest.fn<(...args: never[]) => Promise<TestScenarioResponse | null>>();
 const listSummariesMock =
@@ -43,6 +44,7 @@ jest.mock("@/models/testScenarioModel", () => ({
     create: createMock,
     listSummaries: listSummariesMock,
     suiteBelongsToProject: suiteBelongsToProjectMock,
+    listScenarioPriorityCounts: priorityCountsMock,
     resolveSelection: resolveSelectionMock,
     findManySummaries: findManySummariesMock,
     count: countMock,
@@ -116,6 +118,13 @@ describe("testScenarioService", () => {
     projectExistsMock.mockResolvedValue(false);
     resolveSelectionMock.mockResolvedValue([]);
     await expect(testScenarioService.resolveScenarioSelection({ projectId })).rejects.toBeInstanceOf(TestScenarioNotFoundError);
+  });
+
+  it("scopes priority counts to the selected authors", async () => {
+    const counts = { low: 1, medium: 0, high: 0, unprioritized: 0 };
+    priorityCountsMock.mockResolvedValue(counts);
+    await expect(testScenarioService.listScenarioPriorityCounts({ projectId, createdByIds: scenario.createdById })).resolves.toEqual(counts);
+    expect(priorityCountsMock).toHaveBeenCalledWith(projectId, { createdByIds: scenario.createdById });
   });
 
   it("normalizes structured creation and keeps initial step order", async () => {

@@ -87,7 +87,7 @@ type SummaryListParams = Pick<
 type ScenarioAuthorCountFilters = Pick<SummaryListParams,
   "search" | "priority" | "folderId" | "includeDescendants" | "suiteId" | "scenarioKey" | "title" | "details" | "folder" | "createdBy"
 >;
-type ScenarioPriorityCountFilters = Omit<ScenarioAuthorCountFilters, "priority">;
+type ScenarioPriorityCountFilters = Omit<ScenarioAuthorCountFilters, "priority"> & Pick<SummaryListParams, "createdById" | "createdByIds">;
 
 interface SummaryPredicate {
   folderCte: Prisma.Sql;

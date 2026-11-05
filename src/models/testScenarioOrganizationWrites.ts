@@ -87,6 +87,14 @@ async function readOrderedMembers(tx: Prisma.TransactionClient, suiteId: string)
   return await tx.testSuiteMember.findMany({ where: { suiteId }, select: { testScenarioId: true, position: true }, orderBy: [{ position: "asc" }, { testScenarioId: "asc" }] });
 }
 
+async function createMembers(tx: Prisma.TransactionClient, suiteId: string, members: Array<{ scenarioId: string; position: number }>): Promise<void> {
+  for (let offset = 0; offset < members.length; offset += 1000) {
+    await tx.testSuiteMember.createMany({
+      data: members.slice(offset, offset + 1000).map(({ scenarioId, position }) => ({ suiteId, testScenarioId: scenarioId, position })),
+    });
+  }
+}
+
 function assertExpectedOrder(current: OrderedMembership[], expected: string[]): void {
   if (current.length !== expected.length || current.some((member, index) => member.testScenarioId !== expected[index])) throw conflict();
 }
@@ -114,10 +122,11 @@ export async function mutateSuiteMembership(input: {
     assertExpectedOrder(current, input.expectedScenarioIds);
     const currentSet = new Set(current.map(({ testScenarioId }) => testScenarioId));
     if (addIds.some((id) => currentSet.has(id)) || removeIds.some((id) => !currentSet.has(id))) throw conflict();
+    if (current.length + addIds.length - removeIds.length > 10_000) throw invalid("Resulting membership exceeds 10000 scenarios");
     const removedMembers = current.filter(({ testScenarioId }) => removeIds.includes(testScenarioId)).map(({ testScenarioId, position }) => ({ scenarioId: testScenarioId, position }));
     await tx.testSuiteMember.deleteMany({ where: { suiteId: input.suiteId, testScenarioId: { in: removeIds } } });
     const lastPosition = current.reduce((max, member) => Math.max(max, member.position), -1);
-    for (const [index, scenarioId] of addIds.entries()) await tx.testSuiteMember.create({ data: { suiteId: input.suiteId, testScenarioId: scenarioId, position: lastPosition + index + 1 } });
+    await createMembers(tx, input.suiteId, addIds.map((scenarioId, index) => ({ scenarioId, position: lastPosition + index + 1 })));
     const changed = [...addIds, ...removeIds];
     await advanceScenarioRevisions(tx, input.projectId, changed, input.updatedById);
     const updatedSuite = changed.length ? await tx.testSuite.update({ where: { id: input.suiteId }, data: { membershipRevision: { increment: 1 } }, select: { membershipRevision: true } }) : suite;
@@ -148,7 +157,7 @@ export async function restoreSuiteMembership(input: {
     const currentSet = new Set(current.map(({ testScenarioId }) => testScenarioId));
     if (input.restoreData.addedScenarioIds.some((id) => !currentSet.has(id)) || input.restoreData.removedMembers.some(({ scenarioId }) => currentSet.has(scenarioId))) throw conflict();
     await tx.testSuiteMember.deleteMany({ where: { suiteId: input.suiteId, testScenarioId: { in: input.restoreData.addedScenarioIds } } });
-    for (const member of [...input.restoreData.removedMembers].sort((a, b) => a.position - b.position)) await tx.testSuiteMember.create({ data: { suiteId: input.suiteId, testScenarioId: member.scenarioId, position: member.position } });
+    await createMembers(tx, input.suiteId, input.restoreData.removedMembers);
     await advanceScenarioRevisions(tx, input.projectId, restoreIds, input.updatedById);
     const updatedSuite = restoreIds.length ? await tx.testSuite.update({ where: { id: input.suiteId }, data: { membershipRevision: { increment: 1 } }, select: { membershipRevision: true } }) : suite;
     const after = await readOrderedMembers(tx, input.suiteId);
@@ -190,10 +199,11 @@ export async function moveSuiteMembership(input: {
     const destinationSet = new Set(destination.map(({ testScenarioId }) => testScenarioId));
     const alreadyInDestination = input.scenarioIds.filter((id) => destinationSet.has(id));
     const destinationAddedScenarioIds = input.scenarioIds.filter((id) => !destinationSet.has(id));
+    if (destination.length + destinationAddedScenarioIds.length > 10_000) throw invalid("Resulting membership exceeds 10000 scenarios");
     const sourceMembers = source.filter(({ testScenarioId }) => input.scenarioIds.includes(testScenarioId)).map(({ testScenarioId, position }) => ({ scenarioId: testScenarioId, position }));
     await tx.testSuiteMember.deleteMany({ where: { suiteId: input.sourceSuiteId, testScenarioId: { in: input.scenarioIds } } });
     const lastPosition = destination.reduce((max, member) => Math.max(max, member.position), -1);
-    for (const [index, scenarioId] of destinationAddedScenarioIds.entries()) await tx.testSuiteMember.create({ data: { suiteId: input.destinationSuiteId, testScenarioId: scenarioId, position: lastPosition + index + 1 } });
+    await createMembers(tx, input.destinationSuiteId, destinationAddedScenarioIds.map((scenarioId, index) => ({ scenarioId, position: lastPosition + index + 1 })));
     await advanceScenarioRevisions(tx, input.projectId, input.scenarioIds, input.updatedById);
     const [sourceUpdated, destinationUpdated] = await Promise.all([
       tx.testSuite.update({ where: { id: input.sourceSuiteId }, data: { membershipRevision: { increment: 1 } }, select: { membershipRevision: true } }),
@@ -230,7 +240,7 @@ export async function restoreSuiteMove(input: {
     const destinationSet = new Set(destination.map(({ testScenarioId }) => testScenarioId));
     if (sourceMembers.some(({ scenarioId }) => sourceSet.has(scenarioId)) || destinationAddedScenarioIds.some((id) => !destinationSet.has(id))) throw conflict();
     await tx.testSuiteMember.deleteMany({ where: { suiteId: destinationSuiteId, testScenarioId: { in: destinationAddedScenarioIds } } });
-    for (const member of [...sourceMembers].sort((a, b) => a.position - b.position)) await tx.testSuiteMember.create({ data: { suiteId: sourceSuiteId, testScenarioId: member.scenarioId, position: member.position } });
+    await createMembers(tx, sourceSuiteId, sourceMembers);
     await advanceScenarioRevisions(tx, input.projectId, restoreIds, input.updatedById);
     const [sourceUpdated, destinationUpdated] = await Promise.all([
       sourceMembers.length ? tx.testSuite.update({ where: { id: sourceSuiteId }, data: { membershipRevision: { increment: 1 } }, select: { membershipRevision: true } }) : Promise.resolve(sourceSuite),
@@ -341,6 +351,7 @@ export const testScenarioOrganizationWrites = {
           where: { suiteId: suite.id },
           orderBy: { position: "asc" },
         });
+        if (existing.length + changedIds.length > 10_000) throw invalid("Resulting membership exceeds 10000 scenarios");
         let next =
           existing.reduce((max, member) => Math.max(max, member.position), -1) +
           1;
@@ -360,8 +371,8 @@ export const testScenarioOrganizationWrites = {
   async reorderMembers(input: {
     projectId: string;
     suiteId: string;
-    expectedMembershipRevision: number;
-    expectedScenarioIds: string[];
+    expectedMembershipRevision?: number;
+    expectedScenarioIds?: string[];
     scenarioIds: string[];
   }): Promise<{ scenarioIds: string[] }> {
     return await withScenarioTransaction(async (tx) => {
@@ -378,7 +389,7 @@ export const testScenarioOrganizationWrites = {
       });
       if (!suite) throw notFound();
       const current = suite.members.map(({ testScenarioId }) => testScenarioId);
-      if (suite.membershipRevision !== input.expectedMembershipRevision || current.length !== input.expectedScenarioIds.length || current.some((id, index) => id !== input.expectedScenarioIds[index])) throw conflict();
+      if (input.expectedMembershipRevision !== undefined && (suite.membershipRevision !== input.expectedMembershipRevision || !input.expectedScenarioIds || current.length !== input.expectedScenarioIds.length || current.some((id, index) => id !== input.expectedScenarioIds?.[index]))) throw conflict();
       if (
         new Set(input.scenarioIds).size !== input.scenarioIds.length ||
         current.length !== input.scenarioIds.length ||
@@ -388,6 +399,7 @@ export const testScenarioOrganizationWrites = {
           "Ordering must contain every current member exactly once",
         );
       const reordered = current.some((id, index) => id !== input.scenarioIds[index]);
+      if (!reordered) return { scenarioIds: input.scenarioIds };
       const offset =
         suite.members.reduce(
           (max, member) => Math.max(max, member.position),
@@ -410,7 +422,7 @@ export const testScenarioOrganizationWrites = {
           },
           data: { position },
         });
-      if (reordered) await tx.testSuite.update({ where: { id: suite.id }, data: { membershipRevision: { increment: 1 } } });
+      await tx.testSuite.update({ where: { id: suite.id }, data: { membershipRevision: { increment: 1 } } });
       return { scenarioIds: input.scenarioIds };
     });
   },
