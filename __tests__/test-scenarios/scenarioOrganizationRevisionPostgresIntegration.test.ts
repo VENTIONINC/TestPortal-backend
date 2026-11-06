@@ -164,6 +164,18 @@ describePostgres("organization scenario revisions", () => {
     expect((await scenarios.getScenarioById(scenario.id, projectId)).folderId).toBe(nested.id);
     expect(await dbClient.testScenarioFolder.findMany({ where: { id: { in: [root.id, child.id, nested.id] } } })).toHaveLength(3);
   });
+  it("rejects restoring a subtree when its parent has moved too deep", async () => {
+    const parent = await service.createFolder({ projectId, name: `Parent ${randomUUID()}` });
+    const root = await service.createFolder({ projectId, name: "Restored root", parentId: parent.id });
+    const child = await service.createFolder({ projectId, name: "Restored child", parentId: root.id });
+    const snapshot = await service.deleteFolder({ projectId, folderId: root.id, updatedById: userId });
+    const top = await service.createFolder({ projectId, name: `Top ${randomUUID()}` });
+    const middle = await service.createFolder({ projectId, name: "Middle", parentId: top.id });
+    const lower = await service.createFolder({ projectId, name: "Lower", parentId: middle.id });
+    await service.updateFolder({ projectId, folderId: parent.id, parentId: lower.id });
+    await expect(service.restoreFolderDeletion({ projectId, restoreData: snapshot.restoreData, updatedById: userId })).rejects.toMatchObject({ status: 409 });
+    expect(await dbClient.testScenarioFolder.count({ where: { id: { in: [root.id, child.id] } } })).toBe(0);
+  });
   it("restores mixed scenario folder placements atomically and rejects stale revisions", async () => {
     const firstFolder = await service.createFolder({ projectId, name: `Prior A ${randomUUID()}` });
     const secondFolder = await service.createFolder({ projectId, name: `Prior B ${randomUUID()}` });

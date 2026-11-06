@@ -423,8 +423,8 @@ const FolderSnapshotSchema = z.object({ id: z.string().uuid(), projectId: z.stri
 const FolderRestoreDataSchema = z.object({ folders: z.array(FolderSnapshotSchema), scenarios: z.array(z.object({ scenarioId: z.string().uuid(), folderId: z.string().uuid(), expectedRevision: z.number().int().nonnegative() })) });
 const FolderDeleteResponseSchema = z.object({ deleted: z.literal(true), restoreData: FolderRestoreDataSchema });
 const FolderRestorationBodySchema = z.object({ projectId: z.string().uuid(), restoreData: FolderRestoreDataSchema });
-const FolderMoveRestoreDataSchema = z.array(z.object({ scenarioId: z.string().uuid(), folderId: z.string().uuid().nullable(), expectedFolderId: z.string().uuid().nullable(), expectedRevision: z.number().int().nonnegative() })).min(1).max(10_000);
-const FolderMoveRestorationBodySchema = z.object({ projectId: z.string().uuid(), restoreData: FolderMoveRestoreDataSchema });
+const FolderMoveRestoreDataSchema = z.array(z.object({ scenarioId: z.string().uuid(), folderId: z.string().uuid().nullable(), expectedFolderId: z.string().uuid().nullable(), expectedRevision: z.number().int().nonnegative() })).max(10_000);
+const FolderMoveRestorationBodySchema = z.object({ projectId: z.string().uuid(), restoreData: FolderMoveRestoreDataSchema.min(1) });
 const SuiteMemberResponseSchema = z.object({
   suiteId: z.string().uuid(),
   testScenarioId: z.string().uuid(),

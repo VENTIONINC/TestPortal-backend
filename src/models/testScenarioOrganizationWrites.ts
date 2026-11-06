@@ -293,6 +293,18 @@ export const testScenarioOrganizationWrites = {
       if (!folderIds.length || new Set(folderIds).size !== folderIds.length || new Set(scenarioIds).size !== scenarioIds.length || input.restoreData.folders.some((f) => f.projectId !== input.projectId) || input.restoreData.scenarios.some((s) => !folderIds.includes(s.folderId))) throw conflict();
       const externalParentIds = [...new Set(input.restoreData.folders.flatMap((f) => f.parentId && !folderIds.includes(f.parentId) ? [f.parentId] : []))];
       if (externalParentIds.length && await tx.testScenarioFolder.count({ where: { id: { in: externalParentIds }, projectId: input.projectId } }) !== externalParentIds.length) throw conflict();
+      const depths = new Map<string, number>();
+      for (const parentId of externalParentIds) {
+        let depth = 0;
+        let currentId: string | null = parentId;
+        while (currentId) {
+          if (++depth > 5) throw conflict();
+          const parent: { parentId: string | null } | null = await tx.testScenarioFolder.findFirst({ where: { id: currentId, projectId: input.projectId }, select: { parentId: true } });
+          if (!parent) throw conflict();
+          currentId = parent.parentId;
+        }
+        depths.set(parentId, depth);
+      }
       await lockScenarios(tx, input.projectId, scenarioIds);
       if (await tx.testScenarioFolder.count({ where: { id: { in: folderIds } } })) throw conflict();
       const scenarios = await tx.testScenario.findMany({ where: { projectId: input.projectId, id: { in: scenarioIds } }, select: { id: true, folderId: true, revision: true } });
@@ -305,8 +317,11 @@ export const testScenarioOrganizationWrites = {
           if (index < 0) throw conflict();
           const [folder] = pending.splice(index, 1);
           if (!folder) throw conflict();
+          const depth = folder.parentId ? (depths.get(folder.parentId) ?? 0) + 1 : 1;
+          if (depth > 5) throw conflict();
           await tx.testScenarioFolder.create({ data: folder });
           restoredIds.add(folder.id);
+          depths.set(folder.id, depth);
         }
       } catch (error) { if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002") throw conflict(); throw error; }
       for (const assignment of input.restoreData.scenarios) await tx.testScenario.update({ where: { id: assignment.scenarioId }, data: { folderId: assignment.folderId } });

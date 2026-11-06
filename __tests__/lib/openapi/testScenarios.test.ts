@@ -109,6 +109,7 @@ describe("structured Test Scenario OpenAPI contract", () => {
     expect(deleteResponse?.properties?.restoreData).toBeDefined();
     const bulkFolderResponse = paths["/api/v2/test-scenarios/bulk-folder"]?.patch?.responses?.["200"]?.content?.["application/json"]?.schema;
     expect(bulkFolderResponse?.properties?.restoreData).toBeDefined();
+    expect(bulkFolderResponse?.properties?.restoreData?.minItems ?? 0).toBe(0);
     const folderSchema = spec.components?.schemas?.TestScenarioFolderResponse as { properties?: Record<string, unknown> };
     expect(folderSchema.properties?.description).toEqual({ type: ["string", "null"] });
     const query = generateOpenAPISpec().components?.schemas?.TestScenarioListQuery as { properties?: Record<string, unknown> };
