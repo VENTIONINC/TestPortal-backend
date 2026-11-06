@@ -36,9 +36,9 @@ describe("test scenario organization schemas", () => {
     expect(suiteMoveBody.safeParse({ projectId, sourceSuiteId: id, destinationSuiteId: projectId, scenarioIds: [id], expectedSourceMembershipRevision: 0, expectedDestinationMembershipRevision: 0, expectedSourceScenarioIds: [id], expectedDestinationScenarioIds: ids }).success).toBe(false);
   });
 
-  it("requires a folder deletion disposition and a non-empty patch", () => {
-    expect(folderDeleteQuery.safeParse({ projectId }).success).toBe(false);
-    expect(folderDeleteQuery.safeParse({ projectId, disposition: "unfiled" }).success).toBe(true);
+  it("accepts project-scoped subtree deletion and requires a non-empty patch", () => {
+    expect(folderDeleteQuery.safeParse({ projectId }).success).toBe(true);
+    expect(folderDeleteQuery.safeParse({ projectId, disposition: "unfiled" }).success).toBe(false);
     expect(folderUpdateBody.safeParse({ projectId }).success).toBe(false);
   });
 

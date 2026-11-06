@@ -9,7 +9,10 @@ const folderDescription = z.string().trim().transform((value) => value || null).
 export const organizationProjectQuery = z.object({ projectId: uuid });
 export const folderCreateBody = z.object({ projectId: uuid, name, description: folderDescription, parentId: uuid.nullable().optional(), position: z.number().int().nonnegative().optional() }).strict();
 export const folderUpdateBody = z.object({ projectId: uuid, name: name.optional(), description: folderDescription, parentId: uuid.nullable().optional(), position: z.number().int().nonnegative().optional() }).strict().refine((value) => value.name !== undefined || value.description !== undefined || value.parentId !== undefined || value.position !== undefined);
-export const folderDeleteQuery = z.object({ projectId: uuid, disposition: z.enum(["parent", "unfiled"]) });
+export const folderDeleteQuery = z.object({ projectId: uuid }).strict();
+const folderSnapshot = z.object({ folders: z.array(z.object({ id: uuid, projectId: uuid, name: z.string(), description: z.string().nullable(), parentId: uuid.nullable(), position: z.number().int() }).strict()), scenarios: z.array(z.object({ scenarioId: uuid, folderId: uuid, expectedRevision: z.number().int().nonnegative() }).strict()) }).strict();
+export const folderRestoreBody = z.object({ projectId: uuid, restoreData: folderSnapshot }).strict();
+export const folderMoveRestoreBody = z.object({ projectId: uuid, restoreData: z.array(z.object({ scenarioId: uuid, folderId: uuid.nullable(), expectedFolderId: uuid.nullable(), expectedRevision: z.number().int().nonnegative() }).strict()).min(1).max(10_000) }).strict();
 export const suiteCreateBody = z.object({ projectId: uuid, name, description: z.string().nullable().optional(), purpose: z.string().nullable().optional(), release: z.string().nullable().optional() }).strict();
 export const suiteUpdateBody = z.object({ projectId: uuid, name: name.optional(), description: z.string().nullable().optional(), purpose: z.string().nullable().optional(), release: z.string().nullable().optional() }).strict().refine((value) => Object.keys(value).some((key) => key !== "projectId"));
 const uniqueIds = (value: { scenarioIds: string[] }) => new Set(value.scenarioIds).size === value.scenarioIds.length;

@@ -653,10 +653,10 @@ describePostgres("test scenario PostgreSQL aggregate integration", () => {
     const foreignSuite = await organization.createSuite({ projectId: otherProjectId, name: "Foreign suite" });
     await expect(testScenarioService.listScenarios({ projectId, suiteId: foreignSuite.id })).rejects.toBeInstanceOf(TestScenarioNotFoundError);
 
-    await organization.deleteFolder({ projectId, folderId: root.id, disposition: "unfiled" });
-    expect(await dbClient.testScenario.findUnique({ where: { id: first.id }, select: { folderId: true } })).toEqual({ folderId: child.id });
+    await organization.deleteFolder({ projectId, folderId: root.id });
+    expect(await dbClient.testScenario.findUnique({ where: { id: first.id }, select: { folderId: true } })).toEqual({ folderId: null });
     expect(await dbClient.testScenario.findUnique({ where: { id: second.id }, select: { folderId: true } })).toEqual({ folderId: null });
-    expect(await dbClient.testScenarioFolder.findFirst({ where: { id: child.id }, select: { parentId: true } })).toEqual({ parentId: null });
+    expect(await dbClient.testScenarioFolder.findFirst({ where: { id: child.id }, select: { parentId: true } })).toBeNull();
   });
 
   it("cascades project deletion through its folders, suites, and memberships only", async () => {
