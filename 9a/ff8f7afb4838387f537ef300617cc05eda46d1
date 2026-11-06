@@ -1,0 +1,41 @@
+.env.example
+  s_c9d5c492d598d5::t_6aff3ebed6986e 52-65
+README.md
+  s_c9d5c492d598d5::t_c3714585408de1 150
+__tests__/lib/aiModel.test.ts
+  s_c9d5c492d598d5::t_a60daf4c5c460d 1-83
+docker-compose.ai-gateway.yml
+  s_c9d5c492d598d5::t_285b389892194f 1-46
+docs/AI_GATEWAY.md
+  s_c9d5c492d598d5::t_47663865566f64 1-94
+local/ai-gateway/config.yaml
+  s_c9d5c492d598d5::t_89701093a5fd70 1-23
+package.json
+  s_c9d5c492d598d5::t_da9c1c044eae39 25
+scripts/smoke-ai-gateway.ts
+  s_c9d5c492d598d5::t_71e2535795566c 1-87
+src/lib/aiModel.ts
+  s_c9d5c492d598d5::t_cfec6fb5cc529d 1-61
+src/services/errorFormatterService.ts
+  s_c9d5c492d598d5::t_fe866d7dcd443e 7,38,97
+src/services/insightsService.ts
+  s_c9d5c492d598d5::t_21e6a827a5f287 4,161
+src/services/testAnalysisService.ts
+  s_c9d5c492d598d5::t_f0ae00c4332472 6,117
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "9aff8f7afb4838387f537ef300617cc05eda46d1",
+  "prompts": {},
+  "sessions": {
+    "s_c9d5c492d598d5": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a1aff2-a7f4-78f2-9aeb-8967e434919c",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Ihar Mikailau <ihar.mikailau@ventionteams.com>"
+    }
+  }
+}
