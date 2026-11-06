@@ -52,7 +52,8 @@ export function registerAssumptionRoutes(registry: OpenAPIRegistry) {
   registry.registerPath({
     method: "post",
     path: "/api/v2/assumptions",
-    description: "Create a new assumption for a specific issue and result error (requires authentication)",
+    description:
+      "Creates an assumption for an issue and result error in the shared workspace (requires authentication)",
     security: [{ BearerAuth: [] }],
     request: {
       body: {
@@ -96,7 +97,8 @@ export function registerAssumptionRoutes(registry: OpenAPIRegistry) {
   registry.registerPath({
     method: "patch",
     path: "/api/v2/assumptions/{assumptionId}",
-    description: "Update an existing assumption by its ID (requires authentication)",
+    description:
+      "Updates an assumption in the shared workspace (requires authentication)",
     security: [{ BearerAuth: [] }],
     request: {
       params: z.object({
@@ -151,14 +153,18 @@ export function registerAssumptionRoutes(registry: OpenAPIRegistry) {
   registry.registerPath({
     method: "get",
     path: "/api/v2/assumptions/{assumptionId}",
-    description: "Retrieve an existing assumption by its ID (requires projectId)",
+    description:
+      "Retrieves an assumption in a shared-workspace project (requires projectId; project ownership does not restrict access)",
     security: [{ BearerAuth: [] }],
     request: {
       params: z.object({
         assumptionId: z.string().uuid(),
       }),
       query: z.object({
-        projectId: z.string().uuid().describe("Project ID to verify ownership of the assumption"),
+        projectId: z
+          .string()
+          .uuid()
+          .describe("Project ID used to scope the assumption lookup"),
       }),
     },
     responses: {
@@ -202,7 +208,8 @@ export function registerAssumptionRoutes(registry: OpenAPIRegistry) {
   registry.registerPath({
     method: "delete",
     path: "/api/v2/assumptions/{assumptionId}",
-    description: "Delete an existing assumption by its ID (requires projectId and authentication)",
+    description:
+      "Deletes an assumption in a shared-workspace project (requires projectId and authentication)",
     security: [{ BearerAuth: [] }],
     request: {
       params: z.object({
@@ -211,7 +218,10 @@ export function registerAssumptionRoutes(registry: OpenAPIRegistry) {
         }),
       }),
       query: z.object({
-        projectId: z.string().uuid().describe("Project ID to verify ownership of the assumption"),
+        projectId: z
+          .string()
+          .uuid()
+          .describe("Project ID used to scope the assumption deletion"),
       }),
     },
     responses: {

@@ -7,6 +7,7 @@ import {
   type AnalysisExportFilters,
   type AnalysisExportRow,
 } from "@/models/resultModel";
+import { testScenarioSpecLinkModel } from "@/models/testScenarioSpecLinkModel";
 import {
   normalizeJsonStringArray,
   normalizeResultPayload,
@@ -20,6 +21,7 @@ import type {
   ResultsStats,
   StructuredResultWithRelations,
 } from "@/types";
+import type { RelatedTestScenarioSummary } from "@/types/testScenarios";
 import { dashboardService } from "@/services/dashboardService";
 import getLogger from "@/lib/logger";
 import { dbClient } from "@/prisma/client";
@@ -34,6 +36,35 @@ interface GetResultsResponse {
   rawTotal: number;
   page: number;
   totalPages: number;
+}
+
+interface ResultDetailResponse extends StructuredResultWithRelations {
+  relatedTestScenarios: RelatedTestScenarioSummary[];
+}
+
+async function getNormalizedResultById(
+  resultId: number | string,
+  projectId: string,
+): Promise<StructuredResultWithRelations> {
+  if (!resultId) {
+    throw new Error("Result ID is required");
+  }
+
+  if (!projectId) {
+    throw new Error("Project ID is required");
+  }
+
+  const resultRecord = await resultModel.findById(
+    resultId,
+    projectId,
+    dbClient,
+  );
+
+  if (!resultRecord) {
+    throw new Error(`Result with ID ${resultId} not found`);
+  }
+
+  return normalizeResultPayload(resultRecord);
 }
 
 export const resultService = {
@@ -121,25 +152,52 @@ export const resultService = {
     resultId: number | string,
     projectId: string,
   ): Promise<StructuredResultWithRelations> {
-    if (!resultId) {
-      throw new Error("Result ID is required");
-    }
+    return await getNormalizedResultById(resultId, projectId);
+  },
 
-    if (!projectId) {
+  async getResultDetailById(
+    resultId: number | string,
+    projectId: string,
+  ): Promise<ResultDetailResponse> {
+    const result = await getNormalizedResultById(resultId, projectId);
+    const relatedTestScenarios =
+      await testScenarioSpecLinkModel.findLinkedTestScenarios(
+        result.spec.id,
+        projectId,
+      );
+
+    return { ...result, relatedTestScenarios };
+  },
+
+  async getResultsBySpecRecordIds(params: {
+    projectId: string;
+    specRecordIds: string[];
+    page?: number;
+    limit?: number;
+  }): Promise<{
+    results: StructuredResultWithRelations[];
+    total: number;
+  }> {
+    if (!params.projectId) {
       throw new Error("Project ID is required");
     }
 
-    const resultRecord = await resultModel.findById(
-      resultId,
-      projectId,
-      dbClient,
-    );
+    const page = params.page ?? 1;
+    const limit = params.limit ?? 30;
+    const [results, total] = await Promise.all([
+      resultModel.findManyBySpecRecordIds(
+        params.specRecordIds,
+        params.projectId,
+        page,
+        limit,
+      ),
+      resultModel.countBySpecRecordIds(params.specRecordIds, params.projectId),
+    ]);
 
-    if (!resultRecord) {
-      throw new Error(`Result with ID ${resultId} not found`);
-    }
-
-    return normalizeResultPayload(resultRecord);
+    return {
+      results: results.map(normalizeResultPayload),
+      total,
+    };
   },
 
   async getResultsStats(params: GetResultsStatsParams): Promise<ResultsStats> {

@@ -93,6 +93,12 @@ jest.mock("@/models/userModel", () => ({
       return Promise.resolve(user ?? null);
     }),
     list: jest.fn(() => Promise.resolve([...users])),
+    listActiveDirectory: jest.fn(() => Promise.resolve(
+      users
+        .filter((user) => user.status === "active")
+        .sort((left, right) => left.name.localeCompare(right.name) || left.id.localeCompare(right.id))
+        .map(({ id, name, email }) => ({ id, name, email })),
+    )),
     countActiveAdmins: jest.fn(() =>
       Promise.resolve(
         users.filter((user) => user.status === "active" && user.role === "admin")
@@ -306,6 +312,36 @@ describe("Users Routes", () => {
       expect(res.statusCode).toBe(200);
       const body = res.body;
       expect(body?.email).toBe("carol@ventionteams.com");
+    });
+
+    it("GET /v2/users lists active users to an authenticated non-admin with safe fields only", async () => {
+      await signup("Zed Active", "zed@ventionteams.com");
+      await signup("Pending User", "pending@ventionteams.com");
+      await signup("Suspended User", "suspended@ventionteams.com");
+      approveUser("zed@ventionteams.com");
+      const suspended = users.find((user) => user.email === "suspended@ventionteams.com");
+      if (!suspended) throw new Error("Expected suspended test user");
+      suspended.status = "suspended";
+      const active = users.find((user) => user.email === "zed@ventionteams.com");
+      if (!active) throw new Error("Expected active test user");
+      active.role = "member";
+      const loginRes = await login("zed@ventionteams.com");
+      const token = loginRes.body.accessToken as string;
+
+      const unauthenticated = await executeProtectedController(
+        userController.listActiveDirectory,
+      );
+      expect(unauthenticated.statusCode).toBe(401);
+
+      const response = await executeProtectedController(
+        userController.listActiveDirectory,
+        { token },
+      );
+      expect(response.statusCode).toBe(200);
+      expect(response.body).toEqual([
+        { id: active.id, name: "Zed Active", email: "zed@ventionteams.com" },
+      ]);
+      expect(JSON.stringify(response.body)).not.toMatch(/passwordHash|mcpToken|role|status|integrations/i);
     });
 
     it("POST /refresh-token issues new tokens", async () => {

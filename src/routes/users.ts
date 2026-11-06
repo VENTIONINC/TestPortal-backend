@@ -22,6 +22,7 @@ router.post("/v2/users/login", userController.authLogin);
 router.post("/v2/users/signout", userController.authLogout);
 
 // PROTECTED ROUTES
+router.get("/v2/users", authMiddleware, userController.listActiveDirectory);
 router.get("/v2/users/:userId", authMiddleware, userController.getUserById);
 router.patch("/v2/users/:userId", authMiddleware, userController.updateUser);
 router.patch(

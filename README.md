@@ -1,197 +1,163 @@
-# Test Results Manager - TypeScript Edition
+# TestPortal Backend
 
-A comprehensive Node.js Express server for managing test results with TypeScript, Prisma database operations, MVC architecture, and Model Context Protocol (MCP) integration.
+[![License: Apache 2.0](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](LICENSE)
 
-## Features
+TestPortal helps teams centralize test results, investigate failures, and track issues across projects. This repository contains its REST API and Model Context Protocol (MCP) server.
 
-- 🚀 **TypeScript**: Full type safety and modern development experience
-- 🏗️ **MVC Architecture**: Clean separation with models, controllers, and services
-- 🗄️ **Prisma ORM**: Type-safe database operations with PostgreSQL
-- 🔧 **MCP Integration**: Model Context Protocol for advanced tool interactions
-- 📊 **Test Analytics**: Comprehensive test result tracking and analysis
-- 🔍 **Error Analysis**: Automated error pattern recognition and categorization
-- 🎯 **RESTful API**: Well-structured API endpoints for all operations
-- 🐳 **Docker Support**: PostgreSQL database with Docker Compose
+## What you can do
 
-## Setup Instructions
+- Ingest automated test reports in JSON and Common Test Report Format (CTRF).
+- Store and query project-scoped executions, test specifications, results, and failures.
+- Track issues and associate them with test errors.
+- Analyze failures with AI-assisted workflows and expose test data through MCP tools.
+- Provide dashboard metrics and PDF reports to the frontend.
+- Manage reusable prompts, skill packages, users, and project integrations.
+
+The backend uses Node.js, TypeScript, Express, Prisma, and PostgreSQL. Zod schemas and OpenAPI documentation describe its REST contracts. Authentication supports local accounts and AWS Cognito.
+
+## TestPortal ecosystem
+
+| Repository                                                       | Role                                                                                  |
+| ---------------------------------------------------------------- | ------------------------------------------------------------------------------------- |
+| [Frontend](https://github.com/VENTIONINC/TestPortal-client)      | Web interface for results, issues, and dashboards.                                    |
+| [Backend](https://github.com/VENTIONINC/TestPortal-backend)      | REST API, MCP server, authentication, and data storage; this repository.              |
+| [CLI](https://github.com/VENTIONINC/TestPortal-cli)              | Converts test reports and uploads them to TestPortal from local runs or CI pipelines. |
+| [Infrastructure](https://github.com/VENTIONINC/TestPortal-infra) | Infrastructure configuration for TestPortal deployments.                              |
+
+```mermaid
+flowchart LR
+    CLI[CLI / CI pipelines] -->|Test reports| API[REST API]
+    Frontend[Web frontend] --> API
+    Agents[MCP clients] --> MCP[MCP server]
+    API --> Services[Backend services]
+    MCP --> Services
+    Services --> DB[(PostgreSQL)]
+```
+
+## Setup instructions
 
 ### Prerequisites
 
-- Node.js 18+
-- npm 8+
-- Docker and Docker Compose
+- Node.js 22.15.0 or later and npm.
+- Docker with Docker Compose for the local PostgreSQL database, or an existing PostgreSQL instance.
 
-### Installation
+### 1. Clone and install
 
-1. **Clone and install dependencies:**
+```bash
+git clone https://github.com/VENTIONINC/TestPortal-backend.git
+cd TestPortal-backend
+npm install
+cp .env.example .env
+```
 
-   ```sh
-   git clone <repository-url>
-   cd test-portal-be
-   npm install
-   ```
+### 2. Configure local authentication and database access
 
-2. **Start PostgreSQL with Docker:**
+The example configuration targets the bundled PostgreSQL service:
 
-   ```sh
-   docker-compose up -d postgres
-   ```
+```dotenv
+DATABASE_URL="postgresql://postgres:postgres@localhost:5433/test_portal?schema=public"
+PORT=3001
+NODE_ENV=development
+AUTH_PROVIDER=local
+```
 
-3. **Create a `.env` file** in the root of the project:
+In `.env`, set `ADMIN_NAME`, `ADMIN_EMAIL`, and `ADMIN_PASSWORD` for your local administrator. Replace the placeholder values for `JWT_SECRET`, `MCP_SECRET`, and `API_KEY_SECRET` with separate signing secrets.
 
-   ```env
-   DATABASE_URL="postgresql://postgres:postgres@localhost:5433/test_portal"
-   PORT=3001
-   NODE_ENV=development
-   AUTH_PROVIDER=local
-   ```
+The example file also documents Cognito configuration, `OPENAI_API_KEY` for AI analysis, and optional LangSmith tracing.
 
-4. **Initialize Prisma and set up the database:**
+### 3. Start PostgreSQL and apply the existing migrations
 
-   ```sh
-   npx prisma migrate dev --name "initial-postgresql-migration"
-   ```
+For the bundled local database:
 
-5. **Build and run the server:**
+```bash
+docker compose up -d postgres
+docker compose ps postgres
+```
 
-   ```sh
-   # Development mode with hot reloading
-   npm run dev
+Wait until PostgreSQL is healthy, then generate the client and apply the repository's migrations to the database configured by `DATABASE_URL`:
 
-   # Production build
-   npm run build
-   npm run server
-   ```
-
-6. **Seed persisted skill packages** (optional):
-
-   ```sh
-   npm run seed
-   ```
-
-   This command idempotently seeds the system skill packages. Container-based
-   deployments run the same seeder automatically at startup.
-
-7. **Verify installation:**
-
-   Open `http://localhost:3001/api/v2/results` in your browser
-
-## Development Scripts
-
-```sh
-# Development with hot reloading
-npm run dev
-
-# Type checking
-npm run type-check
-
-# Unit tests
-npm test # runs Jest via ts-jest
-
-# Build for production
-npm run build
-
-# Production server
-npm run server
-
-# Linting and code quality
-npm run lint
-
-# Database operations
-npm run migrate
+```bash
 npm run db:generate
-
-# Docker operations
-docker-compose up -d postgres     # Start PostgreSQL
-docker-compose down               # Stop all services
-docker-compose logs postgres      # View PostgreSQL logs
+npx prisma migrate deploy
 ```
 
-## Prompt Tests
+### 4. Create the local administrator
 
-Datasets must be generated first.
-
-See __prompts-tests__/README.md for prompt test commands.
-
-## TypeScript Features
-
-- **Strict type checking** with comprehensive type definitions
-- **Path aliases** (`@/*`) for clean imports
-- **ES modules** support with proper Node.js configuration
-- **Prisma integration** with generated types
-- **ESLint configuration** with TypeScript rules
-- **Development experience** optimized with tsx and nodemon
-
-## Project Structure
-
-```
-src/
-├── controllers/     # Express route handlers
-├── services/        # Business logic layer
-├── models/          # Database access layer
-├── routes/          # API route definitions
-├── handlers/        # MCP request handlers
-├── mcp/             # Model Context Protocol integration
-│   ├── tools/       # MCP tool definitions
-│   ├── schemas/     # Zod validation schemas
-│   └── helpers/     # MCP utility functions
-├── lib/             # Utility libraries
-├── types/           # TypeScript type definitions
-└── middleware/      # Express middleware
+```bash
+npm run bootstrap:admin
 ```
 
-## API Endpoints
+This command uses the `ADMIN_*` values in `.env`. If the account already exists, it updates its password and grants active administrator access.
 
-### Authentication
+Optionally, seed the system skill packages:
 
-- `GET /api/v2/auth/config` - Discover the active auth provider and capability flags
-- `POST /api/v2/auth/signup` - Sign up through the configured provider
-- `POST /api/v2/auth/login` - Login through the configured provider
-- `POST /api/v2/auth/refresh-token` - Exchange a refresh token for new internal JWTs
-- `POST /api/v2/auth/logout` - Logout through the configured provider
+```bash
+npm run seed
+```
 
-### Core Resources
+The skill seeder is idempotent. Container deployments run it at startup.
 
-- `GET /api/v2/results` - Get test results with filtering
-- `GET /api/v2/executions` - Get test executions
-- `GET /api/v2/specs` - Get test specifications
-- `GET /api/v2/issues` - Get identified issues
-- `GET /api/v2/assumptions` - Get error assumptions
+### 5. Start and verify the server
 
-### Analysis & Reports
+```bash
+npm run dev
+```
 
-- `POST /api/v2/upload-json-report` - Upload a JSON test report using JWT authentication
-- `POST /api/v2/upload-json-report-api-key` - Upload a JSON test report using API key authentication
-- `POST /api/v2/result-errors/:id/review` - Analyze error patterns
-- `PUT /api/v2/result-errors/:id/assign` - Assign issue to error
+In another terminal:
 
-### Status & Health
+```bash
+curl http://localhost:3001/api/v2/status
+```
 
-- `GET /api/v2/status` - System health check
+A running server returns HTTP 200 with `status: "ok"` and its version. This endpoint confirms the server responds; it does not check database connectivity.
 
-## Documentation
+Open [Swagger UI](http://localhost:3001/api/swagger) to explore the REST API. Point the [frontend](https://github.com/VENTIONINC/TestPortal-client#getting-started) at `http://localhost:3001` and sign in with your administrator account. Use the [CLI](https://github.com/VENTIONINC/TestPortal-cli#-usage) to upload reports once a project and upload API key are configured.
 
-- **[Development Guide](docs/DEVELOPMENT_GUIDE.md)** - Complete setup and development guide
-- [API Documentation](docs/API_DOCUMENTATION.md)
-- [How to Inspect the MCP Server](docs/INSPECT_MCP_SERVER.md)
-- [MCP Tools Documentation](docs/MCP_TOOLS.md)
-- [Docker Deployment Guide](docs/DOCKER.md)
-- [Release Guide](docs/RELEASE.md)
-- [Contributing Guide](CONTRIBUTING.md)
+## API and MCP access
 
-## Contributing
+| Endpoint                  | Purpose                                          |
+| ------------------------- | ------------------------------------------------ |
+| `GET /api/v2/status`      | Server status and version.                       |
+| `GET /api/v2/auth/config` | Active authentication provider and capabilities. |
+| `POST /api/v2/auth/login` | Sign in through the configured provider.         |
+| `GET /api/openapi.json`   | OpenAPI specification.                           |
+| `/api/swagger`            | Interactive REST API documentation.              |
+| `/api/v2/mcp`             | Authenticated MCP endpoint over Streamable HTTP. |
 
-See [CONTRIBUTING.md](CONTRIBUTING.md) for the contributor workflow, including the `npm run new:file -- <path>` command for supported new source files.
+REST resource endpoints require authentication; report uploads also support upload API keys. See the [API documentation](docs/API_DOCUMENTATION.md), [MCP tools guide](docs/MCP_TOOLS.md), and [MCP inspection guide](docs/INSPECT_MCP_SERVER.md) for details.
 
-To backfill the standard Apache 2.0 header across existing supported files in `src`, `__tests__`, and `__prompts-tests__`, run `npm run headers:add`.
+## Development
 
-This project uses TypeScript with strict type checking. Please ensure:
+| Command               | Purpose                                                 |
+| --------------------- | ------------------------------------------------------- |
+| `npm run dev`         | Start the development server with reloads.              |
+| `npm run type-check`  | Check TypeScript without emitting output.               |
+| `npm run lint`        | Run ESLint.                                             |
+| `npm test`            | Run the Jest test suite.                                |
+| `npm run build`       | Compile the production server to `dist/`.               |
+| `npm run server`      | Start the compiled server.                              |
+| `npm run db:generate` | Regenerate the Prisma client.                           |
+| `npm run migrate`     | Create and apply a migration during schema development. |
+| `npm run studio`      | Open Prisma Studio.                                     |
+| `npm run seed`        | Seed system skill packages.                             |
 
-1. All code passes TypeScript compilation (`npm run type-check`)
-2. ESLint passes without errors (`npm run lint`)
-3. Follow the established patterns for types and interfaces
-4. Use path aliases (`@/*`) for internal imports
+Prompt evaluations are separate from the Jest suite and require generated datasets. See the [prompt test guide](__prompts-tests__/README.md).
+
+The code follows an MVC structure: routes and controllers handle HTTP, services contain business logic, and models use Prisma for persistence. MCP tools share backend services with REST handlers. See the [development guide](docs/DEVELOPMENT_GUIDE.md) for more detail.
+
+## Deployment and releases
+
+- [Docker deployment](docs/DOCKER.md)
+- [ECS deployment](docs/DEPLOY_ECS.md)
+- [Release process](docs/RELEASE.md)
+- [Published releases](https://github.com/VENTIONINC/TestPortal-backend/releases)
+
+## Feedback and contributions
+
+Report bugs and propose improvements through [GitHub Issues](https://github.com/VENTIONINC/TestPortal-backend/issues). Include reproduction steps, expected and actual behavior, and relevant version details.
+
+Read [CONTRIBUTING.md](CONTRIBUTING.md) for the contribution workflow, required checks, API contract conventions, and source-file header guidance.
 
 ## License
 
-This project is licensed under the Apache License 2.0. See [LICENSE](LICENSE) for the full text and [NOTICE](NOTICE) for the project copyright notice.
+Licensed under the Apache License 2.0. See [LICENSE](LICENSE) for the full terms and [NOTICE](NOTICE) for copyright attribution.

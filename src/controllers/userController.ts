@@ -312,6 +312,18 @@ export const userController = {
     }
   },
 
+  listActiveDirectory: async (
+    _req: AuthenticatedRequest,
+    res: Response,
+  ): Promise<void> => {
+    try {
+      const users = await userService.listActiveDirectory();
+      res.status(200).json(users);
+    } catch (error) {
+      handleUserError(res, error, 500);
+    }
+  },
+
   approveUser: async (
     req: AuthenticatedRequest<{ userId: string }>,
     res: Response,

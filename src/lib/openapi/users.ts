@@ -33,6 +33,15 @@ const AdminManagedUserSchema = UserSchema.omit({ mcpToken: true }).openapi(
   "AdminManagedUser",
 );
 
+const ActiveUserDirectoryEntrySchema = z
+  .object({
+    id: z.string().uuid(),
+    name: z.string(),
+    email: z.string(),
+  })
+  .strict()
+  .openapi("ActiveUserDirectoryEntry");
+
 const AdminUserRoleUpdateRequestSchema = z
   .object({
     role: UserRoleSchema,
@@ -68,6 +77,7 @@ const McpTokenResponseSchema = z
 export function registerUserRoutes(registry: OpenAPIRegistry) {
   registry.register("User", UserSchema);
   registry.register("AdminManagedUser", AdminManagedUserSchema);
+  registry.register("ActiveUserDirectoryEntry", ActiveUserDirectoryEntrySchema);
   registry.register("UserStatus", UserStatusSchema);
   registry.register("UserRole", UserRoleSchema);
   registry.register("UserUpdateRequest", UserUpdateRequestSchema);
@@ -80,6 +90,33 @@ export function registerUserRoutes(registry: OpenAPIRegistry) {
     AdminUserRoleUpdateRequestSchema,
   );
   registry.register("McpTokenResponse", McpTokenResponseSchema);
+
+  registry.registerPath({
+    method: "get",
+    path: "/api/v2/users",
+    description:
+      "Lists active users for authenticated user-selection flows in deterministic name and ID order. Returns only safe identity fields; admin access is not required.",
+    security: [{ BearerAuth: [] }],
+    responses: {
+      200: {
+        description: "Active user directory",
+        content: {
+          "application/json": {
+            schema: z.array(ActiveUserDirectoryEntrySchema),
+          },
+        },
+      },
+      401: {
+        description: "Unauthorized - invalid or missing token",
+        content: { "application/json": { schema: ErrorResponseSchema } },
+      },
+      403: {
+        description: "Forbidden - user is not active",
+        content: { "application/json": { schema: ErrorResponseSchema } },
+      },
+    },
+    tags: ["Users"],
+  });
 
   registry.registerPath({
     method: "get",

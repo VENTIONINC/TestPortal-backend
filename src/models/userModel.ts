@@ -93,6 +93,16 @@ export const userModel = {
     });
   },
 
+  listActiveDirectory: async (): Promise<
+    Array<{ id: string; name: string; email: string }>
+  > => {
+    return await dbClient.user.findMany({
+      where: { status: UserStatus.active },
+      select: { id: true, name: true, email: true },
+      orderBy: [{ name: "asc" }, { id: "asc" }],
+    });
+  },
+
   countActiveAdmins: async (tx?: Prisma.TransactionClient): Promise<number> => {
     const client = tx ?? dbClient;
     return await client.user.count({

@@ -130,7 +130,7 @@ export const resultController = {
         return;
       }
 
-      const resultRecord = await resultService.getResultById(
+      const resultRecord = await resultService.getResultDetailById(
         resultId,
         projectId,
       );
