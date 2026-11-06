@@ -63,6 +63,8 @@ describe("structured Test Scenario OpenAPI contract", () => {
       ["/api/v2/test-scenario-folders", "post"],
       ["/api/v2/test-scenario-folders/{folderId}", "patch"],
       ["/api/v2/test-scenario-folders/{folderId}", "delete"],
+      ["/api/v2/test-scenario-folders/restoration", "post"],
+      ["/api/v2/test-scenarios/folder-restoration", "post"],
       ["/api/v2/test-suites", "get"],
       ["/api/v2/test-suites", "post"],
       ["/api/v2/test-suites/{suiteId}", "get"],
@@ -100,7 +102,13 @@ describe("structured Test Scenario OpenAPI contract", () => {
     expect(memberOrderBody?.required).toEqual(expect.arrayContaining(["projectId", "scenarioIds"]));
     expect(memberOrderBody?.required).not.toContain("expectedMembershipRevision");
     expect(memberOrderBody?.required).not.toContain("expectedScenarioIds");
-    expect(paths["/api/v2/test-scenario-folders/{folderId}"]?.delete?.parameters).toEqual(expect.arrayContaining([expect.objectContaining({ name: "disposition", in: "query" })]));
+    expect(paths["/api/v2/test-scenario-folders/{folderId}"]?.delete?.parameters).not.toEqual(expect.arrayContaining([expect.objectContaining({ name: "disposition", in: "query" })]));
+    expect(paths["/api/v2/test-scenario-folders/restoration"]?.post?.requestBody).toBeDefined();
+    expect(paths["/api/v2/test-scenarios/folder-restoration"]?.post?.requestBody).toBeDefined();
+    const deleteResponse = paths["/api/v2/test-scenario-folders/{folderId}"]?.delete?.responses?.["200"]?.content?.["application/json"]?.schema;
+    expect(deleteResponse?.properties?.restoreData).toBeDefined();
+    const bulkFolderResponse = paths["/api/v2/test-scenarios/bulk-folder"]?.patch?.responses?.["200"]?.content?.["application/json"]?.schema;
+    expect(bulkFolderResponse?.properties?.restoreData).toBeDefined();
     const folderSchema = spec.components?.schemas?.TestScenarioFolderResponse as { properties?: Record<string, unknown> };
     expect(folderSchema.properties?.description).toEqual({ type: ["string", "null"] });
     const query = generateOpenAPISpec().components?.schemas?.TestScenarioListQuery as { properties?: Record<string, unknown> };

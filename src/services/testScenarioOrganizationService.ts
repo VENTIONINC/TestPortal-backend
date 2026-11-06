@@ -88,10 +88,17 @@ export const testScenarioOrganizationService = {
   async deleteFolder(input: {
     projectId: string;
     folderId: string;
-    disposition: "parent" | "unfiled";
     updatedById?: string;
   }) {
     return await testScenarioOrganizationWrites.deleteFolder(input);
+  },
+
+  async restoreFolderDeletion(input: { projectId: string; restoreData: Parameters<typeof testScenarioOrganizationWrites.restoreFolderDeletion>[0]["restoreData"]; updatedById?: string }) {
+    return await testScenarioOrganizationWrites.restoreFolderDeletion(input);
+  },
+
+  async restoreScenarioFolders(input: Parameters<typeof testScenarioOrganizationWrites.restoreScenarioFolders>[0]) {
+    return await testScenarioOrganizationWrites.restoreScenarioFolders(input);
   },
 
   async listSuites(projectId: string) { await requireProject(projectId); return await dbClient.testSuite.findMany({ where: { projectId }, orderBy: [{ name: "asc" }, { id: "asc" }], include: { members: { orderBy: { position: "asc" } } } }); },

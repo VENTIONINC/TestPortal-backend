@@ -74,7 +74,7 @@ export async function deleteScenarioSuite(
 
 const notFound = () => new OrganizationError("Resource not found", 404);
 const invalid = (message: string) => new OrganizationError(message, 400);
-const conflict = () => new OrganizationError("Suite membership changed; reload and retry", 409);
+const conflict = () => new OrganizationError("Organization data changed; reload and retry", 409);
 
 type OrderedMembership = { testScenarioId: string; position: number };
 type MembershipUndo = {
@@ -255,60 +255,63 @@ export const testScenarioOrganizationWrites = {
   async deleteFolder(input: {
     projectId: string;
     folderId: string;
-    disposition: "parent" | "unfiled";
     updatedById?: string;
-  }): Promise<{ deleted: true }> {
+  }): Promise<{ deleted: true; restoreData: { folders: Array<{ id: string; projectId: string; name: string; description: string | null; parentId: string | null; position: number }>; scenarios: Array<{ scenarioId: string; folderId: string; expectedRevision: number }> } }> {
     return await withScenarioTransaction(async (tx) => {
       await requireOrganizationActor(tx, input.updatedById);
       // Folder-tree writes retain their project mutex for tree depth and reparenting.
       await tx.$queryRaw(
         Prisma.sql`SELECT "id" FROM "Project" WHERE "id" = ${input.projectId}::uuid FOR UPDATE`,
       );
-      const folder = await tx.testScenarioFolder.findFirst({
-        where: { id: input.folderId, projectId: input.projectId },
-      });
-      if (!folder) throw notFound();
-      const discovered = await tx.testScenario.findMany({
-        where: { projectId: input.projectId, folderId: folder.id },
-        select: { id: true },
-      });
-      await lockScenarios(
-        tx,
-        input.projectId,
-        discovered.map((s) => s.id),
-      );
-      const current = await tx.testScenario.findMany({
-        where: { projectId: input.projectId, folderId: folder.id },
-        select: { id: true },
-      });
-      if (current.some((s) => !discovered.some((d) => d.id === s.id)))
+      const folders = await tx.$queryRaw<Array<{ id: string }>>(Prisma.sql`
+        WITH RECURSIVE tree AS (
+          SELECT * FROM "TestScenarioFolder" WHERE "id" = ${input.folderId}::uuid AND "projectId" = ${input.projectId}::uuid
+          UNION ALL SELECT child.* FROM "TestScenarioFolder" child JOIN tree parent ON child."parentId" = parent."id"
+          WHERE child."projectId" = ${input.projectId}::uuid
+        ) SELECT "id" FROM tree`);
+      if (!folders.length) throw notFound();
+      const folderIds = folders.map(({ id }) => id);
+      const folderRecords = await tx.testScenarioFolder.findMany({ where: { id: { in: folderIds }, projectId: input.projectId }, orderBy: [{ position: "asc" }, { id: "asc" }], select: { id: true, projectId: true, name: true, description: true, parentId: true, position: true } });
+      const discovered = await tx.testScenario.findMany({ where: { projectId: input.projectId, folderId: { in: folderIds } }, select: { id: true } });
+      await lockScenarios(tx, input.projectId, discovered.map((s) => s.id));
+      const current = await tx.testScenario.findMany({ where: { projectId: input.projectId, folderId: { in: folderIds } }, select: { id: true, folderId: true } });
+      if (current.length !== discovered.length || current.some((s) => !discovered.some((d) => d.id === s.id)))
         throw new ScenarioTransactionRetryError();
-      await tx.testScenario.updateMany({
-        where: { projectId: input.projectId, folderId: folder.id },
-        data: {
-          folderId: input.disposition === "parent" ? folder.parentId : null,
-        },
-      });
-      await advanceScenarioRevisions(
-        tx,
-        input.projectId,
-        current.map((s) => s.id),
-        input.updatedById,
-      );
-      const children = await tx.testScenarioFolder.findMany({
-        where: { projectId: input.projectId, parentId: folder.id },
-        orderBy: [{ position: "asc" }, { id: "asc" }],
-      });
-      for (const [index, child] of children.entries())
-        await tx.testScenarioFolder.update({
-          where: { id: child.id },
-          data: {
-            parentId: folder.parentId,
-            position: folder.position + index,
-          },
-        });
-      await tx.testScenarioFolder.delete({ where: { id: folder.id } });
-      return { deleted: true as const };
+      await tx.testScenario.updateMany({ where: { projectId: input.projectId, id: { in: current.map((s) => s.id) } }, data: { folderId: null } });
+      await advanceScenarioRevisions(tx, input.projectId, current.map((s) => s.id), input.updatedById);
+      await tx.testScenarioFolder.deleteMany({ where: { id: { in: folderIds }, projectId: input.projectId } });
+      const updatedScenarios = await tx.testScenario.findMany({ where: { projectId: input.projectId, id: { in: current.map((s) => s.id) } }, select: { id: true, revision: true } });
+      return { deleted: true as const, restoreData: { folders: folderRecords, scenarios: current.map((s) => ({ scenarioId: s.id, folderId: s.folderId as string, expectedRevision: updatedScenarios.find((u) => u.id === s.id)?.revision ?? 0 })) } };
+    });
+  },
+  async restoreFolderDeletion(input: { projectId: string; restoreData: { folders: Array<{ id: string; projectId: string; name: string; description: string | null; parentId: string | null; position: number }>; scenarios: Array<{ scenarioId: string; folderId: string; expectedRevision: number }> }; updatedById?: string }) {
+    return await withScenarioTransaction(async (tx) => {
+      await requireOrganizationActor(tx, input.updatedById);
+      await tx.$queryRaw(Prisma.sql`SELECT "id" FROM "Project" WHERE "id" = ${input.projectId}::uuid FOR UPDATE`);
+      const folderIds = input.restoreData.folders.map((f) => f.id);
+      const scenarioIds = input.restoreData.scenarios.map((s) => s.scenarioId);
+      if (!folderIds.length || new Set(folderIds).size !== folderIds.length || new Set(scenarioIds).size !== scenarioIds.length || input.restoreData.folders.some((f) => f.projectId !== input.projectId) || input.restoreData.scenarios.some((s) => !folderIds.includes(s.folderId))) throw conflict();
+      const externalParentIds = [...new Set(input.restoreData.folders.flatMap((f) => f.parentId && !folderIds.includes(f.parentId) ? [f.parentId] : []))];
+      if (externalParentIds.length && await tx.testScenarioFolder.count({ where: { id: { in: externalParentIds }, projectId: input.projectId } }) !== externalParentIds.length) throw conflict();
+      await lockScenarios(tx, input.projectId, scenarioIds);
+      if (await tx.testScenarioFolder.count({ where: { id: { in: folderIds } } })) throw conflict();
+      const scenarios = await tx.testScenario.findMany({ where: { projectId: input.projectId, id: { in: scenarioIds } }, select: { id: true, folderId: true, revision: true } });
+      if (scenarios.length !== scenarioIds.length || input.restoreData.scenarios.some((expected) => { const current = scenarios.find((s) => s.id === expected.scenarioId); return !current || current.folderId !== null || current.revision !== expected.expectedRevision; })) throw conflict();
+      try {
+        const pending = [...input.restoreData.folders];
+        const restoredIds = new Set<string>();
+        while (pending.length) {
+          const index = pending.findIndex((folder) => folder.parentId === null || !folderIds.includes(folder.parentId) || restoredIds.has(folder.parentId));
+          if (index < 0) throw conflict();
+          const [folder] = pending.splice(index, 1);
+          if (!folder) throw conflict();
+          await tx.testScenarioFolder.create({ data: folder });
+          restoredIds.add(folder.id);
+        }
+      } catch (error) { if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002") throw conflict(); throw error; }
+      for (const assignment of input.restoreData.scenarios) await tx.testScenario.update({ where: { id: assignment.scenarioId }, data: { folderId: assignment.folderId } });
+      await advanceScenarioRevisions(tx, input.projectId, scenarioIds, input.updatedById);
+      return { restored: true as const };
     });
   },
   async mutateMembers(input: {
@@ -431,7 +434,7 @@ export const testScenarioOrganizationWrites = {
     scenarioIds: string[];
     folderId: string | null;
     updatedById?: string;
-  }): Promise<{ moved: number }> {
+  }): Promise<{ moved: number; restoreData: Array<{ scenarioId: string; folderId: string | null; expectedFolderId: string | null; expectedRevision: number }> }> {
     return await withScenarioTransaction(async (tx) => {
       await requireOrganizationActor(tx, input.updatedById);
       await lockScenarios(tx, input.projectId, input.scenarioIds);
@@ -447,6 +450,10 @@ export const testScenarioOrganizationWrites = {
         where: { id: { in: input.scenarioIds }, projectId: input.projectId },
       });
       if (count !== input.scenarioIds.length) throw notFound();
+      const before = await tx.testScenario.findMany({
+        where: { projectId: input.projectId, id: { in: input.scenarioIds } },
+        select: { id: true, folderId: true },
+      });
       const changed = await tx.testScenario.findMany({
         where: {
           projectId: input.projectId,
@@ -469,7 +476,23 @@ export const testScenarioOrganizationWrites = {
         where: { id: { in: input.scenarioIds }, projectId: input.projectId },
         data: { folderId: input.folderId },
       });
-      return { moved: count };
+      const after = await tx.testScenario.findMany({ where: { projectId: input.projectId, id: { in: input.scenarioIds } }, select: { id: true, revision: true } });
+      return { moved: changed.length, restoreData: before.filter((s) => s.folderId !== input.folderId).map((s) => ({ scenarioId: s.id, folderId: s.folderId, expectedFolderId: input.folderId, expectedRevision: after.find((a) => a.id === s.id)?.revision ?? 0 })) };
+    });
+  },
+  async restoreScenarioFolders(input: { projectId: string; restoreData: Array<{ scenarioId: string; folderId: string | null; expectedFolderId: string | null; expectedRevision: number }>; updatedById?: string }) {
+    return await withScenarioTransaction(async (tx) => {
+      await requireOrganizationActor(tx, input.updatedById);
+      const ids = input.restoreData.map((item) => item.scenarioId);
+      if (!ids.length || new Set(ids).size !== ids.length) throw invalid("Restoration scenarios must be unique");
+      await lockScenarios(tx, input.projectId, ids);
+      const folderIds = [...new Set(input.restoreData.flatMap((item) => [item.folderId, item.expectedFolderId].filter((id): id is string => id !== null)))];
+      if (folderIds.length && await tx.testScenarioFolder.count({ where: { id: { in: folderIds }, projectId: input.projectId } }) !== folderIds.length) throw notFound();
+      const current = await tx.testScenario.findMany({ where: { projectId: input.projectId, id: { in: ids } }, select: { id: true, folderId: true, revision: true } });
+      if (current.length !== ids.length || input.restoreData.some((item) => { const row = current.find((s) => s.id === item.scenarioId); return !row || row.folderId !== item.expectedFolderId || row.revision !== item.expectedRevision; })) throw conflict();
+      for (const item of input.restoreData) await tx.testScenario.update({ where: { id: item.scenarioId }, data: { folderId: item.folderId } });
+      await advanceScenarioRevisions(tx, input.projectId, ids, input.updatedById);
+      return await tx.testScenario.findMany({ where: { projectId: input.projectId, id: { in: ids } }, select: { id: true, folderId: true, revision: true } });
     });
   },
 };

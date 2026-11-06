@@ -10,6 +10,8 @@ router.get("/v2/test-scenario-folders", authMiddleware, controller.listFolders);
 router.post("/v2/test-scenario-folders", authMiddleware, controller.createFolder);
 router.patch("/v2/test-scenario-folders/:folderId", authMiddleware, controller.updateFolder);
 router.delete("/v2/test-scenario-folders/:folderId", authMiddleware, controller.deleteFolder);
+router.post("/v2/test-scenario-folders/restoration", authMiddleware, controller.restoreFolderDeletion);
+router.post("/v2/test-scenarios/folder-restoration", authMiddleware, controller.restoreScenarioFolders);
 router.get("/v2/test-suites", authMiddleware, controller.listSuites);
 router.post("/v2/test-suites", authMiddleware, controller.createSuite);
 router.get("/v2/test-suites/:suiteId", authMiddleware, controller.getSuite);

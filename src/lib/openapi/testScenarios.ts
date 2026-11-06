@@ -419,6 +419,12 @@ const FolderRecordResponseSchema = z.object({
   createdAt: z.string(),
   updatedAt: z.string(),
 });
+const FolderSnapshotSchema = z.object({ id: z.string().uuid(), projectId: z.string().uuid(), name: z.string(), description: z.string().nullable(), parentId: z.string().uuid().nullable(), position: z.number().int() });
+const FolderRestoreDataSchema = z.object({ folders: z.array(FolderSnapshotSchema), scenarios: z.array(z.object({ scenarioId: z.string().uuid(), folderId: z.string().uuid(), expectedRevision: z.number().int().nonnegative() })) });
+const FolderDeleteResponseSchema = z.object({ deleted: z.literal(true), restoreData: FolderRestoreDataSchema });
+const FolderRestorationBodySchema = z.object({ projectId: z.string().uuid(), restoreData: FolderRestoreDataSchema });
+const FolderMoveRestoreDataSchema = z.array(z.object({ scenarioId: z.string().uuid(), folderId: z.string().uuid().nullable(), expectedFolderId: z.string().uuid().nullable(), expectedRevision: z.number().int().nonnegative() })).min(1).max(10_000);
+const FolderMoveRestorationBodySchema = z.object({ projectId: z.string().uuid(), restoreData: FolderMoveRestoreDataSchema });
 const SuiteMemberResponseSchema = z.object({
   suiteId: z.string().uuid(),
   testScenarioId: z.string().uuid(),
@@ -438,7 +444,7 @@ const SuiteResponseSchema = z.object({
   members: z.array(SuiteMemberResponseSchema).optional(),
 });
 const DeletedResponseSchema = z.object({ deleted: z.literal(true) });
-const MovedResponseSchema = z.object({ moved: z.number().int().nonnegative() });
+const MovedResponseSchema = z.object({ moved: z.number().int().nonnegative(), restoreData: FolderMoveRestoreDataSchema });
 const MemberOrderResponseSchema = z.object({
   scenarioIds: z.array(z.string().uuid()),
 });
@@ -446,11 +452,12 @@ const MembershipChangeResponseSchema = z.object({ scenarioIds: z.array(z.string(
 const MembershipRestoreResponseSchema = z.object({ scenarioIds: z.array(z.string().uuid()), membershipRevision: z.number().int().nonnegative() });
 const SuiteMoveResponseSchema = z.object({ sourceScenarioIds: z.array(z.string().uuid()), destinationScenarioIds: z.array(z.string().uuid()), sourceMembershipRevision: z.number().int().nonnegative(), destinationMembershipRevision: z.number().int().nonnegative(), restoreData: MoveUndoSchema, alreadyInDestination: z.array(z.string().uuid()) });
 const SuiteMoveRestoreResponseSchema = z.object({ sourceScenarioIds: z.array(z.string().uuid()), destinationScenarioIds: z.array(z.string().uuid()), sourceMembershipRevision: z.number().int().nonnegative(), destinationMembershipRevision: z.number().int().nonnegative() });
-const FolderDeleteQuerySchema = OrganizationProjectQuerySchema.extend({
-  disposition: z.enum(["parent", "unfiled"]),
-});
+const FolderDeleteQuerySchema = OrganizationProjectQuerySchema;
 
 function organizationResponseSchema(path: string, method: string): ZodTypeAny {
+  if (path === "/api/v2/test-scenarios/folder-restoration") return z.array(z.object({ id: z.string().uuid(), folderId: z.string().uuid().nullable(), revision: z.number().int().nonnegative() }));
+  if (path.endsWith("/restoration")) return z.object({ restored: z.literal(true) });
+  if (path.endsWith("test-scenario-folders/{folderId}") && method === "delete") return FolderDeleteResponseSchema;
   if (path.endsWith("/membership-changes")) return MembershipChangeResponseSchema;
   if (path.endsWith("/membership-restoration")) return MembershipRestoreResponseSchema;
   if (path.endsWith("/moves")) return SuiteMoveResponseSchema;
@@ -1178,6 +1185,8 @@ export function registerTestScenarioRoutes(registry: OpenAPIRegistry): void {
   for (const [path, methods] of Object.entries({
     "/api/v2/test-scenario-folders": ["get", "post"],
     "/api/v2/test-scenario-folders/{folderId}": ["patch", "delete"],
+    "/api/v2/test-scenario-folders/restoration": ["post"],
+    "/api/v2/test-scenarios/folder-restoration": ["post"],
     "/api/v2/test-suites": ["get", "post"],
     "/api/v2/test-suites/{suiteId}": ["get", "patch", "delete"],
     "/api/v2/test-suites/{suiteId}/members": ["post", "delete"],
@@ -1231,6 +1240,10 @@ export function registerTestScenarioRoutes(registry: OpenAPIRegistry): void {
                               ? SuiteMoveBodySchema
                               : path.endsWith("/move-restoration")
                                 ? SuiteMoveRestoreBodySchema
+                        : path === "/api/v2/test-scenario-folders/restoration"
+                          ? FolderRestorationBodySchema
+                          : path === "/api/v2/test-scenarios/folder-restoration"
+                            ? FolderMoveRestorationBodySchema
                         : path.endsWith("/members/order")
                           ? MemberOrderBodySchema
                           : path.includes("members")
