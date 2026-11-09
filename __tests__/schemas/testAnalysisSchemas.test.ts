@@ -32,6 +32,33 @@ describe("testAnalysisSchemas", () => {
     );
   });
 
+  it("enforces confidence and quality compatibility for failed and flaky results", () => {
+    expect(
+      testResultSchema.safeParse({ ...failedResult, confidence: 0 }).success,
+    ).toBe(false);
+    expect(
+      testResultSchema.safeParse({ ...failedResult, confidence: 6 }).success,
+    ).toBe(false);
+    expect(
+      testResultSchema.safeParse({
+        ...failedResult,
+        errorQuality: null,
+        errorQualityConclusion: null,
+      }).success,
+    ).toBe(true);
+    expect(
+      testResultSchema.safeParse({
+        ...failedResult,
+        status: "flaky",
+        errorQuality: null,
+        errorQualityConclusion: null,
+      }).success,
+    ).toBe(true);
+    expect(
+      testResultSchema.safeParse({ ...failedResult, status: "flaky" }).success,
+    ).toBe(false);
+  });
+
   it.each([
     ["v1.0.0", testAnalysisSchemaV1_0_0],
     ["v1.1.0", testAnalysisSchemaV1_1_0],

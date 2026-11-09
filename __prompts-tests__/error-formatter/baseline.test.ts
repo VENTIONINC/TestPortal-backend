@@ -197,24 +197,35 @@ describe(`error formatter: ${settings.model}`, () => {
   it.each(cases)("$name", async (testCase) => {
     const startedAt = Date.now();
     const usageStart = usageEntries.length;
-    const output = await errorFormatterService.formatErrorMessage(
-      testCase.input,
-    );
-    records.push({
+    const record: Record<string, unknown> = {
       name: testCase.name,
       input: testCase.input,
-      output,
-      durationMs: Date.now() - startedAt,
-      usage: usageEntries.slice(usageStart),
-    });
-    expect(usageEntries.length).toBeGreaterThan(usageStart);
-    expect(usageEntries.slice(usageStart)).not.toContain(null);
-    expect(errorFormatterSchema.strict().safeParse(output).success).toBe(true);
-    expect(output.name.trim().length).toBeGreaterThan(0);
-    expect(output.description.trim().length).toBeGreaterThan(0);
-    const text = `${output.name}\n${output.description}`;
-    for (const pattern of testCase.required) expect(text).toMatch(pattern);
-    for (const pattern of testCase.forbidden ?? [])
-      expect(text).not.toMatch(pattern);
+      passed: false,
+    };
+    records.push(record);
+    try {
+      const output = await errorFormatterService.formatErrorMessage(
+        testCase.input,
+      );
+      record.output = output;
+      expect(usageEntries.length).toBeGreaterThan(usageStart);
+      expect(usageEntries.slice(usageStart)).not.toContain(null);
+      expect(errorFormatterSchema.strict().safeParse(output).success).toBe(
+        true,
+      );
+      expect(output.name.trim().length).toBeGreaterThan(0);
+      expect(output.description.trim().length).toBeGreaterThan(0);
+      const text = `${output.name}\n${output.description}`;
+      for (const pattern of testCase.required) expect(text).toMatch(pattern);
+      for (const pattern of testCase.forbidden ?? [])
+        expect(text).not.toMatch(pattern);
+      record.passed = true;
+    } catch (error) {
+      record.failure = error instanceof Error ? error.message : String(error);
+      throw error;
+    } finally {
+      record.durationMs = Date.now() - startedAt;
+      record.usage = usageEntries.slice(usageStart);
+    }
   });
 });

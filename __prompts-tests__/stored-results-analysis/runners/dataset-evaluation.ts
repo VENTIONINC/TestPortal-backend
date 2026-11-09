@@ -24,15 +24,18 @@ export async function runDatasetEvaluation(
   );
   const reportCases = cases.map((testCase) => {
     const output = byId.get(testCase.input.id);
-    if (!output) throw new Error(`Missing output for ${testCase.input.id}`);
+    const failures = result.failures.filter(
+      (failure) => failure.testCaseName === testCase.name,
+    );
     return {
       id: testCase.input.id,
       name: testCase.name,
       expected: testCase.expect.category,
-      actual: output.category,
-      correct: output.category === testCase.expect.category,
-      confidence: output.confidence,
-      details: output,
+      actual: output?.category ?? null,
+      correct: output?.category === testCase.expect.category,
+      confidence: output?.confidence ?? null,
+      details: output ?? null,
+      failures: failures.map((failure) => failure.reason),
     };
   });
   const correctCount = reportCases.filter(({ correct }) => correct).length;

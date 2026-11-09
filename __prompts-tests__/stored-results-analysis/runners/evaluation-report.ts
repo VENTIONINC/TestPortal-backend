@@ -14,10 +14,11 @@ export interface EvaluationCaseResult {
   id: string;
   name: string;
   expected: Category;
-  actual: Category;
+  actual: Category | null;
   correct: boolean;
-  confidence: number;
+  confidence: number | null;
   details?: unknown;
+  failures: string[];
 }
 
 export interface EvaluationReport {

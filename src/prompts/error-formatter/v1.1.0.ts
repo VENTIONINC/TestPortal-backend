@@ -10,7 +10,7 @@ export const getErrorFormatterPrompt = () => `
 
   <guidelines>
     Preserve diagnostic details from the input: exact error codes, exception types,
-    file paths, line and column numbers, selectors, hostnames, and expected/actual values.
+    file paths, line and column numbers, selectors, hostnames, timeouts, and expected/actual values.
     You may rephrase the surrounding text, but do not omit or alter these details.
     Preserve negation and uncertainty. Do not present inferred causes as established facts.
   </guidelines>

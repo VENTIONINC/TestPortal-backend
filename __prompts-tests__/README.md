@@ -105,6 +105,7 @@ parameterized over prompt v1.1.0 and v1.2.0. Model settings default to the same
 settings used by production classification: GPT-6 Luna, Responses API, low
 reasoning, and a 4000-token output limit. The runner supports explicit settings
 for comparisons; a separate model-specific test file is unnecessary.
+Prompt v1.1.0 is the evaluation baseline; v1.2.0 is used in production.
 
 Error formatting has its own diagnostic-preservation suite; see
 [its evaluation guide](error-formatter/README.md). It uses the production
