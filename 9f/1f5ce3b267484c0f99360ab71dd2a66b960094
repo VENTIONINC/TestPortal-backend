@@ -1,0 +1,36 @@
+__tests__/services/testAnalysisService.test.ts
+  s_9935f0a16b82ef::t_5e1579913105c0 20,45-48
+  s_9935f0a16b82ef::t_81faf4239c4b0c 1-19,21-44,49-50
+  s_9935f0a16b82ef::t_d9b19c682e5094 51-89
+__prompts-tests__/error-formatter/baseline.test.ts
+  s_9935f0a16b82ef::t_0b53f49cf127dc 200,203-220
+  s_9935f0a16b82ef::t_66dbb4b642536f 221-229
+__prompts-tests__/README.md
+  s_9935f0a16b82ef::t_adf7d9476c87dc 108
+src/prompts/error-formatter/v1.1.0.ts
+  s_9935f0a16b82ef::t_229c660cf840fc 13
+__prompts-tests__/stored-results-analysis/runners/dataset-evaluation.ts
+  s_9935f0a16b82ef::t_0b53f49cf127dc 27-29,34-36
+  s_9935f0a16b82ef::t_72547de7050f6f 37-38
+__tests__/schemas/testAnalysisSchemas.test.ts
+  s_9935f0a16b82ef::t_5e1579913105c0 35-42
+  s_9935f0a16b82ef::t_ba61ea184a01e3 43-61
+__prompts-tests__/stored-results-analysis/runners/evaluation-report.ts
+  s_9935f0a16b82ef::t_0b53f49cf127dc 17,19,21
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "9f1f5ce3b267484c0f99360ab71dd2a66b960094",
+  "prompts": {},
+  "sessions": {
+    "s_9935f0a16b82ef": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a1b094-0b81-7642-ba5c-09aa9cd8d412",
+        "model": "gpt-6.1-terra"
+      },
+      "human_author": "Ihar Mikailau <ihar.mikailau@ventionteams.com>"
+    }
+  }
+}
