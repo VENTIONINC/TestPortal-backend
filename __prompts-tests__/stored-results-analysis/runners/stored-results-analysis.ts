@@ -8,6 +8,13 @@
 
 import { ChatOpenAI } from "@langchain/openai";
 import { z } from "zod";
+import type { UsageMetadata } from "@langchain/core/messages";
+import {
+  getPromptModelOptions,
+  storedResultsAnalysisConfig,
+  type PromptModelSettings,
+} from "@/config/promptModels";
+import { sumTokenUsage } from "../../helpers/evaluation";
 import type { TestAnalysisResponse } from "@/schemas/testAnalysisSchemas";
 import type { TestCase } from "../v1.1.0/templates/types";
 import type { EvalResult, EvalFailure } from "./types";
@@ -30,6 +37,9 @@ export interface RunEvalOptions {
   version: PromptVersion;
   model?: string;
   temperature?: number;
+  batchSize?: number;
+  reasoningEffort?: PromptModelSettings["reasoningEffort"];
+  useResponsesApi?: boolean;
 }
 
 /**
@@ -38,18 +48,30 @@ export interface RunEvalOptions {
  * @returns Evaluation result with LLM response and validation failures
  */
 export async function runEval(options: RunEvalOptions): Promise<EvalResult> {
-  const { cases, version, model = "gpt-4.1-mini", temperature = 0.1 } = options;
+  const {
+    cases,
+    version,
+    model = storedResultsAnalysisConfig.model,
+    temperature = 0.1,
+    batchSize = 25,
+    reasoningEffort = model === storedResultsAnalysisConfig.model
+      ? storedResultsAnalysisConfig.reasoningEffort
+      : undefined,
+    useResponsesApi = model === storedResultsAnalysisConfig.model
+      ? storedResultsAnalysisConfig.useResponsesApi
+      : false,
+  } = options;
+  const startedAt = Date.now();
 
-  // Prepare prompt and input using version-specific prompt
-  const systemPrompt = version.getPrompt(cases.length);
-  const userPrompt = JSON.stringify(cases.map((c) => c.input));
-
-  // Setup LLM with structured output using version-specific schema
-  const llm = new ChatOpenAI({
+  const settings: PromptModelSettings = {
     model,
-    temperature,
-    maxTokens: 4000,
-    maxRetries: 2,
+    useResponsesApi,
+    maxTokens: storedResultsAnalysisConfig.maxTokens,
+    maxRetries: storedResultsAnalysisConfig.maxRetries,
+    ...(reasoningEffort !== undefined ? { reasoningEffort } : { temperature }),
+  };
+  const llm = new ChatOpenAI({
+    ...getPromptModelOptions(settings),
     cache: false,
   });
 
@@ -57,16 +79,42 @@ export async function runEval(options: RunEvalOptions): Promise<EvalResult> {
     version.schema,
     {
       name: "test_analysis",
+      includeRaw: true,
     },
   );
 
-  // Invoke LLM
-  const response = await structuredModel.invoke([
-    { role: "system", content: systemPrompt },
-    { role: "user", content: userPrompt },
-  ]);
+  const batches: TestCase[][] = [];
+  for (let index = 0; index < cases.length; index += batchSize) {
+    batches.push(cases.slice(index, index + batchSize));
+  }
 
-  // Contract validation: Response length must match input length
+  const batchResponses = await Promise.all(
+    batches.map(async (batch) => {
+      const result = await structuredModel.invoke([
+        { role: "system", content: version.getPrompt(batch.length) },
+        { role: "user", content: JSON.stringify(batch.map((c) => c.input)) },
+      ]);
+      const response = result.parsed;
+
+      if (response.results.length !== batch.length) {
+        throw new Error(
+          `Contract violation (${version.version}): Expected ${batch.length} results, got ${response.results.length}`,
+        );
+      }
+
+      return {
+        response,
+        usage: (result.raw as { usage_metadata?: UsageMetadata })
+          .usage_metadata,
+      };
+    }),
+  );
+  const response: TestAnalysisResponse = {
+    results: batchResponses.flatMap((batch) => batch.response.results),
+  };
+  const usage = sumTokenUsage(batchResponses.map((batch) => batch.usage));
+
+  // Contract validation: Combined response length must match input length
   if (response.results.length !== cases.length) {
     throw new Error(
       `Contract violation (${version.version}): Expected ${cases.length} results, got ${response.results.length}`,
@@ -165,5 +213,13 @@ export async function runEval(options: RunEvalOptions): Promise<EvalResult> {
     }
   }
 
-  return { response, failures };
+  return {
+    response,
+    failures,
+    model,
+    settings,
+    requestCount: batches.length,
+    durationMs: Date.now() - startedAt,
+    usage,
+  };
 }
