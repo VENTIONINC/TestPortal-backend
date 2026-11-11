@@ -5,11 +5,12 @@ import { ChatPromptTemplate } from "@langchain/core/prompts";
 import { ChatOpenAI } from "@langchain/openai";
 import { z } from "zod";
 
-import {
-  errorFormatterConfig,
-  getPromptModelOptions,
-} from "@/config/promptModels";
 import { normalizeJsonArrayForText } from "@/lib/jsonPayloads";
+import {
+  createGenerativeAiClient,
+  GenerativeAiError,
+  invalidAiResponseError,
+} from "@/lib/generativeAi";
 import getLogger from "@/lib/logger";
 import { getEffectiveResultCategory } from "@/lib/resultCategory";
 import { getErrorFormatterPrompt } from "@/prompts/error-formatter/v1.1.0";
@@ -32,6 +33,10 @@ import type { StructuredResultWithRelations } from "@/types";
 
 const logger = getLogger("error-formatter");
 
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return value !== null && typeof value === "object";
+}
+
 export const errorFormatterService = {
   async formatErrorMessage(
     input: ErrorFormatterInput,
@@ -39,12 +44,13 @@ export const errorFormatterService = {
     try {
       logger.info("Formatting error message with LangChain");
 
-      const model = new ChatOpenAI(getPromptModelOptions(errorFormatterConfig));
+      const client = createGenerativeAiClient("formatting");
 
-      const structuredModel = model.withStructuredOutput<
+      const structuredModel = client.model.withStructuredOutput<
         z.infer<typeof errorFormatterSchema>
       >(errorFormatterSchema, {
         name: "error_formatter_response",
+        includeRaw: true,
       });
 
       const userContent = [
@@ -55,15 +61,56 @@ export const errorFormatterService = {
           : []),
       ].join("\n");
 
-      const result = await structuredModel.invoke([
-        { role: "system", content: getErrorFormatterPrompt() },
-        { role: "user", content: userContent },
-      ]);
+      const result: unknown = await client.invoke(() =>
+        structuredModel.invoke([
+          { role: "system", content: getErrorFormatterPrompt() },
+          { role: "user", content: userContent },
+        ]),
+      );
+
+      if (!isRecord(result) || !isRecord(result.raw)) {
+        throw invalidAiResponseError(client);
+      }
+
+      const raw = result.raw;
+      const responseMetadata = isRecord(raw.response_metadata)
+        ? raw.response_metadata
+        : {};
+      const additionalKwargs = isRecord(raw.additional_kwargs)
+        ? raw.additional_kwargs
+        : {};
+      const finishReason = responseMetadata.finish_reason;
+      const responseStatus = responseMetadata.status;
+      const incompleteDetails = responseMetadata.incomplete_details;
+      const isRefusal = Boolean(additionalKwargs.refusal);
+      const isTruncated = finishReason === "length";
+      const isIncomplete =
+        (responseStatus !== undefined && responseStatus !== "completed") ||
+        (incompleteDetails !== undefined && incompleteDetails !== null);
+
+      if (isRefusal || isTruncated || isIncomplete) {
+        throw invalidAiResponseError(
+          client,
+          responseMetadata.model ?? responseMetadata.model_name,
+        );
+      }
+
+      const parsed = errorFormatterSchema.safeParse(result.parsed);
+      if (!parsed.success) {
+        throw invalidAiResponseError(
+          client,
+          responseMetadata.model ?? responseMetadata.model_name,
+        );
+      }
 
       logger.info("Successfully formatted error message");
-      return result;
+      return parsed.data;
     } catch (error) {
-      logger.error("Error formatting message:", error);
+      if (error instanceof GenerativeAiError) {
+        logger.error("Error formatting message:", error.diagnostic);
+      } else {
+        logger.error("Error formatting message");
+      }
       throw new Error("Failed to format error message");
     }
   },

@@ -1,5 +1,6 @@
 import dotenv from "dotenv";
 dotenv.config();
+import { initializeAiConfig } from "@/config/aiConfig";
 import express, { Request, Response, NextFunction } from "express";
 import cors from "cors";
 import parseCookie from "cookie-parser";
@@ -8,6 +9,8 @@ import helmet from "helmet";
 import getLogger from "@/lib/logger";
 import { errorHandler } from "@/middleware/error-handler";
 import routes from "@/routes/index";
+
+await initializeAiConfig();
 
 const logger = getLogger("server");
 const loggingMiddleware = (
@@ -51,4 +54,3 @@ const PORT: number = parseInt(process.env.PORT ?? "3001", 10);
 app.listen(PORT, () => {
   console.log(`Running on Port ${PORT}`);
 });
-

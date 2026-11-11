@@ -129,6 +129,12 @@ Narrow caught values before reading their properties. Preserve useful internal c
 existing logger and expose an appropriate public message through the adapter. Avoid duplicate error
 logging at every layer and do not expose credentials or raw internal failures in public responses.
 
+Generative provider construction and invocation use the shared AI boundary. It categorizes failures
+as `authentication/configuration`, `rate-limit`, `unavailable/timeout`, `invalid-response`, or
+`unknown`. Logs may include only the fixed connection label and validated requested/returned model
+identifiers. Do not log raw provider errors, causes, URLs, headers, response bodies, or arbitrary
+provider metadata. A missing credential may identify the `OPENAI_API_KEY` setting, never its value.
+
 Use the existing MCP helpers in `src/mcp/helpers/mcpHelpers.ts` for tool responses and error handling.
 Keep request schemas, response shapes, tool descriptions, and OpenAPI documentation aligned when
 behavior changes. Preserve compatibility unless changing it is part of the requested scope.

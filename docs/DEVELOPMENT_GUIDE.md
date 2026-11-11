@@ -5,6 +5,7 @@ A comprehensive guide for developing with the Test Results Manager TypeScript co
 ## Table of Contents
 
 - [🚀 Quick Start](#-quick-start)
+- [🤖 AI Connection Configuration](#-ai-connection-configuration)
 - [📁 Project Structure](#-project-structure)
 - [🎯 TypeScript Features & Configuration](#-typescript-features--configuration)
 - [🏗️ Type System](#️-type-system)
@@ -51,6 +52,82 @@ npm run server           # Run production server
 npm run migrate          # Run migrations
 npm run db:generate      # Generate Prisma types
 ```
+
+## 🤖 AI Connection Configuration
+
+The backend uses one server-controlled AI connection. Set `AI_API_BASE_URL` and its matching
+`OPENAI_API_KEY` in the process environment. The URL defaults to `https://api.openai.com/v1`; the
+same key is used when an operator selects a compatible custom URL. Request input cannot change
+either value. A missing key does not prevent startup and is reported safely when an AI client is
+first acquired.
+
+`AI_CONFIG_PATH` optionally selects a JSON settings file. Relative paths resolve from the backend
+process working directory; use an absolute mounted path in deployments. If it is unset, the backend
+loads the generic `src/config/ai-config.default.json` file, which is included in the production
+build. The selected file is read and validated once after environment loading and before the server
+listens. A missing or invalid explicitly selected file stops startup. Changes to environment values
+or the file take effect after a restart or redeployment.
+
+Version 1 requires independent entries for all four operations:
+
+```json
+{
+  "version": 1,
+  "operations": {
+    "classification": { "model": "gpt-4.1-mini", "api": "chat-completions" },
+    "formatting": { "model": "gpt-4.1-mini", "api": "chat-completions" },
+    "suggestions": { "model": "gpt-4.1-mini", "api": "chat-completions" },
+    "insights": { "model": "gpt-4.1-mini", "api": "chat-completions" }
+  }
+}
+```
+
+Each operation accepts a nonempty `model` alias, optional `api` (`chat-completions` or
+`responses`), optional `temperature` from 0 through 2, optional positive integer `maxOutputTokens`,
+and optional `reasoningEffort` (`none`, `low`, `medium`, or `high`). `api` defaults to
+`chat-completions`. Temperature and reasoning effort cannot be set together. Unknown fields,
+credentials, and endpoint settings are rejected in the JSON file. The generic values are technical
+defaults, not a model recommendation or a quality profile.
+
+Only error formatting adopts these settings in this change. Classification, suggestions, and
+insights keep their existing configuration until their own adoption work is completed; their
+entries are required so each operation can be configured independently when adopted.
+
+### API and parameter behavior
+
+For the direct OpenAI connection, the formatter can use either supported API mode. With
+`"api": "chat-completions"`, `reasoningEffort` is translated to the Chat Completions
+`reasoning_effort` field. With `"api": "responses"`, it is sent as
+`reasoning: { "effort": ... }`. For example, a Responses formatter entry can be configured as:
+
+```json
+{ "model": "o3-mini", "api": "responses", "reasoningEffort": "medium" }
+```
+
+The installed LangChain/OpenAI versions serialize the outgoing request; the backend does not
+forward arbitrary SDK options. The formatter keeps its existing direct-OpenAI temperature and token
+defaults when compatible. Custom URLs receive no implicit temperature or token limit, and supported
+explicit settings remain available. Canonical OpenAI formatting keeps two automatic retries (up to
+three transport attempts); a custom URL has no automatic retries. There is no connection or
+credential fallback.
+
+Schema validation checks syntax and known parameter conflicts only. It cannot establish that a
+particular model alias is enabled for an account, that a compatible service supports each option,
+or that output meets semantic quality expectations. The optional synthetic connection check tests
+technical formatting compatibility; it does not score quality.
+
+To opt in to a live synthetic check against direct OpenAI, set `AI_API_BASE_URL` to
+`https://api.openai.com/v1` and provide `OPENAI_API_KEY` in `.env`, build the backend, then run:
+
+```bash
+npm run build
+npm run ai:check
+```
+
+The check sends one synthetic formatting request through the same configured formatter and output
+validation path. It is never run by startup, build, or the regular Jest suite. It prints the
+validated synthetic result on success and a safe failure line on error; service diagnostics remain
+in the backend log. A successful call establishes technical compatibility for that request only.
 
 ## 📁 Project Structure
 
@@ -532,4 +609,4 @@ Before committing:
 
 ---
 
-**Happy coding with TypeScript! 🚀** 
+**Happy coding with TypeScript! 🚀**
