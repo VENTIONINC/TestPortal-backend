@@ -1,0 +1,93 @@
+src/config/aiConfig.ts
+  s_92bccc26b42ce3::t_a901febe61f72b 1-180
+  s_dc27ceae8793d4::t_a1e5c1acc2aeae 181-183
+src/services/errorFormatterService.ts
+  s_92bccc26b42ce3::t_013a69d290fe8f 9-13,36-39,47,49,53,64-104,107,109-113
+  s_92bccc26b42ce3::t_ff8e5e2f7f5256 16
+__tests__/lib/generativeAi.test.ts
+  s_92bccc26b42ce3::t_e48d53c5969df7 1-192,194-244,246-251,257-298,321-322
+  s_92bccc26b42ce3::t_2c650f4f759160 311-320
+  s_92bccc26b42ce3::t_ea652244373886 245,299-310
+  s_92bccc26b42ce3::t_38c7a82e399523 193
+  s_92bccc26b42ce3::t_e83b683d5afebd 252-256
+src/config/ai-config.default.json
+  s_92bccc26b42ce3::t_dc7c3188443d69 1-9
+src/config/aiConfigSchema.ts
+  s_92bccc26b42ce3::t_0191302f8435e6 1-40
+  s_92bccc26b42ce3::t_5f3602b53ef35c 41-45
+src/lib/generativeAi.ts
+  s_92bccc26b42ce3::t_ea652244373886 62-63,95
+  s_92bccc26b42ce3::t_a901febe61f72b 1-23,25-61,64-94,96-135,137-190
+  s_92bccc26b42ce3::t_38c7a82e399523 24,136
+  s_dc27ceae8793d4::t_a79bda63e8c837 191
+src/config/promptModels.ts
+  s_92bccc26b42ce3::t_ff8e5e2f7f5256 1-8,10-26
+  s_92bccc26b42ce3::t_8b511492b953a9 9
+scripts/copy-ai-config.js
+  s_92bccc26b42ce3::t_dc7c3188443d69 1-16
+__tests__/scripts/check-ai-formatting.test.ts
+  s_92bccc26b42ce3::t_f18cc0d51311de 1-5,7-63
+  s_92bccc26b42ce3::t_46b256a27f75e5 6
+docs/DEVELOPMENT_GUIDE.md
+  s_92bccc26b42ce3::t_b32c6b7e21a599 8,56-131,612
+__tests__/services/errorFormatterService.test.ts
+  s_92bccc26b42ce3::t_0bfe83461f9d41 226-229
+  s_92bccc26b42ce3::t_9f850f84e891b4 295-296,300-309,317-325
+  s_92bccc26b42ce3::t_9c34f954d4d96d 9,263-270,277-294
+  s_92bccc26b42ce3::t_83aea78ff4b491 299,327-378
+  s_92bccc26b42ce3::t_c6c9a69b3b7b67 7,65-67,71-73,78-79,100,105-122,231-236,257-260,271-276,310-316,326,379
+  s_92bccc26b42ce3::t_90bd7e12c6fae2 59-64,68-70
+  s_92bccc26b42ce3::t_ed5773bcd25c9f 5,74-77
+  s_92bccc26b42ce3::t_19d8534a36073c 297-298
+docs/engineering/backend-conventions.md
+  s_92bccc26b42ce3::t_38c7a82e399523 132-137
+package.json
+  s_92bccc26b42ce3::t_353da82f9893d1 28-29
+  s_92bccc26b42ce3::t_dc7c3188443d69 8
+scripts/check-ai-formatting.ts
+  s_92bccc26b42ce3::t_f18cc0d51311de 53-55
+  s_92bccc26b42ce3::t_353da82f9893d1 1-52,56
+  s_92bccc26b42ce3::t_8981a406d9b36e 57-60
+src/prompts/error-formatter/v1.1.0.ts
+  s_92bccc26b42ce3::t_ff8e5e2f7f5256 1-33
+index.ts
+  s_92bccc26b42ce3::t_2f10a5982a98cf 3,13
+  s_92bccc26b42ce3::t_2461b33d39fb4d 14
+__tests__/config/aiConfigSchema.test.ts
+  s_92bccc26b42ce3::t_1846349f5e0fc2 1-4,6-19,26-92
+  s_92bccc26b42ce3::t_996ccd26a79104 5,20-25
+  s_92bccc26b42ce3::t_aed2de51ec74fe 93-114
+.env.example
+  s_92bccc26b42ce3::t_b4305f54125872 33-35
+__tests__/config/aiConfig.test.ts
+  s_92bccc26b42ce3::t_e83b683d5afebd 97,111-112
+  s_92bccc26b42ce3::t_e48d53c5969df7 1-96,98-110,113-173
+__tests__/controllers/errorFormatterController.test.ts
+  s_92bccc26b42ce3::t_fe51e4ef21a0e5 40-59
+__mocks__/path.config.ts
+  s_dc27ceae8793d4::t_a9f56ad3d37e30 1-4
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "32cfdfe9e3859a61053bbd0fcce24c25fb4c1e88",
+  "prompts": {},
+  "sessions": {
+    "s_92bccc26b42ce3": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a1c9ab-d9b4-7022-96d9-0331411cf548",
+        "model": "gpt-6-luna"
+      },
+      "human_author": "Ihar Mikailau <ihar.mikailau@ventionteams.com>"
+    },
+    "s_dc27ceae8793d4": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a1c9ee-13a1-73f3-82b7-f70417b32a51",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Ihar Mikailau <ihar.mikailau@ventionteams.com>"
+    }
+  }
+}
