@@ -37,6 +37,26 @@ describe("errorFormatterController.formatError", () => {
     });
   });
 
+  it("keeps the existing public failure response when formatting fails", async () => {
+    jest
+      .spyOn(errorFormatterService, "formatErrorMessage")
+      .mockRejectedValue(new Error("Failed to format error message"));
+
+    const res = await executeController(errorFormatterController.formatError, {
+      method: "POST",
+      body: {
+        name: "Original failure",
+        description: "Original details",
+      },
+    });
+
+    expect(res.statusCode).toBe(500);
+    expect(res.body).toEqual({
+      error: "Failed to format error message",
+      details: "Failed to format error message",
+    });
+  });
+
   it("prefers canonical contextCategory over the legacy category alias", async () => {
     jest.spyOn(errorFormatterService, "formatErrorMessage").mockResolvedValue({
       name: "Readable failure",

@@ -6,25 +6,25 @@ export interface PromptModelSettings {
   useResponsesApi: boolean;
   reasoningEffort?: "none" | "low" | "medium" | "high";
   temperature?: number;
-  maxTokens: number;
+  maxTokens?: number;
   maxRetries: number;
 }
 
-export const storedResultsAnalysisConfig: PromptModelSettings = {
+export const storedResultsAnalysisConfig = {
   model: "gpt-6-luna",
   useResponsesApi: true,
   reasoningEffort: "low",
   maxTokens: 4000,
   maxRetries: 2,
-};
+} satisfies PromptModelSettings;
 
-export const errorFormatterConfig: PromptModelSettings = {
+export const errorFormatterConfig = {
   model: "gpt-6-luna",
   useResponsesApi: true,
   reasoningEffort: "none",
   maxTokens: 500,
   maxRetries: 2,
-};
+} satisfies PromptModelSettings;
 
 export function getPromptModelOptions(settings: PromptModelSettings) {
   const { reasoningEffort, temperature, ...options } = settings;
