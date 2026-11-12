@@ -3,7 +3,7 @@
 
 import { z } from "zod";
 
-const operationConfigSchema = z
+export const aiOperationConfigSchema = z
   .object({
     model: z.string().trim().min(1),
     api: z.enum(["chat-completions", "responses"]).default("chat-completions"),
@@ -29,10 +29,10 @@ export const aiConfigSchema = z
     version: z.literal(1),
     operations: z
       .object({
-        classification: operationConfigSchema,
-        formatting: operationConfigSchema,
-        suggestions: operationConfigSchema,
-        insights: operationConfigSchema,
+        classification: aiOperationConfigSchema,
+        formatting: aiOperationConfigSchema,
+        suggestions: aiOperationConfigSchema,
+        insights: aiOperationConfigSchema,
       })
       .strict(),
   })
@@ -41,5 +41,5 @@ export const aiConfigSchema = z
 export type AiOperationName = keyof z.infer<
   typeof aiConfigSchema
 >["operations"];
-export type AiOperationConfig = z.infer<typeof operationConfigSchema>;
+export type AiOperationConfig = z.infer<typeof aiOperationConfigSchema>;
 export type AiConfig = z.infer<typeof aiConfigSchema>;

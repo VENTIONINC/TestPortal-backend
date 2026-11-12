@@ -8,7 +8,9 @@ import { createAiConfigStore } from "@/config/aiConfig";
 import {
   createGenerativeAiClient,
   GenerativeAiError,
+  parseStructuredCompletion,
 } from "@/lib/generativeAi";
+import { errorFormatterSchema } from "@/schemas/errorFormatterSchemas";
 
 const defaultOperation = {
   model: "gpt-4.1-mini",
@@ -20,18 +22,23 @@ async function makeSnapshot(
     baseUrl?: string;
     apiKey?: string;
     formatting?: Partial<AiConfigSnapshot["operations"]["formatting"]>;
+    operations?: Partial<AiConfigSnapshot["operations"]>;
   } = {},
 ): Promise<AiConfigSnapshot> {
   const baseUrl = options.baseUrl ?? "https://api.openai.com/v1";
-  const formatting = { ...defaultOperation, ...options.formatting };
+  const operations = {
+    classification: { ...defaultOperation, ...options.operations?.classification },
+    formatting: {
+      ...defaultOperation,
+      ...options.formatting,
+      ...options.operations?.formatting,
+    },
+    suggestions: { ...defaultOperation, ...options.operations?.suggestions },
+    insights: { ...defaultOperation, ...options.operations?.insights },
+  };
   const json = JSON.stringify({
     version: 1,
-    operations: {
-      classification: defaultOperation,
-      formatting,
-      suggestions: defaultOperation,
-      insights: defaultOperation,
-    },
+    operations,
   });
   const store = createAiConfigStore({
     env: () => ({
@@ -225,6 +232,266 @@ describe("createGenerativeAiClient", () => {
   );
 
   it.each([
+    ["classification", undefined, 4000, 2],
+    ["formatting", 0.7, 500, 2],
+    ["suggestions", 0.3, 700, 2],
+    ["insights", 0.2, 400, 1],
+  ] as const)(
+    "applies the %s canonical operation policy to captured requests",
+    async (operation, temperature, maxTokens, retries) => {
+      const fetchMock = jest.spyOn(global, "fetch").mockImplementation(
+        async () =>
+          new Response(JSON.stringify({ error: { message: "unavailable" } }), {
+            status: 503,
+            headers: { "content-type": "application/json" },
+          }),
+      );
+      const snapshot = await makeSnapshot();
+      const client = createGenerativeAiClient(operation, snapshot);
+      await expect(
+        client.invoke(() => client.model.invoke("synthetic prompt")),
+      ).rejects.toBeInstanceOf(GenerativeAiError);
+
+      const requestBody = JSON.parse(
+        String(fetchMock.mock.calls[0]?.[1]?.body),
+      ) as Record<string, unknown>;
+      expect(requestBody.model).toBe("gpt-4.1-mini");
+      expect(requestBody.temperature).toBe(temperature);
+      expect(requestBody.max_tokens).toBe(maxTokens);
+      expect(fetchMock).toHaveBeenCalledTimes(retries + 1);
+      expect(client.model).toBeDefined();
+    },
+    15000,
+  );
+
+  it.each([
+    "classification",
+    "formatting",
+    "suggestions",
+    "insights",
+  ] as const)(
+    "omits implicit generation defaults and retries for custom %s requests",
+    async (operation) => {
+      const fetchMock = jest.spyOn(global, "fetch").mockImplementation(
+        async () => chatResponse("gpt-4.1-mini"),
+      );
+      const client = createGenerativeAiClient(
+        operation,
+        await makeSnapshot({ baseUrl: "https://ai.example.test/v1" }),
+      );
+      await client.invoke(() => client.model.invoke("synthetic prompt"));
+
+      const requestBody = JSON.parse(
+        String(fetchMock.mock.calls[0]?.[1]?.body),
+      ) as Record<string, unknown>;
+      expect(requestBody).not.toHaveProperty("temperature");
+      expect(requestBody).not.toHaveProperty("max_tokens");
+      expect(fetchMock).toHaveBeenCalledTimes(1);
+    },
+  );
+
+  it("keeps per-operation explicit settings and reasoning translation", async () => {
+    let requestBody: Record<string, unknown> | undefined;
+    jest.spyOn(global, "fetch").mockImplementation(async (_input, init) => {
+      requestBody = JSON.parse(String(init?.body)) as Record<string, unknown>;
+      return new Response(
+        JSON.stringify({
+          id: "resp-reasoning",
+          object: "response",
+          created_at: 1,
+          model: "reasoning-alias",
+          status: "completed",
+          output_text: "synthetic response",
+          output: [],
+        }),
+        { status: 200, headers: { "content-type": "application/json" } },
+      );
+    });
+    const client = createGenerativeAiClient(
+      "suggestions",
+      await makeSnapshot({
+        operations: {
+          suggestions: {
+            model: "reasoning-alias",
+            api: "responses",
+            reasoningEffort: "low",
+            maxOutputTokens: 123,
+          },
+        },
+      }),
+    );
+    await client.invoke(() => client.model.invoke("synthetic prompt"));
+
+    expect(requestBody).toMatchObject({
+      model: "reasoning-alias",
+      reasoning: { effort: "low" },
+      max_output_tokens: 123,
+    });
+    expect(requestBody).not.toHaveProperty("temperature");
+    expect(requestBody).not.toHaveProperty("max_tokens");
+  });
+
+  it("keeps nested suggestion and migrated classification request settings isolated", async () => {
+    const requests: Array<{
+      url: string;
+      authorization: string | null;
+      body: Record<string, unknown>;
+    }> = [];
+    jest.spyOn(global, "fetch").mockImplementation(async (input, init) => {
+      const headers = new Headers(init?.headers);
+      requests.push({
+        url: String(input),
+        authorization: headers.get("authorization"),
+        body: JSON.parse(String(init?.body)) as Record<string, unknown>,
+      });
+      if (String(input).endsWith("/responses")) {
+        return new Response(
+          JSON.stringify({
+            id: "resp-classification",
+            object: "response",
+            created_at: 1,
+            model: "gpt-6-luna",
+            status: "completed",
+            output_text: "synthetic classification",
+            output: [],
+          }),
+          { status: 200, headers: { "content-type": "application/json" } },
+        );
+      }
+      return chatResponse("gpt-4.1-mini");
+    });
+
+    const snapshot = await makeSnapshot({
+      operations: {
+        classification: {
+          model: "gpt-6-luna",
+          api: "responses",
+          reasoningEffort: "low",
+          maxOutputTokens: 4000,
+        },
+        suggestions: {
+          model: "gpt-4.1-mini",
+          api: "chat-completions",
+          temperature: 0.3,
+          maxOutputTokens: 700,
+        },
+      },
+    });
+    const classification = createGenerativeAiClient("classification", snapshot);
+    const suggestions = createGenerativeAiClient("suggestions", snapshot);
+
+    await classification.invoke(() =>
+      classification.model.invoke("synthetic classification"),
+    );
+    await suggestions.invoke(() =>
+      suggestions.model.invoke("synthetic suggestion"),
+    );
+
+    expect(requests).toHaveLength(2);
+    expect(requests.map(({ url }) => url)).toEqual([
+      "https://api.openai.com/v1/responses",
+      "https://api.openai.com/v1/chat/completions",
+    ]);
+    expect(requests.map(({ authorization }) => authorization)).toEqual([
+      "Bearer synthetic-key",
+      "Bearer synthetic-key",
+    ]);
+    expect(requests[0]?.body).toMatchObject({
+      model: "gpt-6-luna",
+      reasoning: { effort: "low" },
+      max_output_tokens: 4000,
+    });
+    expect(requests[0]?.body).not.toHaveProperty("temperature");
+    expect(requests[1]?.body).toMatchObject({
+      model: "gpt-4.1-mini",
+      temperature: 0.3,
+      max_tokens: 700,
+    });
+  });
+
+  it.each([
+    ["classification", "canonical", undefined, 4000],
+    ["formatting", "canonical", 0.7, 500],
+    ["suggestions", "canonical", 0.3, 700],
+    ["insights", "canonical", 0.2, 400],
+    ["classification", "custom", undefined, undefined],
+    ["formatting", "custom", undefined, undefined],
+    ["suggestions", "custom", undefined, undefined],
+    ["insights", "custom", undefined, undefined],
+  ] as const)(
+    "captures the %s Responses request policy for a %s URL",
+    async (operation, connection, temperature, maxOutputTokens) => {
+      let requestUrl = "";
+      let requestBody: Record<string, unknown> | undefined;
+      jest.spyOn(global, "fetch").mockImplementation(async (input, init) => {
+        requestUrl = String(input);
+        requestBody = JSON.parse(String(init?.body)) as Record<string, unknown>;
+        return new Response(
+          JSON.stringify({
+            id: "resp-captured",
+            object: "response",
+            created_at: 1,
+            model: "gpt-4.1-mini",
+            status: "completed",
+            output_text: "synthetic response",
+            output: [],
+          }),
+          { status: 200, headers: { "content-type": "application/json" } },
+        );
+      });
+      const baseUrl =
+        connection === "canonical"
+          ? "https://api.openai.com/v1/"
+          : "https://ai.example.test/custom/v1";
+      const client = createGenerativeAiClient(
+        operation,
+        await makeSnapshot({
+          baseUrl,
+          operations: { [operation]: { ...defaultOperation, api: "responses" } },
+        }),
+      );
+      await client.invoke(() => client.model.invoke("synthetic prompt"));
+
+      expect(requestUrl).toBe(`${baseUrl.replace(/\/$/, "")}/responses`);
+      expect(requestBody).toMatchObject({ model: "gpt-4.1-mini" });
+      expect(requestBody?.temperature).toBe(temperature);
+      expect(requestBody?.max_output_tokens).toBe(maxOutputTokens);
+    },
+  );
+
+  it.each([
+    ["chat completion refusal", { response_metadata: {}, additional_kwargs: { refusal: "no" }, content: "" }],
+    ["chat completion truncation", { response_metadata: { finish_reason: "length" }, additional_kwargs: {}, content: "{}" }],
+    ["incomplete Responses status", { response_metadata: { status: "incomplete", incomplete_details: { reason: "max_output_tokens" } }, additional_kwargs: {}, content: "" }],
+    ["incomplete Responses output item", { response_metadata: { status: "completed", output: [{ type: "message", status: "incomplete", content: [] }] }, additional_kwargs: {}, content: "" }],
+  ])("rejects %s before returning structured output", (_label, raw) => {
+    const client = { connection: "openai" as const, requestedModel: "safe-model" };
+    expect(() =>
+      parseStructuredCompletion(
+        client,
+        { raw, parsed: { name: "name", description: "description" } },
+        errorFormatterSchema,
+      ),
+    ).toThrow(GenerativeAiError);
+  });
+
+  it("rejects unparseable chat and Responses structured results", () => {
+    const client = { connection: "custom" as const, requestedModel: "alias" };
+    for (const raw of [
+      { response_metadata: { finish_reason: "stop" }, content: "not json" },
+      { response_metadata: { status: "completed" }, content: [] },
+    ]) {
+      expect(() =>
+        parseStructuredCompletion(
+          client,
+          { raw, parsed: null },
+          errorFormatterSchema,
+        ),
+      ).toThrow(GenerativeAiError);
+    }
+  });
+
+  it.each([
     ["canonical OpenAI", "https://api.openai.com/v1/", 3],
     ["custom URL", "https://ai.example.test/v1", 1],
   ])(
@@ -319,4 +586,43 @@ describe("createGenerativeAiClient", () => {
       "unavailable/timeout",
     );
   });
+
+  it.each([
+    ["authentication", 401, "authentication/configuration"],
+    ["model or parameter", 400, "invalid-response"],
+    ["credit", 402, "unknown"],
+    ["rate limit", 429, "rate-limit"],
+    ["availability", 503, "unavailable/timeout"],
+    ["timeout", 408, "unavailable/timeout"],
+  ] as const)(
+    "sanitizes %s diagnostics before they reach a service",
+    async (_label, status, category) => {
+      const client = createGenerativeAiClient(
+        "classification",
+        await makeSnapshot({ baseUrl: "https://ai.example.test/v1" }),
+      );
+      const failure = Object.assign(
+        new Error("sk-sensitive https://private.example/raw-response"),
+        {
+          status,
+          headers: { authorization: "Bearer hidden" },
+          body: "sensitive response body",
+        },
+      );
+
+      let thrown: unknown;
+      try {
+        await client.invoke(async () => Promise.reject(failure));
+      } catch (error) {
+        thrown = error;
+      }
+      expect(thrown).toMatchObject({
+        diagnostic: { category },
+        message: `AI request failed (${category}).`,
+      });
+      expect((thrown as Error).message).not.toMatch(
+        /sk-sensitive|private\.example|sensitive response|Bearer hidden/,
+      );
+    },
+  );
 });

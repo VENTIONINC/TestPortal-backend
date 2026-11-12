@@ -61,6 +61,14 @@ when they are materially changed and the extraction stays within scope.
 Avoid holding database transactions open across slow external calls unless the workflow explicitly
 requires it. Define which writes must be atomic and how partial failure is handled.
 
+For stored-result AI enrichment, `storedResultEnrichmentService` performs provider analysis before
+calling the result model's project-scoped batch persistence operation. The model writes only
+generated analysis fields in one transaction, checks that each trusted result ID matches the
+requested project and status, and rolls back the whole batch on any mismatch. The service returns
+analyses only after commit; user feedback and reviewer fields remain model-owned and unchanged.
+Report ingestion commits separately before optional enrichment, so an AI or analysis-write failure
+does not undo the saved report and must not be returned as successful analysis.
+
 ## Types and Contracts
 
 Use `interface` for handwritten object-shaped contracts such as service parameters and domain

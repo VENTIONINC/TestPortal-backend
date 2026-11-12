@@ -217,9 +217,11 @@ describe("errorFormatterService.suggestFromResult", () => {
       { role: "user", content: "user" },
     ]);
     invokeMock.mockResolvedValue({
-      category: "bug",
-      name: "Checkout request fails",
-      description: "Suggested steps",
+      ...formatterResult({
+        category: "bug",
+        name: "Checkout request fails",
+        description: "Suggested steps",
+      }),
     });
   });
 
@@ -355,6 +357,17 @@ describe("errorFormatterService.suggestFromResult", () => {
         },
       ),
     ],
+    [
+      "incomplete Responses message item with completed response status",
+      formatterResult(
+        { name: "Partial", description: "Partial" },
+        {
+          status: "completed",
+          output: [{ type: "message", status: "incomplete", content: [] }],
+          model: "gpt-4.1-mini",
+        },
+      ),
+    ],
   ])(
     "rejects %s through the public formatter error",
     async (_label, result) => {
@@ -434,6 +447,8 @@ describe("errorFormatterService.suggestFromResult", () => {
     await expect(
       errorFormatterService.suggestFromResult("result-1", "project-1"),
     ).rejects.toThrow("Only failed or flaky results can be analyzed");
+    expect(analyzeStoredResultsMock).not.toHaveBeenCalled();
+    expect(invokeMock).not.toHaveBeenCalled();
   });
 
   it("throws when result has no errors", async () => {
@@ -446,6 +461,8 @@ describe("errorFormatterService.suggestFromResult", () => {
     await expect(
       errorFormatterService.suggestFromResult("result-1", "project-1"),
     ).rejects.toThrow("Result has no error details to analyze");
+    expect(analyzeStoredResultsMock).not.toHaveBeenCalled();
+    expect(invokeMock).not.toHaveBeenCalled();
   });
 
   it("returns the complete issue draft generated from existing analysis", async () => {
@@ -536,5 +553,111 @@ describe("errorFormatterService.suggestFromResult", () => {
       name: "Checkout request fails",
       description: "Suggested steps",
     });
+  });
+
+  it("fails closed when the required classification result is missing", async () => {
+    getResultByIdMock.mockResolvedValue(makeResult({}));
+    analyzeStoredResultsMock.mockResolvedValue(new Map());
+
+    await expect(
+      errorFormatterService.suggestFromResult("result-1", "project-1"),
+    ).rejects.toThrow("Failed to generate error suggestion");
+
+    expect(analyzeStoredResultsMock).toHaveBeenCalledTimes(1);
+    expect(invokeMock).not.toHaveBeenCalled();
+  });
+
+  it("fails closed when nested classification rejects invalid output", async () => {
+    getResultByIdMock.mockResolvedValue(makeResult({}));
+    analyzeStoredResultsMock.mockRejectedValue(
+      new Error("AI request failed (invalid-response)."),
+    );
+
+    await expect(
+      errorFormatterService.suggestFromResult("result-1", "project-1"),
+    ).rejects.toThrow("Failed to generate error suggestion");
+
+    expect(analyzeStoredResultsMock).toHaveBeenCalledTimes(1);
+    expect(invokeMock).not.toHaveBeenCalled();
+  });
+
+  it.each([
+    ["invalid schema output", formatterResult(null)],
+    [
+      "refusal",
+      formatterResult(
+        {
+          category: "bug",
+          name: "Private refusal detail",
+          description: "No",
+        },
+        { finish_reason: "stop" },
+        { refusal: "Private refusal detail" },
+      ),
+    ],
+    [
+      "truncated output",
+      formatterResult(
+        { category: "bug", name: "Partial", description: "Partial" },
+        { finish_reason: "length" },
+      ),
+    ],
+    [
+      "incomplete Responses output",
+      formatterResult(
+        { category: "bug", name: "Partial", description: "Partial" },
+        { status: "incomplete", incomplete_details: { reason: "private" } },
+      ),
+    ],
+    [
+      "incomplete Responses message item with completed response status",
+      formatterResult(
+        { category: "bug", name: "Partial", description: "Partial" },
+        {
+          status: "completed",
+          output: [{ type: "message", status: "incomplete", content: [] }],
+        },
+      ),
+    ],
+  ])("rejects %s without exposing completion metadata", async (_label, raw) => {
+    getResultByIdMock.mockResolvedValue(
+      makeResult({ analysisCategory: "bug" }),
+    );
+    invokeMock.mockResolvedValueOnce(raw);
+
+    await expect(
+      errorFormatterService.suggestFromResult("result-1", "project-1"),
+    ).rejects.toThrow("Failed to generate error suggestion");
+
+    expect(loggerErrorMock).toHaveBeenCalledWith(
+      "Error generating solution suggestion:",
+      expect.objectContaining({ category: "invalid-response" }),
+    );
+    expect(JSON.stringify(loggerErrorMock.mock.calls)).not.toMatch(
+      /Private refusal detail|private/,
+    );
+  });
+
+  it("sanitizes suggestion provider failures while retaining local validation errors", async () => {
+    getResultByIdMock.mockResolvedValue(
+      makeResult({ analysisCategory: "bug" }),
+    );
+    invokeMock.mockRejectedValueOnce(
+      Object.assign(
+        new Error("sk-private https://provider.example/secret private body"),
+        { status: 503, body: "private body" },
+      ),
+    );
+
+    await expect(
+      errorFormatterService.suggestFromResult("result-1", "project-1"),
+    ).rejects.toThrow("Failed to generate error suggestion");
+    expect(JSON.stringify(loggerErrorMock.mock.calls)).not.toMatch(
+      /sk-private|provider\.example|private body/,
+    );
+    expect(resultService.getResultById).toHaveBeenCalledWith(
+      "result-1",
+      "project-1",
+    );
   });
 });

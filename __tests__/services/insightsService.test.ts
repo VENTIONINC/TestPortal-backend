@@ -2,7 +2,9 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import "@/test-utils/testEnv";
+import { resolve } from "node:path";
 import { jest } from "@jest/globals";
+import { initializeAiConfig } from "@/config/aiConfig";
 import {
   AI_INSIGHTS_FALLBACK_TEXT,
   AI_INSIGHTS_TIMEOUT_MS,
@@ -26,12 +28,27 @@ jest.mock("@langchain/openai", () => {
 
 jest.mock("@/lib/logger", () => ({
   __esModule: true,
-  default: () => ({
-    info: jest.fn(),
-    warn: jest.fn(),
-    error: jest.fn(),
-  }),
+  ...(() => {
+    const errorMock = jest.fn();
+    return {
+      __mocks__: { errorMock },
+      default: () => ({
+        info: jest.fn(),
+        warn: jest.fn(),
+        error: errorMock,
+      }),
+    };
+  })(),
 }));
+
+beforeAll(async () => {
+  process.env.OPENAI_API_KEY = "synthetic-test-key";
+  process.env.AI_CONFIG_PATH = resolve(
+    process.cwd(),
+    "src/config/ai-config.default.json",
+  );
+  await initializeAiConfig();
+});
 
 describe("insightsService.generateInsights", () => {
   const openAiMocks: {
@@ -42,6 +59,10 @@ describe("insightsService.generateInsights", () => {
   } = jest.requireMock("@langchain/openai");
 
   const invokeMock = openAiMocks.__mocks__.invokeMock;
+  const chatOpenAIMock = openAiMocks.__mocks__.chatOpenAIMock;
+  const loggerMocks: { __mocks__: { errorMock: jest.Mock } } =
+    jest.requireMock("@/lib/logger");
+  const loggerErrorMock = loggerMocks.__mocks__.errorMock;
 
   const params = {
     filters: {
@@ -120,13 +141,39 @@ describe("insightsService.generateInsights", () => {
   it("returns AI-generated text when the model succeeds", async () => {
     invokeMock.mockResolvedValue({
       content:
-        "Pass rate remained stable with a spike in total runs on 2026-01-02.",
+        "  Pass rate remained stable with a spike in total runs on 2026-01-02.  ",
     } as never);
 
     const result = await insightsService.generateInsights(params);
 
     expect(result).toBe(
       "Pass rate remained stable with a spike in total runs on 2026-01-02.",
+    );
+    expect(chatOpenAIMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        model: "gpt-4.1-mini",
+        temperature: 0.2,
+        maxTokens: 400,
+        maxRetries: 1,
+        configuration: expect.objectContaining({
+          baseURL: "https://api.openai.com/v1",
+          maxRetries: 0,
+        }),
+      }),
+    );
+  });
+
+  it("extracts supported string and text blocks", async () => {
+    invokeMock.mockResolvedValue({
+      content: [
+        { type: "text", text: "  Pass rate improved. " },
+        "Failures concentrated in checkout.",
+        { type: "image", image_url: "ignored" },
+      ],
+    } as never);
+
+    await expect(insightsService.generateInsights(params)).resolves.toBe(
+      "Pass rate improved.  Failures concentrated in checkout.",
     );
   });
 
@@ -142,10 +189,37 @@ describe("insightsService.generateInsights", () => {
   });
 
   it("returns fallback text when the model throws", async () => {
-    invokeMock.mockRejectedValue(new Error("HTTP 500") as never);
+    invokeMock.mockRejectedValue(
+      Object.assign(
+        new Error("sk-secret https://provider.example/private response-body"),
+        { status: 503, body: "response-body" },
+      ) as never,
+    );
 
     const result = await insightsService.generateInsights(params);
 
     expect(result).toBe(AI_INSIGHTS_FALLBACK_TEXT);
+    expect(JSON.stringify(loggerErrorMock.mock.calls)).not.toMatch(
+      /sk-secret|provider\.example|response-body/,
+    );
+    expect(loggerErrorMock).toHaveBeenCalledWith(
+      "AI insights generation failed",
+      expect.objectContaining({
+        category: "unavailable/timeout",
+        connection: "openai",
+      }),
+    );
+  });
+
+  it("returns fallback text for an empty completion", async () => {
+    invokeMock.mockResolvedValue({ content: [{ type: "image" }] } as never);
+
+    await expect(insightsService.generateInsights(params)).resolves.toBe(
+      AI_INSIGHTS_FALLBACK_TEXT,
+    );
+    expect(loggerErrorMock).toHaveBeenCalledWith(
+      "AI insights generation failed",
+      expect.objectContaining({ category: "invalid-response" }),
+    );
   });
 });

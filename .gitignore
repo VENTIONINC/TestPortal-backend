@@ -69,6 +69,7 @@ dev.db
 .tmp
 .worktrees/
 mocks/
+/.private-ai-config/
 
 # TypeScript build output
 dist/

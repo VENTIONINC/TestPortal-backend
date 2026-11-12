@@ -8,6 +8,7 @@ import type {
   ResultWithRelations,
   ResultsStats,
 } from "@/types";
+import type { TestResultAnalysis } from "@/schemas/testAnalysisSchemas";
 import { Prisma } from "@prisma/client";
 
 export interface ResultFilters {
@@ -69,6 +70,11 @@ export interface AnalysisExportRow {
     startedAt: Date;
     createdAt: Date;
   };
+}
+
+export interface PersistAnalysisBatchInput {
+  projectId: string;
+  analyses: TestResultAnalysis[];
 }
 
 const resultStatsSelect = Prisma.validator<Prisma.ResultSelect>()({
@@ -968,6 +974,40 @@ export const resultModel = {
     });
 
     return updatedResult;
+  },
+
+  persistAnalysisBatch: async (
+    input: PersistAnalysisBatchInput,
+  ): Promise<void> => {
+    if (input.analyses.length === 0) return;
+
+    try {
+      await dbClient.$transaction(async (tx) => {
+        for (const analysis of input.analyses) {
+          const updated = await tx.result.updateMany({
+            where: {
+              id: analysis.id,
+              status: analysis.status,
+              spec: { projectId: input.projectId },
+              execution: { projectId: input.projectId },
+            },
+            data: {
+              analysisStatus: analysis.status,
+              analysisCategory: analysis.category,
+              analysisConfidence: analysis.confidence,
+              analysisConclusion: analysis.conclusion,
+              analysisErrorQuality: analysis.errorQuality,
+              analysisErrorQualityConclusion: analysis.errorQualityConclusion,
+            },
+          });
+          if (updated.count !== 1) {
+            throw new Error("Analysis batch scope mismatch");
+          }
+        }
+      });
+    } catch {
+      throw new Error("Could not persist the complete analysis batch");
+    }
   },
 
   updateAnalysisFeedback: async (

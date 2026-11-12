@@ -1,13 +1,14 @@
 // Copyright 2026 VENSOLUTIONSGROUP LTD
 // SPDX-License-Identifier: Apache-2.0
 
-import { ChatOpenAI } from "@langchain/openai";
 import { z } from "zod";
 
 import {
-  getPromptModelOptions,
-  storedResultsAnalysisConfig,
-} from "@/config/promptModels";
+  createGenerativeAiClient,
+  GenerativeAiError,
+  invalidAiResponseError,
+  parseStructuredCompletion,
+} from "@/lib/generativeAi";
 import { normalizeJsonArrayForText } from "@/lib/jsonPayloads";
 import getLogger from "@/lib/logger";
 import { getStoredResultsAnalysisPrompt } from "@/prompts/stored-results-analysis/v1.2.0";
@@ -59,10 +60,19 @@ export const testAnalysisService = {
     try {
       logger.info(`Analyzing ${results.length} stored test results`);
 
-      // Filter to only failed tests
-      const resultsForAnalysis = results.filter(
+      // Classification trusts only unique, eligible source results.
+      const eligibleResults = results.filter(
         ({ status }) => status === "failed" || status === "flaky",
       );
+      const resultsById = new Map<string, (typeof eligibleResults)[number]>();
+      for (const result of eligibleResults) {
+        const existing = resultsById.get(result.id);
+        if (existing && existing.status !== result.status) {
+          throw new Error("Conflicting statuses in classification input");
+        }
+        if (!existing) resultsById.set(result.id, result);
+      }
+      const resultsForAnalysis = [...resultsById.values()];
       const resultsForAnalysisCount = resultsForAnalysis.length;
 
       logger.info(
@@ -118,20 +128,23 @@ export const testAnalysisService = {
       const systemPrompt = getStoredResultsAnalysisPrompt(essentialData.length);
       const userPrompt = JSON.stringify(essentialData);
 
-      const model = new ChatOpenAI(
-        getPromptModelOptions(storedResultsAnalysisConfig),
-      );
+      const client = createGenerativeAiClient("classification");
 
-      const structuredModel = model.withStructuredOutput<
+      const structuredModel = client.model.withStructuredOutput<
         z.infer<typeof testAnalysisSchema>
-      >(testAnalysisSchema, {
-        name: "test_analysis",
-      });
+      >(testAnalysisSchema, { name: "test_analysis", includeRaw: true });
 
-      const analysisResponse = await structuredModel.invoke([
-        { role: "system", content: systemPrompt },
-        { role: "user", content: userPrompt },
-      ]);
+      const rawResponse: unknown = await client.invoke(() =>
+        structuredModel.invoke([
+          { role: "system", content: systemPrompt },
+          { role: "user", content: userPrompt },
+        ]),
+      );
+      const analysisResponse = parseStructuredCompletion(
+        client,
+        rawResponse,
+        testAnalysisSchema,
+      );
 
       logger.info(
         `AI returned ${analysisResponse.results.length} analysis results (expected ${resultsForAnalysisCount})`,
@@ -140,7 +153,19 @@ export const testAnalysisService = {
       // Convert array to Map keyed by result ID
       const analysisMap = new Map<string, TestResultAnalysis>();
       for (const result of analysisResponse.results) {
+        const trusted = resultsById.get(result.id);
+        if (
+          !trusted ||
+          analysisMap.has(result.id) ||
+          trusted.status !== result.status
+        ) {
+          throw invalidAiResponseError(client);
+        }
         analysisMap.set(result.id, result);
+      }
+
+      if (analysisMap.size !== resultsForAnalysisCount) {
+        throw invalidAiResponseError(client);
       }
 
       logger.info(
@@ -149,8 +174,15 @@ export const testAnalysisService = {
 
       return analysisMap;
     } catch (error) {
-      logger.error("Error analyzing stored test results:", error);
-      throw error;
+      if (error instanceof GenerativeAiError) {
+        logger.error("Error analyzing stored test results:", error.diagnostic);
+        throw error;
+      }
+      logger.error("Error analyzing stored test results");
+      throw new GenerativeAiError({
+        category: "unknown",
+        connection: "openai",
+      });
     }
   },
 };

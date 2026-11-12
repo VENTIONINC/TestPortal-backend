@@ -5,7 +5,7 @@ import "@/test-utils/testEnv";
 import { jest } from "@jest/globals";
 import { resultErrorService } from "@/services/resultErrorService";
 import { resultErrorModel } from "@/models/resultErrorModel";
-import { testAnalysisService } from "@/services/testAnalysisService";
+import { storedResultEnrichmentService } from "@/services/storedResultEnrichmentService";
 import { dashboardService } from "@/services/dashboardService";
 import { dbClient } from "@/prisma/client";
 jest.mock("@/lib/logger", () => ({
@@ -24,6 +24,7 @@ jest.mock("@/prisma/client", () => ({
     },
   },
 }));
+jest.mock("@/services/storedResultEnrichmentService");
 
 describe("resultErrorService.analyzeErrors", () => {
   beforeEach(() => {
@@ -119,7 +120,7 @@ describe("resultErrorService.analyzeErrors", () => {
     });
 
     jest
-      .spyOn(testAnalysisService, "analyzeStoredResults")
+      .spyOn(storedResultEnrichmentService, "analyzeAndPersist")
       .mockResolvedValue(mockAnalysis);
     jest
       .spyOn(dashboardService, "updateStats")
@@ -137,7 +138,9 @@ describe("resultErrorService.analyzeErrors", () => {
       "project-1",
     );
 
-    expect(testAnalysisService.analyzeStoredResults).toHaveBeenCalledWith([
+    expect(storedResultEnrichmentService.analyzeAndPersist).toHaveBeenCalledWith(
+      "project-1",
+      [
       expect.objectContaining({
         id: "res-1",
         status: "failed",
@@ -151,16 +154,10 @@ describe("resultErrorService.analyzeErrors", () => {
           },
         ],
       }),
-    ]);
+      ],
+    );
 
-    expect(dbClient.result.update).toHaveBeenCalledWith({
-      where: { id: "res-1" },
-      data: expect.objectContaining({
-        analysisStatus: "failed",
-        analysisCategory: "bug",
-        analysisConfidence: 4,
-      }),
-    });
+    expect(dbClient.result.update).not.toHaveBeenCalled();
 
     expect(dashboardService.updateStats).toHaveBeenCalledWith(
       "exec-1",
@@ -202,7 +199,7 @@ describe("resultErrorService.analyzeErrors", () => {
     ]);
 
     jest
-      .spyOn(testAnalysisService, "analyzeStoredResults")
+      .spyOn(storedResultEnrichmentService, "analyzeAndPersist")
       .mockRejectedValue(new Error("Analysis failed"));
 
     await expect(

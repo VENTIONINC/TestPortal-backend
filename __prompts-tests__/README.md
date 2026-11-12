@@ -100,19 +100,27 @@ jest.setTimeout(300_000); // 5 minutes
 
 ## Classification and formatting evaluations
 
-Stored-results analysis uses one smoke suite and one regression suite, each
-parameterized over prompt v1.1.0 and v1.2.0. Model settings default to the same
-settings used by production classification: GPT-6 Luna, Responses API, low
-reasoning, and a 4000-token output limit. The runner supports explicit settings
-for comparisons; a separate model-specific test file is unnecessary.
-Prompt v1.1.0 is the evaluation baseline; v1.2.0 is used in production.
+The baseline for stored-results analysis and error formatting resolves the same
+immutable `AI_CONFIG_PATH` snapshot used by runtime operations. If
+`AI_CONFIG_PATH` is unset, evaluations use the packaged generic configuration.
+They do not assume TP-50's Luna profile; deployment selection must be verified
+separately. Stored-results analysis uses one smoke suite and one regression
+suite, parameterized over prompt v1.1.0 and v1.2.0. Prompt v1.1.0 remains an
+explicit historical prompt comparison; v1.2.0 is used in production.
 
-Error formatting has its own diagnostic-preservation suite; see
-[its evaluation guide](error-formatter/README.md). It uses the production
-formatter settings by default: GPT-6 Luna with reasoning none and a 500-token
-output limit. Solution suggestions and dashboard insights retain their existing
-models.
+See [the formatter evaluation guide](error-formatter/README.md) for explicit
+comparison controls. Supported model aliases are not restricted by a local
+whitelist. Settings are validated before a request; temperature and reasoning
+cannot be combined, and retry policy cannot be overridden. An evaluation report
+labels baseline versus comparison, records only the safe `openai` or `custom`
+connection label, effective settings, explicit overrides, returned model
+identity when safe, prompt/version, latency, and actual usage when available.
+Timestamped and `latest.json` reports are written with the same effective
+settings. Cached input and reasoning tokens are subsets of input and output
+tokens respectively, and are not added to totals again.
 
-Both suites share token accounting and timestamped JSON report writing. Reports
-include effective model settings. Cached input and reasoning tokens are subsets
-of input and output tokens respectively, and are not added to totals again.
+These prompt suites are opt-in and make paid provider requests. Ordinary Jest
+runs use synthetic fixtures only. Technical request parity does not establish
+semantic quality; repeat affected cases separately when evaluating stochastic
+output. Keep historical semantic evidence and private profiles outside public
+source control and build artifacts.

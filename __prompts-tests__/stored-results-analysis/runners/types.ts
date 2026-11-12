@@ -6,7 +6,7 @@
  */
 
 import type { TestAnalysisResponse } from "@/schemas/testAnalysisSchemas";
-import type { PromptModelSettings } from "@/config/promptModels";
+import type { AiOperationConfig } from "@/config/aiConfigSchema";
 import type { EvaluationTokenUsage } from "./evaluation-report";
 
 /**
@@ -24,7 +24,11 @@ export interface EvalResult {
   response: TestAnalysisResponse;
   failures: EvalFailure[];
   model: string;
-  settings: PromptModelSettings;
+  settings: AiOperationConfig & { maxRetries: number; sdkMaxRetries: 0 };
+  connection: "openai" | "custom";
+  returnedModels: string[];
+  mode: "baseline" | "comparison";
+  overrides: Partial<AiOperationConfig>;
   requestCount: number;
   durationMs: number;
   usage: EvaluationTokenUsage | null;
