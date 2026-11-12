@@ -1,0 +1,261 @@
+.codex/config.toml
+  s_b05250079fb561::t_87e8a75829adad 9-11
+.dockerignore
+  s_b05250079fb561::t_0a9865d2b2288f 7
+.env.example
+  s_b05250079fb561::t_15487ae32be9a0 33-35
+.gitignore
+  s_b05250079fb561::t_3017ffd6c38037 71-72,80,92,95,98
+AGENTS.md
+  s_b05250079fb561::t_be455de4c6e31e 10
+README.md
+  s_b05250079fb561::t_3d468ddf593d2a 1
+__mocks__/path.config.ts
+  s_b05250079fb561::t_4e4259f2dd138c 1-4
+__prompts-tests__/README.md
+  s_b05250079fb561::t_c006b2c76db492 18,100-126
+__prompts-tests__/error-formatter/README.md
+  s_b05250079fb561::t_5a4fdc211ec574 1-25
+__prompts-tests__/error-formatter/baseline.test.ts
+  s_b05250079fb561::t_1e945338b69696 4-8,10-12,14-18,20-27,29-38,40-44,46-61,63-109,111,113-118,120-192,194-205,207-212,214-216,218-244,246-247,249-266,268-280,283
+__prompts-tests__/error-solution/runners/error-solution.ts
+  s_b05250079fb561::t_c6d07c2268db57 15
+__prompts-tests__/error-solution/v1.0.0/regression.test.ts
+  s_b05250079fb561::t_752b10ad5a42c2 8,11-12
+__prompts-tests__/error-solution/v1.0.0/smoke.test.ts
+  s_b05250079fb561::t_d75aad89c721e9 8,11-12
+__prompts-tests__/error-solution/v1.0.0/templates/error-solution/bug.assertion.ts
+  s_b05250079fb561::t_7c2a1da44f45b7 4-5
+__prompts-tests__/error-solution/v1.0.0/templates/error-solution/infra.network-timeout.ts
+  s_b05250079fb561::t_10b9441f41343c 4-5
+__prompts-tests__/error-solution/v1.0.0/templates/error-solution/performance.slow-response.ts
+  s_b05250079fb561::t_6c2ec8dbfeee5b 4-5
+__prompts-tests__/error-solution/v1.0.0/templates/error-solution/script.selector-not-found.ts
+  s_b05250079fb561::t_a54252a1f2366e 4-5
+__prompts-tests__/helpers/evaluation.ts
+  s_b05250079fb561::t_aa222a73a430a8 1-75
+__prompts-tests__/helpers/formatter-evaluation.ts
+  s_b05250079fb561::t_84e8dda77e6846 4,6,8-10,12-13,15-17,19,21,24,26,31-51,54-61
+__prompts-tests__/stored-results-analysis/generate-datasets.ts
+  s_b05250079fb561::t_bd615c5d8dbf43 53,56-57,69
+__prompts-tests__/stored-results-analysis/regression.test.ts
+  s_b05250079fb561::t_92619a8cdb82a8 4-6,8-15
+__prompts-tests__/stored-results-analysis/runners/compare-versions.ts
+  s_b05250079fb561::t_2085fd7f731109 9,11-15,53
+__prompts-tests__/stored-results-analysis/runners/dataset-evaluation.ts
+  s_b05250079fb561::t_84ab6363c4d5c1 7-9,11-67
+__prompts-tests__/stored-results-analysis/runners/evaluation-report.ts
+  s_b05250079fb561::t_b3336ac8c0ed9c 4,6-9,11-42,45-54
+__prompts-tests__/stored-results-analysis/runners/stored-results-analysis.ts
+  s_b05250079fb561::t_d29f2ab95d3d8d 10-20,22,41,44-49,58-88,91-123,125,129,133-178,180,279-291
+__prompts-tests__/stored-results-analysis/runners/types.ts
+  s_b05250079fb561::t_edaf66f597c89d 9-10,26-34
+__prompts-tests__/stored-results-analysis/runners/versions.ts
+  s_b05250079fb561::t_fa0bf2504c5465 10-14,20,26-31
+__prompts-tests__/stored-results-analysis/smoke.test.ts
+  s_b05250079fb561::t_6bc92fd9d7e375 4-6,8-16
+__prompts-tests__/stored-results-analysis/v1.1.0/templates/stored-results-analysis/bug.application-error.ts
+  s_b05250079fb561::t_5dc3ff36ff034f 1-53
+__prompts-tests__/stored-results-analysis/v1.1.0/templates/stored-results-analysis/bug.assertion.ts
+  s_b05250079fb561::t_1c3b90ffcd7e46 4-5
+__prompts-tests__/stored-results-analysis/v1.1.0/templates/stored-results-analysis/index.ts
+  s_b05250079fb561::t_3afce65001021d 10,12-14,16,18,26,28-30,32,34
+__prompts-tests__/stored-results-analysis/v1.1.0/templates/stored-results-analysis/infra.dns-tls.ts
+  s_b05250079fb561::t_2d6bcea14bbc81 1-53
+__prompts-tests__/stored-results-analysis/v1.1.0/templates/stored-results-analysis/infra.network-timeout.ts
+  s_b05250079fb561::t_0c5a97cf517caf 4-5
+__prompts-tests__/stored-results-analysis/v1.1.0/templates/stored-results-analysis/other.generic.ts
+  s_b05250079fb561::t_a4af4d9df55e36 4-5
+__prompts-tests__/stored-results-analysis/v1.1.0/templates/stored-results-analysis/other.insufficient-context.ts
+  s_b05250079fb561::t_d1d6d1e6eb8132 1-45
+__prompts-tests__/stored-results-analysis/v1.1.0/templates/stored-results-analysis/performance.resource-constraint.ts
+  s_b05250079fb561::t_adbb36f2dd5a0d 1-53
+__prompts-tests__/stored-results-analysis/v1.1.0/templates/stored-results-analysis/performance.slow-response.ts
+  s_b05250079fb561::t_d1327939fdbccc 1-54
+__prompts-tests__/stored-results-analysis/v1.1.0/templates/stored-results-analysis/script.fixture-setup.ts
+  s_b05250079fb561::t_ab746db040dfee 1-53
+__prompts-tests__/stored-results-analysis/v1.1.0/templates/stored-results-analysis/script.selector-not-found.ts
+  s_b05250079fb561::t_c9589ad4917157 4-5
+__tests__/config/aiConfig.test.ts
+  s_b05250079fb561::t_d1f063feea5c0e 4-22,24-27,29-30,32-56,58-90,92,94-174,176-195,197-200,202-231
+__tests__/config/aiConfigSchema.test.ts
+  s_b05250079fb561::t_d144effa8dd5be 1-114
+__tests__/controllers/errorFormatterController.test.ts
+  s_b05250079fb561::t_fb06a6677008fb 40-59
+__tests__/controllers/jsonReportController.test.ts
+  s_b05250079fb561::t_17d72a48205a16 9-14,126-187
+__tests__/controllers/testScenarioController.test.ts
+  s_b05250079fb561::t_0c3816ca9c157f 57-58,87,143,149
+__tests__/lib/generativeAi.test.ts
+  s_b05250079fb561::t_85aadffcb40c7f 4-7,9-34,36-41,43-48,50-64,66-70,72-74,77-94,97-102,104,106-112,114-115,118-132,134,138-149,151-154,156-157,160-164,167-175,177-184,187-204,207-232,234-250,252-262,264,267-276,278-291,293-305,307,310-320,322-331,334-345,347-361,364-378,380-381,383-388,390-402,404-408,412-453,455-460,462-475,478-491,494-513,515-526,528-540,542,544,547-552,554-556,558-565,567-577,579-587,590-605,607-609,611-627
+__tests__/lib/openapi/testScenarios.test.ts
+  s_b05250079fb561::t_1fdb31337c8f87 7-25
+__tests__/lib/testScenarioMarkdown.test.ts
+  s_b05250079fb561::t_5a2bd6e3a5b1a2 15-16,25,31-34,39-41,50-51,55,68-84
+__tests__/manual-test-runs/manualTestRunPostgresIntegration.test.ts
+  s_b05250079fb561::t_8670c4f3cb9bfb 32,127,149,361,369-370
+__tests__/mcp/mcpTestScenarioHandler.test.ts
+  s_b05250079fb561::t_e3df927cbcfd74 83-86
+__tests__/mcp/serverRegistration.test.ts
+  s_b05250079fb561::t_2d574ee0549794 6,14,23,32-34,36-38
+__tests__/mcp/testScenarioMcpWorkflow.test.ts
+  s_b05250079fb561::t_82afdbe66aa0bb 10-11,32-35,48-59,67,86-105,117-125,127-139,146-148,151-156,160-162,168-177,182-186
+__tests__/mcp/testScenarioMetadataContract.test.ts
+  s_b05250079fb561::t_e0ce8eaa760ceb 3-20,22-46
+__tests__/mcp/testScenarioSchemas.test.ts
+  s_b05250079fb561::t_e2008c46c4a0fb 48-81,86-91,96,98,113-126
+__tests__/mcp/testScenarioTools.test.ts
+  s_b05250079fb561::t_8298dc635e66fd 15-20,27,36,55-58,95-116,205,212,214,220
+__tests__/models/manualTestRunModel.test.ts
+  s_b05250079fb561::t_6330a4068ac236 114-124
+__tests__/models/resultAnalysisPostgresIntegration.test.ts
+  s_b05250079fb561::t_dececd25b47a3f 1-196
+__tests__/models/resultModelAnalysis.test.ts
+  s_b05250079fb561::t_ea0d51bdc1190c 4,6-11,13-18,20,22-30,32-35,38-42,44-79,83-86,88-96
+__tests__/models/testScenarioModel.test.ts
+  s_b05250079fb561::t_69cd2dd60098db 67-68,137-155,199,204,225,227
+__tests__/prisma/testScenarioMigration.test.ts
+  s_b05250079fb561::t_856055bb7d06da 132,153-165
+__tests__/prompts/evaluation.test.ts
+  s_b05250079fb561::t_812a8a16479d48 4-6,8-22,25-53,55-61,63,66-125,127-128,130-133,136,138-146,148-149,152-153,155-163,165-168,171-173,175-185,187-192,194,196,198-205,207-208,210-221,224-232,234-244
+__tests__/prompts/transportParity.test.ts
+  s_b05250079fb561::t_319ad6502b734c 1-249
+__tests__/routes/status.test.ts
+  s_b05250079fb561::t_f0328a21fe1c9c 7
+__tests__/schemas/testAnalysisSchemas.test.ts
+  s_b05250079fb561::t_495922888d4a4b 1-102
+__tests__/schemas/testScenarioSchemas.test.ts
+  s_b05250079fb561::t_a4b8f8d157bf20 22,28,48,50,74-94
+__tests__/scripts/check-ai-formatting.test.ts
+  s_b05250079fb561::t_2da0758dba0044 1-63
+__tests__/services/ctrfService.test.ts
+  s_b05250079fb561::t_7b98776cf99975 8,15,116,148-154,156,164-165,174,182,202
+__tests__/services/errorFormatterService.test.ts
+  s_b05250079fb561::t_08dc277bc59747 5,7,9,55,59-79,100,105-122,209-210,220-224,228-231,233-238,259-302,305-392,399-433,450-451,464-465,484,547,557-662
+__tests__/services/insightsService.test.ts
+  s_b05250079fb561::t_ed4b6068d7113e 5,7,31-41,44-52,62-65,144,152-177,192-197,202-223
+__tests__/services/manualTestRunService.test.ts
+  s_b05250079fb561::t_21854394129ee7 54-56
+__tests__/services/resultErrorService.test.ts
+  s_b05250079fb561::t_a263dc3456d928 8,27,123,141,143-157,160-161,202
+__tests__/services/resultService.export.test.ts
+  s_b05250079fb561::t_83bcc6b354e372 132
+__tests__/services/storedResultEnrichmentService.test.ts
+  s_b05250079fb561::t_2317018d757645 4,7-77
+__tests__/services/testAnalysisService.test.ts
+  s_b05250079fb561::t_8886f466c66756 6,8-11,13-21,23-38,40-46,49-68,70,73-89,91-92,94,97-111,113-125,127-138,142-144,147-152
+__tests__/services/testScenarioService.test.ts
+  s_b05250079fb561::t_df7ad288495eef 73-74,109-110,120-121,148-173,244-245,248-249
+__tests__/test-scenarios/testScenarioIntegrationWorkflow.test.ts
+  s_b05250079fb561::t_f9ea16892a29e7 65-74,85-94,97-152,230-234,236-240,248-252,255-258,266-270,273-279,285-301,303-399,404-418,420-443,453-456,458-460,464-473,483-487,495-502,506-515,534,545-551,553-559,563-567,571-573,586-595
+__tests__/test-scenarios/testScenarioPostgresIntegration.test.ts
+  s_b05250079fb561::t_f386c804e9cfdd 86-87,91,288,294,596-597,600,617-618,621
+__tests__/test-scenarios/testScenarioWorkflow.test.ts
+  s_b05250079fb561::t_548734774fcb70 10-15,19-21,48-49,51-52,73-75,84-88,91-97,99-105,107-109,113-129
+__tests__/test-scenarios/tmsFieldMigrationPostgresIntegration.test.ts
+  s_b05250079fb561::t_4acd6329aee086 4-6,8-9,11-14,16-24,26-59,61-62
+docs/AI_ERROR_ANALYSIS_RESEARCH.md
+  s_b05250079fb561::t_bd91b48048fa3e 1-398
+docs/API_DOCUMENTATION.md
+  s_b05250079fb561::t_198cce6a4942d5 134-136,142-146
+docs/DEVELOPMENT_GUIDE.md
+  s_b05250079fb561::t_2a694350cc07dc 8,56-159
+docs/MCP_TOOLS.md
+  s_b05250079fb561::t_a323abeb6bcb86 234-241,267,276,278-280,282,307
+docs/engineering/backend-conventions.md
+  s_b05250079fb561::t_8de5131914a51e 64-71,140-145
+index.ts
+  s_b05250079fb561::t_aa4367a818a13a 3,12-13
+jest.prompts.config.ts
+  s_b05250079fb561::t_f4b9f12c87b571 8-10,15,17
+package.json
+  s_b05250079fb561::t_e09bb2c7b36d4b 8,28-29
+prisma/migrations/20261023120000_tms_scenario_metadata/migration.sql
+  s_b05250079fb561::t_b58493a5d4a10f 1-14
+prisma/schema.prisma
+  s_b05250079fb561::t_a76b2c421bc015 242-247,254-255
+scripts/check-ai-formatting.ts
+  s_b05250079fb561::t_b924ec9cfdfbf6 1-60
+scripts/copy-ai-config.js
+  s_b05250079fb561::t_8f1b02e4da03a4 1-16
+src/config/ai-config.default.json
+  s_b05250079fb561::t_2ded61b9d094aa 1-9
+src/config/aiConfig.ts
+  s_b05250079fb561::t_63a7fd4b7c328e 4-17,20-22,25-27,30-36,39-43,46-51,54-78,81-86,88-89,91-97,99-100,102-108,110-177,179-183
+src/config/aiConfigSchema.ts
+  s_b05250079fb561::t_62e4eacdcf9ee5 6,8-12,14-19,21-25,27,29-37,41-45
+src/config/cognitoConfig.ts
+  s_b05250079fb561::t_e89d581110a1ef 10
+src/config/promptModels.ts
+  s_b05250079fb561::t_d45df237eb5bee 4-10,13-14,16-24
+src/controllers/jsonReportController.ts
+  s_b05250079fb561::t_ee23a63638b7cd 9,119,129-130
+src/handlers/mcpTestScenarioHandler.ts
+  s_b05250079fb561::t_9998469c4f73d4 8,20-24
+src/lib/generativeAi.ts
+  s_b05250079fb561::t_bbaa53348434eb 4-5,7-13,15-18,20-33,35-38,40-44,46-66,70-81,84-85,88-92,95-97,99-100,104-106,108,111-113,116-152,155-164,167-169,171,174-184,186-196,198-201,203,205,208-220,223-236,239-266,269-278,280-286,289-296,299-307
+src/lib/jsonPayloads.ts
+  s_b05250079fb561::t_f0763932d6d005 98,108-109
+src/lib/openapi/manualTestRuns.ts
+  s_b05250079fb561::t_7bfaa67a2abb75 40-45,48-89,97-112,136-151,203-217,238-245,256-263,298-300,313-316,321-328,346,352-354,378-384,395-401,412-418,445-447,464-469,472-478,490-495,498-504,516-521,524-530
+src/lib/openapi/results.ts
+  s_b05250079fb561::t_92fc450f12fbed 77,92
+src/lib/openapi/testScenarios.ts
+  s_b05250079fb561::t_ad255bfa5241c8 9-22,35-36,71-78,82-83,121-128,132-133,202-257,261,268-279,293-332,334-342,345-359,361-368,373-378,385-390,1041-1044,1047-1068,1079-1143,1145
+src/lib/testScenarioMarkdown.ts
+  s_b05250079fb561::t_37db3378a44f02 4,16-17,21,43-44,53-59
+src/mcp/helpers/mcpHelpers.ts
+  s_b05250079fb561::t_9a8cdc91bb4d1f 18-19
+src/mcp/schemas/testScenarioSchemas.ts
+  s_b05250079fb561::t_d39422a2609450 6-49,79-103,107-118,148-149
+src/mcp/server.ts
+  s_b05250079fb561::t_14b8b75f8993f9 39,172-182,184-215
+src/mcp/tools/test-scenarios.ts
+  s_b05250079fb561::t_293791bab24a90 7,21-38
+src/models/resultModel.ts
+  s_b05250079fb561::t_6f23caa3db72ba 75-77,979-1012
+src/models/testScenarioModel.ts
+  s_b05250079fb561::t_4280dac9c09088 135-136,262-263,297-298,480-481,489
+src/prompts/error-formatter/v1.1.0.ts
+  s_b05250079fb561::t_6e261c8e2ce92a 4-23,25-33
+src/prompts/stored-results-analysis/v1.2.0.ts
+  s_b05250079fb561::t_f2dc9fea226eb7 1-207
+src/schemas/testAnalysisSchemas.ts
+  s_b05250079fb561::t_9ad2ca3d21c637 7,17-24,49,78-107,114,116-119
+src/schemas/testScenarioSchemas.ts
+  s_b05250079fb561::t_e273d7d0267920 11-20,37-38,53-54
+src/services/ctrfService.ts
+  s_b05250079fb561::t_580f2206302ce3 14,87-88,99-100
+src/services/errorFormatterService.ts
+  s_b05250079fb561::t_de16259d17a4c3 5,8-12,15,38-39,44,46-48,50-52,62-81,84,86-90,99-101,103-105,107,109-111,113-116,118,121,123-129,136-148,157-162,191,217
+src/services/insightsService.ts
+  s_b05250079fb561::t_5bf233c146aacc 5-8,48-49,164,175,187-196,198,200-210
+src/services/resultErrorService.ts
+  s_b05250079fb561::t_67aba41caac1bd 17,716
+src/services/storedResultEnrichmentService.ts
+  s_b05250079fb561::t_500cf6b1d45b98 4-6,8-10,12-20,22,24
+src/services/testAnalysisService.ts
+  s_b05250079fb561::t_56b806ad0b1dee 7-12,14,63-64,67-75,131,133,135,137-147,156-163,167-170,177-179,181-186
+src/services/testScenarioService.ts
+  s_b05250079fb561::t_733ea04f3123e6 4,35-36,40-53,225-226,362-365
+src/types/database.ts
+  s_b05250079fb561::t_c486b3bc580e0a 195
+src/types/testScenarios.ts
+  s_b05250079fb561::t_f83f4596a4f434 4-5,28-29,85-86,101-102
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "97617169232f7096a25cf5ec7f000b22a68c22fb",
+  "prompts": {},
+  "sessions": {
+    "s_b05250079fb561": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a1cf55-961f-7a32-8f2c-230648a4a753",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Ihar Mikailau <ihar.mikailau@ventionteams.com>"
+    }
+  }
+}
