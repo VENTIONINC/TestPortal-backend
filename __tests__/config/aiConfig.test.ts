@@ -143,6 +143,64 @@ describe("aiConfig", () => {
     );
   });
 
+  it("preserves selected operation models and generation settings without model-based inference", async () => {
+    const selectedConfig = {
+      version: 1,
+      operations: {
+        classification: {
+          model: "synthetic-classifier",
+          api: "responses",
+          reasoningEffort: "low",
+          maxOutputTokens: 901,
+        },
+        formatting: {
+          model: "synthetic-formatter",
+          api: "responses",
+          reasoningEffort: "none",
+          maxOutputTokens: 502,
+        },
+        suggestions: {
+          model: "synthetic-suggester",
+          api: "chat-completions",
+          temperature: 0.4,
+          maxOutputTokens: 703,
+        },
+        insights: {
+          model: "synthetic-insights",
+          api: "chat-completions",
+          temperature: 0.1,
+          maxOutputTokens: 404,
+        },
+      },
+    };
+    const snapshot = await createAiConfigStore({
+      env: () => ({ AI_CONFIG_PATH: "/private/current.json" }),
+      readFile: async () => JSON.stringify(selectedConfig),
+    }).initialize();
+
+    expect(snapshot.operations).toEqual(selectedConfig.operations);
+  });
+
+  it("does not fall back to packaged defaults when the explicitly selected profile is absent", async () => {
+    const readFileMock = jest.fn(async () => {
+      throw new Error("selected profile is absent");
+    });
+    const store = createAiConfigStore({
+      env: () => ({ AI_CONFIG_PATH: "/private/current.json" }),
+      readFile: readFileMock,
+      defaultConfigPath: new URL("file:///packaged/default.json"),
+    });
+
+    await expect(store.initialize()).rejects.toThrow(
+      "Could not read the file selected by AI_CONFIG_PATH",
+    );
+    expect(readFileMock).toHaveBeenCalledTimes(1);
+    expect(readFileMock).toHaveBeenCalledWith(
+      "/private/current.json",
+      "utf8",
+    );
+  });
+
   it("rejects invalid selected JSON and schema values without echoing them", async () => {
     const invalidJsonStore = createAiConfigStore({
       env: () => ({ AI_CONFIG_PATH: "/secret/invalid.json" }),

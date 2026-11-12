@@ -4,12 +4,8 @@
 import "../testEnv";
 import path from "node:path";
 import type { UsageMetadata } from "@langchain/core/messages";
-
-import {
-  errorFormatterConfig,
-  getPromptModelOptions,
-  type PromptModelSettings,
-} from "@/config/promptModels";
+import { initializeAiConfig } from "@/config/aiConfig";
+import type { AiOperationConfig } from "@/config/aiConfigSchema";
 import {
   sumTokenUsage,
   writePromptEvaluationReport,
@@ -34,19 +30,8 @@ jest.mock("@langchain/openai", () => {
     usageEntries,
     ChatOpenAI: jest.fn(
       (options: ConstructorParameters<typeof actual.ChatOpenAI>[0]) => {
-        if (
-          !process.env.ERROR_FORMATTER_MODEL &&
-          !process.env.ERROR_FORMATTER_REASONING
-        ) {
-          return new actual.ChatOpenAI({ ...options, callbacks });
-        }
-        const selectedOptions = { ...options };
-        delete selectedOptions.temperature;
-        delete selectedOptions.reasoning;
-        delete selectedOptions.modelKwargs;
         return new actual.ChatOpenAI({
-          ...selectedOptions,
-          ...getPromptModelOptions(getFormatterEvaluationSettings()),
+          ...options,
           callbacks,
         });
       },
@@ -57,6 +42,73 @@ jest.mock("@/services/resultService", () => ({ resultService: {} }));
 jest.mock("@/services/testAnalysisService", () => ({
   testAnalysisService: {},
 }));
+
+jest.mock("@/lib/generativeAi", () => {
+  const actual = jest.requireActual<typeof import("@/lib/generativeAi")>(
+    "@/lib/generativeAi",
+  );
+  const config = jest.requireActual<typeof import("@/config/aiConfig")>(
+    "@/config/aiConfig",
+  );
+  const evaluationOverrides = jest.requireActual<
+    typeof import("../helpers/formatter-evaluation")
+  >("../helpers/formatter-evaluation");
+  const observations: Array<{
+    settings: unknown;
+    connection: "openai" | "custom";
+    overrides: Partial<AiOperationConfig>;
+    returnedModels: string[];
+  }> = [];
+  return {
+    ...actual,
+    __evaluation: { observations },
+    createGenerativeAiClient: (
+      operation: Parameters<typeof actual.createGenerativeAiClient>[0],
+      snapshot = config.getAiConfigSnapshot(),
+    ) => {
+      const { client, overrides } =
+        evaluationOverrides.createFormatterEvaluationClient(
+          (selectedOverrides: Partial<AiOperationConfig>) =>
+            actual.createGenerativeAiClient(
+              operation,
+              snapshot,
+              selectedOverrides,
+            ),
+          process.env,
+        );
+      const observation = {
+        settings: client.effectiveSettings,
+        connection: client.connection,
+        overrides,
+        returnedModels: [] as string[],
+      };
+      observations.push(observation);
+      return {
+        ...client,
+        async invoke<T>(operationCall: () => Promise<T>): Promise<T> {
+          const result = await client.invoke(operationCall);
+          if (
+            typeof result === "object" &&
+            result !== null &&
+            "raw" in result &&
+            typeof result.raw === "object" &&
+            result.raw !== null &&
+            "response_metadata" in result.raw &&
+            typeof result.raw.response_metadata === "object" &&
+            result.raw.response_metadata !== null &&
+            "model" in result.raw.response_metadata
+          ) {
+            const returnedModel = actual.safeModelIdentifier(
+              result.raw.response_metadata.model,
+            );
+            if (returnedModel) observation.returnedModels.push(returnedModel);
+          }
+          return result;
+        },
+      };
+    },
+  };
+});
 
 interface Case {
   name: string;
@@ -139,46 +191,46 @@ const cases: Case[] = [
   },
 ];
 
-function getFormatterEvaluationSettings(): PromptModelSettings {
-  const model = process.env.ERROR_FORMATTER_MODEL ?? errorFormatterConfig.model;
-  const reasoningEffort =
-    process.env.ERROR_FORMATTER_REASONING ??
-    errorFormatterConfig.reasoningEffort;
-  if (reasoningEffort !== "none" && reasoningEffort !== "low") {
-    throw new Error(
-      `Unsupported ERROR_FORMATTER_REASONING: ${reasoningEffort}`,
-    );
-  }
-  if (model !== "gpt-4.1-mini" && model !== errorFormatterConfig.model) {
-    throw new Error(`Unsupported ERROR_FORMATTER_MODEL: ${model}`);
-  }
-  const { reasoningEffort: _defaultReasoning, ...defaults } =
-    errorFormatterConfig;
-  return {
-    ...defaults,
-    model,
-    ...(model === "gpt-4.1-mini"
-      ? { useResponsesApi: false, temperature: 0.7 }
-      : { reasoningEffort }),
-  };
-}
-
-const settings = getFormatterEvaluationSettings();
-
-describe(`error formatter: ${settings.model}`, () => {
+describe("error formatter baseline and comparisons", () => {
   jest.setTimeout(120_000);
   const records: Array<Record<string, unknown>> = [];
   const { usageEntries } = jest.requireMock<{
     usageEntries: Array<UsageMetadata | null>;
   }>("@langchain/openai");
+  const evaluationMocks: {
+    __evaluation: {
+      observations: Array<{
+        settings: {
+          model: string;
+          [key: string]: unknown;
+        };
+        connection: "openai" | "custom";
+        overrides: Partial<AiOperationConfig>;
+        returnedModels: string[];
+      }>;
+    };
+  } = jest.requireMock("@/lib/generativeAi");
+
+  beforeAll(async () => {
+    await initializeAiConfig();
+  });
 
   afterAll(() => {
+    const observation = evaluationMocks.__evaluation.observations[0];
+    if (!observation) return;
     const report = writePromptEvaluationReport(
       path.resolve("__prompts-tests__/error-formatter/reports"),
       {
-        model: settings.model,
+        provider: "openai",
+        model: observation.settings.model,
         promptVersion: "v1.1.0",
-        settings,
+        settings: observation.settings,
+        mode: Object.keys(observation.overrides).length
+          ? "comparison"
+          : "baseline",
+        connection: observation.connection,
+        overrides: observation.overrides,
+        returnedModels: Array.from(new Set(observation.returnedModels)),
         usage: sumTokenUsage(usageEntries),
         usageEntries,
         // These checks cover factual anchors, not a complete semantic quality judgment.

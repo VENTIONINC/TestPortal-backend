@@ -3,7 +3,7 @@
 
 import path from "node:path";
 
-import type { PromptModelSettings } from "@/config/promptModels";
+import type { AiOperationConfig } from "@/config/aiConfigSchema";
 import { writePromptEvaluationReport } from "../../helpers/evaluation";
 import type { EvaluationTokenUsage } from "../../helpers/evaluation";
 import type { Category } from "../v1.1.0/templates/types";
@@ -26,7 +26,11 @@ export interface EvaluationReport {
   createdAt: string;
   provider: "openai" | "typesafe";
   model: string;
-  settings?: PromptModelSettings;
+  settings: AiOperationConfig & { maxRetries: number; sdkMaxRetries: 0 };
+  mode: "baseline" | "comparison";
+  connection: "openai" | "custom";
+  returnedModels: string[];
+  overrides: Partial<AiOperationConfig>;
   promptVersion?: string;
   suite: "smoke" | "regression";
   requestCount: number;

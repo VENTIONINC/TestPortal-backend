@@ -6,15 +6,18 @@
  * Invokes LLM with structured output and validates expectations
  */
 
-import { ChatOpenAI } from "@langchain/openai";
 import { z } from "zod";
-import type { UsageMetadata } from "@langchain/core/messages";
 import {
-  getPromptModelOptions,
-  storedResultsAnalysisConfig,
-  type PromptModelSettings,
-} from "@/config/promptModels";
-import { sumTokenUsage } from "../../helpers/evaluation";
+  initializeAiConfig,
+  type AiConfigSnapshot,
+} from "@/config/aiConfig";
+import type { AiOperationConfig } from "@/config/aiConfigSchema";
+import {
+  createGenerativeAiClient,
+  parseStructuredCompletion,
+  safeModelIdentifier,
+} from "@/lib/generativeAi";
+import { createUsageCollector, sumTokenUsage } from "../../helpers/evaluation";
 import type { TestAnalysisResponse } from "@/schemas/testAnalysisSchemas";
 import type { TestCase } from "../v1.1.0/templates/types";
 import type { EvalResult, EvalFailure } from "./types";
@@ -35,11 +38,15 @@ export interface PromptVersion {
 export interface RunEvalOptions {
   cases: TestCase[];
   version: PromptVersion;
+  /** Legacy comparison controls. Baseline runs omit these and resolve runtime settings. */
   model?: string;
   temperature?: number;
   batchSize?: number;
-  reasoningEffort?: PromptModelSettings["reasoningEffort"];
+  reasoningEffort?: AiOperationConfig["reasoningEffort"];
   useResponsesApi?: boolean;
+  settingsOverride?: Partial<AiOperationConfig>;
+  /** Synthetic transport tests may supply an isolated in-memory snapshot. */
+  snapshot?: AiConfigSnapshot;
 }
 
 /**
@@ -48,34 +55,74 @@ export interface RunEvalOptions {
  * @returns Evaluation result with LLM response and validation failures
  */
 export async function runEval(options: RunEvalOptions): Promise<EvalResult> {
+  const supportedOptions = new Set([
+    "cases",
+    "version",
+    "model",
+    "temperature",
+    "batchSize",
+    "reasoningEffort",
+    "useResponsesApi",
+    "settingsOverride",
+    "snapshot",
+  ]);
+  const unsupportedOptions = Object.keys(options).filter(
+    (key) => !supportedOptions.has(key),
+  );
+  if (unsupportedOptions.length > 0) {
+    throw new Error(
+      `Unsupported evaluation option(s): ${unsupportedOptions.join(", ")}. Use model, api, temperature, maxOutputTokens, or reasoningEffort overrides; retry policy is fixed.`,
+    );
+  }
+  if (
+    options.temperature !== undefined &&
+    options.reasoningEffort !== undefined
+  ) {
+    throw new Error(
+      "Conflicting evaluation settings: temperature and reasoningEffort cannot be combined.",
+    );
+  }
   const {
     cases,
     version,
-    model = storedResultsAnalysisConfig.model,
-    temperature = 0.1,
     batchSize = 25,
-    reasoningEffort = model === storedResultsAnalysisConfig.model
-      ? storedResultsAnalysisConfig.reasoningEffort
-      : undefined,
-    useResponsesApi = model === storedResultsAnalysisConfig.model
-      ? storedResultsAnalysisConfig.useResponsesApi
-      : false,
+    model,
+    temperature,
+    reasoningEffort,
+    useResponsesApi,
+    settingsOverride,
+    snapshot: suppliedSnapshot,
   } = options;
   const startedAt = Date.now();
-
-  const settings: PromptModelSettings = {
-    model,
-    useResponsesApi,
-    maxTokens: storedResultsAnalysisConfig.maxTokens,
-    maxRetries: storedResultsAnalysisConfig.maxRetries,
-    ...(reasoningEffort !== undefined ? { reasoningEffort } : { temperature }),
+  const legacyOverrides: Partial<AiOperationConfig> = {
+    ...(model !== undefined ? { model } : {}),
+    ...(temperature !== undefined
+      ? { temperature, reasoningEffort: undefined }
+      : {}),
+    ...(reasoningEffort !== undefined
+      ? { reasoningEffort, temperature: undefined }
+      : {}),
+    ...(useResponsesApi !== undefined
+      ? { api: useResponsesApi ? "responses" : "chat-completions" }
+      : {}),
   };
-  const llm = new ChatOpenAI({
-    ...getPromptModelOptions(settings),
-    cache: false,
-  });
+  for (const [key, value] of Object.entries(legacyOverrides)) {
+    if (
+      settingsOverride &&
+      key in settingsOverride &&
+      settingsOverride[key as keyof AiOperationConfig] !== value
+    ) {
+      throw new Error(
+        `Conflicting evaluation settings for ${key}; pass one explicit value.`,
+      );
+    }
+  }
+  const overrides = { ...legacyOverrides, ...settingsOverride };
+  const snapshot = suppliedSnapshot ?? (await initializeAiConfig());
+  const client = createGenerativeAiClient("classification", snapshot, overrides);
+  const { usageEntries, callbacks } = createUsageCollector();
 
-  const structuredModel = llm.withStructuredOutput<TestAnalysisResponse>(
+  const structuredModel = client.model.withStructuredOutput<TestAnalysisResponse>(
     version.schema,
     {
       name: "test_analysis",
@@ -93,8 +140,12 @@ export async function runEval(options: RunEvalOptions): Promise<EvalResult> {
       const result = await structuredModel.invoke([
         { role: "system", content: version.getPrompt(batch.length) },
         { role: "user", content: JSON.stringify(batch.map((c) => c.input)) },
-      ]);
-      const response = result.parsed;
+      ], { callbacks });
+      const response = parseStructuredCompletion(
+        client,
+        result,
+        version.schema,
+      );
 
       if (response.results.length !== batch.length) {
         throw new Error(
@@ -104,15 +155,27 @@ export async function runEval(options: RunEvalOptions): Promise<EvalResult> {
 
       return {
         response,
-        usage: (result.raw as { usage_metadata?: UsageMetadata })
-          .usage_metadata,
+        returnedModel:
+          typeof result.raw === "object" && result.raw !== null &&
+          "response_metadata" in result.raw &&
+          typeof result.raw.response_metadata === "object" &&
+          result.raw.response_metadata !== null &&
+          "model" in result.raw.response_metadata &&
+          safeModelIdentifier(result.raw.response_metadata.model),
       };
     }),
   );
   const response: TestAnalysisResponse = {
     results: batchResponses.flatMap((batch) => batch.response.results),
   };
-  const usage = sumTokenUsage(batchResponses.map((batch) => batch.usage));
+  const usage = sumTokenUsage(usageEntries);
+  const returnedModels = Array.from(
+    new Set(
+      batchResponses
+        .map((batch) => batch.returnedModel)
+        .filter((model): model is string => model !== undefined),
+    ),
+  );
 
   // Contract validation: Combined response length must match input length
   if (response.results.length !== cases.length) {
@@ -216,8 +279,12 @@ export async function runEval(options: RunEvalOptions): Promise<EvalResult> {
   return {
     response,
     failures,
-    model,
-    settings,
+    model: client.requestedModel,
+    settings: client.effectiveSettings,
+    connection: client.connection,
+    returnedModels,
+    mode: Object.keys(overrides).length > 0 ? "comparison" : "baseline",
+    overrides,
     requestCount: batches.length,
     durationMs: Date.now() - startedAt,
     usage,

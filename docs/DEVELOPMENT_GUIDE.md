@@ -89,9 +89,26 @@ and optional `reasoningEffort` (`none`, `low`, `medium`, or `high`). `api` defau
 credentials, and endpoint settings are rejected in the JSON file. The generic values are technical
 defaults, not a model recommendation or a quality profile.
 
-Only error formatting adopts these settings in this change. Classification, suggestions, and
-insights keep their existing configuration until their own adoption work is completed; their
-entries are required so each operation can be configured independently when adopted.
+Classification, formatting, suggestions, and dashboard insights each use their own operation entry.
+The same immutable snapshot supplies nested classification calls made while generating a
+suggestion. Configuration changes take effect after restart or redeployment.
+
+Dashboard PDF insights use the independent `insights` entry, retain the existing prompt and
+evidence assembly, and accept either plain text or text blocks from the completion. They keep the
+existing eight-second user-facing deadline and one direct-OpenAI retry; empty, rejected, or late
+responses return `AI insights unavailable for this export.` Provider diagnostics are logged only
+as allowlisted categories and safe model/connection identifiers. These settings do not change the
+export contract or add cancellation controls.
+
+Suggestion generation uses the `suggestions` entry after loading a failed or flaky result with
+error details. Existing feedback category takes precedence over generated analysis; when neither
+is available, the service first runs the independently configured `classification` operation and
+does not request a suggestion unless that classification returns a valid result. This nested
+classification and suggestion request share the selected connection and key but retain separate
+model and operation settings. Provider diagnostics are reduced to safe categories before logging
+or returning a feature error. These settings provide technical request compatibility only; they
+do not certify suggestion quality. The REST response fields remain `category`, `name`, and
+`description`.
 
 ### API and parameter behavior
 
@@ -105,11 +122,22 @@ For the direct OpenAI connection, the formatter can use either supported API mod
 ```
 
 The installed LangChain/OpenAI versions serialize the outgoing request; the backend does not
-forward arbitrary SDK options. The formatter keeps its existing direct-OpenAI temperature and token
-defaults when compatible. Custom URLs receive no implicit temperature or token limit, and supported
-explicit settings remain available. Canonical OpenAI formatting keeps two automatic retries (up to
-three transport attempts); a custom URL has no automatic retries. There is no connection or
-credential fallback.
+forward arbitrary SDK options. The shared client disables SDK retries and applies this
+operation-specific policy only for the canonical OpenAI URL:
+
+| Operation | Automatic retries | Implicit temperature | Implicit output limit |
+| --- | ---: | ---: | ---: |
+| Classification | 2 | none | 4000 tokens |
+| Formatting | 2 | 0.7 without reasoning | 500 tokens |
+| Suggestions | 2 | 0.3 without reasoning | 700 tokens |
+| Insights | 1 | 0.2 without reasoning | 400 tokens |
+
+Explicit supported settings take precedence. A configured reasoning effort suppresses an implicit
+temperature. For custom URLs, automatic retries are disabled and implicit temperature/output
+limits are omitted; configured supported values remain available. Responses API requests use
+`max_output_tokens`, while Chat Completions requests use `max_tokens`. There is no connection,
+credential, model, or strategy fallback. These are request compatibility defaults, not model-quality
+recommendations.
 
 Schema validation checks syntax and known parameter conflicts only. It cannot establish that a
 particular model alias is enabled for an account, that a compatible service supports each option,

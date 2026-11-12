@@ -1,8 +1,11 @@
 // Copyright 2026 VENSOLUTIONSGROUP LTD
 // SPDX-License-Identifier: Apache-2.0
 
-import { ChatOpenAI } from "@langchain/openai";
 import getLogger from "@/lib/logger";
+import {
+  createGenerativeAiClient,
+  GenerativeAiError,
+} from "@/lib/generativeAi";
 import { buildInsightsPrompt } from "@/prompts/insights/v1.0.0";
 import { anomalyDetector } from "@/services/anomalyDetector";
 import type {
@@ -42,8 +45,8 @@ function getAnomalyFlags(
         skipped: bucket.metrics.skipped,
       })),
     );
-  } catch (error) {
-    logger.error("AI anomaly detection failed", error);
+  } catch {
+    logger.error("AI anomaly detection failed");
     return [];
   }
 }
@@ -158,12 +161,7 @@ export const insightsService = {
     const passRateTrend = getPassRateTrend(dashboard.history);
 
     try {
-      const model = new ChatOpenAI({
-        model: "gpt-4.1-mini",
-        temperature: 0.2,
-        maxTokens: 400,
-        maxRetries: 1,
-      });
+      const client = createGenerativeAiClient("insights");
 
       const promptMessages = await buildInsightsPrompt({
         filters,
@@ -174,7 +172,7 @@ export const insightsService = {
       });
 
       const response = await withTimeout(
-        model.invoke(promptMessages),
+        client.invoke(() => client.model.invoke(promptMessages)),
         AI_INSIGHTS_TIMEOUT_MS,
       );
 
@@ -186,14 +184,30 @@ export const insightsService = {
 
       return insightsText;
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : "UNKNOWN";
-
+      const category =
+        error instanceof GenerativeAiError
+          ? error.diagnostic.category
+          : error instanceof Error && error.message === "AI_INSIGHTS_TIMEOUT"
+            ? "unavailable/timeout"
+            : "invalid-response";
+      const diagnostic =
+        error instanceof GenerativeAiError
+          ? error.diagnostic
+          : undefined;
       logger.error("AI insights generation failed", {
-        timestamp: new Date().toISOString(),
-        error_type: errorMessage,
+        category,
         duration_ms: Date.now() - startedAt,
-        project: filters.project,
-        period: `${filters.periodStart}:${filters.periodEnd}`,
+        ...(diagnostic
+          ? {
+              connection: diagnostic.connection,
+              ...(diagnostic.requestedModel
+                ? { requestedModel: diagnostic.requestedModel }
+                : {}),
+              ...(diagnostic.returnedModel
+                ? { returnedModel: diagnostic.returnedModel }
+                : {}),
+            }
+          : {}),
       });
 
       return AI_INSIGHTS_FALLBACK_TEXT;
