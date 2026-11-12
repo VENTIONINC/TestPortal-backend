@@ -1,0 +1,154 @@
+__prompts-tests__/stored-results-analysis/runners/types.ts
+  s_4679affed3bc10::t_e00ee65ddc44b3 9,27-31
+src/services/testAnalysisService.ts
+  s_4679affed3bc10::t_f9f430238ab844 7-11,63-64,67-75,131,133,135,137-147,156-163,167-170,177-185
+__prompts-tests__/README.md
+  s_4679affed3bc10::t_717a87483f7f0f 103-126
+__tests__/models/resultModelAnalysis.test.ts
+  s_4679affed3bc10::t_929c7864f10bef 1-5,12-96
+  s_4679affed3bc10::t_1540dbbaca2585 9-11
+  s_4679affed3bc10::t_29f8310852415b 6-8
+__tests__/services/resultErrorService.test.ts
+  s_4679affed3bc10::t_1519481a09d773 8,27,123,141-143,157-158,160,202
+.gitignore
+  s_4679affed3bc10::t_9f60d483f5124a 72
+__tests__/controllers/jsonReportController.test.ts
+  s_4679affed3bc10::t_2611d7f91881e1 9-14,126-161,171-186
+  s_4679affed3bc10::t_faa88c213e97ad 162-170
+  s_4679affed3bc10::t_ddd22e4d6e6dc6 187
+__tests__/config/aiConfig.test.ts
+  s_4679affed3bc10::t_3714e51f368962 146-203
+docs/DEVELOPMENT_GUIDE.md
+  s_4679affed3bc10::t_3c2117a79de58f 96-102
+  s_4679affed3bc10::t_999fdde2e13ada 103-111
+  s_4679affed3bc10::t_8dd5b3eda9d3bc 92-94,125-140
+  s_4679affed3bc10::t_3be89cb58f8e93 95
+__prompts-tests__/stored-results-analysis/runners/dataset-evaluation.ts
+  s_4679affed3bc10::t_6f667adfbe2716 46-49
+__prompts-tests__/error-formatter/baseline.test.ts
+  s_4679affed3bc10::t_fa3d6dbbf5f63d 7
+  s_4679affed3bc10::t_30d43ebe6c3b0f 8,34
+  s_4679affed3bc10::t_c9d8e037cef3f5 46-52,56-68,79-98,100,105-112
+  s_4679affed3bc10::t_6fbb9643587c09 53-55
+  s_4679affed3bc10::t_dc36610f3ad2bf 69-78
+  s_4679affed3bc10::t_e078b914b26a70 99,101-104
+  s_4679affed3bc10::t_2dd5fd23e1041e 194,200-216,219-220,224-225,227-233
+__tests__/services/storedResultEnrichmentService.test.ts
+  s_4679affed3bc10::t_52b44944e1016e 1-4,6,11-20,22-77
+  s_4679affed3bc10::t_6aa1b7bd6c71fd 5,7-10,21
+src/services/ctrfService.ts
+  s_4679affed3bc10::t_a2275b464a34bb 14,87-90,99-100
+src/services/insightsService.ts
+  s_4679affed3bc10::t_cef18773baaf2e 48
+  s_4679affed3bc10::t_6f983a6185f387 5-8,49,164,175,187-196,198,200-210
+src/services/resultErrorService.ts
+  s_4679affed3bc10::t_5c885cd6b2ed4e 17,716-718
+__tests__/lib/generativeAi.test.ts
+  s_4679affed3bc10::t_e90a1239ab7695 235,297-308,316,327-328,331
+  s_4679affed3bc10::t_dc63bb7ffdc8e9 243-247,251-253,261
+  s_4679affed3bc10::t_afea01aac807e8 264
+  s_4679affed3bc10::t_7f796bb3e3fab2 334-346,362-411
+  s_4679affed3bc10::t_8134cbf5fc364c 11,13,332-333,412-465,468-491
+  s_4679affed3bc10::t_ad6c45f1966f5e 467
+  s_4679affed3bc10::t_16d210cdfacf88 466
+  s_4679affed3bc10::t_b6616d56a25f89 602,613-619,623-625
+  s_4679affed3bc10::t_861e529150bb57 25,29-38,41,234,236-242,248-250,254-260,262,266-296,309-315,317-326,329-330,492
+  s_4679affed3bc10::t_71835311260613 347-361
+  s_4679affed3bc10::t_f5a0c0d7c88ec3 263,265,589-601,603-612,620-622,626-627
+  s_4679affed3bc10::t_eede61d0ef46a7 493
+src/services/errorFormatterService.ts
+  s_4679affed3bc10::t_7df170ebbdc02d 99-101,103-105,107,109-111,113-116,118,157-162,217
+  s_4679affed3bc10::t_74fe35eab23a8a 5,38-39,44
+  s_4679affed3bc10::t_d95c9ec56798a1 46-48,51-52,123-129
+  s_4679affed3bc10::t_9d03904de7e36c 11,77-81,84,121,142,144-148
+  s_4679affed3bc10::t_357140cf4931ca 63-74
+  s_4679affed3bc10::t_87efb11ec03b7f 136-141,143
+__tests__/services/testAnalysisService.test.ts
+  s_4679affed3bc10::t_7434385ed514ca 10-13,16,18-21,39-47,107,117
+  s_4679affed3bc10::t_e22555ab7b3e57 8-9,17,33,115
+  s_4679affed3bc10::t_ae6617724070b1 24-25,27-29,36-38
+  s_4679affed3bc10::t_3c86e097fa1627 23,49-57,105-106,126-153
+  s_4679affed3bc10::t_1eff4c33dac2aa 83
+  s_4679affed3bc10::t_b0a785e3f75685 82,84-103
+  s_4679affed3bc10::t_6fcacbb45344aa 15,22
+  s_4679affed3bc10::t_f2affa8d6ed9a0 14
+  s_4679affed3bc10::t_8553f368dd5ff4 48
+src/services/storedResultEnrichmentService.ts
+  s_4679affed3bc10::t_e271c00b69beb6 1-24
+src/config/aiConfigSchema.ts
+  s_4679affed3bc10::t_e0b5565b5eea04 44
+  s_4679affed3bc10::t_bdc43d4d48df01 6,32-35
+src/models/resultModel.ts
+  s_4679affed3bc10::t_418236224197aa 11,75-79,979-1010
+  s_4679affed3bc10::t_8951f89fcd35e2 1011-1012
+__tests__/prompts/evaluation.test.ts
+  s_4679affed3bc10::t_2897732333dbe8 63,112-113,115-117,121,158-166,168
+  s_4679affed3bc10::t_60d10496c02b35 5-6,11-14,17-27,30-62,64-65,102-111,114,118-120,122-157,167,169-208,245
+  s_4679affed3bc10::t_d1531dbf2aeef3 15,222-244
+  s_4679affed3bc10::t_6877abc3cde8f3 209-221
+  s_4679affed3bc10::t_65b32095c00a9f 16
+__prompts-tests__/error-formatter/README.md
+  s_4679affed3bc10::t_3bc1f0bd4efc2c 9,11,14,17,19,25
+__prompts-tests__/helpers/formatter-evaluation.ts
+  s_4679affed3bc10::t_f63b5191f87082 1-53
+  s_4679affed3bc10::t_5f887f38557316 54-61
+__tests__/prompts/transportParity.test.ts
+  s_4679affed3bc10::t_e0bfa417a2aee1 4
+  s_4679affed3bc10::t_75f9504b1d77eb 64-68,70,125-132,163,222-227
+  s_4679affed3bc10::t_09007dd891515f 105-106
+  s_4679affed3bc10::t_f802c4321e2aab 241,245
+  s_4679affed3bc10::t_8d627aff48b2f1 1-3,5-63,69,71-104,107-124,133-162,164-221,228,248-249
+  s_4679affed3bc10::t_0a3fbbd8e6e4bd 229-240,242-244,246-247
+__tests__/services/errorFormatterService.test.ts
+  s_4679affed3bc10::t_1fafc8066267e9 220-224
+  s_4679affed3bc10::t_fc7e864182e786 360-370,610-619
+  s_4679affed3bc10::t_d38e6795864911 557-560,575-609,620-662
+  s_4679affed3bc10::t_4563e003bfae5a 450-451,464-465,561-574
+src/controllers/jsonReportController.ts
+  s_4679affed3bc10::t_700ce05ed68106 9,119-122,129-130
+__tests__/services/ctrfService.test.ts
+  s_4679affed3bc10::t_8c86e42e30a04b 8,15,156,164-165,174,182,202
+  s_4679affed3bc10::t_b5ee8fc5fa0a21 116,148-154
+.dockerignore
+  s_4679affed3bc10::t_b1b74cca9e4a3f 7
+src/lib/generativeAi.ts
+  s_4679affed3bc10::t_bfe52f29ded15e 5,40-43,49-59,84-94,116-137,143-152,252-253,257,260
+  s_4679affed3bc10::t_bc4f6e19d5d2f2 95-115,138-142,153
+  s_4679affed3bc10::t_deae386db8fd32 7,14-17,44-48,226,228-239,242,254,256,259,261-267,271-272,276-277
+  s_4679affed3bc10::t_bc2543673ea66b 155
+  s_4679affed3bc10::t_e0c95321d24f0b 296,300,302,306
+  s_4679affed3bc10::t_9b6caef2dd2c04 154
+__tests__/models/resultAnalysisPostgresIntegration.test.ts
+  s_4679affed3bc10::t_852bc72a49490a 1-196
+__prompts-tests__/stored-results-analysis/runners/stored-results-analysis.ts
+  s_4679affed3bc10::t_20675d97efe95c 171
+  s_4679affed3bc10::t_aef4ef1299f6c4 77-84
+  s_4679affed3bc10::t_160629fd513b7e 58-66,68-76
+  s_4679affed3bc10::t_ae9001f51a718b 99-104
+  s_4679affed3bc10::t_519e9e38e462de 18,164
+  s_4679affed3bc10::t_c034e23508a9af 12,48-49,67,94,121
+  s_4679affed3bc10::t_44283177439065 173-177
+  s_4679affed3bc10::t_9015519d8744ad 11,13-17,19-20,41,45,47,90-91,93,95-98,105-107,109-120,122-123,125,143-148,158-163,172,178,282-287
+__prompts-tests__/stored-results-analysis/runners/evaluation-report.ts
+  s_4679affed3bc10::t_963a4bc5d2dbae 6,29-33
+docs/engineering/backend-conventions.md
+  s_4679affed3bc10::t_3ad6f11caca63c 64-71
+__tests__/services/insightsService.test.ts
+  s_4679affed3bc10::t_dea36a6746e5bd 5,7,31-41,44-52,62-65,144,152-177,192-197,202-223
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "f6d088101647e4b5d7003800e784b1c583e7e4d3",
+  "prompts": {},
+  "sessions": {
+    "s_4679affed3bc10": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a1ca76-19be-73e2-b9c8-b4b1c5cfb1fb",
+        "model": "gpt-6-luna"
+      },
+      "human_author": "Ihar Mikailau <ihar.mikailau@ventionteams.com>"
+    }
+  }
+}
