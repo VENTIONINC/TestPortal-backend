@@ -14,7 +14,7 @@ import { getEffectiveResultCategory } from "@/lib/resultCategory";
 import { isResultCategory } from "@/lib/resultCategory";
 import { dbClient } from "@/prisma/client";
 import { dashboardService } from "@/services/dashboardService";
-import { storedResultAnalysisService } from "@/services/storedResultAnalysisService";
+import { storedResultEnrichmentService } from "@/services/storedResultEnrichmentService";
 import type {
   ResultErrorModalAssignmentSummary,
   ResultErrorModalContext,
@@ -713,7 +713,7 @@ export const resultErrorService = {
       `Analyzing ${resultsForAnalysis.length} results from ${validatedIds.length} errors`,
     );
 
-    const analysisMap = await storedResultAnalysisService.analyzeAndPersist(
+    const analysisMap = await storedResultEnrichmentService.analyzeAndPersist(
       projectId,
       resultsForAnalysis,
     );

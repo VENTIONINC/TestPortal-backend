@@ -5,6 +5,7 @@ A comprehensive guide for developing with the Test Results Manager TypeScript co
 ## Table of Contents
 
 - [🚀 Quick Start](#-quick-start)
+- [🤖 AI Connection Configuration](#-ai-connection-configuration)
 - [📁 Project Structure](#-project-structure)
 - [🎯 TypeScript Features & Configuration](#-typescript-features--configuration)
 - [🏗️ Type System](#️-type-system)
@@ -35,14 +36,6 @@ npm run migrate
 npm run dev
 ```
 
-Stored-result analysis remains on the existing generative provider by default. To opt into the
-OpenAI Luna Decisions classifier through OpenRouter in a controlled environment, set
-`USE_DECISIONS_API=true` and provide `OPENROUTER_API_KEY`, then restart the backend. The flag accepts
-only `true` or `false` (case-insensitive, surrounding whitespace ignored); it defaults to false
-when absent. Setting it to false and restarting rolls provider selection back. This flag does not
-change OpenAI use for issue drafts or other generative features. Apply the additive Prisma migration
-before deploying the code; it does not backfill existing rows.
-
 ### Essential Commands
 
 ```bash
@@ -59,6 +52,110 @@ npm run server           # Run production server
 npm run migrate          # Run migrations
 npm run db:generate      # Generate Prisma types
 ```
+
+## 🤖 AI Connection Configuration
+
+The backend uses one server-controlled AI connection. Set `AI_API_BASE_URL` and its matching
+`OPENAI_API_KEY` in the process environment. The URL defaults to `https://api.openai.com/v1`; the
+same key is used when an operator selects a compatible custom URL. Request input cannot change
+either value. A missing key does not prevent startup and is reported safely when an AI client is
+first acquired.
+
+`AI_CONFIG_PATH` optionally selects a JSON settings file. Relative paths resolve from the backend
+process working directory; use an absolute mounted path in deployments. If it is unset, the backend
+loads the generic `src/config/ai-config.default.json` file, which is included in the production
+build. The selected file is read and validated once after environment loading and before the server
+listens. A missing or invalid explicitly selected file stops startup. Changes to environment values
+or the file take effect after a restart or redeployment.
+
+Version 1 requires independent entries for all four operations:
+
+```json
+{
+  "version": 1,
+  "operations": {
+    "classification": { "model": "gpt-4.1-mini", "api": "chat-completions" },
+    "formatting": { "model": "gpt-4.1-mini", "api": "chat-completions" },
+    "suggestions": { "model": "gpt-4.1-mini", "api": "chat-completions" },
+    "insights": { "model": "gpt-4.1-mini", "api": "chat-completions" }
+  }
+}
+```
+
+Each operation accepts a nonempty `model` alias, optional `api` (`chat-completions` or
+`responses`), optional `temperature` from 0 through 2, optional positive integer `maxOutputTokens`,
+and optional `reasoningEffort` (`none`, `low`, `medium`, or `high`). `api` defaults to
+`chat-completions`. Temperature and reasoning effort cannot be set together. Unknown fields,
+credentials, and endpoint settings are rejected in the JSON file. The generic values are technical
+defaults, not a model recommendation or a quality profile.
+
+Classification, formatting, suggestions, and dashboard insights each use their own operation entry.
+The same immutable snapshot supplies nested classification calls made while generating a
+suggestion. Configuration changes take effect after restart or redeployment.
+
+Dashboard PDF insights use the independent `insights` entry, retain the existing prompt and
+evidence assembly, and accept either plain text or text blocks from the completion. They keep the
+existing eight-second user-facing deadline and one direct-OpenAI retry; empty, rejected, or late
+responses return `AI insights unavailable for this export.` Provider diagnostics are logged only
+as allowlisted categories and safe model/connection identifiers. These settings do not change the
+export contract or add cancellation controls.
+
+Suggestion generation uses the `suggestions` entry after loading a failed or flaky result with
+error details. Existing feedback category takes precedence over generated analysis; when neither
+is available, the service first runs the independently configured `classification` operation and
+does not request a suggestion unless that classification returns a valid result. This nested
+classification and suggestion request share the selected connection and key but retain separate
+model and operation settings. Provider diagnostics are reduced to safe categories before logging
+or returning a feature error. These settings provide technical request compatibility only; they
+do not certify suggestion quality. The REST response fields remain `category`, `name`, and
+`description`.
+
+### API and parameter behavior
+
+For the direct OpenAI connection, the formatter can use either supported API mode. With
+`"api": "chat-completions"`, `reasoningEffort` is translated to the Chat Completions
+`reasoning_effort` field. With `"api": "responses"`, it is sent as
+`reasoning: { "effort": ... }`. For example, a Responses formatter entry can be configured as:
+
+```json
+{ "model": "o3-mini", "api": "responses", "reasoningEffort": "medium" }
+```
+
+The installed LangChain/OpenAI versions serialize the outgoing request; the backend does not
+forward arbitrary SDK options. The shared client disables SDK retries and applies this
+operation-specific policy only for the canonical OpenAI URL:
+
+| Operation | Automatic retries | Implicit temperature | Implicit output limit |
+| --- | ---: | ---: | ---: |
+| Classification | 2 | none | 4000 tokens |
+| Formatting | 2 | 0.7 without reasoning | 500 tokens |
+| Suggestions | 2 | 0.3 without reasoning | 700 tokens |
+| Insights | 1 | 0.2 without reasoning | 400 tokens |
+
+Explicit supported settings take precedence. A configured reasoning effort suppresses an implicit
+temperature. For custom URLs, automatic retries are disabled and implicit temperature/output
+limits are omitted; configured supported values remain available. Responses API requests use
+`max_output_tokens`, while Chat Completions requests use `max_tokens`. There is no connection,
+credential, model, or strategy fallback. These are request compatibility defaults, not model-quality
+recommendations.
+
+Schema validation checks syntax and known parameter conflicts only. It cannot establish that a
+particular model alias is enabled for an account, that a compatible service supports each option,
+or that output meets semantic quality expectations. The optional synthetic connection check tests
+technical formatting compatibility; it does not score quality.
+
+To opt in to a live synthetic check against direct OpenAI, set `AI_API_BASE_URL` to
+`https://api.openai.com/v1` and provide `OPENAI_API_KEY` in `.env`, build the backend, then run:
+
+```bash
+npm run build
+npm run ai:check
+```
+
+The check sends one synthetic formatting request through the same configured formatter and output
+validation path. It is never run by startup, build, or the regular Jest suite. It prints the
+validated synthetic result on success and a safe failure line on error; service diagnostics remain
+in the backend log. A successful call establishes technical compatibility for that request only.
 
 ## 📁 Project Structure
 

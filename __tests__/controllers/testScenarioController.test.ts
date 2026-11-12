@@ -52,11 +52,10 @@ const scenario: TestScenarioResponse = {
   title: "Login",
   scenarioKey: null,
   details: null,
-  objective: null,
   preconditions: null,
   testData: null,
-  expectedResult: null,
-  notes: null,
+  priority: null,
+  relatedIssueUrl: null,
   steps: [{ id: stepId, position: 0, action: "Open", expectedResult: null }],
   contentMd: "# Login\n",
   contentMdHash: "a".repeat(64),
@@ -85,7 +84,7 @@ describe("testScenarioController", () => {
       body: {
         projectId,
         title: "  Login  ",
-        objective: "  Verify  ",
+        preconditions: "  Verify  ",
         steps: [{ action: " Open " }],
       },
     });
@@ -141,13 +140,13 @@ describe("testScenarioController", () => {
       method: "PATCH",
       params: { scenarioId },
       query: { projectId },
-      body: { notes: null },
+      body: { relatedIssueUrl: null },
     });
     expect(response.statusCode).toBe(200);
     expect(updateMock).toHaveBeenCalledWith({
       scenarioId,
       projectId,
-      notes: null,
+      relatedIssueUrl: null,
     });
   });
 

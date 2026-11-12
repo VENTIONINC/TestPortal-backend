@@ -74,9 +74,7 @@ const ResultSchema = z
       .string()
       .nullable()
       .optional()
-      .describe(
-        "Explanation for the categorization decision; Decisions API analysis may use a fixed unavailable-explanation placeholder.",
-      ),
+      .describe("Explanation for the categorization decision"),
     analysisErrorQuality: z
       .number()
       .int()
@@ -91,7 +89,7 @@ const ResultSchema = z
       .string()
       .nullable()
       .optional()
-      .describe("Explanation for the error quality rating; null when unavailable."),
+      .describe("Explanation for the error quality rating"),
     analysisReviewedAt: z.string().nullable().optional(),
     analysisReviewedById: z.string().uuid().nullable().optional(),
     analysisFeedbackCategory: z

@@ -7,13 +7,18 @@ import { executeController } from "@/test-utils/httpMocks";
 import type { TestScenarioResponse } from "@/types/testScenarios";
 
 const projectExistsMock = jest.fn<() => Promise<boolean>>();
-const createMock = jest.fn<(...args: never[]) => Promise<TestScenarioResponse | null>>();
-const findByIdMock = jest.fn<(...args: never[]) => Promise<TestScenarioResponse | null>>();
-const updateMock = jest.fn<(...args: never[]) => Promise<TestScenarioResponse | null>>();
+const createMock =
+  jest.fn<(...args: never[]) => Promise<TestScenarioResponse | null>>();
+const findByIdMock =
+  jest.fn<(...args: never[]) => Promise<TestScenarioResponse | null>>();
+const updateMock =
+  jest.fn<(...args: never[]) => Promise<TestScenarioResponse | null>>();
 const deleteMock = jest.fn<(...args: never[]) => Promise<number>>();
 const listMock = jest.fn<(...args: never[]) => Promise<unknown>>();
 
-jest.mock("@/models/projectModel", () => ({ projectModel: { exists: projectExistsMock } }));
+jest.mock("@/models/projectModel", () => ({
+  projectModel: { exists: projectExistsMock },
+}));
 jest.mock("@/models/testScenarioModel", () => ({
   testScenarioModel: {
     create: createMock,
@@ -38,13 +43,13 @@ const scenario: TestScenarioResponse = {
   title: "Login",
   scenarioKey: null,
   details: null,
-  objective: "Verify login",
   preconditions: null,
   testData: null,
-  expectedResult: null,
-  notes: null,
+  priority: null,
+  relatedIssueUrl: null,
   steps: [],
-  contentMd: "# Login\n\n## Objective\nVerify login\n\n## Steps\n_No steps defined._\n",
+  contentMd:
+    "# Login\n\n## Objective\nVerify login\n\n## Steps\n_No steps defined._\n",
   contentMdHash: "a".repeat(64),
   contentMdFormatVersion: 1,
   createdAt: new Date("2026-01-01T00:00:00.000Z"),
@@ -65,7 +70,9 @@ describe("structured Test Scenario project workflow", () => {
     jest.clearAllMocks();
     projectExistsMock.mockResolvedValue(true);
     createMock.mockResolvedValue(scenario);
-    findByIdMock.mockImplementation(async (id: string, projectId: string) => id === scenario.id && projectId === scenario.projectId ? scenario : null);
+    findByIdMock.mockImplementation(async (id: string, projectId: string) =>
+      id === scenario.id && projectId === scenario.projectId ? scenario : null,
+    );
     updateMock.mockResolvedValue(scenario);
     deleteMock.mockResolvedValue(1);
   });
@@ -74,31 +81,52 @@ describe("structured Test Scenario project workflow", () => {
     const created = await executeController(testScenarioController.create, {
       method: "POST",
       user,
-      body: { projectId: projectA, title: " Login ", objective: " Verify " },
+      body: {
+        projectId: projectA,
+        title: " Login ",
+        preconditions: " Verify ",
+      },
     });
     expect(created.statusCode).toBe(201);
-    expect(createMock).toHaveBeenCalledWith(expect.objectContaining({ createdById: userId, title: "Login", objective: "Verify" }));
+    expect(createMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        createdById: userId,
+        title: "Login",
+        preconditions: "Verify",
+      }),
+    );
 
-    const wrongProject = await executeController(testScenarioController.getById, {
-      params: { scenarioId },
-      query: { projectId: projectB },
-    });
+    const wrongProject = await executeController(
+      testScenarioController.getById,
+      {
+        params: { scenarioId },
+        query: { projectId: projectB },
+      },
+    );
     expect(wrongProject.statusCode).toBe(404);
-    expect(wrongProject.body).toEqual(expect.objectContaining({ error: expect.any(String) }));
+    expect(wrongProject.body).toEqual(
+      expect.objectContaining({ error: expect.any(String) }),
+    );
   });
 
   it("rejects raw Markdown on create and patch", async () => {
-    const createResponse = await executeController(testScenarioController.create, {
-      method: "POST",
-      user,
-      body: { projectId: projectA, title: "Login", contentMd: "# forbidden" },
-    });
-    const updateResponse = await executeController(testScenarioController.update, {
-      method: "PATCH",
-      params: { scenarioId },
-      query: { projectId: projectA },
-      body: { contentMd: "# forbidden" },
-    });
+    const createResponse = await executeController(
+      testScenarioController.create,
+      {
+        method: "POST",
+        user,
+        body: { projectId: projectA, title: "Login", contentMd: "# forbidden" },
+      },
+    );
+    const updateResponse = await executeController(
+      testScenarioController.update,
+      {
+        method: "PATCH",
+        params: { scenarioId },
+        query: { projectId: projectA },
+        body: { contentMd: "# forbidden" },
+      },
+    );
     expect(createResponse.statusCode).toBe(400);
     expect(updateResponse.statusCode).toBe(400);
     expect(createMock).not.toHaveBeenCalled();

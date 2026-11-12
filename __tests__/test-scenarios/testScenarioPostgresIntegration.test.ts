@@ -83,12 +83,12 @@ async function expectProjectionConsistency(
   const expectedContent = renderTestScenarioMarkdown({
     title: scenario.title,
     details: scenario.details,
-    objective: scenario.objective,
+    priority: scenario.priority,
+    relatedIssueUrl: scenario.relatedIssueUrl,
     preconditions: scenario.preconditions,
     testData: scenario.testData,
     steps: scenario.steps,
-    expectedResult: scenario.expectedResult,
-    notes: scenario.notes,
+
   });
   const persistedScenario = await dbClient.testScenario.findUnique({
     where: { id: scenario.id },
@@ -285,13 +285,13 @@ describePostgres("test scenario PostgreSQL aggregate integration", () => {
     const combinedSecondPage = await testScenarioService.listScenarios({ projectId, scenarioKey: "key-1", title: "ALPHA", details: "special", createdBy: "test-scenario-postgres-", sortField: "title", sortDirection: "asc", page: 2, limit: 1 });
     expect(combinedSecondPage.scenarios.map(({ id }) => id)).toEqual([nestedSecond.id]);
 
-    const nestedPath = await testScenarioService.listScenarios({ projectId, folder: "root / child" });
+    const nestedPath = await testScenarioService.listScenarios({ projectId, folder: "root / child", sortField: "title", sortDirection: "asc" });
     expect(nestedPath.scenarios.map(({ id }) => id)).toEqual([nested.id, nestedSecond.id]);
     const unfiledPath = await testScenarioService.listScenarios({ projectId, folder: " UNFILED " });
     expect(unfiledPath.scenarios.map(({ id }) => id)).toEqual([unfiled.id]);
 
     const folderOrder = await testScenarioService.listScenarios({ projectId, sortField: "folder", sortDirection: "asc" });
-    expect(folderOrder.scenarios.map(({ id }) => id)).toEqual([nested.id, unfiled.id]);
+    expect(folderOrder.scenarios.map(({ id }) => id)).toEqual([...([nested.id, nestedSecond.id].sort()), unfiled.id]);
   });
 
   it("sorts every supported column in both directions with stable defaults", async () => {
@@ -593,11 +593,11 @@ describePostgres("test scenario PostgreSQL aggregate integration", () => {
     const scenario = await createScenario({
       title: "Unicode checkout ✅",
       details: "Line one\r\nLine two",
-      objective: "Confirm the purchase flow",
+      priority: "high",
+      relatedIssueUrl: "https://example.test/issue/20",
       preconditions: "A signed-in customer exists",
       testData: "Card ending in 4242",
-      expectedResult: "The order is accepted",
-      notes: "Review the receipt\nwith the customer",
+
       steps: [
         {
           action: "Enter shipping address\r\nusing valid data",
@@ -614,11 +614,11 @@ describePostgres("test scenario PostgreSQL aggregate integration", () => {
     expect(persisted).toMatchObject({
       title: scenario.title,
       details: "Line one\r\nLine two",
-      objective: scenario.objective,
+      priority: scenario.priority,
+    relatedIssueUrl: scenario.relatedIssueUrl,
       preconditions: scenario.preconditions,
       testData: scenario.testData,
-      expectedResult: scenario.expectedResult,
-      notes: scenario.notes,
+
     });
     expect(persisted.steps).toEqual(scenario.steps);
     expect(persisted.contentMd).not.toMatch(/\r/);

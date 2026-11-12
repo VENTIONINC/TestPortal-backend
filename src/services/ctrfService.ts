@@ -11,7 +11,7 @@ import type {
   ProcessReportResult,
 } from "@/services/jsonReportService";
 import { jsonReportService } from "@/services/jsonReportService";
-import { storedResultAnalysisService } from "@/services/storedResultAnalysisService";
+import { storedResultEnrichmentService } from "@/services/storedResultEnrichmentService";
 import type { TestResultAnalysis } from "@/schemas/testAnalysisSchemas";
 
 const logger = getLogger("ctrf-service");
@@ -84,12 +84,11 @@ export const ctrfService = {
         // Step 5: Analyze stored results (POST-PERSIST)
         let analysisMap: Map<string, TestResultAnalysis> | null = null;
         try {
-          analysisMap = await storedResultAnalysisService.analyzeAndPersist(
-            projectId,
+          analysisMap = await storedResultEnrichmentService.analyzeAndPersist(
+            projectId.toString(),
             createdResults,
           );
 
-          // Step 6: Update results with analysis fields (POST-PERSIST)
           logger.info(
             `Updating ${analysisMap.size} results with analysis data`,
           );
@@ -97,11 +96,8 @@ export const ctrfService = {
           logger.info(
             `Successfully updated ${analysisMap.size} results with analysis`,
           );
-        } catch (analysisError) {
-          logger.warn(
-            "Analysis failed, results saved without analysis:",
-            analysisError,
-          );
+        } catch {
+          logger.warn("Analysis failed, results saved without analysis");
         }
 
         result = {

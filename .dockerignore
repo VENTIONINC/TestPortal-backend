@@ -4,4 +4,5 @@ coverage
 .git
 .github
 .env
+/.private-ai-config/
 .DS_Store

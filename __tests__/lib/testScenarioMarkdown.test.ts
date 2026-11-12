@@ -12,7 +12,8 @@ describe("test scenario Markdown projection", () => {
     const content = renderTestScenarioMarkdown({
       title: "Login # flow!",
       details: "Details\r\nwith two lines",
-      objective: "Verify Unicode ✓",
+      priority: "medium",
+      relatedIssueUrl: "https://example.test/issue/20",
       preconditions: "User exists",
       testData: "email@example.com",
       steps: [
@@ -21,26 +22,23 @@ describe("test scenario Markdown projection", () => {
           expectedResult: "Page is visible",
         },
       ],
-      expectedResult: "Dashboard loads",
-      notes: "Keep the code fence:\n```ts\nconst ok = true;\n```",
+
     });
 
     expect(content).toBe(
       "# Login \\# flow\\!\n\n" +
         "## Details\nDetails\nwith two lines\n\n" +
-        "## Objective\nVerify Unicode ✓\n\n" +
-        "## Preconditions\nUser exists\n\n" +
-        "## Test Data\nemail@example.com\n\n" +
-        "## Steps\n### Step 1\nOpen page\nChoose account\n**Expected result:**\nPage is visible\n\n" +
-        "## Expected Result\nDashboard loads\n\n" +
-        "## Notes\nKeep the code fence:\n```ts\nconst ok = true;\n```\n",
+        "## Priority\nMedium\n\n" +
+        "## Related issue URL\nhttps://example.test/issue/20\n\n" +
+        "## Test setup\n### Preconditions\nUser exists\n### Test data\nemail@example.com\n\n" +
+        "## Steps\n### Step 1\nOpen page\nChoose account\n**Expected result:**\nPage is visible\n",
     );
     expect(content).not.toContain("\r");
     expect(content.endsWith("\n")).toBe(true);
     expect(content.endsWith("\n\n")).toBe(false);
-    expect(content.indexOf("## Details")).toBeLessThan(content.indexOf("## Objective"));
-    expect(content.indexOf("## Objective")).toBeLessThan(content.indexOf("## Steps"));
-    expect(content.indexOf("## Steps")).toBeLessThan(content.indexOf("## Expected Result"));
+    expect(content.indexOf("## Details")).toBeLessThan(content.indexOf("## Test setup"));
+    expect(content.indexOf("## Test setup")).toBeLessThan(content.indexOf("## Steps"));
+    expect(content).not.toMatch(/## (Objective|Expected Result|Notes)/);
     expect(TEST_SCENARIO_MARKDOWN_FORMAT_VERSION).toBe(1);
   });
 
@@ -49,12 +47,12 @@ describe("test scenario Markdown projection", () => {
       renderTestScenarioMarkdown({
         title: "Empty",
         details: null,
-        objective: null,
+        priority: null,
+        relatedIssueUrl: null,
         preconditions: null,
         testData: null,
         steps: [],
-        expectedResult: null,
-        notes: null,
+
       }),
     ).toBe("# Empty\n\n## Steps\n_No steps defined._\n");
   });
@@ -67,4 +65,21 @@ describe("test scenario Markdown projection", () => {
     expect(hashTestScenarioMarkdown(content)).toBe(hashTestScenarioMarkdown(content));
     expect(hashTestScenarioMarkdown(content)).not.toBe(hashTestScenarioMarkdown(`${content}\n`));
   });
+
+  it("generates TP-20 metadata and Test setup before steps without obsolete sections", () => {
+    const source = {
+      title: "TP-20", details: "Useful details", priority: "high" as const,
+      relatedIssueUrl: "https://example.test/issue/20", preconditions: "Ready",
+      testData: "Input", steps: [{ action: "Run", expectedResult: "Works" }],
+      objective: "legacy", expectedResult: "legacy", notes: "legacy",
+    };
+    const content = renderTestScenarioMarkdown(source);
+    expect(content).toContain("## Priority\nHigh");
+    expect(content).toContain("## Related issue URL\nhttps://example.test/issue/20");
+    expect(content).toContain("## Test setup\n### Preconditions\nReady\n### Test data\nInput");
+    expect(content.indexOf("## Test setup")).toBeLessThan(content.indexOf("## Steps"));
+    expect(content).toContain("**Expected result:**\nWorks");
+    expect(content).not.toMatch(/## (Objective|Expected Result|Notes)/);
+  });
+
 });

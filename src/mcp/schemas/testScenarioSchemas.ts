@@ -3,7 +3,50 @@
 
 import { z } from "zod/v3";
 import type { MCPToolSchema } from "@/types";
-import { TEST_SCENARIO_SORT_FIELDS, TEST_SCENARIO_SORT_VALUES } from "@/types/testScenarios";
+import {
+  TEST_SCENARIO_SORT_FIELDS,
+  TEST_SCENARIO_SORT_VALUES,
+} from "@/types/testScenarios";
+
+const testScenarioPrioritySchema = z.enum(["low", "medium", "high"]);
+const testScenarioRelatedIssueUrlSchema = z
+  .string()
+  .trim()
+  .url()
+  .refine(
+    (value) => /^https?:\/\//i.test(value),
+    "Must be an absolute HTTP(S) URL",
+  );
+export const createTestScenarioSchema = z
+  .object({
+    projectId: z.string().uuid(),
+    folderId: z.string().uuid().nullable().optional(),
+    title: z.string().trim().min(1),
+    scenarioKey: z
+      .string()
+      .trim()
+      .min(1)
+      .max(100)
+      .regex(/^[^\r\n]+$/)
+      .nullable()
+      .optional(),
+    details: z.string().trim().min(1).optional(),
+    preconditions: z.string().trim().min(1).optional(),
+    testData: z.string().trim().min(1).optional(),
+    priority: testScenarioPrioritySchema.nullable().optional(),
+    relatedIssueUrl: testScenarioRelatedIssueUrlSchema.nullable().optional(),
+    steps: z
+      .array(
+        z
+          .object({
+            action: z.string().trim().min(1),
+            expectedResult: z.string().trim().min(1).optional(),
+          })
+          .strict(),
+      )
+      .default([]),
+  })
+  .strict() satisfies MCPToolSchema;
 
 const uuid = () => z.string().uuid();
 const page = () => z.number().int().min(1);
@@ -33,16 +76,46 @@ export const listTestScenariosSchema = z
       ),
     sortField: z.enum(TEST_SCENARIO_SORT_FIELDS).optional(),
     sortDirection: z.enum(["asc", "desc"]).optional(),
-    scenarioKey: z.string().trim().optional().transform((value) => value || undefined),
-    title: z.string().trim().optional().transform((value) => value || undefined),
-    details: z.string().trim().optional().transform((value) => value || undefined),
-    folder: z.string().trim().optional().transform((value) => value || undefined),
-    createdBy: z.string().trim().optional().transform((value) => value || undefined),
+    scenarioKey: z
+      .string()
+      .trim()
+      .optional()
+      .transform((value) => value || undefined),
+    title: z
+      .string()
+      .trim()
+      .optional()
+      .transform((value) => value || undefined),
+    details: z
+      .string()
+      .trim()
+      .optional()
+      .transform((value) => value || undefined),
+    folder: z
+      .string()
+      .trim()
+      .optional()
+      .transform((value) => value || undefined),
+    createdBy: z
+      .string()
+      .trim()
+      .optional()
+      .transform((value) => value || undefined),
   })
   .strict()
   .superRefine((value, context) => {
-    if (value.sortDirection && !value.sortField) context.addIssue({ code: "custom", path: ["sortDirection"], message: "sortDirection requires sortField" });
-    if (value.sortField && value.sort !== undefined) context.addIssue({ code: "custom", path: ["sort"], message: "sort cannot be combined with sortField" });
+    if (value.sortDirection && !value.sortField)
+      context.addIssue({
+        code: "custom",
+        path: ["sortDirection"],
+        message: "sortDirection requires sortField",
+      });
+    if (value.sortField && value.sort !== undefined)
+      context.addIssue({
+        code: "custom",
+        path: ["sort"],
+        message: "sort cannot be combined with sortField",
+      });
   }) satisfies MCPToolSchema;
 
 export const getTestScenarioSchema = z
@@ -70,11 +143,10 @@ export const updateTestScenarioSchema = z
       .nullable()
       .optional(),
     details: z.string().trim().min(1).nullable().optional(),
-    objective: z.string().trim().min(1).nullable().optional(),
     preconditions: z.string().trim().min(1).nullable().optional(),
     testData: z.string().trim().min(1).nullable().optional(),
-    expectedResult: z.string().trim().min(1).nullable().optional(),
-    notes: z.string().trim().min(1).nullable().optional(),
+    priority: testScenarioPrioritySchema.nullable().optional(),
+    relatedIssueUrl: testScenarioRelatedIssueUrlSchema.nullable().optional(),
   })
   .strict()
   .refine(

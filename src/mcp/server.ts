@@ -36,6 +36,7 @@ import {
 } from "@/mcp/tools/result-errors";
 import { getSpecById } from "@/mcp/tools/specs";
 import {
+  createTestScenarioTool,
   deleteTestScenario,
   getTestScenario,
   listTestScenarios,
@@ -168,23 +169,50 @@ router.post(
         // Spec tools
         server.tool(...getSpecById);
 
+        // Bind creation to the authenticated session owner, as with assumption updates.
+        const createTestScenario = createTestScenarioTool(reviewedById);
+        server.registerTool(
+          createTestScenario[0],
+          {
+            description: createTestScenario[1],
+            inputSchema: createTestScenario[2],
+          },
+          createTestScenario[3],
+        );
+
         // Test Scenario tools
-        server.registerTool(listTestScenarios[0], {
-          description: listTestScenarios[1],
-          inputSchema: listTestScenarios[2],
-        }, listTestScenarios[3]);
-        server.registerTool(getTestScenario[0], {
-          description: getTestScenario[1],
-          inputSchema: getTestScenario[2],
-        }, getTestScenario[3]);
-        server.registerTool(updateTestScenario[0], {
-          description: updateTestScenario[1],
-          inputSchema: updateTestScenario[2],
-        }, updateTestScenario[3]);
-        server.registerTool(deleteTestScenario[0], {
-          description: deleteTestScenario[1],
-          inputSchema: deleteTestScenario[2],
-        }, deleteTestScenario[3]);
+        server.registerTool(
+          listTestScenarios[0],
+          {
+            description: listTestScenarios[1],
+            inputSchema: listTestScenarios[2],
+          },
+          listTestScenarios[3],
+        );
+        server.registerTool(
+          getTestScenario[0],
+          {
+            description: getTestScenario[1],
+            inputSchema: getTestScenario[2],
+          },
+          getTestScenario[3],
+        );
+        server.registerTool(
+          updateTestScenario[0],
+          {
+            description: updateTestScenario[1],
+            inputSchema: updateTestScenario[2],
+          },
+          updateTestScenario[3],
+        );
+        server.registerTool(
+          deleteTestScenario[0],
+          {
+            description: deleteTestScenario[1],
+            inputSchema: deleteTestScenario[2],
+          },
+          deleteTestScenario[3],
+        );
 
         // Test Portal Assistant
         server.registerPrompt(

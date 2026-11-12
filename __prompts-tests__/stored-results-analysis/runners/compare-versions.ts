@@ -6,9 +6,13 @@
  * Runs multiple prompt versions in parallel and generates comparison reports
  */
 
-import type { TestCase } from "@/root/__prompts-tests__/stored-results-analysis/v1.1.0/templates/types";
+import type { TestCase } from "../v1.1.0/templates/types";
 import type { EvalResult } from "./types";
-import { runEval, type PromptVersion } from "./stored-results-analysis";
+import {
+  runEval,
+  type PromptVersion,
+  type RunEvalOptions,
+} from "./stored-results-analysis";
 
 /**
  * Metrics for a single version evaluation
@@ -46,10 +50,7 @@ export interface ComparisonReport {
 export async function compareVersions(
   cases: TestCase[],
   versions: PromptVersion[],
-  options?: {
-    model?: string;
-    temperature?: number;
-  },
+  options?: Omit<RunEvalOptions, "cases" | "version">,
 ): Promise<ComparisonReport> {
   // Run evaluations in parallel
   const results = await Promise.all(

@@ -68,6 +68,8 @@ dev.db
 
 .tmp
 .worktrees/
+mocks/
+/.private-ai-config/
 
 # TypeScript build output
 dist/
@@ -75,6 +77,7 @@ dist/
 
 # exmaple files
 example-reports/
+mocks/
 
 # Generated mock payloads
 mocks/
@@ -86,18 +89,10 @@ mocks/
 # Prompt testing datasets (generated files)
 __prompts-tests__/**/datasets/
 __prompts-tests__/**/reports/
+mocks/
 
 # Local tooling and generated reports
+/.vsdlc/
 /.agents/skills/playwright-cli/
 /.claude/skills/playwright-cli/
-
-# Local developer tooling
-/.vsdlc/
-/.mise.toml
-/.mcp.json
-/.codex/hooks.json
-/.claude/
-/.cursor/
-/.gemini/
-/.playwright-cli/
-/.playwright/
+__prompts-tests__/**/reports/

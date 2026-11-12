@@ -6,7 +6,6 @@
  */
 
 import type { MCPToolResponse, MCPToolHandler, MCPToolSchema } from "@/types";
-import { projectPublicPayload } from "@/lib/jsonPayloads";
 
 /**
  * Creates a successful MCP response with JSON content
@@ -15,10 +14,9 @@ export const createSuccessResponse = (
   data: unknown,
   message: string | null = null,
 ): MCPToolResponse => {
-  const publicData = projectPublicPayload(data);
   const content = message
-    ? `${message}\n\n${JSON.stringify(publicData, null, 2)}`
-    : JSON.stringify(publicData, null, 2);
+    ? `${message}\n\n${JSON.stringify(data, null, 2)}`
+    : JSON.stringify(data, null, 2);
 
   return {
     content: [

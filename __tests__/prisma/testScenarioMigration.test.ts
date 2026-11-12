@@ -129,7 +129,7 @@ describe("test-scenario persistence contract", () => {
 
   it("defines nullable structured fields and generated projection metadata", () => {
     expect(schema).toMatch(
-      /model TestScenario \{[\s\S]*details\s+String\?\s+@db\.Text[\s\S]*objective\s+String\?\s+@db\.Text[\s\S]*contentMd\s+String\s+@db\.Text[\s\S]*contentMdHash\s+String\s+@db\.Char\(64\)[\s\S]*contentMdFormatVersion\s+Int\s+@default\(1\)/,
+      /model TestScenario \{[\s\S]*details\s+String\?\s+@db\.Text[\s\S]*contentMd\s+String\s+@db\.Text[\s\S]*contentMdHash\s+String\s+@db\.Char\(64\)[\s\S]*contentMdFormatVersion\s+Int\s+@default\(1\)/,
     );
     expect(detailsMigration).toContain('ALTER TABLE "TestScenario" ADD COLUMN "details" TEXT;');
     expect(structuredMigration.indexOf('DELETE FROM "TestScenarioSpecLink"')).toBeLessThan(
@@ -150,4 +150,17 @@ describe("test-scenario persistence contract", () => {
       'CONSTRAINT "TestScenario_createdById_fkey" FOREIGN KEY ("createdById")',
     );
   });
+
+  it("uses nullable TP-20 metadata and removes only obsolete scenario snapshots", () => {
+    const scenario = schema.match(/model TestScenario \{([\s\S]*?)\n\}/)?.[1] ?? "";
+    const run = schema.match(/model ManualTestRun \{([\s\S]*?)\n\}/)?.[1] ?? "";
+    expect(scenario).toMatch(/priority\s+TestScenarioPriority\?/);
+    expect(scenario).toMatch(/relatedIssueUrl\s+String\?\s+@db\.Text/);
+    expect(scenario).not.toMatch(/\n\s+(objective|expectedResult|notes)\s/);
+    expect(run).not.toMatch(/\n\s+(objective|expectedResult|scenarioNotes)\s/);
+    expect(run).toMatch(/\n\s+notes\s+String\?/);
+    expect(schema).toMatch(/model TestScenarioStep \{[\s\S]*?expectedResult\s+String\?/);
+    expect(schema).toMatch(/model ManualTestRunStep \{[\s\S]*?expectedResult\s+String\?[\s\S]*?notes\s+String\?/);
+  });
+
 });

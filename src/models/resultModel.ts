@@ -9,12 +9,6 @@ import type {
   ResultsStats,
 } from "@/types";
 import type { TestResultAnalysis } from "@/schemas/testAnalysisSchemas";
-import {
-  analysisLastErrorSchema,
-  analysisMetadataSchema,
-  type AnalysisLastError,
-  type AnalysisMetadata,
-} from "@/schemas/analysisMetadataSchemas";
 import { Prisma } from "@prisma/client";
 
 export interface ResultFilters {
@@ -78,9 +72,9 @@ export interface AnalysisExportRow {
   };
 }
 
-export interface ResultAnalysisPersistenceUpdate {
-  analysis: TestResultAnalysis;
-  metadata: AnalysisMetadata;
+export interface PersistAnalysisBatchInput {
+  projectId: string;
+  analyses: TestResultAnalysis[];
 }
 
 const resultStatsSelect = Prisma.validator<Prisma.ResultSelect>()({
@@ -982,6 +976,40 @@ export const resultModel = {
     return updatedResult;
   },
 
+  persistAnalysisBatch: async (
+    input: PersistAnalysisBatchInput,
+  ): Promise<void> => {
+    if (input.analyses.length === 0) return;
+
+    try {
+      await dbClient.$transaction(async (tx) => {
+        for (const analysis of input.analyses) {
+          const updated = await tx.result.updateMany({
+            where: {
+              id: analysis.id,
+              status: analysis.status,
+              spec: { projectId: input.projectId },
+              execution: { projectId: input.projectId },
+            },
+            data: {
+              analysisStatus: analysis.status,
+              analysisCategory: analysis.category,
+              analysisConfidence: analysis.confidence,
+              analysisConclusion: analysis.conclusion,
+              analysisErrorQuality: analysis.errorQuality,
+              analysisErrorQualityConclusion: analysis.errorQualityConclusion,
+            },
+          });
+          if (updated.count !== 1) {
+            throw new Error("Analysis batch scope mismatch");
+          }
+        }
+      });
+    } catch {
+      throw new Error("Could not persist the complete analysis batch");
+    }
+  },
+
   updateAnalysisFeedback: async (
     resultId: number | string,
     feedbackData: {
@@ -1015,53 +1043,6 @@ export const resultModel = {
     });
 
     return updatedResult as ResultWithRelations;
-  },
-
-  persistAnalysisBatch: async (
-    projectId: string,
-    updates: Map<string, ResultAnalysisPersistenceUpdate>,
-  ): Promise<void> => {
-    if (updates.size === 0) return;
-    await dbClient.$transaction(async (tx) => {
-      for (const [id, { analysis, metadata }] of updates) {
-        const validatedMetadata = analysisMetadataSchema.parse(metadata);
-        const result = await tx.result.updateMany({
-          where: { id, execution: { projectId } },
-          data: {
-            analysisStatus: analysis.status,
-            analysisCategory: analysis.category,
-            analysisConfidence: analysis.confidence,
-            analysisConclusion: analysis.conclusion,
-            analysisErrorQuality: analysis.errorQuality,
-            analysisErrorQualityConclusion: analysis.errorQualityConclusion,
-            analysisMetadata: validatedMetadata as Prisma.InputJsonValue,
-            analysisLastError: Prisma.DbNull,
-          },
-        });
-        if (result.count !== 1) {
-          throw new Error("Analysis result is missing or outside the requested project.");
-        }
-      }
-    });
-  },
-
-  recordAnalysisFailures: async (
-    projectId: string,
-    failures: Map<string, AnalysisLastError>,
-  ): Promise<void> => {
-    if (failures.size === 0) return;
-    await dbClient.$transaction(async (tx) => {
-      for (const [id, failure] of failures) {
-        const validatedFailure = analysisLastErrorSchema.parse(failure);
-        const result = await tx.result.updateMany({
-          where: { id, execution: { projectId } },
-          data: { analysisLastError: validatedFailure as Prisma.InputJsonValue },
-        });
-        if (result.count !== 1) {
-          throw new Error("Analysis result is missing or outside the requested project.");
-        }
-      }
-    });
   },
 
   delete: async (

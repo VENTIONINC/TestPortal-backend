@@ -1,5 +1,6 @@
 import dotenv from "dotenv";
 dotenv.config();
+import { initializeAiConfig } from "@/config/aiConfig";
 import express, { Request, Response, NextFunction } from "express";
 import cors from "cors";
 import parseCookie from "cookie-parser";
@@ -8,7 +9,8 @@ import helmet from "helmet";
 import getLogger from "@/lib/logger";
 import { errorHandler } from "@/middleware/error-handler";
 import routes from "@/routes/index";
-import { projectPublicPayload } from "@/lib/jsonPayloads";
+
+await initializeAiConfig();
 
 const logger = getLogger("server");
 const loggingMiddleware = (
@@ -23,14 +25,6 @@ const loggingMiddleware = (
 const app = express();
 app.use(helmet());
 app.use(cors());
-
-// Keep internal result analysis lifecycle columns out of every REST response,
-// including nested Prisma relations owned by different controllers.
-app.use((_req, res, next) => {
-  const sendJson = res.json.bind(res);
-  res.json = ((body: unknown) => sendJson(projectPublicPayload(body))) as Response["json"];
-  next();
-});
 
 // Apply JSON parsing middleware to all routes except file upload routes
 app.use((req, res, next) => {
@@ -60,4 +54,3 @@ const PORT: number = parseInt(process.env.PORT ?? "3001", 10);
 app.listen(PORT, () => {
   console.log(`Running on Port ${PORT}`);
 });
-

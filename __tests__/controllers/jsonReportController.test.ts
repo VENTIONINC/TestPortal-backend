@@ -6,6 +6,12 @@ import { jest } from "@jest/globals";
 import type { Request, Response } from "express";
 import { jsonReportController } from "@/controllers/jsonReportController";
 import { executeController } from "@/test-utils/httpMocks";
+import { dbClient } from "@/prisma/client";
+import { jsonReportService } from "@/services/jsonReportService";
+import { dashboardService } from "@/services/dashboardService";
+import { storedResultEnrichmentService } from "@/services/storedResultEnrichmentService";
+
+afterEach(() => jest.restoreAllMocks());
 
 describe("jsonReportController shared workspace access", () => {
   it("passes an authenticated member and requested project to ingestion", async () => {
@@ -115,5 +121,67 @@ describe("jsonReportController Playwright enrichment normalization", () => {
         },
       }),
     );
+  });
+});
+
+describe("jsonReportController analysis enrichment", () => {
+  const file = { buffer: Buffer.from("{}") } as Express.Multer.File;
+
+  const prepareImport = (analyzeEnabled: boolean) => {
+    jest
+      .spyOn(jsonReportController, "_transformRawReport")
+      .mockResolvedValue({ provider: "Playwright", tests: [] } as never);
+    jest.spyOn(jsonReportService, "processReport").mockResolvedValue({
+      success: true,
+      executionId: "execution-1",
+      specsProcessed: 1,
+    });
+    jest
+      .spyOn(dbClient.user, "findUnique")
+      .mockResolvedValue({ analyzeEnabled } as never);
+    jest
+      .spyOn(dbClient.result, "findMany")
+      .mockResolvedValue([{ id: "result-1" }] as never);
+    jest
+      .spyOn(storedResultEnrichmentService, "analyzeAndPersist")
+      .mockRejectedValue(new Error("Could not persist analysis"));
+    jest.spyOn(dashboardService, "updateStats").mockResolvedValue(undefined);
+  };
+
+  it("retains saved report results and omits analysis when enrichment fails", async () => {
+    prepareImport(true);
+
+    const response = await jsonReportController._processRawReportFileCore(
+      file,
+      "project-1",
+      "user-1",
+    );
+
+    expect(jsonReportService.processReport).toHaveBeenCalledTimes(1);
+    expect(storedResultEnrichmentService.analyzeAndPersist).toHaveBeenCalledTimes(1);
+    const reportCallOrder = (jsonReportService.processReport as jest.Mock).mock
+      .invocationCallOrder[0];
+    const enrichmentCallOrder = (
+      storedResultEnrichmentService.analyzeAndPersist as jest.Mock
+    ).mock.invocationCallOrder[0];
+    if (reportCallOrder === undefined || enrichmentCallOrder === undefined) {
+      throw new Error("Expected both report and enrichment calls");
+    }
+    expect(reportCallOrder).toBeLessThan(enrichmentCallOrder);
+    expect(response.analysis).toBeUndefined();
+    expect(response.executionId).toBe("execution-1");
+  });
+
+  it("keeps the user analysis preference gate", async () => {
+    prepareImport(false);
+
+    const response = await jsonReportController._processRawReportFileCore(
+      file,
+      "project-1",
+      "user-1",
+    );
+
+    expect(storedResultEnrichmentService.analyzeAndPersist).not.toHaveBeenCalled();
+    expect(response.analysis).toBeUndefined();
   });
 });

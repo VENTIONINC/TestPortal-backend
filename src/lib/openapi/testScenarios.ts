@@ -6,7 +6,20 @@ import { ErrorResponseSchema } from "./common";
 import { ResultSchema } from "./results";
 import { z } from "./zod";
 import type { ZodTypeAny } from "zod";
-import { TEST_SCENARIO_SORT_FIELDS, TEST_SCENARIO_SORT_VALUES } from "@/types/testScenarios";
+import {
+  TEST_SCENARIO_SORT_FIELDS,
+  TEST_SCENARIO_SORT_VALUES,
+} from "@/types/testScenarios";
+
+const testScenarioPrioritySchema = z.enum(["low", "medium", "high"]);
+const testScenarioRelatedIssueUrlSchema = z
+  .string()
+  .trim()
+  .url()
+  .refine(
+    (value) => /^https?:\/\//i.test(value),
+    "Must be an absolute HTTP(S) URL",
+  );
 
 const TestScenarioSchema = z
   .object({
@@ -17,11 +30,10 @@ const TestScenarioSchema = z
     title: z.string(),
     scenarioKey: z.string().max(100).nullable(),
     details: z.string().nullable(),
-    objective: z.string().nullable(),
     preconditions: z.string().nullable(),
     testData: z.string().nullable(),
-    expectedResult: z.string().nullable(),
-    notes: z.string().nullable(),
+    priority: z.union([testScenarioPrioritySchema, z.null()]),
+    relatedIssueUrl: testScenarioRelatedIssueUrlSchema.nullable(),
     steps: z.array(
       z
         .object({
@@ -56,13 +68,19 @@ const CreateTestScenarioRequestSchema = z
     projectId: z.string().uuid(),
     folderId: z.string().uuid().nullable().optional(),
     title: z.string().min(1).regex(/\S/),
-    scenarioKey: z.string().trim().min(1).max(100).regex(/^[^\r\n]+$/).nullable().optional(),
+    scenarioKey: z
+      .string()
+      .trim()
+      .min(1)
+      .max(100)
+      .regex(/^[^\r\n]+$/)
+      .nullable()
+      .optional(),
     details: z.string().min(1).regex(/\S/).optional(),
-    objective: z.string().min(1).regex(/\S/).optional(),
     preconditions: z.string().min(1).regex(/\S/).optional(),
     testData: z.string().min(1).regex(/\S/).optional(),
-    expectedResult: z.string().min(1).regex(/\S/).optional(),
-    notes: z.string().min(1).regex(/\S/).optional(),
+    priority: z.union([testScenarioPrioritySchema, z.null()]).optional(),
+    relatedIssueUrl: testScenarioRelatedIssueUrlSchema.nullable().optional(),
     steps: z.array(CreateTestScenarioStepSchema).default([]),
   })
   .strict()
@@ -100,13 +118,19 @@ const UpdateTestScenarioFieldSchema = z.string().min(1).regex(/\S/).nullable();
 const updateTestScenarioFields = {
   folderId: z.string().uuid().nullable().optional(),
   title: z.string().min(1).regex(/\S/).optional(),
-  scenarioKey: z.string().trim().min(1).max(100).regex(/^[^\r\n]+$/).nullable().optional(),
+  scenarioKey: z
+    .string()
+    .trim()
+    .min(1)
+    .max(100)
+    .regex(/^[^\r\n]+$/)
+    .nullable()
+    .optional(),
   details: UpdateTestScenarioFieldSchema.optional(),
-  objective: UpdateTestScenarioFieldSchema.optional(),
   preconditions: UpdateTestScenarioFieldSchema.optional(),
   testData: UpdateTestScenarioFieldSchema.optional(),
-  expectedResult: UpdateTestScenarioFieldSchema.optional(),
-  notes: UpdateTestScenarioFieldSchema.optional(),
+  priority: z.union([testScenarioPrioritySchema, z.null()]).optional(),
+  relatedIssueUrl: testScenarioRelatedIssueUrlSchema.nullable().optional(),
 };
 
 const UpdateTestScenarioRequestSchema = z
@@ -175,28 +199,84 @@ const TestScenarioListQuerySchema = z
         "Optional creator User UUID filter. It may identify any user; a valid UUID with no matching scenarios returns an empty page.",
       example: "33333333-3333-4333-8333-333333333333",
     }),
-    sort: z
-      .enum(TEST_SCENARIO_SORT_VALUES)
+    sort: z.enum(TEST_SCENARIO_SORT_VALUES).optional().openapi({
+      description:
+        "Ordering: recently_created (createdAt DESC, id DESC), recently_updated (updatedAt DESC, id DESC), or title_asc (title ASC, id ASC).",
+      example: "title_asc",
+    }),
+    sortField: z
+      .enum(TEST_SCENARIO_SORT_FIELDS)
       .optional()
       .openapi({
         description:
-          "Ordering: recently_created (createdAt DESC, id DESC), recently_updated (updatedAt DESC, id DESC), or title_asc (title ASC, id ASC).",
-        example: "title_asc",
+          "Single sort column. Defaults to createdAt descending when omitted. Cannot be combined with legacy sort.",
+        example: "scenarioKey",
       }),
-    sortField: z.enum(TEST_SCENARIO_SORT_FIELDS).optional().openapi({ description: "Single sort column. Defaults to createdAt descending when omitted. Cannot be combined with legacy sort.", example: "scenarioKey" }),
-    sortDirection: z.enum(["asc", "desc"]).optional().openapi({ description: "Sort direction; defaults to desc when sortField is supplied. Requires sortField.", example: "asc" }),
-    scenarioKey: z.string().trim().optional().openapi({ description: "Case-insensitive literal substring filter for the persisted scenario key; whitespace-only values are ignored." }),
-    title: z.string().trim().optional().openapi({ description: "Case-insensitive literal substring filter for title; whitespace-only values are ignored." }),
-    details: z.string().trim().optional().openapi({ description: "Case-insensitive literal substring filter for persisted details; whitespace-only values are ignored." }),
-    folder: z.string().trim().optional().openapi({ description: "Case-insensitive literal substring filter for the displayed full folder path or Unfiled value; whitespace-only values are ignored." }),
-    createdBy: z.string().trim().optional().openapi({ description: "Case-insensitive literal substring filter for creator display name or email; whitespace-only values are ignored." }),
+    sortDirection: z
+      .enum(["asc", "desc"])
+      .optional()
+      .openapi({
+        description:
+          "Sort direction; defaults to desc when sortField is supplied. Requires sortField.",
+        example: "asc",
+      }),
+    scenarioKey: z
+      .string()
+      .trim()
+      .optional()
+      .openapi({
+        description:
+          "Case-insensitive literal substring filter for the persisted scenario key; whitespace-only values are ignored.",
+      }),
+    title: z
+      .string()
+      .trim()
+      .optional()
+      .openapi({
+        description:
+          "Case-insensitive literal substring filter for title; whitespace-only values are ignored.",
+      }),
+    details: z
+      .string()
+      .trim()
+      .optional()
+      .openapi({
+        description:
+          "Case-insensitive literal substring filter for persisted details; whitespace-only values are ignored.",
+      }),
+    folder: z
+      .string()
+      .trim()
+      .optional()
+      .openapi({
+        description:
+          "Case-insensitive literal substring filter for the displayed full folder path or Unfiled value; whitespace-only values are ignored.",
+      }),
+    createdBy: z
+      .string()
+      .trim()
+      .optional()
+      .openapi({
+        description:
+          "Case-insensitive literal substring filter for creator display name or email; whitespace-only values are ignored.",
+      }),
     folderId: z.union([z.string().uuid(), z.literal("unfiled")]).optional(),
     includeDescendants: z.boolean().optional(),
     suiteId: z.string().uuid().optional(),
   })
   .superRefine((value, context) => {
-    if (value.sortDirection && !value.sortField) context.addIssue({ code: "custom", path: ["sortDirection"], message: "sortDirection requires sortField" });
-    if (value.sortField && value.sort !== undefined) context.addIssue({ code: "custom", path: ["sort"], message: "sort cannot be combined with sortField" });
+    if (value.sortDirection && !value.sortField)
+      context.addIssue({
+        code: "custom",
+        path: ["sortDirection"],
+        message: "sortDirection requires sortField",
+      });
+    if (value.sortField && value.sort !== undefined)
+      context.addIssue({
+        code: "custom",
+        path: ["sort"],
+        message: "sort cannot be combined with sortField",
+      });
   })
   .openapi("TestScenarioListQuery");
 
@@ -210,39 +290,104 @@ const TestScenarioListResponseSchema = z
   })
   .openapi("TestScenarioListResponse");
 
-const OrganizationProjectQuerySchema = z.object({ projectId: z.string().uuid() });
-const FolderBodySchema = z.object({ projectId: z.string().uuid(), name: z.string().min(1), parentId: z.string().uuid().nullable().optional(), position: z.number().int().nonnegative().optional() });
-const FolderUpdateBodySchema = z.object({ name: z.string().min(1).optional(), parentId: z.string().uuid().nullable().optional(), position: z.number().int().nonnegative().optional() });
-const SuiteBodySchema = z.object({ projectId: z.string().uuid(), name: z.string().min(1), description: z.string().nullable().optional(), purpose: z.string().nullable().optional(), release: z.string().nullable().optional() });
-const SuiteUpdateBodySchema = z.object({ name: z.string().min(1).optional(), description: z.string().nullable().optional(), purpose: z.string().nullable().optional(), release: z.string().nullable().optional() });
-const MembersBodySchema = z.object({ projectId: z.string().uuid(), scenarioIds: z.array(z.string().uuid()).min(1).max(100) });
-const MemberOrderBodySchema = z.object({ projectId: z.string().uuid(), scenarioIds: z.array(z.string().uuid()) });
-const BulkFolderBodySchema = z.object({ projectId: z.string().uuid(), scenarioIds: z.array(z.string().uuid()).min(1).max(100), folderId: z.string().uuid().nullable() });
+const OrganizationProjectQuerySchema = z.object({
+  projectId: z.string().uuid(),
+});
+const FolderBodySchema = z.object({
+  projectId: z.string().uuid(),
+  name: z.string().min(1),
+  parentId: z.string().uuid().nullable().optional(),
+  position: z.number().int().nonnegative().optional(),
+});
+const FolderUpdateBodySchema = z.object({
+  name: z.string().min(1).optional(),
+  parentId: z.string().uuid().nullable().optional(),
+  position: z.number().int().nonnegative().optional(),
+});
+const SuiteBodySchema = z.object({
+  projectId: z.string().uuid(),
+  name: z.string().min(1),
+  description: z.string().nullable().optional(),
+  purpose: z.string().nullable().optional(),
+  release: z.string().nullable().optional(),
+});
+const SuiteUpdateBodySchema = z.object({
+  name: z.string().min(1).optional(),
+  description: z.string().nullable().optional(),
+  purpose: z.string().nullable().optional(),
+  release: z.string().nullable().optional(),
+});
+const MembersBodySchema = z.object({
+  projectId: z.string().uuid(),
+  scenarioIds: z.array(z.string().uuid()).min(1).max(100),
+});
+const MemberOrderBodySchema = z.object({
+  projectId: z.string().uuid(),
+  scenarioIds: z.array(z.string().uuid()),
+});
+const BulkFolderBodySchema = z.object({
+  projectId: z.string().uuid(),
+  scenarioIds: z.array(z.string().uuid()).min(1).max(100),
+  folderId: z.string().uuid().nullable(),
+});
 const FolderResponseSchema: ZodTypeAny = z.object({
-  id: z.string().uuid(), projectId: z.string().uuid(), parentId: z.string().uuid().nullable(),
-  name: z.string(), position: z.number().int(), createdAt: z.string(), updatedAt: z.string(),
-  scenarioCount: z.number().int().nonnegative(), _count: z.object({ scenarios: z.number().int().nonnegative() }),
+  id: z.string().uuid(),
+  projectId: z.string().uuid(),
+  parentId: z.string().uuid().nullable(),
+  name: z.string(),
+  position: z.number().int(),
+  createdAt: z.string(),
+  updatedAt: z.string(),
+  scenarioCount: z.number().int().nonnegative(),
+  _count: z.object({ scenarios: z.number().int().nonnegative() }),
   children: z.array(z.unknown()),
 });
-const FolderRecordResponseSchema = z.object({ id: z.string().uuid(), projectId: z.string().uuid(), parentId: z.string().uuid().nullable(), name: z.string(), position: z.number().int(), createdAt: z.string(), updatedAt: z.string() });
-const SuiteMemberResponseSchema = z.object({ suiteId: z.string().uuid(), testScenarioId: z.string().uuid(), position: z.number().int(), createdAt: z.string() });
+const FolderRecordResponseSchema = z.object({
+  id: z.string().uuid(),
+  projectId: z.string().uuid(),
+  parentId: z.string().uuid().nullable(),
+  name: z.string(),
+  position: z.number().int(),
+  createdAt: z.string(),
+  updatedAt: z.string(),
+});
+const SuiteMemberResponseSchema = z.object({
+  suiteId: z.string().uuid(),
+  testScenarioId: z.string().uuid(),
+  position: z.number().int(),
+  createdAt: z.string(),
+});
 const SuiteResponseSchema = z.object({
-  id: z.string().uuid(), projectId: z.string().uuid(), name: z.string(), description: z.string().nullable(),
-  purpose: z.string().nullable(), release: z.string().nullable(), createdAt: z.string(), updatedAt: z.string(),
+  id: z.string().uuid(),
+  projectId: z.string().uuid(),
+  name: z.string(),
+  description: z.string().nullable(),
+  purpose: z.string().nullable(),
+  release: z.string().nullable(),
+  createdAt: z.string(),
+  updatedAt: z.string(),
   members: z.array(SuiteMemberResponseSchema).optional(),
 });
 const DeletedResponseSchema = z.object({ deleted: z.literal(true) });
 const MovedResponseSchema = z.object({ moved: z.number().int().nonnegative() });
-const MemberOrderResponseSchema = z.object({ scenarioIds: z.array(z.string().uuid()) });
-const FolderDeleteQuerySchema = OrganizationProjectQuerySchema.extend({ disposition: z.enum(["parent", "unfiled"]) });
+const MemberOrderResponseSchema = z.object({
+  scenarioIds: z.array(z.string().uuid()),
+});
+const FolderDeleteQuerySchema = OrganizationProjectQuerySchema.extend({
+  disposition: z.enum(["parent", "unfiled"]),
+});
 
 function organizationResponseSchema(path: string, method: string): ZodTypeAny {
   if (path.includes("bulk-folder")) return MovedResponseSchema;
   if (path.endsWith("/members/order")) return MemberOrderResponseSchema;
   if (path.endsWith("/members")) return z.array(SuiteMemberResponseSchema);
   if (method === "delete") return DeletedResponseSchema;
-  if (path.includes("test-scenario-folders")) return method === "get" ? z.array(FolderResponseSchema) : FolderRecordResponseSchema;
-  if (path === "/api/v2/test-suites" && method === "get") return z.array(SuiteResponseSchema);
+  if (path.includes("test-scenario-folders"))
+    return method === "get"
+      ? z.array(FolderResponseSchema)
+      : FolderRecordResponseSchema;
+  if (path === "/api/v2/test-suites" && method === "get")
+    return z.array(SuiteResponseSchema);
   return SuiteResponseSchema;
 }
 
@@ -893,10 +1038,34 @@ export function registerTestScenarioRoutes(registry: OpenAPIRegistry): void {
   registry.register("TestScenarioFolderResponse", FolderResponseSchema);
   registry.register("TestSuiteMemberResponse", SuiteMemberResponseSchema);
   registry.register("TestSuiteResponse", SuiteResponseSchema);
-  registry.register("TestScenarioOrganizationDeleteResponse", DeletedResponseSchema);
+  registry.register(
+    "TestScenarioOrganizationDeleteResponse",
+    DeletedResponseSchema,
+  );
   registry.register("TestScenarioBulkFolderResponse", MovedResponseSchema);
   registry.register("TestSuiteMemberOrderResponse", MemberOrderResponseSchema);
-  const orgErrors = { 400: { description: "Invalid request", content: { "application/json": { schema: ErrorResponseSchema } } }, 401: { description: "Unauthorized", content: { "application/json": { schema: ErrorResponseSchema } } }, 404: { description: "Project or resource not found", content: { "application/json": { schema: ErrorResponseSchema } } }, 409: { description: "Name conflict", content: { "application/json": { schema: ErrorResponseSchema } } }, 500: { description: "Internal server error", content: { "application/json": { schema: ErrorResponseSchema } } } };
+  const orgErrors = {
+    400: {
+      description: "Invalid request",
+      content: { "application/json": { schema: ErrorResponseSchema } },
+    },
+    401: {
+      description: "Unauthorized",
+      content: { "application/json": { schema: ErrorResponseSchema } },
+    },
+    404: {
+      description: "Project or resource not found",
+      content: { "application/json": { schema: ErrorResponseSchema } },
+    },
+    409: {
+      description: "Name conflict",
+      content: { "application/json": { schema: ErrorResponseSchema } },
+    },
+    500: {
+      description: "Internal server error",
+      content: { "application/json": { schema: ErrorResponseSchema } },
+    },
+  };
   const projectQuery = { query: OrganizationProjectQuerySchema };
   for (const [path, methods] of Object.entries({
     "/api/v2/test-scenario-folders": ["get", "post"],
@@ -907,23 +1076,73 @@ export function registerTestScenarioRoutes(registry: OpenAPIRegistry): void {
     "/api/v2/test-suites/{suiteId}/members/order": ["put"],
     "/api/v2/test-scenarios/bulk-folder": ["patch"],
   })) {
-    for (const method of methods) registry.registerPath({
-      method: method as "get" | "post" | "patch" | "delete" | "put",
-      path,
-      tags: ["Test Scenarios"],
-      description: "Authenticated project-scoped test scenario organization operation.",
-      request: method === "get" || (method === "delete" && !path.endsWith("/members"))
-        ? { query: path.includes("{folderId}") && method === "delete" ? FolderDeleteQuerySchema : OrganizationProjectQuerySchema, ...(path.includes("{folderId}") ? { params: z.object({ folderId: z.string().uuid() }) } : path.includes("{suiteId}") ? { params: z.object({ suiteId: z.string().uuid() }) } : {}) }
-        : { ...(path.includes("{folderId}") ? { params: z.object({ folderId: z.string().uuid() }) } : path.includes("{suiteId}") ? { params: z.object({ suiteId: z.string().uuid() }) } : {}), ...(method === "patch" && !path.includes("bulk-folder") ? projectQuery : {}), body: { content: { "application/json": { schema: path.includes("bulk-folder") ? BulkFolderBodySchema : path.endsWith("/members/order") ? MemberOrderBodySchema : path.includes("members") ? MembersBodySchema : path.includes("folders") ? (method === "patch" ? FolderUpdateBodySchema : FolderBodySchema) : (method === "patch" ? SuiteUpdateBodySchema : SuiteBodySchema) } } } },
-      security: [{ BearerAuth: [] }],
-      responses: {
-        [method === "post" && (path === "/api/v2/test-scenario-folders" || path === "/api/v2/test-suites") ? 201 : 200]: {
-          description: "Organization operation succeeded",
-          content: { "application/json": { schema: organizationResponseSchema(path, method) } },
+    for (const method of methods)
+      registry.registerPath({
+        method: method as "get" | "post" | "patch" | "delete" | "put",
+        path,
+        tags: ["Test Scenarios"],
+        description:
+          "Authenticated project-scoped test scenario organization operation.",
+        request:
+          method === "get" ||
+          (method === "delete" && !path.endsWith("/members"))
+            ? {
+                query:
+                  path.includes("{folderId}") && method === "delete"
+                    ? FolderDeleteQuerySchema
+                    : OrganizationProjectQuerySchema,
+                ...(path.includes("{folderId}")
+                  ? { params: z.object({ folderId: z.string().uuid() }) }
+                  : path.includes("{suiteId}")
+                    ? { params: z.object({ suiteId: z.string().uuid() }) }
+                    : {}),
+              }
+            : {
+                ...(path.includes("{folderId}")
+                  ? { params: z.object({ folderId: z.string().uuid() }) }
+                  : path.includes("{suiteId}")
+                    ? { params: z.object({ suiteId: z.string().uuid() }) }
+                    : {}),
+                ...(method === "patch" && !path.includes("bulk-folder")
+                  ? projectQuery
+                  : {}),
+                body: {
+                  content: {
+                    "application/json": {
+                      schema: path.includes("bulk-folder")
+                        ? BulkFolderBodySchema
+                        : path.endsWith("/members/order")
+                          ? MemberOrderBodySchema
+                          : path.includes("members")
+                            ? MembersBodySchema
+                            : path.includes("folders")
+                              ? method === "patch"
+                                ? FolderUpdateBodySchema
+                                : FolderBodySchema
+                              : method === "patch"
+                                ? SuiteUpdateBodySchema
+                                : SuiteBodySchema,
+                    },
+                  },
+                },
+              },
+        security: [{ BearerAuth: [] }],
+        responses: {
+          [method === "post" &&
+          (path === "/api/v2/test-scenario-folders" ||
+            path === "/api/v2/test-suites")
+            ? 201
+            : 200]: {
+            description: "Organization operation succeeded",
+            content: {
+              "application/json": {
+                schema: organizationResponseSchema(path, method),
+              },
+            },
+          },
+          ...orgErrors,
         },
-        ...orgErrors,
-      },
-    });
+      });
   }
 }
 

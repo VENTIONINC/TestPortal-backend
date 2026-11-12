@@ -192,8 +192,7 @@ export interface StructuredResultError
   sourceSnippet: ResultErrorSourceSnippet | null;
 }
 
-export interface StructuredResultWithRelations
-  extends Omit<PrismaResult, "analysisMetadata" | "analysisLastError"> {
+export interface StructuredResultWithRelations extends PrismaResult {
   errors: StructuredResultError[];
   spec: StructuredSpec;
   execution: PrismaExecution;

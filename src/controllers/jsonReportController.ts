@@ -6,7 +6,7 @@ import {
   jsonReportService,
   type ProcessReportResult,
 } from "@/services/jsonReportService";
-import { storedResultAnalysisService } from "@/services/storedResultAnalysisService";
+import { storedResultEnrichmentService } from "@/services/storedResultEnrichmentService";
 import type { TestResultAnalysis } from "@/schemas/testAnalysisSchemas";
 import type { ApiKeyAuthenticatedRequest } from "@/middleware/apiKeyMiddleware";
 import type { AuthenticatedRequest } from "@/middleware/authMiddleware";
@@ -116,22 +116,18 @@ export const jsonReportController = {
     // Step 4: Analyze stored results (POST-PERSIST)
     let analysisMap = null;
     try {
-      analysisMap = await storedResultAnalysisService.analyzeAndPersist(
+      analysisMap = await storedResultEnrichmentService.analyzeAndPersist(
         projectId,
         createdResults,
       );
 
-      // Step 5: Update results with analysis fields
       logger.info(`Updating ${analysisMap.size} results with analysis data`);
 
       logger.info(
         `Successfully updated ${analysisMap.size} results with analysis`,
       );
-    } catch (analysisError) {
-      logger.warn(
-        "Analysis failed, results saved without analysis:",
-        analysisError,
-      );
+    } catch {
+      logger.warn("Analysis failed, results saved without analysis");
     }
 
     // Update stats after analysis (or failure)
