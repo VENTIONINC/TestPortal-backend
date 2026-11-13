@@ -3,20 +3,11 @@
 
 import { z } from "zod";
 import { environmentValueSchema } from "@/schemas/manualRunEnvironmentProfileSchemas";
-import {
-  MANUAL_TEST_RUN_STATUSES,
-  MANUAL_TEST_RUN_STEP_STATUSES,
-  MANUAL_TEST_RUN_TERMINAL_STATUSES,
-} from "@/types/manualTestRuns";
-import {
-  editableTestManagementKeySchema,
-  testManagementKeyFilterSchema,
-} from "@/schemas/testManagementKeySchemas";
+import { MANUAL_TEST_RUN_SCENARIO_RESULTS } from "@/types/manualTestRuns";
 
 const uuidSchema = z.string().uuid("Must be a valid UUID");
-const nonBlankText = z.string().trim().min(1, "Value must not be blank");
-const positiveIntegerQuery = (defaultValue: number, maximum?: number) => {
-  const schema = z
+const positiveIntegerQuery = (defaultValue: number, maximum?: number) =>
+  z
     .string()
     .regex(/^\d+$/, "Must be a positive integer")
     .transform(Number)
@@ -26,149 +17,135 @@ const positiveIntegerQuery = (defaultValue: number, maximum?: number) => {
       maximum === undefined
         ? "Must be a positive integer"
         : `Must be no greater than ${maximum}`,
-    );
-  return schema.optional().default(String(defaultValue));
+    )
+    .optional()
+    .default(String(defaultValue));
+const resultSchema = z.enum(MANUAL_TEST_RUN_SCENARIO_RESULTS);
+const dateOnlySchema = z
+  .string()
+  .regex(/^\d{4}-\d{2}-\d{2}$/, "Must be a date in YYYY-MM-DD format");
+
+const uniqueScenarioIdsSchema = z
+  .array(uuidSchema)
+  .min(1)
+  .max(10_000)
+  .refine(
+    (ids) => new Set(ids).size === ids.length,
+    "Scenario IDs must be unique",
+  );
+
+const createEnvironmentFields = {
+  browser: environmentValueSchema.optional(),
+  operatingSystem: environmentValueSchema.optional(),
+  device: environmentValueSchema.optional(),
+  apiEnvironment: environmentValueSchema.optional(),
+  build: environmentValueSchema.optional(),
+  deployment: environmentValueSchema.optional(),
 };
 
-const runStatusSchema = z.enum(MANUAL_TEST_RUN_STATUSES);
-const stepStatusSchema = z.enum(MANUAL_TEST_RUN_STEP_STATUSES);
-const terminalStatusSchema = z.enum(MANUAL_TEST_RUN_TERMINAL_STATUSES);
-const notesSchema = nonBlankText.nullable();
-const timestampSchema = z.string().refine(
-  (value) => {
-    const hasTimezone =
-      /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?(?:Z|[+-]\d{2}:\d{2})$/.test(
-        value,
-      );
-    return hasTimezone && !Number.isNaN(Date.parse(value));
-  },
-  "Must be an RFC 3339 timestamp with an explicit timezone",
-);
+export const manualTestRunCreateSchema = z.union([
+  z
+    .object({
+      scenarioIds: uniqueScenarioIdsSchema,
+      ...createEnvironmentFields,
+    })
+    .strict(),
+  z.object({ suiteId: uuidSchema, ...createEnvironmentFields }).strict(),
+]);
 
-function withDateRangeValidation<T extends z.AnyZodObject>(schema: T): T {
-  return schema.superRefine((value, context) => {
-    const startedFrom = value.startedFrom as string | undefined;
-    const startedBefore = value.startedBefore as string | undefined;
-    if (
-      startedFrom !== undefined &&
-      startedBefore !== undefined &&
-      new Date(startedFrom).getTime() >= new Date(startedBefore).getTime()
-    ) {
-      context.addIssue({
-        code: z.ZodIssueCode.custom,
-        path: ["startedFrom"],
-        message: "startedFrom must be earlier than startedBefore",
-      });
-    }
-  }) as unknown as T;
-}
-
-export const manualTestRunStartSchema = z
-  .object({
-    notes: notesSchema.optional(),
-    runKey: editableTestManagementKeySchema.optional(),
-    environmentProfileId: uuidSchema.optional(),
-    browser: environmentValueSchema.optional(),
-    operatingSystem: environmentValueSchema.optional(),
-    device: environmentValueSchema.optional(),
-    apiEnvironment: environmentValueSchema.optional(),
-    build: environmentValueSchema.optional(),
-    deployment: environmentValueSchema.optional(),
-  })
+export const manualTestRunScenarioResultSchema = z
+  .object({ result: resultSchema })
   .strict();
+export const manualTestRunScenarioAssigneeSchema = z
+  .object({ assigneeId: uuidSchema.nullable() })
+  .strict();
+export const manualTestRunScenarioOrderSchema = z
+  .object({ scenarioIds: uniqueScenarioIdsSchema })
+  .strict();
+export const manualTestRunScenarioBulkSchema = z
+  .object({
+    scenarioIds: uniqueScenarioIdsSchema,
+    result: resultSchema.optional(),
+    assigneeId: uuidSchema.nullable().optional(),
+  })
+  .strict()
+  .refine(
+    (value) => value.result !== undefined || value.assigneeId !== undefined,
+    "At least one bulk result or assignment change is required",
+  );
 
-export const manualTestRunIdParamsSchema = z.object({
-  runId: uuidSchema,
-});
-
-export const manualTestRunStepParamsSchema = z.object({
-  runId: uuidSchema,
-  stepId: uuidSchema,
-});
-
+export const manualTestRunIdParamsSchema = z.object({ runId: uuidSchema });
 export const manualTestRunScenarioParamsSchema = z.object({
   scenarioId: uuidSchema,
 });
-
 export const manualTestRunProjectQuerySchema = z.object({
   projectId: uuidSchema,
 });
 
-export const manualTestRunHistoryQuerySchema = withDateRangeValidation(
-  z
-    .object({
-      projectId: uuidSchema,
-      page: positiveIntegerQuery(1),
-      limit: positiveIntegerQuery(30, 100),
-      startedFrom: timestampSchema.optional(),
-      startedBefore: timestampSchema.optional(),
-      testScenarioId: uuidSchema.optional(),
-      sourceScenarioKey: testManagementKeyFilterSchema.optional(),
-      status: runStatusSchema.optional(),
-    })
-    .strict(),
-);
-
-export const manualTestRunScenarioHistoryQuerySchema = withDateRangeValidation(
-  z
-    .object({
-      projectId: uuidSchema,
-      page: positiveIntegerQuery(1),
-      limit: positiveIntegerQuery(30, 100),
-      startedFrom: timestampSchema.optional(),
-      startedBefore: timestampSchema.optional(),
-      status: runStatusSchema.optional(),
-    })
-    .strict(),
-);
-
-export const manualTestRunUpdateSchema = z
+export const manualTestRunHistoryQuerySchema = z
   .object({
-    status: runStatusSchema.optional(),
-    notes: notesSchema.optional(),
-    runKey: editableTestManagementKeySchema.optional(),
+    projectId: uuidSchema,
+    page: positiveIntegerQuery(1),
+    limit: positiveIntegerQuery(30, 100),
+    search: z.string().trim().max(200).optional(),
+    show: z
+      .enum(["in_progress", "completed", "all"])
+      .optional()
+      .default("in_progress"),
+    period: z
+      .enum([
+        "recent",
+        "today",
+        "yesterday",
+        "last_7_days",
+        "last_30_days",
+        "this_month",
+        "last_month",
+        "any_time",
+        "custom",
+      ])
+      .optional()
+      .default("recent"),
+    timeZone: z.string().trim().min(1).max(100).optional().default("UTC"),
+    dateFrom: dateOnlySchema.optional(),
+    dateTo: dateOnlySchema.optional(),
   })
   .strict()
-  .refine((value) => Object.keys(value).length > 0, {
-    message: "At least one editable field is required",
+  .superRefine((value, context) => {
+    if (value.period === "custom" && (!value.dateFrom || !value.dateTo)) {
+      context.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["dateFrom"],
+        message: "Custom period requires dateFrom and dateTo",
+      });
+    }
+    if (
+      value.period !== "custom" &&
+      (value.dateFrom !== undefined || value.dateTo !== undefined)
+    ) {
+      context.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["period"],
+        message: "dateFrom and dateTo are only valid for a custom period",
+      });
+    }
+    if (value.dateFrom && value.dateTo && value.dateFrom > value.dateTo) {
+      context.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["dateFrom"],
+        message: "dateFrom must not be after dateTo",
+      });
+    }
   });
 
-export const manualTestRunExecutorReassignmentSchema = z
-  .object({ executedById: uuidSchema })
-  .strict();
+export const manualTestRunCompleteSchema = z.object({}).strict();
+export const manualTestRunReopenSchema = z.object({}).strict();
 
-export const manualTestRunStepUpdateSchema = z
-  .object({
-    status: stepStatusSchema.optional(),
-    notes: notesSchema.optional(),
-  })
-  .strict()
-  .refine((value) => Object.keys(value).length > 0, {
-    message: "At least one editable field is required",
-  });
-
-export const manualTestRunCompleteSchema = z
-  .object({
-    status: terminalStatusSchema,
-    notes: notesSchema.optional(),
-  })
-  .strict();
-
-export type ManualTestRunStartInput = z.infer<typeof manualTestRunStartSchema>;
+export type ManualTestRunCreateInput = z.infer<
+  typeof manualTestRunCreateSchema
+>;
 export type ManualTestRunHistoryQuery = z.infer<
   typeof manualTestRunHistoryQuerySchema
->;
-export type ManualTestRunScenarioHistoryQuery = z.infer<
-  typeof manualTestRunScenarioHistoryQuerySchema
->;
-export type ManualTestRunUpdateInput = z.infer<
-  typeof manualTestRunUpdateSchema
->;
-export type ManualTestRunExecutorReassignmentInput = z.infer<
-  typeof manualTestRunExecutorReassignmentSchema
->;
-export type ManualTestRunStepUpdateInput = z.infer<
-  typeof manualTestRunStepUpdateSchema
 >;
 export type ManualTestRunCompleteInput = z.infer<
   typeof manualTestRunCompleteSchema

@@ -3,98 +3,137 @@
 
 import {
   manualTestRunCompleteSchema,
+  manualTestRunCreateSchema,
   manualTestRunHistoryQuerySchema,
-  manualTestRunScenarioHistoryQuerySchema,
-  manualTestRunStartSchema,
-  manualTestRunStepUpdateSchema,
-  manualTestRunUpdateSchema,
+  manualTestRunReopenSchema,
+  manualTestRunScenarioBulkSchema,
 } from "@/schemas/manualTestRunSchemas";
 
 const projectId = "11111111-1111-4111-8111-111111111111";
+const scenarioId = "22222222-2222-4222-8222-222222222222";
 
 describe("manual test run request schemas", () => {
-  it("accepts an empty start body and trims optional notes", () => {
-    expect(manualTestRunStartSchema.parse({})).toEqual({});
-    expect(manualTestRunStartSchema.parse({ notes: "  started  " })).toEqual({
-      notes: "started",
+  it("accepts exactly one source form and preserves selected scenario order", () => {
+    const second = "33333333-3333-4333-8333-333333333333";
+    const suite = "44444444-4444-4444-8444-444444444444";
+    expect(
+      manualTestRunCreateSchema.parse({ scenarioIds: [scenarioId, second] }),
+    ).toEqual({ scenarioIds: [scenarioId, second] });
+    expect(manualTestRunCreateSchema.parse({ suiteId: suite })).toEqual({
+      suiteId: suite,
     });
-  });
-
-  it("accepts editable run labels and exact source-label filters", () => {
-    expect(manualTestRunStartSchema.parse({ runKey: " Review " })).toEqual({ runKey: "Review" });
-    expect(manualTestRunUpdateSchema.parse({ runKey: null })).toEqual({ runKey: null });
-    expect(manualTestRunHistoryQuerySchema.parse({ projectId, sourceScenarioKey: " R1 " }).sourceScenarioKey).toBe("R1");
-    for (const runKey of ["  ", "R1\nR2", "x".repeat(101)]) {
-      expect(manualTestRunStartSchema.safeParse({ runKey }).success).toBe(false);
-      expect(manualTestRunUpdateSchema.safeParse({ runKey }).success).toBe(false);
-    }
-    for (const sourceScenarioKey of [" ", "R1\nR2", "x".repeat(101), ["R1", "R2"]]) {
-      expect(manualTestRunHistoryQuerySchema.safeParse({ projectId, sourceScenarioKey }).success).toBe(false);
-    }
-    expect(manualTestRunStartSchema.safeParse({ sourceScenarioKey: "R1" }).success).toBe(false);
-    expect(manualTestRunUpdateSchema.safeParse({ sourceScenarioKey: "R1" }).success).toBe(false);
-  });
-
-  it("rejects client-owned identity, snapshot, and unknown fields", () => {
+    expect(manualTestRunCreateSchema.safeParse({}).success).toBe(false);
     expect(
-      manualTestRunStartSchema.safeParse({ executedById: projectId }).success,
+      manualTestRunCreateSchema.safeParse({
+        scenarioIds: [scenarioId],
+        suiteId: suite,
+      }).success,
     ).toBe(false);
     expect(
-      manualTestRunUpdateSchema.safeParse({ title: "changed" }).success,
-    ).toBe(false);
-    expect(
-      manualTestRunStepUpdateSchema.safeParse({}).success,
+      manualTestRunCreateSchema.safeParse({
+        scenarioIds: [scenarioId, scenarioId],
+      }).success,
     ).toBe(false);
   });
 
-  it("requires valid editable statuses and supports null note clearing", () => {
+  it("accepts validated environment metadata for either source", () => {
     expect(
-      manualTestRunUpdateSchema.parse({ status: "in_progress", notes: null }),
-    ).toEqual({ status: "in_progress", notes: null });
+      manualTestRunCreateSchema.parse({
+        scenarioIds: [scenarioId],
+        browser: " Chrome ",
+        build: " 42 ",
+        device: null,
+      }),
+    ).toEqual({
+      scenarioIds: [scenarioId],
+      browser: "Chrome",
+      build: "42",
+      device: null,
+    });
     expect(
-      manualTestRunStepUpdateSchema.parse({ status: "not_started", notes: null }),
-    ).toEqual({ status: "not_started", notes: null });
+      manualTestRunCreateSchema.parse({
+        suiteId: scenarioId,
+        deployment: "stage",
+      }),
+    ).toEqual({ suiteId: scenarioId, deployment: "stage" });
     expect(
-      manualTestRunCompleteSchema.safeParse({ status: "in_progress" }).success,
+      manualTestRunCreateSchema.safeParse({
+        suiteId: scenarioId,
+        browser: "x".repeat(201),
+      }).success,
+    ).toBe(false);
+    expect(
+      manualTestRunCreateSchema.safeParse({
+        suiteId: scenarioId,
+        build: "a\nb",
+      }).success,
     ).toBe(false);
   });
 
-  it("parses bounded history queries and rejects invalid/repeated ranges", () => {
+  it("requires an empty lifecycle request and rejects client-owned fields", () => {
+    expect(manualTestRunCompleteSchema.parse({})).toEqual({});
+    expect(manualTestRunReopenSchema.parse({})).toEqual({});
+    expect(
+      manualTestRunCompleteSchema.safeParse({ status: "completed" }).success,
+    ).toBe(false);
+    expect(
+      manualTestRunReopenSchema.safeParse({ completedById: projectId }).success,
+    ).toBe(false);
+  });
+
+  it("validates run list period and local date filters", () => {
     expect(
       manualTestRunHistoryQuerySchema.parse({
         projectId,
-        startedFrom: "2026-01-01T00:00:00+02:00",
-        startedBefore: "2026-01-02T00:00:00Z",
-        status: "failed",
+        page: "2",
+        period: "recent",
       }),
-    ).toMatchObject({ projectId, page: 1, limit: 30, status: "failed" });
-
+    ).toMatchObject({
+      projectId,
+      page: 2,
+      limit: 30,
+      show: "in_progress",
+      timeZone: "UTC",
+    });
     expect(
       manualTestRunHistoryQuerySchema.safeParse({
         projectId,
-        startedFrom: "2026-01-01",
+        period: "custom",
+        dateFrom: "2026-02-01",
       }).success,
     ).toBe(false);
     expect(
       manualTestRunHistoryQuerySchema.safeParse({
         projectId,
-        startedFrom: "2026-01-02T00:00:00Z",
-        startedBefore: "2026-01-01T00:00:00Z",
+        period: "today",
+        dateFrom: "2026-02-01",
       }).success,
     ).toBe(false);
     expect(
       manualTestRunHistoryQuerySchema.safeParse({
         projectId,
-        status: ["failed", "passed"],
+        period: "custom",
+        dateFrom: "2026-02-02",
+        dateTo: "2026-02-01",
       }).success,
     ).toBe(false);
   });
 
-  it("does not allow a redundant scenario filter on nested history", () => {
+  it("requires at least one bulk operation and rejects unknown fields", () => {
     expect(
-      manualTestRunScenarioHistoryQuerySchema.safeParse({
-        projectId,
-        testScenarioId: projectId,
+      manualTestRunScenarioBulkSchema.safeParse({ scenarioIds: [scenarioId] })
+        .success,
+    ).toBe(false);
+    expect(
+      manualTestRunScenarioBulkSchema.parse({
+        scenarioIds: [scenarioId],
+        result: "passed",
+      }),
+    ).toMatchObject({ result: "passed" });
+    expect(
+      manualTestRunCreateSchema.safeParse({
+        suiteId: scenarioId,
+        title: "unsafe",
       }).success,
     ).toBe(false);
   });

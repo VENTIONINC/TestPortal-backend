@@ -2,41 +2,55 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { OpenAPIRegistry } from "@asteasolutions/zod-to-openapi";
+import type { ZodTypeAny } from "zod";
 import { ErrorResponseSchema } from "./common";
 import { z } from "./zod";
 
 const ManualTestRunStatusSchema = z
-  .enum(["in_progress", "passed", "failed", "blocked", "skipped"])
+  .enum(["in_progress", "completed"])
   .openapi("ManualTestRunStatus");
-
-const ManualTestRunStepStatusSchema = z
-  .enum(["not_started", "passed", "failed", "blocked", "skipped"])
-  .openapi("ManualTestRunStepStatus");
-
-const ManualTestRunExecutorSchema = z
-  .object({
-    id: z.string().uuid(),
-    name: z.string(),
-    email: z.string(),
-  })
+const ManualTestRunScenarioResultSchema = z
+  .enum(["untested", "passed", "failed", "blocked", "skipped"])
+  .openapi("ManualTestRunScenarioResult");
+const ManualTestRunUserSchema = z
+  .object({ id: z.string().uuid(), name: z.string(), email: z.string() })
   .strict()
   .nullable()
-  .openapi("ManualTestRunExecutor");
+  .openapi("ManualTestRunUser");
 
-const ManualTestRunStepSchema = z
+const ManualTestRunScenarioStepSchema = z
   .object({
     id: z.string().uuid().openapi({ readOnly: true }),
     position: z.number().int().nonnegative().openapi({ readOnly: true }),
     action: z.string().openapi({ readOnly: true }),
     expectedResult: z.string().nullable().openapi({ readOnly: true }),
-    status: ManualTestRunStepStatusSchema,
-    notes: z.string().nullable(),
-    updatedAt: z.string().openapi({ readOnly: true }),
   })
   .strict()
-  .openapi("ManualTestRunStep");
+  .openapi("ManualTestRunScenarioStep");
 
-const environmentResponseFields = {
+const ManualTestRunScenarioSchema = z
+  .object({
+    id: z.string().uuid().openapi({ readOnly: true }),
+    sourceScenarioId: z.string().uuid().openapi({ readOnly: true }),
+    sourceScenarioKey: z.string().openapi({ readOnly: true }),
+    title: z.string().openapi({ readOnly: true }),
+    position: z.number().int().nonnegative(),
+    details: z.string().nullable().openapi({ readOnly: true }),
+    preconditions: z.string().nullable().openapi({ readOnly: true }),
+    testData: z.string().nullable().openapi({ readOnly: true }),
+    folderPath: z.string().nullable().openapi({ readOnly: true }),
+    result: ManualTestRunScenarioResultSchema,
+    assigneeId: z.string().uuid().nullable(),
+    assignee: ManualTestRunUserSchema,
+    resultById: z.string().uuid().nullable().openapi({ readOnly: true }),
+    resultBy: ManualTestRunUserSchema,
+    resultAt: z.string().nullable().openapi({ readOnly: true }),
+    steps: z.array(ManualTestRunScenarioStepSchema).openapi({ readOnly: true }),
+  })
+  .strict()
+  .openapi("ManualTestRunScenario");
+
+const environmentFields = {
   browser: z.string().nullable(),
   operatingSystem: z.string().nullable(),
   device: z.string().nullable(),
@@ -44,120 +58,50 @@ const environmentResponseFields = {
   build: z.string().nullable(),
   deployment: z.string().nullable(),
 };
-const environmentInputFields = {
-  browser: z
-    .string()
-    .trim()
-    .max(200)
-    .regex(/^[^\r\n]*$/)
-    .nullable()
-    .optional(),
-  operatingSystem: z
-    .string()
-    .trim()
-    .max(200)
-    .regex(/^[^\r\n]*$/)
-    .nullable()
-    .optional(),
-  device: z
-    .string()
-    .trim()
-    .max(200)
-    .regex(/^[^\r\n]*$/)
-    .nullable()
-    .optional(),
-  apiEnvironment: z
-    .string()
-    .trim()
-    .max(200)
-    .regex(/^[^\r\n]*$/)
-    .nullable()
-    .optional(),
-  build: z
-    .string()
-    .trim()
-    .max(200)
-    .regex(/^[^\r\n]*$/)
-    .nullable()
-    .optional(),
-  deployment: z
-    .string()
-    .trim()
-    .max(200)
-    .regex(/^[^\r\n]*$/)
-    .nullable()
-    .optional(),
-};
 
 const ManualTestRunSchema = z
   .object({
     id: z.string().uuid().openapi({ readOnly: true }),
     projectId: z.string().uuid().openapi({ readOnly: true }),
-    sourceTestScenarioId: z.string().uuid().openapi({ readOnly: true }),
-    runKey: z
-      .string()
-      .max(100)
-      .nullable()
-      .openapi({
-        description:
-          "Editable nonunique label; UUIDs remain entity identifiers",
-      }),
-    sourceScenarioKey: z
-      .string()
-      .max(100)
-      .nullable()
-      .openapi({
-        readOnly: true,
-        description: "Scenario label captured when the run started",
-      }),
-    testScenarioId: z.string().uuid().nullable().openapi({ readOnly: true }),
     executedById: z.string().uuid().nullable().openapi({ readOnly: true }),
-    executedBy: ManualTestRunExecutorSchema,
+    executedBy: ManualTestRunUserSchema,
     status: ManualTestRunStatusSchema,
     startedAt: z.string().openapi({ readOnly: true }),
-    completedAt: z.string().nullable().openapi({ readOnly: true }),
     updatedAt: z.string().openapi({ readOnly: true }),
+    completedAt: z.string().nullable().openapi({ readOnly: true }),
+    completedById: z.string().uuid().nullable().openapi({ readOnly: true }),
+    completedBy: ManualTestRunUserSchema,
+    skippedAtCompletion: z
+      .number()
+      .int()
+      .nonnegative()
+      .openapi({ readOnly: true }),
     title: z.string().openapi({ readOnly: true }),
-    details: z.string().nullable().openapi({ readOnly: true }),
-    preconditions: z.string().nullable().openapi({ readOnly: true }),
-    testData: z.string().nullable().openapi({ readOnly: true }),
-    notes: z.string().nullable(),
-    ...environmentResponseFields,
-    steps: z.array(ManualTestRunStepSchema).openapi({ readOnly: true }),
+    ...environmentFields,
+    scenarios: z.array(ManualTestRunScenarioSchema).openapi({ readOnly: true }),
   })
   .strict()
   .openapi("ManualTestRun");
 
 const ManualTestRunSummarySchema = z
   .object({
-    id: z.string().uuid().openapi({ readOnly: true }),
-    projectId: z.string().uuid().openapi({ readOnly: true }),
-    sourceTestScenarioId: z.string().uuid().openapi({ readOnly: true }),
-    runKey: z
-      .string()
-      .max(100)
-      .nullable()
-      .openapi({
-        description:
-          "Editable nonunique label; UUIDs remain entity identifiers",
-      }),
-    sourceScenarioKey: z
-      .string()
-      .max(100)
-      .nullable()
-      .openapi({
-        readOnly: true,
-        description: "Scenario label captured when the run started",
-      }),
-    testScenarioId: z.string().uuid().nullable().openapi({ readOnly: true }),
-    executedById: z.string().uuid().nullable().openapi({ readOnly: true }),
-    executedBy: ManualTestRunExecutorSchema,
-    title: z.string().openapi({ readOnly: true }),
-    ...environmentResponseFields,
+    id: z.string().uuid(),
+    projectId: z.string().uuid(),
+    executedById: z.string().uuid().nullable(),
+    executedBy: ManualTestRunUserSchema,
     status: ManualTestRunStatusSchema,
-    startedAt: z.string().openapi({ readOnly: true }),
-    completedAt: z.string().nullable().openapi({ readOnly: true }),
-    updatedAt: z.string().openapi({ readOnly: true }),
+    startedAt: z.string(),
+    updatedAt: z.string(),
+    completedAt: z.string().nullable(),
+    completedDay: z.string().nullable(),
+    title: z.string(),
+    ...environmentFields,
+    scenarioCount: z.number().int().nonnegative(),
+    untestedCount: z.number().int().nonnegative(),
+    passedCount: z.number().int().nonnegative(),
+    failedCount: z.number().int().nonnegative(),
+    blockedCount: z.number().int().nonnegative(),
+    skippedCount: z.number().int().nonnegative(),
   })
   .strict()
   .openapi("ManualTestRunSummary");
@@ -173,245 +117,189 @@ const ManualTestRunPageSchema = z
   .strict()
   .openapi("ManualTestRunPage");
 
-const ProjectIdQuerySchema = z.object({
-  projectId: z.string().uuid(),
-});
+const ProjectIdQuerySchema = z
+  .object({ projectId: z.string().uuid() })
+  .strict();
+const RunIdParamsSchema = z.object({ runId: z.string().uuid() }).strict();
+const ScenarioParamsSchema = z
+  .object({ runId: z.string().uuid(), scenarioId: z.string().uuid() })
+  .strict();
 
-const ScenarioIdParamsSchema = z.object({
-  scenarioId: z.string().uuid(),
-});
-
-const RunIdParamsSchema = z.object({
-  runId: z.string().uuid(),
-});
-
-const RunStepParamsSchema = z.object({
-  runId: z.string().uuid(),
-  stepId: z.string().uuid(),
-});
-
-const dateDescription =
-  "RFC 3339 timestamp with an explicit Z or numeric timezone offset; startedFrom is inclusive and startedBefore is exclusive";
+const createEnvironmentFields = Object.fromEntries(
+  Object.keys(environmentFields).map((field) => [
+    field,
+    z
+      .string()
+      .max(200)
+      .regex(/^[^\r\n]*$/)
+      .nullable()
+      .optional(),
+  ]),
+);
+const ManualTestRunCreateRequestSchema = z
+  .union([
+    z
+      .object({
+        scenarioIds: z.array(z.string().uuid()).min(1).max(10000),
+        ...createEnvironmentFields,
+      })
+      .strict(),
+    z
+      .object({ suiteId: z.string().uuid(), ...createEnvironmentFields })
+      .strict(),
+  ])
+  .openapi("ManualTestRunCreateRequest");
 
 const ManualTestRunHistoryQuerySchema = z
   .object({
     projectId: z.string().uuid(),
     page: z.number().int().positive().default(1),
     limit: z.number().int().positive().max(100).default(30),
-    startedFrom: z.string().describe(dateDescription).optional(),
-    startedBefore: z.string().describe(dateDescription).optional(),
-    testScenarioId: z
+    search: z.string().trim().max(200).optional(),
+    show: z.enum(["in_progress", "completed", "all"]).default("in_progress"),
+    period: z
+      .enum([
+        "recent",
+        "today",
+        "yesterday",
+        "last_7_days",
+        "last_30_days",
+        "this_month",
+        "last_month",
+        "any_time",
+        "custom",
+      ])
+      .default("recent"),
+    timeZone: z.string().trim().min(1).max(100).default("UTC"),
+    dateFrom: z
       .string()
-      .uuid()
-      .describe("Immutable source scenario UUID")
+      .regex(/^\d{4}-\d{2}-\d{2}$/)
       .optional(),
-    sourceScenarioKey: z
+    dateTo: z
       .string()
-      .trim()
-      .min(1)
-      .max(100)
-      .regex(/^[^\r\n]+$/)
-      .describe(
-        "Exact, case-sensitive captured source label; duplicate labels match multiple scenarios",
-      )
+      .regex(/^\d{4}-\d{2}-\d{2}$/)
       .optional(),
-    status: ManualTestRunStatusSchema.optional(),
   })
   .strict()
   .openapi("ManualTestRunHistoryQuery");
 
-const ManualTestRunScenarioHistoryQuerySchema = z
+const ManualTestRunScenarioResultRequestSchema = z
   .object({
-    projectId: z.string().uuid(),
-    page: z.number().int().positive().default(1),
-    limit: z.number().int().positive().max(100).default(30),
-    startedFrom: z.string().describe(dateDescription).optional(),
-    startedBefore: z.string().describe(dateDescription).optional(),
-    status: ManualTestRunStatusSchema.optional(),
+    result: ManualTestRunScenarioResultSchema,
   })
   .strict()
-  .openapi("ManualTestRunScenarioHistoryQuery");
-
-const ManualTestRunStartRequestSchema = z
+  .openapi("ManualTestRunScenarioResultRequest");
+const ManualTestRunScenarioAssigneeRequestSchema = z
   .object({
-    notes: z.string().min(1).regex(/\S/).nullable().optional(),
-    runKey: z
-      .string()
-      .trim()
-      .min(1)
-      .max(100)
-      .regex(/^[^\r\n]+$/)
-      .nullable()
-      .optional(),
-    environmentProfileId: z.string().uuid().optional(),
-    ...environmentInputFields,
+    assigneeId: z.string().uuid().nullable(),
   })
   .strict()
-  .openapi("ManualTestRunStartRequest");
-
-const ManualTestRunUpdateRequestSchema = z
+  .openapi("ManualTestRunScenarioAssigneeRequest");
+const ManualTestRunScenarioOrderRequestSchema = z
   .object({
-    status: ManualTestRunStatusSchema.optional(),
-    notes: z.string().min(1).regex(/\S/).nullable().optional(),
-    runKey: z
-      .string()
-      .trim()
-      .min(1)
-      .max(100)
-      .regex(/^[^\r\n]+$/)
-      .nullable()
-      .optional(),
+    scenarioIds: z.array(z.string().uuid()).min(1).max(10000),
   })
   .strict()
-  .openapi("ManualTestRunUpdateRequest");
-
-const ManualTestRunExecutorReassignmentRequestSchema = z
-  .object({ executedById: z.string().uuid() })
-  .strict()
-  .openapi("ManualTestRunExecutorReassignmentRequest");
-
-const ManualTestRunStepUpdateRequestSchema = z
+  .openapi("ManualTestRunScenarioOrderRequest");
+const ManualTestRunScenarioBulkRequestSchema = z
   .object({
-    status: ManualTestRunStepStatusSchema.optional(),
-    notes: z.string().min(1).regex(/\S/).nullable().optional(),
+    scenarioIds: z.array(z.string().uuid()).min(1).max(10000),
+    result: ManualTestRunScenarioResultSchema.optional(),
+    assigneeId: z.string().uuid().nullable().optional(),
   })
   .strict()
-  .openapi("ManualTestRunStepUpdateRequest");
+  .refine(
+    (value) => value.result !== undefined || value.assigneeId !== undefined,
+    "At least one bulk result or assignment change is required",
+  )
+  .openapi("ManualTestRunScenarioBulkRequest");
+const EmptyRequestSchema = z.object({}).strict();
 
-const ManualTestRunCompleteRequestSchema = z
-  .object({
-    status: z.enum(["passed", "failed", "blocked", "skipped"]),
-    notes: z.string().min(1).regex(/\S/).nullable().optional(),
-  })
-  .strict()
-  .openapi("ManualTestRunCompleteRequest");
-
-const errorResponse = (description: string) => ({
+const error = (description: string) => ({
   description,
   content: { "application/json": { schema: ErrorResponseSchema } },
 });
-
 const commonErrors = {
-  400: errorResponse("Invalid request, identifier, filter, or immutable field"),
-  401: errorResponse("Unauthorized"),
-  403: errorResponse("Forbidden by the existing authentication lifecycle"),
-  404: errorResponse(
-    "The requested project, scenario, run, or step was not found in scope",
+  400: error("Invalid request, identifier, filter, or immutable field"),
+  401: error("Unauthorized"),
+  403: error("Forbidden by the existing authentication lifecycle"),
+  404: error(
+    "The requested project, run, scenario, or user was not found in scope",
   ),
-  409: errorResponse("The run cannot make the requested state transition"),
-  500: errorResponse("Internal server error"),
+  409: error("The run cannot make the requested state transition"),
+  500: error("Internal server error"),
 };
+const jsonBody = (schema: ZodTypeAny) => ({
+  required: true,
+  content: { "application/json": { schema } },
+});
 
 export function registerManualTestRunRoutes(registry: OpenAPIRegistry): void {
-  registry.register("ManualTestRunStatus", ManualTestRunStatusSchema);
-  registry.register("ManualTestRunStepStatus", ManualTestRunStepStatusSchema);
-  registry.register("ManualTestRunExecutor", ManualTestRunExecutorSchema);
-  registry.register("ManualTestRunStep", ManualTestRunStepSchema);
-  registry.register("ManualTestRun", ManualTestRunSchema);
-  registry.register("ManualTestRunSummary", ManualTestRunSummarySchema);
-  registry.register("ManualTestRunPage", ManualTestRunPageSchema);
-  registry.register(
-    "ManualTestRunHistoryQuery",
-    ManualTestRunHistoryQuerySchema,
-  );
-  registry.register(
-    "ManualTestRunScenarioHistoryQuery",
-    ManualTestRunScenarioHistoryQuerySchema,
-  );
-  registry.register(
-    "ManualTestRunStartRequest",
-    ManualTestRunStartRequestSchema,
-  );
-  registry.register(
-    "ManualTestRunUpdateRequest",
-    ManualTestRunUpdateRequestSchema,
-  );
-  registry.register(
-    "ManualTestRunExecutorReassignmentRequest",
-    ManualTestRunExecutorReassignmentRequestSchema,
-  );
-  registry.register(
-    "ManualTestRunStepUpdateRequest",
-    ManualTestRunStepUpdateRequestSchema,
-  );
-  registry.register(
-    "ManualTestRunCompleteRequest",
-    ManualTestRunCompleteRequestSchema,
-  );
+  for (const [name, schema] of Object.entries({
+    ManualTestRunStatus: ManualTestRunStatusSchema,
+    ManualTestRunScenarioResult: ManualTestRunScenarioResultSchema,
+    ManualTestRunUser: ManualTestRunUserSchema,
+    ManualTestRunScenarioStep: ManualTestRunScenarioStepSchema,
+    ManualTestRunScenario: ManualTestRunScenarioSchema,
+    ManualTestRun: ManualTestRunSchema,
+    ManualTestRunSummary: ManualTestRunSummarySchema,
+    ManualTestRunPage: ManualTestRunPageSchema,
+    ManualTestRunCreateRequest: ManualTestRunCreateRequestSchema,
+    ManualTestRunHistoryQuery: ManualTestRunHistoryQuerySchema,
+    ManualTestRunScenarioResultRequest:
+      ManualTestRunScenarioResultRequestSchema,
+    ManualTestRunScenarioAssigneeRequest:
+      ManualTestRunScenarioAssigneeRequestSchema,
+    ManualTestRunScenarioOrderRequest: ManualTestRunScenarioOrderRequestSchema,
+    ManualTestRunScenarioBulkRequest: ManualTestRunScenarioBulkRequestSchema,
+  }))
+    registry.register(name, schema);
 
   registry.registerPath({
     method: "post",
-    path: "/api/v2/test-scenarios/{scenarioId}/manual-runs",
+    path: "/api/v2/manual-test-runs",
     description:
-      "Starts an authenticated manual run by atomically capturing the structured scenario and ordered steps. The executor and timestamps are server-owned. Optional environment fields override values from an owned profile; null or blank clears a value. Build and deployment are always per-run.",
+      "Creates one project-scoped run from an ordered set of scenario IDs or a suite ID. Selected-scenario runs are titled Manual run; suite runs use the suite name. Snapshot creation is atomic.",
     request: {
-      params: ScenarioIdParamsSchema,
       query: ProjectIdQuerySchema,
-      body: {
-        required: false,
-        content: {
-          "application/json": { schema: ManualTestRunStartRequestSchema },
-        },
-      },
+      body: jsonBody(ManualTestRunCreateRequestSchema),
     },
     security: [{ BearerAuth: [] }],
     responses: {
       201: {
-        description: "Manual test run started",
+        description: "Created run with ordered scenario snapshots",
         content: { "application/json": { schema: ManualTestRunSchema } },
       },
       ...commonErrors,
     },
     tags: ["Manual Test Runs"],
   });
-
-  registry.registerPath({
-    method: "get",
-    path: "/api/v2/test-scenarios/{scenarioId}/manual-runs",
-    description:
-      "Lists lightweight runs for a live project-scoped scenario. The path scenario is the immutable source filter; offset pagination is deterministic for unchanged data but can shift after new runs.",
-    request: {
-      params: ScenarioIdParamsSchema,
-      query: ManualTestRunScenarioHistoryQuerySchema,
-    },
-    security: [{ BearerAuth: [] }],
-    responses: {
-      200: {
-        description: "Scenario manual-run history",
-        content: { "application/json": { schema: ManualTestRunPageSchema } },
-      },
-      ...commonErrors,
-    },
-    tags: ["Manual Test Runs"],
-  });
-
   registry.registerPath({
     method: "get",
     path: "/api/v2/manual-test-runs",
     description:
-      "Lists project-scoped lightweight manual-run history, including detached runs after source scenario deletion. Filters combine with AND before page and count.",
+      "Lists project-scoped runs filtered by search, lifecycle, period, and the requested local time zone. Counts cover every scenario in each run, independent of client paging or filters.",
     request: { query: ManualTestRunHistoryQuerySchema },
     security: [{ BearerAuth: [] }],
     responses: {
       200: {
-        description: "Project manual-run history",
+        description: "Paged project run history",
         content: { "application/json": { schema: ManualTestRunPageSchema } },
       },
       ...commonErrors,
     },
     tags: ["Manual Test Runs"],
   });
-
   registry.registerPath({
     method: "get",
     path: "/api/v2/manual-test-runs/{runId}",
     description:
-      "Retrieves a complete immutable snapshot and current execution state. Null live scenario/executor fields explicitly indicate deletion.",
+      "Returns the selected project-scoped run and its ordered immutable scenario and step snapshots with current results and assignments.",
     request: { params: RunIdParamsSchema, query: ProjectIdQuerySchema },
     security: [{ BearerAuth: [] }],
     responses: {
       200: {
-        description: "Manual test run detail",
+        description: "Run detail",
         content: { "application/json": { schema: ManualTestRunSchema } },
       },
       ...commonErrors,
@@ -420,116 +308,112 @@ export function registerManualTestRunRoutes(registry: OpenAPIRegistry): void {
   });
 
   registry.registerPath({
-    method: "patch",
-    path: "/api/v2/manual-test-runs/{runId}/executor",
-    description:
-      "Assigns an active user as Executor without changing execution data. Available for runs in any status to any authenticated active user; project-scoped and does not enforce Executor-only edit authorization.",
-    request: {
-      params: RunIdParamsSchema,
-      query: ProjectIdQuerySchema,
-      body: {
-        required: true,
-        content: {
-          "application/json": {
-            schema: ManualTestRunExecutorReassignmentRequestSchema,
-          },
-        },
-      },
-    },
-    security: [{ BearerAuth: [] }],
-    responses: {
-      200: {
-        description: "Reassigned run with authoritative Executor identity",
-        content: { "application/json": { schema: ManualTestRunSchema } },
-      },
-      400: errorResponse(
-        "Invalid request or target user is missing or inactive",
-      ),
-      401: errorResponse("Unauthorized"),
-      403: errorResponse("Forbidden by the existing authentication lifecycle"),
-      404: errorResponse("The run was not found in the requested project"),
-      500: errorResponse("Internal server error"),
-    },
-    tags: ["Manual Test Runs"],
-  });
-
-  registry.registerPath({
-    method: "patch",
+    method: "delete",
     path: "/api/v2/manual-test-runs/{runId}",
+    description: "Permanently deletes a project-scoped run and its scenario snapshots and lifecycle history.",
+    request: { params: RunIdParamsSchema, query: ProjectIdQuerySchema },
+    security: [{ BearerAuth: [] }],
+    responses: { 204: { description: "Run deleted" }, ...commonErrors },
+    tags: ["Manual Test Runs"],
+  });
+
+  const mutationResponse = {
+    200: {
+      description: "Authoritative updated run detail",
+      content: { "application/json": { schema: ManualTestRunSchema } },
+    },
+    ...commonErrors,
+  };
+  registry.registerPath({
+    method: "put",
+    path: "/api/v2/manual-test-runs/{runId}/scenarios/order",
     description:
-      "Updates active run labels, notes, or outcome atomically. A terminal status completes the run; completed runs allow runKey-only edits while execution fields remain frozen. Labels are nonunique, and UUIDs identify entities.",
+      "Reorders every scenario in an in-progress run using the supplied complete ordered scenario ID list.",
     request: {
       params: RunIdParamsSchema,
       query: ProjectIdQuerySchema,
-      body: {
-        required: true,
-        content: {
-          "application/json": { schema: ManualTestRunUpdateRequestSchema },
-        },
-      },
+      body: jsonBody(ManualTestRunScenarioOrderRequestSchema),
     },
     security: [{ BearerAuth: [] }],
-    responses: {
-      200: {
-        description: "Updated manual test run",
-        content: { "application/json": { schema: ManualTestRunSchema } },
-      },
-      ...commonErrors,
-    },
+    responses: mutationResponse,
     tags: ["Manual Test Runs"],
   });
-
-  registry.registerPath({
-    method: "patch",
-    path: "/api/v2/manual-test-runs/{runId}/steps/{stepId}",
-    description:
-      "Updates one copied step of an active run. Omitted notes are preserved and null clears them; source step content and position are immutable.",
-    request: {
-      params: RunStepParamsSchema,
-      query: ProjectIdQuerySchema,
-      body: {
-        required: true,
-        content: {
-          "application/json": { schema: ManualTestRunStepUpdateRequestSchema },
-        },
-      },
-    },
-    security: [{ BearerAuth: [] }],
-    responses: {
-      200: {
-        description: "Updated manual test run",
-        content: { "application/json": { schema: ManualTestRunSchema } },
-      },
-      ...commonErrors,
-    },
-    tags: ["Manual Test Runs"],
-  });
-
   registry.registerPath({
     method: "post",
-    path: "/api/v2/manual-test-runs/{runId}/complete",
+    path: "/api/v2/manual-test-runs/{runId}/scenarios/bulk",
     description:
-      "Explicitly completes an active run using the same atomic transition as terminal run PATCH. Passing requires a nonempty run to have at least one passed step and no failed, blocked, or not-started steps; failed, blocked, and skipped may finish early.",
+      "Atomically updates the result and/or assignee of every listed scenario in the run. Result attribution is the authenticated user.",
     request: {
       params: RunIdParamsSchema,
       query: ProjectIdQuerySchema,
-      body: {
-        required: true,
-        content: {
-          "application/json": { schema: ManualTestRunCompleteRequestSchema },
-        },
-      },
+      body: jsonBody(ManualTestRunScenarioBulkRequestSchema),
     },
     security: [{ BearerAuth: [] }],
-    responses: {
-      200: {
-        description: "Completed manual test run",
-        content: { "application/json": { schema: ManualTestRunSchema } },
-      },
-      ...commonErrors,
-    },
+    responses: mutationResponse,
     tags: ["Manual Test Runs"],
   });
+  registry.registerPath({
+    method: "put",
+    path: "/api/v2/manual-test-runs/{runId}/scenarios/{scenarioId}/result",
+    description:
+      "Sets or resets one scenario result and records the authenticated result actor.",
+    request: {
+      params: ScenarioParamsSchema,
+      query: ProjectIdQuerySchema,
+      body: jsonBody(ManualTestRunScenarioResultRequestSchema),
+    },
+    security: [{ BearerAuth: [] }],
+    responses: mutationResponse,
+    tags: ["Manual Test Runs"],
+  });
+  registry.registerPath({
+    method: "patch",
+    path: "/api/v2/manual-test-runs/{runId}/scenarios/{scenarioId}/assignee",
+    description:
+      "Assigns one scenario to an active project user or clears its assignment with null.",
+    request: {
+      params: ScenarioParamsSchema,
+      query: ProjectIdQuerySchema,
+      body: jsonBody(ManualTestRunScenarioAssigneeRequestSchema),
+    },
+    security: [{ BearerAuth: [] }],
+    responses: mutationResponse,
+    tags: ["Manual Test Runs"],
+  });
+  for (const [path, method, description, statusDescription] of [
+    [
+      "/complete",
+      "post",
+      "Completes an in-progress run atomically, marks only still-untested scenarios Skipped, and returns the actual skipped count.",
+      "Completed run detail",
+    ],
+    [
+      "/reopen",
+      "post",
+      "Reopens a completed run and preserves scenario results, assignment, attribution, snapshots, and order.",
+      "Reopened run detail",
+    ],
+  ] as const) {
+    registry.registerPath({
+      method,
+      path: `/api/v2/manual-test-runs/{runId}${path}`,
+      description,
+      request: {
+        params: RunIdParamsSchema,
+        query: ProjectIdQuerySchema,
+        body: jsonBody(EmptyRequestSchema),
+      },
+      security: [{ BearerAuth: [] }],
+      responses: {
+        200: {
+          description: statusDescription,
+          content: { "application/json": { schema: ManualTestRunSchema } },
+        },
+        ...commonErrors,
+      },
+      tags: ["Manual Test Runs"],
+    });
+  }
 }
 
 export {
@@ -537,5 +421,5 @@ export {
   ManualTestRunSummarySchema,
   ManualTestRunPageSchema,
   ManualTestRunStatusSchema,
-  ManualTestRunStepStatusSchema,
+  ManualTestRunScenarioResultSchema,
 };
