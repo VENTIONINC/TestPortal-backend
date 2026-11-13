@@ -27,7 +27,10 @@ async function makeSnapshot(
 ): Promise<AiConfigSnapshot> {
   const baseUrl = options.baseUrl ?? "https://api.openai.com/v1";
   const operations = {
-    classification: { ...defaultOperation, ...options.operations?.classification },
+    classification: {
+      ...defaultOperation,
+      ...options.operations?.classification,
+    },
     formatting: {
       ...defaultOperation,
       ...options.formatting,
@@ -113,6 +116,31 @@ describe("createGenerativeAiClient", () => {
     });
     expect(requestBody).not.toHaveProperty("temperature");
     expect(requestBody).not.toHaveProperty("max_tokens");
+  });
+
+  it("keeps generative classification compatible when Decisions is configured but disabled", async () => {
+    let requestBody: Record<string, unknown> | undefined;
+    jest.spyOn(global, "fetch").mockImplementation(async (_input, init) => {
+      requestBody = JSON.parse(String(init?.body)) as Record<string, unknown>;
+      return chatResponse("gpt-4.1-mini");
+    });
+
+    const snapshot = await makeSnapshot({
+      operations: {
+        classification: {
+          model: "gpt-4.1-mini",
+          api: "chat-completions",
+          decisions: { model: "decision-model-alias" },
+        },
+      },
+    });
+    expect(snapshot.classificationStrategy).toBe("generative");
+
+    const client = createGenerativeAiClient("classification", snapshot);
+    await client.invoke(() => client.model.invoke("synthetic prompt"));
+
+    expect(requestBody?.model).toBe("gpt-4.1-mini");
+    expect(requestBody).not.toHaveProperty("decisions");
   });
 
   it("sends Responses API reasoning fields without direct defaults", async () => {
@@ -264,17 +292,12 @@ describe("createGenerativeAiClient", () => {
     15000,
   );
 
-  it.each([
-    "classification",
-    "formatting",
-    "suggestions",
-    "insights",
-  ] as const)(
+  it.each(["classification", "formatting", "suggestions", "insights"] as const)(
     "omits implicit generation defaults and retries for custom %s requests",
     async (operation) => {
-      const fetchMock = jest.spyOn(global, "fetch").mockImplementation(
-        async () => chatResponse("gpt-4.1-mini"),
-      );
+      const fetchMock = jest
+        .spyOn(global, "fetch")
+        .mockImplementation(async () => chatResponse("gpt-4.1-mini"));
       const client = createGenerativeAiClient(
         operation,
         await makeSnapshot({ baseUrl: "https://ai.example.test/v1" }),
@@ -447,7 +470,9 @@ describe("createGenerativeAiClient", () => {
         operation,
         await makeSnapshot({
           baseUrl,
-          operations: { [operation]: { ...defaultOperation, api: "responses" } },
+          operations: {
+            [operation]: { ...defaultOperation, api: "responses" },
+          },
         }),
       );
       await client.invoke(() => client.model.invoke("synthetic prompt"));
@@ -460,12 +485,49 @@ describe("createGenerativeAiClient", () => {
   );
 
   it.each([
-    ["chat completion refusal", { response_metadata: {}, additional_kwargs: { refusal: "no" }, content: "" }],
-    ["chat completion truncation", { response_metadata: { finish_reason: "length" }, additional_kwargs: {}, content: "{}" }],
-    ["incomplete Responses status", { response_metadata: { status: "incomplete", incomplete_details: { reason: "max_output_tokens" } }, additional_kwargs: {}, content: "" }],
-    ["incomplete Responses output item", { response_metadata: { status: "completed", output: [{ type: "message", status: "incomplete", content: [] }] }, additional_kwargs: {}, content: "" }],
+    [
+      "chat completion refusal",
+      {
+        response_metadata: {},
+        additional_kwargs: { refusal: "no" },
+        content: "",
+      },
+    ],
+    [
+      "chat completion truncation",
+      {
+        response_metadata: { finish_reason: "length" },
+        additional_kwargs: {},
+        content: "{}",
+      },
+    ],
+    [
+      "incomplete Responses status",
+      {
+        response_metadata: {
+          status: "incomplete",
+          incomplete_details: { reason: "max_output_tokens" },
+        },
+        additional_kwargs: {},
+        content: "",
+      },
+    ],
+    [
+      "incomplete Responses output item",
+      {
+        response_metadata: {
+          status: "completed",
+          output: [{ type: "message", status: "incomplete", content: [] }],
+        },
+        additional_kwargs: {},
+        content: "",
+      },
+    ],
   ])("rejects %s before returning structured output", (_label, raw) => {
-    const client = { connection: "openai" as const, requestedModel: "safe-model" };
+    const client = {
+      connection: "openai" as const,
+      requestedModel: "safe-model",
+    };
     expect(() =>
       parseStructuredCompletion(
         client,

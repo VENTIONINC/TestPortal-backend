@@ -7,6 +7,7 @@ import parseCookie from "cookie-parser";
 import helmet from "helmet";
 
 import getLogger from "@/lib/logger";
+import { publicJsonReplacer } from "@/lib/jsonPayloads";
 import { errorHandler } from "@/middleware/error-handler";
 import routes from "@/routes/index";
 
@@ -23,6 +24,7 @@ const loggingMiddleware = (
 };
 
 const app = express();
+app.set("json replacer", publicJsonReplacer);
 app.use(helmet());
 app.use(cors());
 

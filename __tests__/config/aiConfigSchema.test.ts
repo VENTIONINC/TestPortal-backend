@@ -21,6 +21,9 @@ describe("aiConfigSchema", () => {
     expect(
       aiConfigSchema.parse(defaultConfig).operations.formatting.model,
     ).toBe("gpt-4.1-mini");
+    expect(
+      aiConfigSchema.parse(defaultConfig).operations.classification.decisions,
+    ).toEqual({ model: "gpt-6-luna" });
   });
 
   it("accepts unevaluated aliases and supplies the default API", () => {
@@ -29,6 +32,24 @@ describe("aiConfigSchema", () => {
     expect(parsed.operations.formatting).toEqual({
       model: "model-alias",
       api: "chat-completions",
+    });
+  });
+
+  it("accepts a separately configured Decisions model for classification", () => {
+    const config = validConfig();
+    const parsed = aiConfigSchema.parse({
+      ...config,
+      operations: {
+        ...config.operations,
+        classification: {
+          ...operation,
+          decisions: { model: "gpt-6-luna" },
+        },
+      },
+    });
+
+    expect(parsed.operations.classification.decisions).toEqual({
+      model: "gpt-6-luna",
     });
   });
 
@@ -45,6 +66,19 @@ describe("aiConfigSchema", () => {
       }),
     ],
     ["connection fields", () => ({ ...validConfig(), apiKey: "secret" })],
+    [
+      "generative fields inside Decisions settings",
+      () => ({
+        ...validConfig(),
+        operations: {
+          ...validConfig().operations,
+          classification: {
+            ...operation,
+            decisions: { model: "gpt-6-luna", temperature: 0 },
+          },
+        },
+      }),
+    ],
     [
       "operation endpoint field",
       () => ({

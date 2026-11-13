@@ -45,6 +45,8 @@ describe("resultService JSON payload normalization", () => {
     analysisFeedbackCategory: null,
     analysisFeedbackConfidence: null,
     analysisFeedbackConclusion: null,
+    analysisMetadata: { provider: "internal-provider", secret: "private" },
+    analysisLastError: { message: "private upstream body" },
     spec: {
       id: "spec-1",
       createdAt: now,
@@ -81,7 +83,19 @@ describe("resultService JSON payload normalization", () => {
         receivedString: null,
         location: "spec.ts:12",
         resultId: "result-1",
-        result: null,
+        result: {
+          id: "nested-result",
+          createdAt: now,
+          updatedAt: now,
+          retry: 0,
+          status: "failed",
+          duration: 1,
+          startTime: now,
+          specId: "spec-1",
+          executionId: "exec-1",
+          analysisMetadata: { request: "private" },
+          analysisLastError: { credential: "private" },
+        },
         assumptions: [],
       },
       {
@@ -114,8 +128,20 @@ describe("resultService JSON payload normalization", () => {
       const rawResult = buildRawResult();
       rawResult.status = status;
       const scenarios = [
-        { id: "scenario-1", title: "Checkout", scenarioKey: null, details: "Payment flow", contentMd: "# Checkout\n" },
-        { id: "scenario-2", title: "Refund", scenarioKey: null, details: null, contentMd: "# Refund\n" },
+        {
+          id: "scenario-1",
+          title: "Checkout",
+          scenarioKey: null,
+          details: "Payment flow",
+          contentMd: "# Checkout\n",
+        },
+        {
+          id: "scenario-2",
+          title: "Refund",
+          scenarioKey: null,
+          details: null,
+          contentMd: "# Refund\n",
+        },
       ];
       mockResultModel.findById.mockResolvedValueOnce(rawResult);
       mockTestScenarioSpecLinkModel.findLinkedTestScenarios.mockResolvedValueOnce(
@@ -131,13 +157,16 @@ describe("resultService JSON payload normalization", () => {
         ...normalizeResultPayload(rawResult),
         relatedTestScenarios: scenarios,
       });
+      expect(Object.keys(detail.relatedTestScenarios[0] ?? {}).sort()).toEqual([
+        "contentMd",
+        "details",
+        "id",
+        "scenarioKey",
+        "title",
+      ]);
       expect(
-        Object.keys(detail.relatedTestScenarios[0] ?? {}).sort(),
-      ).toEqual(["contentMd", "details", "id", "scenarioKey", "title"]);
-      expect(mockTestScenarioSpecLinkModel.findLinkedTestScenarios).toHaveBeenCalledWith(
-        "spec-1",
-        "project-1",
-      );
+        mockTestScenarioSpecLinkModel.findLinkedTestScenarios,
+      ).toHaveBeenCalledWith("spec-1", "project-1");
     },
   );
 
@@ -156,7 +185,13 @@ describe("resultService JSON payload normalization", () => {
   it("returns a single lightweight related scenario summary", async () => {
     const rawResult = buildRawResult();
     const scenarios = [
-      { id: "scenario-1", title: "Checkout", scenarioKey: null, details: null, contentMd: "# Checkout\n" },
+      {
+        id: "scenario-1",
+        title: "Checkout",
+        scenarioKey: null,
+        details: null,
+        contentMd: "# Checkout\n",
+      },
     ];
     mockResultModel.findById.mockResolvedValueOnce(rawResult);
     mockTestScenarioSpecLinkModel.findLinkedTestScenarios.mockResolvedValueOnce(
@@ -186,6 +221,9 @@ describe("resultService JSON payload normalization", () => {
     const result = await resultService.getResultById("result-1", "project-1");
 
     expect(result).toEqual(normalizeResultPayload(rawResult));
+    expect(JSON.stringify(result)).not.toMatch(
+      /analysisMetadata|analysisLastError|private upstream body|private-provider/,
+    );
     expect(result).not.toHaveProperty("relatedTestScenarios");
     expect(
       mockTestScenarioSpecLinkModel.findLinkedTestScenarios,
