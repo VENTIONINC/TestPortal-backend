@@ -28,14 +28,11 @@ enum SkillSource {
 
 enum ManualTestRunStatus {
   in_progress
-  passed
-  failed
-  blocked
-  skipped
+  completed
 }
 
-enum ManualTestRunStepStatus {
-  not_started
+enum ManualTestRunScenarioResult {
+  untested
   passed
   failed
   blocked
@@ -43,30 +40,30 @@ enum ManualTestRunStepStatus {
 }
 
 model Project {
-  id              String   @id @default(uuid()) @db.Uuid
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
-  name            String   @unique
-  description     String?
-  isActive        Boolean  @default(true)
-  categoryWeights Json?
-  lastScenarioNumber Int @default(0)
+  id                 String   @id @default(uuid()) @db.Uuid
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+  name               String   @unique
+  description        String?
+  isActive           Boolean  @default(true)
+  categoryWeights    Json?
+  lastScenarioNumber Int      @default(0)
 
   // Simple ownership
   owner   User   @relation(fields: [ownerId], references: [id])
   ownerId String @db.Uuid
 
   // Relationships
-  executions    Execution[]
-  specs         Spec[]
-  issues        Issue[]
-  testScenarios TestScenario[]
-  testScenarioFolders TestScenarioFolder[]
-  testSuites TestSuite[]
-  manualTestRuns ManualTestRun[]
+  executions                   Execution[]
+  specs                        Spec[]
+  issues                       Issue[]
+  testScenarios                TestScenario[]
+  testScenarioFolders          TestScenarioFolder[]
+  testSuites                   TestSuite[]
+  manualTestRuns               ManualTestRun[]
   manualRunEnvironmentProfiles ManualRunEnvironmentProfile[]
-  uploadApiKeys UploadApiKey[]
-  dailyMetrics  DailyExecutionMetric[]
+  uploadApiKeys                UploadApiKey[]
+  dailyMetrics                 DailyExecutionMetric[]
 
   @@index([name])
   @@index([ownerId])
@@ -109,7 +106,7 @@ model Spec {
   project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
   projectId String  @db.Uuid
 
-  results Result[]
+  results           Result[]
   testScenarioLinks TestScenarioSpecLink[]
 
   // Unique key per project
@@ -120,30 +117,30 @@ model Spec {
 }
 
 model Result {
-  id                              String        @id @default(uuid()) @db.Uuid
-  createdAt                       DateTime      @default(now())
-  updatedAt                       DateTime      @updatedAt
-  reportPortalLink                String?
-  retry                           Int
-  status                          String
-  duration                        Int
-  startTime                       DateTime
-  errors                          ResultError[]
-  spec                            Spec          @relation(fields: [specId], references: [id], onDelete: Cascade)
-  specId                          String        @db.Uuid
-  execution                       Execution     @relation(fields: [executionId], references: [id], onDelete: Cascade)
-  executionId                     String        @db.Uuid
-  analysisStatus                  String? // "passed" | "failed"
-  analysisCategory                String? // "bug" | "infra" | "performance" | "script" | "other"
-  analysisConfidence              Int? // 1 to 5
-  analysisConclusion              String? // Brief explanation for the categorization decision
-  analysisErrorQuality            Int? // 1 to 5 (only for failed tests)
-  analysisErrorQualityConclusion  String? // Brief explanation for error quality rating (only for failed tests)
-  analysisReviewedAt              DateTime?
-  analysisReviewedById            String? @db.Uuid
-  analysisFeedbackCategory        String?
-  analysisFeedbackConfidence      Int?
-  analysisFeedbackConclusion      String?
+  id                             String        @id @default(uuid()) @db.Uuid
+  createdAt                      DateTime      @default(now())
+  updatedAt                      DateTime      @updatedAt
+  reportPortalLink               String?
+  retry                          Int
+  status                         String
+  duration                       Int
+  startTime                      DateTime
+  errors                         ResultError[]
+  spec                           Spec          @relation(fields: [specId], references: [id], onDelete: Cascade)
+  specId                         String        @db.Uuid
+  execution                      Execution     @relation(fields: [executionId], references: [id], onDelete: Cascade)
+  executionId                    String        @db.Uuid
+  analysisStatus                 String? // "passed" | "failed"
+  analysisCategory               String? // "bug" | "infra" | "performance" | "script" | "other"
+  analysisConfidence             Int? // 1 to 5
+  analysisConclusion             String? // Brief explanation for the categorization decision
+  analysisErrorQuality           Int? // 1 to 5 (only for failed tests)
+  analysisErrorQualityConclusion String? // Brief explanation for error quality rating (only for failed tests)
+  analysisReviewedAt             DateTime?
+  analysisReviewedById           String?       @db.Uuid
+  analysisFeedbackCategory       String?
+  analysisFeedbackConfidence     Int?
+  analysisFeedbackConclusion     String?
 
   @@index([specId, startTime])
   @@index([executionId])
@@ -205,14 +202,17 @@ model User {
   analyzeEnabled          Boolean    @default(false)
 
   // Project relationships
-  projects             Project[]
-  issuesCreated        Issue[]        @relation("IssuesCreated")
-  issuesUpdated        Issue[]        @relation("IssuesUpdated")
-  testScenariosCreated TestScenario[] @relation("TestScenarioCreatedBy")
-  testScenariosUpdated TestScenario[] @relation("TestScenarioUpdatedBy")
-  manualTestRunsExecuted ManualTestRun[] @relation("ManualTestRunExecutedBy")
+  projects                     Project[]
+  issuesCreated                Issue[]                       @relation("IssuesCreated")
+  issuesUpdated                Issue[]                       @relation("IssuesUpdated")
+  testScenariosCreated         TestScenario[]                @relation("TestScenarioCreatedBy")
+  testScenariosUpdated         TestScenario[]                @relation("TestScenarioUpdatedBy")
+  manualTestRunsExecuted       ManualTestRun[]               @relation("ManualTestRunExecutedBy")
+  manualTestRunsCompleted      ManualTestRun[]               @relation("ManualTestRunCompletedBy")
+  manualRunScenariosAssigned   ManualTestRunScenario[]       @relation("ManualTestRunScenarioAssignedTo")
+  manualRunScenariosResulted   ManualTestRunScenario[]       @relation("ManualTestRunScenarioResultedBy")
   manualRunEnvironmentProfiles ManualRunEnvironmentProfile[]
-  uploadApiKeys        UploadApiKey[]
+  uploadApiKeys                UploadApiKey[]
 }
 
 model Issue {
@@ -248,55 +248,54 @@ enum TestScenarioPriority {
 }
 
 model TestScenario {
-  id                    String             @id @default(uuid()) @db.Uuid
-  createdAt             DateTime           @default(now())
-  updatedAt             DateTime           @updatedAt
-  title                 String
-  scenarioKey           String             @db.VarChar(100)
-  scenarioNumber        Int
-  revision              Int                @default(1)
-  updatedById           String?            @db.Uuid
-  priority              TestScenarioPriority @default(medium)
-  relatedIssueUrl       String?            @db.Text
-  details               String?            @db.Text
-  preconditions         String?            @db.Text
-  testData              String?            @db.Text
-  contentMd             String             @db.Text
-  contentMdHash         String             @db.Char(64)
-  contentMdFormatVersion Int               @default(1)
-  createdById           String             @db.Uuid
+  id                     String               @id @default(uuid()) @db.Uuid
+  createdAt              DateTime             @default(now())
+  updatedAt              DateTime             @updatedAt
+  title                  String
+  scenarioKey            String               @db.VarChar(100)
+  scenarioNumber         Int
+  revision               Int                  @default(1)
+  updatedById            String?              @db.Uuid
+  priority               TestScenarioPriority @default(medium)
+  relatedIssueUrl        String?              @db.Text
+  details                String?              @db.Text
+  preconditions          String?              @db.Text
+  testData               String?              @db.Text
+  contentMd              String               @db.Text
+  contentMdHash          String               @db.Char(64)
+  contentMdFormatVersion Int                  @default(1)
+  createdById            String               @db.Uuid
 
-  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
-  projectId String  @db.Uuid
-  folderId  String? @db.Uuid
+  project   Project             @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  projectId String              @db.Uuid
+  folderId  String?             @db.Uuid
   folder    TestScenarioFolder? @relation(fields: [folderId], references: [id], onDelete: SetNull)
-  createdBy User    @relation("TestScenarioCreatedBy", fields: [createdById], references: [id])
-  updatedBy User?   @relation("TestScenarioUpdatedBy", fields: [updatedById], references: [id], onDelete: SetNull)
+  createdBy User                @relation("TestScenarioCreatedBy", fields: [createdById], references: [id])
+  updatedBy User?               @relation("TestScenarioUpdatedBy", fields: [updatedById], references: [id], onDelete: SetNull)
 
-  specLinks TestScenarioSpecLink[]
-  steps     TestScenarioStep[]
-  manualTestRuns ManualTestRun[]
+  specLinks        TestScenarioSpecLink[]
+  steps            TestScenarioStep[]
   suiteMemberships TestSuiteMember[]
 
+  @@unique([projectId, scenarioNumber])
   @@index([projectId])
   @@index([projectId, createdAt])
   @@index([projectId, folderId])
   @@index([createdById])
-  @@unique([projectId, scenarioNumber])
 }
 
 model TestScenarioFolder {
-  id        String   @id @default(uuid()) @db.Uuid
-  projectId String   @db.Uuid
-  parentId  String?  @db.Uuid
-  name      String
-  description String? @db.Text
-  position  Int      @default(0)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id          String   @id @default(uuid()) @db.Uuid
+  projectId   String   @db.Uuid
+  parentId    String?  @db.Uuid
+  name        String
+  description String?  @db.Text
+  position    Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 
-  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
-  parent    TestScenarioFolder? @relation("FolderTree", fields: [parentId], references: [id], onDelete: Cascade)
+  project   Project              @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  parent    TestScenarioFolder?  @relation("FolderTree", fields: [parentId], references: [id], onDelete: Cascade)
   children  TestScenarioFolder[] @relation("FolderTree")
   scenarios TestScenario[]
 
@@ -305,29 +304,29 @@ model TestScenarioFolder {
 }
 
 model TestSuite {
-  id          String   @id @default(uuid()) @db.Uuid
-  projectId   String   @db.Uuid
-  name        String
-  description String?
-  purpose     String?
-  release     String?
-  membershipRevision Int @default(0)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id                 String   @id @default(uuid()) @db.Uuid
+  projectId          String   @db.Uuid
+  name               String
+  description        String?
+  purpose            String?
+  release            String?
+  membershipRevision Int      @default(0)
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
 
-  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  project Project           @relation(fields: [projectId], references: [id], onDelete: Cascade)
   members TestSuiteMember[]
 
   @@index([projectId, name])
 }
 
 model TestSuiteMember {
-  suiteId String @db.Uuid
-  testScenarioId String @db.Uuid
-  position Int
-  createdAt DateTime @default(now())
+  suiteId        String   @db.Uuid
+  testScenarioId String   @db.Uuid
+  position       Int
+  createdAt      DateTime @default(now())
 
-  suite TestSuite @relation(fields: [suiteId], references: [id], onDelete: Cascade)
+  suite        TestSuite    @relation(fields: [suiteId], references: [id], onDelete: Cascade)
   testScenario TestScenario @relation(fields: [testScenarioId], references: [id], onDelete: Cascade)
 
   @@id([suiteId, testScenarioId])
@@ -336,11 +335,11 @@ model TestSuiteMember {
 }
 
 model TestScenarioStep {
-  id             String       @id @default(uuid()) @db.Uuid
-  testScenarioId String       @db.Uuid
+  id             String  @id @default(uuid()) @db.Uuid
+  testScenarioId String  @db.Uuid
   position       Int
-  action         String       @db.Text
-  expectedResult String?      @db.Text
+  action         String  @db.Text
+  expectedResult String? @db.Text
 
   testScenario TestScenario @relation(fields: [testScenarioId], references: [id], onDelete: Cascade)
 
@@ -359,38 +358,35 @@ model TestScenarioSpecLink {
 }
 
 model ManualTestRun {
-  id                   String              @id @default(uuid()) @db.Uuid
-  projectId            String              @db.Uuid
-  testScenarioId       String?             @db.Uuid
-  sourceTestScenarioId String              @db.Uuid
-  runKey               String?             @db.VarChar(100)
-  sourceScenarioKey    String?             @db.VarChar(100)
-  executedById         String?             @db.Uuid
-  status               ManualTestRunStatus @default(in_progress)
-  startedAt            DateTime            @default(now())
-  updatedAt            DateTime            @updatedAt
-  completedAt          DateTime?
-  title                String
-  details              String?             @db.Text
-  preconditions        String?             @db.Text
-  testData             String?             @db.Text
-  notes                String?             @db.Text
-  browser              String?             @db.VarChar(200)
-  operatingSystem      String?             @db.VarChar(200)
-  device               String?             @db.VarChar(200)
-  apiEnvironment       String?             @db.VarChar(200)
-  build                String?             @db.VarChar(200)
-  deployment           String?             @db.VarChar(200)
+  id                  String              @id @default(uuid()) @db.Uuid
+  projectId           String              @db.Uuid
+  executedById        String?             @db.Uuid
+  status              ManualTestRunStatus @default(in_progress)
+  startedAt           DateTime            @default(now())
+  updatedAt           DateTime            @updatedAt
+  completedAt         DateTime?
+  completedById       String?             @db.Uuid
+  skippedAtCompletion Int                 @default(0)
+  title               String
+  browser             String?             @db.VarChar(200)
+  operatingSystem     String?             @db.VarChar(200)
+  device              String?             @db.VarChar(200)
+  apiEnvironment      String?             @db.VarChar(200)
+  build               String?             @db.VarChar(200)
+  deployment          String?             @db.VarChar(200)
 
-  project      Project             @relation(fields: [projectId], references: [id], onDelete: Cascade)
-  testScenario TestScenario?       @relation(fields: [testScenarioId], references: [id], onDelete: SetNull)
-  executedBy   User?               @relation("ManualTestRunExecutedBy", fields: [executedById], references: [id], onDelete: SetNull)
-  steps        ManualTestRunStep[]
+  project     Project                          @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  executedBy  User?                            @relation("ManualTestRunExecutedBy", fields: [executedById], references: [id], onDelete: SetNull)
+  completedBy User?                            @relation("ManualTestRunCompletedBy", fields: [completedById], references: [id], onDelete: SetNull)
+  scenarios   ManualTestRunScenario[]
+  intervals   ManualTestRunLifecycleInterval[]
 
+  @@unique([id, projectId])
   @@index([projectId, startedAt, id])
-  @@index([projectId, sourceTestScenarioId, startedAt, id])
-  @@index([projectId, sourceScenarioKey, startedAt, id])
+  @@index([projectId, status, startedAt, id])
+  @@index([projectId, completedAt, id])
   @@index([executedById])
+  @@index([completedById])
 }
 
 model ManualRunEnvironmentProfile {
@@ -412,19 +408,58 @@ model ManualRunEnvironmentProfile {
   @@index([ownerId])
 }
 
-model ManualTestRunStep {
-  id              String                  @id @default(uuid()) @db.Uuid
-  manualTestRunId String                  @db.Uuid
-  position        Int
-  action          String                  @db.Text
-  expectedResult  String?                 @db.Text
-  status          ManualTestRunStepStatus @default(not_started)
-  notes           String?                 @db.Text
-  updatedAt       DateTime                @updatedAt
+model ManualTestRunScenario {
+  id                String                      @id @default(uuid()) @db.Uuid
+  manualTestRunId   String                      @db.Uuid
+  projectId         String                      @db.Uuid
+  sourceScenarioId  String                      @db.Uuid
+  sourceScenarioKey String                      @db.VarChar(100)
+  title             String
+  position          Int
+  details           String?                     @db.Text
+  preconditions     String?                     @db.Text
+  testData          String?                     @db.Text
+  folderPath        String?
+  result            ManualTestRunScenarioResult @default(untested)
+  assigneeId        String?                     @db.Uuid
+  resultById        String?                     @db.Uuid
+  resultAt          DateTime?
 
-  manualTestRun ManualTestRun @relation(fields: [manualTestRunId], references: [id], onDelete: Cascade)
+  run      ManualTestRun               @relation(fields: [manualTestRunId, projectId], references: [id, projectId], onDelete: Cascade)
+  assignee User?                       @relation("ManualTestRunScenarioAssignedTo", fields: [assigneeId], references: [id], onDelete: SetNull)
+  resultBy User?                       @relation("ManualTestRunScenarioResultedBy", fields: [resultById], references: [id], onDelete: SetNull)
+  steps    ManualTestRunScenarioStep[]
 
   @@unique([manualTestRunId, position])
+  @@unique([id, manualTestRunId])
+  @@index([projectId, result, manualTestRunId])
+  @@index([assigneeId, manualTestRunId])
+}
+
+model ManualTestRunScenarioStep {
+  id                      String  @id @default(uuid()) @db.Uuid
+  manualTestRunScenarioId String  @db.Uuid
+  position                Int
+  action                  String  @db.Text
+  expectedResult          String? @db.Text
+
+  scenario ManualTestRunScenario @relation(fields: [manualTestRunScenarioId], references: [id], onDelete: Cascade)
+
+  @@unique([manualTestRunScenarioId, position])
+  @@index([manualTestRunScenarioId])
+}
+
+model ManualTestRunLifecycleInterval {
+  id              String    @id @default(uuid()) @db.Uuid
+  manualTestRunId String    @db.Uuid
+  projectId       String    @db.Uuid
+  startedAt       DateTime  @default(now())
+  endedAt         DateTime?
+
+  run ManualTestRun @relation(fields: [manualTestRunId, projectId], references: [id, projectId], onDelete: Cascade)
+
+  @@index([projectId, startedAt, endedAt])
+  @@index([manualTestRunId, startedAt])
 }
 
 model UploadApiKey {

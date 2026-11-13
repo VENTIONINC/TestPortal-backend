@@ -2,50 +2,63 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { Router } from "express";
-import { manualTestRunController } from "@/controllers/manualTestRunController";
+import { manualTestRunCreationController } from "@/controllers/manualTestRunCreationController";
+import { manualTestRunHistoryController } from "@/controllers/manualTestRunHistoryController";
+import { manualTestRunLifecycleController } from "@/controllers/manualTestRunLifecycleController";
+import { manualTestRunMutationController } from "@/controllers/manualTestRunMutationController";
 import { authMiddleware } from "@/middleware/authMiddleware";
 
 const router = Router();
 
 router.post(
-  "/v2/test-scenarios/:scenarioId/manual-runs",
+  "/v2/manual-test-runs",
   authMiddleware,
-  manualTestRunController.start,
-);
-router.get(
-  "/v2/test-scenarios/:scenarioId/manual-runs",
-  authMiddleware,
-  manualTestRunController.listByScenario,
+  manualTestRunCreationController.create,
 );
 router.get(
   "/v2/manual-test-runs",
   authMiddleware,
-  manualTestRunController.listByProject,
+  manualTestRunHistoryController.list,
 );
 router.get(
   "/v2/manual-test-runs/:runId",
   authMiddleware,
-  manualTestRunController.getById,
+  manualTestRunHistoryController.getById,
 );
-router.patch(
-  "/v2/manual-test-runs/:runId/executor",
-  authMiddleware,
-  manualTestRunController.reassignExecutor,
-);
-router.patch(
+router.delete(
   "/v2/manual-test-runs/:runId",
   authMiddleware,
-  manualTestRunController.update,
+  manualTestRunLifecycleController.delete,
+);
+router.put(
+  "/v2/manual-test-runs/:runId/scenarios/order",
+  authMiddleware,
+  manualTestRunMutationController.reorder,
+);
+router.post(
+  "/v2/manual-test-runs/:runId/scenarios/bulk",
+  authMiddleware,
+  manualTestRunMutationController.bulkUpdate,
+);
+router.put(
+  "/v2/manual-test-runs/:runId/scenarios/:scenarioId/result",
+  authMiddleware,
+  manualTestRunMutationController.updateResult,
 );
 router.patch(
-  "/v2/manual-test-runs/:runId/steps/:stepId",
+  "/v2/manual-test-runs/:runId/scenarios/:scenarioId/assignee",
   authMiddleware,
-  manualTestRunController.updateStep,
+  manualTestRunMutationController.updateAssignee,
 );
 router.post(
   "/v2/manual-test-runs/:runId/complete",
   authMiddleware,
-  manualTestRunController.complete,
+  manualTestRunLifecycleController.complete,
+);
+router.post(
+  "/v2/manual-test-runs/:runId/reopen",
+  authMiddleware,
+  manualTestRunLifecycleController.reopen,
 );
 
 export default router;

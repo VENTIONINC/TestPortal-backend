@@ -9,52 +9,36 @@ describe("manual test run persistence contract", () => {
     readFileSync(path.join(process.cwd(), file), "utf8");
   const schema = read("prisma/schema.prisma");
   const migration = read(
-    "prisma/migrations/20260917120400_add_manual_test_runs/migration.sql",
-  );
-  const keysMigration = read(
-    "prisma/migrations/20260917120600_add_editable_test_management_keys/migration.sql",
+    "prisma/migrations/20261112120000_redesign_manual_test_runs/migration.sql",
   );
 
-  it("defines independent run and step aggregates with nullable live relations", () => {
+  it("defines the run aggregate with scenario snapshots and lifecycle intervals", () => {
     expect(schema).toContain("enum ManualTestRunStatus");
-    expect(schema).toContain("enum ManualTestRunStepStatus");
-    expect(schema).toMatch(
-      /model ManualTestRun \{[\s\S]*testScenarioId\s+String\?[\s\S]*sourceTestScenarioId\s+String[\s\S]*executedById\s+String\?/,
-    );
-    expect(schema).toMatch(
-      /testScenario\s+TestScenario\?\s+@relation\(fields: \[testScenarioId\], references: \[id\], onDelete: SetNull\)/,
-    );
-    expect(schema).toMatch(
-      /executedBy\s+User\?\s+@relation\("ManualTestRunExecutedBy", fields: \[executedById\], references: \[id\], onDelete: SetNull\)/,
-    );
+    expect(schema).toContain("enum ManualTestRunScenarioResult");
+    expect(schema).toMatch(/model ManualTestRun \{[\s\S]*scenarios\s+ManualTestRunScenario\[\][\s\S]*intervals\s+ManualTestRunLifecycleInterval\[\]/);
+    expect(schema).toMatch(/model ManualTestRunScenario \{[\s\S]*sourceScenarioId\s+String[\s\S]*result\s+ManualTestRunScenarioResult[\s\S]*assigneeId\s+String\?/);
+    expect(schema).toMatch(/model ManualTestRunScenarioStep \{[\s\S]*action\s+String[\s\S]*expectedResult\s+String\?/);
     expect(schema).toContain("@@unique([manualTestRunId, position])");
+    expect(schema).toContain("@@unique([id, projectId])");
   });
 
-  it("uses an additive migration with structural and lifecycle checks", () => {
-    expect(migration).toContain('CREATE TYPE "ManualTestRunStatus"');
-    expect(migration).toContain('CREATE TABLE "ManualTestRun"');
-    expect(migration).toContain('CREATE TABLE "ManualTestRunStep"');
-    expect(migration).toContain('CHECK ("position" >= 0)');
-    expect(migration).toContain('"ManualTestRun_completedAt_status_check"');
-    expect(migration).toContain('"ManualTestRun_completedAt_startedAt_check"');
+  it("replaces the legacy model with one-way aggregate migration constraints", () => {
+    expect(migration).toContain('DROP TABLE IF EXISTS "ManualTestRunStep"');
+    expect(migration).toContain('DROP TABLE IF EXISTS "ManualTestRun"');
+    expect(migration).toContain('CREATE TYPE "ManualTestRunScenarioResult"');
+    expect(migration).toContain('CREATE TABLE "ManualTestRunScenario"');
+    expect(migration).toContain('CREATE TABLE "ManualTestRunScenarioStep"');
+    expect(migration).toContain('CREATE TABLE "ManualTestRunLifecycleInterval"');
+    expect(migration).toContain('"ManualTestRun_lifecycle_check"');
+    expect(migration).toContain('"ManualTestRunScenario_position_check"');
+    expect(migration).toContain('WHERE "endedAt" IS NULL');
     expect(migration).toContain("ON DELETE SET NULL");
     expect(migration).toContain("ON DELETE CASCADE");
-    expect(migration).toContain(
-      'CREATE INDEX "ManualTestRun_projectId_sourceTestScenarioId_startedAt_id_idx"',
-    );
     expect(migration).not.toContain("DELETE FROM");
-  });
-
-  it("preserves nullable run labels and captured-key history alongside generated scenario keys", () => {
-    expect(schema).toMatch(/scenarioKey\s+String\s+@db\.VarChar\(100\)/);
-    expect(schema).toContain("runKey               String?             @db.VarChar(100)");
-    expect(schema).toContain("sourceScenarioKey    String?             @db.VarChar(100)");
-    expect(keysMigration).toContain('ADD COLUMN "scenarioKey" VARCHAR(100)');
-    expect(keysMigration).toContain('ADD COLUMN "runKey" VARCHAR(100)');
-    expect(keysMigration).toContain('ADD COLUMN "sourceScenarioKey" VARCHAR(100)');
-    expect(keysMigration).toContain('CREATE INDEX "ManualTestRun_projectId_sourceScenarioKey_startedAt_id_idx"');
-    expect(keysMigration).not.toContain("UNIQUE");
-    expect(keysMigration).not.toContain("UPDATE ");
+    expect(schema).not.toContain("ManualTestRunStepStatus");
+    expect(schema).not.toContain("runKey");
+    const snapshotModel = schema.match(/model ManualTestRunScenario \{[\s\S]*?\n\}/)?.[0] ?? "";
+    expect(snapshotModel).not.toContain("contentMd");
   });
 
 });
