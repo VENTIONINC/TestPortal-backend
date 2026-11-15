@@ -37,6 +37,23 @@ export interface ManualTestRunScenarioStepResponse {
   position: number;
   action: string;
   expectedResult: string | null;
+  comment: string | null;
+  failedFlag: boolean;
+  failedComment: string | null;
+  blockedFlag: boolean;
+  blockedComment: string | null;
+}
+
+export interface ManualRunEnvironmentProperty {
+  name: string;
+  value: string;
+}
+
+export interface ManualTestRunRequirementContext {
+  type: "requirement" | "ticket";
+  reference: string;
+  title: string;
+  url: string | null;
 }
 
 export interface ManualTestRunScenarioResponse {
@@ -49,7 +66,11 @@ export interface ManualTestRunScenarioResponse {
   preconditions: string | null;
   testData: string | null;
   folderPath: string | null;
+  priority: "low" | "medium" | "high";
+  requirementContext: ManualTestRunRequirementContext[];
   result: ManualTestRunScenarioResult;
+  executionComment: string | null;
+  defectReference: string | null;
   assigneeId: string | null;
   assignee: ManualTestRunUser | null;
   resultById: string | null;
@@ -65,6 +86,7 @@ export interface ManualRunEnvironmentSnapshot {
   apiEnvironment: string | null;
   build: string | null;
   deployment: string | null;
+  environmentProperties: ManualRunEnvironmentProperty[];
 }
 
 export interface ManualTestRunResponse extends ManualRunEnvironmentSnapshot {
@@ -80,6 +102,7 @@ export interface ManualTestRunResponse extends ManualRunEnvironmentSnapshot {
   completedBy: ManualTestRunUser | null;
   skippedAtCompletion: number;
   title: string;
+  hasBeenReopened: boolean;
   scenarios: ManualTestRunScenarioResponse[];
 }
 
@@ -94,6 +117,7 @@ export interface ManualTestRunSummary extends ManualRunEnvironmentSnapshot {
   completedAt: Date | null;
   completedDay: string | null;
   title: string;
+  hasBeenReopened: boolean;
   scenarioCount: number;
   untestedCount: number;
   passedCount: number;
@@ -133,11 +157,39 @@ export type CreateManualTestRunParams = ManualTestRunSource & {
 } & {
   projectId: string;
   executedById: string;
+  title?: string | undefined;
+  environmentProperties?: ManualRunEnvironmentProperty[] | undefined;
 };
 
 export interface GetManualTestRunParams {
   projectId: string;
   runId: string;
+}
+
+export interface UpdateManualTestRunDetailsParams {
+  projectId: string;
+  runId: string;
+  title: string;
+  scenarioIds: string[];
+  environmentProperties: ManualRunEnvironmentProperty[];
+}
+
+export interface ManualTestRunScenarioStepEvidenceInput {
+  id: string;
+  comment?: string | null | undefined;
+  failedFlag?: boolean | undefined;
+  failedComment?: string | null | undefined;
+  blockedFlag?: boolean | undefined;
+  blockedComment?: string | null | undefined;
+}
+
+export interface UpdateManualTestRunScenarioEvidenceParams {
+  projectId: string;
+  runId: string;
+  scenarioId: string;
+  executionComment?: string | null | undefined;
+  defectReference?: string | null | undefined;
+  steps?: ManualTestRunScenarioStepEvidenceInput[] | undefined;
 }
 
 export interface ListManualTestRunsParams {

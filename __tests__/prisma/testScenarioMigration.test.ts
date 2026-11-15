@@ -49,13 +49,9 @@ describe("test-scenario persistence contract", () => {
     expect(schema).toMatch(
       /model TestScenario \{[\s\S]*id\s+String\s+@id\s+@default\(uuid\(\)\)\s+@db\.Uuid[\s\S]*contentMd\s+String\s+@db\.Text[\s\S]*projectId\s+String\s+@db\.Uuid/,
     );
-    expect(schema).toContain("testScenarios TestScenario[]");
-    expect(schema).toContain(
-      'testScenariosCreated TestScenario[] @relation("TestScenarioCreatedBy")',
-    );
-    expect(schema).toContain(
-      'createdBy User    @relation("TestScenarioCreatedBy"',
-    );
+    expect(schema).toMatch(/testScenarios\s+TestScenario\[\]/);
+    expect(schema).toMatch(/testScenariosCreated\s+TestScenario\[\]\s+@relation\("TestScenarioCreatedBy"\)/);
+    expect(schema).toMatch(/createdBy\s+User\s+@relation\("TestScenarioCreatedBy"/);
   });
 
   it("cascades project deletion through scenarios without duplicating indexes", () => {
@@ -98,8 +94,8 @@ describe("test-scenario persistence contract", () => {
     expect(schema).toMatch(
       /model TestScenarioSpecLink \{[\s\S]*testScenarioId\s+String @db\.Uuid[\s\S]*specId\s+String @db\.Uuid[\s\S]*@@id\(\[testScenarioId, specId\]\)[\s\S]*@@index\(\[specId\]\)/,
     );
-    expect(schema).toContain("specLinks TestScenarioSpecLink[]");
-    expect(schema).toContain("testScenarioLinks TestScenarioSpecLink[]");
+    expect(schema).toMatch(/specLinks\s+TestScenarioSpecLink\[\]/);
+    expect(schema).toMatch(/testScenarioLinks\s+TestScenarioSpecLink\[\]/);
     expect(linkMigration).toContain('CREATE TABLE "TestScenarioSpecLink"');
     expect(linkMigration).toContain(
       'CONSTRAINT "TestScenarioSpecLink_pkey" PRIMARY KEY ("testScenarioId", "specId")',
@@ -158,9 +154,9 @@ describe("test-scenario persistence contract", () => {
     expect(scenario).toMatch(/relatedIssueUrl\s+String\?\s+@db\.Text/);
     expect(scenario).not.toMatch(/\n\s+(objective|expectedResult|notes)\s/);
     expect(run).not.toMatch(/\n\s+(objective|expectedResult|scenarioNotes)\s/);
-    expect(run).toMatch(/\n\s+notes\s+String\?/);
+    expect(run).not.toMatch(/\n\s+notes\s+String\?/);
     expect(schema).toMatch(/model TestScenarioStep \{[\s\S]*?expectedResult\s+String\?/);
-    expect(schema).toMatch(/model ManualTestRunStep \{[\s\S]*?expectedResult\s+String\?[\s\S]*?notes\s+String\?/);
+    expect(schema).toMatch(/model ManualTestRunScenarioStep \{[\s\S]*?expectedResult\s+String\?[\s\S]*?comment\s+String\?/);
   });
 
 });

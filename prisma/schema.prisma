@@ -368,12 +368,13 @@ model ManualTestRun {
   completedById       String?             @db.Uuid
   skippedAtCompletion Int                 @default(0)
   title               String
-  browser             String?             @db.VarChar(200)
-  operatingSystem     String?             @db.VarChar(200)
-  device              String?             @db.VarChar(200)
-  apiEnvironment      String?             @db.VarChar(200)
-  build               String?             @db.VarChar(200)
-  deployment          String?             @db.VarChar(200)
+  browser             String?             @db.Text
+  operatingSystem     String?             @db.Text
+  device              String?             @db.Text
+  apiEnvironment      String?             @db.Text
+  build               String?             @db.Text
+  deployment          String?             @db.Text
+  environmentProperties Json               @default("[]")
 
   project     Project                          @relation(fields: [projectId], references: [id], onDelete: Cascade)
   executedBy  User?                            @relation("ManualTestRunExecutedBy", fields: [executedById], references: [id], onDelete: SetNull)
@@ -420,7 +421,11 @@ model ManualTestRunScenario {
   preconditions     String?                     @db.Text
   testData          String?                     @db.Text
   folderPath        String?
+  priority          TestScenarioPriority   @default(medium)
+  requirementContext Json                  @default("[]")
   result            ManualTestRunScenarioResult @default(untested)
+  executionComment  String?                @db.Text
+  defectReference   String?                @db.Text
   assigneeId        String?                     @db.Uuid
   resultById        String?                     @db.Uuid
   resultAt          DateTime?
@@ -442,6 +447,11 @@ model ManualTestRunScenarioStep {
   position                Int
   action                  String  @db.Text
   expectedResult          String? @db.Text
+  comment                 String? @db.Text
+  failedFlag              Boolean @default(false)
+  failedComment           String? @db.Text
+  blockedFlag             Boolean @default(false)
+  blockedComment          String? @db.Text
 
   scenario ManualTestRunScenario @relation(fields: [manualTestRunScenarioId], references: [id], onDelete: Cascade)
 

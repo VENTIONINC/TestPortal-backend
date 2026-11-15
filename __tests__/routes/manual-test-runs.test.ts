@@ -13,6 +13,8 @@ const controllerMocks = {
   bulkUpdate: jest.fn<(req: Request, res: Response) => void>(),
   updateResult: jest.fn<(req: Request, res: Response) => void>(),
   updateAssignee: jest.fn<(req: Request, res: Response) => void>(),
+  updateDetails: jest.fn<(req: Request, res: Response) => void>(),
+  updateScenarioEvidence: jest.fn<(req: Request, res: Response) => void>(),
   complete: jest.fn<(req: Request, res: Response) => void>(),
   delete: jest.fn<(req: Request, res: Response) => void>(),
   reopen: jest.fn<(req: Request, res: Response) => void>(),
@@ -21,7 +23,7 @@ const controllerMocks = {
 jest.mock("@/middleware/authMiddleware", () => ({ authMiddleware: authMiddlewareMock }));
 jest.mock("@/controllers/manualTestRunCreationController", () => ({ manualTestRunCreationController: { create: controllerMocks.create } }));
 jest.mock("@/controllers/manualTestRunHistoryController", () => ({ manualTestRunHistoryController: { list: controllerMocks.list, getById: controllerMocks.getById } }));
-jest.mock("@/controllers/manualTestRunMutationController", () => ({ manualTestRunMutationController: { reorder: controllerMocks.reorder, bulkUpdate: controllerMocks.bulkUpdate, updateResult: controllerMocks.updateResult, updateAssignee: controllerMocks.updateAssignee } }));
+jest.mock("@/controllers/manualTestRunMutationController", () => ({ manualTestRunMutationController: { reorder: controllerMocks.reorder, bulkUpdate: controllerMocks.bulkUpdate, updateResult: controllerMocks.updateResult, updateAssignee: controllerMocks.updateAssignee, updateDetails: controllerMocks.updateDetails, updateScenarioEvidence: controllerMocks.updateScenarioEvidence } }));
 jest.mock("@/controllers/manualTestRunLifecycleController", () => ({ manualTestRunLifecycleController: { complete: controllerMocks.complete, reopen: controllerMocks.reopen, delete: controllerMocks.delete } }));
 
 import router from "@/routes/manual-test-runs";
@@ -38,6 +40,8 @@ describe("manual test run routes", () => {
     ["get /v2/manual-test-runs", controllerMocks.list],
     ["get /v2/manual-test-runs/:runId", controllerMocks.getById],
     ["delete /v2/manual-test-runs/:runId", controllerMocks.delete],
+    ["put /v2/manual-test-runs/:runId/details", controllerMocks.updateDetails],
+    ["patch /v2/manual-test-runs/:runId/scenarios/:scenarioId/evidence", controllerMocks.updateScenarioEvidence],
     ["put /v2/manual-test-runs/:runId/scenarios/order", controllerMocks.reorder],
     ["post /v2/manual-test-runs/:runId/scenarios/bulk", controllerMocks.bulkUpdate],
     ["put /v2/manual-test-runs/:runId/scenarios/:scenarioId/result", controllerMocks.updateResult],

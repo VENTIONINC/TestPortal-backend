@@ -7,6 +7,7 @@ import { manualTestRunCreationModel } from "@/models/manualTestRunCreationModel"
 import { manualTestRunHistoryModel } from "@/models/manualTestRunHistoryModel";
 import { manualTestRunMutationModel } from "@/models/manualTestRunMutationModel";
 import { manualTestRunLifecycleModel } from "@/models/manualTestRunLifecycleModel";
+import { ManualTestRunConflictError } from "@/types/manualTestRuns";
 
 const enabled = process.env.RUN_POSTGRES_INTEGRATION_TESTS === "1";
 const describePostgres = enabled ? describe : describe.skip;
@@ -172,16 +173,26 @@ describePostgres(
         projectId,
         executedById: userId,
         scenarioIds: [scenarioTwo.id, scenarioOne.id],
-        browser: "Chrome",
-        build: "42",
+        title: "Cross browser smoke",
+        environmentProperties: [
+          { name: "browser", value: "Chrome" },
+          { name: "build", value: "42" },
+          { name: "region", value: "EU" },
+        ],
       });
 
       expect(run).toMatchObject({
-        title: "Manual run",
+        title: "Cross browser smoke",
         status: "in_progress",
         executedById: userId,
         browser: "Chrome",
         build: "42",
+        hasBeenReopened: false,
+        environmentProperties: [
+          { name: "browser", value: "Chrome" },
+          { name: "build", value: "42" },
+          { name: "region", value: "EU" },
+        ],
       });
       expect(
         run?.scenarios.map(
@@ -225,6 +236,179 @@ describePostgres(
         run!.id,
       );
       expect(stored?.scenarios[1]?.title).toBe("Login as member");
+    });
+
+    it("updates details atomically while preserving retained data and appending new scenarios", async () => {
+      const run = await manualTestRunCreationModel.createFromCatalog({
+        projectId,
+        executedById: userId,
+        scenarioIds: [scenarioOne.id],
+        title: "Initial run",
+      });
+      if (!run) throw new Error("Run was not created");
+      const retained = run.scenarios[0];
+      if (!retained) throw new Error("Initial snapshot is missing");
+      await manualTestRunMutationModel.updateResult({
+        projectId,
+        runId: run.id,
+        scenarioId: retained.id,
+        result: "passed",
+        resultById: userId,
+      });
+      await dbClient.manualTestRunScenario.update({
+        where: { id: retained.id },
+        data: { executionComment: "Keep this with the retained snapshot" },
+      });
+
+      const updated = await manualTestRunMutationModel.updateDetails({
+        projectId,
+        runId: run.id,
+        title: "Renamed run",
+        scenarioIds: [scenarioTwo.id, scenarioOne.id],
+        environmentProperties: [{ name: "region", value: "EU" }],
+      });
+      expect(updated).toMatchObject({
+        title: "Renamed run",
+        environmentProperties: [{ name: "region", value: "EU" }],
+      });
+      expect(updated?.scenarios.map(({ sourceScenarioId, position, result }) => ({
+        sourceScenarioId, position, result,
+      }))).toEqual([
+        { sourceScenarioId: scenarioOne.id, position: 0, result: "passed" },
+        { sourceScenarioId: scenarioTwo.id, position: 1, result: "untested" },
+      ]);
+      expect(updated?.scenarios[0]?.executionComment).toBe("Keep this with the retained snapshot");
+
+      const removedId = updated?.scenarios[0]?.id;
+      const afterRemoval = await manualTestRunMutationModel.updateDetails({
+        projectId,
+        runId: run.id,
+        title: "Renamed run",
+        scenarioIds: [scenarioTwo.id],
+        environmentProperties: [],
+      });
+      expect(afterRemoval?.scenarios.map(({ sourceScenarioId }) => sourceScenarioId)).toEqual([scenarioTwo.id]);
+      expect(await dbClient.manualTestRunScenario.findUnique({ where: { id: removedId! } })).toBeNull();
+      expect(await dbClient.testScenario.findUnique({ where: { id: scenarioOne.id } })).not.toBeNull();
+    });
+
+    it("rolls back detail metadata and membership if adding a copied step fails", async () => {
+      const run = await manualTestRunCreationModel.createFromCatalog({
+        projectId,
+        executedById: userId,
+        scenarioIds: [scenarioOne.id],
+        title: "Before rollback",
+      });
+      if (!run) throw new Error("Run was not created");
+      const suffix = randomUUID().replaceAll("-", "");
+      const functionName = `tp60_fail_detail_step_${suffix}`;
+      const triggerName = `tp60_fail_detail_step_trigger_${suffix}`;
+      await dbClient.$executeRawUnsafe(
+        `CREATE FUNCTION "${functionName}"() RETURNS trigger AS $$ BEGIN RAISE EXCEPTION 'fixture detail step failure'; END; $$ LANGUAGE plpgsql`,
+      );
+      await dbClient.$executeRawUnsafe(
+        `CREATE TRIGGER "${triggerName}" BEFORE INSERT ON "ManualTestRunScenarioStep" FOR EACH ROW EXECUTE FUNCTION "${functionName}"()`,
+      );
+      try {
+        await expect(manualTestRunMutationModel.updateDetails({
+          projectId,
+          runId: run.id,
+          title: "Must roll back",
+          scenarioIds: [scenarioTwo.id],
+          environmentProperties: [{ name: "region", value: "EU" }],
+        })).rejects.toThrow("fixture detail step failure");
+      } finally {
+        await dbClient.$executeRawUnsafe(`DROP TRIGGER IF EXISTS "${triggerName}" ON "ManualTestRunScenarioStep"`);
+        await dbClient.$executeRawUnsafe(`DROP FUNCTION IF EXISTS "${functionName}"()`);
+      }
+      const unchanged = await manualTestRunCreationModel.findById(projectId, run.id);
+      expect(unchanged?.title).toBe("Before rollback");
+      expect(unchanged?.environmentProperties).toEqual([]);
+      expect(unchanged?.scenarios.map(({ sourceScenarioId }) => sourceScenarioId)).toEqual([scenarioOne.id]);
+    });
+
+    it("persists project-scoped scenario and step evidence across completion and reopen", async () => {
+      const run = await manualTestRunCreationModel.createFromCatalog({
+        projectId,
+        executedById: userId,
+        scenarioIds: [scenarioOne.id],
+      });
+      if (!run) throw new Error("Run was not created");
+      const scenario = run.scenarios[0];
+      const step = scenario?.steps[0];
+      if (!scenario || !step) throw new Error("Scenario evidence fixture is missing");
+      await manualTestRunMutationModel.updateResult({
+        projectId,
+        runId: run.id,
+        scenarioId: scenario.id,
+        result: "blocked",
+        resultById: userId,
+      });
+      const saved = await manualTestRunMutationModel.updateScenarioEvidence({
+        projectId,
+        runId: run.id,
+        scenarioId: scenario.id,
+        executionComment: "Waiting for service",
+        defectReference: "BUG-100",
+        steps: [{
+          id: step.id,
+          comment: "Endpoint returned 503",
+          blockedFlag: true,
+          blockedComment: "Service unavailable",
+        }],
+      });
+      expect(saved?.scenarios[0]).toMatchObject({
+        executionComment: "Waiting for service",
+        defectReference: "BUG-100",
+        steps: [{ comment: "Endpoint returned 503", blockedFlag: true, blockedComment: "Service unavailable" }],
+      });
+      await manualTestRunMutationModel.updateResult({
+        projectId,
+        runId: run.id,
+        scenarioId: scenario.id,
+        result: "failed",
+        resultById: userId,
+      });
+      const withIndependentFlags = await manualTestRunMutationModel.updateScenarioEvidence({
+        projectId,
+        runId: run.id,
+        scenarioId: scenario.id,
+        steps: [{ id: step.id, failedFlag: true, failedComment: "Assertion failed" }],
+      });
+      expect(withIndependentFlags?.scenarios[0]?.steps[0]).toMatchObject({
+        failedFlag: true,
+        failedComment: "Assertion failed",
+        blockedFlag: true,
+        blockedComment: "Service unavailable",
+      });
+      await expect(manualTestRunMutationModel.updateScenarioEvidence({
+        projectId: foreignProjectId,
+        runId: run.id,
+        scenarioId: scenario.id,
+        executionComment: "Must not leak",
+      })).resolves.toBeNull();
+      await expect(manualTestRunMutationModel.updateScenarioEvidence({
+        projectId,
+        runId: run.id,
+        scenarioId: scenario.id,
+        steps: [{ id: randomUUID(), comment: "Outside this scenario" }],
+      })).resolves.toBeNull();
+      await manualTestRunLifecycleModel.complete({ projectId, runId: run.id, completedById: userId });
+      await expect(manualTestRunMutationModel.updateScenarioEvidence({
+        projectId,
+        runId: run.id,
+        scenarioId: scenario.id,
+        executionComment: "Locked",
+      })).rejects.toBeInstanceOf(ManualTestRunConflictError);
+      const reopened = await manualTestRunLifecycleModel.reopen({ projectId, runId: run.id, reopenedById: assigneeId });
+      expect(reopened?.scenarios[0]).toMatchObject({
+        executionComment: "Waiting for service",
+        defectReference: "BUG-100",
+        steps: [{ failedFlag: true, blockedFlag: true, blockedComment: "Service unavailable" }],
+      });
+      await manualTestRunLifecycleModel.delete({ projectId, runId: run.id });
+      expect(await dbClient.manualTestRunScenario.findUnique({ where: { id: scenario.id } })).toBeNull();
+      expect(await dbClient.testScenario.findUnique({ where: { id: scenarioOne.id } })).not.toBeNull();
     });
 
     it("uses the suite name and ordered suite membership", async () => {
@@ -692,6 +876,7 @@ describePostgres(
       });
       expect(completed).toMatchObject({
         status: "completed",
+        hasBeenReopened: false,
         completedById: userId,
         skippedAtCompletion: 1,
       });
@@ -715,6 +900,7 @@ describePostgres(
       });
       expect(reopened).toMatchObject({
         status: "in_progress",
+        hasBeenReopened: true,
         completedAt: null,
         completedById: null,
         skippedAtCompletion: 0,
@@ -733,6 +919,19 @@ describePostgres(
           where: { manualTestRunId: run.id, endedAt: null },
         }),
       ).toBe(1);
+      const completedAgain = await manualTestRunLifecycleModel.complete({
+        projectId,
+        runId: run.id,
+        completedById: userId,
+      });
+      expect(completedAgain?.hasBeenReopened).toBe(true);
+      await expect(manualTestRunMutationModel.updateDetails({
+        projectId,
+        runId: run.id,
+        title: "Locked edit",
+        scenarioIds: [first.id, second.id],
+        environmentProperties: [],
+      })).rejects.toBeInstanceOf(ManualTestRunConflictError);
       expect(
         await dbClient.manualTestRunLifecycleInterval.count({
           where: { manualTestRunId: run.id, endedAt: { not: null } },

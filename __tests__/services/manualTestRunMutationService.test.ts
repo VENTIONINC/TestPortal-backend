@@ -5,6 +5,8 @@ import { jest } from "@jest/globals";
 import type { ManualTestRunResponse } from "@/types/manualTestRuns";
 
 const modelMocks = {
+  updateDetails: jest.fn<() => Promise<ManualTestRunResponse | null>>(),
+  updateScenarioEvidence: jest.fn<() => Promise<ManualTestRunResponse | null>>(),
   updateResult: jest.fn<() => Promise<ManualTestRunResponse | null>>(),
   updateAssignee: jest.fn<() => Promise<ManualTestRunResponse | null>>(),
   reorder: jest.fn<() => Promise<ManualTestRunResponse | null>>(),
@@ -31,9 +33,44 @@ describe("manualTestRunMutationService", () => {
   beforeEach(() => {
     jest.clearAllMocks();
     modelMocks.updateResult.mockResolvedValue(run);
+    modelMocks.updateDetails.mockResolvedValue(run);
+    modelMocks.updateScenarioEvidence.mockResolvedValue(run);
     modelMocks.updateAssignee.mockResolvedValue(run);
     modelMocks.reorder.mockResolvedValue(run);
     modelMocks.bulkUpdate.mockResolvedValue(run);
+  });
+
+  it("validates and delegates one atomic run-details update", async () => {
+    const params = {
+      projectId,
+      runId,
+      title: "Edited run",
+      scenarioIds: [scenarioId, secondScenarioId],
+      environmentProperties: [{ name: "region", value: "EU" }],
+    };
+    await manualTestRunMutationService.updateDetails(params);
+    expect(modelMocks.updateDetails).toHaveBeenCalledWith(params);
+    await expect(manualTestRunMutationService.updateDetails({ ...params, title: "  " }))
+      .rejects.toBeInstanceOf(ManualTestRunValidationError);
+    await expect(manualTestRunMutationService.updateDetails({ ...params, scenarioIds: [] }))
+      .rejects.toBeInstanceOf(ManualTestRunValidationError);
+  });
+
+  it("validates scoped scenario evidence and independent step flags", async () => {
+    const params = {
+      projectId,
+      runId,
+      scenarioId,
+      executionComment: "Investigated",
+      defectReference: "BUG-42",
+      steps: [{ id: secondScenarioId, comment: "Observed output", blockedFlag: true, blockedComment: "Service unavailable" }],
+    };
+    await manualTestRunMutationService.updateScenarioEvidence(params);
+    expect(modelMocks.updateScenarioEvidence).toHaveBeenCalledWith(params);
+    await expect(manualTestRunMutationService.updateScenarioEvidence({ ...params, steps: [
+      ...params.steps,
+      { id: secondScenarioId, failedFlag: true },
+    ] })).rejects.toBeInstanceOf(ManualTestRunValidationError);
   });
 
   it("records the authenticated result actor separately from the assignee", async () => {

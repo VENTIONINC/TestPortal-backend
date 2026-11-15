@@ -4,9 +4,11 @@
 import {
   manualTestRunCompleteSchema,
   manualTestRunCreateSchema,
+  manualTestRunDetailsSchema,
   manualTestRunHistoryQuerySchema,
   manualTestRunReopenSchema,
   manualTestRunScenarioBulkSchema,
+  manualTestRunScenarioEvidenceSchema,
 } from "@/schemas/manualTestRunSchemas";
 
 const projectId = "11111111-1111-4111-8111-111111111111";
@@ -17,15 +19,17 @@ describe("manual test run request schemas", () => {
     const second = "33333333-3333-4333-8333-333333333333";
     const suite = "44444444-4444-4444-8444-444444444444";
     expect(
-      manualTestRunCreateSchema.parse({ scenarioIds: [scenarioId, second] }),
-    ).toEqual({ scenarioIds: [scenarioId, second] });
-    expect(manualTestRunCreateSchema.parse({ suiteId: suite })).toEqual({
+      manualTestRunCreateSchema.parse({ scenarioIds: [scenarioId, second], title: "Regression run" }),
+    ).toEqual({ scenarioIds: [scenarioId, second], title: "Regression run" });
+    expect(manualTestRunCreateSchema.parse({ suiteId: suite, title: "Suite run" })).toEqual({
       suiteId: suite,
+      title: "Suite run",
     });
     expect(manualTestRunCreateSchema.safeParse({}).success).toBe(false);
     expect(
       manualTestRunCreateSchema.safeParse({
         scenarioIds: [scenarioId],
+        title: "Run",
         suiteId: suite,
       }).success,
     ).toBe(false);
@@ -40,12 +44,14 @@ describe("manual test run request schemas", () => {
     expect(
       manualTestRunCreateSchema.parse({
         scenarioIds: [scenarioId],
+        title: "Metadata run",
         browser: " Chrome ",
         build: " 42 ",
         device: null,
       }),
     ).toEqual({
       scenarioIds: [scenarioId],
+      title: "Metadata run",
       browser: "Chrome",
       build: "42",
       device: null,
@@ -53,18 +59,21 @@ describe("manual test run request schemas", () => {
     expect(
       manualTestRunCreateSchema.parse({
         suiteId: scenarioId,
+        title: "Suite metadata run",
         deployment: "stage",
       }),
-    ).toEqual({ suiteId: scenarioId, deployment: "stage" });
+    ).toEqual({ suiteId: scenarioId, title: "Suite metadata run", deployment: "stage" });
     expect(
       manualTestRunCreateSchema.safeParse({
         suiteId: scenarioId,
+        title: "Bad browser",
         browser: "x".repeat(201),
       }).success,
     ).toBe(false);
     expect(
       manualTestRunCreateSchema.safeParse({
         suiteId: scenarioId,
+        title: "Bad build",
         build: "a\nb",
       }).success,
     ).toBe(false);
@@ -134,7 +143,54 @@ describe("manual test run request schemas", () => {
       manualTestRunCreateSchema.safeParse({
         suiteId: scenarioId,
         title: "unsafe",
+        extra: "not allowed",
       }).success,
     ).toBe(false);
+  });
+
+  it("requires a nonblank name and accepts ordered environment properties", () => {
+    expect(manualTestRunCreateSchema.parse({ suiteId: scenarioId })).toEqual({ suiteId: scenarioId });
+    expect(manualTestRunCreateSchema.parse({ scenarioIds: [scenarioId] })).toEqual({ scenarioIds: [scenarioId] });
+    expect(manualTestRunCreateSchema.safeParse({ scenarioIds: [scenarioId], title: "   " }).success).toBe(false);
+    expect(manualTestRunCreateSchema.parse({
+      scenarioIds: [scenarioId],
+      title: "Browser run",
+      environmentProperties: [
+        { name: "Browser", value: "Firefox" },
+        { name: "Region", value: "EU" },
+      ],
+    }).environmentProperties).toEqual([
+      { name: "Browser", value: "Firefox" },
+      { name: "Region", value: "EU" },
+    ]);
+  });
+
+  it("validates the atomic run details contract", () => {
+    expect(manualTestRunDetailsSchema.parse({
+      title: "Edited run",
+      scenarioIds: [scenarioId],
+      environmentProperties: [{ name: "region", value: "EU" }],
+    })).toEqual({
+      title: "Edited run",
+      scenarioIds: [scenarioId],
+      environmentProperties: [{ name: "region", value: "EU" }],
+    });
+    expect(manualTestRunDetailsSchema.safeParse({
+      title: "Edited run",
+      scenarioIds: [],
+      environmentProperties: [],
+    }).success).toBe(false);
+  });
+
+  it("validates scenario and copied-step evidence writes", () => {
+    expect(manualTestRunScenarioEvidenceSchema.parse({
+      executionComment: "Investigated",
+      defectReference: "BUG-42",
+      steps: [{ id: scenarioId, comment: "Needs review", blockedFlag: true }],
+    })).toMatchObject({ executionComment: "Investigated", defectReference: "BUG-42" });
+    expect(manualTestRunScenarioEvidenceSchema.safeParse({}).success).toBe(false);
+    expect(manualTestRunScenarioEvidenceSchema.safeParse({
+      steps: [{ id: "not-a-uuid", failedFlag: true }],
+    }).success).toBe(false);
   });
 });

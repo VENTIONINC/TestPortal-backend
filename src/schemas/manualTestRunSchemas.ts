@@ -42,15 +42,23 @@ const createEnvironmentFields = {
   build: environmentValueSchema.optional(),
   deployment: environmentValueSchema.optional(),
 };
+const createRunMetadata = {
+  title: z.string().trim().min(1).max(200).optional(),
+  environmentProperties: z.array(z.object({
+    name: z.string().trim().min(1).max(100),
+    value: z.string().max(2_000),
+  }).strict()).max(100).optional(),
+};
 
 export const manualTestRunCreateSchema = z.union([
   z
     .object({
       scenarioIds: uniqueScenarioIdsSchema,
       ...createEnvironmentFields,
+      ...createRunMetadata,
     })
     .strict(),
-  z.object({ suiteId: uuidSchema, ...createEnvironmentFields }).strict(),
+  z.object({ suiteId: uuidSchema, ...createEnvironmentFields, ...createRunMetadata }).strict(),
 ]);
 
 export const manualTestRunScenarioResultSchema = z
@@ -62,6 +70,29 @@ export const manualTestRunScenarioAssigneeSchema = z
 export const manualTestRunScenarioOrderSchema = z
   .object({ scenarioIds: uniqueScenarioIdsSchema })
   .strict();
+export const manualTestRunDetailsSchema = z.object({
+  title: z.string().trim().min(1).max(200),
+  scenarioIds: uniqueScenarioIdsSchema,
+  environmentProperties: z.array(z.object({
+    name: z.string().trim().min(1).max(100),
+    value: z.string().max(2_000),
+  }).strict()).max(100),
+}).strict();
+export const manualTestRunScenarioEvidenceSchema = z.object({
+  executionComment: z.string().max(10_000).nullable().optional(),
+  defectReference: z.string().max(2_000).nullable().optional(),
+  steps: z.array(z.object({
+    id: uuidSchema,
+    comment: z.string().max(10_000).nullable().optional(),
+    failedFlag: z.boolean().optional(),
+    failedComment: z.string().max(2_000).nullable().optional(),
+    blockedFlag: z.boolean().optional(),
+    blockedComment: z.string().max(2_000).nullable().optional(),
+  }).strict()).max(500).optional(),
+}).strict().refine((value) =>
+  value.executionComment !== undefined || value.defectReference !== undefined || (value.steps?.length ?? 0) > 0,
+  "At least one execution evidence field is required",
+);
 export const manualTestRunScenarioBulkSchema = z
   .object({
     scenarioIds: uniqueScenarioIdsSchema,

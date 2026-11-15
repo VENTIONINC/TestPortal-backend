@@ -56,16 +56,18 @@ describe("manualTestRunCreationController", () => {
           id: "44444444-4444-4444-8444-444444444444",
         } as AuthenticatedRequest["user"],
         query: { projectId },
-        body: { scenarioIds: [scenarioId], browser: " Chrome ", build: "42" },
+        body: { title: "Release check", scenarioIds: [scenarioId], browser: " Chrome ", build: "42", environmentProperties: [{ name: "Browser", value: "Chrome" }] },
       } as unknown as AuthenticatedRequest,
       successful,
     );
     expect(serviceMocks.createRun).toHaveBeenCalledWith({
       projectId,
       executedById: "44444444-4444-4444-8444-444444444444",
+      title: "Release check",
       scenarioIds: [scenarioId],
       browser: "Chrome",
       build: "42",
+      environmentProperties: [{ name: "Browser", value: "Chrome" }],
     });
     expect(successful.status as jest.Mock).toHaveBeenCalledWith(201);
     expect(successful.json as jest.Mock).toHaveBeenCalledWith(run);

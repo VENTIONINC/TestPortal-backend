@@ -8,6 +8,12 @@ import { randomUUID } from "node:crypto";
 import { Prisma } from "@prisma/client";
 import { dbClient } from "@/prisma/client";
 import {
+  mapEnvironmentProperties,
+  mapHasBeenReopened,
+  mapScenarioEvidence,
+  mapStepEvidence,
+} from "@/lib/manualTestRunResponseMapper";
+import {
   ScenarioTransactionRetryError,
   lockScenarios,
   lockSuites,
@@ -36,6 +42,8 @@ const detailSelect = {
   apiEnvironment: true,
   build: true,
   deployment: true,
+  environmentProperties: true,
+  intervals: { select: { id: true } },
   executedBy: { select: { id: true, name: true, email: true } },
   completedBy: { select: { id: true, name: true, email: true } },
   scenarios: {
@@ -48,19 +56,27 @@ const detailSelect = {
   },
 } satisfies Prisma.ManualTestRunSelect;
 
-type RunRecord = Prisma.ManualTestRunGetPayload<{
-  select: typeof detailSelect;
-}>;
-
 async function findDetail(
   client: Prisma.TransactionClient,
   projectId: string,
   runId: string,
-): Promise<RunRecord | null> {
-  return await client.manualTestRun.findFirst({
+): Promise<ManualTestRunResponse | null> {
+  const record = await client.manualTestRun.findFirst({
     where: { id: runId, projectId },
     select: detailSelect,
   });
+  if (!record) return null;
+  const { intervals, ...run } = record;
+  return {
+    ...run,
+    hasBeenReopened: mapHasBeenReopened(intervals),
+    environmentProperties: mapEnvironmentProperties(run.environmentProperties),
+    scenarios: run.scenarios.map((scenario) => ({
+      ...scenario,
+      ...mapScenarioEvidence(scenario),
+      steps: scenario.steps.map((step) => ({ ...step, ...mapStepEvidence(step) })),
+    })),
+  };
 }
 
 async function getFolderPaths(
@@ -165,7 +181,7 @@ export const manualTestRunCreationModel = {
       });
       if (!starter) return null;
 
-      let title: string;
+    let defaultTitle: string;
       let scenarioIds: string[];
       if (input.suiteId !== undefined) {
         const suite = await resolveSuiteSources(
@@ -174,7 +190,7 @@ export const manualTestRunCreationModel = {
           input.suiteId,
         );
         if (!suite) return null;
-        title = suite.title;
+        defaultTitle = suite.title;
         scenarioIds = suite.scenarioIds;
       } else {
         scenarioIds = input.scenarioIds;
@@ -190,13 +206,16 @@ export const manualTestRunCreationModel = {
           if (error instanceof TestScenarioNotFoundError) return null;
           throw error;
         }
-        title = "Manual run";
+        defaultTitle = "Manual run";
       }
 
       const sources = await tx.testScenario.findMany({
         where: { id: { in: scenarioIds }, projectId: input.projectId },
         orderBy: { id: "asc" },
-        include: { steps: { orderBy: { position: "asc" } } },
+        include: {
+          steps: { orderBy: { position: "asc" } },
+          specLinks: { include: { spec: { select: { key: true, title: true } } } },
+        },
       });
       if (sources.length !== scenarioIds.length) return null;
       const sourcesById = new Map(sources.map((source) => [source.id, source]));
@@ -228,6 +247,23 @@ export const manualTestRunCreationModel = {
         folderPath: source.folderId
           ? (folderPaths.get(source.folderId) ?? null)
           : null,
+        priority: source.priority,
+        requirementContext: [
+          ...source.specLinks.map(({ spec }) => ({
+            type: "requirement",
+            reference: spec.key,
+            title: spec.title,
+            url: null,
+          })),
+          ...(source.relatedIssueUrl
+            ? [{
+                type: "ticket",
+                reference: source.relatedIssueUrl,
+                title: source.relatedIssueUrl,
+                url: source.relatedIssueUrl,
+              }]
+            : []),
+        ],
         steps: source.steps.map((step) => ({
           id: randomUUID(),
           manualTestRunScenarioId: "",
@@ -244,13 +280,21 @@ export const manualTestRunCreationModel = {
           executedById: input.executedById,
           status: "in_progress",
           startedAt: now,
-          title,
-          browser: input.browser ?? null,
-          operatingSystem: input.operatingSystem ?? null,
-          device: input.device ?? null,
-          apiEnvironment: input.apiEnvironment ?? null,
-          build: input.build ?? null,
-          deployment: input.deployment ?? null,
+          title: input.title?.trim() || defaultTitle,
+          environmentProperties: (input.environmentProperties ?? Object.entries({
+            browser: input.browser,
+            operatingSystem: input.operatingSystem,
+            device: input.device,
+            apiEnvironment: input.apiEnvironment,
+            build: input.build,
+            deployment: input.deployment,
+          }).flatMap(([name, value]) => value ? [{ name, value }] : [])) as unknown as Prisma.InputJsonValue,
+          browser: input.environmentProperties?.find(({ name }) => name === "browser")?.value ?? input.browser ?? null,
+          operatingSystem: input.environmentProperties?.find(({ name }) => name === "operatingSystem")?.value ?? input.operatingSystem ?? null,
+          device: input.environmentProperties?.find(({ name }) => name === "device")?.value ?? input.device ?? null,
+          apiEnvironment: input.environmentProperties?.find(({ name }) => name === "apiEnvironment")?.value ?? input.apiEnvironment ?? null,
+          build: input.environmentProperties?.find(({ name }) => name === "build")?.value ?? input.build ?? null,
+          deployment: input.environmentProperties?.find(({ name }) => name === "deployment")?.value ?? input.deployment ?? null,
         },
       });
       await tx.manualTestRunScenario.createMany({
