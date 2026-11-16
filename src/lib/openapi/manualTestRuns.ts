@@ -300,6 +300,7 @@ const ManualTestRunScenarioBulkRequestSchema = z
   )
   .openapi("ManualTestRunScenarioBulkRequest");
 const EmptyRequestSchema = z.object({}).strict();
+const CompleteRequestSchema = z.object({ requireAllMarked: z.boolean().optional() }).strict();
 
 const error = (description: string) => ({
   description,
@@ -536,7 +537,7 @@ export function registerManualTestRunRoutes(registry: OpenAPIRegistry): void {
     [
       "/complete",
       "post",
-      "Completes an in-progress run atomically, marks only still-untested scenarios Skipped, and returns the actual skipped count.",
+      "Completes an in-progress run atomically. With requireAllMarked, rejects if any scenario is untested; otherwise marks untested scenarios Skipped.",
       "Completed run detail",
     ],
     [
@@ -553,7 +554,7 @@ export function registerManualTestRunRoutes(registry: OpenAPIRegistry): void {
       request: {
         params: RunIdParamsSchema,
         query: ProjectIdQuerySchema,
-        body: jsonBody(EmptyRequestSchema),
+        body: jsonBody(path === "/complete" ? CompleteRequestSchema : EmptyRequestSchema),
       },
       security: [{ BearerAuth: [] }],
       responses: {

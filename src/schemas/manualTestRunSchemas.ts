@@ -169,7 +169,7 @@ export const manualTestRunHistoryQuerySchema = z
     }
   });
 
-export const manualTestRunCompleteSchema = z.object({}).strict();
+export const manualTestRunCompleteSchema = z.object({ requireAllMarked: z.boolean().optional() }).strict();
 export const manualTestRunReopenSchema = z.object({}).strict();
 
 export type ManualTestRunCreateInput = z.infer<

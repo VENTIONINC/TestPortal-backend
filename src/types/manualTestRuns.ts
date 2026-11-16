@@ -245,6 +245,7 @@ export interface CompleteManualTestRunParams {
   projectId: string;
   runId: string;
   completedById: string;
+  requireAllMarked?: boolean;
 }
 
 export interface ReopenManualTestRunParams {

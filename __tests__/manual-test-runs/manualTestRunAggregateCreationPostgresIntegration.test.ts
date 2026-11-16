@@ -966,6 +966,28 @@ describePostgres(
       }
     });
 
+    it("rejects fully-marked completion when a scenario becomes untested and preserves the run", async () => {
+      const run = await manualTestRunCreationModel.createFromCatalog({
+        projectId, executedById: userId, scenarioIds: [scenarioOne.id],
+      });
+      if (!run || !run.scenarios[0]) throw new Error("Expected a run with one scenario");
+      const scenarioId = run.scenarios[0].id;
+      await expect(manualTestRunLifecycleModel.complete({
+        projectId, runId: run.id, completedById: userId, requireAllMarked: true,
+      })).rejects.toBeInstanceOf(ManualTestRunConflictError);
+      const unchanged = await manualTestRunCreationModel.findById(projectId, run.id);
+      expect(unchanged?.status).toBe("in_progress");
+      expect(unchanged?.scenarios[0]?.result).toBe("untested");
+      await manualTestRunMutationModel.updateResult({
+        projectId, runId: run.id, scenarioId, result: "passed", resultById: userId,
+      });
+      const completed = await manualTestRunLifecycleModel.complete({
+        projectId, runId: run.id, completedById: userId, requireAllMarked: true,
+      });
+      expect(completed?.status).toBe("completed");
+      expect(completed?.skippedAtCompletion).toBe(0);
+    });
+
     it("completes atomically, skips only untested scenarios, and reopens without losing results", async () => {
       const run = await manualTestRunCreationModel.createFromCatalog({
         projectId,
