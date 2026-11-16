@@ -210,20 +210,35 @@ history is intentionally removed by the TP-59 migration.
 
 All run routes require a JWT and a UUID `projectId` query parameter. The
 executor, result attribution, source provenance, and timestamps are
-server-owned. The nine project-scoped operations are:
+server-owned. Creation accepts a user-provided title and an optional ordered
+list of arbitrary environment properties (`{ name, value }`). Existing scalar
+environment fields remain available for compatibility. Run detail and history
+include `hasBeenReopened`, derived from lifecycle intervals, and snapshots carry
+captured priority and requirement/ticket context. Phase 1 runs return empty or
+unavailable values for fields they do not contain. The project-scoped
+operations are:
 
 - `POST /api/v2/manual-test-runs` creates a run from exactly one source:
-  `{ "scenarioIds": ["…"] }` or `{ "suiteId": "…" }`. Selected runs are named
-  `Manual run`; suite runs use the suite name. Scenario and suite order is
-  preserved. Optional `browser`, `operatingSystem`, `device`, `apiEnvironment`,
-  `build`, and `deployment` fields capture the run environment.
+  `{ "title": "Smoke run", "scenarioIds": ["…"] }` or
+  `{ "title": "Smoke run", "suiteId": "…" }`. Scenario selection order or
+  suite order becomes the saved run order.
 - `GET /api/v2/manual-test-runs` returns paged project history. It accepts
   `page`, `limit`, `search`, `show` (`in_progress`, `completed`, `all`),
   `period` (`recent`, `today`, `yesterday`, `last_7_days`, `last_30_days`,
   `this_month`, `last_month`, `any_time`, `custom`), `timeZone`, and optional
   `dateFrom`/`dateTo` for a custom period.
 - `GET /api/v2/manual-test-runs/{runId}` retrieves run metadata and all ordered
-  scenario snapshots, results, assignees, attribution, and copied steps.
+  scenario snapshots, results, assignees, attribution, copied steps, environment
+  properties, and scenario execution evidence.
+- `PUT /api/v2/manual-test-runs/{runId}/details` atomically updates a run's
+  title, environment properties, and selected `scenarioIds`. Retained scenarios
+  preserve their relative order and evidence; additions are appended as
+  Untested, and removed snapshots cascade their run-specific evidence.
+- `PATCH /api/v2/manual-test-runs/{runId}/scenarios/{scenarioId}/evidence`
+  updates `executionComment`, `defectReference`, and copied-step comments with
+  independent `failedFlag`/`failedComment` and
+  `blockedFlag`/`blockedComment` fields. Only one copied step per result type
+  can be flagged in a scenario.
 - `DELETE /api/v2/manual-test-runs/{runId}?projectId=...` permanently deletes the run and its scenario snapshots and lifecycle history, returning `204` (or `404` if absent in the project).
 - `PUT /api/v2/manual-test-runs/{runId}/scenarios/order` saves scenario order
   from `{ "scenarioIds": ["…"] }`.
@@ -238,7 +253,7 @@ server-owned. The nine project-scoped operations are:
   scenarios still `untested` become `skipped` atomically; the response reports
   the actual skipped-at-completion count.
 - `POST /api/v2/manual-test-runs/{runId}/reopen` reopens a completed run and
-  preserves its scenario results.
+  preserves its scenario results and all saved execution evidence.
 
 Period filters use the supplied IANA `timeZone` for calendar boundaries.
 `Recent` includes active runs and runs completed in the preceding seven days.
@@ -246,9 +261,8 @@ Completed runs are read-only until reopened. Completion lifecycle (`in_progress`
 or `completed`) is separate from scenario results.
 
 Saved personal environment profiles remain available through these project-
-scoped routes, with a JWT and project ownership required. They are separate
-from TP-59 run creation, which does not accept an environment profile or run
-environment metadata:
+scoped routes, with a JWT and project ownership required. They remain separate
+from each run's environment property snapshot:
 
 - `GET /api/v2/projects/{projectId}/manual-run-environment-profiles`
 - `POST /api/v2/projects/{projectId}/manual-run-environment-profiles`

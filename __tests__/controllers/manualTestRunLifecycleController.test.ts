@@ -71,6 +71,16 @@ describe("manualTestRunLifecycleController", () => {
     expect(result.status as jest.Mock).toHaveBeenCalledWith(204);
   });
 
+  it("passes the fully-marked precondition to the completion service", async () => {
+    const result = response();
+    await manualTestRunLifecycleController.complete(
+      { user: { id: userId }, params: { runId }, query: { projectId }, body: { requireAllMarked: true } } as unknown as AuthenticatedRequest<{ runId: string }>,
+      result,
+    );
+    expect(result.status as jest.Mock).toHaveBeenCalledWith(200);
+    expect(serviceMocks.completeRun).toHaveBeenCalledWith({ projectId, runId, completedById: userId, requireAllMarked: true });
+  });
+
   it("reopens using the authenticated user", async () => {
     const result = response();
     await manualTestRunLifecycleController.reopen(

@@ -31,6 +31,16 @@ router.delete(
   manualTestRunLifecycleController.delete,
 );
 router.put(
+  "/v2/manual-test-runs/:runId/details",
+  authMiddleware,
+  manualTestRunMutationController.updateDetails,
+);
+router.patch(
+  "/v2/manual-test-runs/:runId/scenarios/:scenarioId/evidence",
+  authMiddleware,
+  manualTestRunMutationController.updateScenarioEvidence,
+);
+router.put(
   "/v2/manual-test-runs/:runId/scenarios/order",
   authMiddleware,
   manualTestRunMutationController.reorder,

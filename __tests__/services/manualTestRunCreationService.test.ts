@@ -37,11 +37,15 @@ describe("manualTestRunCreationService", () => {
       projectId,
       executedById: userId,
       scenarioIds: [scenarioId, suiteId],
+      title: "Selected scenarios",
+      environmentProperties: [{ name: "Browser", value: "Firefox" }],
     });
     expect(modelMocks.createFromCatalog).toHaveBeenCalledWith({
       projectId,
       executedById: userId,
       scenarioIds: [scenarioId, suiteId],
+      title: "Selected scenarios",
+      environmentProperties: [{ name: "Browser", value: "Firefox" }],
     });
   });
 
@@ -91,5 +95,23 @@ describe("manualTestRunCreationService", () => {
       } as never),
     ).rejects.toBeInstanceOf(ManualTestRunValidationError);
     expect(modelMocks.createFromCatalog).not.toHaveBeenCalled();
+  });
+
+  it("rejects a blank run name and delegates a trimmed name", async () => {
+    await expect(manualTestRunCreationService.createRun({
+      projectId,
+      executedById: userId,
+      scenarioIds: [scenarioId],
+      title: "   ",
+    })).rejects.toBeInstanceOf(ManualTestRunValidationError);
+    await manualTestRunCreationService.createRun({
+      projectId,
+      executedById: userId,
+      scenarioIds: [scenarioId],
+      title: "Smoke run",
+    });
+    expect(modelMocks.createFromCatalog).toHaveBeenCalledWith(expect.objectContaining({
+      title: "Smoke run",
+    }));
   });
 });

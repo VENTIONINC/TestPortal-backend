@@ -11,6 +11,8 @@ describe("manual test run OpenAPI contract", () => {
       ["/api/v2/manual-test-runs", "get"],
       ["/api/v2/manual-test-runs/{runId}", "get"],
       ["/api/v2/manual-test-runs/{runId}", "delete"],
+      ["/api/v2/manual-test-runs/{runId}/details", "put"],
+      ["/api/v2/manual-test-runs/{runId}/scenarios/{scenarioId}/evidence", "patch"],
       ["/api/v2/manual-test-runs/{runId}/scenarios/order", "put"],
       ["/api/v2/manual-test-runs/{runId}/scenarios/bulk", "post"],
       ["/api/v2/manual-test-runs/{runId}/scenarios/{scenarioId}/result", "put"],
@@ -45,6 +47,11 @@ describe("manual test run OpenAPI contract", () => {
   it("documents aggregate snapshots, execution state, and current filters", () => {
     const spec = generateOpenAPISpec();
     const schemas = spec.components?.schemas ?? {};
+    const property = schemas.ManualTestRunEnvironmentProperty as {
+      properties: Record<string, { minLength?: number; maxLength?: number }>;
+    };
+    expect(property.properties.name).toMatchObject({ minLength: 1, maxLength: 100 });
+    expect(property.properties.value).toMatchObject({ maxLength: 2000 });
     const run = schemas.ManualTestRun as {
       properties?: Record<string, unknown>;
     };
@@ -61,14 +68,28 @@ describe("manual test run OpenAPI contract", () => {
     };
     const paths = spec.paths ?? {};
     const create = paths["/api/v2/manual-test-runs"]?.post;
+    const updateDetails = schemas.ManualTestRunDetailsRequest as {
+      properties?: Record<string, unknown>;
+    };
+    const evidence = schemas.ManualTestRunScenarioEvidenceRequest as {
+      properties?: Record<string, unknown>;
+    };
 
     expect(run.properties?.scenarios).toBeDefined();
     expect(run.properties?.completedById).toBeDefined();
+    expect(run.properties?.environmentProperties).toBeDefined();
+    expect(run.properties?.hasBeenReopened).toBeDefined();
     expect(scenario.properties?.resultById).toBeDefined();
+    expect(scenario.properties?.priority).toBeDefined();
+    expect(scenario.properties?.requirementContext).toBeDefined();
+    expect(scenario.properties?.executionComment).toBeDefined();
+    expect(scenario.properties?.defectReference).toBeDefined();
     expect(scenario.properties?.assigneeId).toBeDefined();
     expect(scenario.properties?.steps).toBeDefined();
     expect(scenario.properties?.contentMd).toBeUndefined();
     expect(step.properties?.status).toBeUndefined();
+    expect(step.properties?.failedFlag).toBeDefined();
+    expect(step.properties?.blockedFlag).toBeDefined();
     expect(status.enum).toEqual(["in_progress", "completed"]);
     expect(result.enum).toEqual([
       "untested",
@@ -87,7 +108,13 @@ describe("manual test run OpenAPI contract", () => {
     for (const source of createSchema.anyOf) {
       expect(source.properties.browser).toBeDefined();
       expect(source.properties.build).toBeDefined();
+      expect(source.properties.title).toBeDefined();
+      expect(source.properties.environmentProperties).toBeDefined();
     }
+    expect(updateDetails.properties?.scenarioIds).toBeDefined();
+    expect(updateDetails.properties?.environmentProperties).toBeDefined();
+    expect(evidence.properties?.executionComment).toBeDefined();
+    expect(evidence.properties?.steps).toBeDefined();
   });
 
   it("keeps environment profile endpoints and nullable run snapshots", () => {

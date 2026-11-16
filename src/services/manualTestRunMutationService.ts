@@ -14,6 +14,8 @@ import {
   type ReorderManualTestRunScenariosParams,
   type UpdateManualTestRunScenarioAssigneeParams,
   type UpdateManualTestRunScenarioResultParams,
+  type UpdateManualTestRunDetailsParams,
+  type UpdateManualTestRunScenarioEvidenceParams,
 } from "@/types/manualTestRuns";
 
 const UUID_PATTERN =
@@ -73,6 +75,53 @@ async function requireResult(
 }
 
 export const manualTestRunMutationService = {
+  async updateScenarioEvidence(params: UpdateManualTestRunScenarioEvidenceParams): Promise<ManualTestRunResponse> {
+    validateKeys(params, ["projectId", "runId", "scenarioId", "executionComment", "defectReference", "steps"]);
+    validateIds(params.projectId, params.runId);
+    validateScenarioId(params.scenarioId);
+    for (const [field, value, max] of [
+      ["executionComment", params.executionComment, 10_000],
+      ["defectReference", params.defectReference, 2_000],
+    ] as const) {
+      if (value !== undefined && value !== null && (typeof value !== "string" || value.length > max)) {
+        throw new ManualTestRunValidationError(`${field} must be a string no longer than ${max} characters`);
+      }
+    }
+    if (params.steps !== undefined) {
+      if (!Array.isArray(params.steps) || params.steps.length > 500) {
+        throw new ManualTestRunValidationError("steps must contain no more than 500 entries");
+      }
+      const stepIds = params.steps.map(({ id }) => id);
+      stepIds.forEach(validateScenarioId);
+      if (new Set(stepIds).size !== stepIds.length) {
+        throw new ManualTestRunValidationError("Step IDs must be unique");
+      }
+      for (const step of params.steps) {
+        validateKeys(step, ["id", "comment", "failedFlag", "failedComment", "blockedFlag", "blockedComment"]);
+      }
+    }
+    return await requireResult(manualTestRunMutationModel.updateScenarioEvidence(params), params.runId);
+  },
+
+  async updateDetails(params: UpdateManualTestRunDetailsParams): Promise<ManualTestRunResponse> {
+    validateKeys(params, ["projectId", "runId", "title", "scenarioIds", "environmentProperties"]);
+    validateIds(params.projectId, params.runId);
+    if (typeof params.title !== "string" || !params.title.trim()) {
+      throw new ManualTestRunValidationError("Run name must not be blank");
+    }
+    validateScenarioIds(params.scenarioIds);
+    if (!Array.isArray(params.environmentProperties) || params.environmentProperties.length > 100) {
+      throw new ManualTestRunValidationError("environmentProperties must be an array of no more than 100 entries");
+    }
+    params.environmentProperties.forEach((property, index) => {
+      if (!property.name.trim()) throw new ManualTestRunValidationError(`Environment property ${index + 1} must have a name`);
+    });
+    return await requireResult(manualTestRunMutationModel.updateDetails({
+      ...params,
+      title: params.title.trim(),
+    }), params.runId);
+  },
+
   async updateResult(
     params: UpdateManualTestRunScenarioResultParams,
   ): Promise<ManualTestRunResponse> {

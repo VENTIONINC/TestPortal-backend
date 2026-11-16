@@ -23,6 +23,7 @@ const ENVIRONMENT_KEYS = [
   "build",
   "deployment",
 ] as const;
+const RUN_KEYS = ["title", "environmentProperties"] as const;
 
 function requireUuid(value: unknown, label: string): asserts value is string {
   if (typeof value !== "string" || !UUID_PATTERN.test(value)) {
@@ -41,6 +42,7 @@ function validateInput(input: CreateManualTestRunParams): void {
         "executedById",
         ...SOURCE_KEYS,
         ...ENVIRONMENT_KEYS,
+        ...RUN_KEYS,
       ].includes(key),
   );
   if (unknownKey) {
@@ -59,6 +61,19 @@ function validateInput(input: CreateManualTestRunParams): void {
     if (value !== undefined && value !== null && typeof value !== "string") {
       throw new ManualTestRunValidationError(`${key} must be a string or null`);
     }
+  }
+  if (input.title !== undefined && !input.title.trim()) {
+    throw new ManualTestRunValidationError("Run name must not be blank");
+  }
+  if (input.environmentProperties !== undefined) {
+    if (input.environmentProperties.length > 100) {
+      throw new ManualTestRunValidationError("environmentProperties must contain no more than 100 entries");
+    }
+    input.environmentProperties.forEach((property, index) => {
+      if (!property.name.trim()) {
+        throw new ManualTestRunValidationError(`Environment property ${index + 1} must have a name`);
+      }
+    });
   }
   if (hasSuiteId) {
     requireUuid(values.suiteId, "Suite ID");
@@ -84,7 +99,10 @@ export const manualTestRunCreationService = {
     input: CreateManualTestRunParams,
   ): Promise<ManualTestRunResponse> {
     validateInput(input);
-    const run = await manualTestRunCreationModel.createFromCatalog(input);
+    const normalizedInput = input.title === undefined
+      ? input
+      : { ...input, title: input.title.trim() };
+    const run = await manualTestRunCreationModel.createFromCatalog(normalizedInput);
     if (!run) {
       throw new ManualTestRunNotFoundError(
         "Manual test run source not found in the requested project",

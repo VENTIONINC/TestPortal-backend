@@ -8,6 +8,7 @@ import { ManualTestRunScenarioResult, Prisma } from "@prisma/client";
 import { dbClient } from "@/prisma/client";
 import { getManualRunPeriodBounds } from "@/lib/manualTestRunPeriod";
 import { manualTestRunCreationModel } from "@/models/manualTestRunCreationModel";
+import { mapEnvironmentProperties, mapHasBeenReopened } from "@/lib/manualTestRunResponseMapper";
 import type {
   ListManualTestRunsParams,
   ManualTestRunPage,
@@ -29,6 +30,8 @@ const summarySelect = {
   apiEnvironment: true,
   build: true,
   deployment: true,
+  environmentProperties: true,
+  intervals: { select: { id: true } },
   executedBy: { select: { id: true, name: true, email: true } },
 } satisfies Prisma.ManualTestRunSelect;
 
@@ -173,6 +176,7 @@ export const manualTestRunHistoryModel = {
         }
 
         const runs: ManualTestRunSummary[] = records.map((record) => {
+          const { intervals, ...run } = record;
           const resultCounts = counts.get(record.id) ?? {
             untested: 0,
             passed: 0,
@@ -181,7 +185,9 @@ export const manualTestRunHistoryModel = {
             skipped: 0,
           };
           return {
-            ...record,
+            ...run,
+            hasBeenReopened: mapHasBeenReopened(intervals),
+            environmentProperties: mapEnvironmentProperties(record.environmentProperties),
             completedDay: calendarDay(record.completedAt, timeZone),
             scenarioCount:
               resultCounts.untested +

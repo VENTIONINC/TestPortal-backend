@@ -8,12 +8,14 @@ import type { Response } from "express";
 import type { AuthenticatedRequest } from "@/middleware/authMiddleware";
 import {
   manualTestRunIdParamsSchema,
+  manualTestRunDetailsSchema,
   manualTestRunProjectQuerySchema,
   manualTestRunScenarioAssigneeSchema,
   manualTestRunScenarioBulkSchema,
   manualTestRunScenarioOrderSchema,
   manualTestRunScenarioParamsSchema,
   manualTestRunScenarioResultSchema,
+  manualTestRunScenarioEvidenceSchema,
 } from "@/schemas/manualTestRunSchemas";
 import { manualTestRunMutationService } from "@/services/manualTestRunMutationService";
 import {
@@ -91,6 +93,38 @@ function parseScenarioAndProject(
 }
 
 export const manualTestRunMutationController = {
+  async updateScenarioEvidence(
+    req: AuthenticatedRequest<{ runId: string; scenarioId: string }>,
+    res: Response,
+  ): Promise<void> {
+    if (!requireUser(req, res)) return;
+    const scope = parseScenarioAndProject(req, res);
+    if (!scope) return;
+    const body = manualTestRunScenarioEvidenceSchema.safeParse(req.body ?? {});
+    if (!body.success) return sendInvalid(res, body.error.issues);
+    try {
+      res.status(200).json(await manualTestRunMutationService.updateScenarioEvidence({ ...scope, ...body.data }));
+    } catch (error) {
+      sendError(res, error, "update manual run scenario evidence");
+    }
+  },
+
+  async updateDetails(
+    req: AuthenticatedRequest<{ runId: string }>,
+    res: Response,
+  ): Promise<void> {
+    if (!requireUser(req, res)) return;
+    const scope = parseRunAndProject(req, res);
+    if (!scope) return;
+    const body = manualTestRunDetailsSchema.safeParse(req.body ?? {});
+    if (!body.success) return sendInvalid(res, body.error.issues);
+    try {
+      res.status(200).json(await manualTestRunMutationService.updateDetails({ ...scope, ...body.data }));
+    } catch (error) {
+      sendError(res, error, "update manual test run details");
+    }
+  },
+
   async updateResult(
     req: AuthenticatedRequest<{ runId: string; scenarioId: string }>,
     res: Response,
