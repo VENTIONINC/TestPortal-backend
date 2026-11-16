@@ -158,8 +158,8 @@ checks. These conventions describe the expected code even where a lint rule is n
 Do not introduce a different formatter configuration or repository-wide formatting sweep as part of
 a focused behavior change.
 
-This repository is licensed under Apache 2.0. Supported files in `src`, `__tests__`, and
-`__prompts-tests__` must carry this header:
+This repository is licensed under Apache 2.0. Supported files in `src` and `__tests__` must carry
+this header:
 
 ```ts
 // Copyright 2026 VENSOLUTIONSGROUP LTD

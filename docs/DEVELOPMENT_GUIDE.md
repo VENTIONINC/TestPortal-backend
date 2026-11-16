@@ -203,6 +203,14 @@ particular model alias is enabled for an account, that a compatible service supp
 or that output meets semantic quality expectations. The optional synthetic connection check tests
 technical formatting compatibility; it does not score quality.
 
+#### Troubleshooting direct OpenAI setup
+
+- If startup reports an invalid selected JSON profile, check the path visible to the backend process, JSON syntax, version `1`, and the four required operation entries. A configured `AI_CONFIG_PATH` does not fall back to packaged defaults when its file is missing.
+- If an AI operation reports `OPENAI_API_KEY`, check that the key is present in the backend process environment and belongs to the account serving the selected model. The backend does not print the key.
+- If a request is rejected, confirm the model alias, API mode, and configured parameters are supported by that account and endpoint. A syntactically valid JSON profile does not establish provider capability.
+- If settings changed, restart or redeploy the backend so it reloads the environment and selected JSON snapshot.
+- The optional formatting check establishes technical compatibility for its one request only. It does not certify classification, suggestion, insight, or formatting quality.
+
 To opt in to a live synthetic check against direct OpenAI, set `AI_API_BASE_URL` to
 `https://api.openai.com/v1` and provide `OPENAI_API_KEY` in `.env`, build the backend, then run:
 
