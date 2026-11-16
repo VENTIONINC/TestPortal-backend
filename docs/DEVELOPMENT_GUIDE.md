@@ -74,7 +74,10 @@ Version 1 requires independent entries for all four operations:
 {
   "version": 1,
   "operations": {
-    "classification": { "model": "gpt-4.1-mini", "api": "chat-completions" },
+    "classification": {
+      "model": "gpt-4.1-mini",
+      "decisions": { "model": "gpt-6-luna" }
+    },
     "formatting": { "model": "gpt-4.1-mini", "api": "chat-completions" },
     "suggestions": { "model": "gpt-4.1-mini", "api": "chat-completions" },
     "insights": { "model": "gpt-4.1-mini", "api": "chat-completions" }
@@ -92,6 +95,62 @@ defaults, not a model recommendation or a quality profile.
 Classification, formatting, suggestions, and dashboard insights each use their own operation entry.
 The same immutable snapshot supplies nested classification calls made while generating a
 suggestion. Configuration changes take effect after restart or redeployment.
+
+Native Decisions classification is disabled by default. Set `USE_DECISIONS_API=true` to select it;
+the optional `operations.classification.decisions.model` entry supplies its model or gateway alias.
+When selected, classification rejects generative request settings (`api`, `temperature`,
+`maxOutputTokens`, and `reasoningEffort`). It uses the same `AI_API_BASE_URL` and
+`OPENAI_API_KEY` as the other operations and still allows offline startup without an API key.
+
+#### Native Decisions operator check
+
+For a direct OpenAI check, set `AI_API_BASE_URL=https://api.openai.com/v1`, provide the existing
+`OPENAI_API_KEY` through the backend process environment, set `USE_DECISIONS_API=true`, and ensure
+`operations.classification.decisions.model` is `gpt-6-luna` or an account-approved native model
+alias. Restart the backend after changing these values. The adapter sends to `/decisions` on that
+configured base URL; it does not switch endpoints, credentials, or classification strategies if
+the request fails. The backend validates the named category answer and full probability
+distribution, then maps the probability assigned to the selected category to the existing 1–5
+scale at 0.60, 0.75, 0.90, and 0.97. Decisions responses use the fixed conclusion `Explanation is not available from
+the Decisions API.` and null error-quality fields. See the [OpenAI Decisions guide](https://developers.openai.com/api/docs/guides/decisions)
+for the native request and answer format.
+
+To verify a deployment, use one synthetic failed or flaky result in a non-production project with
+analysis enabled. Confirm its category and mapped confidence, the fixed conclusion, and null
+error-quality fields in the import or analysis response. Internal provenance and latest-failure
+metadata are not part of REST, MCP, or export payloads. Restore `USE_DECISIONS_API=false` after the
+check if Decisions should remain disabled. Gateway deployment and support instructions are
+maintained under TP-49's documentation policy; this guide does not publish private gateway setup.
+
+#### Decisions evidence record
+
+Historical TP-7 OpenRouter work and TP-19 SDK work informed the category policy, confidence
+thresholds, and metadata shape. They are historical inputs and do not establish support for the
+native endpoint or a compatible gateway. Current native acceptance evidence is the request-capture
+and response-validation coverage in `__tests__/lib/decisionsApi.test.ts` and
+`__tests__/services/testAnalysisService.test.ts`. Direct OpenAI and team-gateway live checks remain
+opt-in; record the tested revision, connection type, configured model or alias, and sanitized
+response evidence separately when those checks are run. Never include credentials or raw upstream
+payloads in that record.
+
+The first ad-hoc direct check did not reach the provider because its harness omitted backend AI
+configuration initialization; it is not compatibility evidence. On 2026-11-12, initialized
+synthetic checks ran from the uncommitted working tree based on revision `97617169`, using model
+`gpt-6-luna`. Direct OpenAI returned category `bug`, raw confidence `0.93` mapped to `4`, and a
+complete distribution (`infra` 0, `performance` 0.01, `script` 0.03, `bug` 0.94, `other` 0.02)
+in 2453 ms. The custom Docker gateway returned the sanitized category
+`authentication/configuration`; no validated response or returned model was available. The same
+configured key worked for direct OpenAI and was not accepted by the gateway, so the gateway client
+key or access policy was unresolved at that time. On 2026-11-13, the gateway was retested from the
+same uncommitted working tree based on revision `97617169`, after restoring its local Compose
+configuration and setting a model-scoped virtual key. A synthetic native Decisions request through
+LiteLLM returned HTTP 200 with model `gpt-6-luna`, category `bug`, confidence `1.0`, and a complete
+distribution (`infra` 0, `performance` 0, `script` 0, `bug` 1, `other` 0). The backend's configured
+virtual key was separately accepted by the gateway models endpoint (HTTP 200), which listed only
+`gpt-6-luna`. This supersedes the initial gateway setup failure. The check was a single synthetic
+smoke request: it did not evaluate classification quality or verify persisted analysis through the
+backend REST flow. No credentials or raw upstream diagnostics are recorded; the adapter omits raw
+upstream response bodies.
 
 Dashboard PDF insights use the independent `insights` entry, retain the existing prompt and
 evidence assembly, and accept either plain text or text blocks from the completion. They keep the
@@ -125,12 +184,12 @@ The installed LangChain/OpenAI versions serialize the outgoing request; the back
 forward arbitrary SDK options. The shared client disables SDK retries and applies this
 operation-specific policy only for the canonical OpenAI URL:
 
-| Operation | Automatic retries | Implicit temperature | Implicit output limit |
-| --- | ---: | ---: | ---: |
-| Classification | 2 | none | 4000 tokens |
-| Formatting | 2 | 0.7 without reasoning | 500 tokens |
-| Suggestions | 2 | 0.3 without reasoning | 700 tokens |
-| Insights | 1 | 0.2 without reasoning | 400 tokens |
+| Operation      | Automatic retries |  Implicit temperature | Implicit output limit |
+| -------------- | ----------------: | --------------------: | --------------------: |
+| Classification |                 2 |                  none |           4000 tokens |
+| Formatting     |                 2 | 0.7 without reasoning |            500 tokens |
+| Suggestions    |                 2 | 0.3 without reasoning |            700 tokens |
+| Insights       |                 1 | 0.2 without reasoning |            400 tokens |
 
 Explicit supported settings take precedence. A configured reasoning effort suppresses an implicit
 temperature. For custom URLs, automatic retries are disabled and implicit temperature/output
@@ -188,6 +247,7 @@ The project uses two TypeScript configurations:
 - **`tsconfig.build.json`** - Production build configuration
 
 Key features:
+
 - Strict mode enabled for maximum type safety
 - ES modules with Node.js target
 - Path mapping for clean imports (`@/*` aliases)
@@ -264,7 +324,7 @@ export interface MCPToolResponse<T = unknown> {
 
 // Handler types
 export type MCPHandler<P = unknown, R = unknown> = (
-  params: P
+  params: P,
 ) => Promise<MCPToolResponse<R>>;
 ```
 
@@ -280,7 +340,7 @@ const createData: Prisma.ResultCreateInput = {
   status: "passed",
   duration: 1500,
   spec: { connect: { id: specId } },
-  execution: { connect: { id: executionId } }
+  execution: { connect: { id: executionId } },
 };
 
 // Use Prisma payload types for complex queries
@@ -328,7 +388,7 @@ Controllers handle HTTP requests with Express typing:
 export const resultController = {
   async getResults(
     req: Request<{}, GetResultsResponse, {}, GetResultsParams>,
-    res: Response<GetResultsResponse>
+    res: Response<GetResultsResponse>,
   ): Promise<void> {
     try {
       const results = await resultService.getResults(req.query);
@@ -352,7 +412,7 @@ export const exampleTool: MCPTool = {
   inputSchema: exampleSchema,
   handler: async (params): Promise<MCPToolResponse> => {
     // Tool logic
-  }
+  },
 };
 ```
 
@@ -373,7 +433,7 @@ function handleServiceError(error: unknown): ServiceError {
   return {
     name: err.name,
     message: err.message,
-    code: 'SERVICE_ERROR',
+    code: "SERVICE_ERROR",
     statusCode: 500,
   };
 }
@@ -423,12 +483,16 @@ import type { PrismaResult } from "@/types";
 
 ```typescript
 // ✅ Good - Use Prisma types
-const createResult = async (data: Prisma.ResultCreateInput): Promise<PrismaResult> => {
+const createResult = async (
+  data: Prisma.ResultCreateInput,
+): Promise<PrismaResult> => {
   return await dbClient.result.create({ data });
 };
 
 // ✅ Good - Handle optional relations
-const findResultWithRelations = async (id: number): Promise<ResultWithRelations | null> => {
+const findResultWithRelations = async (
+  id: number,
+): Promise<ResultWithRelations | null> => {
   return await dbClient.result.findUnique({
     where: { id },
     include: {
@@ -451,7 +515,7 @@ if (result.errors?.length) {
 }
 
 // ✅ For complex nested access
-const fileName = spec.location?.file?.split('/').pop();
+const fileName = spec.location?.file?.split("/").pop();
 ```
 
 ### Nullish Coalescing
@@ -478,10 +542,7 @@ function isError(value: unknown): value is Error {
 
 ```typescript
 // ✅ Generic MCP tool creation
-function createMCPTool<P, R>(
-  name: string,
-  handler: MCPHandler<P, R>
-): MCPTool {
+function createMCPTool<P, R>(name: string, handler: MCPHandler<P, R>): MCPTool {
   return {
     name,
     description: `Handle ${name} operations`,
@@ -558,6 +619,7 @@ Recommended `.vscode/settings.json`:
 ### Extensions
 
 Recommended VS Code extensions:
+
 - TypeScript Importer
 - ESLint
 - Prettier
@@ -582,20 +644,24 @@ Ctrl+Shift+P → "TypeScript: Restart TS Server"
 ### Common Issues
 
 1. **Module Resolution Errors**
+
    - Ensure `baseUrl` and `paths` are correctly configured in `tsconfig.json`
    - Check that path aliases match the actual file structure
 
 2. **Prisma Type Errors**
+
    - Run `npm run db:generate` to regenerate Prisma types
    - Restart TypeScript service in your IDE
 
 3. **Import Issues**
+
    - Use `@/*` path aliases for internal imports
    - Check `tsconfig.json` paths configuration
    - Ensure file extensions are `.ts` not `.js`
    - Ensure ES modules are properly configured
 
 4. **Build Issues**
+
    ```bash
    # Clean build
    rm -rf dist/
@@ -604,6 +670,7 @@ Ctrl+Shift+P → "TypeScript: Restart TS Server"
    # Check TypeScript config
    npx tsc --showConfig
    ```
+
    - Check that all dependencies have type definitions
    - Verify TypeScript configuration for production builds
 
@@ -616,6 +683,7 @@ Ctrl+Shift+P → "TypeScript: Restart TS Server"
 ## ✅ Quality Checklist
 
 Before committing:
+
 - [ ] `npm run type-check` passes
 - [ ] `npm run lint` passes
 - [ ] `npm run build` succeeds

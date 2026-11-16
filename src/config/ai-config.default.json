@@ -1,7 +1,10 @@
 {
   "version": 1,
   "operations": {
-    "classification": { "model": "gpt-4.1-mini", "api": "chat-completions" },
+    "classification": {
+      "model": "gpt-4.1-mini",
+      "decisions": { "model": "gpt-6-luna" }
+    },
     "formatting": { "model": "gpt-4.1-mini", "api": "chat-completions" },
     "suggestions": { "model": "gpt-4.1-mini", "api": "chat-completions" },
     "insights": { "model": "gpt-4.1-mini", "api": "chat-completions" }

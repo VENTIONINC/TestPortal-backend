@@ -28,13 +28,15 @@ const stepsHeadingRegex = /steps to identify|steps to reproduce|steps:/i;
 
 export async function runEval(options: RunEvalOptions): Promise<EvalResult> {
   const { cases, version, model = "gpt-4.1-mini", temperature = 0.3 } = options;
+  const baseURL = process.env.AI_API_BASE_URL?.trim();
 
   const llm = new ChatOpenAI({
     model,
     temperature,
     maxTokens: 600,
-    maxRetries: 2,
+    maxRetries: baseURL ? 0 : 2,
     cache: false,
+    ...(baseURL ? { configuration: { baseURL } } : {}),
   });
 
   const structuredModel = llm.withStructuredOutput<ErrorSuggestionOutput>(

@@ -86,9 +86,7 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 }
 
 function returnedModelFromRaw(raw: Record<string, unknown>): unknown {
-  const metadata = isRecord(raw.response_metadata)
-    ? raw.response_metadata
-    : {};
+  const metadata = isRecord(raw.response_metadata) ? raw.response_metadata : {};
   return metadata.model ?? metadata.model_name;
 }
 
@@ -102,15 +100,19 @@ function containsIncompleteOutputItem(value: unknown): boolean {
 
   if (
     (typeof value.status === "string" && value.status !== "completed") ||
-    (value.incomplete_details !== undefined && value.incomplete_details !== null) ||
+    (value.incomplete_details !== undefined &&
+      value.incomplete_details !== null) ||
     (value.incompleteDetails !== undefined && value.incompleteDetails !== null)
   ) {
     return true;
   }
 
-  return [value.output, value.output_items, value.outputItems, value.content].some(
-    containsIncompleteOutputItem,
-  );
+  return [
+    value.output,
+    value.output_items,
+    value.outputItems,
+    value.content,
+  ].some(containsIncompleteOutputItem);
 }
 
 /** Validate raw completion metadata and the feature-owned parsed schema. */
@@ -125,7 +127,9 @@ export function parseStructuredCompletion<T>(
 
   const raw = result.raw;
   const metadata = isRecord(raw.response_metadata) ? raw.response_metadata : {};
-  const additional = isRecord(raw.additional_kwargs) ? raw.additional_kwargs : {};
+  const additional = isRecord(raw.additional_kwargs)
+    ? raw.additional_kwargs
+    : {};
   const finishReason = metadata.finish_reason ?? raw.finish_reason;
   const status = metadata.status;
   const incompleteDetails = metadata.incomplete_details;
@@ -141,7 +145,12 @@ export function parseStructuredCompletion<T>(
     containsIncompleteOutputItem(raw.output) ||
     containsIncompleteOutputItem(content);
 
-  if (additional.refusal || refusalBlock || finishReason === "length" || incomplete) {
+  if (
+    additional.refusal ||
+    refusalBlock ||
+    finishReason === "length" ||
+    incomplete
+  ) {
     throw invalidAiResponseError(client, returnedModelFromRaw(raw));
   }
 
@@ -225,8 +234,13 @@ export function createGenerativeAiClient(
   snapshot: AiConfigSnapshot = getAiConfigSnapshot(),
   settingsOverride: Partial<AiOperationConfig> = {},
 ) {
+  const configuredSettings =
+    operation === "classification"
+      ? (({ decisions: _decisions, ...generativeSettings }) =>
+          generativeSettings)(snapshot.operations.classification)
+      : snapshot.operations[operation];
   const settings = aiOperationConfigSchema.safeParse({
-    ...snapshot.operations[operation],
+    ...configuredSettings,
     ...settingsOverride,
   });
   if (!settings.success) {

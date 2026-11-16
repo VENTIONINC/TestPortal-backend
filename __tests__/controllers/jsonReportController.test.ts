@@ -4,8 +4,9 @@
 import "@/test-utils/testEnv";
 import { jest } from "@jest/globals";
 import type { Request, Response } from "express";
+import type { ApiKeyAuthenticatedRequest } from "@/middleware/apiKeyMiddleware";
 import { jsonReportController } from "@/controllers/jsonReportController";
-import { executeController } from "@/test-utils/httpMocks";
+import { createMockResponse, executeController } from "@/test-utils/httpMocks";
 import { dbClient } from "@/prisma/client";
 import { jsonReportService } from "@/services/jsonReportService";
 import { dashboardService } from "@/services/dashboardService";
@@ -17,7 +18,10 @@ describe("jsonReportController shared workspace access", () => {
   it("passes an authenticated member and requested project to ingestion", async () => {
     const core = jest
       .spyOn(jsonReportController, "_processRawReportFileCore")
-      .mockResolvedValue({ executionId: "execution-1", resultsCount: 1 } as never);
+      .mockResolvedValue({
+        executionId: "execution-1",
+        resultsCount: 1,
+      } as never);
 
     const response = await executeController(
       jsonReportController.processRawReportFile as unknown as (
@@ -158,7 +162,9 @@ describe("jsonReportController analysis enrichment", () => {
     );
 
     expect(jsonReportService.processReport).toHaveBeenCalledTimes(1);
-    expect(storedResultEnrichmentService.analyzeAndPersist).toHaveBeenCalledTimes(1);
+    expect(
+      storedResultEnrichmentService.analyzeAndPersist,
+    ).toHaveBeenCalledTimes(1);
     const reportCallOrder = (jsonReportService.processReport as jest.Mock).mock
       .invocationCallOrder[0];
     const enrichmentCallOrder = (
@@ -181,7 +187,37 @@ describe("jsonReportController analysis enrichment", () => {
       "user-1",
     );
 
-    expect(storedResultEnrichmentService.analyzeAndPersist).not.toHaveBeenCalled();
+    expect(
+      storedResultEnrichmentService.analyzeAndPersist,
+    ).not.toHaveBeenCalled();
     expect(response.analysis).toBeUndefined();
+  });
+
+  it("uses the API-key owner and their analysis preference", async () => {
+    prepareImport(true);
+    (
+      storedResultEnrichmentService.analyzeAndPersist as jest.Mock
+    ).mockResolvedValue(new Map() as never);
+    const response = createMockResponse();
+
+    await jsonReportController.processRawReportFileWithApiKey(
+      {
+        file,
+        apiKey: {
+          projectId: "project-1",
+          ownerId: "key-owner-1",
+          keyId: "key-1",
+        },
+      } as ApiKeyAuthenticatedRequest,
+      response,
+    );
+
+    expect(dbClient.user.findUnique).toHaveBeenCalledWith({
+      where: { id: "key-owner-1" },
+    });
+    expect(
+      storedResultEnrichmentService.analyzeAndPersist,
+    ).toHaveBeenCalledWith("project-1", [{ id: "result-1" }]);
+    expect(response.statusCode).toBe(201);
   });
 });

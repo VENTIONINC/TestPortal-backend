@@ -75,7 +75,9 @@ beforeAll(async () => {
     process.cwd(),
     "src/config/ai-config.default.json",
   );
-  await initializeAiConfig();
+  process.env.USE_DECISIONS_API = "true";
+  const snapshot = await initializeAiConfig();
+  expect(snapshot.classificationStrategy).toBe("decisions");
 });
 
 describe("errorFormatterService.suggestFromResult", () => {
@@ -524,7 +526,7 @@ describe("errorFormatterService.suggestFromResult", () => {
     );
   });
 
-  it("runs analysis when missing and returns the complete issue draft", async () => {
+  it("runs nested classification and keeps suggestions generative when Decisions is enabled", async () => {
     getResultByIdMock.mockResolvedValue(makeResult({}));
 
     const analysisMap = new Map();
@@ -545,6 +547,7 @@ describe("errorFormatterService.suggestFromResult", () => {
     );
 
     expect(testAnalysisService.analyzeStoredResults).toHaveBeenCalledTimes(1);
+    expect(chatOpenAIMock).toHaveBeenCalledTimes(1);
     expect(formatMessagesMock).toHaveBeenCalledWith(
       expect.objectContaining({ analysisCategory: "infra" }),
     );
