@@ -6,7 +6,14 @@
     "sourceMap": false,
     "declaration": false
   },
-  "exclude": ["node_modules", "**/*.test.ts", "**/*.spec.ts", "**/*.d.ts"],
+  "exclude": [
+    "node_modules",
+    "__tests__",
+    "__prompts-tests__",
+    "**/*.test.ts",
+    "**/*.spec.ts",
+    "**/*.d.ts"
+  ],
   "tsc-alias": {
     "resolveFullPaths": true
   }
