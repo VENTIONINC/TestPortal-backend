@@ -76,6 +76,13 @@ export interface ManualTestRunScenarioResponse {
   resultById: string | null;
   resultBy: ManualTestRunUser | null;
   resultAt: Date | null;
+  resultHistory: Array<{
+    id: number;
+    result: ManualTestRunScenarioResult;
+    resultById: string | null;
+    resultBy: ManualTestRunUser | null;
+    resultAt: Date;
+  }>;
   steps: ManualTestRunScenarioStepResponse[];
 }
 

@@ -51,6 +51,12 @@ const detailSelect = {
     include: {
       assignee: { select: { id: true, name: true, email: true } },
       resultBy: { select: { id: true, name: true, email: true } },
+      resultHistory: {
+        orderBy: { id: "desc" as const },
+        include: {
+          resultBy: { select: { id: true, name: true, email: true } },
+        },
+      },
       steps: { orderBy: { position: "asc" as const } },
     },
   },
@@ -74,7 +80,10 @@ async function findDetail(
     scenarios: run.scenarios.map((scenario) => ({
       ...scenario,
       ...mapScenarioEvidence(scenario),
-      steps: scenario.steps.map((step) => ({ ...step, ...mapStepEvidence(step) })),
+      steps: scenario.steps.map((step) => ({
+        ...step,
+        ...mapStepEvidence(step),
+      })),
     })),
   };
 }
@@ -181,7 +190,7 @@ export const manualTestRunCreationModel = {
       });
       if (!starter) return null;
 
-    let defaultTitle: string;
+      let defaultTitle: string;
       let scenarioIds: string[];
       if (input.suiteId !== undefined) {
         const suite = await resolveSuiteSources(
@@ -214,7 +223,9 @@ export const manualTestRunCreationModel = {
         orderBy: { id: "asc" },
         include: {
           steps: { orderBy: { position: "asc" } },
-          specLinks: { include: { spec: { select: { key: true, title: true } } } },
+          specLinks: {
+            include: { spec: { select: { key: true, title: true } } },
+          },
         },
       });
       if (sources.length !== scenarioIds.length) return null;
@@ -256,12 +267,14 @@ export const manualTestRunCreationModel = {
             url: null,
           })),
           ...(source.relatedIssueUrl
-            ? [{
-                type: "ticket",
-                reference: source.relatedIssueUrl,
-                title: source.relatedIssueUrl,
-                url: source.relatedIssueUrl,
-              }]
+            ? [
+                {
+                  type: "ticket",
+                  reference: source.relatedIssueUrl,
+                  title: source.relatedIssueUrl,
+                  url: source.relatedIssueUrl,
+                },
+              ]
             : []),
         ],
         steps: source.steps.map((step) => ({
@@ -281,20 +294,50 @@ export const manualTestRunCreationModel = {
           status: "in_progress",
           startedAt: now,
           title: input.title?.trim() || defaultTitle,
-          environmentProperties: (input.environmentProperties ?? Object.entries({
-            browser: input.browser,
-            operatingSystem: input.operatingSystem,
-            device: input.device,
-            apiEnvironment: input.apiEnvironment,
-            build: input.build,
-            deployment: input.deployment,
-          }).flatMap(([name, value]) => value ? [{ name, value }] : [])) as unknown as Prisma.InputJsonValue,
-          browser: input.environmentProperties?.find(({ name }) => name === "browser")?.value ?? input.browser ?? null,
-          operatingSystem: input.environmentProperties?.find(({ name }) => name === "operatingSystem")?.value ?? input.operatingSystem ?? null,
-          device: input.environmentProperties?.find(({ name }) => name === "device")?.value ?? input.device ?? null,
-          apiEnvironment: input.environmentProperties?.find(({ name }) => name === "apiEnvironment")?.value ?? input.apiEnvironment ?? null,
-          build: input.environmentProperties?.find(({ name }) => name === "build")?.value ?? input.build ?? null,
-          deployment: input.environmentProperties?.find(({ name }) => name === "deployment")?.value ?? input.deployment ?? null,
+          environmentProperties: (input.environmentProperties ??
+            Object.entries({
+              browser: input.browser,
+              operatingSystem: input.operatingSystem,
+              device: input.device,
+              apiEnvironment: input.apiEnvironment,
+              build: input.build,
+              deployment: input.deployment,
+            }).flatMap(([name, value]) =>
+              value ? [{ name, value }] : [],
+            )) as unknown as Prisma.InputJsonValue,
+          browser:
+            input.environmentProperties?.find(({ name }) => name === "browser")
+              ?.value ??
+            input.browser ??
+            null,
+          operatingSystem:
+            input.environmentProperties?.find(
+              ({ name }) => name === "operatingSystem",
+            )?.value ??
+            input.operatingSystem ??
+            null,
+          device:
+            input.environmentProperties?.find(({ name }) => name === "device")
+              ?.value ??
+            input.device ??
+            null,
+          apiEnvironment:
+            input.environmentProperties?.find(
+              ({ name }) => name === "apiEnvironment",
+            )?.value ??
+            input.apiEnvironment ??
+            null,
+          build:
+            input.environmentProperties?.find(({ name }) => name === "build")
+              ?.value ??
+            input.build ??
+            null,
+          deployment:
+            input.environmentProperties?.find(
+              ({ name }) => name === "deployment",
+            )?.value ??
+            input.deployment ??
+            null,
         },
       });
       await tx.manualTestRunScenario.createMany({

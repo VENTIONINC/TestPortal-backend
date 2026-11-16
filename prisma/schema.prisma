@@ -211,6 +211,7 @@ model User {
   manualTestRunsCompleted      ManualTestRun[]               @relation("ManualTestRunCompletedBy")
   manualRunScenariosAssigned   ManualTestRunScenario[]       @relation("ManualTestRunScenarioAssignedTo")
   manualRunScenariosResulted   ManualTestRunScenario[]       @relation("ManualTestRunScenarioResultedBy")
+  manualRunResultHistory ManualTestRunScenarioResultHistory[]
   manualRunEnvironmentProfiles ManualRunEnvironmentProfile[]
   uploadApiKeys                UploadApiKey[]
 }
@@ -434,11 +435,23 @@ model ManualTestRunScenario {
   assignee User?                       @relation("ManualTestRunScenarioAssignedTo", fields: [assigneeId], references: [id], onDelete: SetNull)
   resultBy User?                       @relation("ManualTestRunScenarioResultedBy", fields: [resultById], references: [id], onDelete: SetNull)
   steps    ManualTestRunScenarioStep[]
+  resultHistory ManualTestRunScenarioResultHistory[]
 
   @@unique([manualTestRunId, position])
   @@unique([id, manualTestRunId])
   @@index([projectId, result, manualTestRunId])
   @@index([assigneeId, manualTestRunId])
+}
+
+model ManualTestRunScenarioResultHistory {
+  id Int @id @default(autoincrement())
+  scenarioId String @db.Uuid
+  result ManualTestRunScenarioResult
+  resultById String? @db.Uuid
+  resultAt DateTime
+  scenario ManualTestRunScenario @relation(fields: [scenarioId], references: [id], onDelete: Cascade)
+  resultBy User? @relation(fields: [resultById], references: [id], onDelete: SetNull)
+  @@index([scenarioId, id])
 }
 
 model ManualTestRunScenarioStep {

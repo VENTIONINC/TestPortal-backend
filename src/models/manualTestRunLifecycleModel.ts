@@ -73,6 +73,14 @@ export const manualTestRunLifecycleModel = {
       if (!(await lockActiveUser(tx, params.completedById))) return null;
 
       const now = new Date();
+      const untested = await tx.manualTestRunScenario.findMany({
+        where: {
+          projectId: params.projectId,
+          manualTestRunId: params.runId,
+          result: "untested",
+        },
+        select: { id: true },
+      });
       const skipped = await tx.manualTestRunScenario.updateMany({
         where: {
           projectId: params.projectId,
@@ -85,6 +93,16 @@ export const manualTestRunLifecycleModel = {
           resultAt: now,
         },
       });
+      if (untested.length) {
+        await tx.manualTestRunScenarioResultHistory.createMany({
+          data: untested.map(({ id }) => ({
+            scenarioId: id,
+            result: "skipped",
+            resultById: params.completedById,
+            resultAt: now,
+          })),
+        });
+      }
       const closed = await tx.manualTestRunLifecycleInterval.updateMany({
         where: {
           projectId: params.projectId,

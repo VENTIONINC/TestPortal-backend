@@ -12,16 +12,22 @@ const ManualTestRunStatusSchema = z
 const ManualTestRunScenarioResultSchema = z
   .enum(["untested", "passed", "failed", "blocked", "skipped"])
   .openapi("ManualTestRunScenarioResult");
-const ManualTestRunEnvironmentPropertySchema = z.object({
-  name: z.string().trim().min(1).max(100),
-  value: z.string().max(2_000),
-}).strict().openapi("ManualTestRunEnvironmentProperty");
-const ManualTestRunRequirementContextSchema = z.object({
-  type: z.enum(["requirement", "ticket"]),
-  reference: z.string(),
-  title: z.string(),
-  url: z.string().nullable(),
-}).strict().openapi("ManualTestRunRequirementContext");
+const ManualTestRunEnvironmentPropertySchema = z
+  .object({
+    name: z.string().trim().min(1).max(100),
+    value: z.string().max(2_000),
+  })
+  .strict()
+  .openapi("ManualTestRunEnvironmentProperty");
+const ManualTestRunRequirementContextSchema = z
+  .object({
+    type: z.enum(["requirement", "ticket"]),
+    reference: z.string(),
+    title: z.string(),
+    url: z.string().nullable(),
+  })
+  .strict()
+  .openapi("ManualTestRunRequirementContext");
 const ManualTestRunUserSchema = z
   .object({ id: z.string().uuid(), name: z.string(), email: z.string() })
   .strict()
@@ -55,7 +61,9 @@ const ManualTestRunScenarioSchema = z
     testData: z.string().nullable().openapi({ readOnly: true }),
     folderPath: z.string().nullable().openapi({ readOnly: true }),
     priority: z.enum(["low", "medium", "high"]).openapi({ readOnly: true }),
-    requirementContext: z.array(ManualTestRunRequirementContextSchema).openapi({ readOnly: true }),
+    requirementContext: z
+      .array(ManualTestRunRequirementContextSchema)
+      .openapi({ readOnly: true }),
     result: ManualTestRunScenarioResultSchema,
     executionComment: z.string().nullable(),
     defectReference: z.string().nullable(),
@@ -64,6 +72,17 @@ const ManualTestRunScenarioSchema = z
     resultById: z.string().uuid().nullable().openapi({ readOnly: true }),
     resultBy: ManualTestRunUserSchema,
     resultAt: z.string().nullable().openapi({ readOnly: true }),
+    resultHistory: z
+      .array(
+        z.object({
+          id: z.number().int(),
+          result: ManualTestRunScenarioResultSchema,
+          resultById: z.string().uuid().nullable(),
+          resultBy: ManualTestRunUserSchema,
+          resultAt: z.string(),
+        }),
+      )
+      .openapi({ readOnly: true }),
     steps: z.array(ManualTestRunScenarioStepSchema).openapi({ readOnly: true }),
   })
   .strict()
@@ -171,7 +190,12 @@ const ManualTestRunCreateRequestSchema = z
       })
       .strict(),
     z
-      .object({ suiteId: z.string().uuid(), title: z.string().trim().min(1).max(200).optional(), environmentProperties: environmentProperties.max(100).optional(), ...createEnvironmentFields })
+      .object({
+        suiteId: z.string().uuid(),
+        title: z.string().trim().min(1).max(200).optional(),
+        environmentProperties: environmentProperties.max(100).optional(),
+        ...createEnvironmentFields,
+      })
       .strict(),
   ])
   .openapi("ManualTestRunCreateRequest");
@@ -221,23 +245,41 @@ const ManualTestRunScenarioAssigneeRequestSchema = z
   })
   .strict()
   .openapi("ManualTestRunScenarioAssigneeRequest");
-const ManualTestRunDetailsRequestSchema = z.object({
-  title: z.string().trim().min(1).max(200),
-  scenarioIds: z.array(z.string().uuid()).min(1).max(10000),
-  environmentProperties: environmentProperties.max(100),
-}).strict().openapi("ManualTestRunDetailsRequest");
-const ManualTestRunScenarioEvidenceRequestSchema = z.object({
-  executionComment: z.string().max(10000).nullable().optional(),
-  defectReference: z.string().max(2000).nullable().optional(),
-  steps: z.array(z.object({
-    id: z.string().uuid(),
-    comment: z.string().max(10000).nullable().optional(),
-    failedFlag: z.boolean().optional(),
-    failedComment: z.string().max(2000).nullable().optional(),
-    blockedFlag: z.boolean().optional(),
-    blockedComment: z.string().max(2000).nullable().optional(),
-  }).strict()).max(500).optional(),
-}).strict().refine((value) => value.executionComment !== undefined || value.defectReference !== undefined || (value.steps?.length ?? 0) > 0)
+const ManualTestRunDetailsRequestSchema = z
+  .object({
+    title: z.string().trim().min(1).max(200),
+    scenarioIds: z.array(z.string().uuid()).min(1).max(10000),
+    environmentProperties: environmentProperties.max(100),
+  })
+  .strict()
+  .openapi("ManualTestRunDetailsRequest");
+const ManualTestRunScenarioEvidenceRequestSchema = z
+  .object({
+    executionComment: z.string().max(10000).nullable().optional(),
+    defectReference: z.string().max(2000).nullable().optional(),
+    steps: z
+      .array(
+        z
+          .object({
+            id: z.string().uuid(),
+            comment: z.string().max(10000).nullable().optional(),
+            failedFlag: z.boolean().optional(),
+            failedComment: z.string().max(2000).nullable().optional(),
+            blockedFlag: z.boolean().optional(),
+            blockedComment: z.string().max(2000).nullable().optional(),
+          })
+          .strict(),
+      )
+      .max(500)
+      .optional(),
+  })
+  .strict()
+  .refine(
+    (value) =>
+      value.executionComment !== undefined ||
+      value.defectReference !== undefined ||
+      (value.steps?.length ?? 0) > 0,
+  )
   .openapi("ManualTestRunScenarioEvidenceRequest");
 const ManualTestRunScenarioOrderRequestSchema = z
   .object({
@@ -297,7 +339,8 @@ export function registerManualTestRunRoutes(registry: OpenAPIRegistry): void {
     ManualTestRunScenarioAssigneeRequest:
       ManualTestRunScenarioAssigneeRequestSchema,
     ManualTestRunDetailsRequest: ManualTestRunDetailsRequestSchema,
-    ManualTestRunScenarioEvidenceRequest: ManualTestRunScenarioEvidenceRequestSchema,
+    ManualTestRunScenarioEvidenceRequest:
+      ManualTestRunScenarioEvidenceRequestSchema,
     ManualTestRunScenarioOrderRequest: ManualTestRunScenarioOrderRequestSchema,
     ManualTestRunScenarioBulkRequest: ManualTestRunScenarioBulkRequestSchema,
   }))
@@ -320,7 +363,11 @@ export function registerManualTestRunRoutes(registry: OpenAPIRegistry): void {
       },
       ...commonErrors,
     },
-    tags: ["Manual Test Runs", "Manual Test Run History", "Manual Test Run Detail"],
+    tags: [
+      "Manual Test Runs",
+      "Manual Test Run History",
+      "Manual Test Run Detail",
+    ],
   });
   registry.registerPath({
     method: "get",
@@ -358,11 +405,16 @@ export function registerManualTestRunRoutes(registry: OpenAPIRegistry): void {
   registry.registerPath({
     method: "delete",
     path: "/api/v2/manual-test-runs/{runId}",
-    description: "Permanently deletes a project-scoped run and its scenario snapshots and lifecycle history.",
+    description:
+      "Permanently deletes a project-scoped run and its scenario snapshots and lifecycle history.",
     request: { params: RunIdParamsSchema, query: ProjectIdQuerySchema },
     security: [{ BearerAuth: [] }],
     responses: { 204: { description: "Run deleted" }, ...commonErrors },
-    tags: ["Manual Test Runs", "Manual Test Run History", "Manual Test Run Detail"],
+    tags: [
+      "Manual Test Runs",
+      "Manual Test Run History",
+      "Manual Test Run Detail",
+    ],
   });
 
   const mutationResponse = {
@@ -375,7 +427,8 @@ export function registerManualTestRunRoutes(registry: OpenAPIRegistry): void {
   registry.registerPath({
     method: "put",
     path: "/api/v2/manual-test-runs/{runId}/details",
-    description: "Atomically updates an in-progress run title, environment properties, and scenario membership. Retained snapshots preserve order and execution data; additions are appended as Untested.",
+    description:
+      "Atomically updates an in-progress run title, environment properties, and scenario membership. Retained snapshots preserve order and execution data; additions are appended as Untested.",
     request: {
       params: RunIdParamsSchema,
       query: ProjectIdQuerySchema,
@@ -383,12 +436,17 @@ export function registerManualTestRunRoutes(registry: OpenAPIRegistry): void {
     },
     security: [{ BearerAuth: [] }],
     responses: mutationResponse,
-    tags: ["Manual Test Runs", "Manual Test Run History", "Manual Test Run Detail"],
+    tags: [
+      "Manual Test Runs",
+      "Manual Test Run History",
+      "Manual Test Run Detail",
+    ],
   });
   registry.registerPath({
     method: "patch",
     path: "/api/v2/manual-test-runs/{runId}/scenarios/{scenarioId}/evidence",
-    description: "Updates project-scoped scenario comments, defect references, copied-step comments, and independent Failed and Blocked flags for an in-progress run.",
+    description:
+      "Updates project-scoped scenario comments, defect references, copied-step comments, and independent Failed and Blocked flags for an in-progress run.",
     request: {
       params: ScenarioParamsSchema,
       query: ProjectIdQuerySchema,
@@ -396,7 +454,11 @@ export function registerManualTestRunRoutes(registry: OpenAPIRegistry): void {
     },
     security: [{ BearerAuth: [] }],
     responses: mutationResponse,
-    tags: ["Manual Test Runs", "Manual Test Run History", "Manual Test Run Detail"],
+    tags: [
+      "Manual Test Runs",
+      "Manual Test Run History",
+      "Manual Test Run Detail",
+    ],
   });
   registry.registerPath({
     method: "put",
@@ -410,7 +472,11 @@ export function registerManualTestRunRoutes(registry: OpenAPIRegistry): void {
     },
     security: [{ BearerAuth: [] }],
     responses: mutationResponse,
-    tags: ["Manual Test Runs", "Manual Test Run History", "Manual Test Run Detail"],
+    tags: [
+      "Manual Test Runs",
+      "Manual Test Run History",
+      "Manual Test Run Detail",
+    ],
   });
   registry.registerPath({
     method: "post",
@@ -424,7 +490,11 @@ export function registerManualTestRunRoutes(registry: OpenAPIRegistry): void {
     },
     security: [{ BearerAuth: [] }],
     responses: mutationResponse,
-    tags: ["Manual Test Runs", "Manual Test Run History", "Manual Test Run Detail"],
+    tags: [
+      "Manual Test Runs",
+      "Manual Test Run History",
+      "Manual Test Run Detail",
+    ],
   });
   registry.registerPath({
     method: "put",
@@ -438,7 +508,11 @@ export function registerManualTestRunRoutes(registry: OpenAPIRegistry): void {
     },
     security: [{ BearerAuth: [] }],
     responses: mutationResponse,
-    tags: ["Manual Test Runs", "Manual Test Run History", "Manual Test Run Detail"],
+    tags: [
+      "Manual Test Runs",
+      "Manual Test Run History",
+      "Manual Test Run Detail",
+    ],
   });
   registry.registerPath({
     method: "patch",
@@ -452,7 +526,11 @@ export function registerManualTestRunRoutes(registry: OpenAPIRegistry): void {
     },
     security: [{ BearerAuth: [] }],
     responses: mutationResponse,
-    tags: ["Manual Test Runs", "Manual Test Run History", "Manual Test Run Detail"],
+    tags: [
+      "Manual Test Runs",
+      "Manual Test Run History",
+      "Manual Test Run Detail",
+    ],
   });
   for (const [path, method, description, statusDescription] of [
     [
@@ -485,7 +563,11 @@ export function registerManualTestRunRoutes(registry: OpenAPIRegistry): void {
         },
         ...commonErrors,
       },
-      tags: ["Manual Test Runs", "Manual Test Run History", "Manual Test Run Detail"],
+      tags: [
+        "Manual Test Runs",
+        "Manual Test Run History",
+        "Manual Test Run Detail",
+      ],
     });
   }
 }
