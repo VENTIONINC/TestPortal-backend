@@ -1,0 +1,50 @@
+README.md
+  s_fb725adb54c124::t_8ebaae5db56a6e 144
+docs/engineering/backend-conventions.md
+  s_fb725adb54c124::t_8ebaae5db56a6e 161-162
+.dockerignore
+  s_841cdf89b23290::t_b0ff10899f85ee 8
+__tests__/prompts/transportParity.test.ts
+  s_fb725adb54c124::t_b8281262ef6773 37,40,136-140
+  s_fb725adb54c124::t_da0536b0ab171a 5,118,121,130-135,144,148-152,154-160,163-169,171,173-174,176-183,190,199
+jest.prompts.config.ts
+  s_fb725adb54c124::t_8ebaae5db56a6e 2,5-11,35,41,47
+  s_fb725adb54c124::t_80e834d654bd08 49,51-52
+  s_841cdf89b23290::t_667e5880eb80a7 12-29,33,38,45,50
+  s_fb725adb54c124::t_fbe92e1e00ae62 48
+tsconfig.json
+  s_fb725adb54c124::t_8ebaae5db56a6e 64
+docs/DEVELOPMENT_GUIDE.md
+  s_fb725adb54c124::t_831e8c23221b74 206-213
+tsconfig.build.json
+  s_fb725adb54c124::t_831e8c23221b74 9-16
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "d0904d583cba2450f4d395722f9f40a14c29b698",
+  "prompts": {},
+  "humans": {
+    "h_a7ee58a11b75fb": {
+      "author": "Ihar Mikailau <ihar.mikailau@ventionteams.com>"
+    }
+  },
+  "sessions": {
+    "s_841cdf89b23290": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a1e4ae-a813-76b0-b379-846a3fdf4938",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Ihar Mikailau <ihar.mikailau@ventionteams.com>"
+    },
+    "s_fb725adb54c124": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a1e3d6-bb55-7b92-9943-141b70e76cfc",
+        "model": "gpt-6-luna"
+      },
+      "human_author": "Ihar Mikailau <ihar.mikailau@ventionteams.com>"
+    }
+  }
+}
