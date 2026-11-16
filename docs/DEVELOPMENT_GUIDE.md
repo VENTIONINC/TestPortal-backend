@@ -110,8 +110,8 @@ For a direct OpenAI check, set `AI_API_BASE_URL=https://api.openai.com/v1`, prov
 alias. Restart the backend after changing these values. The adapter sends to `/decisions` on that
 configured base URL; it does not switch endpoints, credentials, or classification strategies if
 the request fails. The backend validates the named category answer and full probability
-distribution, then maps the answer's `confidence` field to the existing 1–5 scale at 0.60, 0.75,
-0.90, and 0.97. Decisions responses use the fixed conclusion `Explanation is not available from
+distribution, then maps the probability assigned to the selected category to the existing 1–5
+scale at 0.60, 0.75, 0.90, and 0.97. Decisions responses use the fixed conclusion `Explanation is not available from
 the Decisions API.` and null error-quality fields. See the [OpenAI Decisions guide](https://developers.openai.com/api/docs/guides/decisions)
 for the native request and answer format.
 

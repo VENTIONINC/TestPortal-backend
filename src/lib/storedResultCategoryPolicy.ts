@@ -6,7 +6,7 @@ import type { TestResultAnalysis } from "@/schemas/testAnalysisSchemas";
 export type StoredResultCategory = TestResultAnalysis["category"];
 
 export const STORED_RESULT_CATEGORY_POLICY_VERSION =
-  "stored-results-analysis-v1.1.0-category-v1";
+  "stored-results-analysis-v1.1.0-category-v2";
 
 export const STORED_RESULT_CATEGORY_PRIORITY = [
   "infra",
@@ -28,7 +28,7 @@ export const STORED_RESULT_CATEGORY_CRITERIA = {
     "Evidence is missing, generic, insufficient, or conflicting and does not clearly support another category, such as an unknown failure with no diagnostic cause.",
 } satisfies Record<StoredResultCategory, string>;
 
-export const STORED_RESULT_CATEGORY_INSTRUCTIONS = `Classify this test result using only the supplied result evidence. Choose the first matching category in this priority order: ${STORED_RESULT_CATEGORY_PRIORITY.join(", ")}. Explicit infrastructure failures take priority over generic timeouts. Classify explicit resource exhaustion or saturation as performance. A test assertion that reports an actual application result different from its expected value is a bug unless the evidence shows the expectation/assertion itself is wrong. Classify explicit application exceptions as bugs and generic unknown failures without a diagnostic cause as other. A stack location alone does not determine the cause.`;
+export const STORED_RESULT_CATEGORY_INSTRUCTIONS = `Classify this test result using only the supplied result evidence. Choose the first matching category in this priority order: ${STORED_RESULT_CATEGORY_PRIORITY.join(", ")}. Explicit infrastructure failures take priority over generic timeouts. Classify an explicit timeout while waiting for an application response or UI content to appear as performance when there is no evidence of an infrastructure failure or a defective test wait. The timeout itself is sufficient evidence for performance even if its underlying cause is unknown. Classify explicit resource exhaustion or saturation as performance. A test assertion that reports an actual application result different from its expected value is a bug unless the evidence shows the expectation/assertion itself is wrong. Classify explicit application exceptions as bugs and generic unknown failures without a diagnostic cause as other. A stack location alone does not determine the cause.`;
 
 export const STORED_RESULT_CATEGORY_CHOICES = Object.freeze(
   STORED_RESULT_CATEGORY_PRIORITY.map((value) => ({

@@ -30,7 +30,12 @@ export const getStoredResultsAnalysisPrompt = (testResultsLength: number) => `
     <rule>
       2. performance: timeouts or waits exceeded without network error codes,
       slow responses, long execution times, or flaky timeouts that pass on retry
-      without code changes.
+      without code changes. Classify explicit evidence of resource exhaustion
+      or saturation as performance. Examples include memory allocation
+      failures due to exhaustion, processes terminated for exceeding memory
+      limits, and work blocked because a worker pool or queue is at capacity.
+      Apply this rule even when the failure is reproducible or the stack trace
+      points to application code.
     </rule>
     <rule>
       3. script: test framework errors, selector or locator not found, invalid

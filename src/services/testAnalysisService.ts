@@ -127,6 +127,7 @@ function validateDecisionsCategory(
   client: GenerativeAiClientContext,
 ): {
   answer: z.infer<typeof nativeDecisionAnswerSchema>;
+  selectedProbability: number;
   returnedModel: string | null;
 } {
   const parsed = nativeDecisionsResponseSchema.safeParse(value);
@@ -154,11 +155,20 @@ function validateDecisionsCategory(
     0,
   );
 
-  if (!hasCompleteDistribution || Math.abs(distributionTotal - 1) > 1e-6) {
+  const selectedProbability = answer.probabilities.find(
+    ({ value }) => value === answer.choice,
+  )?.probability;
+
+  if (
+    !hasCompleteDistribution ||
+    Math.abs(distributionTotal - 1) > 1e-6 ||
+    selectedProbability === undefined
+  ) {
     throw invalidAiResponseError(client);
   }
   return {
     answer,
+    selectedProbability,
     returnedModel: safeModelIdentifier(parsed.data.model) ?? null,
   };
 }
@@ -456,14 +466,9 @@ export const testAnalysisService = {
             },
             snapshot,
           );
-          const validated = validateDecisionsCategory(response, client);
-          const { answer } = validated;
-          let confidence: number;
-          try {
-            confidence = mapDecisionsConfidence(answer.confidence);
-          } catch {
-            throw invalidAiResponseError(client);
-          }
+          const { answer, selectedProbability, returnedModel } =
+            validateDecisionsCategory(response, client);
+          const confidence = mapDecisionsConfidence(selectedProbability);
 
           analyses[index] = {
             id: result.id,
@@ -479,11 +484,11 @@ export const testAnalysisService = {
             strategy: "decisions",
             connection: snapshot.connection.connectionLabel,
             requestedModel: safeModelIdentifier(requestedModel) ?? null,
-            returnedModel: validated.returnedModel,
+            returnedModel,
             analyzedAt: new Date().toISOString(),
             latencyMs: Math.max(0, Date.now() - startedAt),
             attempts: 1,
-            rawConfidence: answer.confidence,
+            rawConfidence: selectedProbability,
             categoryProbabilities: Object.fromEntries(
               answer.probabilities.map(({ value, probability }) => [
                 value,
@@ -491,7 +496,7 @@ export const testAnalysisService = {
               ]),
             ),
             categoryPolicyVersion: STORED_RESULT_CATEGORY_POLICY_VERSION,
-            confidenceMappingVersion: "decisions-confidence-v1",
+            confidenceMappingVersion: "decisions-confidence-v2",
           };
         } catch (error) {
           if (error instanceof GenerativeAiError) {

@@ -28,7 +28,9 @@ export const analysisMetadataSchema = z
       .record(resultCategorySchema, confidenceProbabilitySchema)
       .nullable(),
     categoryPolicyVersion: z.string().min(1).nullable(),
-    confidenceMappingVersion: z.literal("decisions-confidence-v1").nullable(),
+    confidenceMappingVersion: z
+      .enum(["decisions-confidence-v1", "decisions-confidence-v2"])
+      .nullable(),
   })
   .strict();
 

@@ -234,7 +234,7 @@ describe("stored result analysis", () => {
     );
   });
 
-  it("uses one named category question and maps the verified confidence field", async () => {
+  it("uses one named category question and maps the selected category probability", async () => {
     mockSubmitDecisionsRequest.mockResolvedValueOnce(validDecisionResponse());
     const snapshot = await makeDecisionsSnapshot();
 
@@ -249,7 +249,7 @@ describe("stored result analysis", () => {
       id: "failed-1",
       status: "failed",
       category: "bug",
-      confidence: 3,
+      confidence: 4,
       conclusion: "Explanation is not available from the Decisions API.",
       errorQuality: null,
       errorQualityConclusion: null,
@@ -261,7 +261,7 @@ describe("stored result analysis", () => {
         requestedModel: "gpt-6-luna",
         returnedModel: "gpt-6-luna",
         attempts: 1,
-        rawConfidence: 0.75,
+        rawConfidence: 0.95,
         categoryProbabilities: {
           infra: 0.02,
           performance: 0.01,
@@ -269,8 +269,8 @@ describe("stored result analysis", () => {
           bug: 0.95,
           other: 0.01,
         },
-        categoryPolicyVersion: "stored-results-analysis-v1.1.0-category-v1",
-        confidenceMappingVersion: "decisions-confidence-v1",
+        categoryPolicyVersion: "stored-results-analysis-v1.1.0-category-v2",
+        confidenceMappingVersion: "decisions-confidence-v2",
       }),
     );
     const decisionRequest = mockSubmitDecisionsRequest.mock.calls[0]?.[0];
