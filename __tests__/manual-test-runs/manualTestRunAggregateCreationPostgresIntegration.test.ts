@@ -970,7 +970,7 @@ describePostgres(
       const run = await manualTestRunCreationModel.createFromCatalog({
         projectId, executedById: userId, scenarioIds: [scenarioOne.id],
       });
-      if (!run || !run.scenarios[0]) throw new Error("Expected a run with one scenario");
+      if (!run?.scenarios[0]) throw new Error("Expected a run with one scenario");
       const scenarioId = run.scenarios[0].id;
       await expect(manualTestRunLifecycleModel.complete({
         projectId, runId: run.id, completedById: userId, requireAllMarked: true,
