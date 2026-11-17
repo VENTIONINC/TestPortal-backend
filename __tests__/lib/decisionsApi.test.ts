@@ -46,6 +46,9 @@ async function makeSnapshot(
         operations: {
           classification: {
             model: "generative-classifier",
+            api: "responses",
+            reasoningEffort: "low",
+            maxOutputTokens: 4000,
             decisions: { model: options.model ?? "gpt-6-luna" },
           },
           formatting: { model: "format-model" },
@@ -108,6 +111,8 @@ describe("submitDecisionsRequest", () => {
       });
       expect(init?.body).not.toContain("temperature");
       expect(init?.body).not.toContain("max_output_tokens");
+      expect(init?.body).not.toContain("reasoning_effort");
+      expect(init?.body).not.toContain("chat-completions");
       expect(init?.body).not.toContain("response_format");
       expect(timeoutMock).toHaveBeenCalledWith(DECISIONS_REQUEST_TIMEOUT_MS);
       expect(DECISIONS_REQUEST_TIMEOUT_MS).toBe(30_000);

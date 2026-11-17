@@ -48,6 +48,11 @@ const config: JestConfigWithTsJest = {
     },
     {
       ...externalEvalConfig,
+      displayName: "insights-evaluation",
+      testMatch: [`${evalRoot}/insights/**/?(*.)test.ts`],
+    },
+    {
+      ...externalEvalConfig,
       displayName: "evaluation-framework",
       testMatch: [`${evalRoot}/evaluation-framework.test.ts`],
     },

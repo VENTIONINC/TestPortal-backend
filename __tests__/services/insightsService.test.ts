@@ -151,8 +151,9 @@ describe("insightsService.generateInsights", () => {
     );
     expect(chatOpenAIMock).toHaveBeenCalledWith(
       expect.objectContaining({
-        model: "gpt-4.1-mini",
-        temperature: 0.2,
+        model: "gpt-6-luna",
+        useResponsesApi: true,
+        modelKwargs: { reasoning: { effort: "low" } },
         maxTokens: 400,
         maxRetries: 1,
         configuration: expect.objectContaining({

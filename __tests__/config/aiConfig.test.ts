@@ -87,7 +87,7 @@ describe("aiConfig", () => {
       const snapshot = await createAiConfigStore({
         env: () => ({}),
       }).initialize();
-      expect(snapshot.operations.formatting.model).toBe("gpt-4.1-mini");
+      expect(snapshot.operations.formatting.model).toBe("gpt-6-luna");
     } finally {
       if (originalEntrypoint === undefined) {
         delete process.argv[1];
@@ -129,6 +129,9 @@ describe("aiConfig", () => {
       readFile: async () =>
         createJson("formatting-alias", {
           model: "generative-classification-model",
+          api: "responses",
+          reasoningEffort: "low",
+          maxOutputTokens: 4000,
           decisions: { model: "decision-model-alias" },
         }),
       defaultConfigPath: new URL("file:///test/default.json"),
@@ -139,6 +142,12 @@ describe("aiConfig", () => {
     expect(snapshot.classificationStrategy).toBe("decisions");
     expect(snapshot.operations.classification.decisions).toEqual({
       model: "decision-model-alias",
+    });
+    expect(snapshot.operations.classification).toMatchObject({
+      model: "generative-classification-model",
+      api: "responses",
+      reasoningEffort: "low",
+      maxOutputTokens: 4000,
     });
     expect(snapshot.connection).toEqual({
       baseUrl: "https://ai.example.test/custom/v1",
@@ -189,18 +198,50 @@ describe("aiConfig", () => {
       "operations.classification.decisions.model is not configured",
     );
 
-    const incompatibleSettings = createAiConfigStore({
+    const invalidGenerativeSettings = createAiConfigStore({
       env: () => ({ USE_DECISIONS_API: "true" }),
       readFile: async () =>
         createJson("formatting-alias", {
           model: "generative-classification-model",
           decisions: { model: "decision-model-alias" },
           temperature: 0.2,
+          reasoningEffort: "low",
         }),
     });
-    await expect(incompatibleSettings.initialize()).rejects.toThrow(
-      "Generative API, temperature, output-token, and reasoning settings are not supported",
+    await expect(invalidGenerativeSettings.initialize()).rejects.toThrow(
+      "AI configuration is invalid at operations.classification.temperature",
     );
+  });
+
+  it("loads one validated generative-plus-Decisions profile in either strategy mode", async () => {
+    const profile = createJson("formatting-alias", {
+      model: "gpt-6-luna",
+      api: "responses",
+      reasoningEffort: "low",
+      maxOutputTokens: 4000,
+      decisions: { model: "gpt-6-luna" },
+    });
+    const load = (strategy: "true" | "false") =>
+      createAiConfigStore({
+        env: () => ({ USE_DECISIONS_API: strategy }),
+        readFile: async () => profile,
+      }).initialize();
+
+    const generative = await load("false");
+    const decisions = await load("true");
+
+    expect(generative.classificationStrategy).toBe("generative");
+    expect(decisions.classificationStrategy).toBe("decisions");
+    expect(generative.operations.classification).toEqual(
+      decisions.operations.classification,
+    );
+    expect(decisions.operations.classification).toMatchObject({
+      model: "gpt-6-luna",
+      api: "responses",
+      reasoningEffort: "low",
+      maxOutputTokens: 4000,
+      decisions: { model: "gpt-6-luna" },
+    });
   });
 
   it("uses the selected file and only exposes actionable safe read errors", async () => {

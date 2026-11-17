@@ -75,12 +75,30 @@ Version 1 requires independent entries for all four operations:
   "version": 1,
   "operations": {
     "classification": {
-      "model": "gpt-4.1-mini",
+      "model": "gpt-6-luna",
+      "api": "responses",
+      "reasoningEffort": "low",
+      "maxOutputTokens": 4000,
       "decisions": { "model": "gpt-6-luna" }
     },
-    "formatting": { "model": "gpt-4.1-mini", "api": "chat-completions" },
-    "suggestions": { "model": "gpt-4.1-mini", "api": "chat-completions" },
-    "insights": { "model": "gpt-4.1-mini", "api": "chat-completions" }
+    "formatting": {
+      "model": "gpt-6-luna",
+      "api": "responses",
+      "reasoningEffort": "none",
+      "maxOutputTokens": 500
+    },
+    "suggestions": {
+      "model": "gpt-6-luna",
+      "api": "responses",
+      "reasoningEffort": "low",
+      "maxOutputTokens": 700
+    },
+    "insights": {
+      "model": "gpt-6-luna",
+      "api": "responses",
+      "reasoningEffort": "low",
+      "maxOutputTokens": 400
+    }
   }
 }
 ```
@@ -89,8 +107,9 @@ Each operation accepts a nonempty `model` alias, optional `api` (`chat-completio
 `responses`), optional `temperature` from 0 through 2, optional positive integer `maxOutputTokens`,
 and optional `reasoningEffort` (`none`, `low`, `medium`, or `high`). `api` defaults to
 `chat-completions`. Temperature and reasoning effort cannot be set together. Unknown fields,
-credentials, and endpoint settings are rejected in the JSON file. The generic values are technical
-defaults, not a model recommendation or a quality profile.
+credentials, and endpoint settings are rejected in the JSON file. The packaged file is the
+evaluated GPT-6 Luna profile; a file explicitly selected through AI_CONFIG_PATH remains
+authoritative.
 
 Classification, formatting, suggestions, and dashboard insights each use their own operation entry.
 The same immutable snapshot supplies nested classification calls made while generating a
