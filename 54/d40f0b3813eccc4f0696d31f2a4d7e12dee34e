@@ -1,0 +1,47 @@
+__tests__/services/insightsService.test.ts
+  s_a68298811377e8::t_15f91992215d18 154-156
+__tests__/services/pdfBuilderService.test.ts
+  s_a68298811377e8::t_6a7aa2a0cc4863 300
+docs/DEVELOPMENT_GUIDE.md
+  s_a68298811377e8::t_85c76dc0e40449 78-81,84-101,110-112
+__tests__/services/testAnalysisService.test.ts
+  s_a68298811377e8::t_8091aa8fd21969 51-53,91-94,112-118,335,342-366
+  s_a68298811377e8::t_292d263b90c892 367-368
+__tests__/config/aiConfigSchema.test.ts
+  s_a68298811377e8::t_15f91992215d18 23-52
+src/services/pdfBuilderService.ts
+  s_a68298811377e8::t_6a7aa2a0cc4863 152
+__tests__/lib/generativeAi.test.ts
+  s_a68298811377e8::t_6f71addd4fc419 80-126
+  s_a68298811377e8::t_6305619f759ecc 169,171-172,174-185,191-192,204,206-208
+  s_a68298811377e8::t_1a632d5eef5b22 168,193-194,205,209
+__tests__/lib/decisionsApi.test.ts
+  s_a68298811377e8::t_1a632d5eef5b22 49-51,114-115
+__tests__/config/aiConfig.test.ts
+  s_a68298811377e8::t_15f91992215d18 90
+  s_a68298811377e8::t_f2199a6843a56c 132-134,146-151,201,208,211-212,216-244
+  s_a68298811377e8::t_829d0d76bf79d6 245-246
+src/config/ai-config.default.json
+  s_a68298811377e8::t_15f91992215d18 5-8,11-28
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "54d40f0b3813eccc4f0696d31f2a4d7e12dee34e",
+  "prompts": {},
+  "humans": {
+    "h_a7ee58a11b75fb": {
+      "author": "Ihar Mikailau <ihar.mikailau@ventionteams.com>"
+    }
+  },
+  "sessions": {
+    "s_a68298811377e8": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a1e8bf-2693-76c2-9179-1dc0ebfcbb38",
+        "model": "gpt-6-luna"
+      },
+      "human_author": "Ihar Mikailau <ihar.mikailau@ventionteams.com>"
+    }
+  }
+}
