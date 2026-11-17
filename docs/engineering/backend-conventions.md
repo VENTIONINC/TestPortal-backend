@@ -61,6 +61,14 @@ when they are materially changed and the extraction stays within scope.
 Avoid holding database transactions open across slow external calls unless the workflow explicitly
 requires it. Define which writes must be atomic and how partial failure is handled.
 
+For stored-result AI enrichment, `storedResultEnrichmentService` performs provider analysis before
+calling the result model's project-scoped batch persistence operation. The model writes only
+generated analysis fields in one transaction, checks that each trusted result ID matches the
+requested project and status, and rolls back the whole batch on any mismatch. The service returns
+analyses only after commit; user feedback and reviewer fields remain model-owned and unchanged.
+Report ingestion commits separately before optional enrichment, so an AI or analysis-write failure
+does not undo the saved report and must not be returned as successful analysis.
+
 ## Types and Contracts
 
 Use `interface` for handwritten object-shaped contracts such as service parameters and domain
@@ -129,6 +137,12 @@ Narrow caught values before reading their properties. Preserve useful internal c
 existing logger and expose an appropriate public message through the adapter. Avoid duplicate error
 logging at every layer and do not expose credentials or raw internal failures in public responses.
 
+Generative provider construction and invocation use the shared AI boundary. It categorizes failures
+as `authentication/configuration`, `rate-limit`, `unavailable/timeout`, `invalid-response`, or
+`unknown`. Logs may include only the fixed connection label and validated requested/returned model
+identifiers. Do not log raw provider errors, causes, URLs, headers, response bodies, or arbitrary
+provider metadata. A missing credential may identify the `OPENAI_API_KEY` setting, never its value.
+
 Use the existing MCP helpers in `src/mcp/helpers/mcpHelpers.ts` for tool responses and error handling.
 Keep request schemas, response shapes, tool descriptions, and OpenAPI documentation aligned when
 behavior changes. Preserve compatibility unless changing it is part of the requested scope.
@@ -144,8 +158,8 @@ checks. These conventions describe the expected code even where a lint rule is n
 Do not introduce a different formatter configuration or repository-wide formatting sweep as part of
 a focused behavior change.
 
-This repository is licensed under Apache 2.0. Supported files in `src`, `__tests__`, and
-`__prompts-tests__` must carry this header:
+This repository is licensed under Apache 2.0. Supported files in `src` and `__tests__` must carry
+this header:
 
 ```ts
 // Copyright 2026 VENSOLUTIONSGROUP LTD

@@ -33,9 +33,7 @@ const toStringArray = (value: JsonArrayValue): string[] => {
   return items;
 };
 
-export const normalizeJsonStringArray = (
-  value: unknown,
-): string[] => {
+export const normalizeJsonStringArray = (value: unknown): string[] => {
   if (value == null) {
     return [];
   }
@@ -60,9 +58,7 @@ export const normalizeJsonStringArray = (
   return [];
 };
 
-export const normalizeJsonUnknownArray = (
-  value: unknown,
-): unknown[] => {
+export const normalizeJsonUnknownArray = (value: unknown): unknown[] => {
   if (value == null) {
     return [];
   }
@@ -83,9 +79,8 @@ export const normalizeJsonUnknownArray = (
   return [];
 };
 
-export const normalizeJsonArrayForText = (
-  value: unknown,
-): string => JSON.stringify(normalizeJsonStringArray(value), null, 2);
+export const normalizeJsonArrayForText = (value: unknown): string =>
+  JSON.stringify(normalizeJsonStringArray(value), null, 2);
 
 export const normalizeSpecPayload = (spec: PrismaSpec): StructuredSpec => ({
   ...spec,
@@ -95,18 +90,61 @@ export const normalizeSpecPayload = (spec: PrismaSpec): StructuredSpec => ({
 
 export const normalizeResultErrorPayload = (
   error: PrismaResultError,
-): StructuredResultError => ({
-  ...error,
-  callLog: normalizeJsonStringArray(error.callLog),
-  callStack: normalizeJsonStringArray(error.callStack),
-  rawLogs: normalizeResultErrorLogs(error.rawLogs) ?? [],
-  sourceSnippet: normalizeResultErrorSourceSnippet(error.sourceSnippet),
-});
+): StructuredResultError =>
+  projectPublicPayload({
+    ...error,
+    callLog: normalizeJsonStringArray(error.callLog),
+    callStack: normalizeJsonStringArray(error.callStack),
+    rawLogs: normalizeResultErrorLogs(error.rawLogs) ?? [],
+    sourceSnippet: normalizeResultErrorSourceSnippet(error.sourceSnippet),
+  });
 
 export const normalizeResultPayload = (
   result: ResultWithRelations,
-): StructuredResultWithRelations => ({
-  ...result,
-  spec: normalizeSpecPayload(result.spec),
-  errors: result.errors.map(normalizeResultErrorPayload),
-});
+): StructuredResultWithRelations =>
+  projectPublicPayload({
+    ...projectPublicResult(result),
+    spec: normalizeSpecPayload(result.spec),
+    errors: result.errors.map(normalizeResultErrorPayload),
+  });
+
+/** Remove internal classification lifecycle fields from a public result. */
+export function projectPublicResult<T extends object>(
+  result: T,
+): Omit<T, "analysisMetadata" | "analysisLastError"> {
+  const {
+    analysisMetadata: _metadata,
+    analysisLastError: _lastError,
+    ...publicResult
+  } = result as T & {
+    analysisMetadata?: unknown;
+    analysisLastError?: unknown;
+  };
+  return publicResult;
+}
+
+/** Remove internal lifecycle fields from nested public payloads as well. */
+export function projectPublicPayload<T>(value: T): T {
+  if (Array.isArray(value)) {
+    return value.map((item) => projectPublicPayload(item)) as T;
+  }
+  if (value && typeof value === "object" && !(value instanceof Date)) {
+    const prototype = Object.getPrototypeOf(value);
+    if (prototype !== Object.prototype && prototype !== null) return value;
+    const projected: Record<string, unknown> = {};
+    for (const [key, item] of Object.entries(value)) {
+      if (key !== "analysisMetadata" && key !== "analysisLastError") {
+        projected[key] = projectPublicPayload(item);
+      }
+    }
+    return projected as T;
+  }
+  return value;
+}
+
+export function publicJsonReplacer(key: string, value: unknown): unknown {
+  if (key === "analysisMetadata" || key === "analysisLastError") {
+    return undefined;
+  }
+  return value;
+}

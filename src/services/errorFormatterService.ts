@@ -2,13 +2,17 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { ChatPromptTemplate } from "@langchain/core/prompts";
-import { ChatOpenAI } from "@langchain/openai";
-import { z } from "zod";
+import type { RunnableConfig } from "@langchain/core/runnables";
 
 import { normalizeJsonArrayForText } from "@/lib/jsonPayloads";
+import {
+  createGenerativeAiClient,
+  GenerativeAiError,
+  parseStructuredCompletion,
+} from "@/lib/generativeAi";
 import getLogger from "@/lib/logger";
 import { getEffectiveResultCategory } from "@/lib/resultCategory";
-import { getErrorFormatterPrompt } from "@/prompts/error-formatter/v1.0.0";
+import { getErrorFormatterPrompt } from "@/prompts/error-formatter/v1.1.0";
 import {
   systemPrompt as errorSolutionSystemPrompt,
   userPrompt as errorSolutionUserPrompt,
@@ -31,22 +35,21 @@ const logger = getLogger("error-formatter");
 export const errorFormatterService = {
   async formatErrorMessage(
     input: ErrorFormatterInput,
+    clientOverride?: ReturnType<typeof createGenerativeAiClient>,
+    runOptions?: RunnableConfig,
   ): Promise<ErrorFormatterOutput> {
     try {
       logger.info("Formatting error message with LangChain");
 
-      const model = new ChatOpenAI({
-        model: "gpt-4.1-mini",
-        temperature: 0.7,
-        maxTokens: 500,
-        maxRetries: 2,
-      });
+      const client = clientOverride ?? createGenerativeAiClient("formatting");
 
-      const structuredModel = model.withStructuredOutput<
-        z.infer<typeof errorFormatterSchema>
-      >(errorFormatterSchema, {
+      const structuredModel = client.model.withStructuredOutput<ErrorFormatterOutput>(
+        errorFormatterSchema,
+        {
         name: "error_formatter_response",
-      });
+        includeRaw: true,
+        },
+      );
 
       const userContent = [
         `Name: ${input.name}`,
@@ -56,15 +59,35 @@ export const errorFormatterService = {
           : []),
       ].join("\n");
 
-      const result = await structuredModel.invoke([
-        { role: "system", content: getErrorFormatterPrompt() },
-        { role: "user", content: userContent },
-      ]);
+      const result: unknown = await client.invoke(() =>
+        runOptions
+          ? structuredModel.invoke(
+              [
+                { role: "system", content: getErrorFormatterPrompt() },
+                { role: "user", content: userContent },
+              ],
+              runOptions,
+            )
+          : structuredModel.invoke([
+              { role: "system", content: getErrorFormatterPrompt() },
+              { role: "user", content: userContent },
+            ]),
+      );
+
+      const parsed = parseStructuredCompletion(
+        client,
+        result,
+        errorFormatterSchema,
+      );
 
       logger.info("Successfully formatted error message");
-      return result;
+      return parsed;
     } catch (error) {
-      logger.error("Error formatting message:", error);
+      if (error instanceof GenerativeAiError) {
+        logger.error("Error formatting message:", error.diagnostic);
+      } else {
+        logger.error("Error formatting message");
+      }
       throw new Error("Failed to format error message");
     }
   },
@@ -73,53 +96,56 @@ export const errorFormatterService = {
     resultId: string,
     projectId: string,
   ): Promise<ErrorSuggestionOutput> {
+    if (!resultId) {
+      throw new Error("Result ID is required");
+    }
+
+    if (!projectId) {
+      throw new Error("Project ID is required");
+    }
+
+    const result = await resultService.getResultById(resultId, projectId);
+
+    if (result.status !== "failed" && result.status !== "flaky") {
+      throw new Error("Only failed or flaky results can be analyzed");
+    }
+
+    const primaryError = result.errors?.[0];
+    if (!primaryError) {
+      throw new Error("Result has no error details to analyze");
+    }
+
     try {
-      if (!resultId) {
-        throw new Error("Result ID is required");
-      }
-
-      if (!projectId) {
-        throw new Error("Project ID is required");
-      }
-
-      const result = await resultService.getResultById(resultId, projectId);
-
-      if (result.status !== "failed" && result.status !== "flaky") {
-        throw new Error("Only failed or flaky results can be analyzed");
-      }
-
-      const primaryError = result.errors?.[0];
-      if (!primaryError) {
-        throw new Error("Result has no error details to analyze");
-      }
-
       const analysis = await resolveResultAnalysis(result);
 
-      const model = new ChatOpenAI({
-        model: "gpt-4.1-mini",
-        temperature: 0.3,
-        maxTokens: 700,
-        maxRetries: 2,
-      });
+      const client = createGenerativeAiClient("suggestions");
 
-      const structuredModel = model.withStructuredOutput<
-        z.infer<typeof errorSuggestionSchema>
-      >(errorSuggestionSchema, {
-        name: "error_solution_suggestion",
-      });
+      const structuredModel = client.model.withStructuredOutput<ErrorSuggestionOutput>(
+        errorSuggestionSchema,
+        {
+          name: "error_solution_suggestion",
+          includeRaw: true,
+        },
+      );
 
       const prompt = ChatPromptTemplate.fromMessages([
         ["system", errorSolutionSystemPrompt],
         ["human", errorSolutionUserPrompt],
       ]);
 
-      const suggestion = await structuredModel.invoke(
-        await prompt.formatMessages({
-          errorMessage: primaryError.message,
-          errorStack: normalizeErrorStack(primaryError.callStack) ?? "(none)",
-          errorLocation: primaryError.location ?? "(none)",
-          analysisCategory: analysis.category ?? "uncategorized",
-        }),
+      const messages = await prompt.formatMessages({
+        errorMessage: primaryError.message,
+        errorStack: normalizeErrorStack(primaryError.callStack) ?? "(none)",
+        errorLocation: primaryError.location ?? "(none)",
+        analysisCategory: analysis.category ?? "uncategorized",
+      });
+      const suggestionResult: unknown = await client.invoke(() =>
+        structuredModel.invoke(messages),
+      );
+      const suggestion = parseStructuredCompletion(
+        client,
+        suggestionResult,
+        errorSuggestionSchema,
       );
 
       return {
@@ -128,12 +154,12 @@ export const errorFormatterService = {
         description: suggestion.description,
       };
     } catch (error) {
-      logger.error("Error generating solution suggestion:", error);
-      throw new Error(
-        error instanceof Error
-          ? error.message
-          : "Failed to generate error suggestion",
-      );
+      if (error instanceof GenerativeAiError) {
+        logger.error("Error generating solution suggestion:", error.diagnostic);
+      } else {
+        logger.error("Error generating solution suggestion");
+      }
+      throw new Error("Failed to generate error suggestion");
     }
   },
 };
@@ -188,9 +214,7 @@ const resolveResultAnalysis = async (
 
   const analysis = analysisMap.get(result.id);
   if (!analysis) {
-    return {
-      category: "other",
-    };
+    throw new Error("Stored result classification was unavailable");
   }
 
   return {
