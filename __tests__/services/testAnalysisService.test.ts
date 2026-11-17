@@ -48,6 +48,9 @@ const mockSubmitDecisionsRequest = jest.requireMock<{
     typeof submitDecisionsRequestType
   >;
 }>("@/lib/decisionsApi").submitDecisionsRequest;
+const mockCreateGenerativeAiClient = jest.requireMock<{
+  createGenerativeAiClient: jest.Mock;
+}>("@/lib/generativeAi").createGenerativeAiClient;
 const loggerMocks: { __mocks__: { error: jest.Mock } } =
   jest.requireMock("@/lib/logger");
 const mockLoggerError = loggerMocks.__mocks__.error;
@@ -85,7 +88,10 @@ async function makeDecisionsSnapshot() {
         version: 1,
         operations: {
           classification: {
-            model: "generative-classification-model",
+            model: "gpt-6-luna",
+            api: "responses",
+            reasoningEffort: "low",
+            maxOutputTokens: 4000,
             decisions: { model: "gpt-6-luna" },
           },
           formatting: { model: "format-model" },
@@ -103,7 +109,13 @@ async function makeGenerativeSnapshot(): Promise<AiConfigSnapshot> {
       JSON.stringify({
         version: 1,
         operations: {
-          classification: { model: "generative-classification-model" },
+          classification: {
+            model: "gpt-6-luna",
+            api: "responses",
+            reasoningEffort: "low",
+            maxOutputTokens: 4000,
+            decisions: { model: "gpt-6-luna" },
+          },
           formatting: { model: "format-model" },
           suggestions: { model: "suggestion-model" },
           insights: { model: "insights-model" },
@@ -320,10 +332,38 @@ describe("stored result analysis", () => {
       expect([...analyses.keys()]).toEqual(["failed-1", "flaky-1"]);
       expect(mockSubmitDecisionsRequest).toHaveBeenCalledTimes(2);
       expect(mockWithStructuredOutput).not.toHaveBeenCalled();
+      expect(mockCreateGenerativeAiClient).not.toHaveBeenCalled();
       expect(invoke).not.toHaveBeenCalled();
     } finally {
       snapshotSpy.mockRestore();
     }
+  });
+
+  it("uses the generative settings from the same profile when Decisions is disabled", async () => {
+    const snapshot = await makeGenerativeSnapshot();
+    jest.spyOn(aiConfig, "getAiConfigSnapshot").mockReturnValue(snapshot);
+    invoke.mockResolvedValueOnce(
+      completion({ results: [classified("failed-1", "failed")] }),
+    );
+
+    const analyses = await testAnalysisService.analyzeStoredResults([
+      result("failed-1", "failed"),
+    ]);
+
+    expect(analyses.get("failed-1")).toEqual(classified("failed-1", "failed"));
+    expect(mockCreateGenerativeAiClient).toHaveBeenCalledWith(
+      "classification",
+      snapshot,
+    );
+    expect(snapshot.operations.classification).toMatchObject({
+      model: "gpt-6-luna",
+      api: "responses",
+      reasoningEffort: "low",
+      maxOutputTokens: 4000,
+      decisions: { model: "gpt-6-luna" },
+    });
+    expect(mockSubmitDecisionsRequest).not.toHaveBeenCalled();
+    expect(invoke).toHaveBeenCalledTimes(1);
   });
 
   it.each([

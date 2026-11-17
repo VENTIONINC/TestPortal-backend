@@ -20,7 +20,36 @@ describe("aiConfigSchema", () => {
   it("accepts the packaged generic defaults", () => {
     expect(
       aiConfigSchema.parse(defaultConfig).operations.formatting.model,
-    ).toBe("gpt-4.1-mini");
+    ).toBe("gpt-6-luna");
+    expect(
+      aiConfigSchema.parse(defaultConfig).operations.classification,
+    ).toMatchObject({
+      model: "gpt-6-luna",
+      api: "responses",
+      reasoningEffort: "low",
+      maxOutputTokens: 4000,
+    });
+    expect(
+      aiConfigSchema.parse(defaultConfig).operations.formatting,
+    ).toMatchObject({
+      api: "responses",
+      reasoningEffort: "none",
+      maxOutputTokens: 500,
+    });
+    expect(
+      aiConfigSchema.parse(defaultConfig).operations.suggestions,
+    ).toMatchObject({
+      api: "responses",
+      reasoningEffort: "low",
+      maxOutputTokens: 700,
+    });
+    expect(
+      aiConfigSchema.parse(defaultConfig).operations.insights,
+    ).toMatchObject({
+      api: "responses",
+      reasoningEffort: "low",
+      maxOutputTokens: 400,
+    });
     expect(
       aiConfigSchema.parse(defaultConfig).operations.classification.decisions,
     ).toEqual({ model: "gpt-6-luna" });

@@ -113,20 +113,6 @@ function decisionsEnabled(value: string | undefined): boolean {
   );
 }
 
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === "object" && value !== null && !Array.isArray(value);
-}
-
-function hasIncompatibleDecisionsSettings(config: unknown): boolean {
-  if (!isRecord(config) || !isRecord(config.operations)) return false;
-  const classification = config.operations.classification;
-  if (!isRecord(classification)) return false;
-
-  return ["api", "temperature", "maxOutputTokens", "reasoningEffort"].some(
-    (setting) => Object.hasOwn(classification, setting),
-  );
-}
-
 export function createAiConfigStore(
   dependencies: AiConfigStoreDependencies = {},
 ) {
@@ -177,12 +163,6 @@ export function createAiConfigStore(
         "USE_DECISIONS_API is true but operations.classification.decisions.model is not configured.",
       );
     }
-    if (useDecisionsApi && hasIncompatibleDecisionsSettings(json)) {
-      throw new AiConfigurationError(
-        "Generative API, temperature, output-token, and reasoning settings are not supported for Decisions classification.",
-      );
-    }
-
     const connection: AiConnection = {
       baseUrl,
       connectionLabel:

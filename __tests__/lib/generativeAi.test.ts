@@ -77,6 +77,53 @@ describe("createGenerativeAiClient", () => {
     jest.restoreAllMocks();
   });
 
+  it("sends the packaged GPT-6 Luna settings independently for every operation", async () => {
+    const requests: Array<Record<string, unknown>> = [];
+    jest.spyOn(global, "fetch").mockImplementation(async (_input, init) => {
+      requests.push(JSON.parse(String(init?.body)) as Record<string, unknown>);
+      return new Response(
+        JSON.stringify({
+          id: "resp-packaged-default",
+          object: "response",
+          created_at: 1,
+          model: "gpt-6-luna",
+          status: "completed",
+          output_text: "synthetic response",
+          output: [],
+        }),
+        { status: 200, headers: { "content-type": "application/json" } },
+      );
+    });
+    const snapshot = await createAiConfigStore({
+      env: () => ({ OPENAI_API_KEY: "synthetic-key" }),
+    }).initialize();
+    const expected = [
+      ["classification", "low", 4000],
+      ["formatting", "none", 500],
+      ["suggestions", "low", 700],
+      ["insights", "low", 400],
+    ] as const;
+
+    for (const [operation] of expected) {
+      const client = createGenerativeAiClient(operation, snapshot);
+      await client.invoke(() => client.model.invoke("synthetic prompt"));
+    }
+
+    expect(requests).toHaveLength(4);
+    for (const [index, [operation, effort, maxOutputTokens]] of
+      expected.entries()) {
+      expect(requests[index]).toMatchObject({
+        model: "gpt-6-luna",
+        reasoning: { effort },
+        max_output_tokens: maxOutputTokens,
+      });
+      expect(requests[index]).not.toHaveProperty("temperature");
+      if (operation === "classification") {
+        expect(requests[index]).not.toHaveProperty("decisions");
+      }
+    }
+  });
+
   it("sends Chat Completions to the selected connection with the configured model and reasoning", async () => {
     let requestUrl = "";
     let authorization: string | null | undefined;
@@ -118,18 +165,33 @@ describe("createGenerativeAiClient", () => {
     expect(requestBody).not.toHaveProperty("max_tokens");
   });
 
-  it("keeps generative classification compatible when Decisions is configured but disabled", async () => {
+  it("uses generative settings from a profile that also configures Decisions", async () => {
+    let requestUrl = "";
     let requestBody: Record<string, unknown> | undefined;
-    jest.spyOn(global, "fetch").mockImplementation(async (_input, init) => {
+    jest.spyOn(global, "fetch").mockImplementation(async (input, init) => {
+      requestUrl = String(input);
       requestBody = JSON.parse(String(init?.body)) as Record<string, unknown>;
-      return chatResponse("gpt-4.1-mini");
+      return new Response(
+        JSON.stringify({
+          id: "resp-synthetic",
+          object: "response",
+          created_at: 1,
+          model: "gpt-6-luna",
+          status: "completed",
+          output_text: "synthetic response",
+          output: [],
+        }),
+        { status: 200, headers: { "content-type": "application/json" } },
+      );
     });
 
     const snapshot = await makeSnapshot({
       operations: {
         classification: {
-          model: "gpt-4.1-mini",
-          api: "chat-completions",
+          model: "gpt-6-luna",
+          api: "responses",
+          reasoningEffort: "low",
+          maxOutputTokens: 4000,
           decisions: { model: "decision-model-alias" },
         },
       },
@@ -139,7 +201,12 @@ describe("createGenerativeAiClient", () => {
     const client = createGenerativeAiClient("classification", snapshot);
     await client.invoke(() => client.model.invoke("synthetic prompt"));
 
-    expect(requestBody?.model).toBe("gpt-4.1-mini");
+    expect(requestUrl).toBe("https://api.openai.com/v1/responses");
+    expect(requestBody).toMatchObject({
+      model: "gpt-6-luna",
+      reasoning: { effort: "low" },
+      max_output_tokens: 4000,
+    });
     expect(requestBody).not.toHaveProperty("decisions");
   });
 
