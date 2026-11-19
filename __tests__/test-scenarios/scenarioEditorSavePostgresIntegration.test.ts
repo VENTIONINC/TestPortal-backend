@@ -118,10 +118,26 @@ describePostgres("atomic scenario editor", () => {
     const before = await dbClient.project.findUniqueOrThrow({
       where: { id: projectId },
     });
-    const first = await service.createScenario({ projectId, createdById, title: "First duplicate", newSuites: [{ name: "Deferred" }], suiteIds: [] });
-    const duplicate = await service.createScenario({ projectId, createdById, title: "Second duplicate", newSuites: [{ name: "deferred" }], suiteIds: [] });
+    const first = await service.createScenario({
+      projectId,
+      createdById,
+      title: "First duplicate",
+      newSuites: [{ name: "Duplicate suite" }],
+      suiteIds: [],
+    });
+    const duplicate = await service.createScenario({
+      projectId,
+      createdById,
+      title: "Second duplicate",
+      newSuites: [{ name: "duplicate suite" }],
+      suiteIds: [],
+    });
     expect(first.suites[0]?.id).not.toBe(duplicate.suites[0]?.id);
-    expect(await dbClient.testSuite.count({ where: { projectId, name: { in: ["Deferred", "deferred"] } } })).toBe(2);
+    expect(
+      await dbClient.testSuite.count({
+        where: { projectId, name: { in: ["Duplicate suite", "duplicate suite"] } },
+      }),
+    ).toBe(2);
     expect(
       (await dbClient.project.findUniqueOrThrow({ where: { id: projectId } }))
         .lastScenarioNumber,

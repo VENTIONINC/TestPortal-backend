@@ -18,6 +18,7 @@ import { projectModel } from "@/models/projectModel";
 import { TestScenarioNotFoundError } from "@/types/testScenarios";
 import { jwtService } from "@/services/jwtService";
 import organizationRouter from "@/routes/test-scenario-organization";
+import scenarioRouter from "@/routes/test-scenarios";
 import type {
   CreateTestScenarioParams,
   TestScenarioResponse,
@@ -180,6 +181,7 @@ describePostgres("test scenario PostgreSQL aggregate integration", () => {
   it("filters literal titles within the project and paginates matching totals", async () => {
     const literal = await createScenario({
       title: "Login %_\\\\ markers",
+      priority: "high",
     });
     const otherCreator = await createScenarioFor(projectId, otherUserId, {
       title: "Login from another creator",
@@ -239,6 +241,7 @@ describePostgres("test scenario PostgreSQL aggregate integration", () => {
     });
     expect(literalMatches.total).toBe(1);
     expect(literalMatches.scenarios[0]?.id).toBe(literal.id);
+    expect(literalMatches.scenarios[0]?.priority).toBe("high");
 
     const summaryKeys = Object.keys(literalMatches.scenarios[0] ?? {}).sort();
     expect(summaryKeys).toEqual([
@@ -250,6 +253,7 @@ describePostgres("test scenario PostgreSQL aggregate integration", () => {
       "folderName",
       "id",
       "matchedSuiteId",
+      "priority",
       "projectId",
       "scenarioKey",
       "title",
@@ -642,8 +646,27 @@ describePostgres("test scenario PostgreSQL aggregate integration", () => {
     expect([...suitePageOne.scenarios, ...suitePageTwo.scenarios].map(({ id }) => id)).toEqual([second.id, first.id]);
     await expect(organization.moveScenarios({ projectId, scenarioIds: [first.id, randomUUID()], folderId: root.id })).rejects.toMatchObject({ code: "TEST_SCENARIO_NOT_FOUND" });
     expect((await getScenario(first.id)).folderId).toBe(child.id);
-    expect(await organization.moveScenarios({ projectId, scenarioIds: [second.id], folderId: null })).toEqual({ moved: 1 });
-    expect((await getScenario(second.id)).folderId).toBeNull();
+    const secondBeforeMove = await getScenario(second.id);
+    const move = await organization.moveScenarios({
+      projectId,
+      scenarioIds: [second.id],
+      folderId: null,
+    });
+    expect(move).toEqual({
+      moved: 1,
+      restoreData: [
+        {
+          scenarioId: second.id,
+          folderId: root.id,
+          expectedFolderId: null,
+          expectedRevision: secondBeforeMove.revision + 1,
+        },
+      ],
+    });
+    expect(await getScenario(second.id)).toMatchObject({
+      folderId: null,
+      revision: secondBeforeMove.revision + 1,
+    });
     expect((await organization.listSuites(projectId))[0]?.members.map(({ testScenarioId }) => testScenarioId)).toEqual([second.id, first.id, third.id]);
     await organization.deleteSuite(projectId, suite.id);
     expect(await dbClient.testScenario.findMany({ where: { id: { in: [first.id, second.id, third.id] } } })).toHaveLength(3);
@@ -678,6 +701,7 @@ describePostgres("test scenario PostgreSQL aggregate integration", () => {
     const app = express();
     app.use(express.json());
     app.use("/api", organizationRouter);
+    app.use("/api", scenarioRouter);
     const routeProjectId = otherProjectId;
     const token = jwtService.generateAccessToken({ userId: otherUserId, email: `test-scenario-postgres-${otherUserId}@example.test` });
 
@@ -711,9 +735,18 @@ describePostgres("test scenario PostgreSQL aggregate integration", () => {
     await request(app).get(`/api/v2/test-suites/${suite.body.id}?projectId=${routeProjectId}`).set("Authorization", `Bearer ${token}`).expect(200);
     await request(app).get(`/api/v2/test-suites/${suite.body.id}?projectId=${projectId}`).set("Authorization", `Bearer ${token}`).expect(404);
     await request(app).patch("/api/v2/test-scenarios/bulk-folder").set("Authorization", `Bearer ${token}`).send({ projectId: routeProjectId, scenarioIds: [], folderId: null }).expect(400);
-    await request(app).delete(`/api/v2/test-scenario-folders/${randomUUID()}?projectId=${routeProjectId}&disposition=unfiled`).set("Authorization", `Bearer ${token}`).expect(404);
+    await request(app)
+      .delete(`/api/v2/test-scenario-folders/${randomUUID()}?projectId=${routeProjectId}`)
+      .set("Authorization", `Bearer ${token}`)
+      .expect(404);
     const assignmentFolder = await organization.createFolder({ projectId: routeProjectId, name: "REST assignment" });
     await request(app).patch("/api/v2/test-scenarios/bulk-folder").set("Authorization", `Bearer ${token}`).send({ projectId: routeProjectId, scenarioIds: [routeScenario.id], folderId: assignmentFolder.id }).expect(200);
-    await request(app).delete(`/api/v2/test-scenario-folders/${assignmentFolder.id}?projectId=${routeProjectId}&disposition=unfiled`).set("Authorization", `Bearer ${token}`).expect(200);
+    await request(app)
+      .delete(`/api/v2/test-scenario-folders/${assignmentFolder.id}?projectId=${routeProjectId}`)
+      .set("Authorization", `Bearer ${token}`)
+      .expect(200);
+    expect(
+      await testScenarioService.getScenarioById(routeScenario.id, routeProjectId),
+    ).toMatchObject({ folderId: null });
   });
 });

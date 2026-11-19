@@ -1063,6 +1063,11 @@ describePostgres(
         completedById: userId,
       });
       expect(completedAgain?.hasBeenReopened).toBe(true);
+      expect(
+        await dbClient.manualTestRunLifecycleInterval.count({
+          where: { manualTestRunId: run.id, endedAt: null },
+        }),
+      ).toBe(0);
       await expect(
         manualTestRunMutationModel.updateDetails({
           projectId,
@@ -1076,7 +1081,7 @@ describePostgres(
         await dbClient.manualTestRunLifecycleInterval.count({
           where: { manualTestRunId: run.id, endedAt: { not: null } },
         }),
-      ).toBe(1);
+      ).toBe(2);
     });
 
     it("serializes a result write racing with completion", async () => {
