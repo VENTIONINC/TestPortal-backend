@@ -438,7 +438,6 @@ model ManualTestRunScenario {
   resultHistory ManualTestRunScenarioResultHistory[]
 
   @@unique([manualTestRunId, position])
-  @@unique([id, manualTestRunId])
   @@index([projectId, result, manualTestRunId])
   @@index([assigneeId, manualTestRunId])
 }
