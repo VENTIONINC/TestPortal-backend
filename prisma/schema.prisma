@@ -469,7 +469,6 @@ model ManualTestRunScenarioStep {
   scenario ManualTestRunScenario @relation(fields: [manualTestRunScenarioId], references: [id], onDelete: Cascade)
 
   @@unique([manualTestRunScenarioId, position])
-  @@index([manualTestRunScenarioId])
 }
 
 model ManualTestRunLifecycleInterval {
