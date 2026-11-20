@@ -31,6 +31,16 @@ A comprehensive Node.js Express server for managing test results with TypeScript
    npm install
    ```
 
+   The install activates the versioned Husky pre-commit hook in a Git checkout.
+   It skips CI, production installs, installs without development dependencies,
+   and source trees without Git metadata. If the hook needs reactivation, run
+   `npm run prepare` and confirm `git config --local --get core.hooksPath`
+   returns `.husky/_`.
+
+   The hook runs `npm run type-check`, `npm run lint`, and
+   `npm run test:unit -- --ci`. Generate Prisma types first with
+   `npm run db:generate` if they are missing.
+
 2. **Start PostgreSQL with Docker:**
 
    ```sh
@@ -85,8 +95,11 @@ npm run dev
 # Type checking
 npm run type-check
 
-# Unit tests
-npm test # runs Jest via ts-jest
+# Full Jest suite
+npm test
+
+# Unit-only suite used by the pre-commit hook
+npm run test:unit -- --ci
 
 # Build for production
 npm run build

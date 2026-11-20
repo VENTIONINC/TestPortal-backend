@@ -70,7 +70,7 @@ export default [
 
   // Override for configuration files that aren't part of the TS project
   {
-    files: ["jest.config.ts", "jest.prompts.config.ts"],
+    files: ["jest.config.ts", "jest.prompts.config.ts", "jest.unit.config.ts"],
     languageOptions: {
       parserOptions: {
         project: null,
@@ -91,6 +91,7 @@ export default [
       "*.d.ts",
       "jest.config.ts",
       "jest.prompts.config.ts",
+      "jest.unit.config.ts",
       ".codex/**",
       ".agents/skills/cartodex/scripts/scan-codebase.mjs",
     ],
