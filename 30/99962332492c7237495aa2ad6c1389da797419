@@ -1,0 +1,40 @@
+docs/DEVELOPMENT_GUIDE.md
+  s_fbe32e58cf1208::t_6f1ee92581e5c8 55-76,557
+package.json
+  s_fbe32e58cf1208::t_6f1ee92581e5c8 11
+  s_fbe32e58cf1208::t_601a2ed0b2eca3 89
+  s_fbe32e58cf1208::t_ae9c207af727a2 25-26
+jest.unit.config.ts
+  s_fbe32e58cf1208::t_ae9c207af727a2 1-23
+.husky/pre-commit
+  s_fbe32e58cf1208::t_6f1ee92581e5c8 1-17
+eslint.config.js
+  s_fbe32e58cf1208::t_7e43dc84a04ad2 73,94
+README.md
+  s_fbe32e58cf1208::t_6f1ee92581e5c8 34-43,98-102
+.gitignore
+  s_fbe32e58cf1208::t_0577e8b165259f 72-73
+package-lock.json
+  s_fbe32e58cf1208::t_a431e066976c7d 67,78-80,6469-6484
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "3099962332492c7237495aa2ad6c1389da797419",
+  "prompts": {},
+  "humans": {
+    "h_a7ee58a11b75fb": {
+      "author": "Ihar Mikailau <ihar.mikailau@ventionteams.com>"
+    }
+  },
+  "sessions": {
+    "s_fbe32e58cf1208": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a1f365-57d9-79e1-a57e-6b68e09bbd8b",
+        "model": "gpt-6-luna"
+      },
+      "human_author": "Ihar Mikailau <ihar.mikailau@ventionteams.com>"
+    }
+  }
+}
