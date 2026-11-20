@@ -2,81 +2,112 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import type { Response } from "express";
+import type { ZodType, ZodTypeDef } from "zod";
 import type { AuthenticatedRequest } from "@/middleware/authMiddleware";
 import { TestScenarioNotFoundError } from "@/types/testScenarios";
-import type { ZodTypeAny } from "zod";
-import { OrganizationError, testScenarioOrganizationService as service } from "@/services/testScenarioOrganizationService";
-import { bulkFolderBody, folderCreateBody, folderDeleteQuery, folderRestoreBody, folderMoveRestoreBody, folderUpdateBody, memberBody, memberOrderBody, organizationProjectQuery, suiteCreateBody, suiteUpdateBody, suiteMembershipChangeBody, suiteMembershipRestoreBody, suiteMoveBody, suiteMoveRestoreBody } from "@/schemas/testScenarioOrganizationSchemas";
+import {
+  OrganizationError,
+  testScenarioOrganizationService as service,
+} from "@/services/testScenarioOrganizationService";
+import {
+  bulkFolderBody,
+  folderCreateBody,
+  folderDeleteQuery,
+  folderRestoreBody,
+  folderMoveRestoreBody,
+  folderUpdateBody,
+  memberBody,
+  memberOrderBody,
+  organizationProjectQuery,
+  suiteCreateBody,
+  suiteUpdateBody,
+  suiteMembershipChangeBody,
+  suiteMembershipRestoreBody,
+  suiteMoveBody,
+  suiteMoveRestoreBody,
+} from "@/schemas/testScenarioOrganizationSchemas";
 
-function parse(res: Response, schema: ZodTypeAny, value: unknown): unknown | undefined {
+function parse<Output>(
+  res: Response,
+  schema: ZodType<Output, ZodTypeDef, unknown>,
+  value: unknown,
+): Output | undefined {
   const result = schema.safeParse(value);
-  if (!result.success) { res.status(400).json({ error: result.error.issues[0]?.message ?? "Invalid request" }); return undefined; }
+  if (!result.success) {
+    res
+      .status(400)
+      .json({ error: result.error.issues[0]?.message ?? "Invalid request" });
+    return undefined;
+  }
   return result.data;
 }
 
 function error(res: Response, cause: unknown): void {
-  if (cause instanceof TestScenarioNotFoundError) { res.status(404).json({ error: cause.message }); return; }
-  if (cause instanceof OrganizationError) { res.status(cause.status).json({ error: cause.message }); return; }
+  if (cause instanceof TestScenarioNotFoundError) {
+    res.status(404).json({ error: cause.message });
+    return;
+  }
+  if (cause instanceof OrganizationError) {
+    res.status(cause.status).json({ error: cause.message });
+    return;
+  }
   res.status(500).json({ error: "Organization operation failed" });
 }
 
-type Body = { projectId: string; [key: string]: unknown };
-
 function routeId(value: string | string[] | undefined): string {
-  if (!value || Array.isArray(value)) throw new OrganizationError("Invalid route identifier", 400);
+  if (!value || Array.isArray(value))
+    throw new OrganizationError("Invalid route identifier", 400);
   return value;
 }
 
 export const testScenarioOrganizationController = {
   async listFolders(req: AuthenticatedRequest, res: Response) {
-    const q = parse(res, organizationProjectQuery, req.query);
-    if (!q) return;
+    const query = parse(res, organizationProjectQuery, req.query);
+    if (!query) return;
     try {
-      res.json(
-        await service.listFolders((q as { projectId: string }).projectId),
-      );
+      res.json(await service.listFolders(query.projectId));
     } catch (e) {
       error(res, e);
     }
   },
 
   async createFolder(req: AuthenticatedRequest, res: Response) {
-    const b = parse(res, folderCreateBody, req.body);
-    if (!b) return;
+    const body = parse(res, folderCreateBody, req.body);
+    if (!body) return;
     try {
-      res
-        .status(201)
-        .json(
-          await service.createFolder(
-            b as Body & {
-              name: string;
-              description?: string | null;
-              parentId?: string | null;
-              position?: number;
-            },
-          ),
-        );
+      res.status(201).json(
+        await service.createFolder({
+          projectId: body.projectId,
+          name: body.name,
+          ...(body.description !== undefined
+            ? { description: body.description }
+            : {}),
+          ...(body.parentId !== undefined ? { parentId: body.parentId } : {}),
+          ...(body.position !== undefined ? { position: body.position } : {}),
+        }),
+      );
     } catch (e) {
       error(res, e);
     }
   },
 
   async updateFolder(req: AuthenticatedRequest, res: Response) {
-    const b = parse(res, folderUpdateBody, {
+    const body = parse(res, folderUpdateBody, {
       ...req.body,
       projectId: req.query.projectId,
     });
-    if (!b) return;
+    if (!body) return;
     try {
       res.json(
         await service.updateFolder({
-          ...(b as Body & {
-            name?: string;
-            description?: string | null;
-            parentId?: string | null;
-            position?: number;
-          }),
+          projectId: body.projectId,
           folderId: routeId(req.params.folderId),
+          ...(body.name !== undefined ? { name: body.name } : {}),
+          ...(body.description !== undefined
+            ? { description: body.description }
+            : {}),
+          ...(body.parentId !== undefined ? { parentId: body.parentId } : {}),
+          ...(body.position !== undefined ? { position: body.position } : {}),
         }),
       );
     } catch (e) {
@@ -85,12 +116,12 @@ export const testScenarioOrganizationController = {
   },
 
   async deleteFolder(req: AuthenticatedRequest, res: Response) {
-    const q = parse(res, folderDeleteQuery, req.query);
-    if (!q) return;
+    const query = parse(res, folderDeleteQuery, req.query);
+    if (!query) return;
     try {
       res.json(
         await service.deleteFolder({
-          ...(q as { projectId: string }),
+          ...query,
           folderId: routeId(req.params.folderId),
           ...(req.user ? { updatedById: req.user.id } : {}),
         }),
@@ -101,17 +132,12 @@ export const testScenarioOrganizationController = {
   },
 
   async restoreFolderDeletion(req: AuthenticatedRequest, res: Response) {
-    const b = parse(res, folderRestoreBody, req.body);
-    if (!b) return;
+    const body = parse(res, folderRestoreBody, req.body);
+    if (!body) return;
     try {
       res.json(
         await service.restoreFolderDeletion({
-          ...(b as {
-            projectId: string;
-            restoreData: Parameters<
-              typeof service.restoreFolderDeletion
-            >[0]["restoreData"];
-          }),
+          ...body,
           ...(req.user ? { updatedById: req.user.id } : {}),
         }),
       );
@@ -121,20 +147,12 @@ export const testScenarioOrganizationController = {
   },
 
   async restoreScenarioFolders(req: AuthenticatedRequest, res: Response) {
-    const b = parse(res, folderMoveRestoreBody, req.body);
-    if (!b) return;
+    const body = parse(res, folderMoveRestoreBody, req.body);
+    if (!body) return;
     try {
       res.json(
         await service.restoreScenarioFolders({
-          ...(b as {
-            projectId: string;
-            restoreData: Array<{
-              scenarioId: string;
-              folderId: string | null;
-              expectedFolderId: string | null;
-              expectedRevision: number;
-            }>;
-          }),
+          ...body,
           ...(req.user ? { updatedById: req.user.id } : {}),
         }),
       );
@@ -144,26 +162,21 @@ export const testScenarioOrganizationController = {
   },
 
   async listSuites(req: AuthenticatedRequest, res: Response) {
-    const q = parse(res, organizationProjectQuery, req.query);
-    if (!q) return;
+    const query = parse(res, organizationProjectQuery, req.query);
+    if (!query) return;
     try {
-      res.json(
-        await service.listSuites((q as { projectId: string }).projectId),
-      );
+      res.json(await service.listSuites(query.projectId));
     } catch (e) {
       error(res, e);
     }
   },
 
   async getSuite(req: AuthenticatedRequest, res: Response) {
-    const q = parse(res, organizationProjectQuery, req.query);
-    if (!q) return;
+    const query = parse(res, organizationProjectQuery, req.query);
+    if (!query) return;
     try {
       res.json(
-        await service.getSuite(
-          (q as { projectId: string }).projectId,
-          routeId(req.params.suiteId),
-        ),
+        await service.getSuite(query.projectId, routeId(req.params.suiteId)),
       );
     } catch (e) {
       error(res, e);
@@ -171,42 +184,42 @@ export const testScenarioOrganizationController = {
   },
 
   async createSuite(req: AuthenticatedRequest, res: Response) {
-    const b = parse(res, suiteCreateBody, req.body);
-    if (!b) return;
+    const body = parse(res, suiteCreateBody, req.body);
+    if (!body) return;
     try {
-      res
-        .status(201)
-        .json(
-          await service.createSuite(
-            b as Body & {
-              name: string;
-              description?: string | null;
-              purpose?: string | null;
-              release?: string | null;
-            },
-          ),
-        );
+      res.status(201).json(
+        await service.createSuite({
+          projectId: body.projectId,
+          name: body.name,
+          ...(body.description !== undefined
+            ? { description: body.description }
+            : {}),
+          ...(body.purpose !== undefined ? { purpose: body.purpose } : {}),
+          ...(body.release !== undefined ? { release: body.release } : {}),
+        }),
+      );
     } catch (e) {
       error(res, e);
     }
   },
 
   async updateSuite(req: AuthenticatedRequest, res: Response) {
-    const b = parse(res, suiteUpdateBody, {
+    const body = parse(res, suiteUpdateBody, {
       ...req.body,
       projectId: req.query.projectId,
     });
-    if (!b) return;
+    if (!body) return;
     try {
       res.json(
         await service.updateSuite({
-          ...(b as Body & {
-            name?: string;
-            description?: string | null;
-            purpose?: string | null;
-            release?: string | null;
-          }),
+          projectId: body.projectId,
           suiteId: routeId(req.params.suiteId),
+          ...(body.name !== undefined ? { name: body.name } : {}),
+          ...(body.description !== undefined
+            ? { description: body.description }
+            : {}),
+          ...(body.purpose !== undefined ? { purpose: body.purpose } : {}),
+          ...(body.release !== undefined ? { release: body.release } : {}),
         }),
       );
     } catch (e) {
@@ -215,12 +228,12 @@ export const testScenarioOrganizationController = {
   },
 
   async deleteSuite(req: AuthenticatedRequest, res: Response) {
-    const q = parse(res, organizationProjectQuery, req.query);
-    if (!q) return;
+    const query = parse(res, organizationProjectQuery, req.query);
+    if (!query) return;
     try {
       res.json(
         await service.deleteSuite(
-          (q as { projectId: string }).projectId,
+          query.projectId,
           routeId(req.params.suiteId),
           req.user?.id,
         ),
@@ -231,12 +244,12 @@ export const testScenarioOrganizationController = {
   },
 
   async addMembers(req: AuthenticatedRequest, res: Response) {
-    const b = parse(res, memberBody, req.body);
-    if (!b) return;
+    const body = parse(res, memberBody, req.body);
+    if (!body) return;
     try {
       res.json(
         await service.mutateMembers({
-          ...(b as { projectId: string; scenarioIds: string[] }),
+          ...body,
           suiteId: routeId(req.params.suiteId),
           operation: "add",
           ...(req.user ? { updatedById: req.user.id } : {}),
@@ -248,12 +261,12 @@ export const testScenarioOrganizationController = {
   },
 
   async removeMembers(req: AuthenticatedRequest, res: Response) {
-    const b = parse(res, memberBody, req.body);
-    if (!b) return;
+    const body = parse(res, memberBody, req.body);
+    if (!body) return;
     try {
       res.json(
         await service.mutateMembers({
-          ...(b as { projectId: string; scenarioIds: string[] }),
+          ...body,
           suiteId: routeId(req.params.suiteId),
           operation: "remove",
           ...(req.user ? { updatedById: req.user.id } : {}),
@@ -265,18 +278,12 @@ export const testScenarioOrganizationController = {
   },
 
   async changeSuiteMembership(req: AuthenticatedRequest, res: Response) {
-    const b = parse(res, suiteMembershipChangeBody, req.body);
-    if (!b) return;
+    const body = parse(res, suiteMembershipChangeBody, req.body);
+    if (!body) return;
     try {
       res.json(
         await service.changeSuiteMembership({
-          ...(b as {
-            projectId: string;
-            expectedMembershipRevision: number;
-            expectedScenarioIds: string[];
-            addScenarioIds: string[];
-            removeScenarioIds: string[];
-          }),
+          ...body,
           suiteId: routeId(req.params.suiteId),
           ...(req.user ? { updatedById: req.user.id } : {}),
         }),
@@ -287,21 +294,12 @@ export const testScenarioOrganizationController = {
   },
 
   async restoreSuiteMembership(req: AuthenticatedRequest, res: Response) {
-    const b = parse(res, suiteMembershipRestoreBody, req.body);
-    if (!b) return;
+    const body = parse(res, suiteMembershipRestoreBody, req.body);
+    if (!body) return;
     try {
       res.json(
         await service.restoreSuiteMembership({
-          ...(b as {
-            projectId: string;
-            expectedMembershipRevision: number;
-            expectedScenarioIds: string[];
-            restoreData: {
-              suiteId: string;
-              addedScenarioIds: string[];
-              removedMembers: Array<{ scenarioId: string; position: number }>;
-            };
-          }),
+          ...body,
           suiteId: routeId(req.params.suiteId),
           ...(req.user ? { updatedById: req.user.id } : {}),
         }),
@@ -312,21 +310,12 @@ export const testScenarioOrganizationController = {
   },
 
   async moveSuiteMembership(req: AuthenticatedRequest, res: Response) {
-    const b = parse(res, suiteMoveBody, req.body);
-    if (!b) return;
+    const body = parse(res, suiteMoveBody, req.body);
+    if (!body) return;
     try {
       res.json(
         await service.moveSuiteMembership({
-          ...(b as {
-            projectId: string;
-            sourceSuiteId: string;
-            destinationSuiteId: string;
-            scenarioIds: string[];
-            expectedSourceScenarioIds: string[];
-            expectedDestinationScenarioIds: string[];
-            expectedSourceMembershipRevision: number;
-            expectedDestinationMembershipRevision: number;
-          }),
+          ...body,
           ...(req.user ? { updatedById: req.user.id } : {}),
         }),
       );
@@ -336,24 +325,12 @@ export const testScenarioOrganizationController = {
   },
 
   async restoreSuiteMove(req: AuthenticatedRequest, res: Response) {
-    const b = parse(res, suiteMoveRestoreBody, req.body);
-    if (!b) return;
+    const body = parse(res, suiteMoveRestoreBody, req.body);
+    if (!body) return;
     try {
       res.json(
         await service.restoreSuiteMove({
-          ...(b as {
-            projectId: string;
-            expectedSourceScenarioIds: string[];
-            expectedDestinationScenarioIds: string[];
-            expectedSourceMembershipRevision: number;
-            expectedDestinationMembershipRevision: number;
-            restoreData: {
-              sourceSuiteId: string;
-              destinationSuiteId: string;
-              sourceMembers: Array<{ scenarioId: string; position: number }>;
-              destinationAddedScenarioIds: string[];
-            };
-          }),
+          ...body,
           ...(req.user ? { updatedById: req.user.id } : {}),
         }),
       );
@@ -363,18 +340,20 @@ export const testScenarioOrganizationController = {
   },
 
   async orderMembers(req: AuthenticatedRequest, res: Response) {
-    const b = parse(res, memberOrderBody, req.body);
-    if (!b) return;
+    const body = parse(res, memberOrderBody, req.body);
+    if (!body) return;
     try {
       res.json(
         await service.reorderMembers({
-          ...(b as {
-            projectId: string;
-            expectedMembershipRevision?: number;
-            expectedScenarioIds?: string[];
-            scenarioIds: string[];
-          }),
+          projectId: body.projectId,
           suiteId: routeId(req.params.suiteId),
+          scenarioIds: body.scenarioIds,
+          ...(body.expectedMembershipRevision !== undefined
+            ? { expectedMembershipRevision: body.expectedMembershipRevision }
+            : {}),
+          ...(body.expectedScenarioIds !== undefined
+            ? { expectedScenarioIds: body.expectedScenarioIds }
+            : {}),
         }),
       );
     } catch (e) {
@@ -383,16 +362,12 @@ export const testScenarioOrganizationController = {
   },
 
   async bulkFolder(req: AuthenticatedRequest, res: Response) {
-    const b = parse(res, bulkFolderBody, req.body);
-    if (!b) return;
+    const body = parse(res, bulkFolderBody, req.body);
+    if (!body) return;
     try {
       res.json(
         await service.moveScenarios({
-          ...(b as {
-            projectId: string;
-            scenarioIds: string[];
-            folderId: string | null;
-          }),
+          ...body,
           ...(req.user ? { updatedById: req.user.id } : {}),
         }),
       );
@@ -400,5 +375,4 @@ export const testScenarioOrganizationController = {
       error(res, e);
     }
   },
-
 };

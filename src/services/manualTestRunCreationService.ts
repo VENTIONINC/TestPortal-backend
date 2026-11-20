@@ -1,9 +1,6 @@
 // Copyright 2026 VENSOLUTIONSGROUP LTD
 // SPDX-License-Identifier: Apache-2.0
 
-// Copyright 2026 VENSOLUTIONSGROUP LTD
-// SPDX-License-Identifier: Apache-2.0
-
 import { manualTestRunCreationModel } from "@/models/manualTestRunCreationModel";
 import {
   ManualTestRunNotFoundError,

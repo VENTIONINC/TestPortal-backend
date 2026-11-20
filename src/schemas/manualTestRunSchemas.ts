@@ -78,17 +78,26 @@ export const manualTestRunDetailsSchema = z.object({
     value: z.string().max(2_000),
   }).strict()).max(100),
 }).strict();
-export const manualTestRunScenarioEvidenceSchema = z.object({
-  executionComment: z.string().max(10_000).nullable().optional(),
-  defectReference: z.string().max(2_000).nullable().optional(),
-  steps: z.array(z.object({
+export const manualTestRunStepEvidenceSchema = z
+  .object({
     id: uuidSchema,
     comment: z.string().max(10_000).nullable().optional(),
     failedFlag: z.boolean().optional(),
     failedComment: z.string().max(2_000).nullable().optional(),
     blockedFlag: z.boolean().optional(),
     blockedComment: z.string().max(2_000).nullable().optional(),
-  }).strict()).max(500).optional(),
+  })
+  .strict()
+  .refine(
+    ({ id: _id, ...fields }) =>
+      Object.values(fields).some((value) => value !== undefined),
+    "At least one step evidence field is required",
+  );
+
+export const manualTestRunScenarioEvidenceSchema = z.object({
+  executionComment: z.string().max(10_000).nullable().optional(),
+  defectReference: z.string().max(2_000).nullable().optional(),
+  steps: z.array(manualTestRunStepEvidenceSchema).max(500).optional(),
 }).strict().refine((value) =>
   value.executionComment !== undefined || value.defectReference !== undefined || (value.steps?.length ?? 0) > 0,
   "At least one execution evidence field is required",

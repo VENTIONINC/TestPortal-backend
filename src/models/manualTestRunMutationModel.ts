@@ -1,9 +1,6 @@
 // Copyright 2026 VENSOLUTIONSGROUP LTD
 // SPDX-License-Identifier: Apache-2.0
 
-// Copyright 2026 VENSOLUTIONSGROUP LTD
-// SPDX-License-Identifier: Apache-2.0
-
 import { Prisma } from "@prisma/client";
 import { dbClient } from "@/prisma/client";
 import { manualTestRunCreationModel } from "@/models/manualTestRunCreationModel";
@@ -95,6 +92,22 @@ async function findUpdatedRun(
     projectId,
     runId,
   );
+}
+
+async function writeScenarioPositions(
+  tx: Prisma.TransactionClient,
+  scope: { projectId: string; runId: string },
+  orderedIds: string[],
+): Promise<void> {
+  // Callers temporarily move these rows past the target range to avoid unique position conflicts.
+  await tx.$executeRaw`
+    UPDATE "ManualTestRunScenario" AS scenario
+    SET "position" = (ordered.ordinality - 1)::integer
+    FROM unnest(${orderedIds}::uuid[]) WITH ORDINALITY AS ordered(id, ordinality)
+    WHERE scenario."id" = ordered.id
+      AND scenario."projectId" = ${scope.projectId}::uuid
+      AND scenario."manualTestRunId" = ${scope.runId}::uuid
+  `;
 }
 
 export const manualTestRunMutationModel = {
@@ -190,17 +203,18 @@ export const manualTestRunMutationModel = {
       if (!(await lockRun(tx, params.projectId, params.runId))) return null;
       const current = await tx.manualTestRunScenario.findMany({
         where: { projectId: params.projectId, manualTestRunId: params.runId },
-        select: { id: true, sourceScenarioId: true, position: true },
+        select: { id: true, sourceScenarioId: true },
         orderBy: [{ position: "asc" }, { id: "asc" }],
       });
-      const currentBySource = new Map(
-        current.map((scenario) => [scenario.sourceScenarioId, scenario]),
+      const currentSourceIds = new Set(
+        current.map(({ sourceScenarioId }) => sourceScenarioId),
       );
+      const requestedSourceIds = new Set(params.scenarioIds);
       const retained = current.filter((scenario) =>
-        params.scenarioIds.includes(scenario.sourceScenarioId),
+        requestedSourceIds.has(scenario.sourceScenarioId),
       );
       const additions = params.scenarioIds.filter(
-        (id) => !currentBySource.has(id),
+        (id) => !currentSourceIds.has(id),
       );
       let sources: Array<{
         id: string;
@@ -244,7 +258,7 @@ export const manualTestRunMutationModel = {
       );
 
       const removed = current.filter(
-        (scenario) => !params.scenarioIds.includes(scenario.sourceScenarioId),
+        (scenario) => !requestedSourceIds.has(scenario.sourceScenarioId),
       );
       if (removed.length) {
         await tx.manualTestRunScenario.deleteMany({
@@ -261,12 +275,11 @@ export const manualTestRunMutationModel = {
           where: { id: { in: retained.map(({ id }) => id) } },
           data: { position: { increment: retainedOffset } },
         });
-        for (const [position, scenario] of retained.entries()) {
-          await tx.manualTestRunScenario.update({
-            where: { id: scenario.id },
-            data: { position },
-          });
-        }
+        await writeScenarioPositions(
+          tx,
+          params,
+          retained.map(({ id }) => id),
+        );
       }
       const firstAdditionPosition = retained.length;
       const additionIds = new Map(additions.map((id) => [id, randomUUID()]));
@@ -425,13 +438,11 @@ export const manualTestRunMutationModel = {
       const current = await tx.manualTestRunScenario.findMany({
         where: { projectId: params.projectId, manualTestRunId: params.runId },
         select: { id: true },
-        orderBy: [{ position: "asc" }, { id: "asc" }],
       });
+      const requestedIds = new Set(params.scenarioIds);
       if (
         current.length !== params.scenarioIds.length ||
-        params.scenarioIds.some(
-          (id) => !current.some((scenario) => scenario.id === id),
-        )
+        current.some(({ id }) => !requestedIds.has(id))
       ) {
         return null;
       }
@@ -440,12 +451,7 @@ export const manualTestRunMutationModel = {
         where: { projectId: params.projectId, manualTestRunId: params.runId },
         data: { position: { increment: offset } },
       });
-      for (const [position, id] of params.scenarioIds.entries()) {
-        await tx.manualTestRunScenario.update({
-          where: { id },
-          data: { position },
-        });
-      }
+      await writeScenarioPositions(tx, params, params.scenarioIds);
       return await findUpdatedRun(tx, params.projectId, params.runId);
     });
   },

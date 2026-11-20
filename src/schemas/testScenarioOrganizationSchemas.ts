@@ -5,22 +5,239 @@ import { z } from "zod";
 
 const uuid = z.string().uuid();
 const name = z.string().trim().min(1).max(200);
-const folderDescription = z.string().trim().transform((value) => value || null).nullable().optional();
+const folderDescription = z
+  .string()
+  .trim()
+  .transform((value) => value || null)
+  .nullable()
+  .optional();
 export const organizationProjectQuery = z.object({ projectId: uuid });
-export const folderCreateBody = z.object({ projectId: uuid, name, description: folderDescription, parentId: uuid.nullable().optional(), position: z.number().int().nonnegative().optional() }).strict();
-export const folderUpdateBody = z.object({ projectId: uuid, name: name.optional(), description: folderDescription, parentId: uuid.nullable().optional(), position: z.number().int().nonnegative().optional() }).strict().refine((value) => value.name !== undefined || value.description !== undefined || value.parentId !== undefined || value.position !== undefined);
+export const folderCreateBody = z
+  .object({
+    projectId: uuid,
+    name,
+    description: folderDescription,
+    parentId: uuid.nullable().optional(),
+    position: z.number().int().nonnegative().optional(),
+  })
+  .strict();
+export const folderUpdateBody = z
+  .object({
+    projectId: uuid,
+    name: name.optional(),
+    description: folderDescription,
+    parentId: uuid.nullable().optional(),
+    position: z.number().int().nonnegative().optional(),
+  })
+  .strict()
+  .refine(
+    (value) =>
+      value.name !== undefined ||
+      value.description !== undefined ||
+      value.parentId !== undefined ||
+      value.position !== undefined,
+  );
 export const folderDeleteQuery = z.object({ projectId: uuid }).strict();
-const folderSnapshot = z.object({ folders: z.array(z.object({ id: uuid, projectId: uuid, name: z.string(), description: z.string().nullable(), parentId: uuid.nullable(), position: z.number().int() }).strict()), scenarios: z.array(z.object({ scenarioId: uuid, folderId: uuid, expectedRevision: z.number().int().nonnegative() }).strict()) }).strict();
-export const folderRestoreBody = z.object({ projectId: uuid, restoreData: folderSnapshot }).strict();
-export const folderMoveRestoreBody = z.object({ projectId: uuid, restoreData: z.array(z.object({ scenarioId: uuid, folderId: uuid.nullable(), expectedFolderId: uuid.nullable(), expectedRevision: z.number().int().nonnegative() }).strict()).min(1).max(10_000) }).strict();
-export const suiteCreateBody = z.object({ projectId: uuid, name, description: z.string().nullable().optional(), purpose: z.string().nullable().optional(), release: z.string().nullable().optional() }).strict();
-export const suiteUpdateBody = z.object({ projectId: uuid, name: name.optional(), description: z.string().nullable().optional(), purpose: z.string().nullable().optional(), release: z.string().nullable().optional() }).strict().refine((value) => Object.keys(value).some((key) => key !== "projectId"));
-const uniqueIds = (value: { scenarioIds: string[] }) => new Set(value.scenarioIds).size === value.scenarioIds.length;
-export const memberBody = z.object({ projectId: uuid, scenarioIds: z.array(uuid).min(1).max(100) }).strict().refine(uniqueIds, "scenarioIds must be unique");
-export const bulkFolderBody = z.object({ projectId: uuid, scenarioIds: z.array(uuid).min(1).max(100), folderId: uuid.nullable() }).strict().refine(uniqueIds, "scenarioIds must be unique");
-const completeMemberOrder = z.array(uuid).max(10_000).refine((ids) => new Set(ids).size === ids.length, "scenario IDs must be unique");
-export const memberOrderBody = z.object({ projectId: uuid, expectedMembershipRevision: z.number().int().nonnegative().optional(), expectedScenarioIds: completeMemberOrder.optional(), scenarioIds: z.array(uuid) }).strict().refine((value) => (value.expectedMembershipRevision === undefined) === (value.expectedScenarioIds === undefined), "Conditional reorder fields must be supplied together");
-export const suiteMembershipChangeBody = z.object({ projectId: uuid, expectedMembershipRevision: z.number().int().nonnegative(), expectedScenarioIds: completeMemberOrder, addScenarioIds: z.array(uuid).max(10_000).default([]), removeScenarioIds: z.array(uuid).max(10_000).default([]) }).strict().refine((value) => value.addScenarioIds.length + value.removeScenarioIds.length > 0, "At least one membership change is required").refine((value) => new Set(value.addScenarioIds).size === value.addScenarioIds.length && new Set(value.removeScenarioIds).size === value.removeScenarioIds.length && value.addScenarioIds.every((id) => !value.removeScenarioIds.includes(id)), "Membership IDs must be unique and additions must not overlap removals").refine((value) => value.expectedScenarioIds.length + value.addScenarioIds.length - value.removeScenarioIds.length <= 10_000, "Resulting membership exceeds 10000 scenarios");
-export const suiteMembershipRestoreBody = z.object({ projectId: uuid, expectedMembershipRevision: z.number().int().nonnegative(), expectedScenarioIds: completeMemberOrder, restoreData: z.object({ suiteId: uuid, addedScenarioIds: z.array(uuid).max(10_000), removedMembers: z.array(z.object({ scenarioId: uuid, position: z.number().int().nonnegative() }).strict()).max(10_000) }).strict() }).strict();
-export const suiteMoveBody = z.object({ projectId: uuid, sourceSuiteId: uuid, destinationSuiteId: uuid, expectedSourceMembershipRevision: z.number().int().nonnegative(), expectedDestinationMembershipRevision: z.number().int().nonnegative(), scenarioIds: z.array(uuid).min(1).max(10_000), expectedSourceScenarioIds: completeMemberOrder, expectedDestinationScenarioIds: completeMemberOrder }).strict().refine((value) => value.sourceSuiteId !== value.destinationSuiteId && new Set(value.scenarioIds).size === value.scenarioIds.length).refine((value) => { const existing = new Set(value.expectedDestinationScenarioIds); return value.expectedDestinationScenarioIds.length + value.scenarioIds.filter((id) => !existing.has(id)).length <= 10_000; }, "Resulting membership exceeds 10000 scenarios");
-export const suiteMoveRestoreBody = z.object({ projectId: uuid, expectedSourceMembershipRevision: z.number().int().nonnegative(), expectedDestinationMembershipRevision: z.number().int().nonnegative(), expectedSourceScenarioIds: completeMemberOrder, expectedDestinationScenarioIds: completeMemberOrder, restoreData: z.object({ sourceSuiteId: uuid, destinationSuiteId: uuid, sourceMembers: z.array(z.object({ scenarioId: uuid, position: z.number().int().nonnegative() }).strict()).max(10_000), destinationAddedScenarioIds: z.array(uuid).max(10_000) }).strict() }).strict();
+const folderSnapshot = z
+  .object({
+    folders: z.array(
+      z
+        .object({
+          id: uuid,
+          projectId: uuid,
+          name: z.string(),
+          description: z.string().nullable(),
+          parentId: uuid.nullable(),
+          position: z.number().int(),
+        })
+        .strict(),
+    ),
+    scenarios: z.array(
+      z
+        .object({
+          scenarioId: uuid,
+          folderId: uuid,
+          expectedRevision: z.number().int().nonnegative(),
+        })
+        .strict(),
+    ),
+  })
+  .strict();
+export const folderRestoreBody = z
+  .object({ projectId: uuid, restoreData: folderSnapshot })
+  .strict();
+export const folderMoveRestoreBody = z
+  .object({
+    projectId: uuid,
+    restoreData: z
+      .array(
+        z
+          .object({
+            scenarioId: uuid,
+            folderId: uuid.nullable(),
+            expectedFolderId: uuid.nullable(),
+            expectedRevision: z.number().int().nonnegative(),
+          })
+          .strict(),
+      )
+      .min(1)
+      .max(10_000),
+  })
+  .strict();
+export const suiteCreateBody = z
+  .object({
+    projectId: uuid,
+    name,
+    description: z.string().nullable().optional(),
+    purpose: z.string().nullable().optional(),
+    release: z.string().nullable().optional(),
+  })
+  .strict();
+export const suiteUpdateBody = z
+  .object({
+    projectId: uuid,
+    name: name.optional(),
+    description: z.string().nullable().optional(),
+    purpose: z.string().nullable().optional(),
+    release: z.string().nullable().optional(),
+  })
+  .strict()
+  .refine((value) => Object.keys(value).some((key) => key !== "projectId"));
+const uniqueIds = (value: { scenarioIds: string[] }) =>
+  new Set(value.scenarioIds).size === value.scenarioIds.length;
+export const memberBody = z
+  .object({ projectId: uuid, scenarioIds: z.array(uuid).min(1).max(100) })
+  .strict()
+  .refine(uniqueIds, "scenarioIds must be unique");
+export const bulkFolderBody = z
+  .object({
+    projectId: uuid,
+    scenarioIds: z.array(uuid).min(1).max(100),
+    folderId: uuid.nullable(),
+  })
+  .strict()
+  .refine(uniqueIds, "scenarioIds must be unique");
+const completeMemberOrder = z
+  .array(uuid)
+  .max(10_000)
+  .refine(
+    (ids) => new Set(ids).size === ids.length,
+    "scenario IDs must be unique",
+  );
+export const memberOrderBody = z
+  .object({
+    projectId: uuid,
+    expectedMembershipRevision: z.number().int().nonnegative().optional(),
+    expectedScenarioIds: completeMemberOrder.optional(),
+    scenarioIds: z.array(uuid),
+  })
+  .strict()
+  .refine(
+    (value) =>
+      (value.expectedMembershipRevision === undefined) ===
+      (value.expectedScenarioIds === undefined),
+    "Conditional reorder fields must be supplied together",
+  );
+export const suiteMembershipChangeBody = z
+  .object({
+    projectId: uuid,
+    expectedMembershipRevision: z.number().int().nonnegative(),
+    expectedScenarioIds: completeMemberOrder,
+    addScenarioIds: z.array(uuid).max(10_000).default([]),
+    removeScenarioIds: z.array(uuid).max(10_000).default([]),
+  })
+  .strict()
+  .refine(
+    (value) => value.addScenarioIds.length + value.removeScenarioIds.length > 0,
+    "At least one membership change is required",
+  )
+  .refine(
+    (value) =>
+      new Set(value.addScenarioIds).size === value.addScenarioIds.length &&
+      new Set(value.removeScenarioIds).size ===
+        value.removeScenarioIds.length &&
+      value.addScenarioIds.every((id) => !value.removeScenarioIds.includes(id)),
+    "Membership IDs must be unique and additions must not overlap removals",
+  )
+  .refine(
+    (value) =>
+      value.expectedScenarioIds.length +
+        value.addScenarioIds.length -
+        value.removeScenarioIds.length <=
+      10_000,
+    "Resulting membership exceeds 10000 scenarios",
+  );
+export const suiteMembershipRestoreBody = z
+  .object({
+    projectId: uuid,
+    expectedMembershipRevision: z.number().int().nonnegative(),
+    expectedScenarioIds: completeMemberOrder,
+    restoreData: z
+      .object({
+        suiteId: uuid,
+        addedScenarioIds: z.array(uuid).max(10_000),
+        removedMembers: z
+          .array(
+            z
+              .object({
+                scenarioId: uuid,
+                position: z.number().int().nonnegative(),
+              })
+              .strict(),
+          )
+          .max(10_000),
+      })
+      .strict(),
+  })
+  .strict();
+export const suiteMoveBody = z
+  .object({
+    projectId: uuid,
+    sourceSuiteId: uuid,
+    destinationSuiteId: uuid,
+    expectedSourceMembershipRevision: z.number().int().nonnegative(),
+    expectedDestinationMembershipRevision: z.number().int().nonnegative(),
+    scenarioIds: z.array(uuid).min(1).max(10_000),
+    expectedSourceScenarioIds: completeMemberOrder,
+    expectedDestinationScenarioIds: completeMemberOrder,
+  })
+  .strict()
+  .refine(
+    (value) =>
+      value.sourceSuiteId !== value.destinationSuiteId &&
+      new Set(value.scenarioIds).size === value.scenarioIds.length,
+  )
+  .refine((value) => {
+    const existing = new Set(value.expectedDestinationScenarioIds);
+    return (
+      value.expectedDestinationScenarioIds.length +
+        value.scenarioIds.filter((id) => !existing.has(id)).length <=
+      10_000
+    );
+  }, "Resulting membership exceeds 10000 scenarios");
+export const suiteMoveRestoreBody = z
+  .object({
+    projectId: uuid,
+    expectedSourceMembershipRevision: z.number().int().nonnegative(),
+    expectedDestinationMembershipRevision: z.number().int().nonnegative(),
+    expectedSourceScenarioIds: completeMemberOrder,
+    expectedDestinationScenarioIds: completeMemberOrder,
+    restoreData: z
+      .object({
+        sourceSuiteId: uuid,
+        destinationSuiteId: uuid,
+        sourceMembers: z
+          .array(
+            z
+              .object({
+                scenarioId: uuid,
+                position: z.number().int().nonnegative(),
+              })
+              .strict(),
+          )
+          .max(10_000),
+        destinationAddedScenarioIds: z.array(uuid).max(10_000),
+      })
+      .strict(),
+  })
+  .strict();

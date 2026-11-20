@@ -193,4 +193,31 @@ describe("manual test run request schemas", () => {
       steps: [{ id: "not-a-uuid", failedFlag: true }],
     }).success).toBe(false);
   });
+
+  it("rejects each step patch without an editable field, even alongside valid evidence", () => {
+    const result = manualTestRunScenarioEvidenceSchema.safeParse({
+      executionComment: "Investigated",
+      steps: [{ id: projectId, failedFlag: false }, { id: scenarioId }],
+    });
+
+    expect(result.success).toBe(false);
+    if (!result.success) {
+      expect(result.error.issues[0]?.path).toEqual(["steps", 1]);
+    }
+    expect(manualTestRunScenarioEvidenceSchema.safeParse({
+      steps: [{ id: scenarioId, comment: undefined }],
+    }).success).toBe(false);
+  });
+
+  it.each([
+    { comment: null },
+    { failedFlag: false },
+    { failedComment: null },
+    { blockedFlag: false },
+    { blockedComment: null },
+  ])("accepts a single cleared evidence field %o", (patch) => {
+    expect(manualTestRunScenarioEvidenceSchema.safeParse({
+      steps: [{ id: scenarioId, ...patch }],
+    }).success).toBe(true);
+  });
 });

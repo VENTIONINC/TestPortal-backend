@@ -1,9 +1,6 @@
 // Copyright 2026 VENSOLUTIONSGROUP LTD
 // SPDX-License-Identifier: Apache-2.0
 
-// Copyright 2026 VENSOLUTIONSGROUP LTD
-// SPDX-License-Identifier: Apache-2.0
-
 import { manualTestRunMutationModel } from "@/models/manualTestRunMutationModel";
 import {
   MANUAL_TEST_RUN_SCENARIO_RESULTS,

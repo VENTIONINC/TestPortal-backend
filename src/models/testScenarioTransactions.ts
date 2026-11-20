@@ -49,7 +49,7 @@ export async function lockScenarios(
   projectId: string,
   scenarioIds: string[],
 ): Promise<void> {
-  const ids = [...new Set(scenarioIds)].sort();
+  const ids = [...new Set(scenarioIds)];
   if (!ids.length) return;
   const rows = await tx.$queryRaw<Array<{ id: string }>>(
     Prisma.sql`SELECT "id" FROM "TestScenario" WHERE "projectId" = ${projectId}::uuid AND "id" IN (${Prisma.join(ids.map((id) => Prisma.sql`${id}::uuid`))}) ORDER BY "id" FOR UPDATE`,
@@ -63,7 +63,7 @@ export async function lockSuites(
   projectId: string,
   suiteIds: string[],
 ): Promise<void> {
-  const ids = [...new Set(suiteIds)].sort();
+  const ids = [...new Set(suiteIds)];
   if (!ids.length) return;
   const rows = await tx.$queryRaw<Array<{ id: string }>>(
     Prisma.sql`SELECT "id" FROM "TestSuite" WHERE "projectId" = ${projectId}::uuid AND "id" IN (${Prisma.join(ids.map((id) => Prisma.sql`${id}::uuid`))}) ORDER BY "id" FOR UPDATE`,

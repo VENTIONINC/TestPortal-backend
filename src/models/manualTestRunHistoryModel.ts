@@ -1,9 +1,6 @@
 // Copyright 2026 VENSOLUTIONSGROUP LTD
 // SPDX-License-Identifier: Apache-2.0
 
-// Copyright 2026 VENSOLUTIONSGROUP LTD
-// SPDX-License-Identifier: Apache-2.0
-
 import { ManualTestRunScenarioResult, Prisma } from "@prisma/client";
 import { dbClient } from "@/prisma/client";
 import { getManualRunPeriodBounds } from "@/lib/manualTestRunPeriod";

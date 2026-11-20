@@ -1,7 +1,7 @@
 // Copyright 2026 VENSOLUTIONSGROUP LTD
 // SPDX-License-Identifier: Apache-2.0
 
-import { Router } from "express";
+import { json, Router } from "express";
 import {
   manualTestRunCreationController,
   type ManualTestRunCreationRequest,
@@ -10,12 +10,15 @@ import { manualTestRunHistoryController } from "@/controllers/manualTestRunHisto
 import { manualTestRunLifecycleController } from "@/controllers/manualTestRunLifecycleController";
 import { manualTestRunMutationController } from "@/controllers/manualTestRunMutationController";
 import { authMiddleware } from "@/middleware/authMiddleware";
+import { manualTestRunJsonRoutes } from "@/middleware/json-body";
 
 const router = Router();
+const { create, updateDetails, reorder, bulkUpdate } = manualTestRunJsonRoutes;
 
-router.post(
-  "/v2/manual-test-runs",
+router[create.method](
+  create.path,
   authMiddleware,
+  json({ limit: create.limit }),
   (req, res) =>
     manualTestRunCreationController.create(req as ManualTestRunCreationRequest, res),
 );
@@ -34,9 +37,10 @@ router.delete(
   authMiddleware,
   manualTestRunLifecycleController.delete,
 );
-router.put(
-  "/v2/manual-test-runs/:runId/details",
+router[updateDetails.method](
+  updateDetails.path,
   authMiddleware,
+  json({ limit: updateDetails.limit }),
   manualTestRunMutationController.updateDetails,
 );
 router.patch(
@@ -44,14 +48,16 @@ router.patch(
   authMiddleware,
   manualTestRunMutationController.updateScenarioEvidence,
 );
-router.put(
-  "/v2/manual-test-runs/:runId/scenarios/order",
+router[reorder.method](
+  reorder.path,
   authMiddleware,
+  json({ limit: reorder.limit }),
   manualTestRunMutationController.reorder,
 );
-router.post(
-  "/v2/manual-test-runs/:runId/scenarios/bulk",
+router[bulkUpdate.method](
+  bulkUpdate.path,
   authMiddleware,
+  json({ limit: bulkUpdate.limit }),
   manualTestRunMutationController.bulkUpdate,
 );
 router.put(

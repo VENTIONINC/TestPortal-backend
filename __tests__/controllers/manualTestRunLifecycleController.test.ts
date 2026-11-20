@@ -3,6 +3,7 @@
 
 import { jest } from "@jest/globals";
 import type { Response } from "express";
+import getLogger from "@/lib/logger";
 import type { AuthenticatedRequest } from "@/middleware/authMiddleware";
 import type { ManualTestRunResponse } from "@/types/manualTestRuns";
 
@@ -11,6 +12,10 @@ const serviceMocks = {
   deleteRun: jest.fn<() => Promise<void>>(),
   reopenRun: jest.fn<() => Promise<ManualTestRunResponse>>(),
 };
+jest.mock("@/lib/logger", () => {
+  const logger = { error: jest.fn() };
+  return { __esModule: true, default: () => logger };
+});
 jest.mock("@/services/manualTestRunLifecycleService", () => ({
   manualTestRunLifecycleService: serviceMocks,
 }));
@@ -67,7 +72,7 @@ describe("manualTestRunLifecycleController", () => {
   it("deletes the requested project run", async () => {
     const result = response();
     await manualTestRunLifecycleController.delete({ user: { id: userId }, params: { runId }, query: { projectId } } as unknown as AuthenticatedRequest<{ runId: string }>, result);
-    expect(serviceMocks.deleteRun).toHaveBeenCalledWith({ projectId, runId, userId });
+    expect(serviceMocks.deleteRun).toHaveBeenCalledWith({ projectId, runId });
     expect(result.status as jest.Mock).toHaveBeenCalledWith(204);
   });
 
@@ -93,5 +98,25 @@ describe("manualTestRunLifecycleController", () => {
       result,
     );
     expect(serviceMocks.reopenRun).toHaveBeenCalledWith({ projectId, runId, reopenedById: userId });
+  });
+
+  it("logs unexpected errors and omits their details from the 500 response", async () => {
+    const error = new Error("Database connection failed");
+    serviceMocks.completeRun.mockRejectedValueOnce(error);
+    const result = response();
+
+    await manualTestRunLifecycleController.complete(
+      {
+        user: { id: userId },
+        params: { runId },
+        query: { projectId },
+        body: {},
+      } as unknown as AuthenticatedRequest<{ runId: string }>,
+      result,
+    );
+
+    expect(result.status).toHaveBeenCalledWith(500);
+    expect(result.json).toHaveBeenCalledWith({ error: "Failed to complete manual test run." });
+    expect(getLogger().error).toHaveBeenCalledWith("Failed to complete manual test run.", error);
   });
 });

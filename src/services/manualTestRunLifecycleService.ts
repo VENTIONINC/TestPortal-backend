@@ -1,9 +1,6 @@
 // Copyright 2026 VENSOLUTIONSGROUP LTD
 // SPDX-License-Identifier: Apache-2.0
 
-// Copyright 2026 VENSOLUTIONSGROUP LTD
-// SPDX-License-Identifier: Apache-2.0
-
 import { manualTestRunLifecycleModel } from "@/models/manualTestRunLifecycleModel";
 import {
   ManualTestRunNotFoundError,
@@ -16,18 +13,22 @@ import {
 const UUID_PATTERN =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
-function validateIds(
-  projectId: string,
-  runId: string,
-  actorId: string,
-  actorLabel: string,
-): void {
+function validateRunIds(projectId: string, runId: string): void {
   if (!UUID_PATTERN.test(projectId)) {
     throw new ManualTestRunValidationError("Project ID must be a valid UUID");
   }
   if (!UUID_PATTERN.test(runId)) {
     throw new ManualTestRunValidationError("Run ID must be a valid UUID");
   }
+}
+
+function validateRunAndActorIds(
+  projectId: string,
+  runId: string,
+  actorId: string,
+  actorLabel: string,
+): void {
+  validateRunIds(projectId, runId);
   if (!UUID_PATTERN.test(actorId)) {
     throw new ManualTestRunValidationError(
       `${actorLabel} must be a valid UUID`,
@@ -52,9 +53,8 @@ export const manualTestRunLifecycleService = {
   async deleteRun(params: {
     projectId: string;
     runId: string;
-    userId: string;
   }): Promise<void> {
-    validateIds(params.projectId, params.runId, params.userId, "User ID");
+    validateRunIds(params.projectId, params.runId);
     if (
       !(await manualTestRunLifecycleModel.delete({
         projectId: params.projectId,
@@ -70,7 +70,7 @@ export const manualTestRunLifecycleService = {
   async completeRun(
     params: CompleteManualTestRunParams,
   ): Promise<ManualTestRunResponse> {
-    validateIds(
+    validateRunAndActorIds(
       params.projectId,
       params.runId,
       params.completedById,
@@ -85,7 +85,7 @@ export const manualTestRunLifecycleService = {
   async reopenRun(
     params: ReopenManualTestRunParams,
   ): Promise<ManualTestRunResponse> {
-    validateIds(
+    validateRunAndActorIds(
       params.projectId,
       params.runId,
       params.reopenedById,

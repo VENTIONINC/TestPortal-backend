@@ -93,23 +93,51 @@ function sendServiceError(
 export const testScenarioController = {
   async listPriorityCounts(req: Request, res: Response): Promise<void> {
     const parsed = testScenarioPriorityCountsQuerySchema.safeParse(req.query);
-    if (!parsed.success) { sendValidationError(res, validationMessage(parsed.error)); return; }
-    try { res.status(200).json(await testScenarioService.listScenarioPriorityCounts(parsed.data)); }
-    catch (error) { sendServiceError(res, error, "list scenario priority counts"); }
+    if (!parsed.success) {
+      sendValidationError(res, validationMessage(parsed.error));
+      return;
+    }
+    try {
+      res
+        .status(200)
+        .json(
+          await testScenarioService.listScenarioPriorityCounts(parsed.data),
+        );
+    } catch (error) {
+      sendServiceError(res, error, "list scenario priority counts");
+    }
   },
 
   async listAuthors(req: Request, res: Response): Promise<void> {
     const parsed = testScenarioAuthorsQuerySchema.safeParse(req.query);
-    if (!parsed.success) { sendValidationError(res, validationMessage(parsed.error)); return; }
-    try { res.status(200).json({ authors: await testScenarioService.listScenarioAuthors(parsed.data) }); }
-    catch (error) { sendServiceError(res, error, "list scenario authors"); }
+    if (!parsed.success) {
+      sendValidationError(res, validationMessage(parsed.error));
+      return;
+    }
+    try {
+      res
+        .status(200)
+        .json({
+          authors: await testScenarioService.listScenarioAuthors(parsed.data),
+        });
+    } catch (error) {
+      sendServiceError(res, error, "list scenario authors");
+    }
   },
 
   async resolveSelection(req: Request, res: Response): Promise<void> {
     const parsed = testScenarioSelectionQuerySchema.safeParse(req.query);
-    if (!parsed.success) { sendValidationError(res, validationMessage(parsed.error)); return; }
-    try { res.status(200).json(await testScenarioService.resolveScenarioSelection(parsed.data)); }
-    catch (error) { sendServiceError(res, error, "resolve scenario selection"); }
+    if (!parsed.success) {
+      sendValidationError(res, validationMessage(parsed.error));
+      return;
+    }
+    try {
+      res
+        .status(200)
+        .json(await testScenarioService.resolveScenarioSelection(parsed.data));
+    } catch (error) {
+      sendServiceError(res, error, "resolve scenario selection");
+    }
   },
 
   async create(req: TestScenarioCreationRequest, res: Response): Promise<void> {

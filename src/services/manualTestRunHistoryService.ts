@@ -1,9 +1,6 @@
 // Copyright 2026 VENSOLUTIONSGROUP LTD
 // SPDX-License-Identifier: Apache-2.0
 
-// Copyright 2026 VENSOLUTIONSGROUP LTD
-// SPDX-License-Identifier: Apache-2.0
-
 import { getManualRunPeriodBounds } from "@/lib/manualTestRunPeriod";
 import { manualTestRunHistoryModel } from "@/models/manualTestRunHistoryModel";
 import {

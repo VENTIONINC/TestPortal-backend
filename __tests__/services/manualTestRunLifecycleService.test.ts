@@ -54,9 +54,11 @@ describe("manualTestRunLifecycleService", () => {
 
   it("deletes only the requested project run and reports missing runs", async () => {
     modelMocks.delete.mockResolvedValueOnce(true).mockResolvedValueOnce(false);
-    await manualTestRunLifecycleService.deleteRun({ projectId, runId, userId });
+    await manualTestRunLifecycleService.deleteRun({ projectId, runId });
     expect(modelMocks.delete).toHaveBeenCalledWith({ projectId, runId });
-    await expect(manualTestRunLifecycleService.deleteRun({ projectId, runId, userId })).rejects.toBeInstanceOf(ManualTestRunNotFoundError);
+    await expect(
+      manualTestRunLifecycleService.deleteRun({ projectId, runId }),
+    ).rejects.toBeInstanceOf(ManualTestRunNotFoundError);
   });
 
   it("reopens with an authenticated actor and validates scope IDs", async () => {

@@ -781,6 +781,55 @@ describePostgres(
       expect(page.runs.map(({ id }) => id)).toContain(run.id);
     });
 
+    it("reorders and updates membership in a run with 10,000 scenarios", async () => {
+      const scenarios = Array.from({ length: 10_000 }, (_, index) => ({
+        id: randomUUID(),
+        projectId,
+        createdById: userId,
+        title: `Large run scenario ${index}`,
+        scenarioKey: `TP-LARGE-${index}`,
+        scenarioNumber: index + 100,
+        contentMd: "",
+        contentMdHash: "a".repeat(64),
+      }));
+      await dbClient.testScenario.createMany({ data: scenarios });
+      const sourceIds = scenarios.map(({ id }) => id);
+      const run = await manualTestRunCreationModel.createFromCatalog({
+        projectId,
+        executedById: userId,
+        scenarioIds: sourceIds,
+      });
+      if (!run) throw new Error("Failed to create large run fixture");
+
+      const reversedSnapshots = [...run.scenarios].reverse();
+      const reordered = await manualTestRunMutationModel.reorder({
+        projectId,
+        runId: run.id,
+        scenarioIds: reversedSnapshots.map(({ id }) => id),
+      });
+      expect(reordered?.scenarios.map(({ id }) => id)).toEqual(
+        reversedSnapshots.map(({ id }) => id),
+      );
+
+      // Drop the first snapshot in run order, retain the rest, and append a new one.
+      const retainedSnapshots = reversedSnapshots.slice(1);
+      const updated = await manualTestRunMutationModel.updateDetails({
+        projectId,
+        runId: run.id,
+        title: "Updated large run",
+        scenarioIds: [scenarioOne.id, ...sourceIds.slice(0, -1)],
+        environmentProperties: [],
+      });
+      expect(updated?.scenarios.slice(0, -1).map(({ id }) => id)).toEqual(
+        retainedSnapshots.map(({ id }) => id),
+      );
+      expect(updated?.scenarios.at(-1)).toMatchObject({
+        sourceScenarioId: scenarioOne.id,
+        position: 9_999,
+        result: "untested",
+      });
+    }, 20_000);
+
     it("updates independent results, assignments, order, bulk targets, and rejects locked or foreign targets", async () => {
       const run = await manualTestRunCreationModel.createFromCatalog({
         projectId,

@@ -114,7 +114,9 @@ describe("manual test run OpenAPI contract", () => {
     expect(updateDetails.properties?.scenarioIds).toBeDefined();
     expect(updateDetails.properties?.environmentProperties).toBeDefined();
     expect(evidence.properties?.executionComment).toBeDefined();
-    expect(evidence.properties?.steps).toBeDefined();
+    expect(evidence.properties?.steps).toMatchObject({
+      items: { required: ["id"], additionalProperties: false, minProperties: 2 },
+    });
   });
 
   it("keeps environment profile endpoints and nullable run snapshots", () => {

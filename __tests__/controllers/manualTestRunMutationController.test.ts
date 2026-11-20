@@ -3,6 +3,7 @@
 
 import { jest } from "@jest/globals";
 import type { Response } from "express";
+import getLogger from "@/lib/logger";
 import type { AuthenticatedRequest } from "@/middleware/authMiddleware";
 import type { ManualTestRunResponse } from "@/types/manualTestRuns";
 
@@ -12,6 +13,10 @@ const serviceMocks = {
   reorder: jest.fn<() => Promise<ManualTestRunResponse>>(),
   bulkUpdate: jest.fn<() => Promise<ManualTestRunResponse>>(),
 };
+jest.mock("@/lib/logger", () => {
+  const logger = { error: jest.fn() };
+  return { __esModule: true, default: () => logger };
+});
 jest.mock("@/services/manualTestRunMutationService", () => ({
   manualTestRunMutationService: serviceMocks,
 }));
@@ -64,6 +69,31 @@ describe("manualTestRunMutationController", () => {
       resultById: userId,
     });
     expect(result.status as jest.Mock).toHaveBeenCalledWith(200);
+  });
+
+  it("logs unexpected errors and omits their details from the 500 response", async () => {
+    const error = new Error("Database connection failed");
+    serviceMocks.updateResult.mockRejectedValueOnce(error);
+    const result = response();
+
+    await manualTestRunMutationController.updateResult(
+      {
+        user: { id: userId },
+        params: { runId, scenarioId },
+        query: { projectId },
+        body: { result: "passed" },
+      } as unknown as AuthenticatedRequest<{ runId: string; scenarioId: string }>,
+      result,
+    );
+
+    expect(result.status).toHaveBeenCalledWith(500);
+    expect(result.json).toHaveBeenCalledWith({
+      error: "Failed to update a manual run scenario result.",
+    });
+    expect(getLogger().error).toHaveBeenCalledWith(
+      "Failed to update a manual run scenario result.",
+      error,
+    );
   });
 
   it("requires authentication for bulk result attribution and ignores client identity", async () => {

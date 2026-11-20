@@ -3,6 +3,7 @@
 
 import { OpenAPIRegistry } from "@asteasolutions/zod-to-openapi";
 import type { ZodTypeAny } from "zod";
+import { manualTestRunStepEvidenceSchema } from "@/schemas/manualTestRunSchemas";
 import { ErrorResponseSchema } from "./common";
 import { z } from "./zod";
 
@@ -259,16 +260,10 @@ const ManualTestRunScenarioEvidenceRequestSchema = z
     defectReference: z.string().max(2000).nullable().optional(),
     steps: z
       .array(
-        z
-          .object({
-            id: z.string().uuid(),
-            comment: z.string().max(10000).nullable().optional(),
-            failedFlag: z.boolean().optional(),
-            failedComment: z.string().max(2000).nullable().optional(),
-            blockedFlag: z.boolean().optional(),
-            blockedComment: z.string().max(2000).nullable().optional(),
-          })
-          .strict(),
+        manualTestRunStepEvidenceSchema.openapi({
+          minProperties: 2,
+          description: "Each step patch must include its ID and at least one editable evidence field.",
+        }),
       )
       .max(500)
       .optional(),
@@ -316,6 +311,17 @@ const commonErrors = {
   409: error("The run cannot make the requested state transition"),
   500: error("Internal server error"),
 };
+const payloadTooLarge = {
+  description: "JSON request body exceeds the size limit",
+  content: {
+    "application/json": {
+      schema: z.object({
+        success: z.literal(false),
+        error: z.object({ message: z.string(), status: z.literal(413) }),
+      }),
+    },
+  },
+};
 const jsonBody = (schema: ZodTypeAny) => ({
   required: true,
   content: { "application/json": { schema } },
@@ -351,7 +357,7 @@ export function registerManualTestRunRoutes(registry: OpenAPIRegistry): void {
     method: "post",
     path: "/api/v2/manual-test-runs",
     description:
-      "Creates one project-scoped run with an optional user-provided title from an ordered set of scenario IDs or a suite ID. Optional ordered environment properties are stored with the run. Snapshot creation is atomic.",
+      "Creates one project-scoped run with an optional user-provided title from an ordered set of scenario IDs or a suite ID. Optional ordered environment properties are stored with the run. Snapshot creation is atomic. The JSON body limit is 2 MiB.",
     request: {
       query: ProjectIdQuerySchema,
       body: jsonBody(ManualTestRunCreateRequestSchema),
@@ -362,6 +368,7 @@ export function registerManualTestRunRoutes(registry: OpenAPIRegistry): void {
         description: "Created run with ordered scenario snapshots",
         content: { "application/json": { schema: ManualTestRunSchema } },
       },
+      413: payloadTooLarge,
       ...commonErrors,
     },
     tags: [
@@ -429,14 +436,14 @@ export function registerManualTestRunRoutes(registry: OpenAPIRegistry): void {
     method: "put",
     path: "/api/v2/manual-test-runs/{runId}/details",
     description:
-      "Atomically updates an in-progress run title, environment properties, and scenario membership. Retained snapshots preserve order and execution data; additions are appended as Untested.",
+      "Atomically updates an in-progress run title, environment properties, and scenario membership. Retained snapshots preserve order and execution data; additions are appended as Untested. The JSON body limit is 2 MiB.",
     request: {
       params: RunIdParamsSchema,
       query: ProjectIdQuerySchema,
       body: jsonBody(ManualTestRunDetailsRequestSchema),
     },
     security: [{ BearerAuth: [] }],
-    responses: mutationResponse,
+    responses: { ...mutationResponse, 413: payloadTooLarge },
     tags: [
       "Manual Test Runs",
       "Manual Test Run History",
@@ -465,14 +472,14 @@ export function registerManualTestRunRoutes(registry: OpenAPIRegistry): void {
     method: "put",
     path: "/api/v2/manual-test-runs/{runId}/scenarios/order",
     description:
-      "Reorders every scenario in an in-progress run using the supplied complete ordered scenario ID list.",
+      "Reorders every scenario in an in-progress run using the supplied complete ordered scenario ID list. The JSON body limit is 512 KiB.",
     request: {
       params: RunIdParamsSchema,
       query: ProjectIdQuerySchema,
       body: jsonBody(ManualTestRunScenarioOrderRequestSchema),
     },
     security: [{ BearerAuth: [] }],
-    responses: mutationResponse,
+    responses: { ...mutationResponse, 413: payloadTooLarge },
     tags: [
       "Manual Test Runs",
       "Manual Test Run History",
@@ -483,14 +490,14 @@ export function registerManualTestRunRoutes(registry: OpenAPIRegistry): void {
     method: "post",
     path: "/api/v2/manual-test-runs/{runId}/scenarios/bulk",
     description:
-      "Atomically updates the result and/or assignee of every listed scenario in the run. Result attribution is the authenticated user.",
+      "Atomically updates the result and/or assignee of every listed scenario in the run. Result attribution is the authenticated user. The JSON body limit is 512 KiB.",
     request: {
       params: RunIdParamsSchema,
       query: ProjectIdQuerySchema,
       body: jsonBody(ManualTestRunScenarioBulkRequestSchema),
     },
     security: [{ BearerAuth: [] }],
-    responses: mutationResponse,
+    responses: { ...mutationResponse, 413: payloadTooLarge },
     tags: [
       "Manual Test Runs",
       "Manual Test Run History",

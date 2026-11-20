@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import type { Response } from "express";
+import getLogger from "@/lib/logger";
 import type { AuthenticatedRequest } from "@/middleware/authMiddleware";
 import {
   manualTestRunCompleteSchema,
@@ -15,6 +16,8 @@ import {
   ManualTestRunNotFoundError,
   ManualTestRunValidationError,
 } from "@/types/manualTestRuns";
+
+const logger = getLogger("manual-test-run-lifecycle-controller");
 
 function invalid(res: Response, message?: string): void {
   res.status(400).json({ error: message ?? "Invalid request" });
@@ -53,8 +56,9 @@ function sendError(res: Response, error: unknown, operation: string): void {
   } else if (error instanceof ManualTestRunConflictError) {
     res.status(409).json({ error: error.message });
   } else {
-    const message = error instanceof Error ? error.message : "Unknown error";
-    res.status(500).json({ error: `Failed to ${operation}. ${message}` });
+    const message = `Failed to ${operation}.`;
+    logger.error(message, error);
+    res.status(500).json({ error: message });
   }
 }
 
@@ -66,7 +70,10 @@ export const manualTestRunLifecycleController = {
     const parsed = scope(req, res);
     if (!parsed) return;
     try {
-      await manualTestRunLifecycleService.deleteRun(parsed);
+      await manualTestRunLifecycleService.deleteRun({
+        projectId: parsed.projectId,
+        runId: parsed.runId,
+      });
       res.status(204).send();
     } catch (error) {
       sendError(res, error, "delete manual test run");
