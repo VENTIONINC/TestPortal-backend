@@ -3,6 +3,7 @@
 
 import { jest } from "@jest/globals";
 import type { Request, Response } from "express";
+import getLogger from "@/lib/logger";
 import type {
   ManualTestRunPage,
   ManualTestRunResponse,
@@ -12,6 +13,10 @@ const serviceMocks = {
   listRuns: jest.fn<() => Promise<ManualTestRunPage>>(),
   getRun: jest.fn<() => Promise<ManualTestRunResponse>>(),
 };
+jest.mock("@/lib/logger", () => {
+  const logger = { error: jest.fn() };
+  return { __esModule: true, default: () => logger };
+});
 jest.mock("@/services/manualTestRunHistoryService", () => ({
   manualTestRunHistoryService: serviceMocks,
 }));
@@ -87,5 +92,27 @@ describe("manualTestRunHistoryController", () => {
     );
     expect(serviceMocks.getRun).toHaveBeenCalledWith({ projectId, runId });
     expect(result.json as jest.Mock).toHaveBeenCalledWith(run);
+  });
+
+  it("logs unexpected errors and returns a generic 500 response", async () => {
+    const error = new Error("Database connection failed");
+    serviceMocks.getRun.mockRejectedValueOnce(error);
+    const result = response();
+
+    await manualTestRunHistoryController.getById(
+      { params: { runId }, query: { projectId } } as unknown as Request<{
+        runId: string;
+      }>,
+      result,
+    );
+
+    expect(result.status as jest.Mock).toHaveBeenCalledWith(500);
+    expect(result.json as jest.Mock).toHaveBeenCalledWith({
+      error: "Failed to get manual test run.",
+    });
+    expect(getLogger().error).toHaveBeenCalledWith(
+      "Failed to get manual test run.",
+      error,
+    );
   });
 });

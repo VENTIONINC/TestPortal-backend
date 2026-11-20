@@ -2,7 +2,10 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { Router } from "express";
-import { manualTestRunCreationController } from "@/controllers/manualTestRunCreationController";
+import {
+  manualTestRunCreationController,
+  type ManualTestRunCreationRequest,
+} from "@/controllers/manualTestRunCreationController";
 import { manualTestRunHistoryController } from "@/controllers/manualTestRunHistoryController";
 import { manualTestRunLifecycleController } from "@/controllers/manualTestRunLifecycleController";
 import { manualTestRunMutationController } from "@/controllers/manualTestRunMutationController";
@@ -13,7 +16,8 @@ const router = Router();
 router.post(
   "/v2/manual-test-runs",
   authMiddleware,
-  manualTestRunCreationController.create,
+  (req, res) =>
+    manualTestRunCreationController.create(req as ManualTestRunCreationRequest, res),
 );
 router.get(
   "/v2/manual-test-runs",

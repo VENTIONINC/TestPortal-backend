@@ -1,10 +1,8 @@
 // Copyright 2026 VENSOLUTIONSGROUP LTD
 // SPDX-License-Identifier: Apache-2.0
 
-// Copyright 2026 VENSOLUTIONSGROUP LTD
-// SPDX-License-Identifier: Apache-2.0
-
 import type { Response } from "express";
+import getLogger from "@/lib/logger";
 import type { AuthenticatedRequest } from "@/middleware/authMiddleware";
 import {
   manualTestRunCreateSchema,
@@ -17,6 +15,12 @@ import {
   ManualTestRunValidationError,
 } from "@/types/manualTestRuns";
 
+const logger = getLogger("manual-test-run-creation-controller");
+
+export interface ManualTestRunCreationRequest extends AuthenticatedRequest {
+  user: NonNullable<AuthenticatedRequest["user"]>;
+}
+
 function validationMessage(error: {
   issues: Array<{ message: string }>;
 }): string {
@@ -24,11 +28,7 @@ function validationMessage(error: {
 }
 
 export const manualTestRunCreationController = {
-  async create(req: AuthenticatedRequest, res: Response): Promise<void> {
-    if (!req.user) {
-      res.status(401).json({ error: "Authentication required" });
-      return;
-    }
+  async create(req: ManualTestRunCreationRequest, res: Response): Promise<void> {
     const query = manualTestRunProjectQuerySchema.safeParse(req.query);
     if (!query.success) {
       res.status(400).json({ error: validationMessage(query.error) });
@@ -55,11 +55,8 @@ export const manualTestRunCreationController = {
       } else if (error instanceof ManualTestRunConflictError) {
         res.status(409).json({ error: error.message });
       } else {
-        const message =
-          error instanceof Error ? error.message : "Unknown error";
-        res
-          .status(500)
-          .json({ error: `Failed to create manual test run. ${message}` });
+        logger.error("Failed to create manual test run", error);
+        res.status(500).json({ error: "Failed to create manual test run." });
       }
     }
   },

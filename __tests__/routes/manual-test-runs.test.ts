@@ -1,7 +1,7 @@
 // Copyright 2026 VENSOLUTIONSGROUP LTD
 // SPDX-License-Identifier: Apache-2.0
 
-import type { NextFunction, Request, Response } from "express";
+import type { NextFunction, Request, RequestHandler, Response } from "express";
 import { jest } from "@jest/globals";
 
 const authMiddlewareMock = jest.fn<(req: Request, res: Response, next: NextFunction) => void>();
@@ -28,9 +28,10 @@ jest.mock("@/controllers/manualTestRunLifecycleController", () => ({ manualTestR
 
 import router from "@/routes/manual-test-runs";
 import { authMiddleware } from "@/middleware/authMiddleware";
+import { createMockRequest, createMockResponse } from "@/test-utils/httpMocks";
 
 interface RouteLayer {
-  route?: { path: string; methods: Record<string, boolean>; stack: Array<{ handle: unknown }> };
+  route?: { path: string; methods: Record<string, boolean>; stack: Array<{ handle: RequestHandler }> };
 }
 const routeLayers = (): RouteLayer[] => (router as unknown as { stack: RouteLayer[] }).stack;
 
@@ -62,17 +63,35 @@ describe("manual test run routes", () => {
     for (const layer of routeLayers()) {
       const route = layer.route;
       if (!route) continue;
-      expect(route.stack.some((entry) => entry.handle === authMiddleware)).toBe(true);
+      expect(route.stack[0]?.handle).toBe(authMiddleware);
     }
   });
 
-  it("hands each operation to its matching controller", () => {
+  it("hands each operation to its matching controller", async () => {
     for (const [routeName, controller] of expected) {
       const route = routeLayers().find((layer) => {
         const metadata = layer.route;
         return metadata && `${Object.keys(metadata.methods)[0]} ${metadata.path}` === routeName;
       });
-      expect(route?.route?.stack.some((entry) => entry.handle === controller)).toBe(true);
+      if (controller === controllerMocks.create) {
+        const req = createMockRequest({
+          method: "POST",
+          user: {
+            id: "user-1",
+            name: "Test Runner",
+            email: "runner@example.com",
+            status: "active",
+            role: "member",
+            createdAt: new Date("2026-01-01"),
+            updatedAt: new Date("2026-01-01"),
+          },
+        });
+        const res = createMockResponse();
+        await route?.route?.stack[1]?.handle(req, res, jest.fn());
+        expect(controller).toHaveBeenCalledWith(req, res);
+      } else {
+        expect(route?.route?.stack.some((entry) => entry.handle === controller)).toBe(true);
+      }
     }
   });
 });

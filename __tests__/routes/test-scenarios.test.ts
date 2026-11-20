@@ -93,9 +93,7 @@ describe("test-scenario routes", () => {
       const route = layer.route;
       if (!route) continue;
 
-      expect(route.stack.some((entry) => entry.handle === authMiddleware)).toBe(
-        true,
-      );
+      expect(route.stack[0]?.handle).toBe(authMiddleware);
     }
   });
 

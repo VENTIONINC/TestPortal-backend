@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import type { Request, Response } from "express";
+import getLogger from "@/lib/logger";
 import type { AuthenticatedRequest } from "@/middleware/authMiddleware";
 import {
   appendTestScenarioStepSchema,
@@ -38,6 +39,12 @@ import {
   TestScenarioSpecLinkConflictError,
   TestScenarioSpecLinkNotFoundError,
 } from "@/types/testScenarioIntegration";
+
+const logger = getLogger("test-scenario-controller");
+
+export interface TestScenarioCreationRequest extends AuthenticatedRequest {
+  user: NonNullable<AuthenticatedRequest["user"]>;
+}
 
 function validationMessage(error: {
   issues: Array<{ message: string }>;
@@ -78,8 +85,9 @@ function sendServiceError(
     return;
   }
 
-  const message = error instanceof Error ? error.message : "Unknown error";
-  res.status(500).json({ error: `Failed to ${operation}. ${message}` });
+  const message = `Failed to ${operation}.`;
+  logger.error(message, error);
+  res.status(500).json({ error: message });
 }
 
 export const testScenarioController = {
@@ -104,12 +112,7 @@ export const testScenarioController = {
     catch (error) { sendServiceError(res, error, "resolve scenario selection"); }
   },
 
-  async create(req: AuthenticatedRequest, res: Response): Promise<void> {
-    if (!req.user) {
-      res.status(401).json({ error: "Authentication required" });
-      return;
-    }
-
+  async create(req: TestScenarioCreationRequest, res: Response): Promise<void> {
     const parsed = createTestScenarioSchema.safeParse(req.body);
     if (!parsed.success) {
       sendValidationError(res, validationMessage(parsed.error));

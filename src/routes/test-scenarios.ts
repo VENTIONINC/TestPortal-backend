@@ -2,7 +2,10 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { Router } from "express";
-import { testScenarioController } from "@/controllers/testScenarioController";
+import {
+  testScenarioController,
+  type TestScenarioCreationRequest,
+} from "@/controllers/testScenarioController";
 import { authMiddleware } from "@/middleware/authMiddleware";
 
 const router = Router();
@@ -10,7 +13,8 @@ const router = Router();
 router.post(
   "/v2/test-scenarios",
   authMiddleware,
-  testScenarioController.create,
+  (req, res) =>
+    testScenarioController.create(req as TestScenarioCreationRequest, res),
 );
 router.get(
   "/v2/test-scenarios",

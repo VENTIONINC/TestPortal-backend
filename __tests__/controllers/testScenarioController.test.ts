@@ -3,7 +3,11 @@
 
 import "@/test-utils/testEnv";
 import { jest } from "@jest/globals";
-import { executeController } from "@/test-utils/httpMocks";
+import {
+  createMockRequest,
+  createMockResponse,
+  executeController,
+} from "@/test-utils/httpMocks";
 import type { TestScenarioResponse } from "@/types/testScenarios";
 
 const createMock = jest.fn<() => Promise<TestScenarioResponse>>();
@@ -86,9 +90,9 @@ describe("testScenarioController", () => {
   });
 
   it("creates structured scenarios from authenticated context", async () => {
-    const response = await executeController(testScenarioController.create, {
+    const response = createMockResponse();
+    const request = createMockRequest({
       method: "POST",
-      user,
       body: {
         projectId,
         title: "  Login  ",
@@ -96,6 +100,10 @@ describe("testScenarioController", () => {
         steps: [{ action: " Open " }],
       },
     });
+    await testScenarioController.create(
+      Object.assign(request, { user }),
+      response,
+    );
     expect(response.statusCode).toBe(201);
     expect(createMock).toHaveBeenCalledWith(
       expect.objectContaining({ createdById: userId }),
@@ -104,11 +112,15 @@ describe("testScenarioController", () => {
   });
 
   it("rejects read-only Markdown input", async () => {
-    const response = await executeController(testScenarioController.create, {
+    const response = createMockResponse();
+    const request = createMockRequest({
       method: "POST",
-      user,
       body: { projectId, title: "Login", contentMd: "# no" },
     });
+    await testScenarioController.create(
+      Object.assign(request, { user }),
+      response,
+    );
     expect(response.statusCode).toBe(400);
     expect(createMock).not.toHaveBeenCalled();
   });

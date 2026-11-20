@@ -3,7 +3,11 @@
 
 import "@/test-utils/testEnv";
 import { jest } from "@jest/globals";
-import { executeController } from "@/test-utils/httpMocks";
+import {
+  createMockRequest,
+  createMockResponse,
+  executeController,
+} from "@/test-utils/httpMocks";
 import type { TestScenarioResponse } from "@/types/testScenarios";
 
 const projectExistsMock = jest.fn<() => Promise<boolean>>();
@@ -86,15 +90,19 @@ describe("structured Test Scenario project workflow", () => {
   });
 
   it("creates and reads complete structured detail while isolating project context", async () => {
-    const created = await executeController(testScenarioController.create, {
+    const created = createMockResponse();
+    const request = createMockRequest({
       method: "POST",
-      user,
       body: {
         projectId: projectA,
         title: " Login ",
         preconditions: " Verify ",
       },
     });
+    await testScenarioController.create(
+      Object.assign(request, { user }),
+      created,
+    );
     expect(created.statusCode).toBe(201);
     expect(createMock).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -118,13 +126,14 @@ describe("structured Test Scenario project workflow", () => {
   });
 
   it("rejects raw Markdown on create and patch", async () => {
-    const createResponse = await executeController(
-      testScenarioController.create,
-      {
-        method: "POST",
-        user,
-        body: { projectId: projectA, title: "Login", contentMd: "# forbidden" },
-      },
+    const createResponse = createMockResponse();
+    const request = createMockRequest({
+      method: "POST",
+      body: { projectId: projectA, title: "Login", contentMd: "# forbidden" },
+    });
+    await testScenarioController.create(
+      Object.assign(request, { user }),
+      createResponse,
     );
     const updateResponse = await executeController(
       testScenarioController.update,
