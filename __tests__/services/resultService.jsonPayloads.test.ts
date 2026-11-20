@@ -114,8 +114,8 @@ describe("resultService JSON payload normalization", () => {
       const rawResult = buildRawResult();
       rawResult.status = status;
       const scenarios = [
-        { id: "scenario-1", title: "Checkout", scenarioKey: null, details: "Payment flow", contentMd: "# Checkout\n" },
-        { id: "scenario-2", title: "Refund", scenarioKey: null, details: null, contentMd: "# Refund\n" },
+        { id: "scenario-1", title: "Checkout", scenarioKey: "TMS-1", details: "Payment flow", contentMd: "# Checkout\n" },
+        { id: "scenario-2", title: "Refund", scenarioKey: "TMS-2", details: null, contentMd: "# Refund\n" },
       ];
       mockResultModel.findById.mockResolvedValueOnce(rawResult);
       mockTestScenarioSpecLinkModel.findLinkedTestScenarios.mockResolvedValueOnce(
@@ -156,7 +156,7 @@ describe("resultService JSON payload normalization", () => {
   it("returns a single lightweight related scenario summary", async () => {
     const rawResult = buildRawResult();
     const scenarios = [
-      { id: "scenario-1", title: "Checkout", scenarioKey: null, details: null, contentMd: "# Checkout\n" },
+      { id: "scenario-1", title: "Checkout", scenarioKey: "TMS-1", details: null, contentMd: "# Checkout\n" },
     ];
     mockResultModel.findById.mockResolvedValueOnce(rawResult);
     mockTestScenarioSpecLinkModel.findLinkedTestScenarios.mockResolvedValueOnce(

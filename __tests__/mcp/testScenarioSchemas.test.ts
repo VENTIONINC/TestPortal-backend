@@ -111,12 +111,12 @@ describe("structured Test Scenario MCP schemas", () => {
         .success,
     ).toBe(false);
     expect(
-      updateTestScenarioSchema.parse({
+      updateTestScenarioSchema.safeParse({
         scenarioId,
         projectId,
         scenarioKey: " R2 ",
-      }).scenarioKey,
-    ).toBe("R2");
+      }).success,
+    ).toBe(false);
     expect(
       updateTestScenarioSchema.safeParse({
         scenarioId,

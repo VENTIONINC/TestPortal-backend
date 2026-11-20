@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import type { Request, Response } from "express";
+import getLogger from "@/lib/logger";
 import type { AuthenticatedRequest } from "@/middleware/authMiddleware";
 import {
   appendTestScenarioStepSchema,
@@ -9,6 +10,9 @@ import {
   reorderTestScenarioStepsSchema,
   testScenarioIdParamsSchema,
   testScenarioListQuerySchema,
+  testScenarioSelectionQuerySchema,
+  testScenarioAuthorsQuerySchema,
+  testScenarioPriorityCountsQuerySchema,
   testScenarioProjectQuerySchema,
   testScenarioStepParamsSchema,
   updateTestScenarioSchema,
@@ -26,6 +30,7 @@ import {
 import { testScenarioService } from "@/services/testScenarioService";
 import { testScenarioIntegrationService } from "@/services/testScenarioIntegrationService";
 import {
+  TestScenarioConflictError,
   TestScenarioNotFoundError,
   TestScenarioValidationError,
 } from "@/types/testScenarios";
@@ -35,7 +40,15 @@ import {
   TestScenarioSpecLinkNotFoundError,
 } from "@/types/testScenarioIntegration";
 
-function validationMessage(error: { issues: Array<{ message: string }> }): string {
+const logger = getLogger("test-scenario-controller");
+
+export interface TestScenarioCreationRequest extends AuthenticatedRequest {
+  user: NonNullable<AuthenticatedRequest["user"]>;
+}
+
+function validationMessage(error: {
+  issues: Array<{ message: string }>;
+}): string {
   return error.issues[0]?.message ?? "Invalid request";
 }
 
@@ -43,7 +56,11 @@ function sendValidationError(res: Response, message: string): void {
   res.status(400).json({ error: message });
 }
 
-function sendServiceError(res: Response, error: unknown, operation: string): void {
+function sendServiceError(
+  res: Response,
+  error: unknown,
+  operation: string,
+): void {
   if (
     error instanceof TestScenarioValidationError ||
     error instanceof TestScenarioIntegrationValidationError
@@ -60,22 +77,70 @@ function sendServiceError(res: Response, error: unknown, operation: string): voi
     return;
   }
 
-  if (error instanceof TestScenarioSpecLinkConflictError) {
+  if (
+    error instanceof TestScenarioSpecLinkConflictError ||
+    error instanceof TestScenarioConflictError
+  ) {
     res.status(409).json({ error: error.message });
     return;
   }
 
-  const message = error instanceof Error ? error.message : "Unknown error";
-  res.status(500).json({ error: `Failed to ${operation}. ${message}` });
+  const message = `Failed to ${operation}.`;
+  logger.error(message, error);
+  res.status(500).json({ error: message });
 }
 
 export const testScenarioController = {
-  async create(req: AuthenticatedRequest, res: Response): Promise<void> {
-    if (!req.user) {
-      res.status(401).json({ error: "Authentication required" });
+  async listPriorityCounts(req: Request, res: Response): Promise<void> {
+    const parsed = testScenarioPriorityCountsQuerySchema.safeParse(req.query);
+    if (!parsed.success) {
+      sendValidationError(res, validationMessage(parsed.error));
       return;
     }
+    try {
+      res
+        .status(200)
+        .json(
+          await testScenarioService.listScenarioPriorityCounts(parsed.data),
+        );
+    } catch (error) {
+      sendServiceError(res, error, "list scenario priority counts");
+    }
+  },
 
+  async listAuthors(req: Request, res: Response): Promise<void> {
+    const parsed = testScenarioAuthorsQuerySchema.safeParse(req.query);
+    if (!parsed.success) {
+      sendValidationError(res, validationMessage(parsed.error));
+      return;
+    }
+    try {
+      res
+        .status(200)
+        .json({
+          authors: await testScenarioService.listScenarioAuthors(parsed.data),
+        });
+    } catch (error) {
+      sendServiceError(res, error, "list scenario authors");
+    }
+  },
+
+  async resolveSelection(req: Request, res: Response): Promise<void> {
+    const parsed = testScenarioSelectionQuerySchema.safeParse(req.query);
+    if (!parsed.success) {
+      sendValidationError(res, validationMessage(parsed.error));
+      return;
+    }
+    try {
+      res
+        .status(200)
+        .json(await testScenarioService.resolveScenarioSelection(parsed.data));
+    } catch (error) {
+      sendServiceError(res, error, "resolve scenario selection");
+    }
+  },
+
+  async create(req: TestScenarioCreationRequest, res: Response): Promise<void> {
     const parsed = createTestScenarioSchema.safeParse(req.body);
     if (!parsed.success) {
       sendValidationError(res, validationMessage(parsed.error));
@@ -136,7 +201,7 @@ export const testScenarioController = {
   },
 
   async update(
-    req: Request<{ scenarioId: string }>,
+    req: AuthenticatedRequest<{ scenarioId: string }>,
     res: Response,
   ): Promise<void> {
     const params = testScenarioIdParamsSchema.safeParse(req.params);
@@ -159,6 +224,7 @@ export const testScenarioController = {
 
     try {
       const scenario = await testScenarioService.updateScenario({
+        actorId: req.user?.id,
         scenarioId: params.data.scenarioId,
         projectId: query.data.projectId,
         ...body.data,
@@ -170,7 +236,7 @@ export const testScenarioController = {
   },
 
   async appendStep(
-    req: Request<{ scenarioId: string }>,
+    req: AuthenticatedRequest<{ scenarioId: string }>,
     res: Response,
   ): Promise<void> {
     const params = testScenarioIdParamsSchema.safeParse(req.params);
@@ -191,6 +257,7 @@ export const testScenarioController = {
 
     try {
       const scenario = await testScenarioService.appendStep({
+        actorId: req.user?.id,
         scenarioId: params.data.scenarioId,
         projectId: query.data.projectId,
         ...body.data,
@@ -202,7 +269,7 @@ export const testScenarioController = {
   },
 
   async updateStep(
-    req: Request<{ scenarioId: string; stepId: string }>,
+    req: AuthenticatedRequest<{ scenarioId: string; stepId: string }>,
     res: Response,
   ): Promise<void> {
     const params = testScenarioStepParamsSchema.safeParse(req.params);
@@ -223,6 +290,7 @@ export const testScenarioController = {
 
     try {
       const scenario = await testScenarioService.updateStep({
+        actorId: req.user?.id,
         scenarioId: params.data.scenarioId,
         projectId: query.data.projectId,
         stepId: params.data.stepId,
@@ -235,7 +303,7 @@ export const testScenarioController = {
   },
 
   async deleteStep(
-    req: Request<{ scenarioId: string; stepId: string }>,
+    req: AuthenticatedRequest<{ scenarioId: string; stepId: string }>,
     res: Response,
   ): Promise<void> {
     const params = testScenarioStepParamsSchema.safeParse(req.params);
@@ -251,6 +319,7 @@ export const testScenarioController = {
 
     try {
       const scenario = await testScenarioService.deleteStep({
+        actorId: req.user?.id,
         scenarioId: params.data.scenarioId,
         projectId: query.data.projectId,
         stepId: params.data.stepId,
@@ -262,7 +331,7 @@ export const testScenarioController = {
   },
 
   async reorderSteps(
-    req: Request<{ scenarioId: string }>,
+    req: AuthenticatedRequest<{ scenarioId: string }>,
     res: Response,
   ): Promise<void> {
     const params = testScenarioIdParamsSchema.safeParse(req.params);
@@ -283,6 +352,7 @@ export const testScenarioController = {
 
     try {
       const scenario = await testScenarioService.reorderSteps({
+        actorId: req.user?.id,
         scenarioId: params.data.scenarioId,
         projectId: query.data.projectId,
         ...body.data,
