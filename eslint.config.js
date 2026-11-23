@@ -98,6 +98,8 @@ export default [
       "dist/**",
       "node_modules/**",
       "backup-js-files/**",
+      "local/**",
+      ".private-ai-config/**",
       ".agents/**",
       "__mocks__/**",
       "*.d.ts",
