@@ -1,0 +1,30 @@
+.husky/install.mjs
+  s_4e164d05b02c19::t_d14c3a5b7410ec 1-23
+package.json
+  s_4e164d05b02c19::t_3e53a737ca11e6 11
+Dockerfile
+  s_4e164d05b02c19::t_d14c3a5b7410ec 12,14,17,37,39,42
+__tests__/services/dashboardService.aggregation.test.ts
+  s_4e164d05b02c19::t_2720f7fc21e30e 10-13,91-92,130-131,159,175,188-189
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "f42aacaa5c080e53c049fdcb0349004ad3e5331c",
+  "prompts": {},
+  "humans": {
+    "h_a7ee58a11b75fb": {
+      "author": "Ihar Mikailau <ihar.mikailau@ventionteams.com>"
+    }
+  },
+  "sessions": {
+    "s_4e164d05b02c19": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a207bb-67a0-7e80-88d5-41c3c6a4adc5",
+        "model": "gpt-6.2-sol"
+      },
+      "human_author": "Ihar Mikailau <ihar.mikailau@ventionteams.com>"
+    }
+  }
+}
