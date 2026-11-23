@@ -40,7 +40,13 @@ const CTRFTestPortalErrorSchema = z.object({
   index: z.number().int().nonnegative(),
   message: z.string().optional(),
   stack: z.string().optional(),
-  location: z.object({ file: z.string(), line: z.number().int(), column: z.number().int().optional() }).optional(),
+  location: z
+    .object({
+      file: z.string(),
+      line: z.number().int(),
+      column: z.number().int().optional(),
+    })
+    .optional(),
   rawLogs: z.array(z.string()).optional(),
   sourceSnippet: CTRFSourceSnippetSchema.optional(),
   generatedTestCase: z.string().optional(),
@@ -51,9 +57,11 @@ const CTRFTestPortalExtraSchema = z.object({
   errors: z.array(CTRFTestPortalErrorSchema),
 });
 
-const CTRFExtraSchema = z.object({
-  testPortal: CTRFTestPortalExtraSchema,
-}).passthrough();
+const CTRFExtraSchema = z
+  .object({
+    testPortal: CTRFTestPortalExtraSchema,
+  })
+  .passthrough();
 
 const CTRFRetryAttemptSchema = z.object({
   attempt: z.number().int().positive(),
@@ -79,10 +87,21 @@ const CTRFTestSchema = z
     stop: z.number().optional().describe("Test end timestamp (Unix epoch)"),
     message: z.string().optional().describe("Error/failure message"),
     trace: z.string().optional().describe("Stack trace or detailed error info"),
-    rawStatus: z.string().optional().describe("Original status from test framework"),
-    type: z.string().optional().describe("Test type (e.g., 'unit', 'integration')"),
+    rawStatus: z
+      .string()
+      .optional()
+      .describe("Original status from test framework"),
+    type: z
+      .string()
+      .optional()
+      .describe("Test type (e.g., 'unit', 'integration')"),
     filePath: z.string().optional().describe("Path to test file"),
-    retries: z.number().int().nonnegative().optional().describe("Number of retries"),
+    retries: z
+      .number()
+      .int()
+      .nonnegative()
+      .optional()
+      .describe("Number of retries"),
     retryAttempts: z.array(CTRFRetryAttemptSchema).optional(),
     flaky: z.boolean().optional().describe("Whether test is flaky"),
     suite: z.array(z.string()).optional().describe("Test suite hierarchy"),
@@ -92,7 +111,10 @@ const CTRFTestSchema = z
     stdout: z.array(z.string()).optional(),
     stderr: z.array(z.string()).optional(),
     extra: CTRFExtraSchema.optional(),
-    meta: z.record(z.string(), z.any()).optional().describe("Custom test metadata"),
+    meta: z
+      .record(z.string(), z.any())
+      .optional()
+      .describe("Custom test metadata"),
   })
   .openapi("CTRFTest");
 
@@ -105,12 +127,18 @@ const CTRFEnvironmentSchema = z
     repositoryName: z.string().optional().describe("Repository name"),
     repositoryUrl: z.string().optional().describe("Repository URL"),
     branchName: z.string().optional().describe("Git branch name"),
-    testEnvironment: z.string().optional().describe("Test environment (e.g., 'staging', 'prod')"),
+    testEnvironment: z
+      .string()
+      .optional()
+      .describe("Test environment (e.g., 'staging', 'prod')"),
     executionType: z
       .string()
       .optional()
       .describe("Execution type (e.g., nightly, release, ondemand)"),
-    extra: z.record(z.string(), z.any()).optional().describe("Custom environment metadata"),
+    extra: z
+      .record(z.string(), z.any())
+      .optional()
+      .describe("Custom environment metadata"),
   })
   .openapi("CTRFEnvironment");
 
@@ -183,7 +211,9 @@ export function registerCtrfRoutes(registry: OpenAPIRegistry) {
                   type: "string",
                   format: "binary",
                 }),
-              projectId: z.string().describe("Project ID to associate the report with"),
+              projectId: z
+                .string()
+                .describe("Project ID to associate the report with"),
             }),
           },
         },
@@ -217,7 +247,8 @@ export function registerCtrfRoutes(registry: OpenAPIRegistry) {
         },
       },
       500: {
-        description: "Internal server error - failed to process uploaded CTRF report",
+        description:
+          "Internal server error - failed to process uploaded CTRF report",
         content: {
           "application/json": {
             schema: ErrorResponseSchema,
@@ -279,7 +310,8 @@ export function registerCtrfRoutes(registry: OpenAPIRegistry) {
         },
       },
       500: {
-        description: "Internal server error - failed to process uploaded CTRF report",
+        description:
+          "Internal server error - failed to process uploaded CTRF report",
         content: {
           "application/json": {
             schema: ErrorResponseSchema,

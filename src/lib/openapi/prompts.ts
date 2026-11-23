@@ -19,7 +19,13 @@ const PromptConfigSchema = z
     name: z.string(),
     title: z.string(),
     description: z.string(),
-    category: z.enum(["development", "reporting", "analysis", "performance", "documentation"]),
+    category: z.enum([
+      "development",
+      "reporting",
+      "analysis",
+      "performance",
+      "documentation",
+    ]),
     parameters: z.record(z.string(), PromptParameterSchema),
   })
   .openapi("PromptConfig");

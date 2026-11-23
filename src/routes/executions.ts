@@ -7,7 +7,15 @@ import { authMiddleware } from "@/middleware/authMiddleware";
 
 const router = Router();
 
-router.get("/v2/executions/:executionId", authMiddleware, executionController.getExecutionById);
-router.delete("/v2/executions/:executionId", authMiddleware, executionController.deleteExecution);
+router.get(
+  "/v2/executions/:executionId",
+  authMiddleware,
+  executionController.getExecutionById,
+);
+router.delete(
+  "/v2/executions/:executionId",
+  authMiddleware,
+  executionController.deleteExecution,
+);
 
 export default router;

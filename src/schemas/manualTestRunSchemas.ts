@@ -44,10 +44,17 @@ const createEnvironmentFields = {
 };
 const createRunMetadata = {
   title: z.string().trim().min(1).max(200).optional(),
-  environmentProperties: z.array(z.object({
-    name: z.string().trim().min(1).max(100),
-    value: z.string().max(2_000),
-  }).strict()).max(100).optional(),
+  environmentProperties: z
+    .array(
+      z
+        .object({
+          name: z.string().trim().min(1).max(100),
+          value: z.string().max(2_000),
+        })
+        .strict(),
+    )
+    .max(100)
+    .optional(),
 };
 
 export const manualTestRunCreateSchema = z.union([
@@ -58,7 +65,13 @@ export const manualTestRunCreateSchema = z.union([
       ...createRunMetadata,
     })
     .strict(),
-  z.object({ suiteId: uuidSchema, ...createEnvironmentFields, ...createRunMetadata }).strict(),
+  z
+    .object({
+      suiteId: uuidSchema,
+      ...createEnvironmentFields,
+      ...createRunMetadata,
+    })
+    .strict(),
 ]);
 
 export const manualTestRunScenarioResultSchema = z
@@ -70,14 +83,22 @@ export const manualTestRunScenarioAssigneeSchema = z
 export const manualTestRunScenarioOrderSchema = z
   .object({ scenarioIds: uniqueScenarioIdsSchema })
   .strict();
-export const manualTestRunDetailsSchema = z.object({
-  title: z.string().trim().min(1).max(200),
-  scenarioIds: uniqueScenarioIdsSchema,
-  environmentProperties: z.array(z.object({
-    name: z.string().trim().min(1).max(100),
-    value: z.string().max(2_000),
-  }).strict()).max(100),
-}).strict();
+export const manualTestRunDetailsSchema = z
+  .object({
+    title: z.string().trim().min(1).max(200),
+    scenarioIds: uniqueScenarioIdsSchema,
+    environmentProperties: z
+      .array(
+        z
+          .object({
+            name: z.string().trim().min(1).max(100),
+            value: z.string().max(2_000),
+          })
+          .strict(),
+      )
+      .max(100),
+  })
+  .strict();
 export const manualTestRunStepEvidenceSchema = z
   .object({
     id: uuidSchema,
@@ -94,14 +115,20 @@ export const manualTestRunStepEvidenceSchema = z
     "At least one step evidence field is required",
   );
 
-export const manualTestRunScenarioEvidenceSchema = z.object({
-  executionComment: z.string().max(10_000).nullable().optional(),
-  defectReference: z.string().max(2_000).nullable().optional(),
-  steps: z.array(manualTestRunStepEvidenceSchema).max(500).optional(),
-}).strict().refine((value) =>
-  value.executionComment !== undefined || value.defectReference !== undefined || (value.steps?.length ?? 0) > 0,
-  "At least one execution evidence field is required",
-);
+export const manualTestRunScenarioEvidenceSchema = z
+  .object({
+    executionComment: z.string().max(10_000).nullable().optional(),
+    defectReference: z.string().max(2_000).nullable().optional(),
+    steps: z.array(manualTestRunStepEvidenceSchema).max(500).optional(),
+  })
+  .strict()
+  .refine(
+    (value) =>
+      value.executionComment !== undefined ||
+      value.defectReference !== undefined ||
+      (value.steps?.length ?? 0) > 0,
+    "At least one execution evidence field is required",
+  );
 export const manualTestRunScenarioBulkSchema = z
   .object({
     scenarioIds: uniqueScenarioIdsSchema,
@@ -178,7 +205,9 @@ export const manualTestRunHistoryQuerySchema = z
     }
   });
 
-export const manualTestRunCompleteSchema = z.object({ requireAllMarked: z.boolean().optional() }).strict();
+export const manualTestRunCompleteSchema = z
+  .object({ requireAllMarked: z.boolean().optional() })
+  .strict();
 export const manualTestRunReopenSchema = z.object({}).strict();
 
 export type ManualTestRunCreateInput = z.infer<

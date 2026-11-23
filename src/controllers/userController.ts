@@ -205,7 +205,11 @@ export const userController = {
         return;
       }
 
-      const result = await authProviderService.signup({ name, email, password });
+      const result = await authProviderService.signup({
+        name,
+        email,
+        password,
+      });
       const safeUser = toSafeUser(result.user);
 
       res.status(201).json({
@@ -294,19 +298,19 @@ export const userController = {
       const safeUser = toSafeUser(updatedUser);
       res.status(200).json(safeUser);
     } catch (error) {
-      handleUserError(
-        res,
-        error,
-        400,
-        "Failed to update user integrations. ",
-      );
+      handleUserError(res, error, 400, "Failed to update user integrations. ");
     }
   },
 
-  listUsers: async (_req: AuthenticatedRequest, res: Response): Promise<void> => {
+  listUsers: async (
+    _req: AuthenticatedRequest,
+    res: Response,
+  ): Promise<void> => {
     try {
       const users = await userService.listUsers();
-      res.status(200).json(users.map((user) => toAdminSafeUser(toSafeUser(user))));
+      res
+        .status(200)
+        .json(users.map((user) => toAdminSafeUser(toSafeUser(user))));
     } catch (error) {
       handleUserError(res, error, 400);
     }

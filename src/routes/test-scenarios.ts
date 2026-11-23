@@ -10,20 +10,25 @@ import { authMiddleware } from "@/middleware/authMiddleware";
 
 const router = Router();
 
-router.post(
-  "/v2/test-scenarios",
+router.post("/v2/test-scenarios", authMiddleware, (req, res) =>
+  testScenarioController.create(req as TestScenarioCreationRequest, res),
+);
+router.get("/v2/test-scenarios", authMiddleware, testScenarioController.list);
+router.get(
+  "/v2/test-scenarios/authors",
   authMiddleware,
-  (req, res) =>
-    testScenarioController.create(req as TestScenarioCreationRequest, res),
+  testScenarioController.listAuthors,
 );
 router.get(
-  "/v2/test-scenarios",
+  "/v2/test-scenarios/priority-counts",
   authMiddleware,
-  testScenarioController.list,
+  testScenarioController.listPriorityCounts,
 );
-router.get("/v2/test-scenarios/authors", authMiddleware, testScenarioController.listAuthors);
-router.get("/v2/test-scenarios/priority-counts", authMiddleware, testScenarioController.listPriorityCounts);
-router.get("/v2/test-scenarios/selection", authMiddleware, testScenarioController.resolveSelection);
+router.get(
+  "/v2/test-scenarios/selection",
+  authMiddleware,
+  testScenarioController.resolveSelection,
+);
 router.post(
   "/v2/test-scenarios/:scenarioId/spec-links",
   authMiddleware,

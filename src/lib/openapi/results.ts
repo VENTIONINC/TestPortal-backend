@@ -117,7 +117,9 @@ const RelatedTestScenarioSummarySchema = z
     details: z.string().nullable(),
     contentMd: z
       .string()
-      .describe("Current generated Test Scenario Markdown returned as JSON text"),
+      .describe(
+        "Current generated Test Scenario Markdown returned as JSON text",
+      ),
   })
   .strict()
   .openapi("RelatedTestScenarioSummary");

@@ -2,6 +2,8 @@ import js from "@eslint/js";
 import globals from "globals";
 import typescriptEslint from "@typescript-eslint/eslint-plugin";
 import typescriptParser from "@typescript-eslint/parser";
+import eslintConfigPrettier from "eslint-config-prettier";
+import prettierPlugin from "eslint-plugin-prettier";
 
 export default [
   js.configs.recommended,
@@ -65,6 +67,15 @@ export default [
       "no-var": "error",
       "object-shorthand": "error",
       "prefer-template": "error",
+    },
+  },
+
+  {
+    files: ["src/**/*.{ts,tsx}"],
+    plugins: { prettier: prettierPlugin },
+    rules: {
+      ...eslintConfigPrettier.rules,
+      "prettier/prettier": "error",
     },
   },
 

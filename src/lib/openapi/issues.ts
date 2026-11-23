@@ -153,7 +153,8 @@ export function registerIssueRoutes(registry: OpenAPIRegistry) {
     security: [{ BearerAuth: [] }],
     responses: {
       200: {
-        description: "Paginated list of categorized issues with linked-result summaries",
+        description:
+          "Paginated list of categorized issues with linked-result summaries",
         content: {
           "application/json": {
             schema: PaginatedIssueListSchema,

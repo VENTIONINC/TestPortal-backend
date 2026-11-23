@@ -37,11 +37,7 @@ export class SkillArtifactError extends Error {
 export class SkillMutationError extends Error {
   constructor(
     message: string,
-    public readonly code:
-      | "CONFLICT"
-      | "FORBIDDEN"
-      | "NOT_FOUND"
-      | "VALIDATION",
+    public readonly code: "CONFLICT" | "FORBIDDEN" | "NOT_FOUND" | "VALIDATION",
   ) {
     super(message);
     this.name = "SkillMutationError";
@@ -147,9 +143,7 @@ export class SkillArtifactService {
     };
   }
 
-  async downloadSkillArchive(
-    id: string,
-  ): Promise<SkillArchiveDownload | null> {
+  async downloadSkillArchive(id: string): Promise<SkillArchiveDownload | null> {
     const skill = await this.skillStore.findPackageById(id);
     if (!skill) {
       return null;
@@ -279,7 +273,9 @@ export class SkillArtifactService {
   }
 
   private getSkillArtifactFile(skill: SkillDetailRecord | SkillPackageRecord) {
-    const artifact = skill.packageFiles.find((file) => file.path === SKILL_ARTIFACT_PATH);
+    const artifact = skill.packageFiles.find(
+      (file) => file.path === SKILL_ARTIFACT_PATH,
+    );
 
     if (!artifact) {
       throw new SkillArtifactError(

@@ -367,9 +367,13 @@ export const jsonReportService = {
       for (const [errorIndex, error] of getOrderedErrors(result).entries()) {
         const parsedError = parseStackTrace(error);
         const modalContext = normalizeResultErrorModalContext({
-          logs: error.rawLogs ?? error.logs ?? (errorIndex === 0 ? result.logs : undefined),
+          logs:
+            error.rawLogs ??
+            error.logs ??
+            (errorIndex === 0 ? result.logs : undefined),
           sourceSnippet:
-            error.sourceSnippet ?? (errorIndex === 0 ? result.sourceSnippet : undefined),
+            error.sourceSnippet ??
+            (errorIndex === 0 ? result.sourceSnippet : undefined),
           generatedTestCase:
             error.generatedTestCase ??
             (errorIndex === 0 ? result.generatedTestCase : undefined),
@@ -385,9 +389,7 @@ export const jsonReportService = {
           receivedString: parsedError.receivedString,
           location: `${parsedError.location.file}:${parsedError.location.line}`,
           resultId,
-          ...(modalContext.rawLogs
-            ? { rawLogs: modalContext.rawLogs }
-            : {}),
+          ...(modalContext.rawLogs ? { rawLogs: modalContext.rawLogs } : {}),
           ...(modalContext.sourceSnippet
             ? {
                 sourceSnippet: {
@@ -524,9 +526,13 @@ export const jsonReportService = {
           this._createErrorRecord(
             error,
             {
-              logs: error.rawLogs ?? error.logs ?? (index === 0 ? resultData.logs : undefined),
+              logs:
+                error.rawLogs ??
+                error.logs ??
+                (index === 0 ? resultData.logs : undefined),
               sourceSnippet:
-                error.sourceSnippet ?? (index === 0 ? resultData.sourceSnippet : undefined),
+                error.sourceSnippet ??
+                (index === 0 ? resultData.sourceSnippet : undefined),
               generatedTestCase:
                 error.generatedTestCase ??
                 (index === 0 ? resultData.generatedTestCase : undefined),

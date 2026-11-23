@@ -5,7 +5,10 @@ import { ManualTestRunScenarioResult, Prisma } from "@prisma/client";
 import { dbClient } from "@/prisma/client";
 import { getManualRunPeriodBounds } from "@/lib/manualTestRunPeriod";
 import { manualTestRunCreationModel } from "@/models/manualTestRunCreationModel";
-import { mapEnvironmentProperties, mapHasBeenReopened } from "@/lib/manualTestRunResponseMapper";
+import {
+  mapEnvironmentProperties,
+  mapHasBeenReopened,
+} from "@/lib/manualTestRunResponseMapper";
 import type {
   ListManualTestRunsParams,
   ManualTestRunPage,
@@ -184,7 +187,9 @@ export const manualTestRunHistoryModel = {
           return {
             ...run,
             hasBeenReopened: mapHasBeenReopened(intervals),
-            environmentProperties: mapEnvironmentProperties(record.environmentProperties),
+            environmentProperties: mapEnvironmentProperties(
+              record.environmentProperties,
+            ),
             completedDay: calendarDay(record.completedAt, timeZone),
             scenarioCount:
               resultCounts.untested +

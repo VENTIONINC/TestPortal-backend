@@ -86,10 +86,7 @@ export const assumptionService = {
 
     if (isConfirmed) {
       return await dbClient.$transaction(async (tx) => {
-        await lockResultErrorAndRejectDuplicateConfirmation(
-          tx,
-          resultErrorId,
-        );
+        await lockResultErrorAndRejectDuplicateConfirmation(tx, resultErrorId);
         return await tx.assumption.create({ data: processedAssumption });
       });
     }
@@ -209,7 +206,10 @@ export const assumptionService = {
     return assumption;
   },
 
-  async deleteAssumption(assumptionId: string, projectId: string): Promise<void> {
+  async deleteAssumption(
+    assumptionId: string,
+    projectId: string,
+  ): Promise<void> {
     if (!assumptionId) {
       throw new Error("Assumption ID is required");
     }

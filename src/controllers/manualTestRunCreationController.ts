@@ -28,7 +28,10 @@ function validationMessage(error: {
 }
 
 export const manualTestRunCreationController = {
-  async create(req: ManualTestRunCreationRequest, res: Response): Promise<void> {
+  async create(
+    req: ManualTestRunCreationRequest,
+    res: Response,
+  ): Promise<void> {
     const query = manualTestRunProjectQuerySchema.safeParse(req.query);
     if (!query.success) {
       res.status(400).json({ error: validationMessage(query.error) });

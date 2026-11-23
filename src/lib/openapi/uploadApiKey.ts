@@ -26,7 +26,9 @@ const GenerateApiKeyResponseSchema = z
     data: z.object({
       id: z.string().uuid(),
       projectId: z.string().uuid(),
-      apiKey: z.string().describe("Plain text API key - only shown once at generation"),
+      apiKey: z
+        .string()
+        .describe("Plain text API key - only shown once at generation"),
       createdAt: z.string(),
     }),
   })
@@ -71,7 +73,10 @@ export function registerUploadApiKeyRoutes(registry: OpenAPIRegistry) {
       "Generate a new API key for a project. The API key is returned in plain text only once - it must be saved securely. Requires JWT authentication.",
     request: {
       query: z.object({
-        projectId: z.string().uuid().describe("The UUID of the project to generate an API key for"),
+        projectId: z
+          .string()
+          .uuid()
+          .describe("The UUID of the project to generate an API key for"),
       }),
     },
     security: [{ BearerAuth: [] }],
@@ -102,7 +107,8 @@ export function registerUploadApiKeyRoutes(registry: OpenAPIRegistry) {
         },
       },
       403: {
-        description: "Forbidden - user does not have permission to generate API keys for this project",
+        description:
+          "Forbidden - user does not have permission to generate API keys for this project",
         content: {
           "application/json": {
             schema: ErrorResponseSchema,
@@ -195,7 +201,8 @@ export function registerUploadApiKeyRoutes(registry: OpenAPIRegistry) {
         },
       },
       403: {
-        description: "Forbidden - user does not have permission to revoke this API key",
+        description:
+          "Forbidden - user does not have permission to revoke this API key",
         content: {
           "application/json": {
             schema: DetailedErrorResponseSchema,

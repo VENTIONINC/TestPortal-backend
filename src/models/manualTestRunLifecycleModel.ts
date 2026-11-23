@@ -79,7 +79,9 @@ export const manualTestRunLifecycleModel = {
         select: { id: true },
       });
       if (params.requireAllMarked && untested.length > 0) {
-        throw new ManualTestRunConflictError("The run has untested scenarios; refresh before completing it");
+        throw new ManualTestRunConflictError(
+          "The run has untested scenarios; refresh before completing it",
+        );
       }
       const skipped = await tx.manualTestRunScenario.updateMany({
         where: {

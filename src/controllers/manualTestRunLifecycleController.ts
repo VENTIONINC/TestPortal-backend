@@ -94,7 +94,9 @@ export const manualTestRunLifecycleController = {
           projectId: parsed.projectId,
           runId: parsed.runId,
           completedById: parsed.userId,
-          ...(body.data.requireAllMarked !== undefined ? { requireAllMarked: body.data.requireAllMarked } : {}),
+          ...(body.data.requireAllMarked !== undefined
+            ? { requireAllMarked: body.data.requireAllMarked }
+            : {}),
         }),
       );
     } catch (error) {

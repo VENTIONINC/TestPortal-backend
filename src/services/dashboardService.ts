@@ -316,20 +316,20 @@ export const dashboardService = {
       if (!dateKey) continue;
 
       const bucket = historyMap.get(dateKey) ?? {
-          total: 0,
-          passed: 0,
-          failed: 0,
-          skipped: 0,
-          timedOut: 0,
-          duration: 0,
-          issues: {
-            bug: 0,
-            environment: 0,
-            script: 0,
-            performance: 0,
-            other: 0,
-          },
-        };
+        total: 0,
+        passed: 0,
+        failed: 0,
+        skipped: 0,
+        timedOut: 0,
+        duration: 0,
+        issues: {
+          bug: 0,
+          environment: 0,
+          script: 0,
+          performance: 0,
+          other: 0,
+        },
+      };
       if (!historyMap.has(dateKey)) {
         historyMap.set(dateKey, bucket);
       }

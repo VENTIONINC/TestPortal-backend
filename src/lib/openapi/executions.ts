@@ -60,7 +60,8 @@ export function registerExecutionRoutes(registry: OpenAPIRegistry) {
         },
       },
       401: {
-        description: "Unauthorized - Authentication token is missing or invalid",
+        description:
+          "Unauthorized - Authentication token is missing or invalid",
         content: {
           "application/json": {
             schema: ErrorResponseSchema,
@@ -112,7 +113,8 @@ export function registerExecutionRoutes(registry: OpenAPIRegistry) {
         },
       },
       401: {
-        description: "Unauthorized - Authentication token is missing or invalid",
+        description:
+          "Unauthorized - Authentication token is missing or invalid",
         content: {
           "application/json": {
             schema: ErrorResponseSchema,
