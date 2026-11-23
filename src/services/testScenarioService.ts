@@ -245,6 +245,7 @@ export const testScenarioService = {
       "priority",
       "folderId",
       ...SCENARIO_FIELDS.filter((field) => field !== "title"),
+      "tagIds",
       "steps",
       "suiteIds",
       "newSuites",
@@ -269,6 +270,7 @@ export const testScenarioService = {
         params.priority === undefined ? "medium" : params.priority,
       ),
       relatedIssueUrl: normalizeRelatedIssueUrl(params.relatedIssueUrl ?? null),
+      ...(params.tagIds !== undefined ? { tagIds: params.tagIds } : {}),
       steps: validateCreateSteps(params.steps),
       ...normalizeSuites(params),
     };
@@ -300,6 +302,8 @@ export const testScenarioService = {
       "createdByIds",
       "priority",
       "sort",
+      "tagIds",
+      "timeZone",
       "sortField",
       "sortDirection",
       "scenarioKey",
@@ -330,6 +334,10 @@ export const testScenarioService = {
     if (params.sortDirection !== undefined && params.sortDirection !== "asc" && params.sortDirection !== "desc") throw new TestScenarioValidationError("sortDirection must be asc or desc");
     if (params.sortDirection !== undefined && params.sortField === undefined) throw new TestScenarioValidationError("sortDirection requires sortField");
     if (params.sortField !== undefined && params.sort !== undefined) throw new TestScenarioValidationError("sort cannot be combined with sortField");
+    if (params.timeZone !== undefined) {
+      try { new Intl.DateTimeFormat("en", { timeZone: params.timeZone }); }
+      catch { throw new TestScenarioValidationError("Unknown time zone"); }
+    }
     const sort = normalizeSort(params.sort);
     const filters = {
       scenarioKey: normalizeColumnFilter(params.scenarioKey, "scenarioKey"),
@@ -358,10 +366,11 @@ export const testScenarioService = {
       throw new TestScenarioNotFoundError("Suite not found");
     }
 
-    const { scenarios, total } = await testScenarioModel.listSummaries({
+    const { scenarios, total, tagCounts } = await testScenarioModel.listSummaries({
       projectId: params.projectId,
       page,
       limit,
+      ...(params.tagIds !== undefined ? { tagIds: params.tagIds } : {}),
       ...(search !== undefined ? { search } : {}),
       ...(params.createdById !== undefined
         ? { createdById: params.createdById }
@@ -369,6 +378,7 @@ export const testScenarioService = {
       ...(createdByIds !== undefined ? { createdByIds } : {}),
       ...(params.priority !== undefined ? { priority: params.priority } : {}),
       ...(!params.suiteId || params.sort !== undefined ? { sort } : {}),
+      ...(params.timeZone !== undefined ? { timeZone: params.timeZone } : {}),
       ...(params.sortField !== undefined
         ? { sortField: params.sortField }
         : {}),
@@ -389,6 +399,7 @@ export const testScenarioService = {
 
     return {
       scenarios,
+      tagCounts,
       total,
       page,
       limit,
@@ -398,7 +409,7 @@ export const testScenarioService = {
 
   async listScenarioAuthors(params: TestScenarioAuthorsQuery): Promise<Array<{ id: string; name: string; email: string; scenarioCount: number }>> {
     validateKeys(params as unknown as Record<string, unknown>, [
-      "projectId", "search", "priority", "scenarioKey", "title", "details", "folder", "createdBy", "folderId", "includeDescendants", "suiteId",
+      "projectId", "tagIds", "search", "priority", "scenarioKey", "title", "details", "folder", "createdBy", "folderId", "includeDescendants", "suiteId",
     ]);
     requireIdentifier(params.projectId, "Project ID");
     if (params.priority !== undefined && !PRIORITY_FILTER_PATTERN.test(params.priority)) throw new TestScenarioValidationError("priority is invalid");
@@ -418,6 +429,7 @@ export const testScenarioService = {
     }
     if (!(await projectModel.exists(params.projectId))) throw new TestScenarioNotFoundError(`Project with id '${params.projectId}' not found`);
     return await testScenarioModel.listScenarioAuthors(params.projectId, {
+      ...(params.tagIds !== undefined ? { tagIds: params.tagIds } : {}),
       ...(search !== undefined ? { search } : {}),
       ...(params.priority !== undefined ? { priority: params.priority } : {}),
       ...(filters.scenarioKey ? { scenarioKey: filters.scenarioKey } : {}),
@@ -432,7 +444,7 @@ export const testScenarioService = {
   },
 
   async listScenarioPriorityCounts(params: TestScenarioPriorityCountsQuery): Promise<{ low: number; medium: number; high: number; unprioritized: number }> {
-    validateKeys(params as unknown as Record<string, unknown>, ["projectId", "search", "scenarioKey", "title", "details", "folder", "createdBy", "createdById", "createdByIds", "folderId", "includeDescendants", "suiteId"]);
+    validateKeys(params as unknown as Record<string, unknown>, ["projectId", "tagIds", "search", "scenarioKey", "title", "details", "folder", "createdBy", "createdById", "createdByIds", "folderId", "includeDescendants", "suiteId"]);
     requireIdentifier(params.projectId, "Project ID");
     if (params.createdById !== undefined) requireUuid(params.createdById, "Creator ID");
     const createdByIds = normalizeCreatorIds(params.createdByIds);
@@ -451,6 +463,7 @@ export const testScenarioService = {
     return await testScenarioModel.listScenarioPriorityCounts(params.projectId, {
       ...(params.createdById !== undefined ? { createdById: params.createdById } : {}),
       ...(createdByIds !== undefined ? { createdByIds } : {}),
+      ...(params.tagIds !== undefined ? { tagIds: params.tagIds } : {}),
       ...(search !== undefined ? { search } : {}),
       ...(filters.scenarioKey ? { scenarioKey: filters.scenarioKey } : {}),
       ...(filters.title ? { title: filters.title } : {}),
@@ -484,6 +497,7 @@ export const testScenarioService = {
     if (!(await projectModel.exists(params.projectId))) throw new TestScenarioNotFoundError(`Project with id '${params.projectId}' not found`);
     const scenarioIds = await testScenarioModel.resolveSelection({
       projectId: params.projectId,
+      ...(params.tagIds !== undefined ? { tagIds: params.tagIds } : {}),
       ...(search !== undefined ? { search } : {}),
       ...(params.createdById !== undefined ? { createdById: params.createdById } : {}),
       ...(createdByIds !== undefined ? { createdByIds } : {}),

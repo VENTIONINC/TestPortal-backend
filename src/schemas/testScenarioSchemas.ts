@@ -75,6 +75,7 @@ export const createTestScenarioSchema = z
     priority: testScenarioPrioritySchema.default("medium"),
     relatedIssueUrl: testScenarioRelatedIssueUrlSchema.nullable().optional(),
     steps: z.array(createStepSchema).default([]),
+    tagIds: z.array(uuidSchema).optional(),
     suiteIds: scenarioSuiteIdsSchema.optional(),
     newSuites: scenarioNewSuitesSchema.optional(),
   })
@@ -174,10 +175,12 @@ const testScenarioListQueryBaseSchema = z.object({
   limit: positiveIntegerQuerySchema(30, 100),
   search: z.string().trim().optional(),
   createdById: uuidSchema.optional(),
+  tagIds: commaSeparatedUuidSchema.optional(),
   createdByIds: commaSeparatedUuidSchema.optional(),
   priority: z.string().regex(/^(low|medium|high)(,(low|medium|high))*$/).optional(),
   sort: z.enum(TEST_SCENARIO_SORT_VALUES).optional(),
-  sortField: z.enum(TEST_SCENARIO_SORT_FIELDS).optional(),
+  timeZone: z.string().optional(),
+    sortField: z.enum(TEST_SCENARIO_SORT_FIELDS).optional(),
   sortDirection: z.enum(["asc", "desc"]).optional(),
   scenarioKey: z.string().trim().optional().transform((value) => value || undefined),
   title: z.string().trim().optional().transform((value) => value || undefined),
@@ -205,14 +208,14 @@ export const testScenarioListQuerySchema = testScenarioListQueryBaseSchema.super
 });
 
 export const testScenarioSelectionQuerySchema = testScenarioListQueryBaseSchema
-  .omit({ page: true, limit: true, sort: true, sortField: true, sortDirection: true })
+  .omit({ page: true, limit: true, sort: true, sortField: true, sortDirection: true, timeZone: true })
   .strict()
   .superRefine(validateScenarioAuthorFilter);
 export const testScenarioAuthorsQuerySchema = testScenarioListQueryBaseSchema
-  .omit({ page: true, limit: true, createdById: true, createdByIds: true, sort: true, sortField: true, sortDirection: true })
+  .omit({ page: true, limit: true, createdById: true, createdByIds: true, sort: true, sortField: true, sortDirection: true, timeZone: true })
   .strict();
 export const testScenarioPriorityCountsQuerySchema = testScenarioListQueryBaseSchema
-  .omit({ page: true, limit: true, priority: true, sort: true, sortField: true, sortDirection: true })
+  .omit({ page: true, limit: true, priority: true, sort: true, sortField: true, sortDirection: true, timeZone: true })
   .strict()
   .superRefine(validateScenarioAuthorFilter);
 export type TestScenarioSelectionQuery = z.infer<typeof testScenarioSelectionQuerySchema>;

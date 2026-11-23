@@ -1,6 +1,8 @@
 // Copyright 2026 VENSOLUTIONSGROUP LTD
 // SPDX-License-Identifier: Apache-2.0
 
+import type { z } from "zod";
+import type { tagSummary } from "@/schemas/scenarioTagSchemas";
 import type { TestScenarioPriority } from "@prisma/client";
 
 import type {
@@ -15,7 +17,10 @@ export interface TestScenarioStepResponse {
   expectedResult: string | null;
 }
 
+export type ScenarioTagSummary = z.infer<typeof tagSummary>;
+
 export interface TestScenarioResponse {
+  tags: ScenarioTagSummary[];
   id: string;
   projectId: string;
   folderId?: string | null;
@@ -48,6 +53,7 @@ export interface TestScenarioCreatorSummary {
 }
 
 export interface TestScenarioSummary {
+  tags: ScenarioTagSummary[];
   id: string;
   projectId: string;
   createdById: string;
@@ -89,6 +95,7 @@ export interface CreateTestScenarioParams {
   testData?: string | undefined;
   priority?: TestScenarioPriority | null | undefined;
   relatedIssueUrl?: string | null | undefined;
+  tagIds?: string[] | undefined;
   steps?: CreateTestScenarioStepInput[] | undefined;
   suiteIds?: string[] | undefined;
   newSuites?: Array<{ name: string }> | undefined;
@@ -172,6 +179,8 @@ export type TestScenarioSortField = (typeof TEST_SCENARIO_SORT_FIELDS)[number];
 export type TestScenarioSortDirection = "asc" | "desc";
 
 export interface ListTestScenariosParams {
+  timeZone?: string | undefined;
+  tagIds?: string | undefined;
   projectId: string;
   page?: number | undefined;
   limit?: number | undefined;
@@ -193,6 +202,7 @@ export interface ListTestScenariosParams {
 }
 
 export interface TestScenarioListResponse {
+  tagCounts: Record<string, number>;
   scenarios: TestScenarioSummary[];
   total: number;
   page: number;

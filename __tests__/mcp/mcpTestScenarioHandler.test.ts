@@ -71,6 +71,7 @@ import { mcpTestScenarioHandler } from "@/handlers/mcpTestScenarioHandler";
 const projectId = "11111111-1111-1111-1111-111111111111";
 const scenarioId = "22222222-2222-2222-2222-222222222222";
 const scenario: TestScenarioResponse = {
+  tags: [],
   id: scenarioId,
   projectId,
   createdById: "33333333-3333-3333-3333-333333333333",
@@ -122,6 +123,7 @@ describe("mcpTestScenarioHandler", () => {
   beforeEach(() => {
     jest.clearAllMocks();
     listSummariesMock.mockResolvedValue({
+      tagCounts: {},
       scenarios: [],
       total: 0,
       page: 1,
@@ -144,6 +146,7 @@ describe("mcpTestScenarioHandler", () => {
     const response = await mcpTestScenarioHandler.listTestScenarios(params);
 
     expect(response).toEqual({
+      tagCounts: {},
       scenarios: [],
       total: 0,
       page: 1,

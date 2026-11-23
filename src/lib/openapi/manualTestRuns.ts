@@ -1,6 +1,7 @@
 // Copyright 2026 VENSOLUTIONSGROUP LTD
 // SPDX-License-Identifier: Apache-2.0
 
+import { tagSummary } from "@/schemas/scenarioTagSchemas";
 import { OpenAPIRegistry } from "@asteasolutions/zod-to-openapi";
 import type { ZodTypeAny } from "zod";
 import { manualTestRunStepEvidenceSchema } from "@/schemas/manualTestRunSchemas";
@@ -53,6 +54,7 @@ const ManualTestRunScenarioStepSchema = z
 const ManualTestRunScenarioSchema = z
   .object({
     id: z.string().uuid().openapi({ readOnly: true }),
+    tags: z.array(tagSummary),
     sourceScenarioId: z.string().uuid().openapi({ readOnly: true }),
     sourceScenarioKey: z.string().openapi({ readOnly: true }),
     title: z.string().openapi({ readOnly: true }),

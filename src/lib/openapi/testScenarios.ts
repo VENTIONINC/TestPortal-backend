@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { OpenAPIRegistry } from "@asteasolutions/zod-to-openapi";
+import { tagSummary } from "@/schemas/scenarioTagSchemas";
 import { ErrorResponseSchema } from "./common";
 import { ResultSchema } from "./results";
 import { z } from "./zod";
@@ -35,6 +36,7 @@ const TestScenarioSchema = z
       .object({ id: z.string().uuid(), name: z.string(), email: z.string() })
       .strict()
       .nullable(),
+    tags: z.array(tagSummary),
     suites: z.array(
       z.object({ id: z.string().uuid(), name: z.string() }).strict(),
     ),
@@ -85,6 +87,7 @@ const CreateTestScenarioRequestSchema = z
     priority: testScenarioPrioritySchema.default("medium"),
     relatedIssueUrl: testScenarioRelatedIssueUrlSchema.nullable().optional(),
     steps: z.array(CreateTestScenarioStepSchema).default([]),
+    tagIds: z.array(z.string().uuid()).optional(),
     suiteIds: z.array(z.string().uuid()).optional(),
     newSuites: z
       .array(z.object({ name: z.string().trim().min(1) }).strict())
@@ -116,6 +119,7 @@ const TestScenarioSummarySchema = z
     updatedAt: z.string(),
     folderId: z.string().uuid().nullable(),
     folderName: z.string().nullable(),
+    tags: z.array(tagSummary),
     matchedSuiteId: z.string().uuid().nullable().optional(),
   })
   .strict()
@@ -251,6 +255,7 @@ const TestScenarioListQueryBaseSchema = z.object({
         "Optional creator User UUID filter. It may identify any user; a valid UUID with no matching scenarios returns an empty page.",
       example: "33333333-3333-4333-8333-333333333333",
     }),
+    tagIds: z.string().optional().openapi({description:"Comma-separated tag UUIDs, matching any selected tag."}),
     createdByIds: z.string().regex(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}(,[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})*$/i).optional().openapi({
       description: "Optional comma-separated creator User UUIDs. Scenarios matching any listed creator are included; cannot be combined with createdById.",
       example: "33333333-3333-4333-8333-333333333333,44444444-4444-4444-8444-444444444444",
@@ -264,6 +269,7 @@ const TestScenarioListQueryBaseSchema = z.object({
         "Ordering: recently_created (createdAt DESC, id DESC), recently_updated (updatedAt DESC, id DESC), or title_asc (title ASC, id ASC).",
       example: "title_asc",
     }),
+    timeZone: z.string().optional(),
     sortField: z.enum(TEST_SCENARIO_SORT_FIELDS).optional().openapi({
       description:
         "Single sort column. Defaults to createdAt descending when omitted. Cannot be combined with legacy sort.",
@@ -320,6 +326,7 @@ const TestScenarioListQuerySchema = TestScenarioListQueryBaseSchema
 
 const TestScenarioListResponseSchema = z
   .object({
+    tagCounts: z.record(z.number().int().nonnegative()),
     scenarios: z.array(TestScenarioSummarySchema),
     total: z.number().int().nonnegative(),
     page: z.number().int().positive(),
@@ -328,12 +335,12 @@ const TestScenarioListResponseSchema = z
   })
   .openapi("TestScenarioListResponse");
 
-const TestScenarioSelectionQuerySchema = TestScenarioListQueryBaseSchema.omit({ page: true, limit: true, sort: true, sortField: true, sortDirection: true }).strict().superRefine((value, context) => {
+const TestScenarioSelectionQuerySchema = TestScenarioListQueryBaseSchema.omit({ page: true, limit: true, sort: true, sortField: true, sortDirection: true, timeZone: true }).strict().superRefine((value, context) => {
   if (value.createdById && value.createdByIds) context.addIssue({ code: "custom", path: ["createdByIds"], message: "Use createdById or createdByIds, not both" });
 }).openapi("TestScenarioSelectionQuery");
 const TestScenarioSelectionResponseSchema = z.object({ scenarioIds: z.array(z.string().uuid()), total: z.number().int().nonnegative() }).strict().openapi("TestScenarioSelectionResponse");
-const TestScenarioAuthorsQuerySchema = TestScenarioListQueryBaseSchema.omit({ page: true, limit: true, createdById: true, createdByIds: true, sort: true, sortField: true, sortDirection: true }).strict().openapi("TestScenarioAuthorsQuery");
-const TestScenarioPriorityCountsQuerySchema = TestScenarioListQueryBaseSchema.omit({ page: true, limit: true, priority: true, sort: true, sortField: true, sortDirection: true }).strict().superRefine((value, context) => {
+const TestScenarioAuthorsQuerySchema = TestScenarioListQueryBaseSchema.omit({ page: true, limit: true, createdById: true, createdByIds: true, sort: true, sortField: true, sortDirection: true, timeZone: true }).strict().openapi("TestScenarioAuthorsQuery");
+const TestScenarioPriorityCountsQuerySchema = TestScenarioListQueryBaseSchema.omit({ page: true, limit: true, priority: true, sort: true, sortField: true, sortDirection: true, timeZone: true }).strict().superRefine((value, context) => {
   if (value.createdById && value.createdByIds) context.addIssue({ code: "custom", path: ["createdByIds"], message: "Use createdById or createdByIds, not both" });
 }).openapi("TestScenarioPriorityCountsQuery");
 const TestScenarioAuthorOptionSchema = z.object({
