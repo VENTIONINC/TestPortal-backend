@@ -8,7 +8,7 @@
     "build": "tsc -p tsconfig.build.json && tsc-alias -p tsconfig.build.json",
     "build:watch": "tsc -p tsconfig.build.json --watch",
     "dev": "nodemon --exec tsx index.ts",
-    "prepare": "node -e \"const fs=require('node:fs');const {spawnSync}=require('node:child_process');const omitted=(process.env.npm_config_omit||'').split(',');if(process.env.HUSKY==='0'||process.env.CI||process.env.NODE_ENV==='production'||process.env.npm_config_production==='true'||omitted.includes('dev')||!fs.existsSync('.git'))process.exit(0);const result=spawnSync('husky',[],{stdio:'inherit'});if(result.error)throw result.error;process.exit(result.status??1)\"",
+    "prepare": "node .husky/install.mjs",
     "headers:add": "node scripts/add-license-headers.js",
     "new:file": "node scripts/new-file.js",
     "bootstrap:admin": "tsx scripts/bootstrap-admin.ts",
