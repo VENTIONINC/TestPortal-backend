@@ -101,16 +101,39 @@ describe("resultErrorController issue modal workflows", () => {
         >,
         "assignExistingIssue",
       )
-      .mockResolvedValue({ assumption: { id: "assumption-1" } });
+      .mockResolvedValue({
+        assumption: { id: "assumption-1" },
+        result: { id: "result-1", analysisFeedbackCategory: "bug" },
+      });
 
+    const response = await executeController(resultErrorController.assignIssue, {
+      method: "PATCH",
+      params: { resultErrorId: "error-1" },
+      body: { issueId: "issue-1" },
+      user: authenticatedUser,
+    });
+
+    expect(assignExistingIssue).toHaveBeenCalledWith(
+      "error-1",
+      "issue-1",
+      "user-1",
+    );
+    expect(response.statusCode).toBe(200);
+    expect(response.body).toEqual({
+      assumption: { id: "assumption-1" },
+      result: { id: "result-1", analysisFeedbackCategory: "bug" },
+    });
+  });
+
+  it("rejects assign-existing without an authenticated user", async () => {
     const response = await executeController(resultErrorController.assignIssue, {
       method: "PATCH",
       params: { resultErrorId: "error-1" },
       body: { issueId: "issue-1" },
     });
 
-    expect(assignExistingIssue).toHaveBeenCalledWith("error-1", "issue-1");
-    expect(response.statusCode).toBe(200);
+    expect(response.statusCode).toBe(401);
+    expect(response.body).toEqual({ error: "User is not authenticated" });
   });
 });
 
@@ -186,6 +209,28 @@ describe("resultErrorController.analyzeErrors", () => {
     expect(res.body).toEqual({
       error: "Failed to analyze result errors. Analysis failed",
     });
+  });
+});
+
+describe("resultErrorController shared workspace access", () => {
+  it("reads a result error using project scope without owner scope", async () => {
+    jest
+      .spyOn(resultErrorService, "getResultErrorById")
+      .mockResolvedValue({ id: "error-1" } as never);
+
+    const response = await executeController(
+      resultErrorController.getResultErrorById,
+      {
+        params: { resultErrorId: "error-1" },
+        query: { projectId: "project-1" },
+      },
+    );
+
+    expect(response.statusCode).toBe(200);
+    expect(resultErrorService.getResultErrorById).toHaveBeenCalledWith(
+      "error-1",
+      "project-1",
+    );
   });
 });
 

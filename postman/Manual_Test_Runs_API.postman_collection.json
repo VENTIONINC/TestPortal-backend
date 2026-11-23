@@ -1,0 +1,80 @@
+{
+  "info": {
+    "name": "Test Portal - Manual Test Runs API",
+    "description": "Authenticated project-scoped manual run creation, history, editing, and execution evidence.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:3001" },
+    { "key": "accessToken", "value": "" },
+    { "key": "projectId", "value": "" },
+    { "key": "scenarioId", "value": "" },
+    { "key": "runId", "value": "" },
+    { "key": "runScenarioId", "value": "" },
+    { "key": "stepId", "value": "" }
+  ],
+  "item": [
+    {
+      "name": "Create manual run from selected scenarios",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "body": { "mode": "raw", "raw": "{\n  \"title\": \"Release smoke run\",\n  \"scenarioIds\": [\"{{scenarioId}}\"],\n  \"environmentProperties\": [\n    { \"name\": \"browser\", \"value\": \"Firefox\" },\n    { \"name\": \"region\", \"value\": \"EU\" }\n  ]\n}" },
+        "url": { "raw": "{{baseUrl}}/api/v2/manual-test-runs?projectId={{projectId}}", "host": ["{{baseUrl}}"], "path": ["api", "v2", "manual-test-runs"], "query": [{ "key": "projectId", "value": "{{projectId}}" }] }
+      }
+    },
+    {
+      "name": "List project run history",
+      "request": {
+        "method": "GET",
+        "url": { "raw": "{{baseUrl}}/api/v2/manual-test-runs?projectId={{projectId}}&show=all&period=any_time", "host": ["{{baseUrl}}"], "path": ["api", "v2", "manual-test-runs"], "query": [{ "key": "projectId", "value": "{{projectId}}" }, { "key": "show", "value": "all" }, { "key": "period", "value": "any_time" }] }
+      }
+    },
+    {
+      "name": "Get manual run detail",
+      "request": {
+        "method": "GET",
+        "url": { "raw": "{{baseUrl}}/api/v2/manual-test-runs/{{runId}}?projectId={{projectId}}", "host": ["{{baseUrl}}"], "path": ["api", "v2", "manual-test-runs", "{{runId}}"], "query": [{ "key": "projectId", "value": "{{projectId}}" }] }
+      }
+    },
+    {
+      "name": "Edit run details and membership",
+      "request": {
+        "method": "PUT",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": { "mode": "raw", "raw": "{\n  \"title\": \"Release smoke run - updated\",\n  \"scenarioIds\": [\"{{scenarioId}}\"],\n  \"environmentProperties\": [\n    { \"name\": \"browser\", \"value\": \"Firefox\" },\n    { \"name\": \"region\", \"value\": \"EU\" }\n  ]\n}" },
+        "url": { "raw": "{{baseUrl}}/api/v2/manual-test-runs/{{runId}}/details?projectId={{projectId}}", "host": ["{{baseUrl}}"], "path": ["api", "v2", "manual-test-runs", "{{runId}}", "details"], "query": [{ "key": "projectId", "value": "{{projectId}}" }] }
+      }
+    },
+    {
+      "name": "Update scenario execution evidence",
+      "request": {
+        "method": "PATCH",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": { "mode": "raw", "raw": "{\n  \"executionComment\": \"Verified on the release candidate\",\n  \"defectReference\": \"BUG-42\",\n  \"steps\": [\n    {\n      \"id\": \"{{stepId}}\",\n      \"comment\": \"Observed the expected warning\",\n      \"failedFlag\": true,\n      \"failedComment\": \"Actual response differed\"\n    }\n  ]\n}" },
+        "url": { "raw": "{{baseUrl}}/api/v2/manual-test-runs/{{runId}}/scenarios/{{runScenarioId}}/evidence?projectId={{projectId}}", "host": ["{{baseUrl}}"], "path": ["api", "v2", "manual-test-runs", "{{runId}}", "scenarios", "{{runScenarioId}}", "evidence"], "query": [{ "key": "projectId", "value": "{{projectId}}" }] }
+      }
+    },
+    {
+      "name": "Complete manual run",
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": { "mode": "raw", "raw": "{}" },
+        "url": { "raw": "{{baseUrl}}/api/v2/manual-test-runs/{{runId}}/complete?projectId={{projectId}}", "host": ["{{baseUrl}}"], "path": ["api", "v2", "manual-test-runs", "{{runId}}", "complete"], "query": [{ "key": "projectId", "value": "{{projectId}}" }] }
+      }
+    },
+    {
+      "name": "Reopen manual run",
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": { "mode": "raw", "raw": "{}" },
+        "url": { "raw": "{{baseUrl}}/api/v2/manual-test-runs/{{runId}}/reopen?projectId={{projectId}}", "host": ["{{baseUrl}}"], "path": ["api", "v2", "manual-test-runs", "{{runId}}", "reopen"], "query": [{ "key": "projectId", "value": "{{projectId}}" }] }
+      }
+    }
+  ],
+  "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{accessToken}}", "type": "string" }] }
+}

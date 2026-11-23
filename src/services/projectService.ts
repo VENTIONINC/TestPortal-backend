@@ -119,7 +119,7 @@ export const projectService = {
   },
 
   async deleteProject(id: string): Promise<Project> {
-    // Use cascading deletion with transaction to ensure atomicity
+    // Database cascades delete project-owned records atomically.
     return await projectModel.deleteWithCascade(id);
   },
 };

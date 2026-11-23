@@ -3,6 +3,7 @@
 
 import getLogger from "@/lib/logger";
 import { normalizeResultErrorModalContext } from "@/lib/resultErrorModalContext";
+import { decodeTestPortalExtension } from "@/lib/ctrfTestPortalExtension";
 import { dbClient } from "@/prisma/client";
 import type { CTRFReport, CTRFTest } from "@/types/ctrf";
 import type {
@@ -174,40 +175,71 @@ export const ctrfService = {
     fallbackStartTime: number,
     index: number,
   ) {
-    const modalContext = normalizeResultErrorModalContext({
+    const legacyContext = normalizeResultErrorModalContext({
       logs: ctrfTest.meta?.logs,
       sourceSnippet: ctrfTest.meta?.sourceSnippet,
       generatedTestCase: ctrfTest.meta?.generatedTestCase,
     });
-    const results = [
-      {
-        retry: ctrfTest.retry ?? 0,
-        status: this.mapCtrfStatus(ctrfTest.status),
-        duration: ctrfTest.duration,
-        startTime: this.getCtrfTestStartTime(
-          ctrfTest,
-          fallbackStartTime,
-          index,
-        ),
-        ...(ctrfTest.message
-          ? {
-              error: {
-                message: ctrfTest.message,
-                stack: ctrfTest.trace ?? "",
-                location: this.parseLocation(ctrfTest.filePath),
-              },
-            }
-          : {}),
-        ...(modalContext.rawLogs ? { logs: modalContext.rawLogs } : {}),
-        ...(modalContext.sourceSnippet
-          ? { sourceSnippet: modalContext.sourceSnippet }
-          : {}),
-        ...(modalContext.generatedTestCase
-          ? { generatedTestCase: modalContext.generatedTestCase }
-          : {}),
-        workerIndex: 0,
-      },
-    ];
+    const toErrors = (
+      message: string | undefined,
+      trace: string | undefined,
+      filePath: string | undefined,
+      extra: unknown,
+      fallback = legacyContext,
+    ) => {
+      const decoded = decodeTestPortalExtension(extra);
+      if (decoded.length > 0) {
+        return decoded.map((error) => ({
+          message: error.message ?? (error.index === 0 ? message ?? "Unknown error" : "Unknown error"),
+          stack: error.stack ?? (error.index === 0 ? trace ?? "" : ""),
+          location: error.location ?? { file: "", line: 0 },
+          ...(error.rawLogs ? { rawLogs: error.rawLogs } : {}),
+          ...(error.sourceSnippet ? { sourceSnippet: error.sourceSnippet } : {}),
+          ...(error.generatedTestCase ? { generatedTestCase: error.generatedTestCase } : {}),
+        }));
+      }
+      return message
+        ? [{
+            message,
+            stack: trace ?? "",
+            location: this.parseLocation(filePath),
+            ...(fallback.rawLogs ? { rawLogs: fallback.rawLogs } : {}),
+            ...(fallback.sourceSnippet ? { sourceSnippet: fallback.sourceSnippet } : {}),
+            ...(fallback.generatedTestCase ? { generatedTestCase: fallback.generatedTestCase } : {}),
+          }]
+        : [];
+    };
+
+    const priorAttempts = (ctrfTest.retryAttempts ?? []).map((attempt, attemptIndex) => ({
+      retry: Math.max(0, attempt.attempt - 1),
+      status: this.mapCtrfStatus(attempt.status),
+      duration: attempt.duration ?? 0,
+      startTime: new Date(attempt.start ?? fallbackStartTime + index + attemptIndex),
+      errors: toErrors(attempt.message, attempt.trace, ctrfTest.filePath, attempt.extra, {
+        rawLogs: null,
+        sourceSnippet: null,
+        generatedTestCase: null,
+      }),
+      workerIndex: 0,
+    }));
+    const finalErrors = toErrors(
+      ctrfTest.message,
+      ctrfTest.trace,
+      ctrfTest.filePath,
+      ctrfTest.extra,
+    );
+    const finalAttempt = {
+      retry: ctrfTest.retries ?? ctrfTest.retry ?? priorAttempts.length,
+      status: this.mapCtrfStatus(ctrfTest.status),
+      duration: ctrfTest.duration,
+      startTime: this.getCtrfTestStartTime(ctrfTest, fallbackStartTime, index),
+      ...(finalErrors.length > 0 ? { errors: finalErrors, error: finalErrors[0] } : {}),
+      ...(finalErrors[0]?.rawLogs ? { logs: finalErrors[0].rawLogs } : {}),
+      ...(finalErrors[0]?.sourceSnippet ? { sourceSnippet: finalErrors[0].sourceSnippet } : {}),
+      ...(finalErrors[0]?.generatedTestCase ? { generatedTestCase: finalErrors[0].generatedTestCase } : {}),
+      workerIndex: 0,
+    };
+    const results = [...priorAttempts, finalAttempt];
 
     const testSpec = {
       title: ctrfTest.name,
@@ -237,7 +269,9 @@ export const ctrfService = {
 
     return [
       ctrfTest.filePath ?? "unknown",
-      ctrfTest.suite ?? "default",
+      Array.isArray(ctrfTest.suite)
+        ? ctrfTest.suite.join(" › ")
+        : ctrfTest.suite ?? "default",
       ctrfTest.name,
     ].join("::");
   },

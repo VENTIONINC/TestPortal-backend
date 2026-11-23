@@ -4,11 +4,13 @@
 import type { z } from "zod/v3";
 
 // MCP Tool Definition Types
-export interface MCPToolSchema {
+export type MCPToolSchemaShape = {
   [key: string]:
     | z.ZodSchema
     | { type: string; default?: unknown; optional?: boolean };
-}
+};
+
+export type MCPToolSchema = MCPToolSchemaShape | z.ZodSchema;
 
 export interface MCPToolDefinition {
   name: string;

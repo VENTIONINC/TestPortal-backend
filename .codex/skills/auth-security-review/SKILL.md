@@ -5,8 +5,6 @@ description: Review authentication, authorization, token handling, validation bo
 
 # Auth Security Review
 
-Use this skill when a change touches authentication, authorization, session or token handling, request validation, security headers, CORS, secrets, or trust boundaries.
-
 ## Review Focus
 
 - Authentication and authorization flows
