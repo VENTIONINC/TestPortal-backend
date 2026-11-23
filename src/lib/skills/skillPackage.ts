@@ -9,10 +9,7 @@ import { crc32 } from "node:zlib";
 
 import JSZip, { type JSZipObject } from "jszip";
 
-import type {
-  SkillFrontmatter,
-  StoredSkillPackageFile,
-} from "@/types/skills";
+import type { SkillFrontmatter, StoredSkillPackageFile } from "@/types/skills";
 
 const SUPPORTED_FILE_CONTENT_TYPES: Record<string, string> = {
   ".json": "application/json; charset=utf-8",
@@ -91,7 +88,9 @@ export async function readSkillPackageZip(
   const fileEntries = packageEntries.filter((entry) => !entry.dir);
 
   if (fileEntries.length === 0) {
-    throw new SkillPackageValidationError("Skill package zip contains no files");
+    throw new SkillPackageValidationError(
+      "Skill package zip contains no files",
+    );
   }
 
   if (fileEntries.length > MAX_SKILL_PACKAGE_FILES) {
@@ -164,7 +163,9 @@ export function validateSkillPackage(
     .map((file) => validatePackageFile(file))
     .sort((left, right) => left.path.localeCompare(right.path));
 
-  const duplicatePaths = findDuplicatePaths(normalizedFiles.map((file) => file.path));
+  const duplicatePaths = findDuplicatePaths(
+    normalizedFiles.map((file) => file.path),
+  );
   if (duplicatePaths.length > 0) {
     throw new SkillPackageValidationError(
       `Skill package contains duplicate files after normalization: ${duplicatePaths.join(", ")}`,
@@ -201,7 +202,9 @@ export function validateSkillPackage(
   };
 }
 
-function validatePackageFile(file: SkillPackageInputFile): StoredSkillPackageFile {
+function validatePackageFile(
+  file: SkillPackageInputFile,
+): StoredSkillPackageFile {
   const normalizedPath = normalizeSkillPackagePath(file.path);
   const extension = path.posix.extname(normalizedPath).toLowerCase();
   const contentType = SUPPORTED_FILE_CONTENT_TYPES[extension];
@@ -230,13 +233,17 @@ export function normalizeSkillPackagePath(value: string): string {
   const trimmedValue = value.trim();
 
   if (!trimmedValue) {
-    throw new SkillPackageValidationError("Skill package file path cannot be empty");
+    throw new SkillPackageValidationError(
+      "Skill package file path cannot be empty",
+    );
   }
 
   const slashNormalizedValue = trimmedValue.replace(/\\/g, "/");
 
   if (slashNormalizedValue.includes("\0")) {
-    throw new SkillPackageValidationError("Skill package file path cannot contain NUL bytes");
+    throw new SkillPackageValidationError(
+      "Skill package file path cannot contain NUL bytes",
+    );
   }
 
   if (
@@ -269,7 +276,9 @@ export function parseSkillFrontmatter(
   expectedSkillName?: string,
 ): SkillFrontmatter {
   if (!content.startsWith("---\n")) {
-    throw new SkillPackageValidationError("Skill artifact is missing frontmatter");
+    throw new SkillPackageValidationError(
+      "Skill artifact is missing frontmatter",
+    );
   }
 
   const closingIndex = content.indexOf("\n---", 4);
@@ -312,10 +321,7 @@ export function parseSkillFrontmatter(
 }
 
 export function validateSkillName(name: string): void {
-  if (
-    name.length > MAX_SKILL_NAME_LENGTH ||
-    !SKILL_NAME_PATTERN.test(name)
-  ) {
+  if (name.length > MAX_SKILL_NAME_LENGTH || !SKILL_NAME_PATTERN.test(name)) {
     throw new SkillPackageValidationError(
       `Skill artifact frontmatter name must be a lowercase slug of at most ${MAX_SKILL_NAME_LENGTH} characters`,
     );
@@ -401,7 +407,7 @@ function parseScalar(value: string): string {
   const trimmed = value.trim();
 
   if (
-    (trimmed.startsWith("\"") && trimmed.endsWith("\"")) ||
+    (trimmed.startsWith('"') && trimmed.endsWith('"')) ||
     (trimmed.startsWith("'") && trimmed.endsWith("'"))
   ) {
     return trimmed.slice(1, -1);
@@ -650,7 +656,7 @@ async function extractBoundedZipEntry(
         return;
       }
 
-      if ((checksum >>> 0) !== (declaredData.crc32 >>> 0)) {
+      if (checksum >>> 0 !== declaredData.crc32 >>> 0) {
         reject(
           new SkillPackageValidationError(
             `Skill package file '${getZipEntryOriginalPath(entry)}' failed CRC validation`,

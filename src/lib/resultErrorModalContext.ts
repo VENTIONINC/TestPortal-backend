@@ -26,9 +26,7 @@ const ANSI_ESCAPE_SEQUENCE = new RegExp(
 );
 
 const stripAnsiEscapeSequences = (text: string): string =>
-  text
-    .replace(ANSI_OSC_SEQUENCE, "")
-    .replace(ANSI_ESCAPE_SEQUENCE, "");
+  text.replace(ANSI_OSC_SEQUENCE, "").replace(ANSI_ESCAPE_SEQUENCE, "");
 
 const countRepresentedLines = (text: string): number => {
   if (text.length === 0) {
@@ -36,8 +34,7 @@ const countRepresentedLines = (text: string): number => {
   }
 
   const lines = text.split(/\r?\n/u);
-  const trailingEmptyLine =
-    lines.length > 1 && lines[lines.length - 1] === "";
+  const trailingEmptyLine = lines.length > 1 && lines[lines.length - 1] === "";
 
   return Math.max(1, lines.length - (trailingEmptyLine ? 1 : 0));
 };
@@ -71,10 +68,7 @@ export const normalizeResultErrorSourceSnippet = (
 
   const candidate = value as Record<string, unknown>;
   const { path, text, startLine, failingLine } = candidate;
-  if (
-    typeof path !== "string" ||
-    typeof text !== "string"
-  ) {
+  if (typeof path !== "string" || typeof text !== "string") {
     return null;
   }
 

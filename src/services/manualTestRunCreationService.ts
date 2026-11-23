@@ -64,11 +64,15 @@ function validateInput(input: CreateManualTestRunParams): void {
   }
   if (input.environmentProperties !== undefined) {
     if (input.environmentProperties.length > 100) {
-      throw new ManualTestRunValidationError("environmentProperties must contain no more than 100 entries");
+      throw new ManualTestRunValidationError(
+        "environmentProperties must contain no more than 100 entries",
+      );
     }
     input.environmentProperties.forEach((property, index) => {
       if (!property.name.trim()) {
-        throw new ManualTestRunValidationError(`Environment property ${index + 1} must have a name`);
+        throw new ManualTestRunValidationError(
+          `Environment property ${index + 1} must have a name`,
+        );
       }
     });
   }
@@ -96,10 +100,12 @@ export const manualTestRunCreationService = {
     input: CreateManualTestRunParams,
   ): Promise<ManualTestRunResponse> {
     validateInput(input);
-    const normalizedInput = input.title === undefined
-      ? input
-      : { ...input, title: input.title.trim() };
-    const run = await manualTestRunCreationModel.createFromCatalog(normalizedInput);
+    const normalizedInput =
+      input.title === undefined
+        ? input
+        : { ...input, title: input.title.trim() };
+    const run =
+      await manualTestRunCreationModel.createFromCatalog(normalizedInput);
     if (!run) {
       throw new ManualTestRunNotFoundError(
         "Manual test run source not found in the requested project",

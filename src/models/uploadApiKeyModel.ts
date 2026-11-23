@@ -43,7 +43,9 @@ export const uploadApiKeyModel = {
 
   findByUserId: async (
     ownerId: string,
-  ): Promise<Array<UploadApiKey & { project: { id: string; name: string } }>> => {
+  ): Promise<
+    Array<UploadApiKey & { project: { id: string; name: string } }>
+  > => {
     return await dbClient.uploadApiKey.findMany({
       where: {
         ownerId,

@@ -104,7 +104,12 @@ export const manualTestRunMutationController = {
     const body = manualTestRunScenarioEvidenceSchema.safeParse(req.body ?? {});
     if (!body.success) return sendInvalid(res, body.error.issues);
     try {
-      res.status(200).json(await manualTestRunMutationService.updateScenarioEvidence({ ...scope, ...body.data }));
+      res.status(200).json(
+        await manualTestRunMutationService.updateScenarioEvidence({
+          ...scope,
+          ...body.data,
+        }),
+      );
     } catch (error) {
       sendError(res, error, "update manual run scenario evidence");
     }
@@ -120,7 +125,12 @@ export const manualTestRunMutationController = {
     const body = manualTestRunDetailsSchema.safeParse(req.body ?? {});
     if (!body.success) return sendInvalid(res, body.error.issues);
     try {
-      res.status(200).json(await manualTestRunMutationService.updateDetails({ ...scope, ...body.data }));
+      res.status(200).json(
+        await manualTestRunMutationService.updateDetails({
+          ...scope,
+          ...body.data,
+        }),
+      );
     } catch (error) {
       sendError(res, error, "update manual test run details");
     }

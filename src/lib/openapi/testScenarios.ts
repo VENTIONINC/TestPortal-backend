@@ -238,71 +238,88 @@ const TestScenarioProjectQuerySchema = z
   .openapi("TestScenarioProjectQuery");
 
 const TestScenarioListQueryBaseSchema = z.object({
-    projectId: z.string().uuid(),
-    page: z.number().int().min(1).default(1).optional(),
-    limit: z.number().int().min(1).max(100).default(30).optional(),
-    search: z.string().trim().optional().openapi({
+  projectId: z.string().uuid(),
+  page: z.number().int().min(1).default(1).optional(),
+  limit: z.number().int().min(1).max(100).default(30).optional(),
+  search: z.string().trim().optional().openapi({
+    description:
+      "Optional surrounding whitespace is trimmed; the remaining value is matched as a case-insensitive literal substring of title or scenarioKey. Percent, underscore, and backslash are literal; details and other authored fields are not searched.",
+    example: "login",
+  }),
+  createdById: z.string().uuid().optional().openapi({
+    description:
+      "Optional creator User UUID filter. It may identify any user; a valid UUID with no matching scenarios returns an empty page.",
+    example: "33333333-3333-4333-8333-333333333333",
+  }),
+  createdByIds: z
+    .string()
+    .regex(
+      /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}(,[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})*$/i,
+    )
+    .optional()
+    .openapi({
       description:
-        "Optional surrounding whitespace is trimmed; the remaining value is matched as a case-insensitive literal substring of title or scenarioKey. Percent, underscore, and backslash are literal; details and other authored fields are not searched.",
-      example: "login",
+        "Optional comma-separated creator User UUIDs. Scenarios matching any listed creator are included; cannot be combined with createdById.",
+      example:
+        "33333333-3333-4333-8333-333333333333,44444444-4444-4444-8444-444444444444",
     }),
-    createdById: z.string().uuid().optional().openapi({
+  priority: z
+    .string()
+    .regex(/^(low|medium|high)(,(low|medium|high))*$/)
+    .optional()
+    .openapi({
       description:
-        "Optional creator User UUID filter. It may identify any user; a valid UUID with no matching scenarios returns an empty page.",
-      example: "33333333-3333-4333-8333-333333333333",
-    }),
-    createdByIds: z.string().regex(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}(,[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})*$/i).optional().openapi({
-      description: "Optional comma-separated creator User UUIDs. Scenarios matching any listed creator are included; cannot be combined with createdById.",
-      example: "33333333-3333-4333-8333-333333333333,44444444-4444-4444-8444-444444444444",
-    }),
-    priority: z.string().regex(/^(low|medium|high)(,(low|medium|high))*$/).optional().openapi({
-      description: "Comma-separated priorities; omitted includes scenarios with any priority, including null.",
+        "Comma-separated priorities; omitted includes scenarios with any priority, including null.",
       example: "high",
     }),
-    sort: z.enum(TEST_SCENARIO_SORT_VALUES).optional().openapi({
-      description:
-        "Ordering: recently_created (createdAt DESC, id DESC), recently_updated (updatedAt DESC, id DESC), or title_asc (title ASC, id ASC).",
-      example: "title_asc",
-    }),
-    sortField: z.enum(TEST_SCENARIO_SORT_FIELDS).optional().openapi({
-      description:
-        "Single sort column. Defaults to createdAt descending when omitted. Cannot be combined with legacy sort.",
-      example: "scenarioKey",
-    }),
-    sortDirection: z.enum(["asc", "desc"]).optional().openapi({
-      description:
-        "Sort direction; defaults to desc when sortField is supplied. Requires sortField.",
-      example: "asc",
-    }),
-    scenarioKey: z.string().trim().optional().openapi({
-      description:
-        "Case-insensitive literal substring filter for the persisted scenario key; whitespace-only values are ignored.",
-    }),
-    title: z.string().trim().optional().openapi({
-      description:
-        "Case-insensitive literal substring filter for title; whitespace-only values are ignored.",
-    }),
-    details: z.string().trim().optional().openapi({
-      description:
-        "Case-insensitive literal substring filter for persisted details; whitespace-only values are ignored.",
-    }),
-    folder: z.string().trim().optional().openapi({
-      description:
-        "Case-insensitive literal substring filter for the displayed full folder path or Unfiled value; whitespace-only values are ignored.",
-    }),
-    createdBy: z.string().trim().optional().openapi({
-      description:
-        "Case-insensitive literal substring filter for creator display name or email; whitespace-only values are ignored.",
-    }),
-    folderId: z.union([z.string().uuid(), z.literal("unfiled")]).optional(),
-    includeDescendants: z.boolean().optional(),
-    suiteId: z.string().uuid().optional(),
-  });
+  sort: z.enum(TEST_SCENARIO_SORT_VALUES).optional().openapi({
+    description:
+      "Ordering: recently_created (createdAt DESC, id DESC), recently_updated (updatedAt DESC, id DESC), or title_asc (title ASC, id ASC).",
+    example: "title_asc",
+  }),
+  sortField: z.enum(TEST_SCENARIO_SORT_FIELDS).optional().openapi({
+    description:
+      "Single sort column. Defaults to createdAt descending when omitted. Cannot be combined with legacy sort.",
+    example: "scenarioKey",
+  }),
+  sortDirection: z.enum(["asc", "desc"]).optional().openapi({
+    description:
+      "Sort direction; defaults to desc when sortField is supplied. Requires sortField.",
+    example: "asc",
+  }),
+  scenarioKey: z.string().trim().optional().openapi({
+    description:
+      "Case-insensitive literal substring filter for the persisted scenario key; whitespace-only values are ignored.",
+  }),
+  title: z.string().trim().optional().openapi({
+    description:
+      "Case-insensitive literal substring filter for title; whitespace-only values are ignored.",
+  }),
+  details: z.string().trim().optional().openapi({
+    description:
+      "Case-insensitive literal substring filter for persisted details; whitespace-only values are ignored.",
+  }),
+  folder: z.string().trim().optional().openapi({
+    description:
+      "Case-insensitive literal substring filter for the displayed full folder path or Unfiled value; whitespace-only values are ignored.",
+  }),
+  createdBy: z.string().trim().optional().openapi({
+    description:
+      "Case-insensitive literal substring filter for creator display name or email; whitespace-only values are ignored.",
+  }),
+  folderId: z.union([z.string().uuid(), z.literal("unfiled")]).optional(),
+  includeDescendants: z.boolean().optional(),
+  suiteId: z.string().uuid().optional(),
+});
 
-const TestScenarioListQuerySchema = TestScenarioListQueryBaseSchema
-  .superRefine((value, context) => {
+const TestScenarioListQuerySchema = TestScenarioListQueryBaseSchema.superRefine(
+  (value, context) => {
     if (value.createdById && value.createdByIds)
-      context.addIssue({ code: "custom", path: ["createdByIds"], message: "Use createdById or createdByIds, not both" });
+      context.addIssue({
+        code: "custom",
+        path: ["createdByIds"],
+        message: "Use createdById or createdByIds, not both",
+      });
     if (value.sortDirection && !value.sortField)
       context.addIssue({
         code: "custom",
@@ -315,8 +332,8 @@ const TestScenarioListQuerySchema = TestScenarioListQueryBaseSchema
         path: ["sort"],
         message: "sort cannot be combined with sortField",
       });
-  })
-  .openapi("TestScenarioListQuery");
+  },
+).openapi("TestScenarioListQuery");
 
 const TestScenarioListResponseSchema = z
   .object({
@@ -328,22 +345,82 @@ const TestScenarioListResponseSchema = z
   })
   .openapi("TestScenarioListResponse");
 
-const TestScenarioSelectionQuerySchema = TestScenarioListQueryBaseSchema.omit({ page: true, limit: true, sort: true, sortField: true, sortDirection: true }).strict().superRefine((value, context) => {
-  if (value.createdById && value.createdByIds) context.addIssue({ code: "custom", path: ["createdByIds"], message: "Use createdById or createdByIds, not both" });
-}).openapi("TestScenarioSelectionQuery");
-const TestScenarioSelectionResponseSchema = z.object({ scenarioIds: z.array(z.string().uuid()), total: z.number().int().nonnegative() }).strict().openapi("TestScenarioSelectionResponse");
-const TestScenarioAuthorsQuerySchema = TestScenarioListQueryBaseSchema.omit({ page: true, limit: true, createdById: true, createdByIds: true, sort: true, sortField: true, sortDirection: true }).strict().openapi("TestScenarioAuthorsQuery");
-const TestScenarioPriorityCountsQuerySchema = TestScenarioListQueryBaseSchema.omit({ page: true, limit: true, priority: true, sort: true, sortField: true, sortDirection: true }).strict().superRefine((value, context) => {
-  if (value.createdById && value.createdByIds) context.addIssue({ code: "custom", path: ["createdByIds"], message: "Use createdById or createdByIds, not both" });
-}).openapi("TestScenarioPriorityCountsQuery");
-const TestScenarioAuthorOptionSchema = z.object({
-  id: z.string().uuid(),
-  name: z.string(),
-  email: z.string(),
-  scenarioCount: z.number().int().nonnegative(),
-}).strict().openapi("TestScenarioAuthorOption");
-const TestScenarioAuthorsResponseSchema = z.object({ authors: z.array(TestScenarioAuthorOptionSchema) }).strict().openapi("TestScenarioAuthorsResponse");
-const TestScenarioPriorityCountsResponseSchema = z.object({ low: z.number().int().nonnegative(), medium: z.number().int().nonnegative(), high: z.number().int().nonnegative(), unprioritized: z.number().int().nonnegative() }).strict().openapi("TestScenarioPriorityCountsResponse");
+const TestScenarioSelectionQuerySchema = TestScenarioListQueryBaseSchema.omit({
+  page: true,
+  limit: true,
+  sort: true,
+  sortField: true,
+  sortDirection: true,
+})
+  .strict()
+  .superRefine((value, context) => {
+    if (value.createdById && value.createdByIds)
+      context.addIssue({
+        code: "custom",
+        path: ["createdByIds"],
+        message: "Use createdById or createdByIds, not both",
+      });
+  })
+  .openapi("TestScenarioSelectionQuery");
+const TestScenarioSelectionResponseSchema = z
+  .object({
+    scenarioIds: z.array(z.string().uuid()),
+    total: z.number().int().nonnegative(),
+  })
+  .strict()
+  .openapi("TestScenarioSelectionResponse");
+const TestScenarioAuthorsQuerySchema = TestScenarioListQueryBaseSchema.omit({
+  page: true,
+  limit: true,
+  createdById: true,
+  createdByIds: true,
+  sort: true,
+  sortField: true,
+  sortDirection: true,
+})
+  .strict()
+  .openapi("TestScenarioAuthorsQuery");
+const TestScenarioPriorityCountsQuerySchema =
+  TestScenarioListQueryBaseSchema.omit({
+    page: true,
+    limit: true,
+    priority: true,
+    sort: true,
+    sortField: true,
+    sortDirection: true,
+  })
+    .strict()
+    .superRefine((value, context) => {
+      if (value.createdById && value.createdByIds)
+        context.addIssue({
+          code: "custom",
+          path: ["createdByIds"],
+          message: "Use createdById or createdByIds, not both",
+        });
+    })
+    .openapi("TestScenarioPriorityCountsQuery");
+const TestScenarioAuthorOptionSchema = z
+  .object({
+    id: z.string().uuid(),
+    name: z.string(),
+    email: z.string(),
+    scenarioCount: z.number().int().nonnegative(),
+  })
+  .strict()
+  .openapi("TestScenarioAuthorOption");
+const TestScenarioAuthorsResponseSchema = z
+  .object({ authors: z.array(TestScenarioAuthorOptionSchema) })
+  .strict()
+  .openapi("TestScenarioAuthorsResponse");
+const TestScenarioPriorityCountsResponseSchema = z
+  .object({
+    low: z.number().int().nonnegative(),
+    medium: z.number().int().nonnegative(),
+    high: z.number().int().nonnegative(),
+    unprioritized: z.number().int().nonnegative(),
+  })
+  .strict()
+  .openapi("TestScenarioPriorityCountsResponse");
 
 const OrganizationProjectQuerySchema = z.object({
   projectId: z.string().uuid(),
@@ -351,19 +428,28 @@ const OrganizationProjectQuerySchema = z.object({
 const FolderBodySchema = z.object({
   projectId: z.string().uuid(),
   name: z.string().min(1),
-  description: z.string().nullable().optional().openapi({ description: "Optional folder description. Omission leaves it unchanged; null or blank clears it." }),
+  description: z.string().nullable().optional().openapi({
+    description:
+      "Optional folder description. Omission leaves it unchanged; null or blank clears it.",
+  }),
   parentId: z.string().uuid().nullable().optional(),
   position: z.number().int().nonnegative().optional(),
 });
 const FolderUpdateBodySchema = z.object({
   name: z.string().min(1).optional(),
-  description: z.string().nullable().optional().openapi({ description: "Optional folder description. Omission leaves it unchanged; null or blank clears it." }),
+  description: z.string().nullable().optional().openapi({
+    description:
+      "Optional folder description. Omission leaves it unchanged; null or blank clears it.",
+  }),
   parentId: z.string().uuid().nullable().optional(),
   position: z.number().int().nonnegative().optional(),
 });
 const SuiteBodySchema = z.object({
   projectId: z.string().uuid(),
-  name: z.string().min(1).openapi({ description: "Nonblank suite name. Names may repeat within the project; suite UUIDs identify suites." }),
+  name: z.string().min(1).openapi({
+    description:
+      "Nonblank suite name. Names may repeat within the project; suite UUIDs identify suites.",
+  }),
   description: z.string().nullable().optional(),
   purpose: z.string().nullable().optional(),
   release: z.string().nullable().optional(),
@@ -385,12 +471,62 @@ const MemberOrderBodySchema = z.object({
   expectedScenarioIds: CompleteMemberOrderSchema.optional(),
   scenarioIds: z.array(z.string().uuid()),
 });
-const MembershipUndoSchema = z.object({ suiteId: z.string().uuid(), addedScenarioIds: z.array(z.string().uuid()).max(10_000), removedMembers: z.array(z.object({ scenarioId: z.string().uuid(), position: z.number().int().nonnegative() })).max(10_000) });
-const MembershipChangeBodySchema = z.object({ projectId: z.string().uuid(), expectedMembershipRevision: z.number().int().nonnegative(), expectedScenarioIds: CompleteMemberOrderSchema, addScenarioIds: z.array(z.string().uuid()).max(10_000), removeScenarioIds: z.array(z.string().uuid()).max(10_000) });
-const MembershipRestoreBodySchema = z.object({ projectId: z.string().uuid(), expectedMembershipRevision: z.number().int().nonnegative(), expectedScenarioIds: CompleteMemberOrderSchema, restoreData: MembershipUndoSchema });
-const MoveUndoSchema = z.object({ sourceSuiteId: z.string().uuid(), destinationSuiteId: z.string().uuid(), sourceMembers: z.array(z.object({ scenarioId: z.string().uuid(), position: z.number().int().nonnegative() })).max(10_000), destinationAddedScenarioIds: z.array(z.string().uuid()).max(10_000) });
-const SuiteMoveBodySchema = z.object({ projectId: z.string().uuid(), sourceSuiteId: z.string().uuid(), destinationSuiteId: z.string().uuid(), expectedSourceMembershipRevision: z.number().int().nonnegative(), expectedDestinationMembershipRevision: z.number().int().nonnegative(), scenarioIds: z.array(z.string().uuid()).min(1).max(10_000), expectedSourceScenarioIds: CompleteMemberOrderSchema, expectedDestinationScenarioIds: CompleteMemberOrderSchema });
-const SuiteMoveRestoreBodySchema = z.object({ projectId: z.string().uuid(), expectedSourceMembershipRevision: z.number().int().nonnegative(), expectedDestinationMembershipRevision: z.number().int().nonnegative(), expectedSourceScenarioIds: CompleteMemberOrderSchema, expectedDestinationScenarioIds: CompleteMemberOrderSchema, restoreData: MoveUndoSchema });
+const MembershipUndoSchema = z.object({
+  suiteId: z.string().uuid(),
+  addedScenarioIds: z.array(z.string().uuid()).max(10_000),
+  removedMembers: z
+    .array(
+      z.object({
+        scenarioId: z.string().uuid(),
+        position: z.number().int().nonnegative(),
+      }),
+    )
+    .max(10_000),
+});
+const MembershipChangeBodySchema = z.object({
+  projectId: z.string().uuid(),
+  expectedMembershipRevision: z.number().int().nonnegative(),
+  expectedScenarioIds: CompleteMemberOrderSchema,
+  addScenarioIds: z.array(z.string().uuid()).max(10_000),
+  removeScenarioIds: z.array(z.string().uuid()).max(10_000),
+});
+const MembershipRestoreBodySchema = z.object({
+  projectId: z.string().uuid(),
+  expectedMembershipRevision: z.number().int().nonnegative(),
+  expectedScenarioIds: CompleteMemberOrderSchema,
+  restoreData: MembershipUndoSchema,
+});
+const MoveUndoSchema = z.object({
+  sourceSuiteId: z.string().uuid(),
+  destinationSuiteId: z.string().uuid(),
+  sourceMembers: z
+    .array(
+      z.object({
+        scenarioId: z.string().uuid(),
+        position: z.number().int().nonnegative(),
+      }),
+    )
+    .max(10_000),
+  destinationAddedScenarioIds: z.array(z.string().uuid()).max(10_000),
+});
+const SuiteMoveBodySchema = z.object({
+  projectId: z.string().uuid(),
+  sourceSuiteId: z.string().uuid(),
+  destinationSuiteId: z.string().uuid(),
+  expectedSourceMembershipRevision: z.number().int().nonnegative(),
+  expectedDestinationMembershipRevision: z.number().int().nonnegative(),
+  scenarioIds: z.array(z.string().uuid()).min(1).max(10_000),
+  expectedSourceScenarioIds: CompleteMemberOrderSchema,
+  expectedDestinationScenarioIds: CompleteMemberOrderSchema,
+});
+const SuiteMoveRestoreBodySchema = z.object({
+  projectId: z.string().uuid(),
+  expectedSourceMembershipRevision: z.number().int().nonnegative(),
+  expectedDestinationMembershipRevision: z.number().int().nonnegative(),
+  expectedSourceScenarioIds: CompleteMemberOrderSchema,
+  expectedDestinationScenarioIds: CompleteMemberOrderSchema,
+  restoreData: MoveUndoSchema,
+});
 const BulkFolderBodySchema = z.object({
   projectId: z.string().uuid(),
   scenarioIds: z.array(z.string().uuid()).min(1).max(100),
@@ -419,12 +555,46 @@ const FolderRecordResponseSchema = z.object({
   createdAt: z.string(),
   updatedAt: z.string(),
 });
-const FolderSnapshotSchema = z.object({ id: z.string().uuid(), projectId: z.string().uuid(), name: z.string(), description: z.string().nullable(), parentId: z.string().uuid().nullable(), position: z.number().int() });
-const FolderRestoreDataSchema = z.object({ folders: z.array(FolderSnapshotSchema), scenarios: z.array(z.object({ scenarioId: z.string().uuid(), folderId: z.string().uuid(), expectedRevision: z.number().int().nonnegative() })) });
-const FolderDeleteResponseSchema = z.object({ deleted: z.literal(true), restoreData: FolderRestoreDataSchema });
-const FolderRestorationBodySchema = z.object({ projectId: z.string().uuid(), restoreData: FolderRestoreDataSchema });
-const FolderMoveRestoreDataSchema = z.array(z.object({ scenarioId: z.string().uuid(), folderId: z.string().uuid().nullable(), expectedFolderId: z.string().uuid().nullable(), expectedRevision: z.number().int().nonnegative() })).max(10_000);
-const FolderMoveRestorationBodySchema = z.object({ projectId: z.string().uuid(), restoreData: FolderMoveRestoreDataSchema.min(1) });
+const FolderSnapshotSchema = z.object({
+  id: z.string().uuid(),
+  projectId: z.string().uuid(),
+  name: z.string(),
+  description: z.string().nullable(),
+  parentId: z.string().uuid().nullable(),
+  position: z.number().int(),
+});
+const FolderRestoreDataSchema = z.object({
+  folders: z.array(FolderSnapshotSchema),
+  scenarios: z.array(
+    z.object({
+      scenarioId: z.string().uuid(),
+      folderId: z.string().uuid(),
+      expectedRevision: z.number().int().nonnegative(),
+    }),
+  ),
+});
+const FolderDeleteResponseSchema = z.object({
+  deleted: z.literal(true),
+  restoreData: FolderRestoreDataSchema,
+});
+const FolderRestorationBodySchema = z.object({
+  projectId: z.string().uuid(),
+  restoreData: FolderRestoreDataSchema,
+});
+const FolderMoveRestoreDataSchema = z
+  .array(
+    z.object({
+      scenarioId: z.string().uuid(),
+      folderId: z.string().uuid().nullable(),
+      expectedFolderId: z.string().uuid().nullable(),
+      expectedRevision: z.number().int().nonnegative(),
+    }),
+  )
+  .max(10_000);
+const FolderMoveRestorationBodySchema = z.object({
+  projectId: z.string().uuid(),
+  restoreData: FolderMoveRestoreDataSchema.min(1),
+});
 const SuiteMemberResponseSchema = z.object({
   suiteId: z.string().uuid(),
   testScenarioId: z.string().uuid(),
@@ -444,22 +614,55 @@ const SuiteResponseSchema = z.object({
   members: z.array(SuiteMemberResponseSchema).optional(),
 });
 const DeletedResponseSchema = z.object({ deleted: z.literal(true) });
-const MovedResponseSchema = z.object({ moved: z.number().int().nonnegative(), restoreData: FolderMoveRestoreDataSchema });
+const MovedResponseSchema = z.object({
+  moved: z.number().int().nonnegative(),
+  restoreData: FolderMoveRestoreDataSchema,
+});
 const MemberOrderResponseSchema = z.object({
   scenarioIds: z.array(z.string().uuid()),
 });
-const MembershipChangeResponseSchema = z.object({ scenarioIds: z.array(z.string().uuid()), membershipRevision: z.number().int().nonnegative(), restoreData: MembershipUndoSchema });
-const MembershipRestoreResponseSchema = z.object({ scenarioIds: z.array(z.string().uuid()), membershipRevision: z.number().int().nonnegative() });
-const SuiteMoveResponseSchema = z.object({ sourceScenarioIds: z.array(z.string().uuid()), destinationScenarioIds: z.array(z.string().uuid()), sourceMembershipRevision: z.number().int().nonnegative(), destinationMembershipRevision: z.number().int().nonnegative(), restoreData: MoveUndoSchema, alreadyInDestination: z.array(z.string().uuid()) });
-const SuiteMoveRestoreResponseSchema = z.object({ sourceScenarioIds: z.array(z.string().uuid()), destinationScenarioIds: z.array(z.string().uuid()), sourceMembershipRevision: z.number().int().nonnegative(), destinationMembershipRevision: z.number().int().nonnegative() });
+const MembershipChangeResponseSchema = z.object({
+  scenarioIds: z.array(z.string().uuid()),
+  membershipRevision: z.number().int().nonnegative(),
+  restoreData: MembershipUndoSchema,
+});
+const MembershipRestoreResponseSchema = z.object({
+  scenarioIds: z.array(z.string().uuid()),
+  membershipRevision: z.number().int().nonnegative(),
+});
+const SuiteMoveResponseSchema = z.object({
+  sourceScenarioIds: z.array(z.string().uuid()),
+  destinationScenarioIds: z.array(z.string().uuid()),
+  sourceMembershipRevision: z.number().int().nonnegative(),
+  destinationMembershipRevision: z.number().int().nonnegative(),
+  restoreData: MoveUndoSchema,
+  alreadyInDestination: z.array(z.string().uuid()),
+});
+const SuiteMoveRestoreResponseSchema = z.object({
+  sourceScenarioIds: z.array(z.string().uuid()),
+  destinationScenarioIds: z.array(z.string().uuid()),
+  sourceMembershipRevision: z.number().int().nonnegative(),
+  destinationMembershipRevision: z.number().int().nonnegative(),
+});
 const FolderDeleteQuerySchema = OrganizationProjectQuerySchema;
 
 function organizationResponseSchema(path: string, method: string): ZodTypeAny {
-  if (path === "/api/v2/test-scenarios/folder-restoration") return z.array(z.object({ id: z.string().uuid(), folderId: z.string().uuid().nullable(), revision: z.number().int().nonnegative() }));
-  if (path.endsWith("/restoration")) return z.object({ restored: z.literal(true) });
-  if (path.endsWith("test-scenario-folders/{folderId}") && method === "delete") return FolderDeleteResponseSchema;
-  if (path.endsWith("/membership-changes")) return MembershipChangeResponseSchema;
-  if (path.endsWith("/membership-restoration")) return MembershipRestoreResponseSchema;
+  if (path === "/api/v2/test-scenarios/folder-restoration")
+    return z.array(
+      z.object({
+        id: z.string().uuid(),
+        folderId: z.string().uuid().nullable(),
+        revision: z.number().int().nonnegative(),
+      }),
+    );
+  if (path.endsWith("/restoration"))
+    return z.object({ restored: z.literal(true) });
+  if (path.endsWith("test-scenario-folders/{folderId}") && method === "delete")
+    return FolderDeleteResponseSchema;
+  if (path.endsWith("/membership-changes"))
+    return MembershipChangeResponseSchema;
+  if (path.endsWith("/membership-restoration"))
+    return MembershipRestoreResponseSchema;
   if (path.endsWith("/moves")) return SuiteMoveResponseSchema;
   if (path.endsWith("/move-restoration")) return SuiteMoveRestoreResponseSchema;
   if (path.includes("bulk-folder")) return MovedResponseSchema;
@@ -626,10 +829,22 @@ export function registerTestScenarioRoutes(registry: OpenAPIRegistry): void {
   registry.register("TestScenarioProjectQuery", TestScenarioProjectQuerySchema);
   registry.register("TestScenarioListQuery", TestScenarioListQuerySchema);
   registry.register("TestScenarioListResponse", TestScenarioListResponseSchema);
-  registry.register("TestScenarioSelectionQuery", TestScenarioSelectionQuerySchema);
-  registry.register("TestScenarioSelectionResponse", TestScenarioSelectionResponseSchema);
-  registry.register("TestScenarioAuthorsResponse", TestScenarioAuthorsResponseSchema);
-  registry.register("TestScenarioPriorityCountsResponse", TestScenarioPriorityCountsResponseSchema);
+  registry.register(
+    "TestScenarioSelectionQuery",
+    TestScenarioSelectionQuerySchema,
+  );
+  registry.register(
+    "TestScenarioSelectionResponse",
+    TestScenarioSelectionResponseSchema,
+  );
+  registry.register(
+    "TestScenarioAuthorsResponse",
+    TestScenarioAuthorsResponseSchema,
+  );
+  registry.register(
+    "TestScenarioPriorityCountsResponse",
+    TestScenarioPriorityCountsResponseSchema,
+  );
   registry.register("TestScenarioSpecLinkBody", TestScenarioSpecLinkBodySchema);
   registry.register(
     "TestScenarioSpecLinkResponse",
@@ -1039,9 +1254,24 @@ export function registerTestScenarioRoutes(registry: OpenAPIRegistry): void {
   });
 
   for (const [path, query, responseSchema, description] of [
-    ["/api/v2/test-scenarios/authors", TestScenarioAuthorsQuerySchema, TestScenarioAuthorsResponseSchema, "Returns project creators and counts matching the supplied catalog scope and filters, excluding author selection and pagination."],
-    ["/api/v2/test-scenarios/priority-counts", TestScenarioPriorityCountsQuerySchema, TestScenarioPriorityCountsResponseSchema, "Returns priority counts matching the supplied catalog scope and filters, excluding priority and pagination."],
-    ["/api/v2/test-scenarios/selection", TestScenarioSelectionQuerySchema, TestScenarioSelectionResponseSchema, "Resolves all unique matching scenario UUIDs using the catalog filters, without returning summary or Markdown content."],
+    [
+      "/api/v2/test-scenarios/authors",
+      TestScenarioAuthorsQuerySchema,
+      TestScenarioAuthorsResponseSchema,
+      "Returns project creators and counts matching the supplied catalog scope and filters, excluding author selection and pagination.",
+    ],
+    [
+      "/api/v2/test-scenarios/priority-counts",
+      TestScenarioPriorityCountsQuerySchema,
+      TestScenarioPriorityCountsResponseSchema,
+      "Returns priority counts matching the supplied catalog scope and filters, excluding priority and pagination.",
+    ],
+    [
+      "/api/v2/test-scenarios/selection",
+      TestScenarioSelectionQuerySchema,
+      TestScenarioSelectionResponseSchema,
+      "Resolves all unique matching scenario UUIDs using the catalog filters, without returning summary or Markdown content.",
+    ],
   ] as const) {
     registry.registerPath({
       method: "get",
@@ -1050,10 +1280,22 @@ export function registerTestScenarioRoutes(registry: OpenAPIRegistry): void {
       request: { query },
       security: [{ BearerAuth: [] }],
       responses: {
-        200: { description: "Scenario catalog lookup succeeded", content: { "application/json": { schema: responseSchema } } },
-        400: { description: "Invalid project or filter", content: { "application/json": { schema: ErrorResponseSchema } } },
-        401: { description: "Unauthorized", content: { "application/json": { schema: ErrorResponseSchema } } },
-        404: { description: "Project, folder, or suite not found", content: { "application/json": { schema: ErrorResponseSchema } } },
+        200: {
+          description: "Scenario catalog lookup succeeded",
+          content: { "application/json": { schema: responseSchema } },
+        },
+        400: {
+          description: "Invalid project or filter",
+          content: { "application/json": { schema: ErrorResponseSchema } },
+        },
+        401: {
+          description: "Unauthorized",
+          content: { "application/json": { schema: ErrorResponseSchema } },
+        },
+        404: {
+          description: "Project, folder, or suite not found",
+          content: { "application/json": { schema: ErrorResponseSchema } },
+        },
       },
       tags: ["Test Scenarios"],
     });
@@ -1240,21 +1482,23 @@ export function registerTestScenarioRoutes(registry: OpenAPIRegistry): void {
                               ? SuiteMoveBodySchema
                               : path.endsWith("/move-restoration")
                                 ? SuiteMoveRestoreBodySchema
-                        : path === "/api/v2/test-scenario-folders/restoration"
-                          ? FolderRestorationBodySchema
-                          : path === "/api/v2/test-scenarios/folder-restoration"
-                            ? FolderMoveRestorationBodySchema
-                        : path.endsWith("/members/order")
-                          ? MemberOrderBodySchema
-                          : path.includes("members")
-                            ? MembersBodySchema
-                            : path.includes("folders")
-                              ? method === "patch"
-                                ? FolderUpdateBodySchema
-                                : FolderBodySchema
-                              : method === "patch"
-                                ? SuiteUpdateBodySchema
-                                : SuiteBodySchema,
+                                : path ===
+                                    "/api/v2/test-scenario-folders/restoration"
+                                  ? FolderRestorationBodySchema
+                                  : path ===
+                                      "/api/v2/test-scenarios/folder-restoration"
+                                    ? FolderMoveRestorationBodySchema
+                                    : path.endsWith("/members/order")
+                                      ? MemberOrderBodySchema
+                                      : path.includes("members")
+                                        ? MembersBodySchema
+                                        : path.includes("folders")
+                                          ? method === "patch"
+                                            ? FolderUpdateBodySchema
+                                            : FolderBodySchema
+                                          : method === "patch"
+                                            ? SuiteUpdateBodySchema
+                                            : SuiteBodySchema,
                     },
                   },
                 },

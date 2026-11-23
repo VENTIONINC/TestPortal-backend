@@ -1,9 +1,11 @@
 // Copyright 2026 VENSOLUTIONSGROUP LTD
 // SPDX-License-Identifier: Apache-2.0
 
-
 import { manualRunEnvironmentProfileModel } from "@/models/manualRunEnvironmentProfileModel";
-import type { ProfileCreateInput, ProfileUpdateInput } from "@/schemas/manualRunEnvironmentProfileSchemas";
+import type {
+  ProfileCreateInput,
+  ProfileUpdateInput,
+} from "@/schemas/manualRunEnvironmentProfileSchemas";
 
 export class ProfileNotFoundError extends Error {}
 
@@ -24,13 +26,19 @@ export const manualRunEnvironmentProfileService = {
   },
   async update(projectId: string, profileId: string, data: ProfileUpdateInput) {
     await assertProject(projectId);
-    const profile = await manualRunEnvironmentProfileModel.update(projectId, profileId, data);
+    const profile = await manualRunEnvironmentProfileModel.update(
+      projectId,
+      profileId,
+      data,
+    );
     if (!profile) throw new ProfileNotFoundError("Profile not found");
     return profile;
   },
   async remove(projectId: string, profileId: string) {
     await assertProject(projectId);
-    if (!(await manualRunEnvironmentProfileModel.remove(projectId, profileId))) {
+    if (
+      !(await manualRunEnvironmentProfileModel.remove(projectId, profileId))
+    ) {
       throw new ProfileNotFoundError("Profile not found");
     }
   },

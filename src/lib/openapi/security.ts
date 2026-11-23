@@ -22,6 +22,7 @@ export function registerSecuritySchemes(registry: OpenAPIRegistry) {
     type: "apiKey",
     in: "header",
     name: "X-API-Key",
-    description: "API key authentication for upload endpoints. Generate keys via /api/v2/upload/generate-key",
+    description:
+      "API key authentication for upload endpoints. Generate keys via /api/v2/upload/generate-key",
   });
 }

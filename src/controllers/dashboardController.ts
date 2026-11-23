@@ -46,7 +46,9 @@ function parseDashboardParams(req: Request<DashboardParams>) {
     hasDateTo &&
     (!isValidCalendarDate(dateFrom) || !isValidCalendarDate(dateTo))
   ) {
-    throw new Error("dateFrom and dateTo must be valid dates in YYYY-MM-DD format");
+    throw new Error(
+      "dateFrom and dateTo must be valid dates in YYYY-MM-DD format",
+    );
   }
 
   const periodDays = parseInt(String(period ?? "30"), 10) || 30;
@@ -81,8 +83,14 @@ export const dashboardController = {
     res: Response,
   ): Promise<void> {
     try {
-      const { projectId, periodDays, executionType, granularity, dateFrom, dateTo } =
-        parseDashboardParams(req);
+      const {
+        projectId,
+        periodDays,
+        executionType,
+        granularity,
+        dateFrom,
+        dateTo,
+      } = parseDashboardParams(req);
 
       const dashboardData = await dashboardService.getDashboard(
         projectId,
@@ -99,7 +107,8 @@ export const dashboardController = {
         if (
           error.message === "Project ID is required" ||
           error.message === "dateFrom and dateTo must be provided together" ||
-          error.message === "dateFrom and dateTo must be valid dates in YYYY-MM-DD format"
+          error.message ===
+            "dateFrom and dateTo must be valid dates in YYYY-MM-DD format"
         ) {
           res.status(400).json({ error: error.message });
           return;

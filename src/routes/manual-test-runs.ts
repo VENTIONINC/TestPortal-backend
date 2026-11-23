@@ -20,7 +20,10 @@ router[create.method](
   authMiddleware,
   json({ limit: create.limit }),
   (req, res) =>
-    manualTestRunCreationController.create(req as ManualTestRunCreationRequest, res),
+    manualTestRunCreationController.create(
+      req as ManualTestRunCreationRequest,
+      res,
+    ),
 );
 router.get(
   "/v2/manual-test-runs",

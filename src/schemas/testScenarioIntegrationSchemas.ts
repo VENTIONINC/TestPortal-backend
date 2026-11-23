@@ -39,7 +39,8 @@ export const testScenarioSpecLinkBodySchema = z.object({
   specId: uuidSchema,
 });
 
-export const testScenarioEvidenceParamsSchema = testScenarioSpecLinkParamsSchema;
+export const testScenarioEvidenceParamsSchema =
+  testScenarioSpecLinkParamsSchema;
 
 export const testScenarioEvidenceQuerySchema = z.object({
   projectId: uuidSchema,

@@ -442,9 +442,7 @@ export async function moveSuiteMembership(
   });
 }
 
-export async function restoreSuiteMove(
-  input: RestoreSuiteMoveInput,
-): Promise<{
+export async function restoreSuiteMove(input: RestoreSuiteMoveInput): Promise<{
   sourceScenarioIds: string[];
   destinationScenarioIds: string[];
   sourceMembershipRevision: number;

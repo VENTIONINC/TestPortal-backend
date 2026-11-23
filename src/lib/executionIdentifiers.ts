@@ -60,9 +60,9 @@ export function generateExecutionIdentifier(
 
   const date = new Date(startTime);
   const dateStr = formatDateOnly(date);
-  
+
   let timeComponent: string;
-  
+
   switch (strategy) {
     case "hourly":
       timeComponent = formatHour(date);
@@ -92,7 +92,7 @@ export function extractDateFromRunId(runId: string): Date | null {
   // Try to match DD-MM-YYYY-HH:MM:SS pattern
   const ddmmyyyyPattern = /(\d{2})-(\d{2})-(\d{4})-(\d{2}):(\d{2}):(\d{2})/;
   const ddmmMatch = runId.match(ddmmyyyyPattern);
-  
+
   if (ddmmMatch) {
     const [, day, month, year, hour, minute, second] = ddmmMatch;
     return new Date(
@@ -108,14 +108,10 @@ export function extractDateFromRunId(runId: string): Date | null {
   // Try to match YYYY-MM-DD pattern
   const yyyymmddPattern = /(\d{4})-(\d{2})-(\d{2})/;
   const yyyyMatch = runId.match(yyyymmddPattern);
-  
+
   if (yyyyMatch) {
     const [, year, month, day] = yyyyMatch;
-    return new Date(
-      Number(year),
-      Number(month) - 1,
-      Number(day),
-    );
+    return new Date(Number(year), Number(month) - 1, Number(day));
   }
 
   return null;

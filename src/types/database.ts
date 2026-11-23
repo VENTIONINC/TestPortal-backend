@@ -176,7 +176,8 @@ export interface AssumptionWithRelations extends PrismaAssumption {
   resultError?: PrismaResultError;
 }
 
-export interface StructuredSpec extends Omit<PrismaSpec, "tags" | "annotations"> {
+export interface StructuredSpec
+  extends Omit<PrismaSpec, "tags" | "annotations"> {
   tags: string[];
   annotations: unknown[];
 }

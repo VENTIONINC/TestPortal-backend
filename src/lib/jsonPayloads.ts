@@ -33,9 +33,7 @@ const toStringArray = (value: JsonArrayValue): string[] => {
   return items;
 };
 
-export const normalizeJsonStringArray = (
-  value: unknown,
-): string[] => {
+export const normalizeJsonStringArray = (value: unknown): string[] => {
   if (value == null) {
     return [];
   }
@@ -60,9 +58,7 @@ export const normalizeJsonStringArray = (
   return [];
 };
 
-export const normalizeJsonUnknownArray = (
-  value: unknown,
-): unknown[] => {
+export const normalizeJsonUnknownArray = (value: unknown): unknown[] => {
   if (value == null) {
     return [];
   }
@@ -83,9 +79,8 @@ export const normalizeJsonUnknownArray = (
   return [];
 };
 
-export const normalizeJsonArrayForText = (
-  value: unknown,
-): string => JSON.stringify(normalizeJsonStringArray(value), null, 2);
+export const normalizeJsonArrayForText = (value: unknown): string =>
+  JSON.stringify(normalizeJsonStringArray(value), null, 2);
 
 export const normalizeSpecPayload = (spec: PrismaSpec): StructuredSpec => ({
   ...spec,

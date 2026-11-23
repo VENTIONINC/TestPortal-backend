@@ -2,11 +2,17 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { specModel } from "@/models/specModel";
-import { normalizeJsonStringArray, normalizeJsonUnknownArray } from "@/lib/jsonPayloads";
+import {
+  normalizeJsonStringArray,
+  normalizeJsonUnknownArray,
+} from "@/lib/jsonPayloads";
 import type { StructuredSpec } from "@/types";
 
 export const specService = {
-  async getSpecById(specId: string, projectId: string): Promise<StructuredSpec> {
+  async getSpecById(
+    specId: string,
+    projectId: string,
+  ): Promise<StructuredSpec> {
     if (!specId) {
       throw new Error("Spec ID is required");
     }
