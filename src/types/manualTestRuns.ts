@@ -1,51 +1,89 @@
 // Copyright 2026 VENSOLUTIONSGROUP LTD
 // SPDX-License-Identifier: Apache-2.0
 
-import type {
-  ManualTestRunStatus,
-  ManualTestRunStepStatus,
-} from "@prisma/client";
-
-export type ManualTestRunStatusValue = ManualTestRunStatus;
-export type ManualTestRunStepStatusValue = ManualTestRunStepStatus;
+export type ManualTestRunStatus = "in_progress" | "completed";
+export type ManualTestRunScenarioResult =
+  | "untested"
+  | "passed"
+  | "failed"
+  | "blocked"
+  | "skipped";
+export type ManualTestRunStepStatus = ManualTestRunScenarioResult;
 
 export const MANUAL_TEST_RUN_STATUSES = [
   "in_progress",
-  "passed",
-  "failed",
-  "blocked",
-  "skipped",
+  "completed",
 ] as const satisfies readonly ManualTestRunStatus[];
 
-export const MANUAL_TEST_RUN_STEP_STATUSES = [
-  "not_started",
+export const MANUAL_TEST_RUN_SCENARIO_RESULTS = [
+  "untested",
   "passed",
   "failed",
   "blocked",
   "skipped",
-] as const satisfies readonly ManualTestRunStepStatus[];
+] as const satisfies readonly ManualTestRunScenarioResult[];
+export const MANUAL_TEST_RUN_STEP_STATUSES = MANUAL_TEST_RUN_SCENARIO_RESULTS;
 
-export const MANUAL_TEST_RUN_TERMINAL_STATUSES = [
-  "passed",
-  "failed",
-  "blocked",
-  "skipped",
-] as const satisfies readonly ManualTestRunStatus[];
+export const MANUAL_TEST_RUN_TERMINAL_STATUSES = ["completed"] as const;
 
-export interface ManualTestRunExecutor {
+export interface ManualTestRunUser {
   id: string;
   name: string;
   email: string;
 }
 
-export interface ManualTestRunStepResponse {
+export interface ManualTestRunScenarioStepResponse {
   id: string;
   position: number;
   action: string;
   expectedResult: string | null;
-  status: ManualTestRunStepStatus;
-  notes: string | null;
-  updatedAt: Date;
+  comment: string | null;
+  failedFlag: boolean;
+  failedComment: string | null;
+  blockedFlag: boolean;
+  blockedComment: string | null;
+}
+
+export interface ManualRunEnvironmentProperty {
+  name: string;
+  value: string;
+}
+
+export interface ManualTestRunRequirementContext {
+  type: "requirement" | "ticket";
+  reference: string;
+  title: string;
+  url: string | null;
+}
+
+export interface ManualTestRunScenarioResponse {
+  id: string;
+  sourceScenarioId: string;
+  sourceScenarioKey: string;
+  title: string;
+  position: number;
+  details: string | null;
+  preconditions: string | null;
+  testData: string | null;
+  folderPath: string | null;
+  priority: "low" | "medium" | "high";
+  requirementContext: ManualTestRunRequirementContext[];
+  result: ManualTestRunScenarioResult;
+  executionComment: string | null;
+  defectReference: string | null;
+  assigneeId: string | null;
+  assignee: ManualTestRunUser | null;
+  resultById: string | null;
+  resultBy: ManualTestRunUser | null;
+  resultAt: Date | null;
+  resultHistory: Array<{
+    id: number;
+    result: ManualTestRunScenarioResult;
+    resultById: string | null;
+    resultBy: ManualTestRunUser | null;
+    resultAt: Date;
+  }>;
+  steps: ManualTestRunScenarioStepResponse[];
 }
 
 export interface ManualRunEnvironmentSnapshot {
@@ -55,44 +93,57 @@ export interface ManualRunEnvironmentSnapshot {
   apiEnvironment: string | null;
   build: string | null;
   deployment: string | null;
+  environmentProperties: ManualRunEnvironmentProperty[];
 }
 
 export interface ManualTestRunResponse extends ManualRunEnvironmentSnapshot {
   id: string;
   projectId: string;
-  sourceTestScenarioId: string;
-  runKey: string | null;
-  sourceScenarioKey: string | null;
-  testScenarioId: string | null;
   executedById: string | null;
-  executedBy: ManualTestRunExecutor | null;
+  executedBy: ManualTestRunUser | null;
   status: ManualTestRunStatus;
   startedAt: Date;
-  completedAt: Date | null;
   updatedAt: Date;
+  completedAt: Date | null;
+  completedById: string | null;
+  completedBy: ManualTestRunUser | null;
+  skippedAtCompletion: number;
   title: string;
-  details: string | null;
-  preconditions: string | null;
-  testData: string | null;
-  notes: string | null;
-  steps: ManualTestRunStepResponse[];
+  hasBeenReopened: boolean;
+  scenarios: ManualTestRunScenarioResponse[];
 }
 
 export interface ManualTestRunSummary extends ManualRunEnvironmentSnapshot {
   id: string;
   projectId: string;
-  sourceTestScenarioId: string;
-  runKey: string | null;
-  sourceScenarioKey: string | null;
-  testScenarioId: string | null;
   executedById: string | null;
-  executedBy: ManualTestRunExecutor | null;
-  title: string;
+  executedBy: ManualTestRunUser | null;
   status: ManualTestRunStatus;
   startedAt: Date;
-  completedAt: Date | null;
   updatedAt: Date;
+  completedAt: Date | null;
+  completedDay: string | null;
+  title: string;
+  hasBeenReopened: boolean;
+  scenarioCount: number;
+  untestedCount: number;
+  passedCount: number;
+  failedCount: number;
+  blockedCount: number;
+  skippedCount: number;
 }
+
+export type ManualTestRunShowFilter = "in_progress" | "completed" | "all";
+export type ManualTestRunPeriod =
+  | "recent"
+  | "today"
+  | "yesterday"
+  | "last_7_days"
+  | "last_30_days"
+  | "this_month"
+  | "last_month"
+  | "any_time"
+  | "custom";
 
 export interface ManualTestRunPage {
   runs: ManualTestRunSummary[];
@@ -102,65 +153,105 @@ export interface ManualTestRunPage {
   totalPages: number;
 }
 
-export interface StartManualTestRunParams {
+export type ManualTestRunSource =
+  | { scenarioIds: string[]; suiteId?: never }
+  | { suiteId: string; scenarioIds?: never };
+
+export type CreateManualTestRunParams = ManualTestRunSource & {
+  [K in keyof ManualRunEnvironmentSnapshot]?:
+    | ManualRunEnvironmentSnapshot[K]
+    | undefined;
+} & {
   projectId: string;
-  scenarioId: string;
   executedById: string;
-  notes?: string | null | undefined;
-  runKey?: string | null | undefined;
-  environmentProfileId?: string | undefined;
-  browser?: string | null | undefined;
-  operatingSystem?: string | null | undefined;
-  device?: string | null | undefined;
-  apiEnvironment?: string | null | undefined;
-  build?: string | null | undefined;
-  deployment?: string | null | undefined;
-}
+  title?: string | undefined;
+  environmentProperties?: ManualRunEnvironmentProperty[] | undefined;
+};
 
 export interface GetManualTestRunParams {
   projectId: string;
   runId: string;
 }
 
+export interface UpdateManualTestRunDetailsParams {
+  projectId: string;
+  runId: string;
+  title: string;
+  scenarioIds: string[];
+  environmentProperties: ManualRunEnvironmentProperty[];
+}
+
+export interface ManualTestRunScenarioStepEvidenceInput {
+  id: string;
+  comment?: string | null | undefined;
+  failedFlag?: boolean | undefined;
+  failedComment?: string | null | undefined;
+  blockedFlag?: boolean | undefined;
+  blockedComment?: string | null | undefined;
+}
+
+export interface UpdateManualTestRunScenarioEvidenceParams {
+  projectId: string;
+  runId: string;
+  scenarioId: string;
+  executionComment?: string | null | undefined;
+  defectReference?: string | null | undefined;
+  steps?: ManualTestRunScenarioStepEvidenceInput[] | undefined;
+}
+
 export interface ListManualTestRunsParams {
   projectId: string;
-  scenarioId?: string | undefined;
-  testScenarioId?: string | undefined;
-  sourceScenarioKey?: string | undefined;
-  page?: number | undefined;
-  limit?: number | undefined;
-  startedFrom?: string | undefined;
-  startedBefore?: string | undefined;
-  status?: ManualTestRunStatus | undefined;
+  page?: number;
+  limit?: number;
+  search?: string | undefined;
+  show?: ManualTestRunShowFilter;
+  period?: ManualTestRunPeriod;
+  timeZone?: string;
+  dateFrom?: string | undefined;
+  dateTo?: string | undefined;
 }
 
-export interface UpdateManualTestRunParams {
+export interface UpdateManualTestRunScenarioResultParams {
   projectId: string;
   runId: string;
-  status?: ManualTestRunStatus | undefined;
-  notes?: string | null | undefined;
-  runKey?: string | null | undefined;
+  scenarioId: string;
+  result: ManualTestRunScenarioResult;
+  resultById: string;
 }
 
-export interface ReassignManualTestRunExecutorParams {
+export interface UpdateManualTestRunScenarioAssigneeParams {
   projectId: string;
   runId: string;
-  executedById: string;
+  scenarioId: string;
+  assigneeId: string | null;
 }
 
-export interface UpdateManualTestRunStepParams {
+export interface ReorderManualTestRunScenariosParams {
   projectId: string;
   runId: string;
-  stepId: string;
-  status?: ManualTestRunStepStatus | undefined;
-  notes?: string | null | undefined;
+  scenarioIds: string[];
+}
+
+export interface BulkUpdateManualTestRunScenariosParams {
+  projectId: string;
+  runId: string;
+  scenarioIds: string[];
+  result?: ManualTestRunScenarioResult;
+  assigneeId?: string | null;
+  resultById?: string;
 }
 
 export interface CompleteManualTestRunParams {
   projectId: string;
   runId: string;
-  status: Exclude<ManualTestRunStatus, "in_progress">;
-  notes?: string | null | undefined;
+  completedById: string;
+  requireAllMarked?: boolean;
+}
+
+export interface ReopenManualTestRunParams {
+  projectId: string;
+  runId: string;
+  reopenedById: string;
 }
 
 export class ManualTestRunValidationError extends Error {

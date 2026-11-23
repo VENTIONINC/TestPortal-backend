@@ -22,18 +22,10 @@ export const createTestScenarioSchema = z
     projectId: z.string().uuid(),
     folderId: z.string().uuid().nullable().optional(),
     title: z.string().trim().min(1),
-    scenarioKey: z
-      .string()
-      .trim()
-      .min(1)
-      .max(100)
-      .regex(/^[^\r\n]+$/)
-      .nullable()
-      .optional(),
     details: z.string().trim().min(1).optional(),
     preconditions: z.string().trim().min(1).optional(),
     testData: z.string().trim().min(1).optional(),
-    priority: testScenarioPrioritySchema.nullable().optional(),
+    priority: testScenarioPrioritySchema.default("medium"),
     relatedIssueUrl: testScenarioRelatedIssueUrlSchema.nullable().optional(),
     steps: z
       .array(
@@ -134,18 +126,10 @@ export const updateTestScenarioSchema = z
     scenarioId: uuid().describe("The UUID of the Test Scenario"),
     projectId: uuid().describe("The UUID of the project"),
     title: z.string().trim().min(1).optional(),
-    scenarioKey: z
-      .string()
-      .trim()
-      .min(1)
-      .max(100)
-      .regex(/^[^\r\n]+$/)
-      .nullable()
-      .optional(),
     details: z.string().trim().min(1).nullable().optional(),
     preconditions: z.string().trim().min(1).nullable().optional(),
     testData: z.string().trim().min(1).nullable().optional(),
-    priority: testScenarioPrioritySchema.nullable().optional(),
+    priority: testScenarioPrioritySchema.optional(),
     relatedIssueUrl: testScenarioRelatedIssueUrlSchema.nullable().optional(),
   })
   .strict()

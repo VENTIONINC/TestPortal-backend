@@ -1,0 +1,1 @@
+ALTER TABLE "TestSuite" ADD COLUMN "membershipRevision" INTEGER NOT NULL DEFAULT 0;
