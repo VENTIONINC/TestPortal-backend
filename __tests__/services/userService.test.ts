@@ -48,6 +48,13 @@ describe("userService", () => {
     process.env.MCP_SECRET = "test-secret";
   });
 
+  it("returns the active directory through the safe projection model method", async () => {
+    const directory = [{ id: "u1", name: "Alice", email: "alice@example.test" }];
+    mockUserModel.listActiveDirectory.mockResolvedValue(directory);
+    await expect(userService.listActiveDirectory()).resolves.toEqual(directory);
+    expect(mockUserModel.listActiveDirectory).toHaveBeenCalledTimes(1);
+  });
+
   afterEach(() => {
     delete process.env.MCP_SECRET;
   });

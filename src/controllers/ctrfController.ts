@@ -7,6 +7,10 @@ import type { CTRFReport } from "@/types/ctrf";
 import type { ApiKeyAuthenticatedRequest } from "@/middleware/apiKeyMiddleware";
 import type { ProcessReportResult } from "@/services/jsonReportService";
 import getLogger from "@/lib/logger";
+import {
+  formatFutureReportTimestampsError,
+  FutureReportTimestampsError,
+} from "@/lib/reportTimestampWarnings";
 
 const logger = getLogger("ctrf-controller");
 
@@ -72,7 +76,10 @@ export const ctrfController = {
     } catch (error) {
       const err = error as Error;
       res.status(400).json({
-        error: `Failed to process raw CTRF report file. ${err.message}`,
+        error:
+          err instanceof FutureReportTimestampsError
+            ? formatFutureReportTimestampsError(err, req.file?.originalname)
+            : `Failed to process raw CTRF report file. ${err.message}`,
       });
     }
   },
@@ -97,7 +104,10 @@ export const ctrfController = {
     } catch (error) {
       const err = error as Error;
       res.status(400).json({
-        error: `Failed to process raw CTRF report file. ${err.message}`,
+        error:
+          err instanceof FutureReportTimestampsError
+            ? formatFutureReportTimestampsError(err, req.file?.originalname)
+            : `Failed to process raw CTRF report file. ${err.message}`,
       });
     }
   },

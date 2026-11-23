@@ -27,9 +27,12 @@ This directory contains integration tests for the API routes. Tests are organize
 ## Running Tests
 
 ```bash
-# Run all route tests
-npm test -- routes
+# Run route integration tests against a dedicated PostgreSQL database
+TEST_DATABASE_URL="postgresql://.../test_portal_<branch>" npm run test:integration -- --runTestsByPath __tests__/routes
 
 # Run specific test file
-npm test -- users.test.ts
+TEST_DATABASE_URL="postgresql://.../test_portal_<branch>" npm run test:integration -- --runTestsByPath __tests__/routes/users.test.ts
 ```
+
+See [../../docs/TESTING.md](../../docs/TESTING.md) for database setup and the
+available test categories.

@@ -1,0 +1,232 @@
+// Copyright 2026 VENSOLUTIONSGROUP LTD
+// SPDX-License-Identifier: Apache-2.0
+
+import {
+  appendTestScenarioStepSchema,
+  createTestScenarioSchema,
+  reorderTestScenarioStepsSchema,
+  testScenarioListQuerySchema,
+  testScenarioSelectionQuerySchema,
+  testScenarioPriorityCountsQuerySchema,
+  updateTestScenarioSchema,
+  updateTestScenarioStepSchema,
+} from "@/schemas/testScenarioSchemas";
+
+const projectId = "11111111-1111-1111-1111-111111111111";
+const stepId = "22222222-2222-2222-2222-222222222222";
+
+describe("structured Test Scenario schemas", () => {
+  it("accepts one author filter for priority counts", () => {
+    const createdById = "44444444-4444-4444-8444-444444444444";
+    expect(testScenarioPriorityCountsQuerySchema.safeParse({ projectId, createdByIds: createdById }).success).toBe(true);
+    expect(testScenarioPriorityCountsQuerySchema.safeParse({ projectId, createdById, createdByIds: createdById }).success).toBe(false);
+  });
+  it("trims structured creation fields and defaults steps", () => {
+    expect(
+      createTestScenarioSchema.parse({
+        projectId,
+        title: "  Login  ",
+        details: "  Verify login  ",
+        steps: [{ action: "  Open page  ", expectedResult: "  Visible  " }],
+      }),
+    ).toEqual({
+      projectId,
+      title: "Login",
+      details: "Verify login",
+      priority: "medium",
+      steps: [{ action: "Open page", expectedResult: "Visible" }],
+    });
+    expect(
+      createTestScenarioSchema.parse({ projectId, title: "Login" }).steps,
+    ).toEqual([]);
+  });
+
+  it.each([
+    { projectId, title: "Login", contentMd: "# forbidden" },
+    { projectId, title: "Login", details: null },
+    { projectId, title: "Login", steps: [{ action: "" }] },
+    { projectId, title: "Login", steps: [{ action: "Run", id: stepId }] },
+    { projectId, title: "" },
+  ])("rejects obsolete or invalid creation input %j", (input) => {
+    expect(createTestScenarioSchema.safeParse(input).success).toBe(false);
+  });
+
+  it("requires a nonempty strict partial update and permits null clearing", () => {
+    expect(
+      updateTestScenarioSchema.parse({ relatedIssueUrl: null, title: " New " }),
+    ).toEqual({
+      relatedIssueUrl: null,
+      title: "New",
+    });
+    expect(updateTestScenarioSchema.safeParse({}).success).toBe(false);
+    expect(
+      updateTestScenarioSchema.safeParse({ contentMd: "# no" }).success,
+    ).toBe(false);
+    expect(updateTestScenarioSchema.safeParse({ steps: [] }).success).toBe(
+      false,
+    );
+    expect(updateTestScenarioSchema.safeParse({ title: null }).success).toBe(
+      false,
+    );
+  });
+
+  it("rejects supplied scenario keys", () => {
+    expect(
+      createTestScenarioSchema.safeParse({
+        projectId,
+        title: "Login",
+        scenarioKey: " R1 ",
+      }).success,
+    ).toBe(false);
+    expect(
+      updateTestScenarioSchema.safeParse({ scenarioKey: null }).success,
+    ).toBe(false);
+    for (const scenarioKey of ["  ", "R1\nR2", "x".repeat(101)]) {
+      expect(
+        createTestScenarioSchema.safeParse({
+          projectId,
+          title: "Login",
+          scenarioKey,
+        }).success,
+      ).toBe(false);
+      expect(updateTestScenarioSchema.safeParse({ scenarioKey }).success).toBe(
+        false,
+      );
+    }
+  });
+
+  it("rejects null priority and trims absolute HTTP(S) links", () => {
+    expect(
+      createTestScenarioSchema.parse({
+        projectId,
+        title: "Login",
+        priority: "high",
+        relatedIssueUrl: " https://tracker.example/issue/1 ",
+      }),
+    ).toMatchObject({
+      priority: "high",
+      relatedIssueUrl: "https://tracker.example/issue/1",
+    });
+    expect(updateTestScenarioSchema.safeParse({ priority: null }).success).toBe(
+      false,
+    );
+    expect(
+      createTestScenarioSchema.safeParse({
+        projectId,
+        title: "Login",
+        priority: null,
+        relatedIssueUrl: null,
+      }).success,
+    ).toBe(false);
+  });
+
+  it.each(["urgent", "High", ""])("rejects invalid priority %s", (priority) => {
+    expect(
+      createTestScenarioSchema.safeParse({
+        projectId,
+        title: "Login",
+        priority,
+      }).success,
+    ).toBe(false);
+    expect(updateTestScenarioSchema.safeParse({ priority }).success).toBe(
+      false,
+    );
+  });
+
+  it.each([
+    "/issue/1",
+    "ftp://example.com",
+    "javascript:alert(1)",
+    "",
+    "https://",
+  ])("rejects invalid related URL %s", (relatedIssueUrl) => {
+    expect(
+      createTestScenarioSchema.safeParse({
+        projectId,
+        title: "Login",
+        relatedIssueUrl,
+      }).success,
+    ).toBe(false);
+    expect(
+      updateTestScenarioSchema.safeParse({ relatedIssueUrl }).success,
+    ).toBe(false);
+  });
+
+  it.each(["objective", "expectedResult", "notes"])(
+    "rejects removed scenario field %s",
+    (field) => {
+      expect(
+        createTestScenarioSchema.safeParse({
+          projectId,
+          title: "Login",
+          [field]: "removed",
+        }).success,
+      ).toBe(false);
+      expect(
+        updateTestScenarioSchema.safeParse({ [field]: null }).success,
+      ).toBe(false);
+    },
+  );
+
+  it("validates step append, patch, and complete ordering inputs", () => {
+    expect(appendTestScenarioStepSchema.parse({ action: "Run" })).toEqual({
+      action: "Run",
+    });
+    expect(
+      updateTestScenarioStepSchema.parse({ expectedResult: null }),
+    ).toEqual({ expectedResult: null });
+    expect(reorderTestScenarioStepsSchema.parse({ stepIds: [stepId] })).toEqual(
+      { stepIds: [stepId] },
+    );
+    expect(updateTestScenarioStepSchema.safeParse({}).success).toBe(false);
+    expect(
+      appendTestScenarioStepSchema.safeParse({ action: "Run", position: 0 })
+        .success,
+    ).toBe(false);
+    expect(
+      reorderTestScenarioStepsSchema.safeParse({ stepIds: ["bad"] }).success,
+    ).toBe(false);
+  });
+
+  it("defaults list options and rejects invalid list filters", () => {
+    expect(testScenarioListQuerySchema.parse({ projectId })).toEqual({
+      projectId,
+      page: 1,
+      limit: 30,
+    });
+    expect(
+      testScenarioListQuerySchema.parse({
+        projectId,
+        search: "  login  ",
+        createdById: stepId,
+        sort: "title_asc",
+      }),
+    ).toMatchObject({
+      search: "login",
+      createdById: stepId,
+      sort: "title_asc",
+    });
+    expect(
+      testScenarioListQuerySchema.safeParse({ projectId, search: 42 }).success,
+    ).toBe(false);
+    expect(
+      testScenarioListQuerySchema.safeParse({ projectId, createdById: "bad" })
+        .success,
+    ).toBe(false);
+    expect(
+      testScenarioListQuerySchema.safeParse({ projectId, sort: "bad" }).success,
+    ).toBe(false);
+    expect(testScenarioListQuerySchema.parse({ projectId, sortField: "title", title: "  Login " })).toMatchObject({ sortField: "title", title: "Login" });
+    expect(testScenarioListQuerySchema.parse({ projectId, folder: "  " }).folder).toBeUndefined();
+    expect(testScenarioListQuerySchema.safeParse({ projectId, sortField: "bad" }).success).toBe(false);
+    expect(testScenarioListQuerySchema.safeParse({ projectId, sortDirection: "asc" }).success).toBe(false);
+    expect(testScenarioListQuerySchema.safeParse({ projectId, sortField: "title", sort: "title_asc" }).success).toBe(false);
+    expect(testScenarioListQuerySchema.parse({ projectId, priority: "low" })).toMatchObject({ priority: "low" });
+    expect(testScenarioListQuerySchema.safeParse({ projectId, priority: "LOW" }).success).toBe(false);
+    expect(testScenarioListQuerySchema.parse({ projectId, priority: "high,medium" })).toMatchObject({ priority: "high,medium" });
+    expect(testScenarioSelectionQuerySchema.safeParse({ projectId, priority: "high,invalid" }).success).toBe(false);
+    expect(testScenarioSelectionQuerySchema.parse({ projectId, priority: "high", search: " login " })).toMatchObject({ priority: "high", search: "login" });
+    expect(testScenarioSelectionQuerySchema.safeParse({ projectId, page: 2 }).success).toBe(false);
+    expect(testScenarioSelectionQuerySchema.safeParse({ projectId, sortField: "title" }).success).toBe(false);
+  });
+});

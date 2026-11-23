@@ -1,0 +1,1307 @@
+// Copyright 2026 VENSOLUTIONSGROUP LTD
+// SPDX-License-Identifier: Apache-2.0
+
+import { OpenAPIRegistry } from "@asteasolutions/zod-to-openapi";
+import { ErrorResponseSchema } from "./common";
+import { ResultSchema } from "./results";
+import { z } from "./zod";
+import type { ZodTypeAny } from "zod";
+import {
+  TEST_SCENARIO_SORT_FIELDS,
+  TEST_SCENARIO_SORT_VALUES,
+} from "@/types/testScenarios";
+
+const testScenarioPrioritySchema = z.enum(["low", "medium", "high"]);
+const testScenarioRelatedIssueUrlSchema = z
+  .string()
+  .trim()
+  .url()
+  .refine(
+    (value) => /^https?:\/\//i.test(value),
+    "Must be an absolute HTTP(S) URL",
+  );
+
+const TestScenarioSchema = z
+  .object({
+    id: z.string().uuid(),
+    projectId: z.string().uuid(),
+    folderId: z.string().uuid().nullable(),
+    createdById: z.string().uuid(),
+    revision: z.number().int().positive(),
+    createdBy: z
+      .object({ id: z.string().uuid(), name: z.string(), email: z.string() })
+      .strict(),
+    updatedBy: z
+      .object({ id: z.string().uuid(), name: z.string(), email: z.string() })
+      .strict()
+      .nullable(),
+    suites: z.array(
+      z.object({ id: z.string().uuid(), name: z.string() }).strict(),
+    ),
+    title: z.string(),
+    scenarioKey: z.string().regex(/^TMS-[1-9][0-9]*$/),
+    details: z.string().nullable(),
+    preconditions: z.string().nullable(),
+    testData: z.string().nullable(),
+    priority: testScenarioPrioritySchema,
+    relatedIssueUrl: testScenarioRelatedIssueUrlSchema.nullable(),
+    steps: z.array(
+      z
+        .object({
+          id: z.string().uuid(),
+          position: z.number().int().nonnegative(),
+          action: z.string(),
+          expectedResult: z.string().nullable(),
+        })
+        .strict(),
+    ),
+    contentMd: z.string(),
+    contentMdHash: z
+      .string()
+      .length(64)
+      .regex(/^[a-f0-9]{64}$/),
+    contentMdFormatVersion: z.number().int().positive(),
+    createdAt: z.string(),
+    updatedAt: z.string(),
+  })
+  .openapi("TestScenario");
+
+const CreateTestScenarioStepSchema = z
+  .object({
+    action: z.string().min(1).regex(/\S/),
+    expectedResult: z.string().min(1).regex(/\S/).optional(),
+  })
+  .strict()
+  .openapi("CreateTestScenarioStep");
+
+const CreateTestScenarioRequestSchema = z
+  .object({
+    projectId: z.string().uuid(),
+    folderId: z.string().uuid().nullable().optional(),
+    title: z.string().min(1).regex(/\S/),
+    details: z.string().min(1).regex(/\S/).optional(),
+    preconditions: z.string().min(1).regex(/\S/).optional(),
+    testData: z.string().min(1).regex(/\S/).optional(),
+    priority: testScenarioPrioritySchema.default("medium"),
+    relatedIssueUrl: testScenarioRelatedIssueUrlSchema.nullable().optional(),
+    steps: z.array(CreateTestScenarioStepSchema).default([]),
+    suiteIds: z.array(z.string().uuid()).optional(),
+    newSuites: z
+      .array(z.object({ name: z.string().trim().min(1) }).strict())
+      .optional(),
+  })
+  .strict()
+  .openapi("CreateTestScenarioRequest");
+
+const TestScenarioCreatorSummarySchema = z
+  .object({
+    id: z.string().uuid(),
+    name: z.string(),
+    email: z.string(),
+  })
+  .strict()
+  .openapi("TestScenarioCreatorSummary");
+
+const TestScenarioSummarySchema = z
+  .object({
+    id: z.string().uuid(),
+    projectId: z.string().uuid(),
+    createdById: z.string().uuid(),
+    title: z.string(),
+    scenarioKey: z.string().regex(/^TMS-[1-9][0-9]*$/),
+    details: z.string().nullable(),
+    priority: z.union([testScenarioPrioritySchema, z.null()]),
+    createdBy: TestScenarioCreatorSummarySchema,
+    createdAt: z.string(),
+    updatedAt: z.string(),
+    folderId: z.string().uuid().nullable(),
+    folderName: z.string().nullable(),
+    matchedSuiteId: z.string().uuid().nullable().optional(),
+  })
+  .strict()
+  .openapi("TestScenarioSummary");
+
+const UpdateTestScenarioFieldSchema = z.string().min(1).regex(/\S/).nullable();
+
+const updateTestScenarioFields = {
+  folderId: z.string().uuid().nullable().optional(),
+  title: z.string().min(1).regex(/\S/).optional(),
+  details: UpdateTestScenarioFieldSchema.optional(),
+  preconditions: UpdateTestScenarioFieldSchema.optional(),
+  testData: UpdateTestScenarioFieldSchema.optional(),
+  priority: testScenarioPrioritySchema.optional(),
+  relatedIssueUrl: testScenarioRelatedIssueUrlSchema.nullable().optional(),
+};
+
+const UpdateTestScenarioRequestSchema = z
+  .object({
+    ...updateTestScenarioFields,
+    expectedRevision: z.number().int().positive().optional(),
+    steps: z
+      .array(
+        z
+          .object({
+            id: z.string().uuid().optional(),
+            action: z.string().min(1).regex(/\S/),
+            expectedResult: z.string().nullable().optional(),
+          })
+          .strict(),
+      )
+      .optional(),
+    suiteIds: z.array(z.string().uuid()).optional(),
+    newSuites: z
+      .array(z.object({ name: z.string().trim().min(1) }).strict())
+      .optional(),
+  })
+  .strict()
+  .refine((value) => Object.keys(value).length > 0, {
+    message: "At least one editable field is required",
+  })
+  .superRefine((value, context) => {
+    const collections = [value.steps, value.suiteIds, value.newSuites];
+    if (
+      collections.some((collection) => collection !== undefined) &&
+      (collections.some((collection) => collection === undefined) ||
+        value.expectedRevision === undefined)
+    ) {
+      context.addIssue({
+        code: "custom",
+        message:
+          "Editor saves require steps, suiteIds, newSuites and expectedRevision together",
+      });
+    }
+    if (
+      value.expectedRevision !== undefined &&
+      collections.every((collection) => collection === undefined)
+    ) {
+      context.addIssue({
+        code: "custom",
+        message: "expectedRevision requires editor collections",
+      });
+    }
+    for (const [path, ids] of [
+      ["steps", value.steps?.flatMap((step) => (step.id ? [step.id] : []))],
+      ["suiteIds", value.suiteIds],
+      ["newSuites", value.newSuites?.map((suite) => suite.name.toLowerCase())],
+    ] as const) {
+      if (ids && new Set(ids).size !== ids.length)
+        context.addIssue({
+          code: "custom",
+          path: [path],
+          message: "Duplicates are not allowed",
+        });
+    }
+  })
+  .openapi("UpdateTestScenarioRequest");
+
+const AppendTestScenarioStepRequestSchema = z
+  .object({
+    action: z.string().min(1).regex(/\S/),
+    expectedResult: z.string().min(1).regex(/\S/).optional(),
+  })
+  .strict()
+  .openapi("AppendTestScenarioStepRequest");
+
+const UpdateTestScenarioStepRequestSchema = z
+  .object({
+    action: z.string().min(1).regex(/\S/).optional(),
+    expectedResult: UpdateTestScenarioFieldSchema.optional(),
+  })
+  .strict()
+  .refine((value) => Object.keys(value).length > 0, {
+    message: "At least one step field is required",
+  })
+  .openapi("UpdateTestScenarioStepRequest");
+
+const ReorderTestScenarioStepsRequestSchema = z
+  .object({ stepIds: z.array(z.string().uuid()) })
+  .strict()
+  .openapi("ReorderTestScenarioStepsRequest");
+
+const TestScenarioIdParamsSchema = z
+  .object({
+    scenarioId: z.string().uuid(),
+  })
+  .openapi("TestScenarioIdParams");
+
+const TestScenarioStepParamsSchema = z
+  .object({
+    scenarioId: z.string().uuid(),
+    stepId: z.string().uuid(),
+  })
+  .openapi("TestScenarioStepParams");
+
+const TestScenarioProjectQuerySchema = z
+  .object({
+    projectId: z.string().uuid(),
+  })
+  .openapi("TestScenarioProjectQuery");
+
+const TestScenarioListQueryBaseSchema = z.object({
+    projectId: z.string().uuid(),
+    page: z.number().int().min(1).default(1).optional(),
+    limit: z.number().int().min(1).max(100).default(30).optional(),
+    search: z.string().trim().optional().openapi({
+      description:
+        "Optional surrounding whitespace is trimmed; the remaining value is matched as a case-insensitive literal substring of title or scenarioKey. Percent, underscore, and backslash are literal; details and other authored fields are not searched.",
+      example: "login",
+    }),
+    createdById: z.string().uuid().optional().openapi({
+      description:
+        "Optional creator User UUID filter. It may identify any user; a valid UUID with no matching scenarios returns an empty page.",
+      example: "33333333-3333-4333-8333-333333333333",
+    }),
+    createdByIds: z.string().regex(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}(,[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})*$/i).optional().openapi({
+      description: "Optional comma-separated creator User UUIDs. Scenarios matching any listed creator are included; cannot be combined with createdById.",
+      example: "33333333-3333-4333-8333-333333333333,44444444-4444-4444-8444-444444444444",
+    }),
+    priority: z.string().regex(/^(low|medium|high)(,(low|medium|high))*$/).optional().openapi({
+      description: "Comma-separated priorities; omitted includes scenarios with any priority, including null.",
+      example: "high",
+    }),
+    sort: z.enum(TEST_SCENARIO_SORT_VALUES).optional().openapi({
+      description:
+        "Ordering: recently_created (createdAt DESC, id DESC), recently_updated (updatedAt DESC, id DESC), or title_asc (title ASC, id ASC).",
+      example: "title_asc",
+    }),
+    sortField: z.enum(TEST_SCENARIO_SORT_FIELDS).optional().openapi({
+      description:
+        "Single sort column. Defaults to createdAt descending when omitted. Cannot be combined with legacy sort.",
+      example: "scenarioKey",
+    }),
+    sortDirection: z.enum(["asc", "desc"]).optional().openapi({
+      description:
+        "Sort direction; defaults to desc when sortField is supplied. Requires sortField.",
+      example: "asc",
+    }),
+    scenarioKey: z.string().trim().optional().openapi({
+      description:
+        "Case-insensitive literal substring filter for the persisted scenario key; whitespace-only values are ignored.",
+    }),
+    title: z.string().trim().optional().openapi({
+      description:
+        "Case-insensitive literal substring filter for title; whitespace-only values are ignored.",
+    }),
+    details: z.string().trim().optional().openapi({
+      description:
+        "Case-insensitive literal substring filter for persisted details; whitespace-only values are ignored.",
+    }),
+    folder: z.string().trim().optional().openapi({
+      description:
+        "Case-insensitive literal substring filter for the displayed full folder path or Unfiled value; whitespace-only values are ignored.",
+    }),
+    createdBy: z.string().trim().optional().openapi({
+      description:
+        "Case-insensitive literal substring filter for creator display name or email; whitespace-only values are ignored.",
+    }),
+    folderId: z.union([z.string().uuid(), z.literal("unfiled")]).optional(),
+    includeDescendants: z.boolean().optional(),
+    suiteId: z.string().uuid().optional(),
+  });
+
+const TestScenarioListQuerySchema = TestScenarioListQueryBaseSchema
+  .superRefine((value, context) => {
+    if (value.createdById && value.createdByIds)
+      context.addIssue({ code: "custom", path: ["createdByIds"], message: "Use createdById or createdByIds, not both" });
+    if (value.sortDirection && !value.sortField)
+      context.addIssue({
+        code: "custom",
+        path: ["sortDirection"],
+        message: "sortDirection requires sortField",
+      });
+    if (value.sortField && value.sort !== undefined)
+      context.addIssue({
+        code: "custom",
+        path: ["sort"],
+        message: "sort cannot be combined with sortField",
+      });
+  })
+  .openapi("TestScenarioListQuery");
+
+const TestScenarioListResponseSchema = z
+  .object({
+    scenarios: z.array(TestScenarioSummarySchema),
+    total: z.number().int().nonnegative(),
+    page: z.number().int().positive(),
+    limit: z.number().int().positive().max(100),
+    totalPages: z.number().int().nonnegative(),
+  })
+  .openapi("TestScenarioListResponse");
+
+const TestScenarioSelectionQuerySchema = TestScenarioListQueryBaseSchema.omit({ page: true, limit: true, sort: true, sortField: true, sortDirection: true }).strict().superRefine((value, context) => {
+  if (value.createdById && value.createdByIds) context.addIssue({ code: "custom", path: ["createdByIds"], message: "Use createdById or createdByIds, not both" });
+}).openapi("TestScenarioSelectionQuery");
+const TestScenarioSelectionResponseSchema = z.object({ scenarioIds: z.array(z.string().uuid()), total: z.number().int().nonnegative() }).strict().openapi("TestScenarioSelectionResponse");
+const TestScenarioAuthorsQuerySchema = TestScenarioListQueryBaseSchema.omit({ page: true, limit: true, createdById: true, createdByIds: true, sort: true, sortField: true, sortDirection: true }).strict().openapi("TestScenarioAuthorsQuery");
+const TestScenarioPriorityCountsQuerySchema = TestScenarioListQueryBaseSchema.omit({ page: true, limit: true, priority: true, sort: true, sortField: true, sortDirection: true }).strict().superRefine((value, context) => {
+  if (value.createdById && value.createdByIds) context.addIssue({ code: "custom", path: ["createdByIds"], message: "Use createdById or createdByIds, not both" });
+}).openapi("TestScenarioPriorityCountsQuery");
+const TestScenarioAuthorOptionSchema = z.object({
+  id: z.string().uuid(),
+  name: z.string(),
+  email: z.string(),
+  scenarioCount: z.number().int().nonnegative(),
+}).strict().openapi("TestScenarioAuthorOption");
+const TestScenarioAuthorsResponseSchema = z.object({ authors: z.array(TestScenarioAuthorOptionSchema) }).strict().openapi("TestScenarioAuthorsResponse");
+const TestScenarioPriorityCountsResponseSchema = z.object({ low: z.number().int().nonnegative(), medium: z.number().int().nonnegative(), high: z.number().int().nonnegative(), unprioritized: z.number().int().nonnegative() }).strict().openapi("TestScenarioPriorityCountsResponse");
+
+const OrganizationProjectQuerySchema = z.object({
+  projectId: z.string().uuid(),
+});
+const FolderBodySchema = z.object({
+  projectId: z.string().uuid(),
+  name: z.string().min(1),
+  description: z.string().nullable().optional().openapi({ description: "Optional folder description. Omission leaves it unchanged; null or blank clears it." }),
+  parentId: z.string().uuid().nullable().optional(),
+  position: z.number().int().nonnegative().optional(),
+});
+const FolderUpdateBodySchema = z.object({
+  name: z.string().min(1).optional(),
+  description: z.string().nullable().optional().openapi({ description: "Optional folder description. Omission leaves it unchanged; null or blank clears it." }),
+  parentId: z.string().uuid().nullable().optional(),
+  position: z.number().int().nonnegative().optional(),
+});
+const SuiteBodySchema = z.object({
+  projectId: z.string().uuid(),
+  name: z.string().min(1).openapi({ description: "Nonblank suite name. Names may repeat within the project; suite UUIDs identify suites." }),
+  description: z.string().nullable().optional(),
+  purpose: z.string().nullable().optional(),
+  release: z.string().nullable().optional(),
+});
+const SuiteUpdateBodySchema = z.object({
+  name: z.string().min(1).optional(),
+  description: z.string().nullable().optional(),
+  purpose: z.string().nullable().optional(),
+  release: z.string().nullable().optional(),
+});
+const MembersBodySchema = z.object({
+  projectId: z.string().uuid(),
+  scenarioIds: z.array(z.string().uuid()).min(1).max(100),
+});
+const CompleteMemberOrderSchema = z.array(z.string().uuid()).max(10_000);
+const MemberOrderBodySchema = z.object({
+  projectId: z.string().uuid(),
+  expectedMembershipRevision: z.number().int().nonnegative().optional(),
+  expectedScenarioIds: CompleteMemberOrderSchema.optional(),
+  scenarioIds: z.array(z.string().uuid()),
+});
+const MembershipUndoSchema = z.object({ suiteId: z.string().uuid(), addedScenarioIds: z.array(z.string().uuid()).max(10_000), removedMembers: z.array(z.object({ scenarioId: z.string().uuid(), position: z.number().int().nonnegative() })).max(10_000) });
+const MembershipChangeBodySchema = z.object({ projectId: z.string().uuid(), expectedMembershipRevision: z.number().int().nonnegative(), expectedScenarioIds: CompleteMemberOrderSchema, addScenarioIds: z.array(z.string().uuid()).max(10_000), removeScenarioIds: z.array(z.string().uuid()).max(10_000) });
+const MembershipRestoreBodySchema = z.object({ projectId: z.string().uuid(), expectedMembershipRevision: z.number().int().nonnegative(), expectedScenarioIds: CompleteMemberOrderSchema, restoreData: MembershipUndoSchema });
+const MoveUndoSchema = z.object({ sourceSuiteId: z.string().uuid(), destinationSuiteId: z.string().uuid(), sourceMembers: z.array(z.object({ scenarioId: z.string().uuid(), position: z.number().int().nonnegative() })).max(10_000), destinationAddedScenarioIds: z.array(z.string().uuid()).max(10_000) });
+const SuiteMoveBodySchema = z.object({ projectId: z.string().uuid(), sourceSuiteId: z.string().uuid(), destinationSuiteId: z.string().uuid(), expectedSourceMembershipRevision: z.number().int().nonnegative(), expectedDestinationMembershipRevision: z.number().int().nonnegative(), scenarioIds: z.array(z.string().uuid()).min(1).max(10_000), expectedSourceScenarioIds: CompleteMemberOrderSchema, expectedDestinationScenarioIds: CompleteMemberOrderSchema });
+const SuiteMoveRestoreBodySchema = z.object({ projectId: z.string().uuid(), expectedSourceMembershipRevision: z.number().int().nonnegative(), expectedDestinationMembershipRevision: z.number().int().nonnegative(), expectedSourceScenarioIds: CompleteMemberOrderSchema, expectedDestinationScenarioIds: CompleteMemberOrderSchema, restoreData: MoveUndoSchema });
+const BulkFolderBodySchema = z.object({
+  projectId: z.string().uuid(),
+  scenarioIds: z.array(z.string().uuid()).min(1).max(100),
+  folderId: z.string().uuid().nullable(),
+});
+const FolderResponseSchema: ZodTypeAny = z.object({
+  id: z.string().uuid(),
+  projectId: z.string().uuid(),
+  parentId: z.string().uuid().nullable(),
+  name: z.string(),
+  description: z.string().nullable(),
+  position: z.number().int(),
+  createdAt: z.string(),
+  updatedAt: z.string(),
+  scenarioCount: z.number().int().nonnegative(),
+  _count: z.object({ scenarios: z.number().int().nonnegative() }),
+  children: z.array(z.unknown()),
+});
+const FolderRecordResponseSchema = z.object({
+  id: z.string().uuid(),
+  projectId: z.string().uuid(),
+  parentId: z.string().uuid().nullable(),
+  name: z.string(),
+  description: z.string().nullable(),
+  position: z.number().int(),
+  createdAt: z.string(),
+  updatedAt: z.string(),
+});
+const FolderSnapshotSchema = z.object({ id: z.string().uuid(), projectId: z.string().uuid(), name: z.string(), description: z.string().nullable(), parentId: z.string().uuid().nullable(), position: z.number().int() });
+const FolderRestoreDataSchema = z.object({ folders: z.array(FolderSnapshotSchema), scenarios: z.array(z.object({ scenarioId: z.string().uuid(), folderId: z.string().uuid(), expectedRevision: z.number().int().nonnegative() })) });
+const FolderDeleteResponseSchema = z.object({ deleted: z.literal(true), restoreData: FolderRestoreDataSchema });
+const FolderRestorationBodySchema = z.object({ projectId: z.string().uuid(), restoreData: FolderRestoreDataSchema });
+const FolderMoveRestoreDataSchema = z.array(z.object({ scenarioId: z.string().uuid(), folderId: z.string().uuid().nullable(), expectedFolderId: z.string().uuid().nullable(), expectedRevision: z.number().int().nonnegative() })).max(10_000);
+const FolderMoveRestorationBodySchema = z.object({ projectId: z.string().uuid(), restoreData: FolderMoveRestoreDataSchema.min(1) });
+const SuiteMemberResponseSchema = z.object({
+  suiteId: z.string().uuid(),
+  testScenarioId: z.string().uuid(),
+  position: z.number().int(),
+  createdAt: z.string(),
+});
+const SuiteResponseSchema = z.object({
+  id: z.string().uuid(),
+  projectId: z.string().uuid(),
+  name: z.string(),
+  description: z.string().nullable(),
+  purpose: z.string().nullable(),
+  release: z.string().nullable(),
+  membershipRevision: z.number().int().nonnegative(),
+  createdAt: z.string(),
+  updatedAt: z.string(),
+  members: z.array(SuiteMemberResponseSchema).optional(),
+});
+const DeletedResponseSchema = z.object({ deleted: z.literal(true) });
+const MovedResponseSchema = z.object({ moved: z.number().int().nonnegative(), restoreData: FolderMoveRestoreDataSchema });
+const MemberOrderResponseSchema = z.object({
+  scenarioIds: z.array(z.string().uuid()),
+});
+const MembershipChangeResponseSchema = z.object({ scenarioIds: z.array(z.string().uuid()), membershipRevision: z.number().int().nonnegative(), restoreData: MembershipUndoSchema });
+const MembershipRestoreResponseSchema = z.object({ scenarioIds: z.array(z.string().uuid()), membershipRevision: z.number().int().nonnegative() });
+const SuiteMoveResponseSchema = z.object({ sourceScenarioIds: z.array(z.string().uuid()), destinationScenarioIds: z.array(z.string().uuid()), sourceMembershipRevision: z.number().int().nonnegative(), destinationMembershipRevision: z.number().int().nonnegative(), restoreData: MoveUndoSchema, alreadyInDestination: z.array(z.string().uuid()) });
+const SuiteMoveRestoreResponseSchema = z.object({ sourceScenarioIds: z.array(z.string().uuid()), destinationScenarioIds: z.array(z.string().uuid()), sourceMembershipRevision: z.number().int().nonnegative(), destinationMembershipRevision: z.number().int().nonnegative() });
+const FolderDeleteQuerySchema = OrganizationProjectQuerySchema;
+
+function organizationResponseSchema(path: string, method: string): ZodTypeAny {
+  if (path === "/api/v2/test-scenarios/folder-restoration") return z.array(z.object({ id: z.string().uuid(), folderId: z.string().uuid().nullable(), revision: z.number().int().nonnegative() }));
+  if (path.endsWith("/restoration")) return z.object({ restored: z.literal(true) });
+  if (path.endsWith("test-scenario-folders/{folderId}") && method === "delete") return FolderDeleteResponseSchema;
+  if (path.endsWith("/membership-changes")) return MembershipChangeResponseSchema;
+  if (path.endsWith("/membership-restoration")) return MembershipRestoreResponseSchema;
+  if (path.endsWith("/moves")) return SuiteMoveResponseSchema;
+  if (path.endsWith("/move-restoration")) return SuiteMoveRestoreResponseSchema;
+  if (path.includes("bulk-folder")) return MovedResponseSchema;
+  if (path.endsWith("/members/order")) return MemberOrderResponseSchema;
+  if (path.endsWith("/members")) return z.array(SuiteMemberResponseSchema);
+  if (method === "delete") return DeletedResponseSchema;
+  if (path.includes("test-scenario-folders"))
+    return method === "get"
+      ? z.array(FolderResponseSchema)
+      : FolderRecordResponseSchema;
+  if (path === "/api/v2/test-suites" && method === "get")
+    return z.array(SuiteResponseSchema);
+  return SuiteResponseSchema;
+}
+
+const TestScenarioSpecLinkBodySchema = z
+  .object({
+    specId: z.string().uuid(),
+  })
+  .openapi("TestScenarioSpecLinkBody");
+
+const TestScenarioSpecLinkResponseSchema = z
+  .object({
+    scenarioId: z.string().uuid(),
+    specId: z.string().uuid(),
+  })
+  .openapi("TestScenarioSpecLinkResponse");
+
+const TestScenarioLinkedSpecSchema = z
+  .object({
+    id: z.string().uuid(),
+    projectId: z.string().uuid(),
+    key: z.string(),
+    file: z.string(),
+    title: z.string(),
+    tags: z.array(z.string()),
+    annotations: z.array(z.unknown()),
+    createdAt: z.string(),
+    updatedAt: z.string(),
+  })
+  .openapi("TestScenarioLinkedSpec");
+
+const TestScenarioSpecLinkListQuerySchema = z
+  .object({
+    projectId: z.string().uuid(),
+    page: z.number().int().min(1).default(1).optional(),
+    limit: z.number().int().min(1).max(100).default(30).optional(),
+  })
+  .openapi("TestScenarioSpecLinkListQuery");
+
+const TestScenarioSpecLinkDeleteParamsSchema = z
+  .object({
+    scenarioId: z.string().uuid(),
+    specId: z.string().uuid(),
+  })
+  .openapi("TestScenarioSpecLinkDeleteParams");
+
+const TestScenarioEvidenceQuerySchema = z
+  .object({
+    projectId: z.string().uuid(),
+    page: z.number().int().min(1).default(1).optional(),
+    limit: z.number().int().min(1).max(100).default(30).optional(),
+  })
+  .openapi("TestScenarioEvidenceQuery");
+
+const TestScenarioSpecLinkListResponseSchema = z
+  .object({
+    scenarioId: z.string().uuid(),
+    projectId: z.string().uuid(),
+    specs: z.array(TestScenarioLinkedSpecSchema),
+    total: z.number().int().nonnegative(),
+    page: z.number().int().positive(),
+    limit: z.number().int().positive().max(100),
+    totalPages: z.number().int().nonnegative(),
+  })
+  .openapi("TestScenarioSpecLinkListResponse");
+
+const TestScenarioObservedIssueSchema = z
+  .object({
+    id: z.string().uuid(),
+    createdAt: z.string(),
+    updatedAt: z.string(),
+    name: z.string(),
+    category: z.string(),
+    description: z.string().nullable(),
+    portal: z.string().nullable(),
+    service: z.string().nullable(),
+    ticket: z.string().nullable(),
+    createdBy: z
+      .object({
+        id: z.string().uuid(),
+        name: z.string(),
+        email: z.string(),
+        createdAt: z.string(),
+      })
+      .nullable(),
+    updatedBy: z
+      .object({
+        id: z.string().uuid(),
+        name: z.string(),
+        email: z.string(),
+        createdAt: z.string(),
+      })
+      .nullable(),
+  })
+  .openapi("TestScenarioObservedIssue");
+
+const TestScenarioResultsResponseSchema = z
+  .object({
+    scenarioId: z.string().uuid(),
+    projectId: z.string().uuid(),
+    linkedSpecCount: z.number().int().nonnegative(),
+    results: z.array(ResultSchema),
+    total: z.number().int().nonnegative(),
+    page: z.number().int().positive(),
+    limit: z.number().int().positive().max(100),
+    totalPages: z.number().int().nonnegative(),
+  })
+  .openapi("TestScenarioResultsResponse");
+
+const TestScenarioIssuesResponseSchema = z
+  .object({
+    scenarioId: z.string().uuid(),
+    projectId: z.string().uuid(),
+    linkedSpecCount: z.number().int().nonnegative(),
+    issues: z.array(TestScenarioObservedIssueSchema),
+    total: z.number().int().nonnegative(),
+    page: z.number().int().positive(),
+    limit: z.number().int().positive().max(100),
+    totalPages: z.number().int().nonnegative(),
+  })
+  .openapi("TestScenarioIssuesResponse");
+
+export function registerTestScenarioRoutes(registry: OpenAPIRegistry): void {
+  registry.register("TestScenario", TestScenarioSchema);
+  registry.register(
+    "CreateTestScenarioRequest",
+    CreateTestScenarioRequestSchema,
+  );
+  registry.register("CreateTestScenarioStep", CreateTestScenarioStepSchema);
+  registry.register(
+    "TestScenarioCreatorSummary",
+    TestScenarioCreatorSummarySchema,
+  );
+  registry.register("TestScenarioSummary", TestScenarioSummarySchema);
+  registry.register(
+    "UpdateTestScenarioRequest",
+    UpdateTestScenarioRequestSchema,
+  );
+  registry.register(
+    "AppendTestScenarioStepRequest",
+    AppendTestScenarioStepRequestSchema,
+  );
+  registry.register(
+    "UpdateTestScenarioStepRequest",
+    UpdateTestScenarioStepRequestSchema,
+  );
+  registry.register(
+    "ReorderTestScenarioStepsRequest",
+    ReorderTestScenarioStepsRequestSchema,
+  );
+  registry.register("TestScenarioIdParams", TestScenarioIdParamsSchema);
+  registry.register("TestScenarioStepParams", TestScenarioStepParamsSchema);
+  registry.register("TestScenarioProjectQuery", TestScenarioProjectQuerySchema);
+  registry.register("TestScenarioListQuery", TestScenarioListQuerySchema);
+  registry.register("TestScenarioListResponse", TestScenarioListResponseSchema);
+  registry.register("TestScenarioSelectionQuery", TestScenarioSelectionQuerySchema);
+  registry.register("TestScenarioSelectionResponse", TestScenarioSelectionResponseSchema);
+  registry.register("TestScenarioAuthorsResponse", TestScenarioAuthorsResponseSchema);
+  registry.register("TestScenarioPriorityCountsResponse", TestScenarioPriorityCountsResponseSchema);
+  registry.register("TestScenarioSpecLinkBody", TestScenarioSpecLinkBodySchema);
+  registry.register(
+    "TestScenarioSpecLinkResponse",
+    TestScenarioSpecLinkResponseSchema,
+  );
+  registry.register("TestScenarioLinkedSpec", TestScenarioLinkedSpecSchema);
+  registry.register(
+    "TestScenarioSpecLinkListQuery",
+    TestScenarioSpecLinkListQuerySchema,
+  );
+  registry.register(
+    "TestScenarioSpecLinkDeleteParams",
+    TestScenarioSpecLinkDeleteParamsSchema,
+  );
+  registry.register(
+    "TestScenarioEvidenceQuery",
+    TestScenarioEvidenceQuerySchema,
+  );
+  registry.register(
+    "TestScenarioSpecLinkListResponse",
+    TestScenarioSpecLinkListResponseSchema,
+  );
+  registry.register(
+    "TestScenarioObservedIssue",
+    TestScenarioObservedIssueSchema,
+  );
+  registry.register(
+    "TestScenarioResultsResponse",
+    TestScenarioResultsResponseSchema,
+  );
+  registry.register(
+    "TestScenarioIssuesResponse",
+    TestScenarioIssuesResponseSchema,
+  );
+
+  const errorResponse = (description: string) => ({
+    description,
+    content: {
+      "application/json": { schema: ErrorResponseSchema },
+    },
+  });
+
+  registry.registerPath({
+    method: "post",
+    path: "/api/v2/test-scenarios/{scenarioId}/spec-links",
+    description: "Links a project-local Spec to a test scenario.",
+    request: {
+      params: TestScenarioIdParamsSchema,
+      query: TestScenarioProjectQuerySchema,
+      body: {
+        required: true,
+        content: {
+          "application/json": { schema: TestScenarioSpecLinkBodySchema },
+        },
+      },
+    },
+    security: [{ BearerAuth: [] }],
+    responses: {
+      201: {
+        description: "Test scenario Spec link created",
+        content: {
+          "application/json": { schema: TestScenarioSpecLinkResponseSchema },
+        },
+      },
+      400: errorResponse("Invalid scenario, project, or Spec link input"),
+      401: errorResponse("Unauthorized"),
+      404: errorResponse("Test scenario or Spec not found in the project"),
+      409: errorResponse("The scenario/Spec link already exists"),
+      500: errorResponse("Internal server error"),
+    },
+    tags: ["Test Scenarios"],
+  });
+
+  registry.registerPath({
+    method: "patch",
+    path: "/api/v2/test-scenarios/{scenarioId}",
+    description:
+      "Atomically updates structured fields or the complete editor aggregate. Editor saves require steps, suiteIds, newSuites and expectedRevision together; array order sets step positions and retained step IDs are preserved. Empty collections clear them; omitted collections preserve them. Generated keys and Markdown are read-only. A stale revision returns 409 and requires explicit reload.",
+    request: {
+      params: TestScenarioIdParamsSchema,
+      query: TestScenarioProjectQuerySchema,
+      body: {
+        required: true,
+        content: {
+          "application/json": { schema: UpdateTestScenarioRequestSchema },
+        },
+      },
+    },
+    security: [{ BearerAuth: [] }],
+    responses: {
+      200: {
+        description: "Updated test scenario details",
+        content: {
+          "application/json": { schema: TestScenarioSchema },
+        },
+      },
+      400: errorResponse("Invalid scenario, project, or update input"),
+      401: errorResponse("Unauthorized"),
+      404: errorResponse("Test scenario not found in the requested project"),
+      409: errorResponse(
+        "Stale scenario revision; reload explicitly before saving",
+      ),
+      500: errorResponse("Internal server error"),
+    },
+    tags: ["Test Scenarios"],
+  });
+
+  registry.registerPath({
+    method: "post",
+    path: "/api/v2/test-scenarios/{scenarioId}/steps",
+    description:
+      "Appends a stable-ID step and regenerates the scenario projection.",
+    request: {
+      params: TestScenarioIdParamsSchema,
+      query: TestScenarioProjectQuerySchema,
+      body: {
+        required: true,
+        content: {
+          "application/json": { schema: AppendTestScenarioStepRequestSchema },
+        },
+      },
+    },
+    security: [{ BearerAuth: [] }],
+    responses: {
+      201: {
+        description: "Step appended; complete scenario returned",
+        content: { "application/json": { schema: TestScenarioSchema } },
+      },
+      400: errorResponse("Invalid step or project context"),
+      401: errorResponse("Unauthorized"),
+      404: errorResponse("Test scenario not found in the requested project"),
+      500: errorResponse("Internal server error"),
+    },
+    tags: ["Test Scenarios"],
+  });
+
+  registry.registerPath({
+    method: "patch",
+    path: "/api/v2/test-scenarios/{scenarioId}/steps/{stepId}",
+    description: "Partially edits a project-scoped stable-ID step.",
+    request: {
+      params: TestScenarioStepParamsSchema,
+      query: TestScenarioProjectQuerySchema,
+      body: {
+        required: true,
+        content: {
+          "application/json": { schema: UpdateTestScenarioStepRequestSchema },
+        },
+      },
+    },
+    security: [{ BearerAuth: [] }],
+    responses: {
+      200: {
+        description: "Step updated; complete scenario returned",
+        content: { "application/json": { schema: TestScenarioSchema } },
+      },
+      400: errorResponse("Invalid step or project context"),
+      401: errorResponse("Unauthorized"),
+      404: errorResponse(
+        "Test scenario or step not found in the requested project",
+      ),
+      500: errorResponse("Internal server error"),
+    },
+    tags: ["Test Scenarios"],
+  });
+
+  registry.registerPath({
+    method: "delete",
+    path: "/api/v2/test-scenarios/{scenarioId}/steps/{stepId}",
+    description:
+      "Deletes a step, compacts positions, and regenerates the projection.",
+    request: {
+      params: TestScenarioStepParamsSchema,
+      query: TestScenarioProjectQuerySchema,
+    },
+    security: [{ BearerAuth: [] }],
+    responses: {
+      200: {
+        description: "Step deleted; complete scenario returned",
+        content: { "application/json": { schema: TestScenarioSchema } },
+      },
+      400: errorResponse("Invalid step or project context"),
+      401: errorResponse("Unauthorized"),
+      404: errorResponse(
+        "Test scenario or step not found in the requested project",
+      ),
+      500: errorResponse("Internal server error"),
+    },
+    tags: ["Test Scenarios"],
+  });
+
+  registry.registerPath({
+    method: "put",
+    path: "/api/v2/test-scenarios/{scenarioId}/steps/order",
+    description:
+      "Reorders all current steps using their complete stable-ID list.",
+    request: {
+      params: TestScenarioIdParamsSchema,
+      query: TestScenarioProjectQuerySchema,
+      body: {
+        required: true,
+        content: {
+          "application/json": { schema: ReorderTestScenarioStepsRequestSchema },
+        },
+      },
+    },
+    security: [{ BearerAuth: [] }],
+    responses: {
+      200: {
+        description: "Steps reordered; complete scenario returned",
+        content: { "application/json": { schema: TestScenarioSchema } },
+      },
+      400: errorResponse(
+        "stepIds must contain every current step exactly once",
+      ),
+      401: errorResponse("Unauthorized"),
+      404: errorResponse("Test scenario not found in the requested project"),
+      500: errorResponse("Internal server error"),
+    },
+    tags: ["Test Scenarios"],
+  });
+
+  registry.registerPath({
+    method: "get",
+    path: "/api/v2/test-scenarios/{scenarioId}/spec-links",
+    description: "Lists Specs linked to a test scenario.",
+    request: {
+      params: TestScenarioIdParamsSchema,
+      query: TestScenarioSpecLinkListQuerySchema,
+    },
+    security: [{ BearerAuth: [] }],
+    responses: {
+      200: {
+        description: "Paginated linked Specs",
+        content: {
+          "application/json": {
+            schema: TestScenarioSpecLinkListResponseSchema,
+          },
+        },
+      },
+      400: errorResponse("Invalid scenario, project, or pagination query"),
+      401: errorResponse("Unauthorized"),
+      404: errorResponse("Test scenario not found in the project"),
+      500: errorResponse("Internal server error"),
+    },
+    tags: ["Test Scenarios"],
+  });
+
+  registry.registerPath({
+    method: "delete",
+    path: "/api/v2/test-scenarios/{scenarioId}/spec-links/{specId}",
+    description: "Removes a Spec link without deleting either endpoint.",
+    request: {
+      params: TestScenarioSpecLinkDeleteParamsSchema,
+      query: TestScenarioProjectQuerySchema,
+    },
+    security: [{ BearerAuth: [] }],
+    responses: {
+      204: { description: "Test scenario Spec link removed" },
+      400: errorResponse("Invalid scenario, project, or Spec identifier"),
+      401: errorResponse("Unauthorized"),
+      404: errorResponse("Test scenario Spec link not found in the project"),
+      500: errorResponse("Internal server error"),
+    },
+    tags: ["Test Scenarios"],
+  });
+
+  registry.registerPath({
+    method: "get",
+    path: "/api/v2/test-scenarios/{scenarioId}/results",
+    description: "Lists paginated execution Results across linked Specs.",
+    request: {
+      params: TestScenarioIdParamsSchema,
+      query: TestScenarioEvidenceQuerySchema,
+    },
+    security: [{ BearerAuth: [] }],
+    responses: {
+      200: {
+        description: "Paginated scenario Result evidence",
+        content: {
+          "application/json": { schema: TestScenarioResultsResponseSchema },
+        },
+      },
+      400: errorResponse("Invalid scenario, project, or pagination query"),
+      401: errorResponse("Unauthorized"),
+      404: errorResponse("Test scenario not found in the project"),
+      500: errorResponse("Internal server error"),
+    },
+    tags: ["Test Scenarios"],
+  });
+
+  registry.registerPath({
+    method: "get",
+    path: "/api/v2/test-scenarios/{scenarioId}/issues",
+    description: "Lists paginated observed Issues across linked Specs.",
+    request: {
+      params: TestScenarioIdParamsSchema,
+      query: TestScenarioEvidenceQuerySchema,
+    },
+    security: [{ BearerAuth: [] }],
+    responses: {
+      200: {
+        description: "Paginated scenario Issue evidence",
+        content: {
+          "application/json": { schema: TestScenarioIssuesResponseSchema },
+        },
+      },
+      400: errorResponse("Invalid scenario, project, or pagination query"),
+      401: errorResponse("Unauthorized"),
+      404: errorResponse("Test scenario not found in the project"),
+      500: errorResponse("Internal server error"),
+    },
+    tags: ["Test Scenarios"],
+  });
+
+  registry.registerPath({
+    method: "post",
+    path: "/api/v2/test-scenarios",
+    description:
+      "Creates a project-scoped structured Test Scenario with optional initial steps and generated Markdown.",
+    request: {
+      body: {
+        required: true,
+        content: {
+          "application/json": {
+            schema: CreateTestScenarioRequestSchema,
+          },
+        },
+      },
+    },
+    security: [{ BearerAuth: [] }],
+    responses: {
+      201: {
+        description: "Test scenario created",
+        content: {
+          "application/json": { schema: TestScenarioSchema },
+        },
+      },
+      400: {
+        description: "Invalid test scenario input",
+        content: {
+          "application/json": { schema: ErrorResponseSchema },
+        },
+      },
+      401: {
+        description: "Unauthorized",
+        content: {
+          "application/json": { schema: ErrorResponseSchema },
+        },
+      },
+      404: {
+        description: "Project not found",
+        content: {
+          "application/json": { schema: ErrorResponseSchema },
+        },
+      },
+      409: errorResponse(
+        "Scenario revision conflict; no scenario or suite changes saved",
+      ),
+      500: {
+        description: "Internal server error",
+        content: {
+          "application/json": { schema: ErrorResponseSchema },
+        },
+      },
+    },
+    tags: ["Test Scenarios"],
+  });
+
+  registry.registerPath({
+    method: "get",
+    path: "/api/v2/test-scenarios",
+    description:
+      "Lists lightweight project-scoped Test Scenario summaries without Markdown bodies. Global search matches title or scenarioKey; the independent scenarioKey, title, details, folder-path, and creator-name/email filters are combined before sorting and pagination. Text matching is case-insensitive literal substring matching; whitespace-only column filters are ignored. sortField supports scenarioKey, title, details, folder, createdBy, createdAt, and updatedAt; sortDirection defaults to desc. Omit sortField for createdAt DESC then id DESC. Legacy sort presets remain supported and cannot be combined with sortField. Totals count matching scenarios.",
+    request: {
+      query: TestScenarioListQuerySchema,
+    },
+    security: [{ BearerAuth: [] }],
+    responses: {
+      200: {
+        description: "Paginated test scenarios",
+        content: {
+          "application/json": { schema: TestScenarioListResponseSchema },
+        },
+      },
+      400: {
+        description:
+          "Invalid project, pagination, search type, creator User UUID, or sort value",
+        content: {
+          "application/json": { schema: ErrorResponseSchema },
+        },
+      },
+      401: {
+        description: "Unauthorized",
+        content: {
+          "application/json": { schema: ErrorResponseSchema },
+        },
+      },
+      500: {
+        description: "Internal server error",
+        content: {
+          "application/json": { schema: ErrorResponseSchema },
+        },
+      },
+    },
+    tags: ["Test Scenarios"],
+  });
+
+  for (const [path, query, responseSchema, description] of [
+    ["/api/v2/test-scenarios/authors", TestScenarioAuthorsQuerySchema, TestScenarioAuthorsResponseSchema, "Returns project creators and counts matching the supplied catalog scope and filters, excluding author selection and pagination."],
+    ["/api/v2/test-scenarios/priority-counts", TestScenarioPriorityCountsQuerySchema, TestScenarioPriorityCountsResponseSchema, "Returns priority counts matching the supplied catalog scope and filters, excluding priority and pagination."],
+    ["/api/v2/test-scenarios/selection", TestScenarioSelectionQuerySchema, TestScenarioSelectionResponseSchema, "Resolves all unique matching scenario UUIDs using the catalog filters, without returning summary or Markdown content."],
+  ] as const) {
+    registry.registerPath({
+      method: "get",
+      path,
+      description,
+      request: { query },
+      security: [{ BearerAuth: [] }],
+      responses: {
+        200: { description: "Scenario catalog lookup succeeded", content: { "application/json": { schema: responseSchema } } },
+        400: { description: "Invalid project or filter", content: { "application/json": { schema: ErrorResponseSchema } } },
+        401: { description: "Unauthorized", content: { "application/json": { schema: ErrorResponseSchema } } },
+        404: { description: "Project, folder, or suite not found", content: { "application/json": { schema: ErrorResponseSchema } } },
+      },
+      tags: ["Test Scenarios"],
+    });
+  }
+
+  registry.registerPath({
+    method: "get",
+    path: "/api/v2/test-scenarios/{scenarioId}",
+    description:
+      "Retrieves a complete structured Test Scenario with ordered steps and exact persisted generated Markdown within a project context.",
+    request: {
+      params: TestScenarioIdParamsSchema,
+      query: TestScenarioProjectQuerySchema,
+    },
+    security: [{ BearerAuth: [] }],
+    responses: {
+      200: {
+        description: "Test scenario details",
+        content: {
+          "application/json": { schema: TestScenarioSchema },
+        },
+      },
+      400: {
+        description: "Invalid scenario or project identifier",
+        content: {
+          "application/json": { schema: ErrorResponseSchema },
+        },
+      },
+      401: {
+        description: "Unauthorized",
+        content: {
+          "application/json": { schema: ErrorResponseSchema },
+        },
+      },
+      404: {
+        description: "Test scenario not found in the requested project",
+        content: {
+          "application/json": { schema: ErrorResponseSchema },
+        },
+      },
+      500: {
+        description: "Internal server error",
+        content: {
+          "application/json": { schema: ErrorResponseSchema },
+        },
+      },
+    },
+    tags: ["Test Scenarios"],
+  });
+
+  registry.registerPath({
+    method: "delete",
+    path: "/api/v2/test-scenarios/{scenarioId}",
+    description: "Deletes a test scenario within a project context.",
+    request: {
+      params: TestScenarioIdParamsSchema,
+      query: TestScenarioProjectQuerySchema,
+    },
+    security: [{ BearerAuth: [] }],
+    responses: {
+      204: {
+        description: "Test scenario deleted",
+      },
+      400: {
+        description: "Invalid scenario or project identifier",
+        content: {
+          "application/json": { schema: ErrorResponseSchema },
+        },
+      },
+      401: {
+        description: "Unauthorized",
+        content: {
+          "application/json": { schema: ErrorResponseSchema },
+        },
+      },
+      404: {
+        description: "Test scenario not found in the requested project",
+        content: {
+          "application/json": { schema: ErrorResponseSchema },
+        },
+      },
+      500: {
+        description: "Internal server error",
+        content: {
+          "application/json": { schema: ErrorResponseSchema },
+        },
+      },
+    },
+    tags: ["Test Scenarios"],
+  });
+
+  registry.register("OrganizationProjectQuery", OrganizationProjectQuerySchema);
+  registry.register("TestScenarioFolderRequest", FolderBodySchema);
+  registry.register("TestSuiteRequest", SuiteBodySchema);
+  registry.register("TestSuiteMembersRequest", MembersBodySchema);
+  registry.register("TestScenarioBulkFolderRequest", BulkFolderBodySchema);
+  registry.register("TestScenarioFolderResponse", FolderResponseSchema);
+  registry.register("TestSuiteMemberResponse", SuiteMemberResponseSchema);
+  registry.register("TestSuiteResponse", SuiteResponseSchema);
+  registry.register(
+    "TestScenarioOrganizationDeleteResponse",
+    DeletedResponseSchema,
+  );
+  registry.register("TestScenarioBulkFolderResponse", MovedResponseSchema);
+  registry.register("TestSuiteMemberOrderResponse", MemberOrderResponseSchema);
+  const orgErrors = {
+    400: {
+      description: "Invalid request",
+      content: { "application/json": { schema: ErrorResponseSchema } },
+    },
+    401: {
+      description: "Unauthorized",
+      content: { "application/json": { schema: ErrorResponseSchema } },
+    },
+    404: {
+      description: "Project or resource not found",
+      content: { "application/json": { schema: ErrorResponseSchema } },
+    },
+    409: {
+      description: "Membership order conflict or folder name conflict",
+      content: { "application/json": { schema: ErrorResponseSchema } },
+    },
+    500: {
+      description: "Internal server error",
+      content: { "application/json": { schema: ErrorResponseSchema } },
+    },
+  };
+  const projectQuery = { query: OrganizationProjectQuerySchema };
+  for (const [path, methods] of Object.entries({
+    "/api/v2/test-scenario-folders": ["get", "post"],
+    "/api/v2/test-scenario-folders/{folderId}": ["patch", "delete"],
+    "/api/v2/test-scenario-folders/restoration": ["post"],
+    "/api/v2/test-scenarios/folder-restoration": ["post"],
+    "/api/v2/test-suites": ["get", "post"],
+    "/api/v2/test-suites/{suiteId}": ["get", "patch", "delete"],
+    "/api/v2/test-suites/{suiteId}/members": ["post", "delete"],
+    "/api/v2/test-suites/{suiteId}/membership-changes": ["post"],
+    "/api/v2/test-suites/{suiteId}/membership-restoration": ["post"],
+    "/api/v2/test-suites/moves": ["post"],
+    "/api/v2/test-suites/move-restoration": ["post"],
+    "/api/v2/test-suites/{suiteId}/members/order": ["put"],
+    "/api/v2/test-scenarios/bulk-folder": ["patch"],
+  })) {
+    for (const method of methods)
+      registry.registerPath({
+        method: method as "get" | "post" | "patch" | "delete" | "put",
+        path,
+        tags: ["Test Scenarios"],
+        description:
+          "Authenticated project-scoped test scenario organization operation.",
+        request:
+          method === "get" ||
+          (method === "delete" && !path.endsWith("/members"))
+            ? {
+                query:
+                  path.includes("{folderId}") && method === "delete"
+                    ? FolderDeleteQuerySchema
+                    : OrganizationProjectQuerySchema,
+                ...(path.includes("{folderId}")
+                  ? { params: z.object({ folderId: z.string().uuid() }) }
+                  : path.includes("{suiteId}")
+                    ? { params: z.object({ suiteId: z.string().uuid() }) }
+                    : {}),
+              }
+            : {
+                ...(path.includes("{folderId}")
+                  ? { params: z.object({ folderId: z.string().uuid() }) }
+                  : path.includes("{suiteId}")
+                    ? { params: z.object({ suiteId: z.string().uuid() }) }
+                    : {}),
+                ...(method === "patch" && !path.includes("bulk-folder")
+                  ? projectQuery
+                  : {}),
+                body: {
+                  content: {
+                    "application/json": {
+                      schema: path.includes("bulk-folder")
+                        ? BulkFolderBodySchema
+                        : path.endsWith("/membership-changes")
+                          ? MembershipChangeBodySchema
+                          : path.endsWith("/membership-restoration")
+                            ? MembershipRestoreBodySchema
+                            : path.endsWith("/moves")
+                              ? SuiteMoveBodySchema
+                              : path.endsWith("/move-restoration")
+                                ? SuiteMoveRestoreBodySchema
+                        : path === "/api/v2/test-scenario-folders/restoration"
+                          ? FolderRestorationBodySchema
+                          : path === "/api/v2/test-scenarios/folder-restoration"
+                            ? FolderMoveRestorationBodySchema
+                        : path.endsWith("/members/order")
+                          ? MemberOrderBodySchema
+                          : path.includes("members")
+                            ? MembersBodySchema
+                            : path.includes("folders")
+                              ? method === "patch"
+                                ? FolderUpdateBodySchema
+                                : FolderBodySchema
+                              : method === "patch"
+                                ? SuiteUpdateBodySchema
+                                : SuiteBodySchema,
+                    },
+                  },
+                },
+              },
+        security: [{ BearerAuth: [] }],
+        responses: {
+          [method === "post" &&
+          (path === "/api/v2/test-scenario-folders" ||
+            path === "/api/v2/test-suites")
+            ? 201
+            : 200]: {
+            description: "Organization operation succeeded",
+            content: {
+              "application/json": {
+                schema: organizationResponseSchema(path, method),
+              },
+            },
+          },
+          ...orgErrors,
+        },
+      });
+  }
+}
+
+export {
+  CreateTestScenarioRequestSchema,
+  CreateTestScenarioStepSchema,
+  TestScenarioCreatorSummarySchema,
+  AppendTestScenarioStepRequestSchema,
+  UpdateTestScenarioStepRequestSchema,
+  ReorderTestScenarioStepsRequestSchema,
+  UpdateTestScenarioRequestSchema,
+  TestScenarioEvidenceQuerySchema,
+  TestScenarioIdParamsSchema,
+  TestScenarioStepParamsSchema,
+  TestScenarioIssuesResponseSchema,
+  TestScenarioLinkedSpecSchema,
+  TestScenarioListQuerySchema,
+  TestScenarioListResponseSchema,
+  TestScenarioObservedIssueSchema,
+  TestScenarioProjectQuerySchema,
+  TestScenarioResultsResponseSchema,
+  TestScenarioSpecLinkBodySchema,
+  TestScenarioSpecLinkDeleteParamsSchema,
+  TestScenarioSpecLinkListQuerySchema,
+  TestScenarioSpecLinkListResponseSchema,
+  TestScenarioSpecLinkResponseSchema,
+  TestScenarioSchema,
+  TestScenarioSummarySchema,
+};

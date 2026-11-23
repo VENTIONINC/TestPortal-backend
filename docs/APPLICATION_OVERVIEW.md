@@ -153,6 +153,13 @@ Execution (Test Run)
 
 ## Security & Authentication
 
+### Project Access Model
+
+- **Shared workspace today**: Every active authenticated user can read and mutate every project and its project-scoped resources.
+- **Ownership is attribution**: `Project.ownerId` records the creator or attributed owner. It is not a tenant, membership, visibility, or authorization boundary, and normal project updates do not transfer it.
+- **Independent boundaries remain enforced**: Authentication, active-account checks, admin-only user management, and upload API key scope continue to apply independently of project ownership.
+- **Future tenant isolation is a breaking capability**: Organization-based isolation would require explicit organization membership data, migration rules, and endpoint authorization behavior. It must not be inferred from `ownerId`.
+
 ### User Management
 - **Account System**: User registration with email/password
 - **MCP Token Authentication**: Secure API access for AI tools
@@ -209,7 +216,7 @@ Execution (Test Run)
 ### Planned Enhancements
 1. **Real-time Dashboard**: WebSocket-based live test monitoring
 2. **Advanced ML**: Custom ML models for error classification
-3. **Multi-tenant Support**: Organization-based data isolation
+3. **Multi-tenant Support**: Introduce organization membership and organization-based data isolation as a separate future capability
 4. **Advanced Reporting**: Custom report builder with visualizations
 5. **Webhook System**: Event-driven integrations with external tools
 
