@@ -41,7 +41,10 @@ export const jsonBodyParser = Router();
 
 // These routes parse JSON after authentication using their own limits.
 const deferToRoute: RequestHandler = (_req, _res, next) => next("router");
-for (const { method, path } of [...Object.values(manualTestRunJsonRoutes), ...Object.values(scenarioTagSelectionRoutes)]) {
+for (const { method, path } of [
+  ...Object.values(manualTestRunJsonRoutes),
+  ...Object.values(scenarioTagSelectionRoutes),
+]) {
   jsonBodyParser[method](`/api${path}`, deferToRoute);
 }
 

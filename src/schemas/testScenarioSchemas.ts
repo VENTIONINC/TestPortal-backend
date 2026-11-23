@@ -9,17 +9,27 @@ import {
 
 const uuidSchema = z.string().uuid("Must be a valid UUID");
 const nonBlankText = z.string().trim().min(1, "Value must not be blank");
-const commaSeparatedUuidSchema = z.string().min(1).superRefine((value, context) => {
-  const ids = value.split(",");
-  ids.forEach((id, index) => {
-    if (!uuidSchema.safeParse(id).success) {
-      context.addIssue({ code: "custom", path: [index], message: "Each value must be a valid UUID" });
+const commaSeparatedUuidSchema = z
+  .string()
+  .min(1)
+  .superRefine((value, context) => {
+    const ids = value.split(",");
+    ids.forEach((id, index) => {
+      if (!uuidSchema.safeParse(id).success) {
+        context.addIssue({
+          code: "custom",
+          path: [index],
+          message: "Each value must be a valid UUID",
+        });
+      }
+    });
+    if (new Set(ids.map((id) => id.toLowerCase())).size !== ids.length) {
+      context.addIssue({
+        code: "custom",
+        message: "Creator UUIDs must be unique",
+      });
     }
   });
-  if (new Set(ids.map((id) => id.toLowerCase())).size !== ids.length) {
-    context.addIssue({ code: "custom", message: "Creator UUIDs must be unique" });
-  }
-});
 
 export const testScenarioPrioritySchema = z.enum(["low", "medium", "high"]);
 export const testScenarioRelatedIssueUrlSchema = z
@@ -177,50 +187,125 @@ const testScenarioListQueryBaseSchema = z.object({
   createdById: uuidSchema.optional(),
   tagIds: commaSeparatedUuidSchema.optional(),
   createdByIds: commaSeparatedUuidSchema.optional(),
-  priority: z.string().regex(/^(low|medium|high)(,(low|medium|high))*$/).optional(),
+  priority: z
+    .string()
+    .regex(/^(low|medium|high)(,(low|medium|high))*$/)
+    .optional(),
   sort: z.enum(TEST_SCENARIO_SORT_VALUES).optional(),
   timeZone: z.string().optional(),
-    sortField: z.enum(TEST_SCENARIO_SORT_FIELDS).optional(),
+  sortField: z.enum(TEST_SCENARIO_SORT_FIELDS).optional(),
   sortDirection: z.enum(["asc", "desc"]).optional(),
-  scenarioKey: z.string().trim().optional().transform((value) => value || undefined),
-  title: z.string().trim().optional().transform((value) => value || undefined),
-  details: z.string().trim().optional().transform((value) => value || undefined),
-  folder: z.string().trim().optional().transform((value) => value || undefined),
-  createdBy: z.string().trim().optional().transform((value) => value || undefined),
+  scenarioKey: z
+    .string()
+    .trim()
+    .optional()
+    .transform((value) => value || undefined),
+  title: z
+    .string()
+    .trim()
+    .optional()
+    .transform((value) => value || undefined),
+  details: z
+    .string()
+    .trim()
+    .optional()
+    .transform((value) => value || undefined),
+  folder: z
+    .string()
+    .trim()
+    .optional()
+    .transform((value) => value || undefined),
+  createdBy: z
+    .string()
+    .trim()
+    .optional()
+    .transform((value) => value || undefined),
   folderId: z.union([uuidSchema, z.literal("unfiled")]).optional(),
-  includeDescendants: z.enum(["true", "false"]).transform((value) => value === "true").optional(),
+  includeDescendants: z
+    .enum(["true", "false"])
+    .transform((value) => value === "true")
+    .optional(),
   suiteId: uuidSchema.optional(),
 });
 
 const validateScenarioAuthorFilter = (
-  value: { createdById?: string | undefined; createdByIds?: string | undefined },
+  value: {
+    createdById?: string | undefined;
+    createdByIds?: string | undefined;
+  },
   context: z.RefinementCtx,
 ) => {
   if (value.createdById && value.createdByIds) {
-    context.addIssue({ code: "custom", path: ["createdByIds"], message: "Use createdById or createdByIds, not both" });
+    context.addIssue({
+      code: "custom",
+      path: ["createdByIds"],
+      message: "Use createdById or createdByIds, not both",
+    });
   }
 };
 
-export const testScenarioListQuerySchema = testScenarioListQueryBaseSchema.superRefine((value, context) => {
-  validateScenarioAuthorFilter(value, context);
-  if (value.sortDirection && !value.sortField) context.addIssue({ code: "custom", path: ["sortDirection"], message: "sortDirection requires sortField" });
-  if (value.sortField && value.sort !== undefined) context.addIssue({ code: "custom", path: ["sort"], message: "sort cannot be combined with sortField" });
-});
+export const testScenarioListQuerySchema =
+  testScenarioListQueryBaseSchema.superRefine((value, context) => {
+    validateScenarioAuthorFilter(value, context);
+    if (value.sortDirection && !value.sortField)
+      context.addIssue({
+        code: "custom",
+        path: ["sortDirection"],
+        message: "sortDirection requires sortField",
+      });
+    if (value.sortField && value.sort !== undefined)
+      context.addIssue({
+        code: "custom",
+        path: ["sort"],
+        message: "sort cannot be combined with sortField",
+      });
+  });
 
 export const testScenarioSelectionQuerySchema = testScenarioListQueryBaseSchema
-  .omit({ page: true, limit: true, sort: true, sortField: true, sortDirection: true, timeZone: true })
+  .omit({
+    page: true,
+    limit: true,
+    sort: true,
+    sortField: true,
+    sortDirection: true,
+    timeZone: true,
+  })
   .strict()
   .superRefine(validateScenarioAuthorFilter);
 export const testScenarioAuthorsQuerySchema = testScenarioListQueryBaseSchema
-  .omit({ page: true, limit: true, createdById: true, createdByIds: true, sort: true, sortField: true, sortDirection: true, timeZone: true })
+  .omit({
+    page: true,
+    limit: true,
+    createdById: true,
+    createdByIds: true,
+    sort: true,
+    sortField: true,
+    sortDirection: true,
+    timeZone: true,
+  })
   .strict();
-export const testScenarioPriorityCountsQuerySchema = testScenarioListQueryBaseSchema
-  .omit({ page: true, limit: true, priority: true, sort: true, sortField: true, sortDirection: true, timeZone: true })
-  .strict()
-  .superRefine(validateScenarioAuthorFilter);
-export type TestScenarioSelectionQuery = z.infer<typeof testScenarioSelectionQuerySchema>;
-export type TestScenarioAuthorsQuery = z.infer<typeof testScenarioAuthorsQuerySchema>;
-export type TestScenarioPriorityCountsQuery = z.infer<typeof testScenarioPriorityCountsQuerySchema>;
+export const testScenarioPriorityCountsQuerySchema =
+  testScenarioListQueryBaseSchema
+    .omit({
+      page: true,
+      limit: true,
+      priority: true,
+      sort: true,
+      sortField: true,
+      sortDirection: true,
+      timeZone: true,
+    })
+    .strict()
+    .superRefine(validateScenarioAuthorFilter);
+export type TestScenarioSelectionQuery = z.infer<
+  typeof testScenarioSelectionQuerySchema
+>;
+export type TestScenarioAuthorsQuery = z.infer<
+  typeof testScenarioAuthorsQuerySchema
+>;
+export type TestScenarioPriorityCountsQuery = z.infer<
+  typeof testScenarioPriorityCountsQuerySchema
+>;
 
 export type CreateTestScenarioInput = z.infer<typeof createTestScenarioSchema>;
 export type UpdateTestScenarioInput = z.infer<typeof updateTestScenarioSchema>;

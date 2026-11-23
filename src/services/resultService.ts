@@ -126,9 +126,7 @@ export const resultService = {
       ...new Set(specTags.flatMap(normalizeJsonStringArray)),
     ].sort((left, right) => left.localeCompare(right));
 
-    const specRecordIds = [
-      ...new Set(results.map((result) => result.spec.id)),
-    ];
+    const specRecordIds = [...new Set(results.map((result) => result.spec.id))];
     const rawFilters: ResultFilters = { projectId, specRecordIds };
     if (from) rawFilters.from = from;
     if (to) rawFilters.to = to;

@@ -72,8 +72,16 @@ async function findDetail(
   if (!record) return null;
   const { intervals, ...run } = record;
   const assignments = await client.scenarioTagAssignment.findMany({
-    where: { projectId, scenarioId: { in: run.scenarios.map(scenario => scenario.sourceScenarioId) } },
-    select: { scenarioId: true, tag: { select: { id: true, name: true, description: true } } },
+    where: {
+      projectId,
+      scenarioId: {
+        in: run.scenarios.map((scenario) => scenario.sourceScenarioId),
+      },
+    },
+    select: {
+      scenarioId: true,
+      tag: { select: { id: true, name: true, description: true } },
+    },
     orderBy: { tag: { position: "asc" } },
   });
   const liveTags = new Map<string, ScenarioTagSummary[]>();

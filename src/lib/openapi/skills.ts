@@ -49,19 +49,18 @@ const SkillsListResponseSchema = z
   })
   .openapi("SkillsListResponse");
 
-const SkillArchiveDownloadSchema = z
-  .string()
-  .openapi("SkillArchiveDownload", {
-    format: "binary",
-    description:
-      "Complete portable ZIP package containing the skill folder, SKILL.md, and bundled files.",
-  });
+const SkillArchiveDownloadSchema = z.string().openapi("SkillArchiveDownload", {
+  format: "binary",
+  description:
+    "Complete portable ZIP package containing the skill folder, SKILL.md, and bundled files.",
+});
 
 const SkillPackageUploadSchema = z
   .object({
     package: z.string().openapi({
       format: "binary",
-      description: "Zip archive containing SKILL.md and optional package resources.",
+      description:
+        "Zip archive containing SKILL.md and optional package resources.",
     }),
     title: z.string().min(1).openapi({
       description: "Display title used in the shared skills catalog.",
@@ -105,7 +104,8 @@ export function registerSkillRoutes(registry: OpenAPIRegistry) {
         },
       },
       400: {
-        description: "Missing metadata or invalid, malformed, or unsafe package",
+        description:
+          "Missing metadata or invalid, malformed, or unsafe package",
         content: {
           "application/json": { schema: ErrorResponseSchema },
         },
@@ -117,7 +117,8 @@ export function registerSkillRoutes(registry: OpenAPIRegistry) {
         },
       },
       409: {
-        description: "A persisted skill already uses the package frontmatter name",
+        description:
+          "A persisted skill already uses the package frontmatter name",
         content: {
           "application/json": { schema: ErrorResponseSchema },
         },
@@ -157,7 +158,8 @@ export function registerSkillRoutes(registry: OpenAPIRegistry) {
         },
       },
       400: {
-        description: "Missing metadata or invalid, malformed, or unsafe package",
+        description:
+          "Missing metadata or invalid, malformed, or unsafe package",
         content: {
           "application/json": { schema: ErrorResponseSchema },
         },
@@ -181,7 +183,8 @@ export function registerSkillRoutes(registry: OpenAPIRegistry) {
         },
       },
       409: {
-        description: "Another persisted skill uses the replacement package name",
+        description:
+          "Another persisted skill uses the replacement package name",
         content: {
           "application/json": { schema: ErrorResponseSchema },
         },
@@ -199,7 +202,8 @@ export function registerSkillRoutes(registry: OpenAPIRegistry) {
   registry.registerPath({
     method: "delete",
     path: "/api/v2/skills/{id}",
-    description: "Deletes a custom skill and its package files (requires authentication)",
+    description:
+      "Deletes a custom skill and its package files (requires authentication)",
     request: { params: SkillIdParamSchema },
     security: [{ BearerAuth: [] }],
     responses: {

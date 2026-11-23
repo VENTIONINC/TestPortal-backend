@@ -115,11 +115,9 @@ export const testScenarioController = {
       return;
     }
     try {
-      res
-        .status(200)
-        .json({
-          authors: await testScenarioService.listScenarioAuthors(parsed.data),
-        });
+      res.status(200).json({
+        authors: await testScenarioService.listScenarioAuthors(parsed.data),
+      });
     } catch (error) {
       sendServiceError(res, error, "list scenario authors");
     }

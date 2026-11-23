@@ -3,7 +3,11 @@
 
 import { resultErrorModel } from "@/models/resultErrorModel";
 import { runReview } from "@/lib/error-analyzer";
-import { normalizeJsonArrayForText, normalizeJsonStringArray, normalizeResultErrorPayload, } from "@/lib/jsonPayloads";
+import {
+  normalizeJsonArrayForText,
+  normalizeJsonStringArray,
+  normalizeResultErrorPayload,
+} from "@/lib/jsonPayloads";
 import {
   normalizeGeneratedTestCase,
   normalizeResultErrorLogs,
@@ -161,7 +165,9 @@ export const resultErrorService = {
         throw new Error(`Result error with ID ${resultErrorId} not found`);
       }
       if (resultError.assumptions.length > 0) {
-        throw new Error(`Result error with ID ${resultErrorId} already has a confirmed assumption`);
+        throw new Error(
+          `Result error with ID ${resultErrorId} already has a confirmed assumption`,
+        );
       }
 
       const issue = await tx.issue.findUnique({
@@ -435,9 +441,7 @@ export const resultErrorService = {
       assignment: (typeof record.assumptions)[number],
     ): ResultErrorModalAssignmentSummary => {
       if (!isResultCategory(assignment.issue.category)) {
-        throw new Error(
-          `Issue ${assignment.issue.id} has an invalid category`,
-        );
+        throw new Error(`Issue ${assignment.issue.id} has an invalid category`);
       }
 
       return {
@@ -464,9 +468,7 @@ export const resultErrorService = {
         callStack: normalizeJsonStringArray(record.callStack),
         logs: normalizeResultErrorLogs(record.rawLogs) ?? [],
         sourceSnippet: normalizeResultErrorSourceSnippet(record.sourceSnippet),
-        generatedTestCase: normalizeGeneratedTestCase(
-          record.generatedTestCase,
-        ),
+        generatedTestCase: normalizeGeneratedTestCase(record.generatedTestCase),
         location: record.location,
       },
       result: {

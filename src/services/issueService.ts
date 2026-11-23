@@ -1,10 +1,7 @@
 // Copyright 2026 VENSOLUTIONSGROUP LTD
 // SPDX-License-Identifier: Apache-2.0
 
-import {
-  issueModel,
-  type LinkedIssueResult,
-} from "@/models/issueModel";
+import { issueModel, type LinkedIssueResult } from "@/models/issueModel";
 import {
   buildIssueCategorySummary,
   isResultCategory,
@@ -107,10 +104,7 @@ function groupResultsByIssueId(
   results: readonly LinkedIssueResult[],
 ): ResultsByIssueId {
   const issueResultMaps = new Map(
-    issueIds.map((issueId) => [
-      issueId,
-      new Map<string, LinkedIssueResult>(),
-    ]),
+    issueIds.map((issueId) => [issueId, new Map<string, LinkedIssueResult>()]),
   );
 
   for (const result of results) {
@@ -233,10 +227,7 @@ export const issueService = {
     };
   },
 
-  async getIssueById(
-    issueId: string,
-    projectId: string,
-  ): Promise<IssueRead> {
+  async getIssueById(issueId: string, projectId: string): Promise<IssueRead> {
     if (!issueId) {
       throw new Error("Issue ID is required");
     }
@@ -270,10 +261,7 @@ export const issueService = {
     }
 
     const resultsByIssueId = await getResultsByIssueId([issueId]);
-    return serializeIssueRead(
-      issueRecord,
-      resultsByIssueId.get(issueId) ?? [],
-    );
+    return serializeIssueRead(issueRecord, resultsByIssueId.get(issueId) ?? []);
   },
 
   async getObservedIssuesBySpecRecordIds(params: {
@@ -331,8 +319,15 @@ export const issueService = {
       throw new Error("Issue ID is required");
     }
 
-    const { name, category, description, portal, service, ticket, updatedById } =
-      updateData;
+    const {
+      name,
+      category,
+      description,
+      portal,
+      service,
+      ticket,
+      updatedById,
+    } = updateData;
     const cleanUpdateData: Partial<CreateIssueParams> = {};
 
     if (name) cleanUpdateData.name = name;

@@ -150,7 +150,9 @@ const cognitoAuthProvider: AuthProvider = {
     return {
       status: "SUCCESS",
       user,
-      ...(cognitoResult.session ? { cognitoSession: cognitoResult.session } : {}),
+      ...(cognitoResult.session
+        ? { cognitoSession: cognitoResult.session }
+        : {}),
     };
   },
 
@@ -193,7 +195,9 @@ export const authProviderService = {
 
   async login(
     params: AuthLoginRequest,
-  ): Promise<ReturnType<typeof userService.createAuthResponse> | AuthChallengeResponse> {
+  ): Promise<
+    ReturnType<typeof userService.createAuthResponse> | AuthChallengeResponse
+  > {
     const result = await resolveActiveAuthProvider().login(params);
 
     if (result.status === "NEW_PASSWORD_REQUIRED") {
@@ -204,7 +208,9 @@ export const authProviderService = {
     }
 
     return userService.createAuthResponse(result.user, {
-      ...(result.cognitoSession ? { cognitoSession: result.cognitoSession } : {}),
+      ...(result.cognitoSession
+        ? { cognitoSession: result.cognitoSession }
+        : {}),
     });
   },
 

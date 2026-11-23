@@ -52,4 +52,3 @@ export const getResultsStats = createMcpTool(
   },
   "fetching results statistics",
 );
-

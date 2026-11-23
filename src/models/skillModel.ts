@@ -187,10 +187,7 @@ export const skillModel = {
     return tx ? await executor(tx) : await dbClient.$transaction(executor);
   },
 
-  async deleteSkill(
-    id: string,
-    tx?: Prisma.TransactionClient,
-  ): Promise<void> {
+  async deleteSkill(id: string, tx?: Prisma.TransactionClient): Promise<void> {
     const client = tx ?? dbClient;
     await client.skill.delete({ where: { id } });
   },

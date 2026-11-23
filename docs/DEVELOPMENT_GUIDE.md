@@ -52,6 +52,28 @@ npm run migrate          # Run migrations
 npm run db:generate      # Generate Prisma types
 ```
 
+### Pre-commit quality checks
+
+`npm install` activates the checked-in Husky hook in a developer Git checkout.
+The install guard skips CI, production installs, installs that omit development
+dependencies, and source trees without a `.git` file or directory. To activate
+it again in an existing checkout, run:
+
+```bash
+npm run prepare
+git config --local --get core.hooksPath  # should print .husky/_
+```
+
+The hook runs these checks once, in order, and stops at the first failure:
+
+1. `npm run type-check`
+2. `npm run lint`
+3. `npm run test:unit -- --ci`
+
+If TypeScript reports missing Prisma-generated types, run
+`npm run db:generate` and retry the check. `npm test` remains the full Jest
+suite and retains its existing coverage.
+
 ## 📁 Project Structure
 
 ```

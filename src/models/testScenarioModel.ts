@@ -22,7 +22,10 @@ import type {
   UpdateTestScenarioParams,
   UpdateTestScenarioStepParams,
 } from "@/types/testScenarios";
-import { TestScenarioNotFoundError, TestScenarioConflictError } from "@/types/testScenarios";
+import {
+  TestScenarioNotFoundError,
+  TestScenarioConflictError,
+} from "@/types/testScenarios";
 
 import { withScenarioTransaction } from "@/models/testScenarioTransactions";
 import {
@@ -87,13 +90,47 @@ const summarySelect = {
 
 type SummaryListParams = Pick<
   ListTestScenariosParams,
-  "projectId" | "page" | "limit" | "search" | "createdById" | "createdByIds" | "priority" | "sort" | "folderId" | "includeDescendants" | "timeZone" | "tagIds" | "suiteId" | "sortField" | "sortDirection" | "scenarioKey" | "title" | "details" | "folder" | "createdBy"
+  | "projectId"
+  | "page"
+  | "limit"
+  | "search"
+  | "createdById"
+  | "createdByIds"
+  | "priority"
+  | "sort"
+  | "folderId"
+  | "includeDescendants"
+  | "timeZone"
+  | "tagIds"
+  | "suiteId"
+  | "sortField"
+  | "sortDirection"
+  | "scenarioKey"
+  | "title"
+  | "details"
+  | "folder"
+  | "createdBy"
 > & { _folderIds?: string[] };
 
-type ScenarioAuthorCountFilters = Pick<SummaryListParams,
-  "search" | "priority" | "folderId" | "includeDescendants" | "tagIds" | "suiteId" | "scenarioKey" | "title" | "details" | "folder" | "createdBy"
+type ScenarioAuthorCountFilters = Pick<
+  SummaryListParams,
+  | "search"
+  | "priority"
+  | "folderId"
+  | "includeDescendants"
+  | "tagIds"
+  | "suiteId"
+  | "scenarioKey"
+  | "title"
+  | "details"
+  | "folder"
+  | "createdBy"
 >;
-type ScenarioPriorityCountFilters = Omit<ScenarioAuthorCountFilters, "priority"> & Pick<SummaryListParams, "createdById" | "createdByIds">;
+type ScenarioPriorityCountFilters = Omit<
+  ScenarioAuthorCountFilters,
+  "priority"
+> &
+  Pick<SummaryListParams, "createdById" | "createdByIds">;
 
 interface SummaryPredicate {
   folderCte: Prisma.Sql;
@@ -108,11 +145,16 @@ async function buildSummaryPredicate(
   let folderIds: string[] | undefined;
   if (params.folderId && params.folderId !== "unfiled") {
     if (params.includeDescendants === false) {
-      const folder = await transaction.testScenarioFolder.findFirst({ where: { id: params.folderId, projectId: params.projectId }, select: { id: true } });
+      const folder = await transaction.testScenarioFolder.findFirst({
+        where: { id: params.folderId, projectId: params.projectId },
+        select: { id: true },
+      });
       if (!folder) throw new Error("Folder not found");
       folderIds = [params.folderId];
     } else {
-      const rows = await transaction.$queryRaw<Array<{ id: string }>>(Prisma.sql`
+      const rows = await transaction.$queryRaw<
+        Array<{ id: string }>
+      >(Prisma.sql`
         WITH RECURSIVE folders AS (
           SELECT "id" FROM "TestScenarioFolder" WHERE "id" = ${params.folderId}::uuid AND "projectId" = ${params.projectId}::uuid
           UNION ALL SELECT child."id" FROM "TestScenarioFolder" child JOIN folders parent ON child."parentId" = parent."id" WHERE child."projectId" = ${params.projectId}::uuid
@@ -122,36 +164,83 @@ async function buildSummaryPredicate(
       folderIds = rows.map(({ id }) => id);
     }
   }
-  if (params.suiteId && !(await transaction.testSuite.findFirst({ where: { id: params.suiteId, projectId: params.projectId }, select: { id: true } }))) throw new Error("Suite not found");
+  if (
+    params.suiteId &&
+    !(await transaction.testSuite.findFirst({
+      where: { id: params.suiteId, projectId: params.projectId },
+      select: { id: true },
+    }))
+  )
+    throw new Error("Suite not found");
 
-  const needsFolderPaths = Boolean(params.folder || params.sortField === "folder");
-  const folderCte = needsFolderPaths ? Prisma.sql`WITH RECURSIVE folder_paths AS (
+  const needsFolderPaths = Boolean(
+    params.folder || params.sortField === "folder",
+  );
+  const folderCte = needsFolderPaths
+    ? Prisma.sql`WITH RECURSIVE folder_paths AS (
     SELECT f."id", f."projectId", f."parentId", f."name"::text AS path
     FROM "TestScenarioFolder" f WHERE f."projectId" = ${params.projectId}::uuid AND f."parentId" IS NULL
     UNION ALL
     SELECT child."id", child."projectId", child."parentId", (parent.path || ' / ' || child."name")::text
     FROM "TestScenarioFolder" child JOIN folder_paths parent ON child."parentId" = parent."id"
     WHERE child."projectId" = ${params.projectId}::uuid
-  )` : Prisma.empty;
-  const where: Prisma.Sql[] = [Prisma.sql`s."projectId" = ${params.projectId}::uuid`];
-  if (params.createdByIds) where.push(Prisma.sql`s."createdById" IN (${Prisma.join(params.createdByIds.split(",").map((id) => Prisma.sql`${id}::uuid`))})`);
-  else if (params.createdById) where.push(Prisma.sql`s."createdById" = ${params.createdById}::uuid`);
+  )`
+    : Prisma.empty;
+  const where: Prisma.Sql[] = [
+    Prisma.sql`s."projectId" = ${params.projectId}::uuid`,
+  ];
+  if (params.createdByIds)
+    where.push(
+      Prisma.sql`s."createdById" IN (${Prisma.join(params.createdByIds.split(",").map((id) => Prisma.sql`${id}::uuid`))})`,
+    );
+  else if (params.createdById)
+    where.push(Prisma.sql`s."createdById" = ${params.createdById}::uuid`);
   if (params.tagIds) {
-    const ids = params.tagIds.split(",").map(id => Prisma.sql`${id}::uuid`);
+    const ids = params.tagIds.split(",").map((id) => Prisma.sql`${id}::uuid`);
     where.push(Prisma.sql`EXISTS (SELECT 1 FROM "ScenarioTagAssignment" a
       WHERE a."scenarioId" = s.id AND a."tagId" IN (${Prisma.join(ids)}))`);
   }
-  if (params.priority) where.push(Prisma.sql`s."priority" IN (${Prisma.join(params.priority.split(",").map((value) => Prisma.sql`${value}::"TestScenarioPriority"`))})`);
-  if (params.search) where.push(Prisma.sql`(POSITION(LOWER(${params.search}) IN LOWER(COALESCE(s."title", ''))) > 0 OR POSITION(LOWER(${params.search}) IN LOWER(COALESCE(s."scenarioKey", ''))) > 0)`);
-  if (params.scenarioKey) where.push(Prisma.sql`POSITION(LOWER(${params.scenarioKey}) IN LOWER(COALESCE(s."scenarioKey", ''))) > 0`);
-  if (params.title) where.push(Prisma.sql`POSITION(LOWER(${params.title}) IN LOWER(s."title")) > 0`);
-  if (params.details) where.push(Prisma.sql`POSITION(LOWER(${params.details}) IN LOWER(COALESCE(s."details", ''))) > 0`);
-  if (params.createdBy) where.push(Prisma.sql`(POSITION(LOWER(${params.createdBy}) IN LOWER(COALESCE(u."name", ''))) > 0 OR POSITION(LOWER(${params.createdBy}) IN LOWER(u."email")) > 0)`);
-  if (params.folder) where.push(Prisma.sql`POSITION(LOWER(${params.folder}) IN LOWER(COALESCE(fp.path, 'Unfiled'))) > 0`);
-  if (params.folderId === "unfiled") where.push(Prisma.sql`s."folderId" IS NULL`);
-  else if (folderIds) where.push(Prisma.sql`s."folderId" IN (${Prisma.join(folderIds.map((id) => Prisma.sql`${id}::uuid`))})`);
-  if (params.suiteId) where.push(Prisma.sql`EXISTS (SELECT 1 FROM "TestSuiteMember" sm WHERE sm."testScenarioId" = s."id" AND sm."suiteId" = ${params.suiteId}::uuid)`);
-  const folderJoin = needsFolderPaths ? Prisma.sql`LEFT JOIN folder_paths fp ON fp."id" = s."folderId"` : Prisma.empty;
+  if (params.priority)
+    where.push(
+      Prisma.sql`s."priority" IN (${Prisma.join(params.priority.split(",").map((value) => Prisma.sql`${value}::"TestScenarioPriority"`))})`,
+    );
+  if (params.search)
+    where.push(
+      Prisma.sql`(POSITION(LOWER(${params.search}) IN LOWER(COALESCE(s."title", ''))) > 0 OR POSITION(LOWER(${params.search}) IN LOWER(COALESCE(s."scenarioKey", ''))) > 0)`,
+    );
+  if (params.scenarioKey)
+    where.push(
+      Prisma.sql`POSITION(LOWER(${params.scenarioKey}) IN LOWER(COALESCE(s."scenarioKey", ''))) > 0`,
+    );
+  if (params.title)
+    where.push(
+      Prisma.sql`POSITION(LOWER(${params.title}) IN LOWER(s."title")) > 0`,
+    );
+  if (params.details)
+    where.push(
+      Prisma.sql`POSITION(LOWER(${params.details}) IN LOWER(COALESCE(s."details", ''))) > 0`,
+    );
+  if (params.createdBy)
+    where.push(
+      Prisma.sql`(POSITION(LOWER(${params.createdBy}) IN LOWER(COALESCE(u."name", ''))) > 0 OR POSITION(LOWER(${params.createdBy}) IN LOWER(u."email")) > 0)`,
+    );
+  if (params.folder)
+    where.push(
+      Prisma.sql`POSITION(LOWER(${params.folder}) IN LOWER(COALESCE(fp.path, 'Unfiled'))) > 0`,
+    );
+  if (params.folderId === "unfiled")
+    where.push(Prisma.sql`s."folderId" IS NULL`);
+  else if (folderIds)
+    where.push(
+      Prisma.sql`s."folderId" IN (${Prisma.join(folderIds.map((id) => Prisma.sql`${id}::uuid`))})`,
+    );
+  if (params.suiteId)
+    where.push(
+      Prisma.sql`EXISTS (SELECT 1 FROM "TestSuiteMember" sm WHERE sm."testScenarioId" = s."id" AND sm."suiteId" = ${params.suiteId}::uuid)`,
+    );
+  const folderJoin = needsFolderPaths
+    ? Prisma.sql`LEFT JOIN folder_paths fp ON fp."id" = s."folderId"`
+    : Prisma.empty;
   return {
     folderCte,
     from: Prisma.sql`FROM "TestScenario" s JOIN "User" u ON u."id" = s."createdById" ${folderJoin}`,
@@ -180,8 +269,16 @@ function summaryWhere(
     projectId: params.projectId,
     ...(params.createdByIds
       ? { createdById: { in: params.createdByIds.split(",") } }
-      : params.createdById ? { createdById: params.createdById } : {}),
-    ...(params.priority ? { priority: { in: params.priority.split(",") as ("low" | "medium" | "high")[] } } : {}),
+      : params.createdById
+        ? { createdById: params.createdById }
+        : {}),
+    ...(params.priority
+      ? {
+          priority: {
+            in: params.priority.split(",") as ("low" | "medium" | "high")[],
+          },
+        }
+      : {}),
     ...(organization.length ? { AND: organization } : {}),
     ...(params.search
       ? {
@@ -475,9 +572,14 @@ export const testScenarioModel = {
         const count = await client.scenarioTag.count({
           where: { projectId: data.projectId, id: { in: tagIds } },
         });
-        if (count !== tagIds.length) throw new TestScenarioNotFoundError("Tag not found in project");
+        if (count !== tagIds.length)
+          throw new TestScenarioNotFoundError("Tag not found in project");
         await client.scenarioTagAssignment.createMany({
-          data: tagIds.map(tagId => ({ tagId, projectId: data.projectId, scenarioId: scenario.id })),
+          data: tagIds.map((tagId) => ({
+            tagId,
+            projectId: data.projectId,
+            scenarioId: scenario.id,
+          })),
         });
       }
       if (data.suiteIds !== undefined || data.newSuites !== undefined) {
@@ -518,12 +620,17 @@ export const testScenarioModel = {
       take: limit,
       orderBy: summaryOrderBy(),
     });
-    return rows.map(({ tagAssignments, ...row }) => ({ ...row, tags: tagAssignments.map(({ tag }) => tag) }));
+    return rows.map(({ tagAssignments, ...row }) => ({
+      ...row,
+      tags: tagAssignments.map(({ tag }) => tag),
+    }));
   },
 
-  async listSummaries(
-    params: SummaryListParams,
-  ): Promise<{ scenarios: TestScenarioSummary[]; total: number; tagCounts: Record<string, number> }> {
+  async listSummaries(params: SummaryListParams): Promise<{
+    scenarios: TestScenarioSummary[];
+    total: number;
+    tagCounts: Record<string, number>;
+  }> {
     const page = params.page ?? 1;
     const limit = params.limit ?? 30;
     const sortField = params.sortField;
@@ -548,24 +655,29 @@ export const testScenarioModel = {
                     ? Prisma.sql`s."createdAt"`
                     : Prisma.sql`s."title"`;
     const sqlDirection = Prisma.raw(direction.toUpperCase());
-    const orderBy = params.suiteId && !sortField && !params.sort
-      ? Prisma.sql`ORDER BY (SELECT sm."position" FROM "TestSuiteMember" sm WHERE sm."suiteId" = ${params.suiteId}::uuid AND sm."testScenarioId" = s."id") ASC, s."id" ASC`
-      : sortField === "updatedAt"
-        ? Prisma.sql`ORDER BY ((s."updatedAt" AT TIME ZONE 'UTC') AT TIME ZONE ${params.timeZone ?? "UTC"})::date ${sqlDirection}, s."scenarioNumber" ASC`
-      : sortField
-        ? Prisma.sql`ORDER BY ${sortColumn} ${sqlDirection}, s."id" ASC`
-        : params.sort === "title_asc"
-          ? Prisma.sql`ORDER BY s."title" ASC, s."id" ASC`
-          : params.sort === "recently_updated"
-            ? Prisma.sql`ORDER BY s."updatedAt" DESC, s."id" DESC`
-            : Prisma.sql`ORDER BY s."createdAt" DESC, s."id" DESC`;
+    const orderBy =
+      params.suiteId && !sortField && !params.sort
+        ? Prisma.sql`ORDER BY (SELECT sm."position" FROM "TestSuiteMember" sm WHERE sm."suiteId" = ${params.suiteId}::uuid AND sm."testScenarioId" = s."id") ASC, s."id" ASC`
+        : sortField === "updatedAt"
+          ? Prisma.sql`ORDER BY ((s."updatedAt" AT TIME ZONE 'UTC') AT TIME ZONE ${params.timeZone ?? "UTC"})::date ${sqlDirection}, s."scenarioNumber" ASC`
+          : sortField
+            ? Prisma.sql`ORDER BY ${sortColumn} ${sqlDirection}, s."id" ASC`
+            : params.sort === "title_asc"
+              ? Prisma.sql`ORDER BY s."title" ASC, s."id" ASC`
+              : params.sort === "recently_updated"
+                ? Prisma.sql`ORDER BY s."updatedAt" DESC, s."id" DESC`
+                : Prisma.sql`ORDER BY s."createdAt" DESC, s."id" DESC`;
 
     return await dbClient.$transaction(
       async (transaction) => {
         const predicate = await buildSummaryPredicate(transaction, params);
         const [idRows, totalRows] = await Promise.all([
-          transaction.$queryRaw<Array<{ id: string }>>(Prisma.sql`${predicate.folderCte} SELECT s."id" ${predicate.from} WHERE ${predicate.where} ${orderBy} OFFSET ${(page - 1) * limit} LIMIT ${limit}`),
-          transaction.$queryRaw<Array<{ total: bigint }>>(Prisma.sql`${predicate.folderCte} SELECT COUNT(*) AS total ${predicate.from} WHERE ${predicate.where}`),
+          transaction.$queryRaw<Array<{ id: string }>>(
+            Prisma.sql`${predicate.folderCte} SELECT s."id" ${predicate.from} WHERE ${predicate.where} ${orderBy} OFFSET ${(page - 1) * limit} LIMIT ${limit}`,
+          ),
+          transaction.$queryRaw<Array<{ total: bigint }>>(
+            Prisma.sql`${predicate.folderCte} SELECT COUNT(*) AS total ${predicate.from} WHERE ${predicate.where}`,
+          ),
         ]);
         const ids = idRows.map(({ id }) => id);
         const rows = ids.length
@@ -593,46 +705,65 @@ export const testScenarioModel = {
         const total = Number(totalRows[0]?.total ?? 0n);
 
         const scope = params.tagIds
-          ? await buildSummaryPredicate(transaction, { ...params, tagIds: undefined })
+          ? await buildSummaryPredicate(transaction, {
+              ...params,
+              tagIds: undefined,
+            })
           : predicate;
-        const counts = await transaction.$queryRaw<Array<{ tagId: string; count: bigint }>>(Prisma.sql`
+        const counts = await transaction.$queryRaw<
+          Array<{ tagId: string; count: bigint }>
+        >(Prisma.sql`
           ${scope.folderCte} SELECT a."tagId", COUNT(*) AS count ${scope.from}
           JOIN "ScenarioTagAssignment" a ON a."scenarioId"=s.id WHERE ${scope.where} GROUP BY a."tagId"
         `);
-        return { scenarios, total, tagCounts: Object.fromEntries(counts.map(row => [row.tagId, Number(row.count)])) };
+        return {
+          scenarios,
+          total,
+          tagCounts: Object.fromEntries(
+            counts.map((row) => [row.tagId, Number(row.count)]),
+          ),
+        };
       },
       { isolationLevel: Prisma.TransactionIsolationLevel.RepeatableRead },
     );
   },
 
   async resolveSelection(params: SummaryListParams): Promise<string[]> {
-    return await dbClient.$transaction(async (transaction) => {
-      const predicate = await buildSummaryPredicate(transaction, params);
-      const rows = await transaction.$queryRaw<Array<{ id: string }>>(Prisma.sql`${predicate.folderCte} SELECT s."id" ${predicate.from} WHERE ${predicate.where} ORDER BY s."id" ASC`);
-      return [...new Set(rows.map(({ id }) => id))];
-    }, { isolationLevel: Prisma.TransactionIsolationLevel.RepeatableRead });
+    return await dbClient.$transaction(
+      async (transaction) => {
+        const predicate = await buildSummaryPredicate(transaction, params);
+        const rows = await transaction.$queryRaw<Array<{ id: string }>>(
+          Prisma.sql`${predicate.folderCte} SELECT s."id" ${predicate.from} WHERE ${predicate.where} ORDER BY s."id" ASC`,
+        );
+        return [...new Set(rows.map(({ id }) => id))];
+      },
+      { isolationLevel: Prisma.TransactionIsolationLevel.RepeatableRead },
+    );
   },
 
   async listScenarioAuthors(
     projectId: string,
     filters: ScenarioAuthorCountFilters = {},
-  ): Promise<Array<{ id: string; name: string; email: string; scenarioCount: number }>> {
-    return await dbClient.$transaction(async (transaction) => {
-      const predicate = await buildSummaryPredicate(transaction, {
-        projectId,
-        page: 1,
-        limit: 1,
-        ...filters,
-      });
+  ): Promise<
+    Array<{ id: string; name: string; email: string; scenarioCount: number }>
+  > {
+    return await dbClient.$transaction(
+      async (transaction) => {
+        const predicate = await buildSummaryPredicate(transaction, {
+          projectId,
+          page: 1,
+          limit: 1,
+          ...filters,
+        });
 
-      return await transaction.$queryRaw<
-        Array<{
-          id: string;
-          name: string;
-          email: string;
-          scenarioCount: number;
-        }>
-      >(Prisma.sql`
+        return await transaction.$queryRaw<
+          Array<{
+            id: string;
+            name: string;
+            email: string;
+            scenarioCount: number;
+          }>
+        >(Prisma.sql`
         ${predicate.folderCte}
         SELECT project_authors.id, project_authors.name, project_authors.email,
           COALESCE(author_counts.total, 0)::int AS "scenarioCount"
@@ -650,33 +781,58 @@ export const testScenarioModel = {
         ) author_counts ON author_counts."createdById" = project_authors.id
         ORDER BY project_authors.name ASC, project_authors.id ASC
       `);
-    }, { isolationLevel: Prisma.TransactionIsolationLevel.RepeatableRead });
+      },
+      { isolationLevel: Prisma.TransactionIsolationLevel.RepeatableRead },
+    );
   },
 
   async listScenarioPriorityCounts(
     projectId: string,
     filters: ScenarioPriorityCountFilters = {},
-  ): Promise<{ low: number; medium: number; high: number; unprioritized: number }> {
-    return await dbClient.$transaction(async (transaction) => {
-      const predicate = await buildSummaryPredicate(transaction, { projectId, page: 1, limit: 1, ...filters });
-      const rows = await transaction.$queryRaw<Array<{ priority: "low" | "medium" | "high" | null; count: number }>>(Prisma.sql`
+  ): Promise<{
+    low: number;
+    medium: number;
+    high: number;
+    unprioritized: number;
+  }> {
+    return await dbClient.$transaction(
+      async (transaction) => {
+        const predicate = await buildSummaryPredicate(transaction, {
+          projectId,
+          page: 1,
+          limit: 1,
+          ...filters,
+        });
+        const rows = await transaction.$queryRaw<
+          Array<{ priority: "low" | "medium" | "high" | null; count: number }>
+        >(Prisma.sql`
         ${predicate.folderCte}
         SELECT s."priority", COUNT(*)::int AS "count"
         ${predicate.from}
         WHERE ${predicate.where}
         GROUP BY s."priority"
       `);
-      const counts = { low: 0, medium: 0, high: 0, unprioritized: 0 };
-      for (const row of rows) {
-        if (row.priority === null) counts.unprioritized = row.count;
-        else counts[row.priority] = row.count;
-      }
-      return counts;
-    }, { isolationLevel: Prisma.TransactionIsolationLevel.RepeatableRead });
+        const counts = { low: 0, medium: 0, high: 0, unprioritized: 0 };
+        for (const row of rows) {
+          if (row.priority === null) counts.unprioritized = row.count;
+          else counts[row.priority] = row.count;
+        }
+        return counts;
+      },
+      { isolationLevel: Prisma.TransactionIsolationLevel.RepeatableRead },
+    );
   },
 
-  async folderBelongsToProject(folderId: string, projectId: string): Promise<boolean> {
-    return (await dbClient.testScenarioFolder.findFirst({ where: { id: folderId, projectId }, select: { id: true } })) !== null;
+  async folderBelongsToProject(
+    folderId: string,
+    projectId: string,
+  ): Promise<boolean> {
+    return (
+      (await dbClient.testScenarioFolder.findFirst({
+        where: { id: folderId, projectId },
+        select: { id: true },
+      })) !== null
+    );
   },
 
   async suiteBelongsToProject(

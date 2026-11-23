@@ -2,6 +2,8 @@ import js from "@eslint/js";
 import globals from "globals";
 import typescriptEslint from "@typescript-eslint/eslint-plugin";
 import typescriptParser from "@typescript-eslint/parser";
+import eslintConfigPrettier from "eslint-config-prettier";
+import prettierPlugin from "eslint-plugin-prettier";
 
 export default [
   js.configs.recommended,
@@ -68,6 +70,15 @@ export default [
     },
   },
 
+  {
+    files: ["src/**/*.{ts,tsx}"],
+    plugins: { prettier: prettierPlugin },
+    rules: {
+      ...eslintConfigPrettier.rules,
+      "prettier/prettier": "error",
+    },
+  },
+
   // Override for configuration files that aren't part of the TS project
   {
     files: ["jest.config.ts", "jest.prompts.config.ts", "jest.main.config.ts"],
@@ -87,6 +98,8 @@ export default [
       "dist/**",
       "node_modules/**",
       "backup-js-files/**",
+      "local/**",
+      ".private-ai-config/**",
       ".agents/**",
       "__mocks__/**",
       "*.d.ts",

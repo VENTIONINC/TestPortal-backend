@@ -440,7 +440,8 @@ export function registerUserRoutes(registry: OpenAPIRegistry) {
           },
         },
         400: {
-          description: "Bad request - invalid transition or last-admin guardrail",
+          description:
+            "Bad request - invalid transition or last-admin guardrail",
           content: {
             "application/json": {
               schema: ErrorResponseSchema,
@@ -497,11 +498,11 @@ export function registerUserRoutes(registry: OpenAPIRegistry) {
       200: {
         description: "User role updated successfully",
         content: {
-            "application/json": {
-              schema: AdminManagedUserSchema,
-            },
+          "application/json": {
+            schema: AdminManagedUserSchema,
           },
         },
+      },
       400: {
         description: "Bad request - invalid role or last-admin guardrail",
         content: {

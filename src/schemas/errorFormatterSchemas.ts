@@ -27,7 +27,9 @@ export const errorFormatterRequestSchema = z.object({
  * Used by LangChain to format error messages with AI
  */
 export const errorFormatterSchema = z.object({
-  name: z.string().describe("Formatted error name that is clear and descriptive"),
+  name: z
+    .string()
+    .describe("Formatted error name that is clear and descriptive"),
   description: z
     .string()
     .describe("Formatted error description that is clear and actionable"),

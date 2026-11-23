@@ -7,8 +7,10 @@ import { dashboardService } from "@/services/dashboardService";
 import { dbClient } from "@/prisma/client";
 
 const mockDailyExecutionMetricFindMany =
-  dbClient.dailyExecutionMetric.findMany as jest.Mock;
-const mockExecutionFindMany = dbClient.execution.findMany as jest.Mock;
+  dbClient.dailyExecutionMetric.findMany as jest.Mock<() => Promise<unknown>>;
+const mockExecutionFindMany = dbClient.execution.findMany as jest.Mock<
+  () => Promise<unknown>
+>;
 
 // Mock generic logger
 jest.mock("@/lib/logger", () => ({
@@ -86,8 +88,8 @@ describe("dashboardService Aggregation", () => {
   ];
 
   it("should aggregate data by week correctly", async () => {
-    mockDailyExecutionMetricFindMany.mockResolvedValue(mockDailyRows as never);
-    mockExecutionFindMany.mockResolvedValue([] as never);
+    mockDailyExecutionMetricFindMany.mockResolvedValue(mockDailyRows);
+    mockExecutionFindMany.mockResolvedValue([]);
 
     const result = await dashboardService.getDashboard(
       projectId,
@@ -125,8 +127,8 @@ describe("dashboardService Aggregation", () => {
   });
 
   it("should aggregate data by month correctly", async () => {
-    mockDailyExecutionMetricFindMany.mockResolvedValue(mockDailyRows as never);
-    mockExecutionFindMany.mockResolvedValue([] as never);
+    mockDailyExecutionMetricFindMany.mockResolvedValue(mockDailyRows);
+    mockExecutionFindMany.mockResolvedValue([]);
 
     const result = await dashboardService.getDashboard(
       projectId,
@@ -154,7 +156,7 @@ describe("dashboardService Aggregation", () => {
   });
 
   it("counts skipped tests as non-failures while timed-out tests reduce pass rate", async () => {
-    (dbClient.dailyExecutionMetric.findMany as any).mockResolvedValue([
+    mockDailyExecutionMetricFindMany.mockResolvedValue([
       {
         date: new Date("2025-01-01T00:00:00Z"),
         totalTests: 10,
@@ -170,7 +172,7 @@ describe("dashboardService Aggregation", () => {
         issuesOther: 0,
       },
     ]);
-    (dbClient.execution.findMany as any).mockResolvedValue([]);
+    mockExecutionFindMany.mockResolvedValue([]);
 
     const result = await dashboardService.getDashboard(
       projectId,
@@ -183,8 +185,8 @@ describe("dashboardService Aggregation", () => {
   });
 
   it("should use explicit UTC date range when startDate and endDate are provided", async () => {
-    mockDailyExecutionMetricFindMany.mockResolvedValue([] as never);
-    mockExecutionFindMany.mockResolvedValue([] as never);
+    mockDailyExecutionMetricFindMany.mockResolvedValue([]);
+    mockExecutionFindMany.mockResolvedValue([]);
 
     await dashboardService.getDashboard(
       projectId,

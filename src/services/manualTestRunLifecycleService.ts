@@ -50,10 +50,7 @@ async function requireRun(
 }
 
 export const manualTestRunLifecycleService = {
-  async deleteRun(params: {
-    projectId: string;
-    runId: string;
-  }): Promise<void> {
+  async deleteRun(params: { projectId: string; runId: string }): Promise<void> {
     validateRunIds(params.projectId, params.runId);
     if (
       !(await manualTestRunLifecycleModel.delete({

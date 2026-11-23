@@ -264,7 +264,8 @@ const ManualTestRunScenarioEvidenceRequestSchema = z
       .array(
         manualTestRunStepEvidenceSchema.openapi({
           minProperties: 2,
-          description: "Each step patch must include its ID and at least one editable evidence field.",
+          description:
+            "Each step patch must include its ID and at least one editable evidence field.",
         }),
       )
       .max(500)
@@ -297,7 +298,9 @@ const ManualTestRunScenarioBulkRequestSchema = z
   )
   .openapi("ManualTestRunScenarioBulkRequest");
 const EmptyRequestSchema = z.object({}).strict();
-const CompleteRequestSchema = z.object({ requireAllMarked: z.boolean().optional() }).strict();
+const CompleteRequestSchema = z
+  .object({ requireAllMarked: z.boolean().optional() })
+  .strict();
 
 const error = (description: string) => ({
   description,
@@ -563,7 +566,9 @@ export function registerManualTestRunRoutes(registry: OpenAPIRegistry): void {
       request: {
         params: RunIdParamsSchema,
         query: ProjectIdQuerySchema,
-        body: jsonBody(path === "/complete" ? CompleteRequestSchema : EmptyRequestSchema),
+        body: jsonBody(
+          path === "/complete" ? CompleteRequestSchema : EmptyRequestSchema,
+        ),
       },
       security: [{ BearerAuth: [] }],
       responses: {
