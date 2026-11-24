@@ -1,0 +1,154 @@
+src/services/promptParameterService.ts
+  s_fb454cbe0d327e::t_6eb26b73d21382 11
+__tests__/mcp/serverRegistration.test.ts
+  s_fb454cbe0d327e::t_d3487fd8763624 36
+  s_fb454cbe0d327e::t_7b7a36986d08b9 10,59,66
+__tests__/mcp/testScenarioOrganizationTools.test.ts
+  s_fb454cbe0d327e::t_f559d855b8fe7f 29-30,74,106-108,111,117-120
+  s_fb454cbe0d327e::t_031ae3d70c700a 43,104
+  s_fb454cbe0d327e::t_7b7a36986d08b9 24,26-28
+__tests__/mcp/mcpManualTestRunHandler.test.ts
+  s_fb454cbe0d327e::t_d3487fd8763624 42,63,66,78,88,93,118,127
+  s_fb454cbe0d327e::t_74b6eef0b2c18b 13-31,37-39,44-47,52-54,57-62,67-77,79-87,90-92,94-103,107-115,121-126,130-132
+src/mcp/prompts/developer-code-assistant/v1.1.0.ts
+  s_fb454cbe0d327e::t_09606308aa07a3 40,56,74,93
+  s_fb454cbe0d327e::t_6eb26b73d21382 1-39,41-55,57-73,75-92,94-151
+__tests__/mcp/testScenarioOrganizationSchemas.test.ts
+  s_fb454cbe0d327e::t_7b7a36986d08b9 5,7-10,63
+  s_fb454cbe0d327e::t_d3487fd8763624 22,33,41,69,73
+__tests__/mcp/actionCatalog.test.ts
+  s_fb454cbe0d327e::t_74b6eef0b2c18b 126-132
+  s_fb454cbe0d327e::t_d3487fd8763624 101,116,136
+__tests__/mcp/testScenarioTools.test.ts
+  s_fb454cbe0d327e::t_031ae3d70c700a 262
+  s_fb454cbe0d327e::t_74b6eef0b2c18b 315-338,342-344,346-348
+  s_fb454cbe0d327e::t_7b7a36986d08b9 54,58
+__tests__/mcp/mcpTestScenarioHandler.test.ts
+  s_fb454cbe0d327e::t_d3487fd8763624 290
+  s_fb454cbe0d327e::t_74b6eef0b2c18b 40-42,44-46,48-50,52-54,268-279,292-296
+  s_fb454cbe0d327e::t_7b7a36986d08b9 94,262,264-266
+__tests__/mcp/mcpTransport.test.ts
+  s_fb454cbe0d327e::t_7b7a36986d08b9 11,152
+  s_fb454cbe0d327e::t_74b6eef0b2c18b 74-79,83-86,89-92,99-102,105-108,114-116,120-123,133-150,156-160
+  s_fb454cbe0d327e::t_d3487fd8763624 87,103,118,151,161,164,168
+__tests__/mcp/testScenarioSpecLinkActions.test.ts
+  s_fb454cbe0d327e::t_7b7a36986d08b9 27,29-31
+  s_fb454cbe0d327e::t_031ae3d70c700a 61,65,82,101
+__tests__/services/userService.test.ts
+  s_fb454cbe0d327e::t_031ae3d70c700a 105,125,372
+  s_fb454cbe0d327e::t_74b6eef0b2c18b 69-78,83-85,90-104,106-116,119-123,126-128,334-337,363-371,373-377,415-417
+__tests__/mcp/actionTransport.test.ts
+  s_fb454cbe0d327e::t_d3487fd8763624 17,26
+__tests__/mcp/specActions.test.ts
+  s_fb454cbe0d327e::t_d3487fd8763624 38,40,56
+__tests__/mcp/testScenarioMcpTransport.test.ts
+  s_fb454cbe0d327e::t_7b7a36986d08b9 13,59-62,421,434
+  s_fb454cbe0d327e::t_d3487fd8763624 84,160,214,311,330,345,403,436
+  s_fb454cbe0d327e::t_74b6eef0b2c18b 7-10,50-57,81-83,88-99,104-107,136-138,144-146,157-159,164-175,180-183,198-200,211-213,216-219,221-232,248-251,276-279,295-297,308-310,313-316,318-329,341-344,347-391,447-449
+  s_fb454cbe0d327e::t_6eb26b73d21382 118-119,121-128
+  s_fb454cbe0d327e::t_4b04ac47a02f39 120
+__tests__/services/promptParameterService.test.ts
+  s_fb454cbe0d327e::t_6eb26b73d21382 6,14
+  s_fb454cbe0d327e::t_74b6eef0b2c18b 44-47,108-121,123-134
+  s_fb454cbe0d327e::t_031ae3d70c700a 122
+  s_fb454cbe0d327e::t_7b7a36986d08b9 11
+__tests__/controllers/promptController.test.ts
+  s_fb454cbe0d327e::t_d3487fd8763624 149,154
+  s_fb454cbe0d327e::t_74b6eef0b2c18b 143-148,150-153,156-159
+__tests__/mcp/tmsPromptHttp.test.ts
+  s_fb454cbe0d327e::t_7b7a36986d08b9 11,25
+  s_fb454cbe0d327e::t_031ae3d70c700a 46,56,77,93,110,123,152,172,189,205,210
+  s_fb454cbe0d327e::t_74b6eef0b2c18b 27-37,51-55,79-88,91-92,94-100,103-108,111-121,153-167,169-171,173-188,190-193,196-204,206-208,211-225
+src/mcp/prompts/developer-code-assistant/v1.0.0.ts
+  s_fb454cbe0d327e::t_6eb26b73d21382 68-73
+__tests__/mcp/actionDiscovery.test.ts
+  s_fb454cbe0d327e::t_74b6eef0b2c18b 19-25,27-33,36-38,44-48,51-55,57-61,138-152,154-155,161-167,171-175
+  s_fb454cbe0d327e::t_d3487fd8763624 35,49,75,104,114,122,169
+__tests__/routes/promptRoutes.test.ts
+  s_fb454cbe0d327e::t_74b6eef0b2c18b 19-35,39-46,50-53,55-65
+__tests__/mcp/actionIdentity.test.ts
+  s_fb454cbe0d327e::t_d3487fd8763624 35,50
+  s_fb454cbe0d327e::t_74b6eef0b2c18b 34
+  s_fb454cbe0d327e::t_7b7a36986d08b9 7,32-33
+__tests__/mcp/normalizePromptRequest.test.ts
+  s_fb454cbe0d327e::t_74b6eef0b2c18b 6-15,21-24,30-33,40-41
+__tests__/mcp/actionPayload.test.ts
+  s_fb454cbe0d327e::t_d3487fd8763624 18,34,40
+__tests__/users/mcpCredentialPostgresIntegration.test.ts
+  s_fb454cbe0d327e::t_031ae3d70c700a 53,59,74,78,95,113,123,129,147,162,170,187,195,197,201,206,221,231,260,270,308
+  s_fb454cbe0d327e::t_74b6eef0b2c18b 14-15,17-20,23-31,35-37,47-50,54-57,60-65,67-68,79-81,86-94,96-112,114-122,124-128,130-146,148-155,171-184,188-194,215-219,222-230,238-247,254-258,261-269,275-278,281-283,290-296,302-307,310-318
+__tests__/services/specService.test.ts
+  s_fb454cbe0d327e::t_031ae3d70c700a 32,37,68,89,91
+__tests__/mcp/testScenarioSchemas.test.ts
+  s_fb454cbe0d327e::t_74b6eef0b2c18b 23-30,32-40,202-206,217-219,249-251,256-258,264-268,279-283,286-291
+  s_fb454cbe0d327e::t_031ae3d70c700a 208,240,270
+  s_fb454cbe0d327e::t_7b7a36986d08b9 14,18
+__tests__/mcp/actionExecution.test.ts
+  s_fb454cbe0d327e::t_d3487fd8763624 21,49,67
+__tests__/mcp/testScenarioMcpWorkflow.test.ts
+  s_fb454cbe0d327e::t_7b7a36986d08b9 54,58,240,393
+  s_fb454cbe0d327e::t_d3487fd8763624 135,158,173,310,328,340,352,362,371,388,397
+  s_fb454cbe0d327e::t_74b6eef0b2c18b 13-20,117-120,123-131,138-140,144-154,164-166,178-180,312-315,320-325,329-339,341-351,353-361,363-370,373-375,379-381,383-385,398-405
+__tests__/mcp/manualRunEnvironmentProfile.test.ts
+  s_fb454cbe0d327e::t_74b6eef0b2c18b 4-12,14-17,22-29,37-45,50-53,55-62,64-68,71-74,77-82,86-89,91-96,99-101,103-111,113-123
+  s_fb454cbe0d327e::t_7b7a36986d08b9 20,30-31
+  s_fb454cbe0d327e::t_d3487fd8763624 69,90,97,102,112
+__tests__/mcp/actionSchemas.test.ts
+  s_fb454cbe0d327e::t_7b7a36986d08b9 11,13-14
+  s_fb454cbe0d327e::t_d3487fd8763624 49
+__tests__/mcp/manualTestRunSchemas.test.ts
+  s_fb454cbe0d327e::t_7b7a36986d08b9 15,17-20
+  s_fb454cbe0d327e::t_d3487fd8763624 36,72,85,128,160
+  s_fb454cbe0d327e::t_74b6eef0b2c18b 5-13,23-27,32-35,37-47,49-58,63-71,73-83,86-107,111-127,129-154,161-174
+src/test-utils/testUuid.ts
+  s_fb454cbe0d327e::t_550a53b769f289 4-10
+  s_fb454cbe0d327e::t_ddadbb1a22d241 1-3
+__tests__/mcp/tmsWorkflowPrompt.test.ts
+  s_fb454cbe0d327e::t_74b6eef0b2c18b 13-17,22-24,28-31,34-46,48-51,54-63,105-112,115-122
+  s_fb454cbe0d327e::t_031ae3d70c700a 20,26,32,47,66,92,104,114
+  s_fb454cbe0d327e::t_7b7a36986d08b9 7
+__tests__/lib/openapi/users.test.ts
+  s_fb454cbe0d327e::t_d3487fd8763624 12,16
+  s_fb454cbe0d327e::t_74b6eef0b2c18b 19-24
+__tests__/models/userModel.test.ts
+  s_fb454cbe0d327e::t_74b6eef0b2c18b 16-18,29-35
+  s_fb454cbe0d327e::t_031ae3d70c700a 15
+  s_fb454cbe0d327e::t_1403b51f7bacfc 36
+__tests__/routes/users.test.ts
+  s_fb454cbe0d327e::t_031ae3d70c700a 688,695,704
+  s_fb454cbe0d327e::t_74b6eef0b2c18b 109-111,624-627,644-647,680-687,697-700,705-708
+__tests__/mcp/manualTestRunMcpTransport.test.ts
+  s_fb454cbe0d327e::t_7b7a36986d08b9 14,75-80,222,334
+  s_fb454cbe0d327e::t_d3487fd8763624 100,134,150,166,177,187,198,208,218,290,295,315,331,348,358,383,397,422,467
+  s_fb454cbe0d327e::t_74b6eef0b2c18b 8-11,42-49,51-64,66-73,97-99,102-105,108-114,121-123,130-133,137-138,143-148,154-165,167-174,178-185,189-197,199-207,210-217,220-221,224-232,238-245,252-255,257-260,266-269,274-282,286-289,291-294,297-312,316-319,321-324,336-347,350-352,359-362,365-367,369-372,376-382,384-387,389-396,400-421,423-430,435-466,468-471
+__tests__/test-scenarios/testScenarioIntegrationWorkflow.test.ts
+  s_fb454cbe0d327e::t_74b6eef0b2c18b 407-411,414-417,420-425,428-435,443-448
+  s_fb454cbe0d327e::t_031ae3d70c700a 412,418,426,436,440
+__tests__/lib/openapi/prompts.test.ts
+  s_fb454cbe0d327e::t_74b6eef0b2c18b 10-16,18-21,23-31
+  s_fb454cbe0d327e::t_d3487fd8763624 9
+  s_fb454cbe0d327e::t_133846d795eff1 32
+__tests__/test-scenarios/testScenarioPostgresIntegration.test.ts
+  s_fb454cbe0d327e::t_031ae3d70c700a 181,229,273,279,291,299,310,322,334,355,362,374,399,404,417,439,443,463,495,503,514,566,586,605,720,730,747,760,772,791,812,829,835,849,866,910,927,950,1170,1229,1367,1377,1408,1418,1434,1448,1467,1477,1487,1505,1527,1552,1566,1589,1605,1619,1631,1647,1657,1667,1677,1694,1709,1726,1739,1745,1764,1781,1788
+  s_fb454cbe0d327e::t_74b6eef0b2c18b 175-179,184-228,230-242,244-271,275-277,281-284,287-288,292-295,301-308,312-315,317-321,324-329,331-333,335-354,358-360,363-369,376-395,405-416,418-438,440-442,444-448,501-502,508-513,572-575,593-597,599-602,1174-1176,1356-1359,1362-1365,1368-1376,1391-1407,1409-1416,1419-1429,1488-1504,1506-1512,1514-1526,1528-1551,1553-1565,1578-1588,1590-1597,1658-1665,1668-1675,1678-1680,1695-1703,1710-1717,1719-1724,1727-1731,1733-1738,1747-1755,1758-1761,1765-1778,1782-1785,1790-1792
+__tests__/models/specModel.test.ts
+  s_fb454cbe0d327e::t_031ae3d70c700a 21,25
+src/mcp/server.ts
+  s_fb454cbe0d327e::t_6eb26b73d21382 28
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "617ccfd45a8192c5511e8b06e39eaa0ee7f3d098",
+  "prompts": {},
+  "sessions": {
+    "s_fb454cbe0d327e": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a20d8d-35a0-7780-917c-047574bab5c5",
+        "model": "gpt-6.2-sol"
+      },
+      "human_author": "Ihar Mikailau <ihar.mikailau@ventionteams.com>"
+    }
+  }
+}
