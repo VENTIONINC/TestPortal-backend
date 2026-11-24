@@ -37,6 +37,8 @@ jest.mock("@/services/testScenarioIntegrationService", () => ({
 }));
 
 import { mcpTestScenarioHandler } from "@/handlers/mcpTestScenarioHandler";
+import { createActionCatalog } from "@/mcp/actionCatalog";
+import { executeAction } from "@/mcp/actionExecution";
 import {
   appendTestScenarioStep,
   deleteTestScenarioStep,
@@ -206,42 +208,53 @@ describe("Test Scenario MCP workflow", () => {
     });
   });
 
-  it("updates only structured fields through the shared service", async () => {
-    const { data } = await invoke(updateTestScenario[3], {
-      scenarioId,
-      projectId,
-      preconditions: "  New objective  ",
-      priority: null,
-      relatedIssueUrl: null,
-      scenarioKey: "R2",
+  const actorId = "55555555-5555-4555-8555-555555555555";
+  const updateActionId = "testportal-update-test-scenario";
+  const dispatchUpdate = (args: Record<string, unknown>) =>
+    invoke(executeAction.bind(null, createActionCatalog(actorId)), {
+      actionId: updateActionId,
+      arguments: { scenarioId, projectId, ...args },
     });
-    expect(data).toEqual(
-      expect.objectContaining({
-        id: scenario.id,
-        contentMd: scenario.contentMd,
-      }),
-    );
+
+  it("updates valid structured fields through the action dispatcher", async () => {
+    const { response, data } = await dispatchUpdate({
+      preconditions: "  An active account exists  ",
+      priority: "high",
+      relatedIssueUrl: null,
+    });
+
+    expect(response.isError).not.toBe(true);
+    expect(data).toMatchObject({
+      id: scenario.id,
+      scenarioKey: scenario.scenarioKey,
+      contentMd: scenario.contentMd,
+    });
+    expect(scenarioUpdateMock).toHaveBeenCalledTimes(1);
     expect(scenarioUpdateMock).toHaveBeenCalledWith({
       scenarioId,
       projectId,
-      preconditions: "  New objective  ",
-      priority: null,
+      actorId,
+      preconditions: "An active account exists",
+      priority: "high",
       relatedIssueUrl: null,
-      scenarioKey: "R2",
     });
   });
 
-  it("forwards a key-only edit through the existing MCP update tool", async () => {
-    await invoke(updateTestScenario[3], {
-      scenarioId,
-      projectId,
-      scenarioKey: "R3",
+  it.each([
+    ["a caller-supplied scenario key", { scenarioKey: "R3" }],
+    ["a null priority", { priority: null }],
+  ])("rejects %s before calling the update service", async (_, rejected) => {
+    const { response, data } = await dispatchUpdate({
+      title: "Updated login scenario",
+      ...rejected,
     });
-    expect(scenarioUpdateMock).toHaveBeenCalledWith({
-      scenarioId,
-      projectId,
-      scenarioKey: "R3",
+
+    expect(response.isError).toBe(true);
+    expect(data).toMatchObject({
+      kind: "invalid_arguments",
+      actionId: updateActionId,
     });
+    expect(scenarioUpdateMock).not.toHaveBeenCalled();
   });
 
   it("surfaces shared service errors as MCP errors", async () => {

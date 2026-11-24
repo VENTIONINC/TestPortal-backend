@@ -31,10 +31,10 @@ import {
   getTestScenario,
   createUpdateTestScenarioTool,
   deleteTestScenario,
-  appendTestScenarioStep,
-  updateTestScenarioStep,
-  deleteTestScenarioStep,
-  reorderTestScenarioSteps,
+  createAppendTestScenarioStepTool,
+  createUpdateTestScenarioStepTool,
+  createDeleteTestScenarioStepTool,
+  createReorderTestScenarioStepsTool,
 } from "@/mcp/tools/test-scenarios";
 import {
   createStartManualTestRunTool,
@@ -47,7 +47,7 @@ import {
   profileTools,
 } from "@/mcp/tools/manual-run-environment-profiles";
 
-import { organizationTools } from "@/mcp/tools/test-scenario-organization";
+import { createOrganizationTools } from "@/mcp/tools/test-scenario-organization";
 import {
   listTestScenarioSpecLinks,
   addTestScenarioSpecLink,
@@ -93,17 +93,17 @@ export const createActionCatalog = (
     getTestScenario,
     createUpdateTestScenarioTool(userId),
     deleteTestScenario,
-    appendTestScenarioStep,
-    updateTestScenarioStep,
-    deleteTestScenarioStep,
-    reorderTestScenarioSteps,
+    createAppendTestScenarioStepTool(userId),
+    createUpdateTestScenarioStepTool(userId),
+    createDeleteTestScenarioStepTool(userId),
+    createReorderTestScenarioStepsTool(userId),
     createStartManualTestRunTool(userId),
     createCompleteManualTestRunTool(userId),
     createUpdateManualTestRunResultTool(userId),
     ...manualTestRunTools,
     createProfileTool(userId),
     ...profileTools,
-    ...organizationTools,
+    ...createOrganizationTools(userId),
   ];
   const catalog = indexActions(tools);
   for (const id of catalog.keys()) actionAreas(id);

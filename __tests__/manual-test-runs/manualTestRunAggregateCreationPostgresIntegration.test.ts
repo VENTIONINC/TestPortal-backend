@@ -781,8 +781,7 @@ describePostgres(
       expect(page.runs.map(({ id }) => id)).toContain(run.id);
     });
 
-    // The 10,000-scenario fixture can exceed Prisma's default transaction timeout.
-    it.skip("reorders and updates membership in a run with 10,000 scenarios", async () => {
+    it("reorders and updates membership in a run with 10,000 scenarios", async () => {
       const scenarios = Array.from({ length: 10_000 }, (_, index) => ({
         id: randomUUID(),
         projectId,

@@ -299,17 +299,29 @@ describe("Test Scenario MCP transport validation", () => {
         steps: [],
         createdById: userId,
       });
-      expect(mockAppendScenarioStep).toHaveBeenCalledWith({ projectId, scenarioId, action: "Open" });
+      expect(mockAppendScenarioStep).toHaveBeenCalledWith({
+        projectId,
+        scenarioId,
+        action: "Open",
+        actorId: userId,
+      });
       expect(mockUpdateScenarioStep).toHaveBeenCalledWith({
         projectId,
         scenarioId,
+        actorId: userId,
         stepId: "44444444-4444-4444-8444-444444444444",
         expectedResult: null,
       });
-      expect(mockReorderScenarioSteps).toHaveBeenCalledWith({ projectId, scenarioId, stepIds: [] });
+      expect(mockReorderScenarioSteps).toHaveBeenCalledWith({
+        projectId,
+        scenarioId,
+        stepIds: [],
+        actorId: userId,
+      });
       expect(mockDeleteScenarioStep).toHaveBeenCalledWith({
         projectId,
         scenarioId,
+        actorId: userId,
         stepId: "44444444-4444-4444-8444-444444444444",
       });
       expect(mockGetTestScenario).toHaveBeenCalledWith({

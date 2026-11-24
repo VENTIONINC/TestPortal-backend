@@ -2,6 +2,11 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { z } from "zod/v3";
+import {
+  scenarioCreatorIdsFilterSchema,
+  SCENARIO_PRIORITY_FILTER_PATTERN,
+  validateScenarioAuthorFilter,
+} from "@/schemas/testScenarioSchemas";
 import type { MCPToolSchema } from "@/types";
 import {
   TEST_SCENARIO_SORT_FIELDS,
@@ -73,6 +78,24 @@ export const listTestScenariosSchema = z
       .describe(
         "Optional creator User UUID filter; may identify any user, not only the authenticated user",
       ),
+    createdByIds: z
+      .string()
+      .min(1)
+      .refine(
+        (value) => scenarioCreatorIdsFilterSchema.safeParse(value).success,
+        "Use a comma-separated list of distinct creator UUIDs",
+      )
+      .optional()
+      .describe(
+        "Comma-separated creator UUIDs; matches any listed author. Use instead of createdById.",
+      ),
+    priority: z
+      .string()
+      .regex(SCENARIO_PRIORITY_FILTER_PATTERN)
+      .optional()
+      .describe(
+        "One or more priorities (low, medium, high), separated by commas; matches any listed priority.",
+      ),
     sort: z
       .enum(TEST_SCENARIO_SORT_VALUES)
       .optional()
@@ -109,6 +132,7 @@ export const listTestScenariosSchema = z
   })
   .strict()
   .superRefine((value, context) => {
+    validateScenarioAuthorFilter(value, context);
     if (value.sortDirection && !value.sortField)
       context.addIssue({
         code: "custom",
