@@ -250,7 +250,9 @@ export const jsonReportController = {
 
           const normalized = normalizePlaywrightAttempt(result, {
             file: test.location?.file ?? "unknown",
-            line: Number.isInteger(test.location?.line) ? test.location.line : 1,
+            line: Number.isInteger(test.location?.line)
+              ? test.location.line
+              : 1,
           });
           const primary = normalized.errors[0];
 
@@ -321,15 +323,17 @@ export const jsonReportController = {
               }
 
               if (Array.isArray(rest.errors)) {
-                rest.errors = rest.errors.map((error: { message?: string; stack?: string }) => ({
-                  ...error,
-                  ...(typeof error.message === "string"
-                    ? { message: error.message.slice(0, maxSize) }
-                    : {}),
-                  ...(typeof error.stack === "string"
-                    ? { stack: error.stack.slice(0, maxSize) }
-                    : {}),
-                }));
+                rest.errors = rest.errors.map(
+                  (error: { message?: string; stack?: string }) => ({
+                    ...error,
+                    ...(typeof error.message === "string"
+                      ? { message: error.message.slice(0, maxSize) }
+                      : {}),
+                    ...(typeof error.stack === "string"
+                      ? { stack: error.stack.slice(0, maxSize) }
+                      : {}),
+                  }),
+                );
               }
 
               return rest;

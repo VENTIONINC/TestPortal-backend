@@ -34,6 +34,9 @@ export const mcpResultErrorHandler = {
     resultErrorId: string,
     projectId: string,
   ): Promise<StructuredResultError> {
-    return await resultErrorService.getResultErrorById(resultErrorId, projectId);
+    return await resultErrorService.getResultErrorById(
+      resultErrorId,
+      projectId,
+    );
   },
 };

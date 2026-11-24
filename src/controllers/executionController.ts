@@ -31,7 +31,10 @@ export const executionController = {
         return;
       }
 
-      const execution = await executionService.getExecutionById(executionId, projectId);
+      const execution = await executionService.getExecutionById(
+        executionId,
+        projectId,
+      );
       res.status(200).json(execution);
     } catch (error) {
       const err = error as Error;

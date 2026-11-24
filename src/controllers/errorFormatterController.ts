@@ -31,7 +31,9 @@ export const errorFormatterController = {
       const formattedError = await errorFormatterService.formatErrorMessage({
         name,
         description,
-        ...(effectiveContextCategory ? { contextCategory: effectiveContextCategory } : {}),
+        ...(effectiveContextCategory
+          ? { contextCategory: effectiveContextCategory }
+          : {}),
       });
 
       res.status(200).json(formattedError);

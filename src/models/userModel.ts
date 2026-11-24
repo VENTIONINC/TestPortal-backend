@@ -34,7 +34,10 @@ export const userModel = {
     });
   },
 
-  storeMcpTokenForActiveUser: async (id: string, mcpToken: string): Promise<number> => {
+  storeMcpTokenForActiveUser: async (
+    id: string,
+    mcpToken: string,
+  ): Promise<number> => {
     const result = await dbClient.user.updateMany({
       where: { id, status: UserStatus.active },
       data: { mcpToken },

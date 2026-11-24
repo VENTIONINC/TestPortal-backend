@@ -26,11 +26,24 @@ export const actionKeywords = (id: string): string[] => {
     words.push("manual execution", "manual run", "record outcome");
   if (id.includes("manual-test-run-step"))
     words.push("manual step outcome", "record step result");
-  if (id.includes("folder")) words.push("folder", "folders", "hierarchy", "unfiled");
+  if (id.includes("folder"))
+    words.push("folder", "folders", "hierarchy", "unfiled");
   if (id.includes("suite")) words.push("suite", "suites", "membership");
   if (id.includes("environment-profile")) words.push("environment", "profile");
-  if (id === "testportal-list-specs") words.push("automated specs", "automation", "test coverage", "discover specs");
-  if (id.includes("test-scenario-spec-link")) words.push("scenario automation links", "automated specs", "coverage association", "link automated test");
+  if (id === "testportal-list-specs")
+    words.push(
+      "automated specs",
+      "automation",
+      "test coverage",
+      "discover specs",
+    );
+  if (id.includes("test-scenario-spec-link"))
+    words.push(
+      "scenario automation links",
+      "automated specs",
+      "coverage association",
+      "link automated test",
+    );
   if (id === "testportal-get-available-projects")
     words.push("projects", "project discovery", "available projects");
   return words;
@@ -89,6 +102,7 @@ const tms = new Set([
   "testportal-get-manual-test-run",
   "testportal-update-manual-test-run",
   "testportal-update-manual-test-run-step",
+  "testportal-update-manual-test-run-scenario-result",
   "testportal-complete-manual-test-run",
   "testportal-list-manual-test-runs",
   "testportal-list-test-scenario-manual-runs",
@@ -104,10 +118,14 @@ const mutation =
 const destructive = /testportal-delete-/;
 
 const responseSummary = (id: string): string => {
-  if (id === "testportal-list-specs") return "Returns a paginated project Spec catalog with UUIDs, keys and normalized metadata.";
-  if (id === "testportal-list-test-scenario-spec-links") return "Returns a paginated list of Specs linked to the scenario.";
-  if (id === "testportal-add-test-scenario-spec-link") return "Returns the linked scenarioId and specId.";
-  if (id === "testportal-remove-test-scenario-spec-link") return "Returns projectId, scenarioId, specId and removed confirmation.";
+  if (id === "testportal-list-specs")
+    return "Returns a paginated project Spec catalog with UUIDs, keys and normalized metadata.";
+  if (id === "testportal-list-test-scenario-spec-links")
+    return "Returns a paginated list of Specs linked to the scenario.";
+  if (id === "testportal-add-test-scenario-spec-link")
+    return "Returns the linked scenarioId and specId.";
+  if (id === "testportal-remove-test-scenario-spec-link")
+    return "Returns projectId, scenarioId, specId and removed confirmation.";
   if (id === "testportal-get-available-projects")
     return "Returns active projects and their IDs.";
   if (id === "testportal-check-status")
@@ -129,11 +147,24 @@ const responseSummary = (id: string): string => {
     return "Returns paginated run history.";
   if (id.includes("manual-test-run"))
     return "Returns the saved run with its snapshot and outcomes.";
-  if (id === "testportal-list-test-scenario-folders") return "Returns the project folder tree with direct scenario counts.";
-  if (id === "testportal-move-test-scenarios-to-folder") return "Returns the moved scenario count.";
-  if (id.includes("test-scenario-folder")) return id.includes("delete-") ? "Returns folder deletion confirmation." : "Returns the created or updated folder.";
-  if (id.includes("test-suite-members")) return id.includes("reorder-") ? "Returns the ordered scenario IDs." : "Returns the ordered suite members.";
-  if (id.includes("test-suite")) return id.includes("delete-") ? "Returns suite deletion confirmation." : id.includes("list-") || id.includes("get-") ? "Returns suite metadata and ordered members." : "Returns the created or updated suite metadata.";
+  if (id === "testportal-list-test-scenario-folders")
+    return "Returns the project folder tree with direct scenario counts.";
+  if (id === "testportal-move-test-scenarios-to-folder")
+    return "Returns the moved scenario count.";
+  if (id.includes("test-scenario-folder"))
+    return id.includes("delete-")
+      ? "Returns folder deletion confirmation."
+      : "Returns the created or updated folder.";
+  if (id.includes("test-suite-members"))
+    return id.includes("reorder-")
+      ? "Returns the ordered scenario IDs."
+      : "Returns the ordered suite members.";
+  if (id.includes("test-suite"))
+    return id.includes("delete-")
+      ? "Returns suite deletion confirmation."
+      : id.includes("list-") || id.includes("get-")
+        ? "Returns suite metadata and ordered members."
+        : "Returns the created or updated suite metadata.";
   if (id === "testportal-list-test-scenarios")
     return "Returns paginated scenario summaries.";
   if (id === "testportal-get-test-scenario")
@@ -178,7 +209,7 @@ export const describeAction = ([
   const areas = actionAreas(actionId);
   const constraints: string[] = [];
   if (
-    /testportal-update-(?:test-scenario|test-scenario-step|manual-test-run|manual-test-run-step|manual-run-environment-profile)$/.test(
+    /testportal-update-(?:test-scenario|test-scenario-step|manual-test-run-step|manual-run-environment-profile)$/.test(
       actionId,
     )
   )
@@ -189,12 +220,24 @@ export const describeAction = ([
     )
   )
     constraints.push(
-      "Date bounds require RFC 3339 timestamps with timezones; startedFrom must be earlier than startedBefore.",
+      "Custom periods use ordered dateFrom and dateTo in YYYY-MM-DD format.",
     );
-  if (/testportal-update-(?:test-scenario-folder|test-suite)$/.test(actionId)) constraints.push("At least one editable field is required.");
-  if (/testportal-(?:add|remove)-test-suite-members|testportal-move-test-scenarios-to-folder/.test(actionId)) constraints.push("Provide 1–100 distinct scenario UUIDs in the same project.");
-  if (actionId === "testportal-reorder-test-suite-members") constraints.push("Provide every current member exactly once in the desired order.");
-  if (actionId === "testportal-delete-test-scenario-folder") constraints.push("Disposition is required: parent or unfiled.");
+  if (/testportal-update-(?:test-scenario-folder|test-suite)$/.test(actionId))
+    constraints.push("At least one editable field is required.");
+  if (
+    /testportal-(?:add|remove)-test-suite-members|testportal-move-test-scenarios-to-folder/.test(
+      actionId,
+    )
+  )
+    constraints.push(
+      "Provide 1–100 distinct scenario UUIDs in the same project.",
+    );
+  if (actionId === "testportal-reorder-test-suite-members")
+    constraints.push(
+      "Provide every current member exactly once in the desired order.",
+    );
+  if (actionId === "testportal-delete-test-scenario-folder")
+    constraints.push("Disposition is required: parent or unfiled.");
   if (actionId === "testportal-list-test-scenarios")
     constraints.push(
       "sortDirection requires sortField; sort and sortField cannot be combined.",
@@ -205,14 +248,18 @@ export const describeAction = ([
     );
   const effects =
     actionId === "testportal-add-test-scenario-spec-link"
-      ? ["Creates one scenario–Spec association without creating either record."]
+      ? [
+          "Creates one scenario–Spec association without creating either record.",
+        ]
       : actionId === "testportal-remove-test-scenario-spec-link"
-        ? ["Removes one association; Specs, execution evidence and other links are preserved."]
-      : actionId === "testportal-update-assumption"
-      ? ["Changes an assumption; setting isConfirmed to false deletes it."]
-      : mutation.test(actionId)
-        ? [destructive.test(actionId) ? "Deletes data." : "Changes data."]
-        : ["Reads data without mutation."];
+        ? [
+            "Removes one association; Specs, execution evidence and other links are preserved.",
+          ]
+        : actionId === "testportal-update-assumption"
+          ? ["Changes an assumption; setting isConfirmed to false deletes it."]
+          : mutation.test(actionId)
+            ? [destructive.test(actionId) ? "Deletes data." : "Changes data."]
+            : ["Reads data without mutation."];
   return {
     actionId,
     areas,
@@ -227,15 +274,30 @@ export const describeAction = ([
     responseSummary: responseSummary(actionId),
     relatedActionIds:
       actionId === "testportal-list-specs"
-        ? ["testportal-get-spec-by-id", "testportal-list-test-scenario-spec-links", "testportal-add-test-scenario-spec-link"]
+        ? [
+            "testportal-get-spec-by-id",
+            "testportal-list-test-scenario-spec-links",
+            "testportal-add-test-scenario-spec-link",
+          ]
         : actionId === "testportal-get-spec-by-id"
           ? ["testportal-list-specs", "testportal-add-test-scenario-spec-link"]
-        : actionId.includes("test-scenario-spec-link")
-          ? ["testportal-list-specs", "testportal-list-test-scenario-spec-links", "testportal-add-test-scenario-spec-link", "testportal-remove-test-scenario-spec-link", "testportal-get-test-scenario"].filter((id) => id !== actionId)
-        : actionId === "testportal-get-test-scenario"
-        ? ["testportal-get-result-by-id", "testportal-get-issue-by-id", "testportal-list-test-scenario-spec-links", "testportal-list-specs"]
-        : actionId.includes("manual-test-run")
-          ? ["testportal-get-test-scenario"]
-          : [],
+          : actionId.includes("test-scenario-spec-link")
+            ? [
+                "testportal-list-specs",
+                "testportal-list-test-scenario-spec-links",
+                "testportal-add-test-scenario-spec-link",
+                "testportal-remove-test-scenario-spec-link",
+                "testportal-get-test-scenario",
+              ].filter((id) => id !== actionId)
+            : actionId === "testportal-get-test-scenario"
+              ? [
+                  "testportal-get-result-by-id",
+                  "testportal-get-issue-by-id",
+                  "testportal-list-test-scenario-spec-links",
+                  "testportal-list-specs",
+                ]
+              : actionId.includes("manual-test-run")
+                ? ["testportal-get-test-scenario"]
+                : [],
   };
 };

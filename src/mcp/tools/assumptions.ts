@@ -71,8 +71,10 @@ export const getAssumptionById = createMcpTool(
   getAssumptionByIdSchema,
   async (params: GetAssumptionByIdParams): Promise<MCPToolResponse> => {
     const { assumptionId, projectId } = params;
-    const assumption =
-      await mcpAssumptionHandler.getAssumptionById(assumptionId, projectId);
+    const assumption = await mcpAssumptionHandler.getAssumptionById(
+      assumptionId,
+      projectId,
+    );
     return createSuccessResponse(assumption);
   },
   "fetching assumption",

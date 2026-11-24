@@ -48,8 +48,9 @@ describe("action input normalization", () => {
     await expect(
       parseActionInput(listManualTestRunsSchema, {
         projectId,
-        startedFrom: "2026-10-02T00:00:00Z",
-        startedBefore: "2026-10-01T00:00:00Z",
+        period: "custom",
+        dateFrom: "2026-10-02",
+        dateTo: "2026-10-01",
       }),
     ).rejects.toThrow();
   });
@@ -58,7 +59,7 @@ describe("action input normalization", () => {
     expect(
       await parseActionInput(startManualTestRunSchema, {
         projectId,
-        scenarioId: runId,
+        scenarioIds: [runId],
         browser: "  ",
       }),
     ).toMatchObject({ browser: null });

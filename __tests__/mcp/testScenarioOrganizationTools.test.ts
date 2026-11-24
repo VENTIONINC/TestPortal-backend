@@ -7,7 +7,7 @@ const service = {
   listFolders: jest.fn(),
   createFolder: jest.fn(),
   updateFolder: jest.fn(),
-  deleteFolder: jest.fn(),
+  deleteSingleFolder: jest.fn(),
   moveScenarios: jest.fn(),
   listSuites: jest.fn(),
   getSuite: jest.fn(),
@@ -56,7 +56,7 @@ describe("organization MCP actions", () => {
       [
         "delete-test-scenario-folder",
         { projectId, folderId, disposition: "parent" },
-        "deleteFolder",
+        "deleteSingleFolder",
         [{ projectId, folderId, disposition: "parent" }],
       ],
       [
@@ -110,11 +110,16 @@ describe("organization MCP actions", () => {
       ],
     ] as const;
     for (const [id, args, method, expected] of cases) {
+      const expectedResponse = method === "moveScenarios" ? { moved: 1 } : { ok: true };
+      const serviceResponse =
+        method === "moveScenarios"
+          ? { ...expectedResponse, restoreData: [{ scenarioId: scenarioIds[0] }] }
+          : expectedResponse;
       service[method].mockReturnValueOnce(
-        Promise.resolve({ ok: true }) as never,
+        Promise.resolve(serviceResponse) as never,
       );
       const result = await invoke(id, args);
-      expect(JSON.parse(result.content[0]?.text ?? "{}")).toEqual({ ok: true });
+      expect(JSON.parse(result.content[0]?.text ?? "{}")).toEqual(expectedResponse);
       expect(service[method]).toHaveBeenLastCalledWith(...expected);
     }
   });

@@ -17,7 +17,10 @@ export const getExecutionById = createMcpTool(
   getExecutionByIdSchema,
   async (params: GetExecutionByIdParams): Promise<MCPToolResponse> => {
     const { executionId, projectId } = params;
-    const execution = await mcpExecutionHandler.getExecutionById(executionId, projectId);
+    const execution = await mcpExecutionHandler.getExecutionById(
+      executionId,
+      projectId,
+    );
     return createSuccessResponse(execution);
   },
   "fetching execution",

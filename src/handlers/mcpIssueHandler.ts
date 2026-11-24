@@ -46,9 +46,7 @@ export const mcpIssueHandler = {
     return await issueService.getAllIssues(issueParams);
   },
 
-  async getAllIssuesWithStats(
-    params: IssueFilterParams,
-  ) {
+  async getAllIssuesWithStats(params: IssueFilterParams) {
     const {
       projectId,
       category,
@@ -70,10 +68,7 @@ export const mcpIssueHandler = {
     return await issueService.getAllIssuesWithStats(issueParams);
   },
 
-  async getIssueById(
-    issueId: string,
-    projectId: string,
-  ) {
+  async getIssueById(issueId: string, projectId: string) {
     return await issueService.getIssueById(issueId, projectId);
   },
 

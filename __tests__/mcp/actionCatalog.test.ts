@@ -63,6 +63,7 @@ describe("session action catalog", () => {
       "testportal-update-assumption",
       "testportal-update-manual-run-environment-profile",
       "testportal-update-manual-test-run",
+      "testportal-update-manual-test-run-scenario-result",
       "testportal-update-manual-test-run-step",
       "testportal-update-test-scenario",
       "testportal-update-test-scenario-folder",
@@ -114,17 +115,13 @@ describe("session action catalog", () => {
     const update = actions.find(
       ({ actionId }) => actionId === "testportal-update-manual-test-run",
     );
-    expect(update?.constraints).toContain(
-      "At least one editable field is required.",
-    );
-    expect(JSON.stringify(update?.inputSchema)).toContain('"type":"null"');
     expect(JSON.stringify(update?.inputSchema)).not.toContain('"status"');
     const updateSchema = update?.inputSchema as {
       required: string[];
       additionalProperties: boolean;
     };
     expect(updateSchema.required).toEqual(
-      expect.arrayContaining(["projectId", "runId"]),
+      expect.arrayContaining(["projectId", "runId", "title", "scenarioIds", "environmentProperties"]),
     );
     expect(updateSchema.required).not.toContain("notes");
     expect(updateSchema.additionalProperties).toBe(false);

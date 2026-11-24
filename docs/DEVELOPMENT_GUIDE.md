@@ -52,6 +52,28 @@ npm run migrate          # Run migrations
 npm run db:generate      # Generate Prisma types
 ```
 
+### Pre-commit quality checks
+
+`npm install` activates the checked-in Husky hook in a developer Git checkout.
+The install guard skips CI, production installs, installs that omit development
+dependencies, and source trees without a `.git` file or directory. To activate
+it again in an existing checkout, run:
+
+```bash
+npm run prepare
+git config --local --get core.hooksPath  # should print .husky/_
+```
+
+The hook runs these checks once, in order, and stops at the first failure:
+
+1. `npm run type-check`
+2. `npm run lint`
+3. `npm run test:unit -- --ci`
+
+If TypeScript reports missing Prisma-generated types, run
+`npm run db:generate` and retry the check. `npm test` remains the full Jest
+suite and retains its existing coverage.
+
 ## 📁 Project Structure
 
 ```
@@ -532,4 +554,11 @@ Before committing:
 
 ---
 
-**Happy coding with TypeScript! 🚀** 
+**Happy coding with TypeScript! 🚀**
+## Scenario editor identity migration
+
+Back up affected data and pause scenario writers for the coordinated breaking migration. Never run old binaries against the new constraints. Assign scenario numbers independently per project by `createdAt`, then UUID ascending, replacing old live keys with `TMS-N`; preserve UUIDs, step identities, relationships, historical run content and captured keys. Set each project high-water counter to its migrated maximum or zero; deletion never resets it. Backfill null priority to medium, initialize revision to 1, and leave legacy updater unknown. Do not regenerate historical Markdown in bulk. Deploy backend validation, REST/OpenAPI, MCP and regenerated client contracts together.
+
+Roll forward schema corrections. Restoring editable original labels requires a pre-migration backup and compatible binaries: replacement numbers cannot reconstruct them. Never roll back by resetting counters or relabeling historical snapshots.
+
+Acquire locks globally in this order: project row for allocation only, scenario UUIDs ascending, suite UUIDs ascending. Revalidate discovered affected sets after locking. Retry only failed transactions for bounded serialization/deadlock or affected-set discovery conflicts; never retry validation/stale-revision conflicts or automatically replay an uncertain committed create. Editor collection saves create pending suites, preserve retained step IDs and replace requested memberships atomically; stale revisions require explicit reload.

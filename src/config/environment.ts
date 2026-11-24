@@ -19,7 +19,8 @@ const LANGSMITH_TRACING =
 const LANGSMITH_ENDPOINT =
   process.env.LANGSMITH_ENDPOINT ?? "https://api.smith.langchain.com";
 const LANGSMITH_API_KEY = process.env.LANGSMITH_API_KEY ?? "";
-const LANGSMITH_PROJECT = process.env.LANGSMITH_PROJECT ?? "test-portal-backend";
+const LANGSMITH_PROJECT =
+  process.env.LANGSMITH_PROJECT ?? "test-portal-backend";
 
 const SUPPORTED_AUTH_PROVIDERS = ["local", "cognito"] as const;
 type AuthProviderName = (typeof SUPPORTED_AUTH_PROVIDERS)[number];
@@ -27,7 +28,9 @@ type AuthProviderName = (typeof SUPPORTED_AUTH_PROVIDERS)[number];
 const isSupportedAuthProvider = (
   value: string | undefined,
 ): value is AuthProviderName =>
-  Boolean(value && SUPPORTED_AUTH_PROVIDERS.includes(value as AuthProviderName));
+  Boolean(
+    value && SUPPORTED_AUTH_PROVIDERS.includes(value as AuthProviderName),
+  );
 
 if (!AUTH_PROVIDER) {
   throw new Error(
@@ -68,9 +71,7 @@ if (LANGSMITH_TRACING && !LANGSMITH_API_KEY) {
     "LangSmith tracing is enabled but LANGSMITH_API_KEY is not set. Tracing will not work.",
   );
 } else if (isLangSmithConfigured) {
-  console.log(
-    `LangSmith tracing enabled for project: ${LANGSMITH_PROJECT}`,
-  );
+  console.log(`LangSmith tracing enabled for project: ${LANGSMITH_PROJECT}`);
 }
 
 export const environment = {

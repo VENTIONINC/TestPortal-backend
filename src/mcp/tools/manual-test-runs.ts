@@ -1,39 +1,92 @@
 // Copyright 2026 VENSOLUTIONSGROUP LTD
 // SPDX-License-Identifier: Apache-2.0
 
-// Copyright 2026 VENSOLUTIONSGROUP LTD
-// SPDX-License-Identifier: Apache-2.0
-
-import { mcpManualTestRunHandler } from "@/handlers/mcpManualTestRunHandler";
+import { mcpManualTestRunHandler as handler } from "@/handlers/mcpManualTestRunHandler";
 import { createMcpTool, createSuccessResponse } from "@/mcp/helpers/mcpHelpers";
-import {
-  completeManualTestRunSchema, getManualTestRunSchema, listActiveUsersSchema,
-  listManualTestRunsSchema, listTestScenarioManualRunsSchema,
-  reassignManualTestRunExecutorSchema, startManualTestRunSchema,
-  updateManualTestRunSchema, updateManualTestRunStepSchema,
-} from "@/mcp/schemas/manualTestRunSchemas";
-import type { MCPToolResponse } from "@/types";
-import type {
-  CompleteManualTestRunInput, GetManualTestRunInput, ListManualTestRunsInput,
-  ListTestScenarioManualRunsInput, ReassignManualTestRunExecutorInput,
-  StartManualTestRunInput, UpdateManualTestRunInput, UpdateManualTestRunStepInput,
-} from "@/mcp/schemas/manualTestRunSchemas";
+import * as schemas from "@/mcp/schemas/manualTestRunSchemas";
+import type { MCPToolSchema } from "@/types";
 
-export const createStartManualTestRunTool = (executedById: string) => createMcpTool(
-  "testportal-start-manual-test-run",
-  "Start a new project-scoped manual run from a saved Test Scenario. Executor identity comes from the authenticated session. Returns the authoritative snapshot and independent run-step IDs; this records human execution and does not execute browser/API tests.",
-  startManualTestRunSchema,
-  async (params: StartManualTestRunInput): Promise<MCPToolResponse> => createSuccessResponse(await mcpManualTestRunHandler.start(params, executedById)),
-  "starting manual test run",
-);
+const action = <T>(
+  name: string,
+  description: string,
+  schema: MCPToolSchema,
+  run: (params: T) => Promise<unknown>,
+) =>
+  createMcpTool(
+    name,
+    description,
+    schema,
+    async (params: T) => createSuccessResponse(await run(params)),
+    name,
+  );
 
-export const getManualTestRun = createMcpTool("testportal-get-manual-test-run", "Get authoritative saved run snapshot, step outcomes, environment and safe nullable executor details within a project.", getManualTestRunSchema, async (params: GetManualTestRunInput) => createSuccessResponse(await mcpManualTestRunHandler.get(params)), "fetching manual test run");
-export const updateManualTestRun = createMcpTool("testportal-update-manual-test-run", "Update notes and/or runKey on an active run. Status is not accepted; use the dedicated completion tool. Completed runs allow runKey-only updates.", updateManualTestRunSchema, async (params: UpdateManualTestRunInput) => createSuccessResponse(await mcpManualTestRunHandler.update(params)), "updating manual test run");
-export const updateManualTestRunStep = createMcpTool("testportal-update-manual-test-run-step", "Record a status and/or notes for a step identified by its ID in the run snapshot. Returns complete updated run detail.", updateManualTestRunStepSchema, async (params: UpdateManualTestRunStepInput) => createSuccessResponse(await mcpManualTestRunHandler.updateStep(params)), "updating manual test run step");
-export const completeManualTestRun = createMcpTool("testportal-complete-manual-test-run", "Explicitly complete an active run as passed, failed, blocked or skipped. Passing completion validates recorded steps; completion freezes execution data.", completeManualTestRunSchema, async (params: CompleteManualTestRunInput) => createSuccessResponse(await mcpManualTestRunHandler.complete(params)), "completing manual test run");
-export const listManualTestRuns = createMcpTool("testportal-list-manual-test-runs", "List lightweight project-scoped run history with optional source scenario/key, status and date filters. Numeric page/limit default to 1/30 and limit is capped at 100.", listManualTestRunsSchema, async (params: ListManualTestRunsInput) => createSuccessResponse(await mcpManualTestRunHandler.list(params)), "listing manual test runs");
-export const listTestScenarioManualRuns = createMcpTool("testportal-list-test-scenario-manual-runs", "List lightweight history for a live project-scoped Test Scenario with status/date filters and numeric pagination.", listTestScenarioManualRunsSchema, async (params: ListTestScenarioManualRunsInput) => createSuccessResponse(await mcpManualTestRunHandler.listForScenario(params)), "listing Test Scenario manual runs");
-export const listActiveUsers = createMcpTool("testportal-list-active-users", "List active executor candidates with only id, name and email in deterministic order. Requires no project ID.", listActiveUsersSchema, async () => createSuccessResponse(await mcpManualTestRunHandler.listActiveUsers()), "listing active users");
-export const reassignManualTestRunExecutor = createMcpTool("testportal-reassign-manual-test-run-executor", "Reassign a project-scoped run to an existing active user. Updates executor and run updatedAt only; this is not executor-only authorization.", reassignManualTestRunExecutorSchema, async (params: ReassignManualTestRunExecutorInput) => createSuccessResponse(await mcpManualTestRunHandler.reassignExecutor(params)), "reassigning manual test run executor");
+export const createStartManualTestRunTool = (actorId: string) =>
+  action(
+    "testportal-start-manual-test-run",
+    "Start a project-scoped manual run from scenarioIds or a suiteId. The session user starts the run. Returns saved scenario and step snapshots.",
+    schemas.startManualTestRunSchema,
+    (params: schemas.StartManualTestRunInput) => handler.start(params, actorId),
+  );
 
-export const manualTestRunTools = [getManualTestRun, updateManualTestRun, updateManualTestRunStep, completeManualTestRun, listManualTestRuns, listTestScenarioManualRuns, listActiveUsers, reassignManualTestRunExecutor] as const;
+export const createCompleteManualTestRunTool = (actorId: string) =>
+  action(
+    "testportal-complete-manual-test-run",
+    "Complete an active run. Untested scenarios become skipped unless requireAllMarked is true. The session user is recorded as closer.",
+    schemas.completeManualTestRunSchema,
+    (params: schemas.CompleteManualTestRunInput) =>
+      handler.complete(params, actorId),
+  );
+
+export const createUpdateManualTestRunResultTool = (actorId: string) =>
+  action(
+    "testportal-update-manual-test-run-scenario-result",
+    "Record a result on an identified run scenario snapshot. The session user is attributed in result history.",
+    schemas.updateManualTestRunResultSchema,
+    (params: schemas.UpdateManualTestRunResultInput) =>
+      handler.updateResult(params, actorId),
+  );
+
+export const manualTestRunTools = [
+  action(
+    "testportal-get-manual-test-run",
+    "Read the saved run and its scenario and step snapshots.",
+    schemas.getManualTestRunSchema,
+    handler.get,
+  ),
+  action(
+    "testportal-update-manual-test-run",
+    "Update the run title, source scenario IDs and environment properties. Supply the full desired sets. Omitting an existing source ID removes its saved snapshot.",
+    schemas.updateManualTestRunSchema,
+    handler.update,
+  ),
+  action(
+    "testportal-update-manual-test-run-step",
+    "Record evidence on one run scenario step using comments and failure or blocked flags. Supply run snapshot IDs.",
+    schemas.updateManualTestRunStepSchema,
+    handler.updateStep,
+  ),
+  action(
+    "testportal-list-manual-test-runs",
+    "List project-scoped run history with search, status, period, time zone and pagination.",
+    schemas.listManualTestRunsSchema,
+    handler.list,
+  ),
+  action(
+    "testportal-list-test-scenario-manual-runs",
+    "List paginated run history containing snapshots of the supplied source scenario UUID.",
+    schemas.listTestScenarioManualRunsSchema,
+    handler.listForScenario,
+  ),
+  action(
+    "testportal-list-active-users",
+    "List active assignee candidates with id, name and email.",
+    schemas.listActiveUsersSchema,
+    () => handler.listActiveUsers(),
+  ),
+  action(
+    "testportal-reassign-manual-test-run-executor",
+    "Change the assignee of one run scenario snapshot. Use a live user UUID or null to clear.",
+    schemas.reassignManualTestRunExecutorSchema,
+    handler.reassignExecutor,
+  ),
+] as const;

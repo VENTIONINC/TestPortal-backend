@@ -22,18 +22,10 @@ export const createTestScenarioSchema = z
     projectId: z.string().uuid(),
     folderId: z.string().uuid().nullable().optional(),
     title: z.string().trim().min(1),
-    scenarioKey: z
-      .string()
-      .trim()
-      .min(1)
-      .max(100)
-      .regex(/^[^\r\n]+$/)
-      .nullable()
-      .optional(),
     details: z.string().trim().min(1).optional(),
     preconditions: z.string().trim().min(1).optional(),
     testData: z.string().trim().min(1).optional(),
-    priority: testScenarioPrioritySchema.nullable().optional(),
+    priority: testScenarioPrioritySchema.default("medium"),
     relatedIssueUrl: testScenarioRelatedIssueUrlSchema.nullable().optional(),
     steps: z
       .array(
@@ -55,9 +47,19 @@ const limit = () => z.number().int().min(1).max(100);
 export const listTestScenariosSchema = z
   .object({
     projectId: uuid().describe("The UUID of the project"),
-    folderId: z.union([uuid(), z.literal("unfiled")]).optional().describe("Folder UUID or unfiled; folder UUIDs include descendants by default"),
-    includeDescendants: z.boolean().optional().describe("Set false to select direct folder assignments only"),
-    suiteId: uuid().optional().describe("Filter to members of this project suite"),
+    folderId: z
+      .union([uuid(), z.literal("unfiled")])
+      .optional()
+      .describe(
+        "Folder UUID or unfiled; folder UUIDs include descendants by default",
+      ),
+    includeDescendants: z
+      .boolean()
+      .optional()
+      .describe("Set false to select direct folder assignments only"),
+    suiteId: uuid()
+      .optional()
+      .describe("Filter to members of this project suite"),
     page: page().default(1),
     limit: limit().default(30),
     search: z
@@ -137,18 +139,10 @@ export const updateTestScenarioSchema = z
     scenarioId: uuid().describe("The UUID of the Test Scenario"),
     projectId: uuid().describe("The UUID of the project"),
     title: z.string().trim().min(1).optional(),
-    scenarioKey: z
-      .string()
-      .trim()
-      .min(1)
-      .max(100)
-      .regex(/^[^\r\n]+$/)
-      .nullable()
-      .optional(),
     details: z.string().trim().min(1).nullable().optional(),
     preconditions: z.string().trim().min(1).nullable().optional(),
     testData: z.string().trim().min(1).nullable().optional(),
-    priority: testScenarioPrioritySchema.nullable().optional(),
+    priority: testScenarioPrioritySchema.optional(),
     relatedIssueUrl: testScenarioRelatedIssueUrlSchema.nullable().optional(),
   })
   .strict()
@@ -204,6 +198,8 @@ export const reorderTestScenarioStepsSchema = z
   .object({
     projectId: uuid().describe("The UUID of the project"),
     scenarioId: uuid().describe("The UUID of the Test Scenario"),
-    stepIds: z.array(uuid()).describe("Every current step UUID exactly once, in the desired order"),
+    stepIds: z
+      .array(uuid())
+      .describe("Every current step UUID exactly once, in the desired order"),
   })
   .strict() satisfies MCPToolSchema;

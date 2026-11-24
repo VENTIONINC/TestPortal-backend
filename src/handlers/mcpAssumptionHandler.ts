@@ -34,7 +34,10 @@ export const mcpAssumptionHandler = {
     );
   },
 
-  async getAssumptionById(assumptionId: string, projectId: string): Promise<PrismaAssumption> {
+  async getAssumptionById(
+    assumptionId: string,
+    projectId: string,
+  ): Promise<PrismaAssumption> {
     return await assumptionService.getAssumptionById(assumptionId, projectId);
   },
 };

@@ -20,7 +20,13 @@ const PromptConfigSchema = z
     name: z.string(),
     title: z.string(),
     description: z.string(),
-    category: z.enum(["development", "reporting", "analysis", "performance", "documentation"]),
+    category: z.enum([
+      "development",
+      "reporting",
+      "analysis",
+      "performance",
+      "documentation",
+    ]),
     parameters: z.record(z.string(), PromptParameterSchema),
   })
   .openapi("PromptConfig");
@@ -36,13 +42,18 @@ const GeneratePromptRequestSchema = z
     project_id: z.string().uuid().optional(),
     task: z.string().min(1).optional(),
     execution_mode: z.enum(["human_guided", "client_executed"]).optional(),
-  }).catchall(z.any())
+  })
+  .catchall(z.any())
   .openapi("GeneratePromptRequest");
 
-const PromptValidationErrorSchema = z.object({
-  error: z.string(),
-  fields: z.array(z.object({ field: z.string(), message: z.string() })).optional(),
-}).openapi("PromptValidationError");
+const PromptValidationErrorSchema = z
+  .object({
+    error: z.string(),
+    fields: z
+      .array(z.object({ field: z.string(), message: z.string() }))
+      .optional(),
+  })
+  .openapi("PromptValidationError");
 
 const GeneratePromptResponseSchema = z
   .object({

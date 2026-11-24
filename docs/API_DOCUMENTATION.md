@@ -112,7 +112,9 @@ the catalog-provided `downloadUrl` or directly to
 
 ### Folders and suites
 
-Organization endpoints use the existing bearer JWT authentication and require an explicit `projectId` on every request. `GET` and `POST /api/v2/test-scenario-folders` list or create project folders; `PATCH` and `DELETE /api/v2/test-scenario-folders/{folderId}` rename/move or remove a folder. Deletion requires `disposition=parent` or `disposition=unfiled`; direct scenarios are reassigned and child folders are promoted.
+Organization endpoints use the existing bearer JWT authentication and require an explicit `projectId` on every request. `GET` and `POST /api/v2/test-scenario-folders` list or create project folders; `PATCH` and `DELETE /api/v2/test-scenario-folders/{folderId}` rename/move or remove a folder. Folder descriptions are optional and nullable: omit `description` in a patch to preserve the stored value, or send `null`/blank text to clear it. Deletion requires `disposition=parent` or `disposition=unfiled`; direct scenarios are reassigned and child folders are promoted.
+
+The lightweight `GET /api/v2/test-scenarios` catalog supports an optional comma-separated `priority` filter (for example `priority=high,medium`); omitting it includes all priorities, including null. `GET /api/v2/test-scenarios/authors?projectId=...` returns stable UUID-identified creators for scenarios in that project, including authors outside the current page and inactive users. `GET /api/v2/test-scenarios/selection` accepts the catalog's matching project, folder, search, creator, priority, and legacy text filters (without pagination or sorting) and returns `{ "scenarioIds": [...], "total": N }`; the count is derived from the returned unique UUID list. Neither endpoint returns Markdown bodies.
 
 `GET` and `POST /api/v2/test-suites` list or create manually curated suites. `PATCH` and `DELETE /api/v2/test-suites/{suiteId}` update or remove a suite. Add/remove members with `POST`/`DELETE /api/v2/test-suites/{suiteId}/members` and reorder all members with `PUT /api/v2/test-suites/{suiteId}/members/order`; member bodies use `{ "projectId": "…", "scenarioIds": ["…"] }`.
 
@@ -125,26 +127,13 @@ Create folder example:
 Move up to 100 scenarios atomically with `PATCH /api/v2/test-scenarios/bulk-folder` and `{ "projectId": "…", "scenarioIds": ["…"], "folderId": null }` to unfile them. The scenario list accepts `folderId=<UUID|unfiled>`, `includeDescendants=false`, and `suiteId=<UUID>`; filters are applied before pagination. Scenario summaries add nullable `folderId` and `folderName`. Suite membership is mutable current organization; only run snapshots represent historical execution state.
 
 Test Scenario list responses are lightweight summaries. Each item contains
-`id`, `projectId`, `createdById`, `title`, nullable `scenarioKey`, nullable plain-text `details`, a
+`id`, `projectId`, `createdById`, `title`, generated `scenarioKey`, nullable plain-text `details`, a
 `createdBy` object containing only `id`, `name`, and `email`, `createdAt`, and
 `updatedAt`; list items no longer contain `contentMd`.
 
-This is a breaking REST response change for dependent clients. Regenerate
-client types and hooks from the final `/api/openapi.json` document. Create
-requests use structured `details`, `preconditions`, `testData`, nullable
-`priority` (`low`, `medium`, or `high`), nullable `relatedIssueUrl` (trimmed
-absolute HTTP(S) URL), and optional initial `steps`; `contentMd`, its hash,
-and its format version are read-only detail fields. Details and structured text
-are trimmed and must be nonblank when supplied; PATCH accepts `null` for
-clearing nullable fields and preserves omitted fields. `scenarioKey` is an
-optional editable single-line label up to 100 characters; it is trimmed, may
-be cleared with `null`, and may be duplicated. UUIDs remain scenario
-identifiers. Omitted priority and related issue URL default to null on create;
-omission preserves their values on PATCH, and null clears them. Scenario-level
-objective, expectedResult, and notes fields and the corresponding run snapshot
-fields are removed; step expectedResult and execution notes remain supported.
-A key-only PATCH preserves generated Markdown, its hash, and its
-format version.
+This is a breaking REST/MCP contract change. Regenerate client types and hooks from the final `/api/openapi.json` document. Keys are immutable server-generated `TMS-N` labels numbered independently per project. Create and update reject `scenarioKey`; UUIDs remain relationship and route identity. Priority is non-null (`low`, `medium`, `high`) and defaults to `medium` on create; null is rejected. Nullable structured text and related issue URLs retain explicit clearing support.
+
+Detail responses include positive `revision`, safe `createdBy` and nullable `updatedBy` projections containing only `id`, `name`, `email`, and current `suites` containing `id` and `name`. Legacy updater attribution remains unknown. Create accepts optional existing `suiteIds` and pending `newSuites: [{name}]` alongside initial steps without IDs. PATCH supports ordinary fields alone, or an atomic editor save containing all of `steps`, `suiteIds`, `newSuites`, and positive `expectedRevision`. Editor steps accept optional retained UUID, nonblank action, and optional nullable expected result. Array order determines positions; duplicate IDs/names and foreign IDs are rejected. Empty arrays clear the corresponding collection; omitted collections preserve it. Pending suites are created only in the final transaction. A stale revision or suite-name collision returns 409 with no draft changes saved; reload explicitly before retrying stale data. Every committed field, step, folder, or membership mutation advances revision and records the authenticated actor internally. Generated content, positions, timestamps and actor IDs are never accepted editor input.
 
 `GET /api/v2/test-scenarios` accepts `page` (default `1`), `limit` (default
 `30`, maximum `100`), optional global `search`, optional `createdById`, and
@@ -170,7 +159,7 @@ sorting and pagination, so `total` and `totalPages` describe the matching set.
 Example: `GET /api/v2/test-scenarios?projectId=…&title=login&folder=Root%20%2F%20Auth&sortField=updatedAt&sortDirection=desc`
 
 `POST /api/v2/test-scenarios` and `PATCH /api/v2/test-scenarios/{scenarioId}`
-return the complete scenario detail. Step edits are independent operations and
+return the complete scenario detail. Integrations may also use standalone step operations, which
 require `projectId` query context:
 
 - `POST /api/v2/test-scenarios/{scenarioId}/steps` appends a step and returns 201.
@@ -187,7 +176,7 @@ Issues, projects, and users are preserved.
 
 `GET /api/v2/results/{resultId}?projectId=...` requires bearer authentication
 and returns the existing Result detail fields plus `relatedTestScenarios`.
-Each related scenario contains its `id`, `title`, nullable `scenarioKey`,
+Each related scenario contains its `id`, `title`, generated `scenarioKey`,
 nullable `details`, and the current generated Markdown in the `contentMd` JSON
 string field. For example,
 the added portion of a Result response is:
@@ -213,40 +202,67 @@ part of the JSON response; this endpoint does not return a `.md` file.
 
 ## Manual Test Run Routes
 
-Manual runs are separate from automated `Result` records. Starting a run
-captures the structured scenario fields and ordered steps as an independent
-snapshot; later scenario edits do not rewrite that run. Runs do not store
-Markdown, attachments, or automated evidence.
+Manual runs are separate from automated `Result` records. A run captures
+ordered scenario fields, folder display paths, and steps as independent
+snapshots; later scenario edits or deletions do not rewrite that run. Results
+and assignees belong to each captured scenario. Existing single-scenario run
+history is intentionally removed by the TP-59 migration.
 
-All routes require a JWT and a UUID `projectId` query parameter. The executor,
-source provenance, and timestamps are server-owned. The seven operations are:
+All run routes require a JWT and a UUID `projectId` query parameter. The
+executor, result attribution, source provenance, and timestamps are
+server-owned. Creation accepts a user-provided title and an optional ordered
+list of arbitrary environment properties (`{ name, value }`). Existing scalar
+environment fields remain available for compatibility. Run detail and history
+include `hasBeenReopened`, derived from lifecycle intervals, and snapshots carry
+captured priority and requirement/ticket context. Phase 1 runs return empty or
+unavailable values for fields they do not contain. The project-scoped
+operations are:
 
-- `POST /api/v2/test-scenarios/{scenarioId}/manual-runs` starts a run and accepts
-  optional `notes`, `runKey`, `environmentProfileId`, `browser`,
-  `operatingSystem`, `device`, `apiEnvironment`, `build`, and `deployment`
-  fields (an empty body/object is valid).
-- `GET /api/v2/test-scenarios/{scenarioId}/manual-runs` lists history for a live
-  project-scoped scenario.
-- `GET /api/v2/manual-test-runs` lists project history, including runs whose
-  source scenario was later deleted.
-- `GET /api/v2/manual-test-runs/{runId}` retrieves the full snapshot and steps.
-- `PATCH /api/v2/manual-test-runs/{runId}` updates `runKey`, execution notes,
-  or the overall status.
-- `PATCH /api/v2/manual-test-runs/{runId}/steps/{stepId}` updates one copied
-  step's status or notes.
-- `POST /api/v2/manual-test-runs/{runId}/complete` completes a run with one of
-  `passed`, `failed`, `blocked`, or `skipped`.
+- `POST /api/v2/manual-test-runs` creates a run from exactly one source:
+  `{ "title": "Smoke run", "scenarioIds": ["…"] }` or
+  `{ "title": "Smoke run", "suiteId": "…" }`. Scenario selection order or
+  suite order becomes the saved run order.
+- `GET /api/v2/manual-test-runs` returns paged project history. It accepts
+  `page`, `limit`, `search`, `show` (`in_progress`, `completed`, `all`),
+  `period` (`recent`, `today`, `yesterday`, `last_7_days`, `last_30_days`,
+  `this_month`, `last_month`, `any_time`, `custom`), `timeZone`, and optional
+  `dateFrom`/`dateTo` for a custom period.
+- `GET /api/v2/manual-test-runs/{runId}` retrieves run metadata and all ordered
+  scenario snapshots, results, assignees, attribution, copied steps, environment
+  properties, and scenario execution evidence.
+- `PUT /api/v2/manual-test-runs/{runId}/details` atomically updates a run's
+  title, environment properties, and selected `scenarioIds`. Retained scenarios
+  preserve their relative order and evidence; additions are appended as
+  Untested, and removed snapshots cascade their run-specific evidence.
+- `PATCH /api/v2/manual-test-runs/{runId}/scenarios/{scenarioId}/evidence`
+  updates `executionComment`, `defectReference`, and copied-step comments with
+  independent `failedFlag`/`failedComment` and
+  `blockedFlag`/`blockedComment` fields. Only one copied step per result type
+  can be flagged in a scenario.
+- `DELETE /api/v2/manual-test-runs/{runId}?projectId=...` permanently deletes the run and its scenario snapshots and lifecycle history, returning `204` (or `404` if absent in the project).
+- `PUT /api/v2/manual-test-runs/{runId}/scenarios/order` saves scenario order
+  from `{ "scenarioIds": ["…"] }`.
+- `POST /api/v2/manual-test-runs/{runId}/scenarios/bulk` updates selected
+  scenarios with a `scenarioIds` array and at least one of `result` or
+  `assigneeId` (nullable to clear assignment).
+- `PUT /api/v2/manual-test-runs/{runId}/scenarios/{scenarioId}/result` sets
+  `result` to `untested`, `passed`, `failed`, `blocked`, or `skipped`.
+- `PATCH /api/v2/manual-test-runs/{runId}/scenarios/{scenarioId}/assignee` sets
+  `assigneeId` to a user UUID or `null`.
+- `POST /api/v2/manual-test-runs/{runId}/complete` completes the run. Any
+  scenarios still `untested` become `skipped` atomically; the response reports
+  the actual skipped-at-completion count.
+- `POST /api/v2/manual-test-runs/{runId}/reopen` reopens a completed run and
+  preserves its scenario results and all saved execution evidence.
 
-The six environment values are nullable single-line strings up to 200
-characters. Explicit values override a selected profile; omitted reusable
-values inherit from it. `null` or a blank string clears a value. Build and
-deployment are always entered per run. The resolved values are stored on the
-run, returned in detail and history, and cannot be changed through run PATCH.
-Older runs return `null` for each value. An invalid or out-of-scope profile
-reference returns `400` without creating a run.
+Period filters use the supplied IANA `timeZone` for calendar boundaries.
+`Recent` includes active runs and runs completed in the preceding seven days.
+Completed runs are read-only until reopened. Completion lifecycle (`in_progress`
+or `completed`) is separate from scenario results.
 
-Personal environment profiles use these project-scoped routes, with a JWT and
-project ownership required:
+Saved personal environment profiles remain available through these project-
+scoped routes, with a JWT and project ownership required. They remain separate
+from each run's environment property snapshot:
 
 - `GET /api/v2/projects/{projectId}/manual-run-environment-profiles`
 - `POST /api/v2/projects/{projectId}/manual-run-environment-profiles`
@@ -259,39 +275,12 @@ four reusable fields are optional: `browser`, `operatingSystem`, `device`, and
 `400`; an inaccessible project or a profile outside the user's project and
 ownership scope returns `404`. Deleting a profile does not alter prior runs.
 
-Run statuses are `in_progress`, `passed`, `failed`, `blocked`, and `skipped`;
-step statuses additionally include `not_started`. Notes are trimmed when
-provided, `null` clears them, and omission preserves the existing value.
-`runKey` is an optional editable single-line label up to 100 characters. It is
-trimmed, may be cleared with `null`, and may be duplicated. Each run also
-stores nullable `sourceScenarioKey`, captured from the scenario at start and
-unchanged by later rename, clear, or deletion. Both labels are metadata; UUIDs
-remain entity identifiers. Completed runs permit `runKey`-only PATCH; adding
-`notes` or `status` returns `409` without partial mutation. Other execution
-mutations remain blocked and runs cannot be reopened. A passing nonempty run
-requires at least one passed step and every step to be passed or skipped;
-failed, blocked, skipped, and zero-step runs may complete without inferring
-step outcomes. Completion returns `409` when those rules are not satisfied.
-
-History supports `page` (default `1`, positive), `limit` (default `30`, maximum
-`100`), one `status`, and optional `startedFrom` (inclusive) and `startedBefore`
-(exclusive) RFC 3339 timestamps with an explicit timezone. Project history
-also supports one `testScenarioId` filter against immutable source provenance.
-It also accepts `sourceScenarioKey` for exact, case-sensitive filtering against
-the captured label. Duplicate labels intentionally match runs from multiple
-scenarios; use `testScenarioId` when one source scenario is required.
-Bounds and filters are combined before pagination; offset pages are stable only
-when the underlying data is unchanged. Scenario history derives the scenario
-filter from its path and rejects a redundant `testScenarioId` query parameter.
-
-Example completion request:
-
-```json
-{
-  "status": "passed",
-  "notes": "Verified in the staging environment"
-}
-```
+History filters are combined before pagination. Custom periods require both
+`dateFrom` and `dateTo` in `YYYY-MM-DD` format, with `dateFrom` no later than
+`dateTo`; those fields are rejected for other period presets. Scenario order,
+result, assignee, bulk mutation, completion, and reopen operations return the
+authoritative updated run detail. Mutations against completed runs return a
+conflict instead of partially applying changes.
 
 REST PATCH still accepts terminal run statuses; MCP requires
 `testportal-complete-manual-test-run` for completion.

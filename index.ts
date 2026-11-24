@@ -7,6 +7,7 @@ import helmet from "helmet";
 
 import getLogger from "@/lib/logger";
 import { errorHandler } from "@/middleware/error-handler";
+import { jsonBodyParser } from "@/middleware/json-body";
 import routes from "@/routes/index";
 
 const logger = getLogger("server");
@@ -23,21 +24,7 @@ const app = express();
 app.use(helmet());
 app.use(cors());
 
-// Apply JSON parsing middleware to all routes except file upload routes
-app.use((req, res, next) => {
-  if (
-    req.path === "/api/v2/upload-json-report" ||
-    req.path === "/api/v2/upload-json-report-api-key" ||
-    req.path === "/api/v2/upload-ctrf-report" ||
-    req.path === "/api/v2/upload-ctrf-report-api-key"
-  ) {
-    // Skip JSON parsing for file upload routes
-    next();
-  } else {
-    // Apply JSON parsing for all other routes
-    express.json()(req, res, next);
-  }
-});
+app.use(jsonBodyParser);
 
 app.use(parseCookie());
 app.use(loggingMiddleware);

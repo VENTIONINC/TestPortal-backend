@@ -29,7 +29,7 @@ import {
   createTestScenarioTool,
   listTestScenarios,
   getTestScenario,
-  updateTestScenario,
+  createUpdateTestScenarioTool,
   deleteTestScenario,
   appendTestScenarioStep,
   updateTestScenarioStep,
@@ -38,6 +38,8 @@ import {
 } from "@/mcp/tools/test-scenarios";
 import {
   createStartManualTestRunTool,
+  createCompleteManualTestRunTool,
+  createUpdateManualTestRunResultTool,
   manualTestRunTools,
 } from "@/mcp/tools/manual-test-runs";
 import {
@@ -46,7 +48,11 @@ import {
 } from "@/mcp/tools/manual-run-environment-profiles";
 
 import { organizationTools } from "@/mcp/tools/test-scenario-organization";
-import { listTestScenarioSpecLinks, addTestScenarioSpecLink, removeTestScenarioSpecLink } from "@/mcp/tools/test-scenario-spec-links";
+import {
+  listTestScenarioSpecLinks,
+  addTestScenarioSpecLink,
+  removeTestScenarioSpecLink,
+} from "@/mcp/tools/test-scenario-spec-links";
 
 export type ActionTool = readonly [
   string,
@@ -85,13 +91,15 @@ export const createActionCatalog = (
     createTestScenarioTool(userId),
     listTestScenarios,
     getTestScenario,
-    updateTestScenario,
+    createUpdateTestScenarioTool(userId),
     deleteTestScenario,
     appendTestScenarioStep,
     updateTestScenarioStep,
     deleteTestScenarioStep,
     reorderTestScenarioSteps,
     createStartManualTestRunTool(userId),
+    createCompleteManualTestRunTool(userId),
+    createUpdateManualTestRunResultTool(userId),
     ...manualTestRunTools,
     createProfileTool(userId),
     ...profileTools,

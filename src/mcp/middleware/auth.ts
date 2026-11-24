@@ -84,7 +84,10 @@ export const authenticateMcpToken = async (
   let current = false;
   if (validation) {
     try {
-      current = await userService.validateMcpCredential(validation.userId, token);
+      current = await userService.validateMcpCredential(
+        validation.userId,
+        token,
+      );
     } catch {
       logger.error("MCP credential lookup failed for user", validation.userId);
       res.status(500).json({

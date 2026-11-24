@@ -83,12 +83,12 @@ describe("session-bound action identity", () => {
           (
             await call("testportal-start-manual-test-run", {
               projectId,
-              scenarioId,
+              scenarioIds: [scenarioId],
             })
           ).isError,
         ).not.toBe(true);
         expect(mockStart).toHaveBeenLastCalledWith(
-          expect.objectContaining({ projectId, scenarioId }),
+          expect.objectContaining({ projectId, scenarioIds: [scenarioId] }),
           actor,
         );
         expect(
@@ -127,7 +127,7 @@ describe("session-bound action identity", () => {
           (
             await call("testportal-start-manual-test-run", {
               projectId,
-              scenarioId,
+              scenarioIds: [scenarioId],
               executedById: "spoof",
             })
           ).isError,

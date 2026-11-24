@@ -95,7 +95,10 @@ export function registerReportRoutes(registry: OpenAPIRegistry) {
   registry.register("JsonReportTestSpec", JsonReportTestSpecSchema);
   registry.register("JsonReportRequest", JsonReportRequestSchema);
   registry.register("JsonReportResponse", JsonReportResponseSchema);
-  registry.register("JsonReportResponseWithAnalysis", JsonReportResponseWithAnalysisSchema);
+  registry.register(
+    "JsonReportResponseWithAnalysis",
+    JsonReportResponseWithAnalysisSchema,
+  );
   registry.register("RawJsonReportRequest", RawJsonReportRequestSchema);
 
   registry.registerPath({
@@ -109,12 +112,9 @@ export function registerReportRoutes(registry: OpenAPIRegistry) {
         content: {
           "multipart/form-data": {
             schema: z.object({
-              projectId: z
-                .string()
-                .uuid()
-                .openapi({
-                  description: "Project ID to associate the report with",
-                }),
+              projectId: z.string().uuid().openapi({
+                description: "Project ID to associate the report with",
+              }),
               report: z.string().openapi({
                 type: "string",
                 format: "binary",
@@ -178,7 +178,8 @@ export function registerReportRoutes(registry: OpenAPIRegistry) {
     },
     responses: {
       201: {
-        description: "File report processed successfully with optional AI analysis",
+        description:
+          "File report processed successfully with optional AI analysis",
         content: {
           "application/json": {
             schema: JsonReportResponseWithAnalysisSchema,

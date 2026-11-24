@@ -2,20 +2,32 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { Router } from "express";
-import { testScenarioController } from "@/controllers/testScenarioController";
+import {
+  testScenarioController,
+  type TestScenarioCreationRequest,
+} from "@/controllers/testScenarioController";
 import { authMiddleware } from "@/middleware/authMiddleware";
 
 const router = Router();
 
-router.post(
-  "/v2/test-scenarios",
+router.post("/v2/test-scenarios", authMiddleware, (req, res) =>
+  testScenarioController.create(req as TestScenarioCreationRequest, res),
+);
+router.get("/v2/test-scenarios", authMiddleware, testScenarioController.list);
+router.get(
+  "/v2/test-scenarios/authors",
   authMiddleware,
-  testScenarioController.create,
+  testScenarioController.listAuthors,
 );
 router.get(
-  "/v2/test-scenarios",
+  "/v2/test-scenarios/priority-counts",
   authMiddleware,
-  testScenarioController.list,
+  testScenarioController.listPriorityCounts,
+);
+router.get(
+  "/v2/test-scenarios/selection",
+  authMiddleware,
+  testScenarioController.resolveSelection,
 );
 router.post(
   "/v2/test-scenarios/:scenarioId/spec-links",

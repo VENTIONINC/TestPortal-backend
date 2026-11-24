@@ -83,8 +83,10 @@ export const getResultErrorById = createMcpTool(
   getResultErrorByIdSchema,
   async (params: GetResultErrorByIdParams): Promise<MCPToolResponse> => {
     const { resultErrorId, projectId } = params;
-    const resultError =
-      await mcpResultErrorHandler.getResultErrorById(resultErrorId, projectId);
+    const resultError = await mcpResultErrorHandler.getResultErrorById(
+      resultErrorId,
+      projectId,
+    );
     return createSuccessResponse(resultError);
   },
   "fetching result error",

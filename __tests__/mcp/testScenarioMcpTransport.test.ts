@@ -295,6 +295,7 @@ describe("Test Scenario MCP transport validation", () => {
       expect(mockCreateTestScenario).toHaveBeenCalledWith({
         projectId,
         title: "Temporary MCP scenario",
+        priority: "medium",
         steps: [],
         createdById: userId,
       });

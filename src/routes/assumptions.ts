@@ -7,7 +7,11 @@ import { authMiddleware } from "@/middleware/authMiddleware";
 
 const router = Router();
 
-router.post("/v2/assumptions", authMiddleware, assumptionController.createAssumption);
+router.post(
+  "/v2/assumptions",
+  authMiddleware,
+  assumptionController.createAssumption,
+);
 router.patch(
   "/v2/assumptions/:assumptionId",
   authMiddleware,

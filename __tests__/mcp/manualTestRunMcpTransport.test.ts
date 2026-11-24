@@ -25,6 +25,7 @@ const mockGet = jest.fn();
 const mockUpdate = jest.fn();
 const mockUpdateStep = jest.fn();
 const mockComplete = jest.fn();
+const mockResult = jest.fn();
 const mockList = jest.fn();
 const mockListForScenario = jest.fn();
 const mockListActiveUsers = jest.fn();
@@ -40,7 +41,7 @@ jest.mock("@/handlers/mcpManualRunEnvironmentProfileHandler", () => ({ mcpManual
 
 jest.mock("@/handlers/mcpManualTestRunHandler", () => ({ mcpManualTestRunHandler: {
   start: mockStart, get: mockGet, update: mockUpdate, updateStep: mockUpdateStep,
-  complete: mockComplete, list: mockList, listForScenario: mockListForScenario,
+  complete: mockComplete, updateResult: mockResult, list: mockList, listForScenario: mockListForScenario,
   listActiveUsers: mockListActiveUsers, reassignExecutor: mockReassign,
 } }));
 
@@ -85,7 +86,7 @@ describe("manual run Streamable HTTP MCP transport", () => {
     delete process.env.MCP_SECRET;
   });
 
-  it("discovers exactly nine canonical tools and rejects missing authentication", async () => {
+  it("discovers both public tools and rejects missing authentication", async () => {
     const catalog = await client.listTools();
     expect(catalog.tools.map(({ name }) => name).sort()).toEqual(["testportal-execute-action", "testportal-find-action"]);
     const address = server.address() as AddressInfo;
@@ -125,19 +126,20 @@ describe("manual run Streamable HTTP MCP transport", () => {
   });
 
   it("runs the scoped lifecycle, binds executor identity and rejects spoofing/implicit completion before mutation", async () => {
-    const run = { id: runId, projectId, status: "in_progress", steps: [{ id: stepId, status: "not_started" }] };
+    const run = { id: runId, projectId, status: "in_progress", scenarios: [{ id: scenarioId, result: "untested", steps: [{ id: stepId }] }] };
     mockStart.mockResolvedValue(run);
     mockGet.mockResolvedValue(run);
     mockUpdateStep.mockResolvedValue(run);
-    mockComplete.mockResolvedValue({ ...run, status: "passed" });
+    mockResult.mockResolvedValue(run);
+    mockComplete.mockResolvedValue({ ...run, status: "completed" });
 
-    const started = await callAction(client, { name: "testportal-start-manual-test-run", arguments: { projectId, scenarioId } });
+    const started = await callAction(client, { name: "testportal-start-manual-test-run", arguments: { projectId, scenarioIds: [scenarioId] } });
     expect(started.isError).not.toBe(true);
-    expect(mockStart).toHaveBeenCalledWith({ projectId, scenarioId }, userId);
+    expect(mockStart).toHaveBeenCalledWith({ projectId, scenarioIds: [scenarioId] }, userId);
 
     for (const arguments_ of [
-      { projectId, scenarioId, executedById: userId },
-      { projectId, scenarioId, title: "snapshot injection" },
+      { projectId, scenarioIds: [scenarioId], executedById: userId },
+      { projectId, scenarioIds: [scenarioId], steps: [] },
     ]) {
       const rejected = await callAction(client, { name: "testportal-start-manual-test-run", arguments: arguments_ });
       expect(rejected.isError).toBe(true);
@@ -149,10 +151,15 @@ describe("manual run Streamable HTTP MCP transport", () => {
     expect(mockUpdate).not.toHaveBeenCalled();
 
     await callAction(client, { name: "testportal-get-manual-test-run", arguments: { projectId, runId } });
-    await callAction(client, { name: "testportal-update-manual-test-run-step", arguments: { projectId, runId, stepId, status: "passed" } });
-    const completed = await callAction(client, { name: "testportal-complete-manual-test-run", arguments: { projectId, runId, status: "passed" } });
+    await callAction(client, { name: "testportal-update-manual-test-run-step", arguments: { projectId, runId, scenarioId, stepId, comment: "Observed" } });
+    const result = { projectId, runId, scenarioId, result: "passed" };
+    expect((await callAction(client, { name: "testportal-update-manual-test-run-scenario-result", arguments: { ...result, resultById: userId } })).isError).toBe(true);
+    expect((await callAction(client, { name: "testportal-update-manual-test-run-scenario-result", arguments: result })).isError).not.toBe(true);
+    expect(mockResult).toHaveBeenCalledTimes(1);
+    expect(mockResult).toHaveBeenCalledWith(result, userId);
+    const completed = await callAction(client, { name: "testportal-complete-manual-test-run", arguments: { projectId, runId, requireAllMarked: true } });
     expect(completed.isError).not.toBe(true);
-    expect(mockComplete).toHaveBeenCalledWith({ projectId, runId, status: "passed" });
+    expect(mockComplete).toHaveBeenCalledWith({ projectId, runId, requireAllMarked: true }, userId);
   });
 
   it("rejects reuse of a session by a different authenticated owner before handlers run", async () => {
@@ -163,7 +170,7 @@ describe("manual run Streamable HTTP MCP transport", () => {
       .post("/api/v2/mcp")
       .set("Authorization", `Bearer ${issueFixtureToken("66666666-6666-4666-8666-666666666666", secret)}`)
       .set("mcp-session-id", String(sessionId))
-      .send({ jsonrpc: "2.0", id: 1, method: "tools/call", params: { name: "testportal-execute-action", arguments: { actionId: "testportal-start-manual-test-run", arguments: { projectId, scenarioId } } } });
+      .send({ jsonrpc: "2.0", id: 1, method: "tools/call", params: { name: "testportal-execute-action", arguments: { actionId: "testportal-start-manual-test-run", arguments: { projectId, scenarioIds: [scenarioId] } } } });
     expect(response.status).toBe(403);
     expect(response.body.error.message).toBe("MCP session belongs to a different user");
     expect(mockStart).not.toHaveBeenCalled();
@@ -174,7 +181,7 @@ describe("manual run Streamable HTTP MCP transport", () => {
     const serviceError = await callAction(client, { name: "testportal-get-manual-test-run", arguments: { projectId, runId } });
     expect(serviceError.isError).toBe(true);
     const content = serviceError.content[0];
-    expect(content?.type === "text" ? content.text : "").toContain("Error fetching manual test run");
+    expect(content?.type === "text" ? content.text : "").toContain("Error testportal-get-manual-test-run");
 
     const invalidHistory = await callAction(client, { name: "testportal-list-test-scenario-manual-runs", arguments: { projectId, scenarioId, testScenarioId: scenarioId } });
     expect(invalidHistory.isError).toBe(true);
@@ -183,18 +190,18 @@ describe("manual run Streamable HTTP MCP transport", () => {
     mockList.mockResolvedValue({ runs: [], total: 0, page: 1, limit: 30, totalPages: 0 });
     const history = await callAction(client, { name: "testportal-list-manual-test-runs", arguments: { projectId } });
     expect(history.isError).not.toBe(true);
-    expect(mockList).toHaveBeenCalledWith({ projectId, page: 1, limit: 30 });
+    expect(mockList).toHaveBeenCalledWith({ projectId, page: 1, limit: 30, show: "in_progress", period: "recent", timeZone: "UTC" });
     await callAction(client, {
       name: "testportal-list-manual-test-runs",
-      arguments: { projectId, testScenarioId: scenarioId, sourceScenarioKey: "AUTH-1", status: "failed", startedFrom: "2026-10-01T00:00:00Z", startedBefore: "2026-11-01T00:00:00Z", page: 2, limit: 10 },
+      arguments: { projectId, search: "AUTH-1", show: "completed", period: "custom", dateFrom: "2026-10-01", dateTo: "2026-11-01", page: 2, limit: 10 },
     });
-    expect(mockList).toHaveBeenLastCalledWith({ projectId, testScenarioId: scenarioId, sourceScenarioKey: "AUTH-1", status: "failed", startedFrom: "2026-10-01T00:00:00Z", startedBefore: "2026-11-01T00:00:00Z", page: 2, limit: 10 });
-    const reversedRange = await callAction(client, { name: "testportal-list-manual-test-runs", arguments: { projectId, startedFrom: "2026-11-01T00:00:00Z", startedBefore: "2026-10-01T00:00:00Z" } });
+    expect(mockList).toHaveBeenLastCalledWith({ projectId, search: "AUTH-1", show: "completed", period: "custom", dateFrom: "2026-10-01", dateTo: "2026-11-01", page: 2, limit: 10, timeZone: "UTC" });
+    const reversedRange = await callAction(client, { name: "testportal-list-manual-test-runs", arguments: { projectId, period: "custom", dateFrom: "2026-11-01", dateTo: "2026-10-01" } });
     expect(reversedRange.isError).toBe(true);
     expect(mockList).toHaveBeenCalledTimes(2);
     mockListForScenario.mockResolvedValue({ runs: [], total: 0, page: 1, limit: 30, totalPages: 0 });
-    await callAction(client, { name: "testportal-list-test-scenario-manual-runs", arguments: { projectId, scenarioId, startedFrom: "2026-10-01T00:00:00Z", startedBefore: "2026-11-01T00:00:00Z" } });
-    expect(mockListForScenario).toHaveBeenCalledWith({ projectId, scenarioId, startedFrom: "2026-10-01T00:00:00Z", startedBefore: "2026-11-01T00:00:00Z", page: 1, limit: 30 });
+    await callAction(client, { name: "testportal-list-test-scenario-manual-runs", arguments: { projectId, scenarioId, period: "custom", dateFrom: "2026-10-01", dateTo: "2026-11-01" } });
+    expect(mockListForScenario).toHaveBeenCalledWith({ projectId, scenarioId, period: "custom", dateFrom: "2026-10-01", dateTo: "2026-11-01", page: 1, limit: 30, show: "in_progress", timeZone: "UTC" });
 
     mockListActiveUsers.mockResolvedValue([{ id: userId, name: "User", email: "user@example.test" }]);
     const users = await callAction(client, { name: "testportal-list-active-users", arguments: {} });

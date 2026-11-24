@@ -3,6 +3,7 @@
 
 import "@/test-utils/testEnv";
 import { jest } from "@jest/globals";
+import getLogger from "@/lib/logger";
 import { executeController } from "@/test-utils/httpMocks";
 import {
   TestScenarioSpecLinkConflictError,
@@ -15,6 +16,10 @@ const removeSpecLinkMock = jest.fn<() => Promise<unknown>>();
 const getResultsMock = jest.fn<() => Promise<unknown>>();
 const getIssuesMock = jest.fn<() => Promise<unknown>>();
 
+jest.mock("@/lib/logger", () => {
+  const logger = { debug: jest.fn(), error: jest.fn() };
+  return { __esModule: true, default: () => logger };
+});
 jest.mock("@/services/testScenarioService", () => ({
   testScenarioService: {},
 }));
@@ -171,12 +176,18 @@ describe("testScenarioController integration operations", () => {
     });
     expect(conflict.statusCode).toBe(409);
 
-    getIssuesMock.mockRejectedValueOnce(new Error("database unavailable"));
+    const error = new Error("database unavailable");
+    getIssuesMock.mockRejectedValueOnce(error);
     const failed = await executeController(testScenarioController.getIssues, {
       params: { scenarioId },
       query: { projectId },
     });
     expect(failed.statusCode).toBe(500);
+    expect(failed.body).toEqual({ error: "Failed to list test scenario Issues." });
+    expect(getLogger().error).toHaveBeenCalledWith(
+      "Failed to list test scenario Issues.",
+      error,
+    );
   });
 
   it("rejects evidence pagination above the contract limit", async () => {

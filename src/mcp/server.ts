@@ -130,13 +130,11 @@ export const registerPrompts = (server: McpServer): void => {
       performance_metric = "",
       time_range = "",
     }) =>
-      environmentPerformanceAssistant.environmentPerformanceAssistantPrompt(
-        {
-          environment_scope,
-          performance_metric,
-          time_range,
-        },
-      ),
+      environmentPerformanceAssistant.environmentPerformanceAssistantPrompt({
+        environment_scope,
+        performance_metric,
+        time_range,
+      }),
   );
 
   // Developer Code Assistant
@@ -171,8 +169,11 @@ export const registerPrompts = (server: McpServer): void => {
       }),
   );
 
-
-  server.registerPrompt(tmsWorkflowAssistant.name, tmsWorkflowAssistant.parameters, tmsWorkflowAssistant.render);
+  server.registerPrompt(
+    tmsWorkflowAssistant.name,
+    tmsWorkflowAssistant.parameters,
+    tmsWorkflowAssistant.render,
+  );
 };
 
 // Cleanup interval for stale sessions
@@ -199,7 +200,11 @@ router.post(
         transport = entry.transport;
         await handleMcpSessionRequest(entry.userId, req, res, async () => {
           entry.lastActive = Date.now();
-          await transport.handleRequest(req, res, normalizePromptRequest(req.body));
+          await transport.handleRequest(
+            req,
+            res,
+            normalizePromptRequest(req.body),
+          );
         });
         return;
       }

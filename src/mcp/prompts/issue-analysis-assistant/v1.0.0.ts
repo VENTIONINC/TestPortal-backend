@@ -201,7 +201,11 @@ export const issueAnalysisAssistantParameters = {
   description:
     "Analyzes error patterns, manages assumptions, and provides root cause analysis for test failures. Triggered by phrases like 'analyze error patterns', 'find similar issues', 'create assumption', etc.",
   argsSchema: {
-    analysis_scope: z.string().describe("Scope of analysis (recent executions, specific environment, error type, etc.)"),
+    analysis_scope: z
+      .string()
+      .describe(
+        "Scope of analysis (recent executions, specific environment, error type, etc.)",
+      ),
     error_context: z
       .string()
       .optional()

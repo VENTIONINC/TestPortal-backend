@@ -8,8 +8,13 @@ export const mcpTestScenarioOrganizationHandler = {
     service.listFolders(input.projectId),
   createFolder: service.createFolder,
   updateFolder: service.updateFolder,
-  deleteFolder: service.deleteFolder,
-  moveScenarios: service.moveScenarios,
+  deleteFolder: service.deleteSingleFolder,
+  async moveScenarios(
+    input: Parameters<typeof service.moveScenarios>[0],
+  ): Promise<{ moved: number }> {
+    const { moved } = await service.moveScenarios(input);
+    return { moved };
+  },
   listSuites: (input: { projectId: string }) =>
     service.listSuites(input.projectId),
   getSuite: (input: { projectId: string; suiteId: string }) =>

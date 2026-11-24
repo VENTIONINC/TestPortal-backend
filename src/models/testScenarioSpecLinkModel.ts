@@ -1,11 +1,7 @@
 // Copyright 2026 VENSOLUTIONSGROUP LTD
 // SPDX-License-Identifier: Apache-2.0
 
-import type {
-  Prisma,
-  Spec,
-  TestScenarioSpecLink,
-} from "@prisma/client";
+import type { Prisma, Spec, TestScenarioSpecLink } from "@prisma/client";
 import { dbClient } from "@/prisma/client";
 import type { RelatedTestScenarioSummary } from "@/types/testScenarios";
 

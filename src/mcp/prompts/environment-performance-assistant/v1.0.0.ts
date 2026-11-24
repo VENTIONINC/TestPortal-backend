@@ -214,21 +214,30 @@ ${time_range ? `Time Range: ${time_range}` : "Time Range: Recent (last 7 days)"}
   ],
 });
 
-export const environmentPerformanceAssistantName = "environment-performance-assistant";
+export const environmentPerformanceAssistantName =
+  "environment-performance-assistant";
 
 export const environmentPerformanceAssistantParameters = {
   title: "Environment & Performance Analysis Assistant",
   description:
     "Analyzes test environment stability, performance metrics, and infrastructure health. Triggered by phrases like 'analyze environment stability', 'check performance metrics', 'identify infrastructure issues', etc.",
   argsSchema: {
-    environment_scope: z.string().describe("Environment scope for analysis (specific environment name, 'all', 'production', etc.)"),
+    environment_scope: z
+      .string()
+      .describe(
+        "Environment scope for analysis (specific environment name, 'all', 'production', etc.)",
+      ),
     performance_metric: z
       .string()
       .optional()
-      .describe("Specific performance metric to analyze (execution_time, success_rate, resource_usage, etc.)"),
+      .describe(
+        "Specific performance metric to analyze (execution_time, success_rate, resource_usage, etc.)",
+      ),
     time_range: z
       .string()
       .optional()
-      .describe("Time range for analysis (last_24h, last_week, last_month, etc.)"),
+      .describe(
+        "Time range for analysis (last_24h, last_week, last_month, etc.)",
+      ),
   },
 };

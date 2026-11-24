@@ -269,8 +269,8 @@ returned using the standard MCP error response with `isError: true`.
 #### `testportal-create-test-scenario`
 
 - **Source File:** `src/mcp/tools/test-scenarios.ts`
-- **Parameters:** Required `projectId` and nonblank `title`; optional `folderId`, `scenarioKey`, `details`, `preconditions`, `testData`, and initial `steps` (`action`, optional `expectedResult`).
-- **Metadata:** `priority` accepts `low`, `medium`, `high`, or null. `relatedIssueUrl` accepts an absolute HTTP(S) URL (trimmed) or null. Omitted metadata defaults to null.
+- **Parameters:** Required `projectId` and nonblank `title`; optional `folderId`, `details`, `preconditions`, `testData`, and initial `steps` (`action`, optional `expectedResult`).
+- **Metadata:** `priority` accepts `low`, `medium`, or `high`; null is rejected. `relatedIssueUrl` accepts an absolute HTTP(S) URL (trimmed) or null. Omitted priority defaults to medium; omitted related issue URL defaults to null.
 - **Authentication:** The creator is bound to the authenticated MCP session owner. Caller-supplied `createdById` is rejected, and resumed sessions validate that the authenticated token still belongs to the session owner.
 - **Response:** Complete persisted scenario with generated Markdown, nullable metadata, and ordered steps. Uses the same creation service and project/folder checks as REST.
 
@@ -286,7 +286,7 @@ returned using the standard MCP error response with `isError: true`.
   - `createdById` (optional): Creator UUID filter. Resolve a `Me` control to the authenticated user's UUID client-side.
   - `sort` (optional): `recently_created` (default, `createdAt DESC, id DESC`), `recently_updated` (`updatedAt DESC, id DESC`), or `title_asc` (`title ASC, id ASC` under database collation)
 - Filtering is applied before pagination, so `total` and `totalPages` count matching scenarios. Invalid search types, creator UUIDs, and sort values are input validation errors. A valid creator UUID with no matching scenarios returns an empty result. A client resolving a `Me` control sends the authenticated user's UUID.
-- **Response:** Pagination envelope containing `scenarios`, `total`, `page`, `limit`, and `totalPages`. Each summary contains exactly `id`, `projectId`, `createdById`, `title`, nullable `scenarioKey`, `details`, `createdBy`, `createdAt`, and `updatedAt`. `createdBy` contains only `id`, `name`, and `email`; `contentMd` and all other User fields are omitted from the list query and response.
+- **Response:** Pagination envelope containing `scenarios`, `total`, `page`, `limit`, and `totalPages`. Each summary contains exactly `id`, `projectId`, `createdById`, `title`, generated `scenarioKey`, `details`, `createdBy`, `createdAt`, and `updatedAt`. `createdBy` contains only `id`, `name`, and `email`; `contentMd` and all other User fields are omitted from the list query and response.
 
 #### `testportal-get-test-scenario`
 
@@ -299,7 +299,9 @@ returned using the standard MCP error response with `isError: true`.
   - `resultLimit` (optional): Result evidence limit from 1 through 100 (default: 30)
   - `issuePage` (optional): Positive integer observed-Issue evidence page (default: 1)
   - `issueLimit` (optional): Observed-Issue evidence limit from 1 through 100 (default: 30)
-- **Response:** `{ scenario, resultEvidence, issueEvidence }`. `scenario` includes nullable `scenarioKey`, `details`, `priority`, and `relatedIssueUrl`, structured fields, ordered stable-ID `steps`, exact generated `contentMd`, `contentMdHash`, and `contentMdFormatVersion`. Each evidence envelope contains its scenario/project IDs, `linkedSpecCount`, collection, `total`, `page`, `limit`, and `totalPages`. Result evidence is derived from Results belonging to linked same-project Specs; Issue evidence is deduplicated from observed Issues.
+- **Response:** `{ scenario, resultEvidence, issueEvidence }`. `scenario` includes generated `scenarioKey`, `details`, `priority`, and `relatedIssueUrl`, structured fields, ordered stable-ID `steps`, exact generated `contentMd`, `contentMdHash`, and `contentMdFormatVersion`. Each evidence envelope contains its scenario/project IDs, `linkedSpecCount`, collection, `total`, `page`, `limit`, and `totalPages`. Result evidence is derived from Results belonging to linked same-project Specs; Issue evidence is deduplicated from observed Issues.
+
+Scenario detail includes the revision, safe creator and updater metadata (`id`, `name`, and `email`), and suite IDs and names. Creation and field updates use the authenticated session actor. The latest updater may be null for historical records. Full editor collection saves are available through REST PATCH.
 
 #### `testportal-update-test-scenario`
 
@@ -309,8 +311,8 @@ returned using the standard MCP error response with `isError: true`.
   - `scenarioId` (required): Test Scenario UUID
   - `projectId` (required): Owning project UUID
   - `title`, `details`, `preconditions`, or `testData` (optional): Structured field updates; text is trimmed and `null` clears nullable fields
-  - `scenarioKey` (optional): Editable single-line label of 1–100 characters after trimming. `null` clears it; duplicate labels are allowed. UUIDs remain scenario identifiers, and a key-only update preserves generated Markdown, its hash, and its format version.
-- `priority` (optional): `low`, `medium`, `high`, or null; omitted values are preserved and null clears.
+  - `scenarioKey` is immutable, generated as `TMS-N` per project and rejected as input.
+- `priority` (optional): `low`, `medium`, or `high`; omitted values are preserved and null is rejected.
 - `relatedIssueUrl` (optional): Trimmed absolute HTTP(S) URL or null, with the same preserve/clear semantics.
 - **Response:** The complete persisted Test Scenario, including structured fields, ordered steps, exact generated `contentMd`, hash, and format version. At least one editable field is required; omitted fields are preserved. `contentMd`, projection metadata, and steps are rejected as inputs. Creation identity and project ownership cannot be changed.
 
@@ -355,31 +357,22 @@ MCP has no Markdown import tool. Step maintenance is available through the four 
 
 ### Manual Test Runs
 
-These tools record outcomes observed by the MCP client. They do not launch a browser, call an API under test, or create automated `Result` records. Use UUIDs returned by the intended project and the run's copied step IDs. Inputs reject unknown fields. Successful calls return the existing run detail or history object as JSON text; service failures return `isError: true`.
+These actions save observed results and evidence on run snapshots. Use the run's scenario and step UUIDs for writes. Execution of the application under test happens on the client.
 
-| Canonical tool | Required inputs | Optional inputs and behavior |
+| Action ID | Required inputs | Behavior |
 | --- | --- | --- |
-| `testportal-start-manual-test-run` | `projectId`, `scenarioId` (UUIDs) | `notes`, `runKey`, `environmentProfileId`, `browser`, `operatingSystem`, `device`, `apiEnvironment`, `build`, `deployment`. Executor is derived from the authenticated MCP session. Returns a new independent run snapshot with run-step UUIDs. |
-| `testportal-get-manual-test-run` | `projectId`, `runId` | Returns full saved snapshot, ordered run steps, environment, runKey/sourceScenarioKey, immutable source scenario ID, nullable live scenario ID, and safe nullable executor `{id,name,email}`. |
-| `testportal-update-manual-test-run` | `projectId`, `runId`, and at least one of `notes`, `runKey` | `notes` and `runKey` may be null to clear. Status is never accepted here. Completed runs accept runKey-only changes; combining runKey with notes fails atomically. |
-| `testportal-update-manual-test-run-step` | `projectId`, `runId`, snapshot `stepId`, and `status` and/or `notes` | Status is `not_started`, `passed`, `failed`, `blocked`, or `skipped`. Omitted values are preserved; notes may be null to clear. |
-| `testportal-complete-manual-test-run` | `projectId`, `runId`, terminal `status` | Status is `passed`, `failed`, `blocked`, or `skipped`; optional `notes`. Passing nonempty runs need at least one passed step and all remaining steps passed or skipped. This is the only MCP completion operation. |
-| `testportal-list-manual-test-runs` | `projectId` | Optional `testScenarioId`, exact `sourceScenarioKey`, overall `status`, RFC 3339 `startedFrom` (inclusive), `startedBefore` (exclusive), numeric `page` (default 1), `limit` (default 30, maximum 100). |
-| `testportal-list-test-scenario-manual-runs` | `projectId`, live same-project `scenarioId` | Optional overall `status`, date bounds and numeric pagination as above. Project-only source filters are not accepted. |
-| `testportal-list-active-users` | Empty object `{}` | Returns only active users as `{id,name,email}`, ordered by name then ID. No project ID or administrator access is required. |
-| `testportal-reassign-manual-test-run-executor` | `projectId`, `runId`, `executedById` (UUIDs) | Target must be an active user. Reassignment changes executor and run `updatedAt`; execution evidence and timestamps remain unchanged. This does not grant executor-only authorization. |
+| `testportal-start-manual-test-run` | `projectId` and either `scenarioIds` or `suiteId` | Create a run with saved scenario snapshots. Accepts a title, environment properties, and environment fields. The authenticated session user starts the run. |
+| `testportal-get-manual-test-run` | `projectId`, `runId` | Read run status, environment, scenario results, step evidence, and safe user metadata. |
+| `testportal-update-manual-test-run` | `projectId`, `runId`, `title`, `scenarioIds`, `environmentProperties` | Replace the editable details with the desired full sets. Read current detail first. |
+| `testportal-update-manual-test-run-step` | `projectId`, `runId`, snapshot `scenarioId`, snapshot `stepId`, at least one evidence field | Record `comment`, `failedFlag`, `failedComment`, `blockedFlag`, or `blockedComment`. |
+| `testportal-update-manual-test-run-scenario-result` | `projectId`, `runId`, snapshot `scenarioId`, `result` | Record `untested`, `passed`, `failed`, `blocked`, or `skipped`. The authenticated session user is attributed in result history. |
+| `testportal-complete-manual-test-run` | `projectId`, `runId` | Complete the run as the authenticated session user. Untested scenarios become skipped. Set `requireAllMarked: true` to reject completion while untested scenarios remain. |
+| `testportal-list-manual-test-runs` | `projectId` | Search and filter project history by `show`, `period`, and `timeZone`. Custom periods require `dateFrom` and `dateTo` in YYYY-MM-DD format. |
+| `testportal-list-test-scenario-manual-runs` | `projectId`, source `scenarioId` | Apply the same history filters to runs with snapshots of the specified source scenario. |
+| `testportal-list-active-users` | Empty object `{}` | List active assignee candidates with ID, name, and email. |
+| `testportal-reassign-manual-test-run-executor` | `projectId`, `runId`, snapshot `scenarioId`, `assigneeId` | Change the scenario's assignee using an active user ID or null to clear. The run's starter stays intact. |
 
-History returns exactly `{runs,total,page,limit,totalPages}`. Each lightweight summary includes IDs and source provenance, run key, safe nullable executor, status, timestamps, and environment values; it excludes snapshot body, steps and notes. Filters are combined before pagination and order is `startedAt DESC, id DESC`. A valid unmatched source filter returns an empty page. Project history and direct run lookup preserve deleted-source snapshots (`testScenarioId: null`); nested scenario history requires a live scenario. Numeric pagination fields must be JSON numbers, not strings. Dates require an explicit timezone and `startedFrom` must precede `startedBefore`.
-
-The REST `PATCH /api/v2/manual-test-runs/{runId}` continues to accept terminal status updates in this change. MCP rejects every run `status` on its ordinary update tool and requires `testportal-complete-manual-test-run`; REST alignment belongs to TP-38. The general MCP account-lifecycle authentication fix remains tracked separately as TP-37.
-
-Filtered project-history example:
-
-```json
-{"projectId":"11111111-1111-4111-8111-111111111111","sourceScenarioKey":"AUTH-01","status":"failed","startedFrom":"2026-10-01T00:00:00Z","startedBefore":"2026-11-01T00:00:00Z","page":1,"limit":30}
-```
-
-To reassign a run, first call `testportal-list-active-users` with `{}` and select an active user's UUID, then call `testportal-reassign-manual-test-run-executor` with `projectId`, `runId`, and that `executedById`. This operation is project-scoped and does not establish executor-only authorization. TP-32 does not add the separate TP-37 account-lifecycle authentication fix.
+History returns `{runs,total,page,limit,totalPages}`. Page and limit are numbers and default to 1 and 30. The default filters are `show: "in_progress"`, `period: "recent"`, and `timeZone: "UTC"`. Use `show: "all"` and `period: "any_time"` for unrestricted history within the project.
 
 ---
 
@@ -401,9 +394,9 @@ For example, call these tools in order, replacing the identifiers with returned 
 ```jsonl
 {"name":"testportal-execute-action","arguments":{"actionId":"testportal-list-manual-run-environment-profiles","arguments":{"projectId":"11111111-1111-4111-8111-111111111111"}}}
 {"name":"testportal-execute-action","arguments":{"actionId":"testportal-create-manual-run-environment-profile","arguments":{"projectId":"11111111-1111-4111-8111-111111111111","name":"Staging","browser":"Chrome","operatingSystem":"Linux","device":"Laptop","apiEnvironment":"Staging"}}}
-{"name":"testportal-execute-action","arguments":{"actionId":"testportal-start-manual-test-run","arguments":{"projectId":"11111111-1111-4111-8111-111111111111","scenarioId":"22222222-2222-4222-8222-222222222222","environmentProfileId":"33333333-3333-4333-8333-333333333333","browser":"Firefox","device":null,"build":"42","deployment":"canary"}}}
+{"name":"testportal-execute-action","arguments":{"actionId":"testportal-start-manual-test-run","arguments":{"projectId":"11111111-1111-4111-8111-111111111111","scenarioIds":["22222222-2222-4222-8222-222222222222"],"browser":"Firefox","operatingSystem":"Linux","device":null,"apiEnvironment":"Staging","build":"42","deployment":"canary"}}}
 {"name":"testportal-execute-action","arguments":{"actionId":"testportal-update-manual-run-environment-profile","arguments":{"projectId":"11111111-1111-4111-8111-111111111111","profileId":"33333333-3333-4333-8333-333333333333","operatingSystem":"Windows"}}}
-{"name":"testportal-execute-action","arguments":{"actionId":"testportal-start-manual-test-run","arguments":{"projectId":"11111111-1111-4111-8111-111111111111","scenarioId":"22222222-2222-4222-8222-222222222222","environmentProfileId":"33333333-3333-4333-8333-333333333333"}}}
+{"name":"testportal-execute-action","arguments":{"actionId":"testportal-start-manual-test-run","arguments":{"projectId":"11111111-1111-4111-8111-111111111111","scenarioIds":["22222222-2222-4222-8222-222222222222"],"operatingSystem":"Windows"}}}
 {"name":"testportal-execute-action","arguments":{"actionId":"testportal-delete-manual-run-environment-profile","arguments":{"projectId":"11111111-1111-4111-8111-111111111111","profileId":"33333333-3333-4333-8333-333333333333"}}}
 {"name":"testportal-execute-action","arguments":{"actionId":"testportal-get-manual-test-run","arguments":{"projectId":"11111111-1111-4111-8111-111111111111","runId":"44444444-4444-4444-8444-444444444444"}}}
 {"name":"testportal-execute-action","arguments":{"actionId":"testportal-get-manual-test-run","arguments":{"projectId":"11111111-1111-4111-8111-111111111111","runId":"55555555-5555-4555-8555-555555555555"}}}
@@ -411,7 +404,7 @@ For example, call these tools in order, replacing the identifiers with returned 
 {"name":"testportal-execute-action","arguments":{"actionId":"testportal-list-test-scenario-manual-runs","arguments":{"projectId":"11111111-1111-4111-8111-111111111111","scenarioId":"22222222-2222-4222-8222-222222222222"}}}
 ```
 
-Use the created profile's ID and the started run's ID in subsequent calls. The first run captures Firefox, Linux, null device, Staging, build 42, and canary. A later run started after the update captures Windows instead. Both retain their snapshots after deletion, including in project and scenario history. Build and deployment are run-only. Reconnect and use action discovery to check availability.
+Use the profile ID for profile updates and copy the desired profile fields into the start action. Use each returned run ID to read its saved environment. The first run captures Firefox, Linux, null device, Staging, build 42, and canary. The second captures Windows. Both retain their snapshots after deletion, including in project and scenario history. Build and deployment are run-only. Reconnect and use action discovery to check availability.
 
 ## Tool Categories
 
@@ -433,6 +426,7 @@ All tools return standardized responses using the `createSuccessResponse` helper
 ---
 
 _The tool registration in `src/mcp/server.ts` and each tool definition under `src/mcp/tools/` are the source of truth for the available tools and their behavior._
+
 # Maintaining action discovery metadata
 
 The explicit allowlist in `src/mcp/actionCatalog.ts` is session-bound. When adding an action, include the existing wrapped handler and bind any trusted actor through its factory. Update `src/mcp/actionMetadata.ts` with the action's area, search vocabulary, constraints, effects, response meaning and related action IDs as needed. Keep returned JSON Schema input-oriented and verify catalog coverage, schema export and search tests. Action metadata is navigation information; authorization remains in the existing transport and services.

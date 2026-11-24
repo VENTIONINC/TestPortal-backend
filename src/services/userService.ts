@@ -301,9 +301,15 @@ export const userService = {
 
     const mcpToken = generateMcpToken(user.id, mcpTokenSecret);
 
-    const updated = await userModel.storeMcpTokenForActiveUser(user.id, mcpToken);
+    const updated = await userModel.storeMcpTokenForActiveUser(
+      user.id,
+      mcpToken,
+    );
     if (updated !== 1) {
-      throw new UserServiceError("MCP tokens can only be generated for active users", 403);
+      throw new UserServiceError(
+        "MCP tokens can only be generated for active users",
+        403,
+      );
     }
 
     return mcpToken;
@@ -397,7 +403,9 @@ export const userService = {
       }
 
       return this.createAuthResponse(this.assertActiveUser(user), {
-        ...(cognitoResult.session ? { cognitoSession: cognitoResult.session } : {}),
+        ...(cognitoResult.session
+          ? { cognitoSession: cognitoResult.session }
+          : {}),
       });
     } catch (error) {
       throw new Error(`Cognito login failed: ${(error as Error).message}`);
@@ -468,6 +476,10 @@ export const userService = {
         );
       }
 
+      if (user.status === UserStatus.suspended && user.mcpToken === null) {
+        return user;
+      }
+
       return await userModel.update(
         userId,
         { status: UserStatus.suspended, mcpToken: null },
@@ -515,13 +527,13 @@ export const userService = {
 
   async upsertLocalAdmin(params: CreateUserParams): Promise<PrismaUser> {
     if (!params.name || !params.email || !params.password) {
-      throw new UserServiceError(
-        "Name, email, and password are required",
-        400,
-      );
+      throw new UserServiceError("Name, email, and password are required", 400);
     }
 
-    const passwordHash = await argon2.hash(params.password, PASSWORD_HASH_OPTIONS);
+    const passwordHash = await argon2.hash(
+      params.password,
+      PASSWORD_HASH_OPTIONS,
+    );
 
     return await dbClient.$transaction(async (tx) => {
       const existingUser = await userModel.findByEmail(params.email, tx);

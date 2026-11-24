@@ -309,8 +309,10 @@ export const resultController = {
 
   exportAnalysisJsonl: async (req: Request, res: Response): Promise<void> => {
     try {
-      const { projectId, dateFrom, dateTo } =
-        req.query as Record<string, string>;
+      const { projectId, dateFrom, dateTo } = req.query as Record<
+        string,
+        string
+      >;
 
       if (!projectId) {
         res.status(400).json({
@@ -335,10 +337,7 @@ export const resultController = {
       const filename = buildExportFileName(projectId, dateFrom, dateTo);
 
       res.set("Content-Type", "application/jsonl; charset=utf-8");
-      res.set(
-        "Content-Disposition",
-        `attachment; filename="${filename}"`,
-      );
+      res.set("Content-Disposition", `attachment; filename="${filename}"`);
 
       res.status(200).send(content);
     } catch (error) {
