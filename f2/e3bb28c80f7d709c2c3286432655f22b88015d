@@ -1,0 +1,68 @@
+__tests__/test-scenarios/testScenarioPostgresIntegration.test.ts
+  s_23659d38b0bf1e::t_8477dfbf9af0a2 654,664,668,674-689,697-699,704,713,719-726,735-737
+  s_23659d38b0bf1e::t_40aa94488f584f 1119,1128,1134,1140,1152,1156-1157,1166,1175-1180,1192,1201,1217-1222,1226-1227,1231-1237,1246,1250-1251,1261,1270-1276,1285
+  s_23659d38b0bf1e::t_d124c9bcb322ec 710-712
+  s_23659d38b0bf1e::t_29d351d1230bbd 573-574,588-593,598-609,613-614,622-625,629-630,637-638,651-653
+  s_23659d38b0bf1e::t_5172880f2c46d1 498-512,521-522,528,540,545,568-572
+  s_23659d38b0bf1e::t_233982e06502a9 513-520,523-527,529-539,541-544,546-567,575-587,594-597,610-612,615-621,626-628,631-636,639-650,655-663,665-667,669-673,690-696,700-703,705-709,714-718,727-734,1129-1133,1135-1139,1150-1151,1153-1155,1158-1165,1167-1174,1181-1191,1193-1200,1223-1225,1238-1245,1247-1249,1252-1260,1262-1269,1277-1284
+__tests__/manual-test-runs/manualTestRunAggregateCreationPostgresIntegration.test.ts
+  s_28584ca6c1ae32::t_a624c1aee39802 784
+src/mcp/schemas/testScenarioSchemas.ts
+  s_23659d38b0bf1e::t_4cb03dbb715152 89-98
+  s_23659d38b0bf1e::t_5fe39aa2c8b2e0 5-9,81-88,135
+__tests__/mcp/testScenarioMcpTransport.test.ts
+  s_23659d38b0bf1e::t_233982e06502a9 302-307,315-320
+  s_23659d38b0bf1e::t_8c96af93147546 311,324
+__tests__/mcp/tmsWorkflowPrompt.test.ts
+  s_23659d38b0bf1e::t_233982e06502a9 33-66
+src/mcp/actionCatalog.ts
+  s_23659d38b0bf1e::t_4cb03dbb715152 34-37,50,96-99
+  s_23659d38b0bf1e::t_c9866327c05e72 106
+__tests__/mcp/tmsPromptHttp.test.ts
+  s_23659d38b0bf1e::t_233982e06502a9 42-60,74-98
+  s_23659d38b0bf1e::t_f7da9941749d59 7-9,39,41,99-101,120
+src/mcp/tools/test-scenarios.ts
+  s_23659d38b0bf1e::t_4cb03dbb715152 19-20,62,100-117,119-127,129-137,139-162
+  s_23659d38b0bf1e::t_5172880f2c46d1 34,74
+  s_23659d38b0bf1e::t_f768cdddc8e1bc 51
+docs/MCP_TOOLS.md
+  s_23659d38b0bf1e::t_5172880f2c46d1 275
+  s_23659d38b0bf1e::t_4cb03dbb715152 292
+  s_23659d38b0bf1e::t_636557906d21ca 307
+  s_23659d38b0bf1e::t_3307142ba5a7d1 286-288,291,324-331
+src/schemas/testScenarioSchemas.ts
+  s_23659d38b0bf1e::t_4cb03dbb715152 181-183,190-191
+  s_23659d38b0bf1e::t_6ba065e4ccaeaf 12,228
+__tests__/mcp/testScenarioMcpWorkflow.test.ts
+  s_23659d38b0bf1e::t_893e435d7a6351 40-41,211-222,225-232,236-238,243-249,251-255,257
+src/handlers/mcpTestScenarioOrganizationHandler.ts
+  s_23659d38b0bf1e::t_43e2765c20a6e3 30,36
+src/mcp/prompts/tms-workflow-assistant/v1.0.0.ts
+  s_23659d38b0bf1e::t_6122a490114994 44-48
+src/mcp/tools/test-scenario-organization.ts
+  s_23659d38b0bf1e::t_ba77d72eef182d 4,23,26,50,52-56,60,92-96,102-106,115-116
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "f2e3bb28c80f7d709c2c3286432655f22b88015d",
+  "prompts": {},
+  "sessions": {
+    "s_23659d38b0bf1e": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a20d17-0a08-75f1-a753-5fe1d586b938",
+        "model": "gpt-6.2-sol"
+      },
+      "human_author": "Ihar Mikailau <ihar.mikailau@ventionteams.com>"
+    },
+    "s_28584ca6c1ae32": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a20861-f19b-7561-b1ba-76f5d8852461",
+        "model": "gpt-6.2-sol"
+      },
+      "human_author": "Ihar Mikailau <ihar.mikailau@ventionteams.com>"
+    }
+  }
+}
