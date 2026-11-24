@@ -667,7 +667,13 @@ describePostgres("test scenario PostgreSQL aggregate integration", () => {
       folderId: null,
       revision: secondBeforeMove.revision + 1,
     });
-    expect((await organization.listSuites(projectId))[0]?.members.map(({ testScenarioId }) => testScenarioId)).toEqual([second.id, first.id, third.id]);
+    const suites = await organization.listSuites(projectId);
+    const listedSuite = suites.find(({ id }) => id === suite.id);
+    expect(listedSuite?.members.map(({ testScenarioId }) => testScenarioId)).toEqual([
+      second.id,
+      first.id,
+      third.id,
+    ]);
     await organization.deleteSuite(projectId, suite.id);
     expect(await dbClient.testScenario.findMany({ where: { id: { in: [first.id, second.id, third.id] } } })).toHaveLength(3);
     const foreign = await organization.createFolder({ projectId: otherProjectId, name: "Foreign" });

@@ -200,7 +200,7 @@ describe("manual test run JSON body limits", () => {
     const response = await request(createApp())
       .post(base)
       .type("application/json")
-      .send(JSON.stringify({ scenarioIds }));
+      .send("{");
 
     expect(response.status).toBe(401);
     expect(controllerMocks.create).not.toHaveBeenCalled();
