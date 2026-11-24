@@ -55,18 +55,17 @@ export function assignScenarioTag(
           });
     if (!tag) throw new OrganizationError("Tag not found", 404);
     if (input.present) {
-      await tx.scenarioTagAssignment.createMany({
-        data: scenarioIds.map((scenarioId) => ({
-          scenarioId,
-          projectId,
-          tagId: tag.id,
-        })),
-        skipDuplicates: true,
-      });
+      await tx.$executeRaw`
+        INSERT INTO "ScenarioTagAssignment" ("projectId", "scenarioId", "tagId")
+        SELECT ${projectId}::uuid, id, ${tag.id}::uuid FROM unnest(${scenarioIds}::uuid[]) AS selected(id)
+        ON CONFLICT ("scenarioId", "tagId") DO NOTHING
+      `;
     } else {
-      await tx.scenarioTagAssignment.deleteMany({
-        where: { projectId, tagId: tag.id, scenarioId: { in: scenarioIds } },
-      });
+      await tx.$executeRaw`
+        DELETE FROM "ScenarioTagAssignment"
+        WHERE "projectId" = ${projectId}::uuid AND "tagId" = ${tag.id}::uuid
+          AND "scenarioId" = ANY(${scenarioIds}::uuid[])
+      `;
     }
     return tag;
   });
@@ -75,17 +74,17 @@ export function assignScenarioTag(
 export function selectionTagCounts(projectId: string, scenarioIds: string[]) {
   return withScenarioTransaction(async (tx) => {
     const ids = [...new Set(scenarioIds)];
-    if (
-      (await tx.testScenario.count({
-        where: { projectId, id: { in: ids } },
-      })) !== ids.length
-    )
+    const [selection] = await tx.$queryRaw<Array<{ count: number }>>`
+      SELECT count(*)::int AS count FROM "TestScenario"
+      WHERE "projectId" = ${projectId}::uuid AND id = ANY(${ids}::uuid[])
+    `;
+    if (selection?.count !== ids.length)
       throw new OrganizationError("Scenario not found in project", 404);
-    const counts = await tx.scenarioTagAssignment.groupBy({
-      by: ["tagId"],
-      where: { projectId, scenarioId: { in: ids } },
-      _count: true,
-    });
-    return Object.fromEntries(counts.map((row) => [row.tagId, row._count]));
+    const counts = await tx.$queryRaw<Array<{ tagId: string; count: number }>>`
+      SELECT "tagId", count(*)::int AS count FROM "ScenarioTagAssignment"
+      WHERE "projectId" = ${projectId}::uuid AND "scenarioId" = ANY(${ids}::uuid[])
+      GROUP BY "tagId"
+    `;
+    return Object.fromEntries(counts.map(({ tagId, count }) => [tagId, count]));
   });
 }

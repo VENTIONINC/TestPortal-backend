@@ -62,6 +62,11 @@ export function deleteScenarioTags(
   operationId: string,
 ) {
   return withScenarioTransaction(async (tx) => {
+    const project = await tx.project.findUnique({
+      where: { id: projectId },
+      select: { id: true },
+    });
+    if (!project) throw new OrganizationError("Project not found", 404);
     // Claim the retry identifier before taking the snapshot. Concurrent repeats
     // reuse the committed operation even if its tags have already been removed.
     const claim = await tx.scenarioTagDeletion.createMany({

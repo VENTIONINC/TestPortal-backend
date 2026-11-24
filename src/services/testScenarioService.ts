@@ -363,9 +363,11 @@ export const testScenarioService = {
       throw new TestScenarioValidationError(
         "sort cannot be combined with sortField",
       );
-    if (params.timeZone !== undefined) {
+    let timeZone = params.timeZone;
+    if (timeZone !== undefined) {
       try {
-        new Intl.DateTimeFormat("en", { timeZone: params.timeZone });
+        timeZone = new Intl.DateTimeFormat("en", { timeZone }).resolvedOptions()
+          .timeZone;
       } catch {
         throw new TestScenarioValidationError("Unknown time zone");
       }
@@ -411,7 +413,7 @@ export const testScenarioService = {
         ...(createdByIds !== undefined ? { createdByIds } : {}),
         ...(params.priority !== undefined ? { priority: params.priority } : {}),
         ...(!params.suiteId || params.sort !== undefined ? { sort } : {}),
-        ...(params.timeZone !== undefined ? { timeZone: params.timeZone } : {}),
+        ...(timeZone !== undefined ? { timeZone } : {}),
         ...(params.sortField !== undefined
           ? { sortField: params.sortField }
           : {}),

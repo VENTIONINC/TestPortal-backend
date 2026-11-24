@@ -98,7 +98,7 @@ integration("Project scenario tag API", () => {
     ]);
   });
   test("deletion previews distinct impact, rejects stale and unauthorized requests, and restores as one unit", async () => {
-    const project = path(projectId);
+    const project = path(projectId.toUpperCase());
     const second = await db.user.create({
       data: { name: "second", email: `${randomUUID()}@example.test` },
     });
@@ -109,7 +109,7 @@ integration("Project scenario tag API", () => {
       const last = await db.scenarioTag.create({
         data: { projectId, name: "last" },
       });
-      const tagIds = [first.id, last.id];
+      const tagIds = [first.id.toUpperCase(), last.id.toUpperCase()];
       const scenario = await db.testScenario.create({
         data: {
           projectId,
@@ -149,7 +149,7 @@ integration("Project scenario tag API", () => {
         .expect(200);
       expect(
         list.body
-          .filter((t: { id: string }) => tagIds.includes(t.id))
+          .filter((t: { id: string }) => tagIds.includes(t.id.toUpperCase()))
           .map((t: { usageCount: number }) => t.usageCount),
       ).toEqual([1, 1]);
       const confirmation = {
@@ -190,6 +190,31 @@ integration("Project scenario tag API", () => {
     } finally {
       await db.user.delete({ where: { id: second.id } });
     }
+  });
+  test("confirmation returns 404 if the project was deleted after preview", async () => {
+    const project = await db.project.create({
+      data: { name: "Temporary", ownerId: actor },
+    });
+    const tag = await db.scenarioTag.create({
+      data: { projectId: project.id, name: "Temporary" },
+    });
+    const tagIds = [tag.id];
+    const endpoint = `${path(project.id)}/deletion`;
+    const preview = await request(app)
+      .post(`${endpoint}/preview`)
+      .set("Authorization", token(actor))
+      .send({ tagIds })
+      .expect(200);
+    await db.project.delete({ where: { id: project.id } });
+    await request(app)
+      .post(endpoint)
+      .set("Authorization", token(actor))
+      .send({
+        tagIds,
+        operationId: randomUUID(),
+        revision: preview.body.revision,
+      })
+      .expect(404);
   });
   test("bulk desired state covers all selected identities and rolls back mixed projects", async () => {
     const project = path(projectId);
@@ -401,6 +426,9 @@ integration("Project scenario tag API", () => {
         timeZone: "UTC",
       }),
     ).toEqual([ids[3], ids[1], ids[2], ids[0]]);
+    expect(
+      await sorted({ sortField: "updatedAt", timeZone: "+01:00" }),
+    ).toEqual([ids[2], ids[0], ids[1], ids[3]]);
     expect(await sorted({ sort: "recently_updated" })).toEqual([
       ids[0],
       ids[2],
@@ -473,9 +501,9 @@ integration("Project scenario tag API", () => {
       steps: [{ action: "Captured" }],
     });
   });
-  test("full catalog selection passes through the production JSON parser across more than 100 pages", async () => {
+  test("full catalog selection passes through the production JSON parser above the Prisma bind limit", async () => {
     const appWithApiPrefix = express().use(jsonBodyParser).use("/api", routes);
-    const rows = Array.from({ length: 2700 }, (_, index) => ({
+    const rows = Array.from({ length: 32768 }, (_, index) => ({
       id: randomUUID(),
       projectId,
       scenarioNumber: index + 1000,
@@ -486,6 +514,7 @@ integration("Project scenario tag API", () => {
       contentMdHash: "",
     }));
     await db.testScenario.createMany({ data: rows });
+    await db.$executeRaw`ANALYZE "TestScenario"`;
     const scenarioIds = rows.map((row) => row.id);
     const scopedPath = `/api${path(projectId)}`;
     const applied = await request(appWithApiPrefix)
@@ -499,5 +528,15 @@ integration("Project scenario tag API", () => {
       .send({ scenarioIds })
       .expect(200);
     expect(counts.body[applied.body.id]).toBe(scenarioIds.length);
-  });
+    await request(appWithApiPrefix)
+      .put(`${scopedPath}/assignment`)
+      .set("Authorization", token(actor))
+      .send({ tagId: applied.body.id, scenarioIds, present: false })
+      .expect(200);
+    expect(
+      await db.scenarioTagAssignment.count({
+        where: { tagId: applied.body.id },
+      }),
+    ).toBe(0);
+  }, 30000);
 });

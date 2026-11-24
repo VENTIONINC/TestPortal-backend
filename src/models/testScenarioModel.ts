@@ -655,11 +655,16 @@ export const testScenarioModel = {
                     ? Prisma.sql`s."createdAt"`
                     : Prisma.sql`s."title"`;
     const sqlDirection = Prisma.raw(direction.toUpperCase());
+    const zone = params.timeZone ?? "UTC";
+    // PostgreSQL text zones use POSIX signs for offsets. Intervals use ISO signs.
+    const sqlZone = /^[+-]/.test(zone)
+      ? Prisma.sql`${zone}::interval`
+      : Prisma.sql`${zone}::text`;
     const orderBy =
       params.suiteId && !sortField && !params.sort
         ? Prisma.sql`ORDER BY (SELECT sm."position" FROM "TestSuiteMember" sm WHERE sm."suiteId" = ${params.suiteId}::uuid AND sm."testScenarioId" = s."id") ASC, s."id" ASC`
         : sortField === "updatedAt"
-          ? Prisma.sql`ORDER BY ((s."updatedAt" AT TIME ZONE 'UTC') AT TIME ZONE ${params.timeZone ?? "UTC"})::date ${sqlDirection}, s."scenarioNumber" ASC`
+          ? Prisma.sql`ORDER BY ((s."updatedAt" AT TIME ZONE 'UTC') AT TIME ZONE ${sqlZone})::date ${sqlDirection}, s."scenarioNumber" ASC`
           : sortField
             ? Prisma.sql`ORDER BY ${sortColumn} ${sqlDirection}, s."id" ASC`
             : params.sort === "title_asc"

@@ -52,7 +52,7 @@ export async function lockScenarios(
   const ids = [...new Set(scenarioIds)];
   if (!ids.length) return;
   const rows = await tx.$queryRaw<Array<{ id: string }>>(
-    Prisma.sql`SELECT "id" FROM "TestScenario" WHERE "projectId" = ${projectId}::uuid AND "id" IN (${Prisma.join(ids.map((id) => Prisma.sql`${id}::uuid`))}) ORDER BY "id" FOR UPDATE`,
+    Prisma.sql`SELECT "id" FROM "TestScenario" WHERE "projectId" = ${projectId}::uuid AND "id" = ANY(${ids}::uuid[]) ORDER BY "id" FOR UPDATE`,
   );
   if (rows.length !== ids.length)
     throw new TestScenarioNotFoundError("Test scenario not found");
