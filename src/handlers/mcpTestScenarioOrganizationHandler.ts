@@ -27,11 +27,13 @@ export const mcpTestScenarioOrganizationHandler = {
     projectId: string;
     suiteId: string;
     scenarioIds: string[];
+    updatedById?: string;
   }) => service.mutateMembers({ ...input, operation: "add" }),
   removeMembers: (input: {
     projectId: string;
     suiteId: string;
     scenarioIds: string[];
+    updatedById?: string;
   }) => service.mutateMembers({ ...input, operation: "remove" }),
   reorderMembers: service.reorderMembers,
 };

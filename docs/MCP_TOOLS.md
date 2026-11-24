@@ -272,7 +272,7 @@ returned using the standard MCP error response with `isError: true`.
 - **Parameters:** Required `projectId` and nonblank `title`; optional `folderId`, `details`, `preconditions`, `testData`, and initial `steps` (`action`, optional `expectedResult`).
 - **Metadata:** `priority` accepts `low`, `medium`, or `high`; null is rejected. `relatedIssueUrl` accepts an absolute HTTP(S) URL (trimmed) or null. Omitted priority defaults to medium; omitted related issue URL defaults to null.
 - **Authentication:** The creator is bound to the authenticated MCP session owner. Caller-supplied `createdById` is rejected, and resumed sessions validate that the authenticated token still belongs to the session owner.
-- **Response:** Complete persisted scenario with generated Markdown, nullable metadata, and ordered steps. Uses the same creation service and project/folder checks as REST.
+- **Response:** Complete persisted scenario with the generated project-local `TMS-N` key, generated Markdown, and ordered steps. Omit `scenarioKey` from create and update inputs. Uses the same creation service and project/folder checks as REST.
 
 #### `testportal-list-test-scenarios`
 
@@ -283,10 +283,13 @@ returned using the standard MCP error response with `isError: true`.
   - `page` (optional): Positive integer page number (default: 1)
   - `limit` (optional): Integer from 1 through 100 (default: 30)
   - `search` (optional): Trimmed, case-insensitive literal substring matched against `title` or `scenarioKey`. `%`, `_`, and backslash are literal; details, other authored fields, and generated Markdown are not searched.
-  - `createdById` (optional): Creator UUID filter. Resolve a `Me` control to the authenticated user's UUID client-side.
+  - `createdById` (optional): One creator UUID. Resolve a `Me` control to the authenticated user's UUID client-side.
+  - `createdByIds` (optional): Comma-separated distinct creator UUIDs. Matches any supplied author. Use one of `createdById` and `createdByIds`.
+  - `priority` (optional): One or more of `low`, `medium`, and `high`, separated by commas. Matches any supplied priority.
   - `sort` (optional): `recently_created` (default, `createdAt DESC, id DESC`), `recently_updated` (`updatedAt DESC, id DESC`), or `title_asc` (`title ASC, id ASC` under database collation)
 - Filtering is applied before pagination, so `total` and `totalPages` count matching scenarios. Invalid search types, creator UUIDs, and sort values are input validation errors. A valid creator UUID with no matching scenarios returns an empty result. A client resolving a `Me` control sends the authenticated user's UUID.
-- **Response:** Pagination envelope containing `scenarios`, `total`, `page`, `limit`, and `totalPages`. Each summary contains exactly `id`, `projectId`, `createdById`, `title`, generated `scenarioKey`, `details`, `createdBy`, `createdAt`, and `updatedAt`. `createdBy` contains only `id`, `name`, and `email`; `contentMd` and all other User fields are omitted from the list query and response.
+- **Example input:** `{"projectId":"11111111-1111-4111-8111-111111111111","createdByIds":"22222222-2222-4222-8222-222222222222,33333333-3333-4333-8333-333333333333","priority":"high,medium","search":"checkout","page":1,"limit":10}`
+- **Response:** Pagination envelope containing `scenarios`, `total`, `page`, `limit`, and `totalPages`. Each summary contains `id`, `projectId`, `createdById`, `title`, generated `scenarioKey`, `details`, `priority`, `folderId`, `folderName`, `matchedSuiteId`, `createdBy`, `createdAt`, and `updatedAt`. `createdBy` contains only `id`, `name`, and `email`; `contentMd` and all other User fields are omitted from the list query and response.
 
 #### `testportal-get-test-scenario`
 
@@ -301,7 +304,7 @@ returned using the standard MCP error response with `isError: true`.
   - `issueLimit` (optional): Observed-Issue evidence limit from 1 through 100 (default: 30)
 - **Response:** `{ scenario, resultEvidence, issueEvidence }`. `scenario` includes generated `scenarioKey`, `details`, `priority`, and `relatedIssueUrl`, structured fields, ordered stable-ID `steps`, exact generated `contentMd`, `contentMdHash`, and `contentMdFormatVersion`. Each evidence envelope contains its scenario/project IDs, `linkedSpecCount`, collection, `total`, `page`, `limit`, and `totalPages`. Result evidence is derived from Results belonging to linked same-project Specs; Issue evidence is deduplicated from observed Issues.
 
-Scenario detail includes the revision, safe creator and updater metadata (`id`, `name`, and `email`), and suite IDs and names. Creation and field updates use the authenticated session actor. The latest updater may be null for historical records. Full editor collection saves are available through REST PATCH.
+Scenario detail includes the revision, safe creator and updater metadata (`id`, `name`, and `email`), and suite IDs and names. Creation, field updates, and all four step actions use the authenticated session actor. Read the scenario after an edit to verify `revision`, `updatedBy`, `folderId`, and `suites`. The latest updater may be null for historical records. Full editor collection saves are available through REST PATCH.
 
 #### `testportal-update-test-scenario`
 
@@ -317,6 +320,14 @@ Scenario detail includes the revision, safe creator and updater metadata (`id`, 
 - **Response:** The complete persisted Test Scenario, including structured fields, ordered steps, exact generated `contentMd`, hash, and format version. At least one editable field is required; omitted fields are preserved. `contentMd`, projection metadata, and steps are rejected as inputs. Creation identity and project ownership cannot be changed.
 
 MCP has no Markdown import tool. Step maintenance is available through the four authenticated tools below. Scenario-level objective, expectedResult, and notes fields are no longer accepted; step expectedResult and execution notes remain available.
+
+#### Scenario placement and suite membership
+
+Use `testportal-list-test-scenario-folders` with the project UUID to browse the tree. Entries include the folder UUID, name, nullable description, direct scenario count, and children. Resolve the full path, then pass its UUID to `testportal-move-test-scenarios-to-folder`. For example, the action arguments can be `{"projectId":"11111111-1111-4111-8111-111111111111","scenarioIds":["22222222-2222-4222-8222-222222222222"],"folderId":"33333333-3333-4333-8333-333333333333"}`. Use null to move to Unfiled. The entire batch is checked before any scenario moves.
+
+Discover suites with `testportal-list-test-suites`. Suite names can repeat. Compare descriptions, purpose, release, or current members, and ask which suite to use if more than one candidate remains. Use the selected suite UUID with `testportal-add-test-suite-members` or `testportal-remove-test-suite-members`. Adding an existing member or removing a non-member leaves its scenario revision unchanged.
+
+After a move or membership change, read scenario detail to verify the saved folder or suite membership, revision, and authenticated updater. Use the suite detail to verify current membership and order.
 
 #### `testportal-delete-test-scenario`
 

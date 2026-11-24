@@ -4,6 +4,9 @@
 import express from "express";
 import request from "supertest";
 import { generateMcpToken } from "@/lib/mcp-token";
+import { userService } from "@/services/userService";
+import { jwtService } from "@/services/jwtService";
+import promptRouter from "@/routes/promptRoutes";
 import { userModel } from "@/models/userModel";
 
 const credentials = new Map<string, string>();
@@ -33,7 +36,28 @@ describe("authenticated prompt HTTP protocol", () => {
     const app = express();
     app.use(express.json());
     app.use("/api", router);
+    app.use("/api", promptRouter);
     const post = () => request(app).post("/api/v2/mcp").set("Accept", "application/json, text/event-stream").set("Authorization", `Bearer ${token}`);
+    const timestamp = new Date("2026-01-01T00:00:00.000Z");
+    const userLookup = jest
+      .spyOn(userService, "getUserById")
+      .mockResolvedValue({
+        id: user,
+        name: "Tester",
+        email: "tester@example.test",
+        status: "active",
+        role: "member",
+        createdAt: timestamp,
+        updatedAt: timestamp,
+        passwordHash: null,
+        cognitoUserId: null,
+        mcpToken: token,
+        reportPortalUrl: null,
+        reportPortalEnabled: false,
+        monitoringPortalUrl: null,
+        monitoringPortalEnabled: false,
+        analyzeEnabled: false,
+      });
     try {
       const init = await post().send({ jsonrpc: "2.0", id: 1, method: "initialize", params: { protocolVersion: "2025-03-26", capabilities: {}, clientInfo: { name: "test", version: "1" } } });
       const session = init.headers["mcp-session-id"] as string;
@@ -47,6 +71,34 @@ describe("authenticated prompt HTTP protocol", () => {
       expect(explicit.result).toEqual(result.result);
       const valid = messages((await call(envelope(4, "tms-workflow-assistant", { project_id: user, task: "Create case", execution_mode: "client_executed" }))).text)[0];
       expect(JSON.stringify(valid.result)).toContain("Create case");
+      const organize = {
+        project_id: user,
+        task: "Create a scenario, put it in Payments, and add it to Checkout Regression",
+      };
+      const mcpPrompt = messages(
+        (await call(envelope(5, "tms-workflow-assistant", organize))).text,
+      )[0].result.messages[0].content.text;
+      const restToken = jwtService.generateAccessToken({
+        userId: user,
+        email: "tester@example.test",
+      });
+      const restPrompt = await request(app)
+        .post("/api/v2/prompts/tms-workflow-assistant/generate")
+        .set("Authorization", `Bearer ${restToken}`)
+        .send(organize)
+        .expect(200);
+      expect(restPrompt.body.generated_prompt).toBe(mcpPrompt);
+      for (const instruction of [
+        organize.task,
+        "report the saved scenario key and identify the unresolved follow-up",
+        "check what persisted before retrying that follow-up",
+        "Reuse the saved scenario UUID",
+        "human_guided",
+        "client_executed",
+        "Leave unobserved scenarios untested",
+      ]) {
+        expect(mcpPrompt).toContain(instruction);
+      }
       for (const [i, args] of [ { project_id: "bad" }, { task: " " }, { execution_mode: "bad" }, null, [], "bad", { task: 4 } ].entries()) {
         const response = await call(envelope(10 + i, "tms-workflow-assistant", args));
         expect(response.status >= 400 || messages(response.text)[0]?.error).toBeTruthy();
@@ -65,6 +117,7 @@ describe("authenticated prompt HTTP protocol", () => {
       const foreign = await request(app).post("/api/v2/mcp").set("Authorization", `Bearer ${issueFixtureToken("22222222-2222-4222-8222-222222222222", secret)}`).set("mcp-session-id", session).send(envelope(27, "tms-workflow-assistant"));
       expect(foreign.status).toBe(403);
     } finally {
+      userLookup.mockRestore();
       delete process.env.MCP_SECRET;
     }
   });

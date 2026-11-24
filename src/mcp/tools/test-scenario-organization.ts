@@ -1,6 +1,7 @@
 // Copyright 2026 VENSOLUTIONSGROUP LTD
 // SPDX-License-Identifier: Apache-2.0
 
+import type { z } from "zod/v3";
 import { mcpTestScenarioOrganizationHandler as handler } from "@/handlers/mcpTestScenarioOrganizationHandler";
 import { createMcpTool, createSuccessResponse } from "@/mcp/helpers/mcpHelpers";
 import * as schemas from "@/mcp/schemas/testScenarioOrganizationSchemas";
@@ -19,10 +20,10 @@ const action = <T>(
     name,
   );
 
-export const organizationTools = [
+export const createOrganizationTools = (updatedById?: string) => [
   action(
     "list-test-scenario-folders",
-    "List the project folder tree with direct scenario counts.",
+    "List the project folder tree with saved descriptions and direct scenario counts. Resolve the full path to a folder UUID before moving scenarios.",
     schemas.listOrganizationSchema,
     handler.listFolders,
   ),
@@ -46,13 +47,17 @@ export const organizationTools = [
   ),
   action(
     "move-test-scenarios-to-folder",
-    "Atomically move 1–100 distinct scenarios to a folder or null for Unfiled.",
+    "Atomically move 1–100 distinct scenarios to an existing folder UUID or null for Unfiled. Read scenario detail to verify the saved folder, revision, and authenticated updater.",
     schemas.moveScenariosSchema,
-    handler.moveScenarios,
+    (input: z.infer<typeof schemas.moveScenariosSchema>) =>
+      handler.moveScenarios({
+        ...input,
+        ...(updatedById === undefined ? {} : { updatedById }),
+      }),
   ),
   action(
     "list-test-suites",
-    "List project suites and their ordered members.",
+    "List project suites and their ordered members. Names may repeat; use metadata and suite UUIDs to identify the intended suite.",
     schemas.listOrganizationSchema,
     handler.listSuites,
   ),
@@ -84,13 +89,21 @@ export const organizationTools = [
     "add-test-suite-members",
     "Atomically add 1–100 distinct project scenario IDs; existing members are unchanged.",
     schemas.mutateMembersSchema,
-    handler.addMembers,
+    (input: z.infer<typeof schemas.mutateMembersSchema>) =>
+      handler.addMembers({
+        ...input,
+        ...(updatedById === undefined ? {} : { updatedById }),
+      }),
   ),
   action(
     "remove-test-suite-members",
     "Atomically remove 1–100 distinct project scenario IDs; non-members are unchanged.",
     schemas.mutateMembersSchema,
-    handler.removeMembers,
+    (input: z.infer<typeof schemas.mutateMembersSchema>) =>
+      handler.removeMembers({
+        ...input,
+        ...(updatedById === undefined ? {} : { updatedById }),
+      }),
   ),
   action(
     "reorder-test-suite-members",
@@ -99,3 +112,5 @@ export const organizationTools = [
     handler.reorderMembers,
   ),
 ];
+
+export const organizationTools = createOrganizationTools();

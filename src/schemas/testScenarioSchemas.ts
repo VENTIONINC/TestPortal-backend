@@ -9,7 +9,7 @@ import {
 
 const uuidSchema = z.string().uuid("Must be a valid UUID");
 const nonBlankText = z.string().trim().min(1, "Value must not be blank");
-const commaSeparatedUuidSchema = z
+export const scenarioCreatorIdsFilterSchema = z
   .string()
   .min(1)
   .superRefine((value, context) => {
@@ -178,17 +178,17 @@ const positiveIntegerQuerySchema = (defaultValue: number, maximum?: number) => {
   );
 };
 
+export const SCENARIO_PRIORITY_FILTER_PATTERN =
+  /^(low|medium|high)(,(low|medium|high))*$/;
+
 const testScenarioListQueryBaseSchema = z.object({
   projectId: uuidSchema,
   page: positiveIntegerQuerySchema(1),
   limit: positiveIntegerQuerySchema(30, 100),
   search: z.string().trim().optional(),
   createdById: uuidSchema.optional(),
-  createdByIds: commaSeparatedUuidSchema.optional(),
-  priority: z
-    .string()
-    .regex(/^(low|medium|high)(,(low|medium|high))*$/)
-    .optional(),
+  createdByIds: scenarioCreatorIdsFilterSchema.optional(),
+  priority: z.string().regex(SCENARIO_PRIORITY_FILTER_PATTERN).optional(),
   sort: z.enum(TEST_SCENARIO_SORT_VALUES).optional(),
   sortField: z.enum(TEST_SCENARIO_SORT_FIELDS).optional(),
   sortDirection: z.enum(["asc", "desc"]).optional(),
@@ -225,7 +225,7 @@ const testScenarioListQueryBaseSchema = z.object({
   suiteId: uuidSchema.optional(),
 });
 
-const validateScenarioAuthorFilter = (
+export const validateScenarioAuthorFilter = (
   value: {
     createdById?: string | undefined;
     createdByIds?: string | undefined;
