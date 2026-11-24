@@ -18,6 +18,7 @@ describe("action execution", () => {
         handler,
       ],
     ]);
+
     for (const input of [
       { actionId: "", arguments: {} },
       { actionId: "x", arguments: [] },
@@ -45,6 +46,7 @@ describe("action execution", () => {
       ).isError,
     ).toBe(true);
     expect(handler).not.toHaveBeenCalled();
+
     expect(
       await executeAction(catalog, {
         actionId: "testportal-example",
@@ -62,6 +64,7 @@ describe("action execution", () => {
     const catalog = indexActions([
       ["testportal-example", "example", {}, async () => result],
     ]);
+
     expect(
       await executeAction(catalog, {
         actionId: "testportal-example",

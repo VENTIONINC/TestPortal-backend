@@ -29,10 +29,12 @@ describe("listSpecs", () => {
     };
     list.mockResolvedValue([spec] as never);
     count.mockResolvedValue(1 as never);
+
     const result = await specService.listSpecs({
       projectId: "p",
       search: "  ",
     });
+
     expect(result).toEqual({
       projectId: "p",
       specs: [{ ...spec, tags: ["smoke"], annotations: [{ type: "x" }] }],
@@ -63,6 +65,7 @@ describe("listSpecs", () => {
       totalPages: 2,
     });
     expect(list).toHaveBeenCalledWith({ projectId: "p", search: "test" }, 3, 2);
+
     count.mockResolvedValue(0 as never);
     expect((await specService.listSpecs({ projectId: "p" })).totalPages).toBe(
       0,
@@ -83,7 +86,9 @@ describe("listSpecs", () => {
     };
     list.mockResolvedValue([spec] as never);
     count.mockResolvedValue(1 as never);
+
     const result = await specService.listSpecs({ projectId: "p" });
+
     expect(result.specs).toEqual([spec]);
     expect(result.total).toBe(1);
     expect(list).toHaveBeenCalledTimes(1);

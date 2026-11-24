@@ -8,6 +8,7 @@ import { authenticateMcpToken } from "@/mcp/middleware/auth";
 import { userModel } from "@/models/userModel";
 import { userService } from "@/services/userService";
 import type { PrismaUser } from "@/types";
+import { testUuid } from "@/test-utils/testUuid";
 
 jest.mock("@/models/userModel");
 const credentialLookup = jest.mocked(userModel.findMcpCredential);
@@ -70,33 +71,56 @@ describe("MCP authentication transport", () => {
     expect(response.body).toEqual({ ok: true });
   });
 
-  it.each([null, { mcpToken: null }, { mcpToken: "" }, { mcpToken: "replacement" }])(
+  it.each([
+    null,
+    { mcpToken: null },
+    { mcpToken: "" },
+    { mcpToken: "replacement" },
+  ])(
     "rejects a missing, revoked or replaced credential before dispatch",
     async (credential) => {
       credentialLookup.mockResolvedValue(credential);
-      const response = await request(app).post("/v2/mcp")
-        .set("Authorization", `Bearer ${generateMcpToken(userId, secret)}`).send({});
+      const response = await request(app)
+        .post("/v2/mcp")
+        .set("Authorization", `Bearer ${generateMcpToken(userId, secret)}`)
+        .send({});
+
       expect(response.status).toBe(401);
-      expect(response.body.error).toEqual({ code: -32002, message: "Invalid or expired MCP token" });
+      expect(response.body.error).toEqual({
+        code: -32002,
+        message: "Invalid or expired MCP token",
+      });
       expect(protectedHandler).not.toHaveBeenCalled();
     },
   );
 
   it("fails closed without disclosing store errors", async () => {
     credentialLookup.mockRejectedValue(new Error("private database details"));
-    const response = await request(app).post("/v2/mcp")
-      .set("Authorization", `Bearer ${generateMcpToken(userId, secret)}`).send({});
+    const response = await request(app)
+      .post("/v2/mcp")
+      .set("Authorization", `Bearer ${generateMcpToken(userId, secret)}`)
+      .send({});
+
     expect(response.status).toBe(500);
-    expect(response.body.error).toEqual({ code: -32603, message: "Internal server error" });
+    expect(response.body.error).toEqual({
+      code: -32603,
+      message: "Internal server error",
+    });
     expect(protectedHandler).not.toHaveBeenCalled();
   });
 
   it("rejects invalid signatures and expired tokens before looking up credentials", async () => {
     const expired = generateMcpToken(userId, secret);
-    const clock = jest.spyOn(Date, "now").mockReturnValue(Date.now() + 31 * 24 * 60 * 60 * 1000);
+    const clock = jest
+      .spyOn(Date, "now")
+      .mockReturnValue(Date.now() + 31 * 24 * 60 * 60 * 1000);
     const badSignature = generateMcpToken(userId, "wrong-secret");
+
     for (const token of [expired, badSignature]) {
-      const response = await request(app).post("/v2/mcp").set("Authorization", `Bearer ${token}`).send({});
+      const response = await request(app)
+        .post("/v2/mcp")
+        .set("Authorization", `Bearer ${token}`)
+        .send({});
       expect(response.status).toBe(401);
     }
     clock.mockRestore();
@@ -106,20 +130,42 @@ describe("MCP authentication transport", () => {
 
   it("invalidates replaced and repeatedly revoked tokens through authentication", async () => {
     const credentials = new Map<string, string | null>();
-    jest.mocked(userModel.findById).mockImplementation(async (id) => ({ id, status: "active" }) as PrismaUser);
-    credentialLookup.mockImplementation(async (id) => credentials.has(id) ? { mcpToken: credentials.get(id) ?? null } : null);
-    jest.mocked(userModel.storeMcpTokenForActiveUser).mockImplementation(async (id, token) => { credentials.set(id, token); return 1; });
-    jest.mocked(userModel.update).mockImplementation(async (id, data) => { credentials.set(id, data.mcpToken ?? null); return { id } as PrismaUser; });
-    const other = "22222222-2222-4222-8222-222222222222";
+    jest
+      .mocked(userModel.findById)
+      .mockImplementation(
+        async (id) => ({ id, status: "active" }) as PrismaUser,
+      );
+    credentialLookup.mockImplementation(async (id) =>
+      credentials.has(id) ? { mcpToken: credentials.get(id) ?? null } : null,
+    );
+    jest
+      .mocked(userModel.storeMcpTokenForActiveUser)
+      .mockImplementation(async (id, token) => {
+        credentials.set(id, token);
+        return 1;
+      });
+    jest.mocked(userModel.update).mockImplementation(async (id, data) => {
+      credentials.set(id, data.mcpToken ?? null);
+      return { id } as PrismaUser;
+    });
+
+    const other = testUuid(2);
     const first = await userService.generateMcpToken(userId);
     const second = await userService.generateMcpToken(userId);
     const otherToken = await userService.generateMcpToken(other);
-    const send = (token: string) => request(app).post("/v2/mcp").set("Authorization", `Bearer ${token}`).send({});
+    const send = (token: string) =>
+      request(app)
+        .post("/v2/mcp")
+        .set("Authorization", `Bearer ${token}`)
+        .send({});
+
     expect((await send(first)).status).toBe(401);
     expect((await send(second)).status).toBe(200);
+
     await userService.revokeMcpToken(userId);
     await userService.revokeMcpToken(userId);
     await userService.revokeMcpToken(other);
+
     expect(credentials.get(userId)).toBeNull();
     expect(credentials.get(other)).toBeNull();
     expect((await send(second)).status).toBe(401);

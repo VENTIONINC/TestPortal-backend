@@ -24,10 +24,11 @@ import {
 } from "@/mcp/tools/test-scenario-spec-links";
 import { createActionCatalog } from "@/mcp/actionCatalog";
 import { executeAction } from "@/mcp/actionExecution";
+import { testUuid } from "@/test-utils/testUuid";
 
-const projectId = "11111111-1111-4111-8111-111111111111";
-const scenarioId = "22222222-2222-4222-8222-222222222222";
-const specId = "33333333-3333-4333-8333-333333333333";
+const projectId = testUuid(1);
+const scenarioId = testUuid(2);
+const specId = testUuid(3);
 const pair = { projectId, scenarioId, specId };
 describe("scenario Spec link actions", () => {
   beforeEach(() => jest.resetAllMocks());
@@ -57,9 +58,11 @@ describe("scenario Spec link actions", () => {
       limit: 30,
       totalPages: 0,
     };
+
     list.mockResolvedValue(envelope as never);
     add.mockResolvedValue({ scenarioId, specId } as never);
     remove.mockResolvedValue(undefined as never);
+
     expect(await listTestScenarioSpecLinks[3](input)).toEqual({
       content: [{ type: "text", text: JSON.stringify(envelope, null, 2) }],
     });
@@ -76,6 +79,7 @@ describe("scenario Spec link actions", () => {
         },
       ],
     });
+
     expect(list).toHaveBeenCalledWith(input);
     expect(add).toHaveBeenCalledWith(pair);
     expect(remove).toHaveBeenCalledWith(pair);
@@ -94,6 +98,7 @@ describe("scenario Spec link actions", () => {
     list.mockResolvedValue({ specs: [] } as never);
     add.mockResolvedValue({ scenarioId, specId } as never);
     remove.mockResolvedValue(undefined as never);
+
     const catalog = createActionCatalog("actor");
     for (const [actionId, args] of [
       ["testportal-list-test-scenario-spec-links", { projectId, scenarioId }],

@@ -51,9 +51,11 @@ import {
   deleteTestScenarioStep,
   reorderTestScenarioSteps,
 } from "@/mcp/tools/test-scenarios";
+import { testUuid } from "@/test-utils/testUuid";
 
 const projectId = "11111111-1111-1111-1111-111111111111";
 const scenarioId = "22222222-2222-2222-2222-222222222222";
+const stepId = testUuid(4);
 const scenario: TestScenarioResponse = {
   id: scenarioId,
   projectId,
@@ -250,7 +252,6 @@ describe("Test Scenario MCP tools", () => {
   });
 
   it("returns complete scenario success envelopes for all step tools", async () => {
-    const stepId = "44444444-4444-4444-4444-444444444444";
     const args = { projectId, scenarioId };
     const responses = await Promise.all([
       appendTestScenarioStep[3]({ ...args, action: "Open" }),
@@ -258,6 +259,7 @@ describe("Test Scenario MCP tools", () => {
       deleteTestScenarioStep[3]({ ...args, stepId }),
       reorderTestScenarioSteps[3]({ ...args, stepIds: [stepId] }),
     ]);
+
     for (const response of responses) {
       expect(response).not.toHaveProperty("isError", true);
       await expect(responseData(response as MCPToolResponse)).resolves.toEqual(
@@ -309,20 +311,41 @@ describe("Test Scenario MCP tools", () => {
   });
 
   it("maps failures from each step service through standard MCP error envelopes", async () => {
-    const stepId = "44444444-4444-4444-4444-444444444444";
     const calls = [
-      [appendTestScenarioStep, appendStepMock, { projectId, scenarioId, action: "Open" }, "appending"],
-      [updateTestScenarioStep, updateStepMock, { projectId, scenarioId, stepId, action: "Open" }, "updating"],
-      [deleteTestScenarioStep, deleteStepMock, { projectId, scenarioId, stepId }, "deleting"],
-      [reorderTestScenarioSteps, reorderStepsMock, { projectId, scenarioId, stepIds: [stepId] }, "reordering"],
+      [
+        appendTestScenarioStep,
+        appendStepMock,
+        { projectId, scenarioId, action: "Open" },
+        "appending",
+      ],
+      [
+        updateTestScenarioStep,
+        updateStepMock,
+        { projectId, scenarioId, stepId, action: "Open" },
+        "updating",
+      ],
+      [
+        deleteTestScenarioStep,
+        deleteStepMock,
+        { projectId, scenarioId, stepId },
+        "deleting",
+      ],
+      [
+        reorderTestScenarioSteps,
+        reorderStepsMock,
+        { projectId, scenarioId, stepIds: [stepId] },
+        "reordering",
+      ],
     ] as const;
     for (const [tool, serviceMock, input, label] of calls) {
       serviceMock.mockRejectedValueOnce(new Error("service rejected"));
-      const response = await (tool[3] as unknown as (
-        params: unknown,
-      ) => Promise<MCPToolResponse>)(input);
+      const response = await (
+        tool[3] as unknown as (params: unknown) => Promise<MCPToolResponse>
+      )(input);
       expect(response.isError).toBe(true);
-      expect(response.content[0]?.text).toContain(`Error ${label} Test Scenario step`);
+      expect(response.content[0]?.text).toContain(
+        `Error ${label} Test Scenario step`,
+      );
     }
   });
 });

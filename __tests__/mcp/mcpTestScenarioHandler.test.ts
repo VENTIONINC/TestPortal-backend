@@ -37,13 +37,21 @@ const updateScenarioMock =
 const deleteScenarioMock =
   jest.fn<(scenarioId: string, projectId: string) => Promise<void>>();
 const appendStepMock =
-  jest.fn<(params: AppendTestScenarioStepParams) => Promise<TestScenarioResponse>>();
+  jest.fn<
+    (params: AppendTestScenarioStepParams) => Promise<TestScenarioResponse>
+  >();
 const updateStepMock =
-  jest.fn<(params: UpdateTestScenarioStepParams) => Promise<TestScenarioResponse>>();
+  jest.fn<
+    (params: UpdateTestScenarioStepParams) => Promise<TestScenarioResponse>
+  >();
 const deleteStepMock =
-  jest.fn<(params: DeleteTestScenarioStepParams) => Promise<TestScenarioResponse>>();
+  jest.fn<
+    (params: DeleteTestScenarioStepParams) => Promise<TestScenarioResponse>
+  >();
 const reorderStepsMock =
-  jest.fn<(params: ReorderTestScenarioStepsParams) => Promise<TestScenarioResponse>>();
+  jest.fn<
+    (params: ReorderTestScenarioStepsParams) => Promise<TestScenarioResponse>
+  >();
 const getResultsMock =
   jest.fn<
     (params: {
@@ -83,6 +91,7 @@ jest.mock("@/services/testScenarioIntegrationService", () => ({
 }));
 
 import { mcpTestScenarioHandler } from "@/handlers/mcpTestScenarioHandler";
+import { testUuid } from "@/test-utils/testUuid";
 
 const projectId = "11111111-1111-1111-1111-111111111111";
 const scenarioId = "22222222-2222-2222-2222-222222222222";
@@ -250,15 +259,24 @@ describe("mcpTestScenarioHandler", () => {
   });
 
   it("delegates all step operations exactly and preserves omitted fields", async () => {
+    const stepId = testUuid(4);
     const appendParams = { projectId, scenarioId, action: "Open" };
-    const updateParams = { projectId, scenarioId, stepId: "44444444-4444-4444-4444-444444444444", action: "Submit" };
-    const deleteParams = { projectId, scenarioId, stepId: "44444444-4444-4444-4444-444444444444" };
-    const reorderParams = { projectId, scenarioId, stepIds: [deleteParams.stepId] };
+    const updateParams = { projectId, scenarioId, stepId, action: "Submit" };
+    const deleteParams = { projectId, scenarioId, stepId };
+    const reorderParams = { projectId, scenarioId, stepIds: [stepId] };
 
-    await expect(mcpTestScenarioHandler.appendTestScenarioStep(appendParams)).resolves.toBe(scenario);
-    await expect(mcpTestScenarioHandler.updateTestScenarioStep(updateParams)).resolves.toBe(scenario);
-    await expect(mcpTestScenarioHandler.deleteTestScenarioStep(deleteParams)).resolves.toBe(scenario);
-    await expect(mcpTestScenarioHandler.reorderTestScenarioSteps(reorderParams)).resolves.toBe(scenario);
+    await expect(
+      mcpTestScenarioHandler.appendTestScenarioStep(appendParams),
+    ).resolves.toBe(scenario);
+    await expect(
+      mcpTestScenarioHandler.updateTestScenarioStep(updateParams),
+    ).resolves.toBe(scenario);
+    await expect(
+      mcpTestScenarioHandler.deleteTestScenarioStep(deleteParams),
+    ).resolves.toBe(scenario);
+    await expect(
+      mcpTestScenarioHandler.reorderTestScenarioSteps(reorderParams),
+    ).resolves.toBe(scenario);
 
     expect(appendStepMock).toHaveBeenCalledWith(appendParams);
     expect(updateStepMock).toHaveBeenCalledWith(updateParams);
@@ -269,8 +287,13 @@ describe("mcpTestScenarioHandler", () => {
   it("propagates step service failures", async () => {
     const failure = new Error("step service failed");
     appendStepMock.mockRejectedValue(failure);
+
     await expect(
-      mcpTestScenarioHandler.appendTestScenarioStep({ projectId, scenarioId, action: "Open" }),
+      mcpTestScenarioHandler.appendTestScenarioStep({
+        projectId,
+        scenarioId,
+        action: "Open",
+      }),
     ).rejects.toBe(failure);
   });
 });

@@ -8,9 +8,10 @@ import {
   updateManualTestRunSchema,
   startManualTestRunSchema,
 } from "@/mcp/schemas/manualTestRunSchemas";
+import { testUuid } from "@/test-utils/testUuid";
 
-const projectId = "11111111-1111-4111-8111-111111111111";
-const runId = "22222222-2222-4222-8222-222222222222";
+const projectId = testUuid(1);
+const runId = testUuid(2);
 
 describe("action input normalization", () => {
   it("preserves raw shape validation and unknown-key stripping", async () => {
@@ -45,6 +46,7 @@ describe("action input normalization", () => {
         status: "passed",
       }),
     ).rejects.toThrow();
+
     await expect(
       parseActionInput(listManualTestRunsSchema, {
         projectId,

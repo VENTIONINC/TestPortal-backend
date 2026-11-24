@@ -12,7 +12,10 @@ jest.mock("@/prisma/client", () => ({
 it("selects only the current MCP credential by user ID", async () => {
   const findUnique = jest.mocked(dbClient.user.findUnique);
   findUnique.mockResolvedValueOnce({ mcpToken: "token" } as never);
-  await expect(userModel.findMcpCredential("user-1")).resolves.toEqual({ mcpToken: "token" });
+
+  await expect(userModel.findMcpCredential("user-1")).resolves.toEqual({
+    mcpToken: "token",
+  });
   expect(findUnique).toHaveBeenCalledWith({
     where: { id: "user-1" },
     select: { mcpToken: true },
@@ -22,7 +25,12 @@ it("selects only the current MCP credential by user ID", async () => {
 it("writes a credential only to an active user and returns the affected count", async () => {
   const updateMany = jest.mocked(dbClient.user.updateMany);
   updateMany.mockResolvedValueOnce({ count: 1 });
-  await expect(userModel.storeMcpTokenForActiveUser("user-1", "token")).resolves.toBe(1);
-  expect(updateMany).toHaveBeenCalledWith({ where: { id: "user-1", status: "active" }, data: { mcpToken: "token" } });
-});
 
+  await expect(
+    userModel.storeMcpTokenForActiveUser("user-1", "token"),
+  ).resolves.toBe(1);
+  expect(updateMany).toHaveBeenCalledWith({
+    where: { id: "user-1", status: "active" },
+    data: { mcpToken: "token" },
+  });
+});

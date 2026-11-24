@@ -2,11 +2,12 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import * as s from "@/mcp/schemas/testScenarioOrganizationSchemas";
+import { testUuid } from "@/test-utils/testUuid";
 
-const projectId = "11111111-1111-4111-8111-111111111111";
-const folderId = "22222222-2222-4222-8222-222222222222";
-const suiteId = "33333333-3333-4333-8333-333333333333";
-const scenarioIds = ["44444444-4444-4444-8444-444444444444"];
+const projectId = testUuid(1);
+const folderId = testUuid(2);
+const suiteId = testUuid(3);
+const scenarioIds = [testUuid(4)];
 
 describe("organization MCP schemas", () => {
   it("enforces folder names, positions, update fields and deletion disposition", () => {
@@ -18,6 +19,7 @@ describe("organization MCP schemas", () => {
         position: 0,
       }).name,
     ).toBe("Folder");
+
     for (const input of [
       { name: " " },
       { name: "x".repeat(201) },
@@ -28,6 +30,7 @@ describe("organization MCP schemas", () => {
       expect(
         s.createFolderSchema.safeParse({ projectId, ...input }).success,
       ).toBe(false);
+
     expect(
       s.updateFolderSchema.safeParse({ projectId, folderId }).success,
     ).toBe(false);
@@ -35,6 +38,7 @@ describe("organization MCP schemas", () => {
       s.updateFolderSchema.safeParse({ projectId, folderId, parentId: null })
         .success,
     ).toBe(true);
+
     expect(
       s.deleteFolderSchema.safeParse({ projectId, folderId }).success,
     ).toBe(false);
@@ -56,18 +60,17 @@ describe("organization MCP schemas", () => {
       for (const invalid of [
         [],
         [...scenarioIds, ...scenarioIds],
-        Array.from(
-          { length: 101 },
-          (_, i) => `00000000-0000-4000-8000-${String(i).padStart(12, "0")}`,
-        ),
+        Array.from({ length: 101 }, (_, index) => testUuid(index + 100)),
       ])
         expect(
           schema.safeParse({ ...input, scenarioIds: invalid }).success,
         ).toBe(false);
     }
+
     expect(
       s.moveScenariosSchema.safeParse({ projectId, scenarioIds }).success,
     ).toBe(false);
+
     expect(
       s.reorderMembersSchema.safeParse({ projectId, suiteId, scenarioIds: [] })
         .success,

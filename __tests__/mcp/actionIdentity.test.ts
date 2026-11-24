@@ -4,6 +4,7 @@
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { InMemoryTransport } from "@modelcontextprotocol/sdk/inMemory.js";
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
+import { testUuid } from "@/test-utils/testUuid";
 
 const mockScenario = jest.fn().mockResolvedValue({ id: "scenario" });
 const mockProfile = jest.fn().mockResolvedValue({ id: "profile" });
@@ -28,12 +29,10 @@ describe("session-bound action identity", () => {
   it("keeps creator, executor and reviewer attribution isolated between sessions", async () => {
     jest.useFakeTimers();
     const { registerActionTools } = await import("@/mcp/server");
-    const projectId = "11111111-1111-4111-8111-111111111111";
-    const scenarioId = "22222222-2222-4222-8222-222222222222";
-    const actors = [
-      "33333333-3333-4333-8333-333333333333",
-      "44444444-4444-4444-8444-444444444444",
-    ];
+    const projectId = testUuid(1);
+    const scenarioId = testUuid(2);
+    const actors = [testUuid(3), testUuid(4)];
+
     const pairs = await Promise.all(
       actors.map(async (actor) => {
         const [clientTransport, serverTransport] =
@@ -48,6 +47,7 @@ describe("session-bound action identity", () => {
         return { client, server };
       }),
     );
+
     try {
       for (const [index, { client }] of pairs.entries()) {
         const actor = actors[index];

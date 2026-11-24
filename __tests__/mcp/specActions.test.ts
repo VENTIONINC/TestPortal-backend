@@ -35,7 +35,9 @@ describe("list Specs action", () => {
     };
     list.mockResolvedValue(envelope as never);
     const input = listSpecsSchema.parse({ projectId });
+
     const response = await listSpecs[3](input);
+
     expect(list).toHaveBeenCalledWith(input);
     expect(response).toEqual({
       content: [{ type: "text", text: JSON.stringify(envelope, null, 2) }],
@@ -51,6 +53,7 @@ describe("list Specs action", () => {
       totalPages: 0,
     };
     list.mockResolvedValue(envelope as never);
+
     const response = await executeAction(createActionCatalog("actor"), {
       actionId: "testportal-list-specs",
       arguments: { projectId },

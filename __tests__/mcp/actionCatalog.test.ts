@@ -98,6 +98,7 @@ describe("session action catalog", () => {
         action.description && action.effects.length && action.responseSummary,
       ).toBeTruthy();
     }
+
     for (const id of [
       "testportal-get-available-projects",
       "testportal-check-status",
@@ -112,6 +113,7 @@ describe("session action catalog", () => {
     expect(actionKeywords("testportal-update-manual-test-run-step")).toContain(
       "manual step outcome",
     );
+
     const update = actions.find(
       ({ actionId }) => actionId === "testportal-update-manual-test-run",
     );
@@ -121,10 +123,17 @@ describe("session action catalog", () => {
       additionalProperties: boolean;
     };
     expect(updateSchema.required).toEqual(
-      expect.arrayContaining(["projectId", "runId", "title", "scenarioIds", "environmentProperties"]),
+      expect.arrayContaining([
+        "projectId",
+        "runId",
+        "title",
+        "scenarioIds",
+        "environmentProperties",
+      ]),
     );
     expect(updateSchema.required).not.toContain("notes");
     expect(updateSchema.additionalProperties).toBe(false);
+
     const core = actions.find(
       ({ actionId }) => actionId === "testportal-get-issues",
     );

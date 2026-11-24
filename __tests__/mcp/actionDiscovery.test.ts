@@ -16,21 +16,49 @@ describe("action discovery", () => {
       const id = `testportal-${verb}-test-scenario-spec-link${verb === "list" ? "s" : ""}`;
       const action = response({ actionId: id, area: "tms" }).data.actions[0];
       expect(action.areas).toEqual(["tms"]);
-      expect(action.responseSummary).toContain(verb === "list" ? "paginated" : verb === "add" ? "scenarioId" : "removed");
+      expect(action.responseSummary).toContain(
+        verb === "list"
+          ? "paginated"
+          : verb === "add"
+            ? "scenarioId"
+            : "removed",
+      );
       expect(action.relatedActionIds).toContain("testportal-list-specs");
-      expect(response({ query: `${verb} scenario automation links`, area: "tms", limit: 5 }).data.actions.map((item: { actionId: string }) => item.actionId)).toContain(id);
+      expect(
+        response({
+          query: `${verb} scenario automation links`,
+          area: "tms",
+          limit: 5,
+        }).data.actions.map((item: { actionId: string }) => item.actionId),
+      ).toContain(id);
     }
-    const removal = response({ actionId: "testportal-remove-test-scenario-spec-link" }).data.actions[0];
+
+    const removal = response({
+      actionId: "testportal-remove-test-scenario-spec-link",
+    }).data.actions[0];
     expect(removal.effects[0]).toContain("association");
     expect(removal.effects[0]).toContain("preserved");
   });
   it("discovers the shared Spec catalog exactly once and in both areas", () => {
     const id = "testportal-list-specs";
-    expect(response({ actionId: id }).data.actions[0]).toMatchObject({ actionId: id, areas: ["core", "tms"], responseSummary: expect.stringContaining("paginated") });
+    expect(response({ actionId: id }).data.actions[0]).toMatchObject({
+      actionId: id,
+      areas: ["core", "tms"],
+      responseSummary: expect.stringContaining("paginated"),
+    });
+
     for (const area of ["core", "tms"]) {
-      expect(response({ query: "automated specs", area }).data.actions.map((action: { actionId: string }) => action.actionId)).toContain(id);
+      expect(
+        response({ query: "automated specs", area }).data.actions.map(
+          (action: { actionId: string }) => action.actionId,
+        ),
+      ).toContain(id);
     }
-    expect(response({ query: "automated specs" }).data.actions.filter((action: { actionId: string }) => action.actionId === id)).toHaveLength(1);
+    expect(
+      response({ query: "automated specs" }).data.actions.filter(
+        (action: { actionId: string }) => action.actionId === id,
+      ),
+    ).toHaveLength(1);
   });
   it("validates envelopes and supports overview, search and lookup", () => {
     expect(response({}).data).toMatchObject({
@@ -44,6 +72,7 @@ describe("action discovery", () => {
     expect(
       response({ actionId: "testportal-current-time" }).data,
     ).toMatchObject({ mode: "lookup", hasMore: false });
+
     for (const input of [
       { query: "a", actionId: "b" },
       { limit: 2 },
@@ -72,6 +101,7 @@ describe("action discovery", () => {
     expect(ids({ query: "manual step outcome", area: "tms" })).toContain(
       "testportal-update-manual-test-run-step",
     );
+
     for (const area of ["core", "tms"])
       expect(ids({ query: "available projects", area })).toContain(
         "testportal-get-available-projects",
@@ -81,6 +111,7 @@ describe("action discovery", () => {
         (id: string) => id === "testportal-get-available-projects",
       ),
     ).toHaveLength(1);
+
     expect(ids({ query: "quasarzyx" })).toEqual([]);
     expect(response({ query: "scenario", limit: 1 }).data).toMatchObject({
       hasMore: true,
@@ -88,6 +119,7 @@ describe("action discovery", () => {
     expect(ids({ query: "scenario", limit: 5 })).toEqual(
       ids({ query: "scenario", limit: 5 }),
     );
+
     const ties = indexActions([
       ["testportal-get-test-scenario", "same", {}, async () => ({})],
       ["testportal-get-result-by-id", "same", {}, async () => ({})],
@@ -103,18 +135,44 @@ describe("action discovery", () => {
   });
 
   it("discovers strict organization contracts and reports mutation effects", () => {
-    const ids = ["list-test-scenario-folders", "create-test-scenario-folder", "update-test-scenario-folder", "delete-test-scenario-folder", "move-test-scenarios-to-folder", "list-test-suites", "get-test-suite", "create-test-suite", "update-test-suite", "delete-test-suite", "add-test-suite-members", "remove-test-suite-members", "reorder-test-suite-members"];
+    const ids = [
+      "list-test-scenario-folders",
+      "create-test-scenario-folder",
+      "update-test-scenario-folder",
+      "delete-test-scenario-folder",
+      "move-test-scenarios-to-folder",
+      "list-test-suites",
+      "get-test-suite",
+      "create-test-suite",
+      "update-test-suite",
+      "delete-test-suite",
+      "add-test-suite-members",
+      "remove-test-suite-members",
+      "reorder-test-suite-members",
+    ];
     for (const id of ids) {
-      const action = response({ actionId: `testportal-${id}`, area: "tms" }).data.actions[0];
+      const action = response({ actionId: `testportal-${id}`, area: "tms" })
+        .data.actions[0];
       expect(action.areas).toEqual(["tms"]);
       expect(action.inputSchema.additionalProperties).toBe(false);
       expect(JSON.stringify(action.inputSchema)).not.toContain('"$ref"');
       expect(action.inputSchema.required).toContain("projectId");
       expect(action.responseSummary).toBeTruthy();
-      expect(action.effects[0]).toBe(/^(list|get)-/.test(id) ? "Reads data without mutation." : /^(delete)-/.test(id) ? "Deletes data." : "Changes data.");
+      expect(action.effects[0]).toBe(
+        /^(list|get)-/.test(id)
+          ? "Reads data without mutation."
+          : /^(delete)-/.test(id)
+            ? "Deletes data."
+            : "Changes data.",
+      );
     }
+
     for (const query of ["folder", "suite"]) {
-      expect(response({ query, area: "tms", limit: 5 }).data.actions.some((a: { actionId: string }) => a.actionId.includes(query))).toBe(true);
+      expect(
+        response({ query, area: "tms", limit: 5 }).data.actions.some(
+          (a: { actionId: string }) => a.actionId.includes(query),
+        ),
+      ).toBe(true);
     }
   });
 

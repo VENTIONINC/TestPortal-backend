@@ -14,6 +14,7 @@ describe("public action transport", () => {
       InMemoryTransport.createLinkedPair();
     const client = new Client({ name: "client", version: "1" });
     const server = new McpServer({ name: "server", version: "1" });
+
     const actions = createActionCatalog("actor");
     actions.set("testportal-synthetic", [
       "testportal-synthetic",
@@ -22,6 +23,7 @@ describe("public action transport", () => {
       async () => ({ content: [] }),
     ]);
     registerActionTools(server, "actor", actions);
+
     try {
       await Promise.all([
         server.connect(serverTransport),

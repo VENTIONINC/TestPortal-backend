@@ -15,6 +15,7 @@ describe("discovery payload measurement", () => {
     const legacy = new McpServer({ name: "legacy", version: "1" });
     const current = new McpServer({ name: "current", version: "1" });
     const actions = createActionCatalog("actor");
+
     for (const [name, description, schema] of actions.values()) {
       let inputSchema = normalizeActionSchema(schema);
       if (schema instanceof z.ZodType) {
@@ -30,11 +31,13 @@ describe("discovery payload measurement", () => {
       );
     }
     registerActionTools(current, "actor");
+
     const clients = [
       new Client({ name: "legacy", version: "1" }),
       new Client({ name: "current", version: "1" }),
     ] as const;
     const servers = [legacy, current] as const;
+
     try {
       for (const [server, client] of [
         [legacy, clients[0]],

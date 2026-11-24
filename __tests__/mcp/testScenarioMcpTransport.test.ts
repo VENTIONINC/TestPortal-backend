@@ -4,9 +4,13 @@
 import { createServer } from "node:http";
 import type { AddressInfo } from "node:net";
 import express from "express";
-import { Client, StreamableHTTPClientTransport } from "@modelcontextprotocol/client";
+import {
+  Client,
+  StreamableHTTPClientTransport,
+} from "@modelcontextprotocol/client";
 import { generateMcpToken } from "@/lib/mcp-token";
 import { userModel } from "@/models/userModel";
+import { testUuid } from "@/test-utils/testUuid";
 
 const credentials = new Map<string, string>();
 const issueFixtureToken = (id: string, secret: string) => {
@@ -43,13 +47,19 @@ jest.mock("@/handlers/mcpTestScenarioHandler", () => ({
   },
 }));
 
+const callAction = (
+  client: Client,
+  request: { name: string; arguments?: Record<string, unknown> },
+) =>
+  client.callTool({
+    name: "testportal-execute-action",
+    arguments: { actionId: request.name, arguments: request.arguments ?? {} },
+  });
 
-const callAction = (client: Client, request: { name: string; arguments?: Record<string, unknown> }) =>
-  client.callTool({ name: "testportal-execute-action", arguments: { actionId: request.name, arguments: request.arguments ?? {} } });
-
-const projectId = "11111111-1111-1111-1111-111111111111";
-const scenarioId = "22222222-2222-2222-2222-222222222222";
-const userId = "33333333-3333-4333-8333-333333333333";
+const projectId = testUuid(1);
+const scenarioId = testUuid(2);
+const userId = testUuid(3);
+const stepId = testUuid(4);
 const secret = "scenario-mcp-transport-test-secret";
 
 describe("Test Scenario MCP transport validation", () => {
@@ -68,19 +78,33 @@ describe("Test Scenario MCP transport validation", () => {
     app.use(express.json());
     app.use("/api", mcpRouter);
     const server = createServer(app);
-    await new Promise<void>((resolve) => server.listen(0, "127.0.0.1", resolve));
+    await new Promise<void>((resolve) =>
+      server.listen(0, "127.0.0.1", resolve),
+    );
+
     const address = server.address() as AddressInfo;
     const client = new Client({ name: "catalog-test", version: "1.0.0" });
     process.env.MCP_SECRET = secret;
-    await client.connect(new StreamableHTTPClientTransport(
-      new URL(`http://127.0.0.1:${address.port}/api/v2/mcp`),
-      { requestInit: { headers: { Authorization: `Bearer ${issueFixtureToken(userId, secret)}` } } },
-    ));
+    await client.connect(
+      new StreamableHTTPClientTransport(
+        new URL(`http://127.0.0.1:${address.port}/api/v2/mcp`),
+        {
+          requestInit: {
+            headers: {
+              Authorization: `Bearer ${issueFixtureToken(userId, secret)}`,
+            },
+          },
+        },
+      ),
+    );
 
     try {
       const catalog = await client.listTools();
       const names = catalog.tools.map(({ name }) => name);
-      expect(names.sort()).toEqual(["testportal-execute-action", "testportal-find-action"]);
+      expect(names.sort()).toEqual([
+        "testportal-execute-action",
+        "testportal-find-action",
+      ]);
 
       const prompts = await client.listPrompts();
       expect(prompts.prompts.map(({ name }) => name).sort()).toEqual([
@@ -91,6 +115,17 @@ describe("Test Scenario MCP transport validation", () => {
         "test-portal-report-generator",
         "tms-workflow-assistant",
       ]);
+      const developerPrompt = await client.getPrompt({
+        name: "developer-code-assistant",
+        arguments: {},
+      });
+      expect(developerPrompt.messages[0]?.content).toMatchObject({
+        type: "text",
+        text: expect.stringContaining(
+          "Use testportal-find-action to retrieve contracts, then call testportal-execute-action",
+        ),
+      });
+
       const status = await callAction(client, {
         name: "testportal-check-status",
         arguments: {},
@@ -98,13 +133,17 @@ describe("Test Scenario MCP transport validation", () => {
       expect(status.isError).not.toBe(true);
       const statusText = status.content[0];
       expect(statusText?.type).toBe("text");
-      expect(JSON.parse(statusText?.type === "text" ? statusText.text : "{}")).toMatchObject({
+      expect(
+        JSON.parse(statusText?.type === "text" ? statusText.text : "{}"),
+      ).toMatchObject({
         status: "ok",
         service: "test-portal-server",
       });
     } finally {
       await client.close();
-      await new Promise<void>((resolve, reject) => server.close((error) => error ? reject(error) : resolve()));
+      await new Promise<void>((resolve, reject) =>
+        server.close((error) => (error ? reject(error) : resolve())),
+      );
       delete process.env.MCP_SECRET;
     }
   });
@@ -115,19 +154,33 @@ describe("Test Scenario MCP transport validation", () => {
     app.use(express.json());
     app.use("/api", mcpRouter);
     const server = createServer(app);
-    await new Promise<void>((resolve) => server.listen(0, "127.0.0.1", resolve));
+    await new Promise<void>((resolve) =>
+      server.listen(0, "127.0.0.1", resolve),
+    );
+
     const address = server.address() as AddressInfo;
     const client = new Client({ name: "legacy-name-test", version: "1.0.0" });
     process.env.MCP_SECRET = secret;
-    await client.connect(new StreamableHTTPClientTransport(
-      new URL(`http://127.0.0.1:${address.port}/api/v2/mcp`),
-      { requestInit: { headers: { Authorization: `Bearer ${issueFixtureToken(userId, secret)}` } } },
-    ));
+    await client.connect(
+      new StreamableHTTPClientTransport(
+        new URL(`http://127.0.0.1:${address.port}/api/v2/mcp`),
+        {
+          requestInit: {
+            headers: {
+              Authorization: `Bearer ${issueFixtureToken(userId, secret)}`,
+            },
+          },
+        },
+      ),
+    );
 
     try {
       const calls = [
         ["get-test-scenario", { scenarioId, projectId }],
-        ["append-test-scenario-step", { scenarioId, projectId, action: "Open" }],
+        [
+          "append-test-scenario-step",
+          { scenarioId, projectId, action: "Open" },
+        ],
       ] as const;
       for (const [name, arguments_] of calls) {
         const response = await client.callTool({ name, arguments: arguments_ });
@@ -142,7 +195,9 @@ describe("Test Scenario MCP transport validation", () => {
       expect(mockAppendScenarioStep).not.toHaveBeenCalled();
     } finally {
       await client.close();
-      await new Promise<void>((resolve, reject) => server.close((error) => error ? reject(error) : resolve()));
+      await new Promise<void>((resolve, reject) =>
+        server.close((error) => (error ? reject(error) : resolve())),
+      );
       delete process.env.MCP_SECRET;
     }
   });
@@ -153,14 +208,28 @@ describe("Test Scenario MCP transport validation", () => {
     app.use(express.json());
     app.use("/api", mcpRouter);
     const server = createServer(app);
-    await new Promise<void>((resolve) => server.listen(0, "127.0.0.1", resolve));
+    await new Promise<void>((resolve) =>
+      server.listen(0, "127.0.0.1", resolve),
+    );
+
     const address = server.address() as AddressInfo;
-    const client = new Client({ name: "scenario-schema-test", version: "1.0.0" });
+    const client = new Client({
+      name: "scenario-schema-test",
+      version: "1.0.0",
+    });
     process.env.MCP_SECRET = secret;
-    await client.connect(new StreamableHTTPClientTransport(
-      new URL(`http://127.0.0.1:${address.port}/api/v2/mcp`),
-      { requestInit: { headers: { Authorization: `Bearer ${issueFixtureToken(userId, secret)}` } } },
-    ));
+    await client.connect(
+      new StreamableHTTPClientTransport(
+        new URL(`http://127.0.0.1:${address.port}/api/v2/mcp`),
+        {
+          requestInit: {
+            headers: {
+              Authorization: `Bearer ${issueFixtureToken(userId, secret)}`,
+            },
+          },
+        },
+      ),
+    );
 
     try {
       const unknownFieldResponse = await callAction(client, {
@@ -176,7 +245,10 @@ describe("Test Scenario MCP transport validation", () => {
       expect(mockUpdateTestScenario).not.toHaveBeenCalled();
 
       const invalidCases = [
-        ["testportal-append-test-scenario-step", { projectId, scenarioId, action: "  " }],
+        [
+          "testportal-append-test-scenario-step",
+          { projectId, scenarioId, action: "  " },
+        ],
         [
           "testportal-update-test-scenario-step",
           { projectId, scenarioId, stepId: scenarioId },
@@ -201,7 +273,10 @@ describe("Test Scenario MCP transport validation", () => {
         ],
       ] as const;
       for (const [name, arguments_] of invalidCases) {
-        const response = await callAction(client, { name, arguments: arguments_ });
+        const response = await callAction(client, {
+          name,
+          arguments: arguments_,
+        });
         expect(response.isError).toBe(true);
       }
       expect(mockAppendScenarioStep).not.toHaveBeenCalled();
@@ -217,7 +292,9 @@ describe("Test Scenario MCP transport validation", () => {
       expect(mockUpdateTestScenario).not.toHaveBeenCalled();
     } finally {
       await client.close();
-      await new Promise<void>((resolve, reject) => server.close((error) => error ? reject(error) : resolve()));
+      await new Promise<void>((resolve, reject) =>
+        server.close((error) => (error ? reject(error) : resolve())),
+      );
       delete process.env.MCP_SECRET;
     }
   });
@@ -228,14 +305,29 @@ describe("Test Scenario MCP transport validation", () => {
     app.use(express.json());
     app.use("/api", mcpRouter);
     const server = createServer(app);
-    await new Promise<void>((resolve) => server.listen(0, "127.0.0.1", resolve));
+    await new Promise<void>((resolve) =>
+      server.listen(0, "127.0.0.1", resolve),
+    );
+
     const address = server.address() as AddressInfo;
-    const client = new Client({ name: "scenario-lifecycle-test", version: "1.0.0" });
+    const client = new Client({
+      name: "scenario-lifecycle-test",
+      version: "1.0.0",
+    });
     process.env.MCP_SECRET = secret;
-    await client.connect(new StreamableHTTPClientTransport(
-      new URL(`http://127.0.0.1:${address.port}/api/v2/mcp`),
-      { requestInit: { headers: { Authorization: `Bearer ${issueFixtureToken(userId, secret)}` } } },
-    ));
+    await client.connect(
+      new StreamableHTTPClientTransport(
+        new URL(`http://127.0.0.1:${address.port}/api/v2/mcp`),
+        {
+          requestInit: {
+            headers: {
+              Authorization: `Bearer ${issueFixtureToken(userId, secret)}`,
+            },
+          },
+        },
+      ),
+    );
+
     const fullScenario = { id: scenarioId, projectId, steps: [] };
     mockCreateTestScenario.mockResolvedValue(fullScenario);
     mockGetTestScenario.mockResolvedValue({ scenario: fullScenario });
@@ -246,41 +338,57 @@ describe("Test Scenario MCP transport validation", () => {
 
     try {
       const catalog = await client.listTools();
-      expect(catalog.tools.map(({ name }) => name).sort()).toEqual(["testportal-execute-action", "testportal-find-action"]);
+      expect(catalog.tools.map(({ name }) => name).sort()).toEqual([
+        "testportal-execute-action",
+        "testportal-find-action",
+      ]);
+
       const responses = [];
-      responses.push(await callAction(client, {
-        name: "testportal-create-test-scenario",
-        arguments: { projectId, title: "Temporary MCP scenario" },
-      }));
-      responses.push(await callAction(client, {
-        name: "testportal-append-test-scenario-step",
-        arguments: { projectId, scenarioId, action: "Open" },
-      }));
-      responses.push(await callAction(client, {
-        name: "testportal-update-test-scenario-step",
-        arguments: {
-          projectId,
-          scenarioId,
-          stepId: "44444444-4444-4444-8444-444444444444",
-          expectedResult: null,
-        },
-      }));
-      responses.push(await callAction(client, {
-        name: "testportal-reorder-test-scenario-steps",
-        arguments: { projectId, scenarioId, stepIds: [] },
-      }));
-      responses.push(await callAction(client, {
-        name: "testportal-delete-test-scenario-step",
-        arguments: {
-          projectId,
-          scenarioId,
-          stepId: "44444444-4444-4444-8444-444444444444",
-        },
-      }));
-      responses.push(await callAction(client, {
-        name: "testportal-get-test-scenario",
-        arguments: { projectId, scenarioId },
-      }));
+      responses.push(
+        await callAction(client, {
+          name: "testportal-create-test-scenario",
+          arguments: { projectId, title: "Temporary MCP scenario" },
+        }),
+      );
+      responses.push(
+        await callAction(client, {
+          name: "testportal-append-test-scenario-step",
+          arguments: { projectId, scenarioId, action: "Open" },
+        }),
+      );
+      responses.push(
+        await callAction(client, {
+          name: "testportal-update-test-scenario-step",
+          arguments: {
+            projectId,
+            scenarioId,
+            stepId,
+            expectedResult: null,
+          },
+        }),
+      );
+      responses.push(
+        await callAction(client, {
+          name: "testportal-reorder-test-scenario-steps",
+          arguments: { projectId, scenarioId, stepIds: [] },
+        }),
+      );
+      responses.push(
+        await callAction(client, {
+          name: "testportal-delete-test-scenario-step",
+          arguments: {
+            projectId,
+            scenarioId,
+            stepId,
+          },
+        }),
+      );
+      responses.push(
+        await callAction(client, {
+          name: "testportal-get-test-scenario",
+          arguments: { projectId, scenarioId },
+        }),
+      );
 
       expect(responses.every(({ isError }) => isError !== true)).toBe(true);
       const decodedResponses = responses.map((response) => {
@@ -292,6 +400,7 @@ describe("Test Scenario MCP transport validation", () => {
         Array.from({ length: 5 }, () => fullScenario),
       );
       expect(decodedResponses[5]).toEqual({ scenario: fullScenario });
+
       expect(mockCreateTestScenario).toHaveBeenCalledWith({
         projectId,
         title: "Temporary MCP scenario",
@@ -309,7 +418,7 @@ describe("Test Scenario MCP transport validation", () => {
         projectId,
         scenarioId,
         actorId: userId,
-        stepId: "44444444-4444-4444-8444-444444444444",
+        stepId,
         expectedResult: null,
       });
       expect(mockReorderScenarioSteps).toHaveBeenCalledWith({
@@ -322,8 +431,9 @@ describe("Test Scenario MCP transport validation", () => {
         projectId,
         scenarioId,
         actorId: userId,
-        stepId: "44444444-4444-4444-8444-444444444444",
+        stepId,
       });
+
       expect(mockGetTestScenario).toHaveBeenCalledWith({
         scenarioId,
         projectId,
@@ -334,7 +444,9 @@ describe("Test Scenario MCP transport validation", () => {
       });
     } finally {
       await client.close();
-      await new Promise<void>((resolve, reject) => server.close((error) => error ? reject(error) : resolve()));
+      await new Promise<void>((resolve, reject) =>
+        server.close((error) => (error ? reject(error) : resolve())),
+      );
       delete process.env.MCP_SECRET;
     }
   });

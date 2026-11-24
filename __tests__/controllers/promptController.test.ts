@@ -140,10 +140,23 @@ describe("PromptController", () => {
     it("returns field feedback for invalid TMS parameters", async () => {
       mockReq.params = { name: "tms-workflow-assistant" };
       mockReq.body = { project_id: "invalid" };
-      mockPromptParameterService.generatePrompt.mockImplementation(() => z.object({ project_id: z.string().uuid() }).parse(mockReq.body) as never);
-      await PromptController.generatePrompt(mockReq as PromptNameRequest, mockRes as Response);
+      mockPromptParameterService.generatePrompt.mockImplementation(
+        () =>
+          z
+            .object({ project_id: z.string().uuid() })
+            .parse(mockReq.body) as never,
+      );
+
+      await PromptController.generatePrompt(
+        mockReq as PromptNameRequest,
+        mockRes as Response,
+      );
+
       expect(mockStatus).toHaveBeenCalledWith(400);
-      expect(mockJson).toHaveBeenCalledWith({ error: "Invalid prompt parameters", fields: [{ field: "project_id", message: expect.any(String) }] });
+      expect(mockJson).toHaveBeenCalledWith({
+        error: "Invalid prompt parameters",
+        fields: [{ field: "project_id", message: expect.any(String) }],
+      });
     });
     it("should generate prompt successfully with parameters", async () => {
       const mockPromptResult = {

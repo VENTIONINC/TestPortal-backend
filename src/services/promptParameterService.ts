@@ -8,7 +8,7 @@
 import type { GetPromptResult } from "@modelcontextprotocol/sdk/types";
 import z from "zod/v3";
 import * as tmsWorkflow from "@/mcp/prompts/tms-workflow-assistant/v1.0.0";
-import { developerCodeAssistantPrompt } from "@/mcp/prompts/developer-code-assistant/v1.0.0";
+import { developerCodeAssistantPrompt } from "@/mcp/prompts/developer-code-assistant/v1.1.0";
 import { testPortalAssistantPrompt } from "@/mcp/prompts/test-portal-assistant/v1.0.0";
 import { issueAnalysisAssistantPrompt } from "@/mcp/prompts/issue-analysis-assistant/v1.0.0";
 import { environmentPerformanceAssistantPrompt } from "@/mcp/prompts/environment-performance-assistant/v1.0.0";

@@ -21,11 +21,13 @@ jest.mock("@/services/testScenarioOrganizationService", () => ({
   testScenarioOrganizationService: service,
 }));
 import { organizationTools } from "@/mcp/tools/test-scenario-organization";
+import { testUuid } from "@/test-utils/testUuid";
 
-const projectId = "11111111-1111-4111-8111-111111111111";
-const folderId = "22222222-2222-4222-8222-222222222222";
-const suiteId = "33333333-3333-4333-8333-333333333333";
-const scenarioIds = ["44444444-4444-4444-8444-444444444444"];
+const projectId = testUuid(1);
+const folderId = testUuid(2);
+const suiteId = testUuid(3);
+const scenarioId = testUuid(4);
+const scenarioIds = [scenarioId];
 const invoke = async (id: string, args: object) => {
   const tool = organizationTools.find(([name]) => name === `testportal-${id}`);
   if (!tool) throw new Error(`missing ${id}`);
@@ -38,6 +40,7 @@ const invoke = async (id: string, args: object) => {
 
 describe("organization MCP actions", () => {
   beforeEach(() => jest.clearAllMocks());
+
   it("delegates each action with its project scope and returns service responses", async () => {
     const cases = [
       ["list-test-scenario-folders", { projectId }, "listFolders", [projectId]],
@@ -45,25 +48,21 @@ describe("organization MCP actions", () => {
         "create-test-scenario-folder",
         { projectId, name: "Folder" },
         "createFolder",
-        [{ projectId, name: "Folder" }],
       ],
       [
         "update-test-scenario-folder",
         { projectId, folderId, parentId: null },
         "updateFolder",
-        [{ projectId, folderId, parentId: null }],
       ],
       [
         "delete-test-scenario-folder",
         { projectId, folderId, disposition: "parent" },
         "deleteSingleFolder",
-        [{ projectId, folderId, disposition: "parent" }],
       ],
       [
         "move-test-scenarios-to-folder",
         { projectId, scenarioIds, folderId: null },
         "moveScenarios",
-        [{ projectId, scenarioIds, folderId: null }],
       ],
       ["list-test-suites", { projectId }, "listSuites", [projectId]],
       [
@@ -72,17 +71,11 @@ describe("organization MCP actions", () => {
         "getSuite",
         [projectId, suiteId],
       ],
-      [
-        "create-test-suite",
-        { projectId, name: "Suite" },
-        "createSuite",
-        [{ projectId, name: "Suite" }],
-      ],
+      ["create-test-suite", { projectId, name: "Suite" }, "createSuite"],
       [
         "update-test-suite",
         { projectId, suiteId, release: null },
         "updateSuite",
-        [{ projectId, suiteId, release: null }],
       ],
       [
         "delete-test-suite",
@@ -106,21 +99,25 @@ describe("organization MCP actions", () => {
         "reorder-test-suite-members",
         { projectId, suiteId, scenarioIds },
         "reorderMembers",
-        [{ projectId, suiteId, scenarioIds }],
       ],
     ] as const;
+
     for (const [id, args, method, expected] of cases) {
-      const expectedResponse = method === "moveScenarios" ? { moved: 1 } : { ok: true };
+      const expectedArgs = expected ?? [structuredClone(args)];
+      const expectedResponse =
+        method === "moveScenarios" ? { moved: 1 } : { ok: true };
       const serviceResponse =
         method === "moveScenarios"
-          ? { ...expectedResponse, restoreData: [{ scenarioId: scenarioIds[0] }] }
+          ? { ...expectedResponse, restoreData: [{ scenarioId }] }
           : expectedResponse;
       service[method].mockReturnValueOnce(
         Promise.resolve(serviceResponse) as never,
       );
       const result = await invoke(id, args);
-      expect(JSON.parse(result.content[0]?.text ?? "{}")).toEqual(expectedResponse);
-      expect(service[method]).toHaveBeenLastCalledWith(...expected);
+      expect(JSON.parse(result.content[0]?.text ?? "{}")).toEqual(
+        expectedResponse,
+      );
+      expect(service[method]).toHaveBeenLastCalledWith(...expectedArgs);
     }
   });
   it("maps service failures to MCP errors", async () => {

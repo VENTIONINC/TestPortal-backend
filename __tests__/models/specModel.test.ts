@@ -18,9 +18,11 @@ describe("Spec listing queries", () => {
   it("shares project and literal search predicates between the page and count", async () => {
     findMany.mockResolvedValue([] as never);
     count.mockResolvedValue(0 as never);
+
     const filter = { projectId: "project-1", search: "  A%_\\B  " };
     await specModel.list(filter, 2, 10);
     await specModel.count(filter);
+
     const where = {
       projectId: "project-1",
       OR: ["key", "title", "file"].map((field) => ({

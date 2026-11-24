@@ -25,7 +25,7 @@ import { executeAction, executeActionSchema } from "@/mcp/actionExecution";
 import * as testPortalAssistant from "@/mcp/prompts/test-portal-assistant/v1.0.0";
 import * as issueAnalysisAssistant from "@/mcp/prompts/issue-analysis-assistant/v1.0.0";
 import * as environmentPerformanceAssistant from "@/mcp/prompts/environment-performance-assistant/v1.0.0";
-import * as developerCodeAssistant from "@/mcp/prompts/developer-code-assistant/v1.0.0";
+import * as developerCodeAssistant from "@/mcp/prompts/developer-code-assistant/v1.1.0";
 import * as documentationArchitect from "@/mcp/prompts/documentation-architect/v1.0.0";
 import * as tmsWorkflowAssistant from "@/mcp/prompts/tms-workflow-assistant/v1.0.0";
 

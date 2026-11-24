@@ -7,6 +7,7 @@ import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { InMemoryTransport } from "@modelcontextprotocol/sdk/inMemory.js";
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { createTestScenarioSchema } from "@/mcp/schemas/testScenarioSchemas";
+import { testUuid } from "@/test-utils/testUuid";
 
 const serverSource = readFileSync(
   path.join(process.cwd(), "src/mcp/server.ts"),
@@ -32,6 +33,7 @@ describe("Test Scenario MCP server registration", () => {
       name: "registration-test",
       version: "1.0.0",
     });
+
     registerActionTools(server, "actor");
 
     try {
@@ -54,14 +56,14 @@ describe("Test Scenario MCP server registration", () => {
     expect(serverSource).toMatch(/registerActionTools\(server, reviewedById\)/);
     expect(serverSource).not.toContain("createdById");
     const input = {
-      projectId: "11111111-1111-4111-8111-111111111111",
+      projectId: testUuid(1),
       title: "Case",
     };
     expect(createTestScenarioSchema.safeParse(input).success).toBe(true);
     expect(
       createTestScenarioSchema.safeParse({
         ...input,
-        createdById: "22222222-2222-4222-8222-222222222222",
+        createdById: testUuid(2),
       }).success,
     ).toBe(false);
   });
