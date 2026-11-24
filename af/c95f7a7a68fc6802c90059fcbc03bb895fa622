@@ -1,0 +1,462 @@
+src/handlers/mcpTestScenarioOrganizationHandler.ts
+  s_28584ca6c1ae32::t_934d44a0e4091a 12-17
+  s_28584ca6c1ae32::t_ef51047c31d689 11
+__tests__/test-scenarios/testScenarioPostgresIntegration.test.ts
+  s_28584ca6c1ae32::t_d01241dc1fa28e 201-212,1057,1068,1072
+  s_28584ca6c1ae32::t_a43c71c778434b 955
+  s_28584ca6c1ae32::t_0f1765470540eb 21,27,238,250,297,299,307,365,415,475,487,501-504,508,520,534-535,557-559,564,566,573-587,589-592,952,954,966,972,974,1016-1021,1024-1027,1032,1047-1050,1052-1056,1058-1067,1069-1071,1082-1083,1085,1107,1112-1113,1118-1124,1127-1128,1130-1134,1141-1144,1147-1153
+__tests__/routes/manual-test-runs.test.ts
+  s_28584ca6c1ae32::t_934d44a0e4091a 4-5,7,9,11-12,14-19,21-22,25-29,33-35,38,40,43-56,58-63,70,74,78,80-98,102-207
+  s_28584ca6c1ae32::t_5e89292d170e85 208
+__tests__/mcp/testScenarioMcpTransport.test.ts
+  s_28584ca6c1ae32::t_934d44a0e4091a 298
+src/mcp/tools/test-scenarios.ts
+  s_28584ca6c1ae32::t_8efa07930623ae 32,69-82,95-96
+  s_28584ca6c1ae32::t_0ebd4dabb692ac 97
+src/services/promptParameterService.ts
+  s_28584ca6c1ae32::t_ab5ee6e1a2f891 35,38,40-51,53-56
+  s_28584ca6c1ae32::t_8efa07930623ae 21-30,58-62,65,67-68,71,73-74,77,79-82,84,87-91,94,96-97,100,102-103,106,108-110,112-117,120-124,127,129-131,134,136-137,140,142-144,146-152,155-159,162,164-166,169,171-173,176,178-181,183-189,192-196,199,201-203,206,208-210,213,215-217,220,222-224,227,229-232,234-242,253,257-260
+src/models/manualTestRunHistoryModel.ts
+  s_28584ca6c1ae32::t_eebcd5bdd6d26f 1-60,64-226
+  s_28584ca6c1ae32::t_ab5ee6e1a2f891 61-63
+src/handlers/mcpManualTestRunHandler.ts
+  s_28584ca6c1ae32::t_eebcd5bdd6d26f 4-7,10-18,28-30,32-33,41,46-47,61-69,78-84
+  s_28584ca6c1ae32::t_ab5ee6e1a2f891 23,34-40,42-45,48-54,57-60,70-77
+__tests__/mcp/mcpManualTestRunHandler.test.ts
+  s_28584ca6c1ae32::t_91e47a2d2b3818 13-17,24,26,37-43,47,52,57
+src/services/userService.ts
+  s_28584ca6c1ae32::t_ab5ee6e1a2f891 304-307,309-312
+  s_28584ca6c1ae32::t_8efa07930623ae 406-408,479-482,530,533-536
+__tests__/mcp/actionIdentity.test.ts
+  s_28584ca6c1ae32::t_91e47a2d2b3818 86,91,130
+src/mcp/prompts/tms-workflow-assistant/v1.0.0.ts
+  s_28584ca6c1ae32::t_ab5ee6e1a2f891 10-11,15-18,22-26,29-34,52-55
+  s_28584ca6c1ae32::t_8ea623280ea947 47-48
+src/mcp/actionCatalog.ts
+  s_28584ca6c1ae32::t_8efa07930623ae 32,94
+  s_28584ca6c1ae32::t_eebcd5bdd6d26f 41-42,101-102
+  s_28584ca6c1ae32::t_ab5ee6e1a2f891 51-55
+__tests__/mcp/manualTestRunMcpTransport.test.ts
+  s_28584ca6c1ae32::t_91e47a2d2b3818 28,44,89,129,133-134,136,138,141-142,154-160,162,173,184,193,196,198-199,203-204
+__tests__/mcp/actionSchemas.test.ts
+  s_28584ca6c1ae32::t_934d44a0e4091a 51-53,62
+__tests__/mcp/testScenarioOrganizationTools.test.ts
+  s_28584ca6c1ae32::t_934d44a0e4091a 113-117,119,122
+  s_28584ca6c1ae32::t_8c122a33439ab4 10,59
+src/mcp/actionMetadata.ts
+  s_28584ca6c1ae32::t_91e47a2d2b3818 212
+  s_28584ca6c1ae32::t_eebcd5bdd6d26f 105,223
+  s_28584ca6c1ae32::t_ab5ee6e1a2f891 29-30,33-46,121-128,150-167,224-237,239-240,251-253,255-262,277-281,284-301
+src/types/manualTestRuns.ts
+  s_28584ca6c1ae32::t_eebcd5bdd6d26f 4-11,15,18-19,24-25,27,29,35,40-86,96,103,107-110,112-113,120,124-133,136-147,156-164,167-169,176-201,204-212,215,218-220,223,226-227,230,233-242,248-255
+src/mcp/schemas/manualRunEnvironmentProfileSchemas.ts
+  s_28584ca6c1ae32::t_e0148fe0405279 14
+  s_28584ca6c1ae32::t_057cdf2e1e254e 8-13,15-50
+src/mcp/server.ts
+  s_28584ca6c1ae32::t_ab5ee6e1a2f891 133-137,172-176,203-207
+src/services/manualTestRunHistoryService.ts
+  s_28584ca6c1ae32::t_ab5ee6e1a2f891 129-131
+  s_28584ca6c1ae32::t_eebcd5bdd6d26f 1-128,132-164
+docs/MCP_TOOLS.md
+  s_28584ca6c1ae32::t_8efa07930623ae 272-273,289,302-304,314-315,429
+  s_28584ca6c1ae32::t_8ea623280ea947 360,362,364-375,397,399,407
+src/mcp/tools/manual-test-runs.ts
+  s_28584ca6c1ae32::t_ab5ee6e1a2f891 36-37,45-46,50-57,59-83,85-91
+  s_28584ca6c1ae32::t_eebcd5bdd6d26f 4,6-29,31-35,38,40-44,47,49,92
+  s_28584ca6c1ae32::t_d01241dc1fa28e 58
+  s_28584ca6c1ae32::t_934d44a0e4091a 84
+src/schemas/manualTestRunSchemas.ts
+  s_28584ca6c1ae32::t_2d57e4d6397da1 6,9-10,20-22,24-26,29-35,38-44,60,63-65,70-72,75,77,79-87,89,100-102,112-116,118-134,136-142,144-152,154-178,181-205,209,211,213-215
+  s_28584ca6c1ae32::t_e0148fe0405279 23,28,37,45-57,78,88,90-99,104-109,135
+  s_28584ca6c1ae32::t_4662bc5cab3c8a 27,36
+src/mcp/schemas/manualTestRunSchemas.ts
+  s_28584ca6c1ae32::t_2d57e4d6397da1 39-40,52-53,57-71,82-87,140-142
+  s_28584ca6c1ae32::t_ab5ee6e1a2f891 73-79,89-119,121-125,129-130,132-135,146-157,159-164
+  s_28584ca6c1ae32::t_eebcd5bdd6d26f 36-38,51,54-56,72,80-81,126-128,136-139,158
+  s_28584ca6c1ae32::t_e0148fe0405279 5-6,8-34,41-48
+__tests__/mcp/manualTestRunSchemas.test.ts
+  s_28584ca6c1ae32::t_91e47a2d2b3818 16-17,21-24,26-27,34,36,38-40,49-51,59-60
+__tests__/mcp/actionPayload.test.ts
+  s_28584ca6c1ae32::t_934d44a0e4091a 54
+__tests__/manual-test-runs/manualTestRunAggregateCreationPostgresIntegration.test.ts
+  s_28584ca6c1ae32::t_934d44a0e4091a 1-1177
+__tests__/mcp/tmsWorkflowPrompt.test.ts
+  s_28584ca6c1ae32::t_934d44a0e4091a 33
+__tests__/mcp/actionCatalog.test.ts
+  s_28584ca6c1ae32::t_91e47a2d2b3818 66,124
+.gitattributes
+  s_28584ca6c1ae32::t_e194357bcb3eb5 1
+.gitignore
+  s_28584ca6c1ae32::t_a0d6f8b0663f64 72-73
+.husky/install.mjs
+  s_28584ca6c1ae32::t_5cc61f5066d48b 1-23
+.husky/pre-commit
+  s_28584ca6c1ae32::t_0546bc576a5a88 1-17
+.prettierrc.json
+  s_28584ca6c1ae32::t_9d2456e16ccade 7-8
+Dockerfile
+  s_28584ca6c1ae32::t_51fdc35442eda0 12,14,17,37,39,42
+README.md
+  s_28584ca6c1ae32::t_0a4bf5a1b25edf 53-58
+__tests__/controllers/manualTestRunCreationController.test.ts
+  s_28584ca6c1ae32::t_953e75dea326c5 1-128
+__tests__/controllers/manualTestRunHistoryController.test.ts
+  s_28584ca6c1ae32::t_60bedefe01c968 1-118
+__tests__/controllers/manualTestRunLifecycleController.test.ts
+  s_28584ca6c1ae32::t_260834a03b5a1e 5-6,12-13,15-20,23,26-28,33,38,41-42,45-54,56-57,60,62-63,65-66,72-77,79-83,85-86,89,91-97,100,103-105,107-114,117-120
+__tests__/controllers/manualTestRunMutationController.test.ts
+  s_28584ca6c1ae32::t_1ba85ba97b599c 1-128
+__tests__/controllers/testScenarioController.test.ts
+  s_28584ca6c1ae32::t_e13b09ddef546c 6-10,56-63,65,69,93-94,103-106,115-116,120-123
+__tests__/controllers/testScenarioIntegrationController.test.ts
+  s_28584ca6c1ae32::t_42b5b78270fb9a 6,19-22,179-180,186-190
+__tests__/controllers/testScenarioOrganizationAttribution.test.ts
+  s_28584ca6c1ae32::t_b9f0f267e7088c 1-68
+__tests__/lib/manualTestRunPeriod.test.ts
+  s_28584ca6c1ae32::t_910134c4c29224 1-53
+__tests__/lib/manualTestRunResponseMapper.test.ts
+  s_28584ca6c1ae32::t_3072f69f915af3 1-54
+__tests__/lib/openapi/manualTestRuns.test.ts
+  s_28584ca6c1ae32::t_c86fe2e75b024a 7,10,13-22,24,35,37-44,47-54,56,58,61-75,78-95,101-119,122,129-148,150-152
+__tests__/lib/openapi/testScenarios.test.ts
+  s_28584ca6c1ae32::t_2c06a09b42dbe1 9-21,23-32,35,37-50,52-53,55-56,59-60,62-80,86-94,97-114,121-131,159-173,175-183,190,195-196,198,202-203,206-208,217-227,245-247
+__tests__/manual-test-runs/ManualRunsMigrationPostgresIntegration.test.ts
+  s_28584ca6c1ae32::t_9cc0d44e10ccb3 1-195
+__tests__/mcp/mcpTestScenarioHandler.test.ts
+  s_28584ca6c1ae32::t_2268b8ae2a33c9 93-100,102,107
+__tests__/mcp/testScenarioMcpWorkflow.test.ts
+  s_28584ca6c1ae32::t_4d34298791e884 55-62,64,68
+__tests__/mcp/testScenarioMetadataContract.test.ts
+  s_28584ca6c1ae32::t_b2af8fd3f17bf3 32-37,39
+__tests__/mcp/testScenarioSchemas.test.ts
+  s_28584ca6c1ae32::t_dee5c460e5320b 127,131-132
+__tests__/mcp/testScenarioTools.test.ts
+  s_28584ca6c1ae32::t_93bd7fef14cde3 61-68,70,75
+__tests__/models/manualTestRunLifecycleModel.test.ts
+  s_28584ca6c1ae32::t_0816ae1f4a5051 1-28
+__tests__/models/testScenarioModel.test.ts
+  s_28584ca6c1ae32::t_ff962608209016 9,22,26,48,64-67,71,86-96,104,152-177,184-196,198-204,223,227-240,252-334,349,356-362
+__tests__/prisma/manualTestRunMigration.test.ts
+  s_28584ca6c1ae32::t_9eff4215224924 12,14-15,18,20-23,25,28-37,41-44,47-65
+__tests__/prisma/testScenarioMigration.test.ts
+  s_28584ca6c1ae32::t_2eea62f19e8114 52-54,97-98,150,153,157,159
+__tests__/routes/test-scenarios.test.ts
+  s_28584ca6c1ae32::t_9b4fb154a9f6d8 16-18,72-74,96
+__tests__/schemas/manualTestRunSchemas.test.ts
+  s_28584ca6c1ae32::t_f750a4c314e910 6-7,9-11,15,18-26,28-40,43,45-65,67-71,74-78,82-84,86-87,89,93,97-98,100-106,110-111,117-118,124-126,131,133-146,150-222
+__tests__/schemas/scenarioEditorSave.test.ts
+  s_28584ca6c1ae32::t_a8791dcf43a631 1-91
+__tests__/schemas/scenarioIdentity.test.ts
+  s_28584ca6c1ae32::t_f8c0b6ecef90de 1-52
+__tests__/schemas/testScenarioOrganizationSchemas.test.ts
+  s_28584ca6c1ae32::t_a8e0757cb2ab10 4,20-41,44-51
+__tests__/schemas/testScenarioSchemas.test.ts
+  s_28584ca6c1ae32::t_8a5dceb87edfbd 9-10,19-23,36,73-83,85-94,98-120,124-133,136-152,155-169,224-230
+__tests__/services/dashboardService.aggregation.test.ts
+  s_28584ca6c1ae32::t_aff949ef212e7a 10-13,91-92,130-131,159,175,188-189
+__tests__/services/manualTestRunCreationService.test.ts
+  s_28584ca6c1ae32::t_4bf30cb75d17fc 7-9,11-12,15-19,22-26,29,32,35-41,43,45-48,52-62,64,66-71,74,76-81,83,85-86,88-97,100-101,103-107,109-115
+__tests__/services/manualTestRunHistoryService.test.ts
+  s_28584ca6c1ae32::t_79863b85423dbf 1-95
+__tests__/services/manualTestRunLifecycleService.test.ts
+  s_28584ca6c1ae32::t_b0c877fa2f5d6b 1-83
+__tests__/services/manualTestRunMutationService.test.ts
+  s_28584ca6c1ae32::t_f7c2702c471fa2 5,8-13,15-16,19,26-30,32,35-40,43-56,59-73,76-77,79,81-82,84,86,88-89,92,95-96,98,101-102,104,106-107,110,112,115,117-123,125-127,130,133,137,139-141,145-146,148-154
+__tests__/services/resultService.jsonPayloads.test.ts
+  s_28584ca6c1ae32::t_5e46ce1a91f953 117-118,159
+__tests__/services/testScenarioService.test.ts
+  s_28584ca6c1ae32::t_9ba5816c2f02e3 12-13,37,46-48,74-81,83,87,103,117-129,175-183,186-195,197-199,204-218,221-253,274-279,281-301,310-312,358-377,382-396
+__tests__/test-scenarios/resultScenarioDetailPostgresIntegration.test.ts
+  s_28584ca6c1ae32::t_dd6519d5f50f40 161,179,215
+__tests__/test-scenarios/scenarioEditorMigrationPostgresIntegration.test.ts
+  s_28584ca6c1ae32::t_8cb6d25632a885 1-182
+__tests__/test-scenarios/scenarioEditorSavePostgresIntegration.test.ts
+  s_28584ca6c1ae32::t_6a202953190678 1-290
+__tests__/test-scenarios/scenarioIdentityPostgresIntegration.test.ts
+  s_28584ca6c1ae32::t_08945f4766b1e0 1-130
+__tests__/test-scenarios/scenarioOrganizationRevisionPostgresIntegration.test.ts
+  s_28584ca6c1ae32::t_7939b1b6c9b80b 1-630
+__tests__/test-scenarios/scenarioTransactionRetries.test.ts
+  s_28584ca6c1ae32::t_a8ba4cf72d891c 1-61
+__tests__/test-scenarios/testScenarioWorkflow.test.ts
+  s_28584ca6c1ae32::t_20c51bdc72a34d 6-10,47-54,56,60,93-94,102-105,129-136
+docs/API_DOCUMENTATION.md
+  s_28584ca6c1ae32::t_3eb635ff6de288 115-117,130,134-136,162,179,205-265,278-283
+docs/DEVELOPMENT_GUIDE.md
+  s_28584ca6c1ae32::t_e15a2f9c3a53a2 55-76,557-564
+eslint.config.js
+  s_28584ca6c1ae32::t_e62f863cdb286e 5-6,73-81,101-102
+index.ts
+  s_28584ca6c1ae32::t_449c56f2dfdca3 10,27
+package-lock.json
+  s_28584ca6c1ae32::t_13d07284e1c2f0 67,69,71,2171-2183,5057-5069,5247-5277,5744-5750,6589-6604,9699-9711,10983-10998
+package.json
+  s_28584ca6c1ae32::t_a161ad0d89956d 11,20,93,95,97
+postman/Manual_Test_Runs_API.postman_collection.json
+  s_28584ca6c1ae32::t_a8909069d1f260 4,13,18,24-25,29,32,36,39,43,45-48,52,55-57,61,63-66,70,73-75
+postman/docs/Manual_Test_Runs_API.md
+  s_28584ca6c1ae32::t_c2bc244f96f869 3-59
+prisma/migrations/20261030120000_add_test_scenario_folder_description/migration.sql
+  s_28584ca6c1ae32::t_a08ea087f0b33a 1-2
+prisma/migrations/20261030210000_scenario_editor_identity/migration.sql
+  s_28584ca6c1ae32::t_831e207be8c7b6 1-33
+prisma/migrations/20261105120000_allow_duplicate_suite_names/migration.sql
+  s_28584ca6c1ae32::t_70ea4b8af137c9 1
+prisma/migrations/20261105130000_add_suite_membership_revision/migration.sql
+  s_28584ca6c1ae32::t_7d61f00ef6ab1f 1
+prisma/migrations/20261112120000_redesign_manual_test_runs/migration.sql
+  s_28584ca6c1ae32::t_8b5c873a9bc153 1-98
+prisma/migrations/20261112152903_commit/migration.sql
+  s_28584ca6c1ae32::t_2595e61204a91d 1-5
+prisma/migrations/20261115120000_manual_run_phase_two_fields/migration.sql
+  s_28584ca6c1ae32::t_c3f4fc6286cee0 1-32
+prisma/migrations/20261116120000_manual_run_result_history/migration.sql
+  s_28584ca6c1ae32::t_e9982b72bf7ebd 1-11
+prisma/migrations/20261120120000_drop_redundant_manual_run_scenario_step_index/migration.sql
+  s_28584ca6c1ae32::t_8933c5945a3f6b 1
+prisma/migrations/20261120120100_drop_redundant_manual_run_scenario_unique_constraint/migration.sql
+  s_28584ca6c1ae32::t_ba36937bb7b55c 1
+prisma/schema.prisma
+  s_28584ca6c1ae32::t_40e0c5f811c549 31,34-35,43-50,57-63,65-66,109,120-143,205-214,216,252-272,274-275,277-278,281,289-296,298-299,308-318,325-328,330,339-340,342-343,362-386,388-389,391,413-438,441-483
+src/config/environment.ts
+  s_28584ca6c1ae32::t_c56c24b75f7b11 22-23,31-33,74
+src/controllers/assumptionController.ts
+  s_28584ca6c1ae32::t_cb922be102b9e2 106-109
+src/controllers/dashboardController.ts
+  s_28584ca6c1ae32::t_319fd7700a4797 49-51,86-93,110-111
+src/controllers/errorFormatterController.ts
+  s_28584ca6c1ae32::t_684c1bc2cddd77 34-36
+src/controllers/executionController.ts
+  s_28584ca6c1ae32::t_941a132990cb86 34-37
+src/controllers/jsonReportController.ts
+  s_28584ca6c1ae32::t_4c96d82fa66662 253-255,326-336
+src/controllers/manualRunEnvironmentProfileController.ts
+  s_28584ca6c1ae32::t_8c95acb1d8e174 6-15,26-29,31-47,49-52,55-75,77-80,83-103,105-108,110-126
+src/controllers/manualTestRunCreationController.ts
+  s_28584ca6c1ae32::t_a6f6d6ed599d24 1-66
+src/controllers/manualTestRunHistoryController.ts
+  s_28584ca6c1ae32::t_43571c55341d05 5,11,18,20,23,25,27-30,34-35,38-40,44-46,48,56-58,62-63,68-73,75
+src/controllers/manualTestRunLifecycleController.ts
+  s_28584ca6c1ae32::t_4dff77b0f84121 1-127
+src/controllers/manualTestRunMutationController.ts
+  s_28584ca6c1ae32::t_6d3e24c6b6b14b 1-231
+src/controllers/promptController.ts
+  s_28584ca6c1ae32::t_78ac115caa5c2f 81-91
+src/controllers/resultController.ts
+  s_28584ca6c1ae32::t_1370e9d284118a 312-315,340
+src/controllers/testScenarioController.ts
+  s_28584ca6c1ae32::t_2a28e638b938c6 5,13-15,33,43-51,59-63,80-83,88-90,94-97,100-109,111-141,202,225,237,258,270,291,304,320,332,353
+src/controllers/testScenarioOrganizationController.ts
+  s_28584ca6c1ae32::t_fa11f403c6fcb2 4-28,30-34,36-41,44,46-53,56,58-59,64-377
+src/controllers/userController.ts
+  s_28584ca6c1ae32::t_06460eda83e000 208-212,301,305-308,311-313
+src/handlers/mcpAssumptionHandler.ts
+  s_28584ca6c1ae32::t_50174ee930d236 37-40
+src/handlers/mcpExecutionHandler.ts
+  s_28584ca6c1ae32::t_30bd96c60123a7 8-11
+src/handlers/mcpIssueHandler.ts
+  s_28584ca6c1ae32::t_c1a0a18a4170de 49,71
+src/handlers/mcpManualRunEnvironmentProfileHandler.ts
+  s_28584ca6c1ae32::t_c39a848bb12389 5-10,13-29
+src/handlers/mcpResultErrorHandler.ts
+  s_28584ca6c1ae32::t_d759ba53f3de83 37-40
+src/lib/ctrfTestPortalExtension.ts
+  s_28584ca6c1ae32::t_8f5d743a2e9994 12-17,29-35,39-41,50-51,60-65,68-73
+src/lib/executionIdentifiers.ts
+  s_28584ca6c1ae32::t_433ad26134ff7a 63,65,95,111,114,135
+src/lib/jsonPayloads.ts
+  s_28584ca6c1ae32::t_bb99ae1dcd364e 36,61,82-83
+src/lib/manualTestRunPeriod.ts
+  s_28584ca6c1ae32::t_e001e6e74f57f6 1-190
+src/lib/manualTestRunResponseMapper.ts
+  s_28584ca6c1ae32::t_bc69615de0311a 1-83
+src/lib/mcp-token.ts
+  s_28584ca6c1ae32::t_ccf4effe40dcba 4,12,15-16,18,27-30,32,35-37,40-41,43,53-54,61
+src/lib/openapi/auth.ts
+  s_28584ca6c1ae32::t_97c0769a28ab65 222-223
+src/lib/openapi/ctrf.ts
+  s_28584ca6c1ae32::t_3093f69a0b7216 43-49,60-64,90-97,99-104,114-117,130-133,138-141,214-216,250-251,313-314
+src/lib/openapi/executions.ts
+  s_28584ca6c1ae32::t_332bd70093dcc3 63-64,116-117
+src/lib/openapi/issues.ts
+  s_28584ca6c1ae32::t_2e6e8417bec504 156-157
+src/lib/openapi/manualRunEnvironmentProfiles.ts
+  s_28584ca6c1ae32::t_7d605074fc3bef 8-62,65-75,77-79,85-146
+src/lib/openapi/manualTestRuns.ts
+  s_28584ca6c1ae32::t_6f619736339f22 5-6,11,13-16,18-28,31-34,36,38,44-87,90,92,100,107,111-118,120-123,130-133,135-148,164-202,209-225,227,229,231,237,239,242-243,245,248-249,251-253,256-271,273-280,282,285-286,288-290,293-303,308-312,314-326,328-331,334-357,361,363,366,371,374,377-381,385,387-388,392,397,401,403-404,408-409,413,417,420,423-428,431-437,439-440,442,446,449-454,458,460,462,464,467-472,475-476,478,480,482,485-490,494,496,500,503-518,520-526,528-585,593
+src/lib/openapi/prompts.ts
+  s_28584ca6c1ae32::t_1355319e554ca7 23-29,45-46,49-56
+src/lib/openapi/reports.ts
+  s_28584ca6c1ae32::t_93ccaad31ed294 98-101,115-117,181-182
+src/lib/openapi/resultErrors.ts
+  s_28584ca6c1ae32::t_ff845fc9a59adb 156
+src/lib/openapi/results.ts
+  s_28584ca6c1ae32::t_b183d2717ab76e 120-122
+src/lib/openapi/security.ts
+  s_28584ca6c1ae32::t_e5e7b0cd710623 25-26
+src/lib/openapi/skills.ts
+  s_28584ca6c1ae32::t_f55f9bf89916d9 52-56,62-63,107-108,120-121,161-162,186-187,205-206
+src/lib/openapi/specs.ts
+  s_28584ca6c1ae32::t_19d8ae9ed3f90f 113-114
+src/lib/openapi/testScenarios.ts
+  s_28584ca6c1ae32::t_803bc0a6949ae6 30-40,42,46,85,88-91,111,113,132,137-155,160-194,240-260,262-264,266-270,272-273,275-322,335-336,348-424,431-434,440-443,449-452,467,470-471,474-529,540,553,558-597,611,617-620,624-645,647,650-667,832-847,925,947-949,1204-1206,1256-1303,1418,1430-1431,1435-1438,1477-1501
+src/lib/openapi/uploadApiKey.ts
+  s_28584ca6c1ae32::t_47f7e0a71fd17a 29-31,76-79,110-111,204-205
+src/lib/openapi/users.ts
+  s_28584ca6c1ae32::t_11d3d014be3271 328-329,416-417,422-423,446-447,504-505,508
+src/lib/playwrightDiagnostics.ts
+  s_28584ca6c1ae32::t_da6914a40b3b26 108-110,151-152
+src/lib/resultErrorModalContext.ts
+  s_28584ca6c1ae32::t_8b0a23fcd1210a 29,37,71
+src/lib/skills/skillPackage.ts
+  s_28584ca6c1ae32::t_e73cce8c59f64a 12,91-93,166-168,205-207,236-238,244-246,279-281,324,410,659
+src/lib/testScenarioMarkdown.ts
+  s_28584ca6c1ae32::t_977a0647b2dcb6 28-30,44-49,61-67,86-89
+src/mcp/actionDiscovery.ts
+  s_28584ca6c1ae32::t_119832f81dbee2 128-130
+src/mcp/middleware/auth.ts
+  s_28584ca6c1ae32::t_899bc69d0e7399 87-90
+src/mcp/normalizePromptRequest.ts
+  s_28584ca6c1ae32::t_06a10daceeb145 4-7,12-17
+src/mcp/prompts/documentation-architect/v1.0.0.ts
+  s_28584ca6c1ae32::t_e8ea705ed22072 110-117,158-159,169-171,175-177,181-183,187-189,193-195,197
+src/mcp/prompts/environment-performance-assistant/v1.0.0.ts
+  s_28584ca6c1ae32::t_9f5191cbdd3e60 217-218,225-229,233-235,239-241,243
+src/mcp/prompts/issue-analysis-assistant/v1.0.0.ts
+  s_28584ca6c1ae32::t_975610ae9997d8 204-208,218
+src/mcp/schemas/ctrfSchemas.ts
+  s_28584ca6c1ae32::t_db06b776e85760 12-15,18-30,32-45,47-58,65-166,168-169,177-260
+src/mcp/schemas/issueSchemas.ts
+  s_28584ca6c1ae32::t_8d3f1a76ffad66 50-52
+src/mcp/schemas/testScenarioSchemas.ts
+  s_28584ca6c1ae32::t_90e1fc89c15246 28,50-62,145,201-203
+src/mcp/tools/assumptions.ts
+  s_28584ca6c1ae32::t_0a7eb656acad30 74-77
+src/mcp/tools/executions.ts
+  s_28584ca6c1ae32::t_1242a595a7b8d8 20-23
+src/mcp/tools/manual-run-environment-profiles.ts
+  s_28584ca6c1ae32::t_c840b3d0f35939 6-17,19-56
+src/mcp/tools/result-errors.ts
+  s_28584ca6c1ae32::t_608da917f7cf69 86-89
+src/middleware/json-body.ts
+  s_28584ca6c1ae32::t_0978c7d1ebfa64 1-44
+src/models/assumptionModel.ts
+  s_28584ca6c1ae32::t_b5f9d28f2721ca 35-38
+src/models/manualRunEnvironmentProfileModel.ts
+  s_28584ca6c1ae32::t_5f3cc01e1bf9af 6-9,13-15,18-21,23-42,44-64,67-69
+src/models/manualTestRunCreationModel.ts
+  s_28584ca6c1ae32::t_7f37522ab31f41 1-376
+src/models/manualTestRunLifecycleModel.ts
+  s_28584ca6c1ae32::t_a89b06385e12e4 1-179
+src/models/manualTestRunMutationModel.ts
+  s_28584ca6c1ae32::t_538c1ec32f14b0 4,6-9,13,15-19,22-23,25-46,49-50,52,54-59,62-68,71-73,75-76,81-82,85-86,88,90-94,97-110,113-115,117-146,148-192,194-196,199-200,202-252,254-270,272-281,284-334,336-342,345-351,353-361,364-368,372-373,375-380,382-402,406-408,410-414,416-424,426,428-429,433-434,436-439,442-446,449-452,454-455,459-460,462-472,474-491,493-510,512
+src/models/skillModel.ts
+  s_28584ca6c1ae32::t_fd8886d833ec28 190
+src/models/testScenarioEditorModel.ts
+  s_28584ca6c1ae32::t_007347825a28bd 1-139
+src/models/testScenarioModel.ts
+  s_28584ca6c1ae32::t_11d0786e45f084 4,16,19-20,25-33,42-54,68,84-101,104-233,243-250,253-264,284-317,332,350-353,375,408,411,416-417,427-428,439-441,448-451,481,487-489,493,518-523,534,538,552-560,569-573,598-617,619-628,632,634-639,642-657,671-775,778-787,827-854,856-859,866-878,884-898,905,933-934,938,968-969,973,1000-1001,1005,1039-1040,1045
+src/models/testScenarioOrganizationErrors.ts
+  s_28584ca6c1ae32::t_a15eb2102ef888 1-12
+src/models/testScenarioOrganizationWrites.ts
+  s_28584ca6c1ae32::t_754b5ea9399a00 1-1137
+src/models/testScenarioSpecLinkModel.ts
+  s_28584ca6c1ae32::t_e454fc880bdf96 4
+src/models/testScenarioTransactions.ts
+  s_28584ca6c1ae32::t_12227e4dcb557e 1-73
+src/models/uploadApiKeyModel.ts
+  s_28584ca6c1ae32::t_6132997dedc3eb 46-48
+src/models/userModel.ts
+  s_28584ca6c1ae32::t_d3a572a4ac21a5 37-40
+src/routes/assumptions.ts
+  s_28584ca6c1ae32::t_9b8016f150f10d 10-14
+src/routes/executions.ts
+  s_28584ca6c1ae32::t_61f1e1a0ae8848 10-19
+src/routes/manual-run-environment-profiles.ts
+  s_28584ca6c1ae32::t_c6f310b59b5a64 9-28
+src/routes/manual-test-runs.ts
+  s_28584ca6c1ae32::t_c8b571342ad331 4-11,13,16,18-19,21-26,29,31,34,36,38,41,43-44,46-47,50-67,69,72,74,79-84
+src/routes/test-scenario-organization.ts
+  s_28584ca6c1ae32::t_0676e5ee0b06fc 10-34,38-87
+src/routes/test-scenarios.ts
+  s_28584ca6c1ae32::t_d6650d130513dd 5-8,13-23,25,28,30
+src/routes/upload.ts
+  s_28584ca6c1ae32::t_c840af7fde84e2 11-15,21-25
+src/schemas/errorFormatterSchemas.ts
+  s_28584ca6c1ae32::t_f8b74ffedf9100 30-32
+src/schemas/manualRunEnvironmentProfileSchemas.ts
+  s_28584ca6c1ae32::t_da4906cc64acf6 6-18,25-40
+src/schemas/testScenarioIntegrationSchemas.ts
+  s_28584ca6c1ae32::t_6812008c5786f8 42-43
+src/schemas/testScenarioOrganizationSchemas.ts
+  s_28584ca6c1ae32::t_02f66ceb1400ca 8-13,15-243
+src/schemas/testScenarioSchemas.ts
+  s_28584ca6c1ae32::t_a4f892703699de 5-8,12-32,35-49,58-76,85,88-89,102,104-113,118-133,181,187-191,195-219,221-224,228-303
+src/services/assumptionService.ts
+  s_28584ca6c1ae32::t_687e3c98242cb3 89,209-212
+src/services/authProviderService.ts
+  s_28584ca6c1ae32::t_34671311427174 153-155,198-200,211-213
+src/services/ctrfService.ts
+  s_28584ca6c1ae32::t_8d5731be40a15c 193-198,201-206,210-223,227-246,248,260-262,264-269,304
+src/services/dashboardService.ts
+  s_28584ca6c1ae32::t_4b8b126844f473 319-332
+src/services/executionService.ts
+  s_28584ca6c1ae32::t_a40db2ec3aea0b 21-24,33-37
+src/services/insightsService.ts
+  s_28584ca6c1ae32::t_7c9c7b88ecd627 81-84,93-95
+src/services/issueService.ts
+  s_28584ca6c1ae32::t_d7306e713789ee 4,107,230,264,322-330
+src/services/jsonReportService.ts
+  s_28584ca6c1ae32::t_4a7cfac9cea78c 370-373,375-376,392,529-532,534-535
+src/services/manualRunEnvironmentProfileService.ts
+  s_28584ca6c1ae32::t_f6ebd0ab765b59 5-8,29-33,39-41
+src/services/manualTestRunCreationService.ts
+  s_28584ca6c1ae32::t_2565ab2be67e10 1-116
+src/services/manualTestRunLifecycleService.ts
+  s_28584ca6c1ae32::t_634421f51c5b64 1-96
+src/services/manualTestRunMutationService.ts
+  s_28584ca6c1ae32::t_0c669f5082891b 1-255
+src/services/pdfBuilderService.ts
+  s_28584ca6c1ae32::t_15b6a5c3c28dc8 71-73,76,100,150-153
+src/services/projectService.ts
+  s_28584ca6c1ae32::t_0159d5dde39170 90-92
+src/services/resultErrorService.ts
+  s_28584ca6c1ae32::t_481bc6a658f8e1 6-10,168-170,444,471
+src/services/resultService.ts
+  s_28584ca6c1ae32::t_fdc409265fa5b4 129
+src/services/skillArtifactService.ts
+  s_28584ca6c1ae32::t_e839e344d2efe5 40,146,276-278
+src/services/testScenarioIntegrationService.ts
+  s_28584ca6c1ae32::t_2330ced57adcf0 11,31
+src/services/testScenarioOrganizationService.ts
+  s_28584ca6c1ae32::t_6b5ce924cadd9e 5-14,16-23,25,30-35,37-43,46-50,53-55,57-59,61-62,64-66,71,74-90,97-103,107-113,115-170,172-173,176-183,185-201,204-265,270,272-278,280-288,290-303,306-311,314-322,324-327,329-332,335-347,351-380,383-432
+src/services/testScenarioService.ts
+  s_28584ca6c1ae32::t_1a3b90e4730bb6 4-15,38,51-53,55-58,65-68,120-134,162-165,167-168,216-235,251,255-256,259-260,274-276,279,288,306-307,309-315,321-322,330-361,370-377,380-386,398-406,413-415,428-647,670-674,678-700,706-721,736-737,753,757-758,766,787,791-792,807,825-826,829,845-846
+src/types/database.ts
+  s_28584ca6c1ae32::t_52392b832245e1 179-180
+src/types/testScenarioOrganization.ts
+  s_28584ca6c1ae32::t_9105bd3a833d9c 1-72
+src/types/testScenarios.ts
+  s_28584ca6c1ae32::t_16c22d888050c0 24,28,30-33,55,57,69,93-94,98-108,124,132,141,148,163-169,180-181,252-261
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "afc95f7a7a68fc6802c90059fcbc03bb895fa622",
+  "prompts": {},
+  "humans": {
+    "h_a7ee58a11b75fb": {
+      "author": "Ihar Mikailau <ihar.mikailau@ventionteams.com>"
+    }
+  },
+  "sessions": {
+    "s_28584ca6c1ae32": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a20861-f19b-7561-b1ba-76f5d8852461",
+        "model": "gpt-6.2-sol"
+      },
+      "human_author": "Ihar Mikailau <ihar.mikailau@ventionteams.com>"
+    }
+  }
+}
