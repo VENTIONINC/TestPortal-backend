@@ -68,13 +68,12 @@ function resolveCoverLogoPath(): string | null {
     path.resolve(process.cwd(), "dist/src/assets/pdf/watermark.png"),
   ].filter((candidatePath): candidatePath is string => Boolean(candidatePath));
 
-  return candidatePaths.find((candidatePath) => fs.existsSync(candidatePath)) ?? null;
+  return (
+    candidatePaths.find((candidatePath) => fs.existsSync(candidatePath)) ?? null
+  );
 }
 
-function drawCoverLogo(
-  doc: PDFKit.PDFDocument,
-  logoPath: string | null,
-): void {
+function drawCoverLogo(doc: PDFKit.PDFDocument, logoPath: string | null): void {
   if (!logoPath) {
     return;
   }
@@ -98,8 +97,7 @@ function ensureVerticalSpace(
   doc: PDFKit.PDFDocument,
   requiredHeight: number,
 ): void {
-  const availableHeight =
-    doc.page.height - getBottomMargin(doc) - doc.y;
+  const availableHeight = doc.page.height - getBottomMargin(doc) - doc.y;
 
   if (availableHeight < requiredHeight) {
     doc.addPage();

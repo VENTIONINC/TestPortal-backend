@@ -1,0 +1,1 @@
+DROP INDEX "ManualTestRunScenarioStep_manualTestRunScenarioId_idx";

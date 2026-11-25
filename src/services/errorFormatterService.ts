@@ -43,13 +43,14 @@ export const errorFormatterService = {
 
       const client = clientOverride ?? createGenerativeAiClient("formatting");
 
-      const structuredModel = client.model.withStructuredOutput<ErrorFormatterOutput>(
-        errorFormatterSchema,
-        {
-        name: "error_formatter_response",
-        includeRaw: true,
-        },
-      );
+      const structuredModel =
+        client.model.withStructuredOutput<ErrorFormatterOutput>(
+          errorFormatterSchema,
+          {
+            name: "error_formatter_response",
+            includeRaw: true,
+          },
+        );
 
       const userContent = [
         `Name: ${input.name}`,
@@ -120,13 +121,14 @@ export const errorFormatterService = {
 
       const client = createGenerativeAiClient("suggestions");
 
-      const structuredModel = client.model.withStructuredOutput<ErrorSuggestionOutput>(
-        errorSuggestionSchema,
-        {
-          name: "error_solution_suggestion",
-          includeRaw: true,
-        },
-      );
+      const structuredModel =
+        client.model.withStructuredOutput<ErrorSuggestionOutput>(
+          errorSuggestionSchema,
+          {
+            name: "error_solution_suggestion",
+            includeRaw: true,
+          },
+        );
 
       const prompt = ChatPromptTemplate.fromMessages([
         ["system", errorSolutionSystemPrompt],

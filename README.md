@@ -50,6 +50,12 @@ npm install
 cp .env.example .env
 ```
 
+The install activates the versioned Husky pre-commit hook in a developer Git
+checkout. To reactivate it, run `npm run prepare` and confirm
+`git config --local --get core.hooksPath` returns `.husky/_`. The hook runs
+`npm run type-check`, `npm run lint`, and `npm run test:unit -- --ci`.
+Run `npm run db:generate` first if Prisma types are missing.
+
 ### 2. Configure local authentication and database access
 
 The example configuration targets the bundled PostgreSQL service:

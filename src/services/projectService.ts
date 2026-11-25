@@ -87,7 +87,9 @@ export const projectService = {
     ) as ProjectWithCategoryWeights[];
   },
 
-  async createProject(params: CreateProjectParams): Promise<ProjectWithDetails> {
+  async createProject(
+    params: CreateProjectParams,
+  ): Promise<ProjectWithDetails> {
     // Check if project name already exists
     const existingProject = await projectModel.findByName(params.name);
     if (existingProject) {

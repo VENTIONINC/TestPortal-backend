@@ -113,11 +113,13 @@ const RelatedTestScenarioSummarySchema = z
   .object({
     id: z.string().uuid(),
     title: z.string(),
-    scenarioKey: z.string().max(100).nullable(),
+    scenarioKey: z.string().max(100),
     details: z.string().nullable(),
     contentMd: z
       .string()
-      .describe("Current generated Test Scenario Markdown returned as JSON text"),
+      .describe(
+        "Current generated Test Scenario Markdown returned as JSON text",
+      ),
   })
   .strict()
   .openapi("RelatedTestScenarioSummary");

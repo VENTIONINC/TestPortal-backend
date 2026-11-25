@@ -234,8 +234,8 @@ returned using the standard MCP error response with `isError: true`.
 #### `create-test-scenario`
 
 - **Source File:** `src/mcp/tools/test-scenarios.ts`
-- **Parameters:** Required `projectId` and nonblank `title`; optional `folderId`, `scenarioKey`, `details`, `preconditions`, `testData`, and initial `steps` (`action`, optional `expectedResult`).
-- **Metadata:** `priority` accepts `low`, `medium`, `high`, or null. `relatedIssueUrl` accepts an absolute HTTP(S) URL (trimmed) or null. Omitted metadata defaults to null.
+- **Parameters:** Required `projectId` and nonblank `title`; optional `folderId`, `details`, `preconditions`, `testData`, and initial `steps` (`action`, optional `expectedResult`).
+- **Metadata:** `priority` accepts `low`, `medium`, or `high`; null is rejected. `relatedIssueUrl` accepts an absolute HTTP(S) URL (trimmed) or null. Omitted priority defaults to medium; omitted related issue URL defaults to null.
 - **Authentication:** The creator is bound to the authenticated MCP session owner. Caller-supplied `createdById` is rejected, and resumed sessions validate that the authenticated token still belongs to the session owner.
 - **Response:** Complete persisted scenario with generated Markdown, nullable metadata, and ordered steps. Uses the same creation service and project/folder checks as REST.
 
@@ -251,7 +251,7 @@ returned using the standard MCP error response with `isError: true`.
   - `createdById` (optional): Creator UUID filter. Resolve a `Me` control to the authenticated user's UUID client-side.
   - `sort` (optional): `recently_created` (default, `createdAt DESC, id DESC`), `recently_updated` (`updatedAt DESC, id DESC`), or `title_asc` (`title ASC, id ASC` under database collation)
 - Filtering is applied before pagination, so `total` and `totalPages` count matching scenarios. Invalid search types, creator UUIDs, and sort values are input validation errors. A valid creator UUID with no matching scenarios returns an empty result. A client resolving a `Me` control sends the authenticated user's UUID.
-- **Response:** Pagination envelope containing `scenarios`, `total`, `page`, `limit`, and `totalPages`. Each summary contains exactly `id`, `projectId`, `createdById`, `title`, nullable `scenarioKey`, `details`, `createdBy`, `createdAt`, and `updatedAt`. `createdBy` contains only `id`, `name`, and `email`; `contentMd` and all other User fields are omitted from the list query and response.
+- **Response:** Pagination envelope containing `scenarios`, `total`, `page`, `limit`, and `totalPages`. Each summary contains exactly `id`, `projectId`, `createdById`, `title`, generated `scenarioKey`, `details`, `createdBy`, `createdAt`, and `updatedAt`. `createdBy` contains only `id`, `name`, and `email`; `contentMd` and all other User fields are omitted from the list query and response.
 
 #### `get-test-scenario`
 
@@ -264,7 +264,7 @@ returned using the standard MCP error response with `isError: true`.
   - `resultLimit` (optional): Result evidence limit from 1 through 100 (default: 30)
   - `issuePage` (optional): Positive integer observed-Issue evidence page (default: 1)
   - `issueLimit` (optional): Observed-Issue evidence limit from 1 through 100 (default: 30)
-- **Response:** `{ scenario, resultEvidence, issueEvidence }`. `scenario` includes nullable `scenarioKey`, `details`, `priority`, and `relatedIssueUrl`, structured fields, ordered stable-ID `steps`, exact generated `contentMd`, `contentMdHash`, and `contentMdFormatVersion`. Each evidence envelope contains its scenario/project IDs, `linkedSpecCount`, collection, `total`, `page`, `limit`, and `totalPages`. Result evidence is derived from Results belonging to linked same-project Specs; Issue evidence is deduplicated from observed Issues.
+- **Response:** `{ scenario, resultEvidence, issueEvidence }`. `scenario` includes generated `scenarioKey`, `details`, `priority`, and `relatedIssueUrl`, structured fields, ordered stable-ID `steps`, exact generated `contentMd`, `contentMdHash`, and `contentMdFormatVersion`. Each evidence envelope contains its scenario/project IDs, `linkedSpecCount`, collection, `total`, `page`, `limit`, and `totalPages`. Result evidence is derived from Results belonging to linked same-project Specs; Issue evidence is deduplicated from observed Issues.
 
 #### `update-test-scenario`
 
@@ -274,8 +274,8 @@ returned using the standard MCP error response with `isError: true`.
   - `scenarioId` (required): Test Scenario UUID
   - `projectId` (required): Owning project UUID
   - `title`, `details`, `preconditions`, or `testData` (optional): Structured field updates; text is trimmed and `null` clears nullable fields
-  - `scenarioKey` (optional): Editable single-line label of 1–100 characters after trimming. `null` clears it; duplicate labels are allowed. UUIDs remain scenario identifiers, and a key-only update preserves generated Markdown, its hash, and its format version.
-- `priority` (optional): `low`, `medium`, `high`, or null; omitted values are preserved and null clears.
+  - `scenarioKey` is immutable, generated as `TMS-N` per project and rejected as input.
+- `priority` (optional): `low`, `medium`, or `high`; omitted values are preserved and null is rejected.
 - `relatedIssueUrl` (optional): Trimmed absolute HTTP(S) URL or null, with the same preserve/clear semantics.
 - **Response:** The complete persisted Test Scenario, including structured fields, ordered steps, exact generated `contentMd`, hash, and format version. At least one editable field is required; omitted fields are preserved. `contentMd`, projection metadata, and steps are rejected as inputs. Creation identity and project ownership cannot be changed.
 
@@ -311,3 +311,5 @@ All tools return standardized responses using the `createSuccessResponse` helper
 ---
 
 _The tool registration in `src/mcp/server.ts` and each tool definition under `src/mcp/tools/` are the source of truth for the available tools and their behavior._
+
+Scenario detail responses include `revision`, `createdBy`, nullable `updatedBy` (safe `id`, `name`, `email` only), and `suites` (`id`, `name`). Creation attributes both actors to the authenticated user; legacy latest updater remains unknown. MCP field and REST standalone step mutations advance the same revision as the REST editor. Actor IDs are derived from authenticated transport, never caller input. Full editor collection saves are exposed by REST PATCH; no new MCP editor tool is introduced.

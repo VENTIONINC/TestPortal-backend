@@ -18,7 +18,6 @@ export interface TestScenarioMarkdownSource {
   preconditions: string | null;
   testData: string | null;
   steps: readonly TestScenarioMarkdownStep[];
-
 }
 
 function normalizeLineEndings(value: string): string {
@@ -26,7 +25,9 @@ function normalizeLineEndings(value: string): string {
 }
 
 function escapeTitle(value: string): string {
-  return normalizeLineEndings(value).replace(/[\r\n]+/g, " ").replace(/([\\`*_{}[\]()#+.!|>~-])/g, "\\$1");
+  return normalizeLineEndings(value)
+    .replace(/[\r\n]+/g, " ")
+    .replace(/([\\`*_{}[\]()#+.!|>~-])/g, "\\$1");
 }
 
 function section(title: string, value: string): string[] {
@@ -40,7 +41,12 @@ export function renderTestScenarioMarkdown(
 
   const optionalSections: Array<[string, string | null]> = [
     ["Details", source.details],
-    ["Priority", source.priority === null ? null : ({ low: "Low", medium: "Medium", high: "High" })[source.priority]],
+    [
+      "Priority",
+      source.priority === null
+        ? null
+        : { low: "Low", medium: "Medium", high: "High" }[source.priority],
+    ],
     ["Related issue URL", source.relatedIssueUrl],
   ];
 
@@ -52,8 +58,13 @@ export function renderTestScenarioMarkdown(
 
   if (source.preconditions !== null || source.testData !== null) {
     const setup = ["## Test setup"];
-    if (source.preconditions !== null) setup.push("### Preconditions", normalizeLineEndings(source.preconditions));
-    if (source.testData !== null) setup.push("### Test data", normalizeLineEndings(source.testData));
+    if (source.preconditions !== null)
+      setup.push(
+        "### Preconditions",
+        normalizeLineEndings(source.preconditions),
+      );
+    if (source.testData !== null)
+      setup.push("### Test data", normalizeLineEndings(source.testData));
     blocks.push(setup);
   }
 
@@ -72,7 +83,10 @@ export function renderTestScenarioMarkdown(
   }
   blocks.push(stepLines);
 
-  return `${blocks.map((block) => block.join("\n")).join("\n\n").replace(/\n+$/, "")}\n`;
+  return `${blocks
+    .map((block) => block.join("\n"))
+    .join("\n\n")
+    .replace(/\n+$/, "")}\n`;
 }
 
 export function hashTestScenarioMarkdown(contentMd: string): string {

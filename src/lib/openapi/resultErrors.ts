@@ -153,10 +153,7 @@ const ResultErrorModalContextSchema = z
       environment: z.string(),
     }),
     assignments: z.object({
-      confirmed: z.union([
-        z.object(resultErrorModalAssignmentShape),
-        z.null(),
-      ]),
+      confirmed: z.union([z.object(resultErrorModalAssignmentShape), z.null()]),
       suggestions: z.array(ResultErrorModalAssignmentSchema),
     }),
   })
@@ -294,7 +291,6 @@ export function registerResultErrorRoutes(registry: OpenAPIRegistry) {
     tags: ["Result Errors"],
     security: [{ BearerAuth: [] }],
   });
-
 
   registry.registerPath({
     method: "patch",

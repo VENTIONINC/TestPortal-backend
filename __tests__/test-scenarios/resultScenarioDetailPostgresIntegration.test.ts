@@ -158,7 +158,7 @@ describePostgres("Result detail related Test Scenario PostgreSQL lifecycle", () 
       {
         id: originalScenario.id,
         title: "Original scenario",
-        scenarioKey: null,
+        scenarioKey: originalScenario.scenarioKey,
         details: "Original details",
         contentMd: originalScenario.contentMd,
       },
@@ -176,7 +176,7 @@ describePostgres("Result detail related Test Scenario PostgreSQL lifecycle", () 
       {
         id: originalScenario.id,
         title: "Edited scenario",
-        scenarioKey: null,
+        scenarioKey: editedScenario.scenarioKey,
         details: "Current details",
         contentMd: editedScenario.contentMd,
       },
@@ -212,7 +212,7 @@ describePostgres("Result detail related Test Scenario PostgreSQL lifecycle", () 
       {
         id: secondScenario.id,
         title: "Second scenario",
-        scenarioKey: null,
+        scenarioKey: secondScenario.scenarioKey,
         details: null,
         contentMd: secondScenario.contentMd,
       },

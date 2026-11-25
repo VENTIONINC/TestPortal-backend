@@ -105,8 +105,9 @@ export const normalizePlaywrightAttempt = (
       : []),
   ].filter(
     (error, index, errors) =>
-      errors.findIndex((candidate) => errorIdentity(candidate) === errorIdentity(error)) ===
-      index,
+      errors.findIndex(
+        (candidate) => errorIdentity(candidate) === errorIdentity(error),
+      ) === index,
   );
 
   const rawError = asRecord(attempt.error);
@@ -147,7 +148,8 @@ export const normalizePlaywrightAttempt = (
       typeof attempt.startTime === "string" || attempt.startTime instanceof Date
         ? attempt.startTime
         : new Date(0).toISOString(),
-    workerIndex: typeof attempt.workerIndex === "number" ? attempt.workerIndex : 0,
+    workerIndex:
+      typeof attempt.workerIndex === "number" ? attempt.workerIndex : 0,
     errors: ordered,
   };
 };

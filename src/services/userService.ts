@@ -389,7 +389,9 @@ export const userService = {
       }
 
       return this.createAuthResponse(this.assertActiveUser(user), {
-        ...(cognitoResult.session ? { cognitoSession: cognitoResult.session } : {}),
+        ...(cognitoResult.session
+          ? { cognitoSession: cognitoResult.session }
+          : {}),
       });
     } catch (error) {
       throw new Error(`Cognito login failed: ${(error as Error).message}`);
@@ -464,7 +466,11 @@ export const userService = {
         return user;
       }
 
-      return await userModel.update(userId, { status: UserStatus.suspended }, tx);
+      return await userModel.update(
+        userId,
+        { status: UserStatus.suspended },
+        tx,
+      );
     });
   },
 
@@ -507,13 +513,13 @@ export const userService = {
 
   async upsertLocalAdmin(params: CreateUserParams): Promise<PrismaUser> {
     if (!params.name || !params.email || !params.password) {
-      throw new UserServiceError(
-        "Name, email, and password are required",
-        400,
-      );
+      throw new UserServiceError("Name, email, and password are required", 400);
     }
 
-    const passwordHash = await argon2.hash(params.password, PASSWORD_HASH_OPTIONS);
+    const passwordHash = await argon2.hash(
+      params.password,
+      PASSWORD_HASH_OPTIONS,
+    );
 
     return await dbClient.$transaction(async (tx) => {
       const existingUser = await userModel.findByEmail(params.email, tx);

@@ -40,7 +40,7 @@ import {
   deleteTestScenario,
   getTestScenario,
   listTestScenarios,
-  updateTestScenario,
+  createUpdateTestScenarioTool,
 } from "@/mcp/tools/test-scenarios";
 import { getAvailableProjects } from "@/mcp/tools/projects";
 import * as testPortalAssistant from "@/mcp/prompts/test-portal-assistant/v1.0.0";
@@ -180,6 +180,7 @@ router.post(
           createTestScenario[3],
         );
 
+        const updateTestScenario = createUpdateTestScenarioTool(reviewedById);
         // Test Scenario tools
         server.registerTool(
           listTestScenarios[0],

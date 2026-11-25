@@ -1,7 +1,18 @@
 // Copyright 2026 VENSOLUTIONSGROUP LTD
 // SPDX-License-Identifier: Apache-2.0
 
-import { testScenarioPrioritySchema, testScenarioRelatedIssueUrlSchema } from "@/schemas/testScenarioSchemas";
+import {
+  editorStepSchema,
+  scenarioSuiteIdsSchema,
+  scenarioNewSuitesSchema,
+  testScenarioPrioritySchema,
+  testScenarioRelatedIssueUrlSchema,
+} from "@/schemas/testScenarioSchemas";
+import type {
+  TestScenarioAuthorsQuery,
+  TestScenarioPriorityCountsQuery,
+  TestScenarioSelectionQuery,
+} from "@/schemas/testScenarioSchemas";
 import { projectModel } from "@/models/projectModel";
 import { testScenarioModel } from "@/models/testScenarioModel";
 import {
@@ -24,10 +35,10 @@ import {
 const DEFAULT_PAGE = 1;
 const DEFAULT_LIMIT = 30;
 const MAX_LIMIT = 100;
+const PRIORITY_FILTER_PATTERN = /^(low|medium|high)(,(low|medium|high))*$/;
 const UUID_PATTERN =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const SCENARIO_FIELDS = [
-  "scenarioKey",
   "title",
   "details",
   "preconditions",
@@ -37,17 +48,24 @@ const SCENARIO_FIELDS = [
 ] as const;
 const IDENTIFIER_FIELDS = ["scenarioId", "projectId"] as const;
 
-function normalizePriority(value: unknown): NonNullable<CreateTestScenarioParams["priority"]> | null {
-  if (value === null) return null;
+function normalizePriority(
+  value: unknown,
+): NonNullable<CreateTestScenarioParams["priority"]> {
   const parsed = testScenarioPrioritySchema.safeParse(value);
-  if (!parsed.success) throw new TestScenarioValidationError("priority must be low, medium, high or null");
+  if (!parsed.success)
+    throw new TestScenarioValidationError(
+      "priority must be low, medium or high",
+    );
   return parsed.data;
 }
 
 function normalizeRelatedIssueUrl(value: unknown): string | null {
   if (value === null) return null;
   const parsed = testScenarioRelatedIssueUrlSchema.safeParse(value);
-  if (!parsed.success) throw new TestScenarioValidationError("relatedIssueUrl must be an absolute HTTP(S) URL or null");
+  if (!parsed.success)
+    throw new TestScenarioValidationError(
+      "relatedIssueUrl must be an absolute HTTP(S) URL or null",
+    );
   return parsed.data;
 }
 
@@ -81,18 +99,6 @@ function normalizeUpdateOptional(value: unknown, label: string): string | null {
   return normalizeNonBlank(value, label);
 }
 
-function normalizeKey(value: unknown, label: string): string | null {
-  if (value === null) return null;
-  if (typeof value !== "string") {
-    throw new TestScenarioValidationError(`${label} must be a string or null`);
-  }
-  const normalized = value.trim();
-  if (!normalized || normalized.length > 100 || /[\r\n]/.test(normalized)) {
-    throw new TestScenarioValidationError(`${label} must be a nonblank single-line value of at most 100 characters`);
-  }
-  return normalized;
-}
-
 function validatePagination(page: number, limit: number): void {
   if (!Number.isInteger(page) || page < 1) {
     throw new TestScenarioValidationError("page must be a positive integer");
@@ -109,6 +115,21 @@ function requireUuid(value: unknown, label: string): asserts value is string {
   if (typeof value !== "string" || !UUID_PATTERN.test(value)) {
     throw new TestScenarioValidationError(`${label} must be a valid UUID`);
   }
+}
+
+function normalizeCreatorIds(value: unknown): string | undefined {
+  if (value === undefined) return undefined;
+  if (typeof value !== "string" || !value) {
+    throw new TestScenarioValidationError(
+      "Creator IDs must be a comma-separated list of UUIDs",
+    );
+  }
+  const ids = value.split(",");
+  ids.forEach((id) => requireUuid(id, "Creator ID"));
+  if (new Set(ids.map((id) => id.toLowerCase())).size !== ids.length) {
+    throw new TestScenarioValidationError("Creator IDs must be unique");
+  }
+  return ids.join(",");
 }
 
 function normalizeSearch(value: unknown): string | undefined {
@@ -138,9 +159,13 @@ function normalizeSort(value: unknown): TestScenarioSort {
   return value as TestScenarioSort;
 }
 
-function normalizeColumnFilter(value: unknown, label: string): string | undefined {
+function normalizeColumnFilter(
+  value: unknown,
+  label: string,
+): string | undefined {
   if (value === undefined) return undefined;
-  if (typeof value !== "string") throw new TestScenarioValidationError(`${label} must be a string`);
+  if (typeof value !== "string")
+    throw new TestScenarioValidationError(`${label} must be a string`);
   return value.trim() || undefined;
 }
 
@@ -188,6 +213,26 @@ function validateCreateSteps(
   });
 }
 
+function normalizeSuites(params: {
+  suiteIds?: string[] | undefined;
+  newSuites?: Array<{ name: string }> | undefined;
+}): { suiteIds?: string[]; newSuites?: Array<{ name: string }> } {
+  const ids = scenarioSuiteIdsSchema.optional().safeParse(params.suiteIds);
+  const names = scenarioNewSuitesSchema.optional().safeParse(params.newSuites);
+  if (!ids.success || !names.success)
+    throw new TestScenarioValidationError(
+      "Invalid suite selection or duplicate suite names",
+    );
+  return {
+    ...(ids.data !== undefined ? { suiteIds: ids.data } : {}),
+    ...(names.data !== undefined ? { newSuites: names.data } : {}),
+  };
+}
+
+async function scenarioWrite<T>(write: () => Promise<T>): Promise<T> {
+  return await write();
+}
+
 function scenarioNotFound(scenarioId: string): TestScenarioNotFoundError {
   return new TestScenarioNotFoundError(
     `Test scenario with id '${scenarioId}' not found`,
@@ -203,11 +248,16 @@ export const testScenarioService = {
       "title",
       "folderId",
       "createdById",
+      "priority",
       "folderId",
       ...SCENARIO_FIELDS.filter((field) => field !== "title"),
       "steps",
+      "suiteIds",
+      "newSuites",
     ]);
     requireIdentifier(params.projectId, "Project ID");
+    if ("actorId" in params && params.actorId !== undefined)
+      requireUuid(params.actorId, "Updater ID");
     requireIdentifier(params.createdById, "Creator ID");
 
     const data: CreateTestScenarioParams = {
@@ -215,16 +265,18 @@ export const testScenarioService = {
       createdById: params.createdById,
       folderId: params.folderId ?? null,
       title: normalizeNonBlank(params.title, "Title"),
-      scenarioKey: params.scenarioKey === undefined ? null : normalizeKey(params.scenarioKey, "Scenario key"),
       details: normalizeCreateOptional(params.details, "Details") ?? undefined,
       preconditions:
         normalizeCreateOptional(params.preconditions, "Preconditions") ??
         undefined,
       testData:
         normalizeCreateOptional(params.testData, "Test data") ?? undefined,
-      priority: normalizePriority(params.priority ?? null),
+      priority: normalizePriority(
+        params.priority === undefined ? "medium" : params.priority,
+      ),
       relatedIssueUrl: normalizeRelatedIssueUrl(params.relatedIssueUrl ?? null),
       steps: validateCreateSteps(params.steps),
+      ...normalizeSuites(params),
     };
 
     if (!(await projectModel.exists(data.projectId))) {
@@ -232,11 +284,8 @@ export const testScenarioService = {
         `Project with id '${data.projectId}' not found`,
       );
     }
-    if (data.folderId && !(await testScenarioModel.folderBelongsToProject(data.folderId, data.projectId))) {
-      throw new TestScenarioNotFoundError("Folder not found");
-    }
 
-    const scenario = await testScenarioModel.create(data);
+    const scenario = await scenarioWrite(() => testScenarioModel.create(data));
     if (!scenario) {
       throw new TestScenarioNotFoundError(
         `Project with id '${data.projectId}' not found`,
@@ -254,13 +303,23 @@ export const testScenarioService = {
       "limit",
       "search",
       "createdById",
+      "createdByIds",
+      "priority",
       "sort",
-      "sortField", "sortDirection", "scenarioKey", "title", "details", "folder", "createdBy",
+      "sortField",
+      "sortDirection",
+      "scenarioKey",
+      "title",
+      "details",
+      "folder",
+      "createdBy",
       "folderId",
       "includeDescendants",
       "suiteId",
     ]);
     requireIdentifier(params.projectId, "Project ID");
+    if ("actorId" in params && params.actorId !== undefined)
+      requireUuid(params.actorId, "Updater ID");
     const page = params.page ?? DEFAULT_PAGE;
     const limit = params.limit ?? DEFAULT_LIMIT;
     validatePagination(page, limit);
@@ -268,10 +327,38 @@ export const testScenarioService = {
     if (params.createdById !== undefined) {
       requireUuid(params.createdById, "Creator ID");
     }
-    if (params.sortField !== undefined && !(TEST_SCENARIO_SORT_FIELDS as readonly string[]).includes(params.sortField)) throw new TestScenarioValidationError("sortField is invalid");
-    if (params.sortDirection !== undefined && params.sortDirection !== "asc" && params.sortDirection !== "desc") throw new TestScenarioValidationError("sortDirection must be asc or desc");
-    if (params.sortDirection !== undefined && params.sortField === undefined) throw new TestScenarioValidationError("sortDirection requires sortField");
-    if (params.sortField !== undefined && params.sort !== undefined) throw new TestScenarioValidationError("sort cannot be combined with sortField");
+    const createdByIds = normalizeCreatorIds(params.createdByIds);
+    if (params.createdById !== undefined && createdByIds !== undefined) {
+      throw new TestScenarioValidationError(
+        "Use createdById or createdByIds, not both",
+      );
+    }
+    if (
+      params.priority !== undefined &&
+      !PRIORITY_FILTER_PATTERN.test(params.priority)
+    )
+      throw new TestScenarioValidationError("priority is invalid");
+    if (
+      params.sortField !== undefined &&
+      !(TEST_SCENARIO_SORT_FIELDS as readonly string[]).includes(
+        params.sortField,
+      )
+    )
+      throw new TestScenarioValidationError("sortField is invalid");
+    if (
+      params.sortDirection !== undefined &&
+      params.sortDirection !== "asc" &&
+      params.sortDirection !== "desc"
+    )
+      throw new TestScenarioValidationError(
+        "sortDirection must be asc or desc",
+      );
+    if (params.sortDirection !== undefined && params.sortField === undefined)
+      throw new TestScenarioValidationError("sortDirection requires sortField");
+    if (params.sortField !== undefined && params.sort !== undefined)
+      throw new TestScenarioValidationError(
+        "sort cannot be combined with sortField",
+      );
     const sort = normalizeSort(params.sort);
     const filters = {
       scenarioKey: normalizeColumnFilter(params.scenarioKey, "scenarioKey"),
@@ -280,10 +367,23 @@ export const testScenarioService = {
       folder: normalizeColumnFilter(params.folder, "folder"),
       createdBy: normalizeColumnFilter(params.createdBy, "createdBy"),
     };
-    if (params.folderId && params.folderId !== "unfiled" && !(await testScenarioModel.folderBelongsToProject(params.folderId, params.projectId))) {
+    if (
+      params.folderId &&
+      params.folderId !== "unfiled" &&
+      !(await testScenarioModel.folderBelongsToProject(
+        params.folderId,
+        params.projectId,
+      ))
+    ) {
       throw new TestScenarioNotFoundError("Folder not found");
     }
-    if (params.suiteId && !(await testScenarioModel.suiteBelongsToProject(params.suiteId, params.projectId))) {
+    if (
+      params.suiteId &&
+      !(await testScenarioModel.suiteBelongsToProject(
+        params.suiteId,
+        params.projectId,
+      ))
+    ) {
       throw new TestScenarioNotFoundError("Suite not found");
     }
 
@@ -295,16 +395,24 @@ export const testScenarioService = {
       ...(params.createdById !== undefined
         ? { createdById: params.createdById }
         : {}),
-      sort,
-      ...(params.sortField !== undefined ? { sortField: params.sortField } : {}),
-      ...(params.sortDirection !== undefined ? { sortDirection: params.sortDirection } : {}),
+      ...(createdByIds !== undefined ? { createdByIds } : {}),
+      ...(params.priority !== undefined ? { priority: params.priority } : {}),
+      ...(!params.suiteId || params.sort !== undefined ? { sort } : {}),
+      ...(params.sortField !== undefined
+        ? { sortField: params.sortField }
+        : {}),
+      ...(params.sortDirection !== undefined
+        ? { sortDirection: params.sortDirection }
+        : {}),
       ...(filters.scenarioKey ? { scenarioKey: filters.scenarioKey } : {}),
       ...(filters.title ? { title: filters.title } : {}),
       ...(filters.details ? { details: filters.details } : {}),
       ...(filters.folder ? { folder: filters.folder } : {}),
       ...(filters.createdBy ? { createdBy: filters.createdBy } : {}),
       ...(params.folderId !== undefined ? { folderId: params.folderId } : {}),
-      ...(params.includeDescendants !== undefined ? { includeDescendants: params.includeDescendants } : {}),
+      ...(params.includeDescendants !== undefined
+        ? { includeDescendants: params.includeDescendants }
+        : {}),
       ...(params.suiteId !== undefined ? { suiteId: params.suiteId } : {}),
     });
 
@@ -315,6 +423,226 @@ export const testScenarioService = {
       limit,
       totalPages: Math.ceil(total / limit),
     };
+  },
+
+  async listScenarioAuthors(
+    params: TestScenarioAuthorsQuery,
+  ): Promise<
+    Array<{ id: string; name: string; email: string; scenarioCount: number }>
+  > {
+    validateKeys(params as unknown as Record<string, unknown>, [
+      "projectId",
+      "search",
+      "priority",
+      "scenarioKey",
+      "title",
+      "details",
+      "folder",
+      "createdBy",
+      "folderId",
+      "includeDescendants",
+      "suiteId",
+    ]);
+    requireIdentifier(params.projectId, "Project ID");
+    if (
+      params.priority !== undefined &&
+      !PRIORITY_FILTER_PATTERN.test(params.priority)
+    )
+      throw new TestScenarioValidationError("priority is invalid");
+    const search = normalizeSearch(params.search);
+    const filters = {
+      scenarioKey: normalizeColumnFilter(params.scenarioKey, "scenarioKey"),
+      title: normalizeColumnFilter(params.title, "title"),
+      details: normalizeColumnFilter(params.details, "details"),
+      folder: normalizeColumnFilter(params.folder, "folder"),
+      createdBy: normalizeColumnFilter(params.createdBy, "createdBy"),
+    };
+    if (
+      params.folderId &&
+      params.folderId !== "unfiled" &&
+      !(await testScenarioModel.folderBelongsToProject(
+        params.folderId,
+        params.projectId,
+      ))
+    ) {
+      throw new TestScenarioNotFoundError("Folder not found");
+    }
+    if (
+      params.suiteId &&
+      !(await testScenarioModel.suiteBelongsToProject(
+        params.suiteId,
+        params.projectId,
+      ))
+    ) {
+      throw new TestScenarioNotFoundError("Suite not found");
+    }
+    if (!(await projectModel.exists(params.projectId)))
+      throw new TestScenarioNotFoundError(
+        `Project with id '${params.projectId}' not found`,
+      );
+    return await testScenarioModel.listScenarioAuthors(params.projectId, {
+      ...(search !== undefined ? { search } : {}),
+      ...(params.priority !== undefined ? { priority: params.priority } : {}),
+      ...(filters.scenarioKey ? { scenarioKey: filters.scenarioKey } : {}),
+      ...(filters.title ? { title: filters.title } : {}),
+      ...(filters.details ? { details: filters.details } : {}),
+      ...(filters.folder ? { folder: filters.folder } : {}),
+      ...(filters.createdBy ? { createdBy: filters.createdBy } : {}),
+      ...(params.folderId !== undefined ? { folderId: params.folderId } : {}),
+      ...(params.includeDescendants !== undefined
+        ? { includeDescendants: params.includeDescendants }
+        : {}),
+      ...(params.suiteId !== undefined ? { suiteId: params.suiteId } : {}),
+    });
+  },
+
+  async listScenarioPriorityCounts(
+    params: TestScenarioPriorityCountsQuery,
+  ): Promise<{
+    low: number;
+    medium: number;
+    high: number;
+    unprioritized: number;
+  }> {
+    validateKeys(params as unknown as Record<string, unknown>, [
+      "projectId",
+      "search",
+      "scenarioKey",
+      "title",
+      "details",
+      "folder",
+      "createdBy",
+      "createdById",
+      "createdByIds",
+      "folderId",
+      "includeDescendants",
+      "suiteId",
+    ]);
+    requireIdentifier(params.projectId, "Project ID");
+    if (params.createdById !== undefined)
+      requireUuid(params.createdById, "Creator ID");
+    const createdByIds = normalizeCreatorIds(params.createdByIds);
+    if (params.createdById !== undefined && createdByIds !== undefined)
+      throw new TestScenarioValidationError(
+        "Use createdById or createdByIds, not both",
+      );
+    const search = normalizeSearch(params.search);
+    const filters = {
+      scenarioKey: normalizeColumnFilter(params.scenarioKey, "scenarioKey"),
+      title: normalizeColumnFilter(params.title, "title"),
+      details: normalizeColumnFilter(params.details, "details"),
+      folder: normalizeColumnFilter(params.folder, "folder"),
+      createdBy: normalizeColumnFilter(params.createdBy, "createdBy"),
+    };
+    if (
+      params.folderId &&
+      params.folderId !== "unfiled" &&
+      !(await testScenarioModel.folderBelongsToProject(
+        params.folderId,
+        params.projectId,
+      ))
+    )
+      throw new TestScenarioNotFoundError("Folder not found");
+    if (
+      params.suiteId &&
+      !(await testScenarioModel.suiteBelongsToProject(
+        params.suiteId,
+        params.projectId,
+      ))
+    )
+      throw new TestScenarioNotFoundError("Suite not found");
+    if (!(await projectModel.exists(params.projectId)))
+      throw new TestScenarioNotFoundError(
+        `Project with id '${params.projectId}' not found`,
+      );
+    return await testScenarioModel.listScenarioPriorityCounts(
+      params.projectId,
+      {
+        ...(params.createdById !== undefined
+          ? { createdById: params.createdById }
+          : {}),
+        ...(createdByIds !== undefined ? { createdByIds } : {}),
+        ...(search !== undefined ? { search } : {}),
+        ...(filters.scenarioKey ? { scenarioKey: filters.scenarioKey } : {}),
+        ...(filters.title ? { title: filters.title } : {}),
+        ...(filters.details ? { details: filters.details } : {}),
+        ...(filters.folder ? { folder: filters.folder } : {}),
+        ...(filters.createdBy ? { createdBy: filters.createdBy } : {}),
+        ...(params.folderId !== undefined ? { folderId: params.folderId } : {}),
+        ...(params.includeDescendants !== undefined
+          ? { includeDescendants: params.includeDescendants }
+          : {}),
+        ...(params.suiteId !== undefined ? { suiteId: params.suiteId } : {}),
+      },
+    );
+  },
+
+  async resolveScenarioSelection(
+    params: TestScenarioSelectionQuery,
+  ): Promise<{ scenarioIds: string[]; total: number }> {
+    requireIdentifier(params.projectId, "Project ID");
+    if (params.createdById !== undefined)
+      requireUuid(params.createdById, "Creator ID");
+    const createdByIds = normalizeCreatorIds(params.createdByIds);
+    if (params.createdById !== undefined && createdByIds !== undefined) {
+      throw new TestScenarioValidationError(
+        "Use createdById or createdByIds, not both",
+      );
+    }
+    if (
+      params.priority !== undefined &&
+      !PRIORITY_FILTER_PATTERN.test(params.priority)
+    )
+      throw new TestScenarioValidationError("priority is invalid");
+    const search = normalizeSearch(params.search);
+    const filters = {
+      scenarioKey: normalizeColumnFilter(params.scenarioKey, "scenarioKey"),
+      title: normalizeColumnFilter(params.title, "title"),
+      details: normalizeColumnFilter(params.details, "details"),
+      folder: normalizeColumnFilter(params.folder, "folder"),
+      createdBy: normalizeColumnFilter(params.createdBy, "createdBy"),
+    };
+    if (
+      params.folderId &&
+      params.folderId !== "unfiled" &&
+      !(await testScenarioModel.folderBelongsToProject(
+        params.folderId,
+        params.projectId,
+      ))
+    )
+      throw new TestScenarioNotFoundError("Folder not found");
+    if (
+      params.suiteId &&
+      !(await testScenarioModel.suiteBelongsToProject(
+        params.suiteId,
+        params.projectId,
+      ))
+    )
+      throw new TestScenarioNotFoundError("Suite not found");
+    if (!(await projectModel.exists(params.projectId)))
+      throw new TestScenarioNotFoundError(
+        `Project with id '${params.projectId}' not found`,
+      );
+    const scenarioIds = await testScenarioModel.resolveSelection({
+      projectId: params.projectId,
+      ...(search !== undefined ? { search } : {}),
+      ...(params.createdById !== undefined
+        ? { createdById: params.createdById }
+        : {}),
+      ...(createdByIds !== undefined ? { createdByIds } : {}),
+      ...(params.priority !== undefined ? { priority: params.priority } : {}),
+      ...(filters.scenarioKey ? { scenarioKey: filters.scenarioKey } : {}),
+      ...(filters.title ? { title: filters.title } : {}),
+      ...(filters.details ? { details: filters.details } : {}),
+      ...(filters.folder ? { folder: filters.folder } : {}),
+      ...(filters.createdBy ? { createdBy: filters.createdBy } : {}),
+      ...(params.folderId !== undefined ? { folderId: params.folderId } : {}),
+      ...(params.includeDescendants !== undefined
+        ? { includeDescendants: params.includeDescendants }
+        : {}),
+      ...(params.suiteId !== undefined ? { suiteId: params.suiteId } : {}),
+    });
+    return { scenarioIds, total: scenarioIds.length };
   },
 
   async getScenarioById(
@@ -339,26 +667,63 @@ export const testScenarioService = {
       ...IDENTIFIER_FIELDS,
       ...SCENARIO_FIELDS,
       "folderId",
+      "steps",
+      "suiteIds",
+      "newSuites",
+      "expectedRevision",
+      "actorId",
     ]);
     requireIdentifier(params.scenarioId, "Scenario ID");
     requireIdentifier(params.projectId, "Project ID");
+    if ("actorId" in params && params.actorId !== undefined)
+      requireUuid(params.actorId, "Updater ID");
 
-    const supplied = [...SCENARIO_FIELDS.filter((field) => hasOwn(params, field)), ...(hasOwn(params, "folderId") ? ["folderId" as const] : [])];
-    if (supplied.length === 0) {
+    const supplied = [
+      ...SCENARIO_FIELDS.filter((field) => hasOwn(params, field)),
+      ...(hasOwn(params, "folderId") ? ["folderId" as const] : []),
+    ];
+    const editorCount = [
+      params.steps,
+      params.suiteIds,
+      params.newSuites,
+    ].filter((value) => value !== undefined).length;
+    if (
+      (editorCount > 0 &&
+        (editorCount !== 3 ||
+          !Number.isInteger(params.expectedRevision) ||
+          (params.expectedRevision ?? 0) < 1)) ||
+      (editorCount === 0 && params.expectedRevision !== undefined)
+    )
+      throw new TestScenarioValidationError(
+        "Editor saves require all collections and a positive expectedRevision",
+      );
+    if (supplied.length === 0 && editorCount === 0) {
       throw new TestScenarioValidationError(
         "At least one editable field is required",
       );
     }
 
-    const data: Omit<UpdateTestScenarioParams, "scenarioId" | "projectId"> = {};
+    const data: Omit<UpdateTestScenarioParams, "scenarioId" | "projectId"> = {
+      ...(params.actorId !== undefined ? { actorId: params.actorId } : {}),
+      ...(params.expectedRevision !== undefined
+        ? { expectedRevision: params.expectedRevision }
+        : {}),
+      ...normalizeSuites(params),
+    };
+    if (params.steps !== undefined) {
+      const parsed = editorStepSchema.array().safeParse(params.steps);
+      if (!parsed.success)
+        throw new TestScenarioValidationError("Invalid editor steps");
+      const ids = parsed.data.flatMap((step) => (step.id ? [step.id] : []));
+      if (new Set(ids).size !== ids.length)
+        throw new TestScenarioValidationError("Duplicate step IDs");
+      data.steps = parsed.data;
+    }
     for (const field of supplied) {
       if (field === "folderId") {
-        if (params.folderId && !(await testScenarioModel.folderBelongsToProject(params.folderId, params.projectId))) throw new TestScenarioNotFoundError("Folder not found");
         data.folderId = params.folderId;
       } else if (field === "title") {
         data.title = normalizeNonBlank(params.title, "Title");
-      } else if (field === "scenarioKey") {
-        data.scenarioKey = normalizeKey(params.scenarioKey, "Scenario key");
       } else if (field === "priority") {
         data.priority = normalizePriority(params.priority);
       } else if (field === "relatedIssueUrl") {
@@ -368,10 +733,8 @@ export const testScenarioService = {
       }
     }
 
-    const scenario = await testScenarioModel.update(
-      params.scenarioId,
-      params.projectId,
-      data,
+    const scenario = await scenarioWrite(() =>
+      testScenarioModel.update(params.scenarioId, params.projectId, data),
     );
     if (!scenario) {
       throw scenarioNotFound(params.scenarioId);
@@ -387,9 +750,12 @@ export const testScenarioService = {
       "projectId",
       "action",
       "expectedResult",
+      "actorId",
     ]);
     requireIdentifier(params.scenarioId, "Scenario ID");
     requireIdentifier(params.projectId, "Project ID");
+    if ("actorId" in params && params.actorId !== undefined)
+      requireUuid(params.actorId, "Updater ID");
     const action = normalizeNonBlank(params.action, "Action");
     const expectedResult =
       params.expectedResult === undefined
@@ -397,6 +763,7 @@ export const testScenarioService = {
         : normalizeNonBlank(params.expectedResult, "Expected result");
 
     const scenario = await testScenarioModel.appendStep({
+      ...(params.actorId !== undefined ? { actorId: params.actorId } : {}),
       scenarioId: params.scenarioId,
       projectId: params.projectId,
       action,
@@ -417,9 +784,12 @@ export const testScenarioService = {
       "stepId",
       "action",
       "expectedResult",
+      "actorId",
     ]);
     requireIdentifier(params.scenarioId, "Scenario ID");
     requireIdentifier(params.projectId, "Project ID");
+    if ("actorId" in params && params.actorId !== undefined)
+      requireUuid(params.actorId, "Updater ID");
     requireIdentifier(params.stepId, "Step ID");
     if (!hasOwn(params, "action") && !hasOwn(params, "expectedResult")) {
       throw new TestScenarioValidationError(
@@ -434,6 +804,7 @@ export const testScenarioService = {
       ? normalizeUpdateOptional(params.expectedResult, "Expected result")
       : undefined;
     const scenario = await testScenarioModel.updateStep({
+      ...(params.actorId !== undefined ? { actorId: params.actorId } : {}),
       scenarioId: params.scenarioId,
       projectId: params.projectId,
       stepId: params.stepId,
@@ -451,8 +822,11 @@ export const testScenarioService = {
   ): Promise<TestScenarioResponse> {
     requireIdentifier(params.scenarioId, "Scenario ID");
     requireIdentifier(params.projectId, "Project ID");
+    if ("actorId" in params && params.actorId !== undefined)
+      requireUuid(params.actorId, "Updater ID");
     requireIdentifier(params.stepId, "Step ID");
     const scenario = await testScenarioModel.deleteStep({
+      ...(params.actorId !== undefined ? { actorId: params.actorId } : {}),
       scenarioId: params.scenarioId,
       projectId: params.projectId,
       stepId: params.stepId,
@@ -468,6 +842,8 @@ export const testScenarioService = {
   ): Promise<TestScenarioResponse> {
     requireIdentifier(params.scenarioId, "Scenario ID");
     requireIdentifier(params.projectId, "Project ID");
+    if ("actorId" in params && params.actorId !== undefined)
+      requireUuid(params.actorId, "Updater ID");
     if (!Array.isArray(params.stepIds) || params.stepIds.some((id) => !id)) {
       throw new TestScenarioValidationError("stepIds must be an array of IDs");
     }

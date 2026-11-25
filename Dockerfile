@@ -9,11 +9,12 @@ FROM base AS builder
 
 WORKDIR /app
 
-# Copy package files
+# Copy the package files and the npm prepare script
 COPY package.json package-lock.json ./
+COPY .husky/install.mjs .husky/
 
 # Install dependencies (including dev dependencies for build)
-RUN npm ci
+RUN HUSKY=0 npm ci
 
 # Copy source code
 COPY . .
@@ -33,11 +34,12 @@ FROM base
 
 WORKDIR /app
 
-# Copy package files
+# Copy the package files and the npm prepare script
 COPY package.json package-lock.json ./
+COPY .husky/install.mjs .husky/
 
 # Install ONLY production dependencies
-RUN npm ci --omit=dev
+RUN HUSKY=0 npm ci --omit=dev
 
 # Copy built assets from builder
 COPY --from=builder /app/dist ./dist

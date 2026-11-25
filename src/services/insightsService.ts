@@ -81,9 +81,10 @@ function extractTextContent(content: unknown): string {
     .trim();
 }
 
-function calculateBucketPassRate(bucket: DashboardResponse["history"][number]): number {
-  const effectiveTotal =
-    bucket.metrics.total - bucket.metrics.skipped;
+function calculateBucketPassRate(
+  bucket: DashboardResponse["history"][number],
+): number {
+  const effectiveTotal = bucket.metrics.total - bucket.metrics.skipped;
 
   if (effectiveTotal <= 0) {
     return 0;
@@ -92,7 +93,9 @@ function calculateBucketPassRate(bucket: DashboardResponse["history"][number]): 
   return (bucket.metrics.passed / effectiveTotal) * 100;
 }
 
-function getPassRateTrend(history: DashboardResponse["history"]): PassRateTrend {
+function getPassRateTrend(
+  history: DashboardResponse["history"],
+): PassRateTrend {
   const passRates = history
     .filter((bucket) => bucket.metrics.total > 0)
     .map((bucket) => calculateBucketPassRate(bucket));
@@ -191,9 +194,7 @@ export const insightsService = {
             ? "unavailable/timeout"
             : "invalid-response";
       const diagnostic =
-        error instanceof GenerativeAiError
-          ? error.diagnostic
-          : undefined;
+        error instanceof GenerativeAiError ? error.diagnostic : undefined;
       logger.error("AI insights generation failed", {
         category,
         duration_ms: Date.now() - startedAt,

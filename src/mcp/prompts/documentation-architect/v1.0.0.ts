@@ -107,7 +107,14 @@ ${target_audience ? `Target Audience: ${target_audience}` : "Target Audience: Ge
 ${documentation_type ? `Documentation Type: ${documentation_type}` : "Documentation Type: General Reference/Overview"}
 ${scope ? `Scope: ${scope}` : "Scope: Not specified"}
 ${publish ? `Publish to MCP Storage: ${publish === "true" || publish === "yes" ? "Yes - publish if MCP available" : "No - return markdown only"}` : "Publish to MCP Storage: Auto-detect based on context"}
-${file_paths ? `Files to Document:\n${file_paths.split(',').map((f) => `- ${f.trim()}`).join('\n')}` : "Files: Use repository access to identify relevant files"}
+${
+  file_paths
+    ? `Files to Document:\n${file_paths
+        .split(",")
+        .map((f) => `- ${f.trim()}`)
+        .join("\n")}`
+    : "Files: Use repository access to identify relevant files"
+}
 
 ## Publishing Documentation (Optional)
 
@@ -148,7 +155,8 @@ Check for these MCP tools using tool discovery:
   ],
 });
 
-export const softwareDocumentationAssistantName = "software-documentation-assistant";
+export const softwareDocumentationAssistantName =
+  "software-documentation-assistant";
 
 export const softwareDocumentationAssistantParameters = {
   title: "Software Documentation Architect",
@@ -158,22 +166,32 @@ export const softwareDocumentationAssistantParameters = {
     file_paths: z
       .string()
       .optional()
-      .describe("Comma-separated file paths to document (e.g., 'src/controllers/userController.ts,src/services/userService.ts'). Agent will read these files using MCP tools."),
+      .describe(
+        "Comma-separated file paths to document (e.g., 'src/controllers/userController.ts,src/services/userService.ts'). Agent will read these files using MCP tools.",
+      ),
     documentation_type: z
       .string()
       .optional()
-      .describe("Type of documentation to generate: 'Getting Started', 'API Reference', 'Architecture', 'README', 'Integration Guide', etc."),
+      .describe(
+        "Type of documentation to generate: 'Getting Started', 'API Reference', 'Architecture', 'README', 'Integration Guide', etc.",
+      ),
     target_audience: z
       .string()
       .optional()
-      .describe("Target readers: 'Internal Team', 'Public API Consumers', 'Junior Developers', 'DevOps Engineers', etc."),
+      .describe(
+        "Target readers: 'Internal Team', 'Public API Consumers', 'Junior Developers', 'DevOps Engineers', etc.",
+      ),
     scope: z
       .string()
       .optional()
-      .describe("Documentation scope: 'entire project', 'authentication module', 'database layer', 'specific feature', etc."),
+      .describe(
+        "Documentation scope: 'entire project', 'authentication module', 'database layer', 'specific feature', etc.",
+      ),
     publish: z
       .string()
       .optional()
-      .describe("Whether to publish documentation to available MCP storage. Values: 'true'/'yes' to publish, 'false'/'no' to skip, unspecified for auto-detect based on context."),
+      .describe(
+        "Whether to publish documentation to available MCP storage. Values: 'true'/'yes' to publish, 'false'/'no' to skip, unspecified for auto-detect based on context.",
+      ),
   },
 };

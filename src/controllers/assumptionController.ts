@@ -103,8 +103,10 @@ export const assumptionController = {
         return;
       }
 
-      const assumption =
-        await assumptionService.getAssumptionById(assumptionId, projectId as string);
+      const assumption = await assumptionService.getAssumptionById(
+        assumptionId,
+        projectId as string,
+      );
       res.status(200).json(assumption);
     } catch (error) {
       const err = error as Error;

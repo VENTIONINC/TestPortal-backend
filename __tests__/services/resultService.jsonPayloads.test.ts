@@ -131,14 +131,14 @@ describe("resultService JSON payload normalization", () => {
         {
           id: "scenario-1",
           title: "Checkout",
-          scenarioKey: null,
+          scenarioKey: "TMS-1",
           details: "Payment flow",
           contentMd: "# Checkout\n",
         },
         {
           id: "scenario-2",
           title: "Refund",
-          scenarioKey: null,
+          scenarioKey: "TMS-2",
           details: null,
           contentMd: "# Refund\n",
         },
@@ -188,7 +188,7 @@ describe("resultService JSON payload normalization", () => {
       {
         id: "scenario-1",
         title: "Checkout",
-        scenarioKey: null,
+        scenarioKey: "TMS-1",
         details: null,
         contentMd: "# Checkout\n",
       },

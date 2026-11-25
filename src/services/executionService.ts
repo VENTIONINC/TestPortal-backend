@@ -18,7 +18,10 @@ export interface GetExecutionsParams {
 }
 
 export const executionService = {
-  async getExecutionById(executionId: string, projectId: string): Promise<PrismaExecution> {
+  async getExecutionById(
+    executionId: string,
+    projectId: string,
+  ): Promise<PrismaExecution> {
     if (!executionId) {
       throw new Error("Execution ID is required");
     }
@@ -27,7 +30,11 @@ export const executionService = {
       throw new Error("Project ID is required");
     }
 
-    const execution = await executionModel.findById(executionId, projectId, dbClient);
+    const execution = await executionModel.findById(
+      executionId,
+      projectId,
+      dbClient,
+    );
 
     if (!execution) {
       throw new Error(`Execution with ID ${executionId} not found`);

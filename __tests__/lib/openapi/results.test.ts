@@ -78,6 +78,7 @@ describe("Result OpenAPI contract", () => {
       "scenarioKey",
       "title",
     ]);
+    expect(summary.properties?.scenarioKey?.type).toBe("string");
     expect(summary.properties?.contentMd?.type).toBe("string");
     expect(summary.properties?.details?.type).toEqual(["string", "null"]);
     expect(summary.additionalProperties).toBe(false);

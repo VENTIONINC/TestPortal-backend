@@ -219,7 +219,8 @@ export function registerAuthRoutes(registry: OpenAPIRegistry) {
         },
       },
       403: {
-        description: "Forbidden - pending or suspended users cannot refresh tokens",
+        description:
+          "Forbidden - pending or suspended users cannot refresh tokens",
         content: {
           "application/json": {
             schema: ErrorResponseSchema,

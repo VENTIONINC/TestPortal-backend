@@ -171,38 +171,62 @@ export const ctrfService = {
       const decoded = decodeTestPortalExtension(extra);
       if (decoded.length > 0) {
         return decoded.map((error) => ({
-          message: error.message ?? (error.index === 0 ? message ?? "Unknown error" : "Unknown error"),
-          stack: error.stack ?? (error.index === 0 ? trace ?? "" : ""),
+          message:
+            error.message ??
+            (error.index === 0
+              ? (message ?? "Unknown error")
+              : "Unknown error"),
+          stack: error.stack ?? (error.index === 0 ? (trace ?? "") : ""),
           location: error.location ?? { file: "", line: 0 },
           ...(error.rawLogs ? { rawLogs: error.rawLogs } : {}),
-          ...(error.sourceSnippet ? { sourceSnippet: error.sourceSnippet } : {}),
-          ...(error.generatedTestCase ? { generatedTestCase: error.generatedTestCase } : {}),
+          ...(error.sourceSnippet
+            ? { sourceSnippet: error.sourceSnippet }
+            : {}),
+          ...(error.generatedTestCase
+            ? { generatedTestCase: error.generatedTestCase }
+            : {}),
         }));
       }
       return message
-        ? [{
-            message,
-            stack: trace ?? "",
-            location: this.parseLocation(filePath),
-            ...(fallback.rawLogs ? { rawLogs: fallback.rawLogs } : {}),
-            ...(fallback.sourceSnippet ? { sourceSnippet: fallback.sourceSnippet } : {}),
-            ...(fallback.generatedTestCase ? { generatedTestCase: fallback.generatedTestCase } : {}),
-          }]
+        ? [
+            {
+              message,
+              stack: trace ?? "",
+              location: this.parseLocation(filePath),
+              ...(fallback.rawLogs ? { rawLogs: fallback.rawLogs } : {}),
+              ...(fallback.sourceSnippet
+                ? { sourceSnippet: fallback.sourceSnippet }
+                : {}),
+              ...(fallback.generatedTestCase
+                ? { generatedTestCase: fallback.generatedTestCase }
+                : {}),
+            },
+          ]
         : [];
     };
 
-    const priorAttempts = (ctrfTest.retryAttempts ?? []).map((attempt, attemptIndex) => ({
-      retry: Math.max(0, attempt.attempt - 1),
-      status: this.mapCtrfStatus(attempt.status),
-      duration: attempt.duration ?? 0,
-      startTime: new Date(attempt.start ?? fallbackStartTime + index + attemptIndex),
-      errors: toErrors(attempt.message, attempt.trace, ctrfTest.filePath, attempt.extra, {
-        rawLogs: null,
-        sourceSnippet: null,
-        generatedTestCase: null,
+    const priorAttempts = (ctrfTest.retryAttempts ?? []).map(
+      (attempt, attemptIndex) => ({
+        retry: Math.max(0, attempt.attempt - 1),
+        status: this.mapCtrfStatus(attempt.status),
+        duration: attempt.duration ?? 0,
+        startTime: new Date(
+          attempt.start ?? fallbackStartTime + index + attemptIndex,
+        ),
+        errors: toErrors(
+          attempt.message,
+          attempt.trace,
+          ctrfTest.filePath,
+          attempt.extra,
+          {
+            rawLogs: null,
+            sourceSnippet: null,
+            generatedTestCase: null,
+          },
+        ),
+        workerIndex: 0,
       }),
-      workerIndex: 0,
-    }));
+    );
     const finalErrors = toErrors(
       ctrfTest.message,
       ctrfTest.trace,
@@ -214,10 +238,16 @@ export const ctrfService = {
       status: this.mapCtrfStatus(ctrfTest.status),
       duration: ctrfTest.duration,
       startTime: this.getCtrfTestStartTime(ctrfTest, fallbackStartTime, index),
-      ...(finalErrors.length > 0 ? { errors: finalErrors, error: finalErrors[0] } : {}),
+      ...(finalErrors.length > 0
+        ? { errors: finalErrors, error: finalErrors[0] }
+        : {}),
       ...(finalErrors[0]?.rawLogs ? { logs: finalErrors[0].rawLogs } : {}),
-      ...(finalErrors[0]?.sourceSnippet ? { sourceSnippet: finalErrors[0].sourceSnippet } : {}),
-      ...(finalErrors[0]?.generatedTestCase ? { generatedTestCase: finalErrors[0].generatedTestCase } : {}),
+      ...(finalErrors[0]?.sourceSnippet
+        ? { sourceSnippet: finalErrors[0].sourceSnippet }
+        : {}),
+      ...(finalErrors[0]?.generatedTestCase
+        ? { generatedTestCase: finalErrors[0].generatedTestCase }
+        : {}),
       workerIndex: 0,
     };
     const results = [...priorAttempts, finalAttempt];
@@ -252,7 +282,7 @@ export const ctrfService = {
       ctrfTest.filePath ?? "unknown",
       Array.isArray(ctrfTest.suite)
         ? ctrfTest.suite.join(" › ")
-        : ctrfTest.suite ?? "default",
+        : (ctrfTest.suite ?? "default"),
       ctrfTest.name,
     ].join("::");
   },

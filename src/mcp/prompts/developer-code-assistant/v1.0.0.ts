@@ -149,6 +149,8 @@ export const developerCodeAssistantParameters = {
     context_scope: z
       .string()
       .optional()
-      .describe("Scope of code analysis (function, class, module, or full context)"),
+      .describe(
+        "Scope of code analysis (function, class, module, or full context)",
+      ),
   },
 };

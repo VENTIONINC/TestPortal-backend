@@ -8,9 +8,7 @@ import { testScenarioSpecLinkModel } from "@/models/testScenarioSpecLinkModel";
 import { specModel } from "@/models/specModel";
 import { testScenarioModel } from "@/models/testScenarioModel";
 import { normalizeSpecPayload } from "@/lib/jsonPayloads";
-import {
-  TestScenarioNotFoundError,
-} from "@/types/testScenarios";
+import { TestScenarioNotFoundError } from "@/types/testScenarios";
 import {
   TestScenarioIntegrationValidationError,
   TestScenarioSpecLinkConflictError,
@@ -30,9 +28,7 @@ const MAX_LIMIT = 100;
 
 function validateContext(scenarioId: string, projectId: string): void {
   if (!scenarioId) {
-    throw new TestScenarioIntegrationValidationError(
-      "Scenario ID is required",
-    );
+    throw new TestScenarioIntegrationValidationError("Scenario ID is required");
   }
 
   if (!projectId) {

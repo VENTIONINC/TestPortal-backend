@@ -110,7 +110,8 @@ export function registerSpecRoutes(registry: OpenAPIRegistry) {
         description: "Successfully deleted spec",
       },
       400: {
-        description: "Bad Request - Invalid spec ID format or missing projectId",
+        description:
+          "Bad Request - Invalid spec ID format or missing projectId",
         content: {
           "application/json": {
             schema: ErrorResponseSchema,
