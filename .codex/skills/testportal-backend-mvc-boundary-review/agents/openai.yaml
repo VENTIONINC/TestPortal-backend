@@ -1,0 +1,4 @@
+interface:
+  display_name: "TestPortal Backend MVC Boundary Review"
+policy:
+  allow_implicit_invocation: false
