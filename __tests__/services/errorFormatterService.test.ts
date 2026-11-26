@@ -2,8 +2,11 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import "@/test-utils/testEnv";
+import { resolve } from "node:path";
 import { jest } from "@jest/globals";
+import { initializeAiConfig } from "@/config/aiConfig";
 import type { StructuredResultWithRelations } from "@/types";
+import { getErrorFormatterPrompt } from "@/prompts/error-formatter/v1.1.0";
 import { errorFormatterService } from "@/services/errorFormatterService";
 import { resultService } from "@/services/resultService";
 import { testAnalysisService } from "@/services/testAnalysisService";
@@ -53,14 +56,29 @@ jest.mock("@/services/testAnalysisService", () => ({
   },
 }));
 
-jest.mock("@/lib/logger", () => ({
-  __esModule: true,
-  default: () => ({
-    info: jest.fn(),
-    warn: jest.fn(),
-    error: jest.fn(),
-  }),
-}));
+jest.mock("@/lib/logger", () => {
+  const errorMock = jest.fn();
+  return {
+    __esModule: true,
+    __mocks__: { errorMock },
+    default: () => ({
+      info: jest.fn(),
+      warn: jest.fn(),
+      error: errorMock,
+    }),
+  };
+});
+
+beforeAll(async () => {
+  process.env.OPENAI_API_KEY = "synthetic-test-key";
+  process.env.AI_CONFIG_PATH = resolve(
+    process.cwd(),
+    "src/config/ai-config.default.json",
+  );
+  process.env.USE_DECISIONS_API = "true";
+  const snapshot = await initializeAiConfig();
+  expect(snapshot.classificationStrategy).toBe("decisions");
+});
 
 describe("errorFormatterService.suggestFromResult", () => {
   const promptMocks: { __mocks__: { formatMessagesMock: jest.Mock } } =
@@ -81,20 +99,29 @@ describe("errorFormatterService.suggestFromResult", () => {
   >;
   const invokeMock = openAiMocks.__mocks__
     .invokeMock as unknown as jest.MockedFunction<
-    (
-      messages: Array<{ role: string; content: string }>,
-    ) => Promise<
-      | {
-          category: "bug" | "infra" | "performance" | "script" | "other";
-          name: string;
-          description: string;
-        }
-      | { name: string; description: string }
-    >
+    (messages: Array<{ role: string; content: string }>) => Promise<unknown>
   >;
   const chatOpenAIMock = openAiMocks.__mocks__.chatOpenAIMock;
   const withStructuredOutputMock =
     openAiMocks.__mocks__.withStructuredOutputMock;
+  const loggerMocks: { __mocks__: { errorMock: jest.Mock } } =
+    jest.requireMock("@/lib/logger");
+  const loggerErrorMock = loggerMocks.__mocks__.errorMock;
+
+  const formatterResult = (
+    parsed: unknown,
+    metadata: Record<string, unknown> = {
+      finish_reason: "stop",
+      model: "gpt-4.1-mini",
+    },
+    additionalKwargs: Record<string, unknown> = {},
+  ) => ({
+    raw: {
+      response_metadata: metadata,
+      additional_kwargs: additionalKwargs,
+    },
+    parsed,
+  });
 
   const now = new Date("2025-01-01T10:00:00Z");
   const baseResult: StructuredResultWithRelations = {
@@ -192,17 +219,25 @@ describe("errorFormatterService.suggestFromResult", () => {
       { role: "user", content: "user" },
     ]);
     invokeMock.mockResolvedValue({
-      category: "bug",
-      name: "Checkout request fails",
-      description: "Suggested steps",
+      ...formatterResult({
+        category: "bug",
+        name: "Checkout request fails",
+        description: "Suggested steps",
+      }),
     });
   });
 
+  it("does not construct an AI client during service import", () => {
+    expect(chatOpenAIMock).not.toHaveBeenCalled();
+  });
+
   it("passes canonical generic context to the formatter prompt without making it output data", async () => {
-    invokeMock.mockResolvedValue({
-      name: "Readable failure",
-      description: "Actionable details",
-    });
+    invokeMock.mockResolvedValue(
+      formatterResult({
+        name: "Readable failure",
+        description: "Actionable details",
+      }),
+    );
 
     const formatted = await errorFormatterService.formatErrorMessage({
       name: "Original failure",
@@ -223,12 +258,179 @@ describe("errorFormatterService.suggestFromResult", () => {
       description: "Actionable details",
     });
     expect(formatted).not.toHaveProperty("contextCategory");
+    expect(withStructuredOutputMock).toHaveBeenCalledWith(
+      expect.anything(),
+      expect.objectContaining({ includeRaw: true }),
+    );
   });
+
+  it("preserves multiline diagnostic values, negation, and uncertainty", async () => {
+    const input = {
+      name: "checkout timeout (ETIMEDOUT)",
+      description:
+        "Request did not reach api.internal.example within 12000ms.\n" +
+        "Failure at tests/checkout.spec.ts:42:7; expected 200, received 504.\n" +
+        "The cause may be a transient proxy issue.",
+    };
+    invokeMock.mockResolvedValueOnce(
+      formatterResult({
+        name: "Checkout request timed out",
+        description: input.description,
+      }),
+    );
+
+    await errorFormatterService.formatErrorMessage(input);
+
+    expect(invokeMock).toHaveBeenCalledWith([
+      {
+        role: "system",
+        content: getErrorFormatterPrompt(),
+      },
+      {
+        role: "user",
+        content: `Name: ${input.name}\nDescription: ${input.description}`,
+      },
+    ]);
+    expect(getErrorFormatterPrompt()).toContain(
+      "Preserve negation and uncertainty",
+    );
+    expect(getErrorFormatterPrompt()).toContain(
+      "do not omit or alter these details",
+    );
+    expect(invokeMock.mock.calls[0]?.[0][1]?.content).not.toContain(
+      "Context category:",
+    );
+    expect(resultService.getResultById).not.toHaveBeenCalled();
+    expect(testAnalysisService.analyzeStoredResults).not.toHaveBeenCalled();
+  });
+
+  it("retains the public formatter failure message when invocation fails", async () => {
+    invokeMock.mockRejectedValueOnce(
+      Object.assign(new Error("sk-sensitive https://private.example/secret"), {
+        status: 401,
+        headers: { authorization: "Bearer secret" },
+        body: "private response body",
+      }),
+    );
+
+    await expect(
+      errorFormatterService.formatErrorMessage({
+        name: "Synthetic failure",
+        description: "Synthetic details",
+      }),
+    ).rejects.toThrow("Failed to format error message");
+    expect(loggerErrorMock).toHaveBeenCalledWith(
+      "Error formatting message:",
+      expect.objectContaining({
+        category: "authentication/configuration",
+        connection: "openai",
+      }),
+    );
+    expect(JSON.stringify(loggerErrorMock.mock.calls)).not.toMatch(
+      /sk-sensitive|private\.example|private response body|Bearer secret/,
+    );
+  });
+
+  it.each([
+    ["malformed structured result", formatterResult(null)],
+    [
+      "refusal",
+      formatterResult(
+        { name: "Refused", description: "No" },
+        { finish_reason: "stop", model: "gpt-4.1-mini" },
+        { refusal: "private refusal detail" },
+      ),
+    ],
+    [
+      "truncated output",
+      formatterResult(
+        { name: "Partial", description: "Partial" },
+        { finish_reason: "length", model: "gpt-4.1-mini" },
+      ),
+    ],
+    [
+      "incomplete Responses output",
+      formatterResult(
+        { name: "Partial", description: "Partial" },
+        {
+          status: "incomplete",
+          incomplete_details: { reason: "max_output_tokens" },
+          model: "gpt-4.1-mini",
+        },
+      ),
+    ],
+    [
+      "incomplete Responses message item with completed response status",
+      formatterResult(
+        { name: "Partial", description: "Partial" },
+        {
+          status: "completed",
+          output: [{ type: "message", status: "incomplete", content: [] }],
+          model: "gpt-4.1-mini",
+        },
+      ),
+    ],
+  ])(
+    "rejects %s through the public formatter error",
+    async (_label, result) => {
+      invokeMock.mockResolvedValueOnce(result);
+
+      await expect(
+        errorFormatterService.formatErrorMessage({
+          name: "Synthetic failure",
+          description: "Synthetic details",
+        }),
+      ).rejects.toThrow("Failed to format error message");
+
+      expect(loggerErrorMock).toHaveBeenCalledWith(
+        "Error formatting message:",
+        expect.objectContaining({ category: "invalid-response" }),
+      );
+      expect(JSON.stringify(loggerErrorMock.mock.calls)).not.toMatch(
+        /private refusal detail|max_output_tokens/,
+      );
+    },
+  );
 
   it("throws when resultId is missing", async () => {
     await expect(
       errorFormatterService.suggestFromResult("", "project-1"),
     ).rejects.toThrow("Result ID is required");
+  });
+
+  it("formats multiline details without adding absent category context", async () => {
+    const output = {
+      name: "Readable timeout",
+      description: "Timeout at checkout",
+    };
+    invokeMock.mockResolvedValueOnce(formatterResult(output));
+    const input = {
+      name: "checkout timeout",
+      description: "Timeout 12000ms\n at tests/checkout.ts:42:7",
+    };
+
+    await expect(
+      errorFormatterService.formatErrorMessage(input),
+    ).resolves.toEqual(output);
+    expect(invokeMock).toHaveBeenCalledWith([
+      expect.objectContaining({ role: "system" }),
+      {
+        role: "user",
+        content: `Name: ${input.name}\nDescription: ${input.description}`,
+      },
+    ]);
+    expect(resultService.getResultById).not.toHaveBeenCalled();
+    expect(testAnalysisService.analyzeStoredResults).not.toHaveBeenCalled();
+  });
+
+  it("returns the formatter error contract when the model fails", async () => {
+    invokeMock.mockRejectedValueOnce(new Error("Provider unavailable"));
+    await expect(
+      errorFormatterService.formatErrorMessage({
+        name: "Failure",
+        description: "Details",
+      }),
+    ).rejects.toThrow("Failed to format error message");
   });
 
   it("throws when projectId is missing", async () => {
@@ -247,6 +449,8 @@ describe("errorFormatterService.suggestFromResult", () => {
     await expect(
       errorFormatterService.suggestFromResult("result-1", "project-1"),
     ).rejects.toThrow("Only failed or flaky results can be analyzed");
+    expect(analyzeStoredResultsMock).not.toHaveBeenCalled();
+    expect(invokeMock).not.toHaveBeenCalled();
   });
 
   it("throws when result has no errors", async () => {
@@ -259,6 +463,8 @@ describe("errorFormatterService.suggestFromResult", () => {
     await expect(
       errorFormatterService.suggestFromResult("result-1", "project-1"),
     ).rejects.toThrow("Result has no error details to analyze");
+    expect(analyzeStoredResultsMock).not.toHaveBeenCalled();
+    expect(invokeMock).not.toHaveBeenCalled();
   });
 
   it("returns the complete issue draft generated from existing analysis", async () => {
@@ -320,7 +526,7 @@ describe("errorFormatterService.suggestFromResult", () => {
     );
   });
 
-  it("runs analysis when missing and returns the complete issue draft", async () => {
+  it("runs nested classification and keeps suggestions generative when Decisions is enabled", async () => {
     getResultByIdMock.mockResolvedValue(makeResult({}));
 
     const analysisMap = new Map();
@@ -341,6 +547,7 @@ describe("errorFormatterService.suggestFromResult", () => {
     );
 
     expect(testAnalysisService.analyzeStoredResults).toHaveBeenCalledTimes(1);
+    expect(chatOpenAIMock).toHaveBeenCalledTimes(1);
     expect(formatMessagesMock).toHaveBeenCalledWith(
       expect.objectContaining({ analysisCategory: "infra" }),
     );
@@ -349,5 +556,111 @@ describe("errorFormatterService.suggestFromResult", () => {
       name: "Checkout request fails",
       description: "Suggested steps",
     });
+  });
+
+  it("fails closed when the required classification result is missing", async () => {
+    getResultByIdMock.mockResolvedValue(makeResult({}));
+    analyzeStoredResultsMock.mockResolvedValue(new Map());
+
+    await expect(
+      errorFormatterService.suggestFromResult("result-1", "project-1"),
+    ).rejects.toThrow("Failed to generate error suggestion");
+
+    expect(analyzeStoredResultsMock).toHaveBeenCalledTimes(1);
+    expect(invokeMock).not.toHaveBeenCalled();
+  });
+
+  it("fails closed when nested classification rejects invalid output", async () => {
+    getResultByIdMock.mockResolvedValue(makeResult({}));
+    analyzeStoredResultsMock.mockRejectedValue(
+      new Error("AI request failed (invalid-response)."),
+    );
+
+    await expect(
+      errorFormatterService.suggestFromResult("result-1", "project-1"),
+    ).rejects.toThrow("Failed to generate error suggestion");
+
+    expect(analyzeStoredResultsMock).toHaveBeenCalledTimes(1);
+    expect(invokeMock).not.toHaveBeenCalled();
+  });
+
+  it.each([
+    ["invalid schema output", formatterResult(null)],
+    [
+      "refusal",
+      formatterResult(
+        {
+          category: "bug",
+          name: "Private refusal detail",
+          description: "No",
+        },
+        { finish_reason: "stop" },
+        { refusal: "Private refusal detail" },
+      ),
+    ],
+    [
+      "truncated output",
+      formatterResult(
+        { category: "bug", name: "Partial", description: "Partial" },
+        { finish_reason: "length" },
+      ),
+    ],
+    [
+      "incomplete Responses output",
+      formatterResult(
+        { category: "bug", name: "Partial", description: "Partial" },
+        { status: "incomplete", incomplete_details: { reason: "private" } },
+      ),
+    ],
+    [
+      "incomplete Responses message item with completed response status",
+      formatterResult(
+        { category: "bug", name: "Partial", description: "Partial" },
+        {
+          status: "completed",
+          output: [{ type: "message", status: "incomplete", content: [] }],
+        },
+      ),
+    ],
+  ])("rejects %s without exposing completion metadata", async (_label, raw) => {
+    getResultByIdMock.mockResolvedValue(
+      makeResult({ analysisCategory: "bug" }),
+    );
+    invokeMock.mockResolvedValueOnce(raw);
+
+    await expect(
+      errorFormatterService.suggestFromResult("result-1", "project-1"),
+    ).rejects.toThrow("Failed to generate error suggestion");
+
+    expect(loggerErrorMock).toHaveBeenCalledWith(
+      "Error generating solution suggestion:",
+      expect.objectContaining({ category: "invalid-response" }),
+    );
+    expect(JSON.stringify(loggerErrorMock.mock.calls)).not.toMatch(
+      /Private refusal detail|private/,
+    );
+  });
+
+  it("sanitizes suggestion provider failures while retaining local validation errors", async () => {
+    getResultByIdMock.mockResolvedValue(
+      makeResult({ analysisCategory: "bug" }),
+    );
+    invokeMock.mockRejectedValueOnce(
+      Object.assign(
+        new Error("sk-private https://provider.example/secret private body"),
+        { status: 503, body: "private body" },
+      ),
+    );
+
+    await expect(
+      errorFormatterService.suggestFromResult("result-1", "project-1"),
+    ).rejects.toThrow("Failed to generate error suggestion");
+    expect(JSON.stringify(loggerErrorMock.mock.calls)).not.toMatch(
+      /sk-private|provider\.example|private body/,
+    );
+    expect(resultService.getResultById).toHaveBeenCalledWith(
+      "result-1",
+      "project-1",
+    );
   });
 });

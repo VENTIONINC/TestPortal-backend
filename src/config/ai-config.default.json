@@ -1,0 +1,30 @@
+{
+  "version": 1,
+  "operations": {
+    "classification": {
+      "model": "gpt-6-luna",
+      "api": "responses",
+      "reasoningEffort": "low",
+      "maxOutputTokens": 4000,
+      "decisions": { "model": "gpt-6-luna" }
+    },
+    "formatting": {
+      "model": "gpt-6-luna",
+      "api": "responses",
+      "reasoningEffort": "none",
+      "maxOutputTokens": 500
+    },
+    "suggestions": {
+      "model": "gpt-6-luna",
+      "api": "responses",
+      "reasoningEffort": "low",
+      "maxOutputTokens": 700
+    },
+    "insights": {
+      "model": "gpt-6-luna",
+      "api": "responses",
+      "reasoningEffort": "low",
+      "maxOutputTokens": 400
+    }
+  }
+}

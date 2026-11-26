@@ -11,7 +11,7 @@ import type {
   ProcessReportResult,
 } from "@/services/jsonReportService";
 import { jsonReportService } from "@/services/jsonReportService";
-import { testAnalysisService } from "@/services/testAnalysisService";
+import { storedResultEnrichmentService } from "@/services/storedResultEnrichmentService";
 import type { TestResultAnalysis } from "@/schemas/testAnalysisSchemas";
 
 const logger = getLogger("ctrf-service");
@@ -84,39 +84,20 @@ export const ctrfService = {
         // Step 5: Analyze stored results (POST-PERSIST)
         let analysisMap: Map<string, TestResultAnalysis> | null = null;
         try {
-          analysisMap =
-            await testAnalysisService.analyzeStoredResults(createdResults);
-
-          // Step 6: Update results with analysis fields (POST-PERSIST)
-          logger.info(
-            `Updating ${analysisMap.size} results with analysis data`,
+          analysisMap = await storedResultEnrichmentService.analyzeAndPersist(
+            projectId.toString(),
+            createdResults,
           );
 
-          await Promise.all(
-            Array.from(analysisMap.entries()).map(([resultId, analysis]) =>
-              dbClient.result.update({
-                where: { id: resultId },
-                data: {
-                  analysisStatus: analysis.status,
-                  analysisCategory: analysis.category ?? null,
-                  analysisConfidence: analysis.confidence,
-                  analysisConclusion: analysis.conclusion ?? null,
-                  analysisErrorQuality: analysis.errorQuality ?? null,
-                  analysisErrorQualityConclusion:
-                    analysis.errorQualityConclusion ?? null,
-                },
-              }),
-            ),
+          logger.info(
+            `Updating ${analysisMap.size} results with analysis data`,
           );
 
           logger.info(
             `Successfully updated ${analysisMap.size} results with analysis`,
           );
-        } catch (analysisError) {
-          logger.warn(
-            "Analysis failed, results saved without analysis:",
-            analysisError,
-          );
+        } catch {
+          logger.warn("Analysis failed, results saved without analysis");
         }
 
         result = {

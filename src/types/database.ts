@@ -54,6 +54,8 @@ export interface PrismaResult {
   analysisFeedbackCategory?: string | null;
   analysisFeedbackConfidence?: number | null;
   analysisFeedbackConclusion?: string | null;
+  analysisMetadata?: Prisma.JsonValue | null;
+  analysisLastError?: Prisma.JsonValue | null;
 }
 
 export interface PrismaResultError {
@@ -193,7 +195,8 @@ export interface StructuredResultError
   sourceSnippet: ResultErrorSourceSnippet | null;
 }
 
-export interface StructuredResultWithRelations extends PrismaResult {
+export interface StructuredResultWithRelations
+  extends Omit<PrismaResult, "analysisMetadata" | "analysisLastError"> {
   errors: StructuredResultError[];
   spec: StructuredSpec;
   execution: PrismaExecution;

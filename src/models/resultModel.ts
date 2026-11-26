@@ -8,6 +8,13 @@ import type {
   ResultWithRelations,
   ResultsStats,
 } from "@/types";
+import type { TestResultAnalysis } from "@/schemas/testAnalysisSchemas";
+import {
+  analysisLastErrorSchema,
+  analysisMetadataSchema,
+  type AnalysisLastError,
+  type AnalysisMetadata,
+} from "@/schemas/analysisMetadataSchemas";
 import { Prisma } from "@prisma/client";
 
 export interface ResultFilters {
@@ -69,6 +76,23 @@ export interface AnalysisExportRow {
     startedAt: Date;
     createdAt: Date;
   };
+}
+
+export interface PersistAnalysisBatchInput {
+  projectId: string;
+  analyses: TestResultAnalysis[];
+  metadata: Map<string, AnalysisMetadata>;
+}
+
+export interface PersistAnalysisFailureInput {
+  projectId: string;
+  failures: Map<
+    string,
+    {
+      status: "failed" | "flaky";
+      failure: AnalysisLastError;
+    }
+  >;
 }
 
 const resultStatsSelect = Prisma.validator<Prisma.ResultSelect>()({
@@ -968,6 +992,75 @@ export const resultModel = {
     });
 
     return updatedResult;
+  },
+
+  persistAnalysisBatch: async (
+    input: PersistAnalysisBatchInput,
+  ): Promise<void> => {
+    if (input.analyses.length === 0) return;
+
+    try {
+      await dbClient.$transaction(async (tx) => {
+        for (const analysis of input.analyses) {
+          const metadata = analysisMetadataSchema.parse(
+            input.metadata.get(analysis.id),
+          );
+          const updated = await tx.result.updateMany({
+            where: {
+              id: analysis.id,
+              status: analysis.status,
+              spec: { projectId: input.projectId },
+              execution: { projectId: input.projectId },
+            },
+            data: {
+              analysisStatus: analysis.status,
+              analysisCategory: analysis.category,
+              analysisConfidence: analysis.confidence,
+              analysisConclusion: analysis.conclusion,
+              analysisErrorQuality: analysis.errorQuality,
+              analysisErrorQualityConclusion: analysis.errorQualityConclusion,
+              analysisMetadata: metadata as Prisma.InputJsonValue,
+              analysisLastError: Prisma.DbNull,
+            },
+          });
+          if (updated.count !== 1) {
+            throw new Error("Analysis batch scope mismatch");
+          }
+        }
+      });
+    } catch {
+      throw new Error("Could not persist the complete analysis batch");
+    }
+  },
+
+  recordAnalysisFailures: async (
+    input: PersistAnalysisFailureInput,
+  ): Promise<void> => {
+    if (input.failures.size === 0) return;
+
+    try {
+      await dbClient.$transaction(async (tx) => {
+        for (const [id, { status, failure }] of input.failures) {
+          const validatedFailure = analysisLastErrorSchema.parse(failure);
+          const updated = await tx.result.updateMany({
+            where: {
+              id,
+              status,
+              spec: { projectId: input.projectId },
+              execution: { projectId: input.projectId },
+            },
+            data: {
+              analysisLastError: validatedFailure as Prisma.InputJsonValue,
+            },
+          });
+          if (updated.count !== 1) {
+            throw new Error("Analysis failure scope mismatch");
+          }
+        }
+      });
+    } catch {
+      throw new Error("Could not persist sanitized analysis failure metadata");
+    }
   },
 
   updateAnalysisFeedback: async (

@@ -147,7 +147,7 @@ REST resource endpoints require authentication; report uploads also support uplo
 | `npm run studio`      | Open Prisma Studio.                                     |
 | `npm run seed`        | Seed system skill packages.                             |
 
-Prompt evaluations are separate from the Jest suite and require generated datasets. See the [prompt test guide](__prompts-tests__/README.md).
+Maintainer prompt evaluations are kept in the private TestPortal-testing checkout under `ai-evals/backend/prompts`. They use generated datasets and paid provider requests; ordinary backend Jest tests use synthetic fixtures only.
 
 The code follows an MVC structure: routes and controllers handle HTTP, services contain business logic, and models use Prisma for persistence. MCP tools share backend services with REST handlers. See the [development guide](docs/DEVELOPMENT_GUIDE.md) for more detail.
 

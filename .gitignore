@@ -70,7 +70,6 @@ dev.db
 .worktrees/
 mocks/
 /.private-ai-config/
-/local/
 
 # TypeScript build output
 dist/
@@ -92,6 +91,7 @@ __prompts-tests__/**/datasets/
 mocks/
 
 # Local tooling and generated reports
+local/
 /.vsdlc/
 /.agents/skills/playwright-cli/
 /.claude/skills/playwright-cli/
