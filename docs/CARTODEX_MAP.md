@@ -286,6 +286,6 @@ Core domain data is project-scoped and shared across active authenticated users.
 
 **To change downloadable skills**: Inspect `src/skills/<skill>/SKILL.md`, templates/references under that skill folder, `src/services/skillArtifactService.ts`, `src/controllers/skillController.ts`, and `src/routes/skillRoutes.ts`.
 
-**To work on persistence or migrations**: Inspect `prisma/schema.prisma`, migrations under `prisma/migrations`, `prisma/client.ts`, affected model/service tests, and the `prisma-migration-review` skill guidance.
+**To work on persistence or migrations**: Inspect `prisma/schema.prisma`, migrations under `prisma/migrations`, `prisma/client.ts`, affected model/service tests, and the `testportal-backend-prisma-migration-review` skill guidance.
 
 **To validate before PR**: Run `npm run type-check`, `npm run lint`, `npm test`, and `npm run build`. Prompt tests require their separate Jest config and OpenAI credentials.

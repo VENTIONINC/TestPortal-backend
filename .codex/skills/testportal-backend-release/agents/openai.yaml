@@ -1,0 +1,4 @@
+interface:
+  display_name: "TestPortal Backend Release"
+policy:
+  allow_implicit_invocation: false

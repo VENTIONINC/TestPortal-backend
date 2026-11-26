@@ -1,0 +1,7 @@
+interface:
+  display_name: "TestPortal Backend Create Branch DB"
+  short_description: "Create an isolated DB per branch"
+  default_prompt: "Use $testportal-backend-create-branch-db to create a fresh database for the current branch and print the DATABASE_URL."
+
+policy:
+  allow_implicit_invocation: false

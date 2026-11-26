@@ -1,0 +1,4 @@
+interface:
+  display_name: "TestPortal Backend Jest Test Patterns"
+policy:
+  allow_implicit_invocation: false
