@@ -1,0 +1,4 @@
+interface:
+  display_name: "TestPortal Backend Docker Runtime Debugging"
+policy:
+  allow_implicit_invocation: false

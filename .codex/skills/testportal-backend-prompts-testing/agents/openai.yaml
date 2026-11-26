@@ -1,0 +1,4 @@
+interface:
+  display_name: "TestPortal Backend Prompts Testing"
+policy:
+  allow_implicit_invocation: false
