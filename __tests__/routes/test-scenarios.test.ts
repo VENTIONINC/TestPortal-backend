@@ -57,7 +57,7 @@ describe("test-scenario routes", () => {
     jest.clearAllMocks();
   });
 
-  it("registers the five integration operations alongside scenario CRUD", () => {
+  it("registers related scenarios and integration operations alongside scenario CRUD", () => {
     const routes = routeLayers()
       .filter((layer) => layer.route)
       .map((layer) => {
@@ -67,6 +67,7 @@ describe("test-scenario routes", () => {
       });
 
     expect(routes).toEqual([
+      "post /internal/v1/scenarios/related",
       "post /v2/test-scenarios",
       "get /v2/test-scenarios",
       "get /v2/test-scenarios/authors",
