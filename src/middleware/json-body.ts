@@ -47,6 +47,7 @@ for (const { method, path } of [
 ]) {
   jsonBodyParser[method](`/api${path}`, deferToRoute);
 }
+jsonBodyParser.post("/api/v2/mcp", deferToRoute);
 
 const parseJson = json();
 jsonBodyParser.use((req, res, next) => {

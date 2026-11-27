@@ -57,6 +57,10 @@ function createWhere(
 ): Prisma.ManualTestRunWhereInput {
   const where: Prisma.ManualTestRunWhereInput = { projectId: params.projectId };
   const and: Prisma.ManualTestRunWhereInput[] = [];
+  if (params.sourceScenarioId !== undefined)
+    and.push({
+      scenarios: { some: { sourceScenarioId: params.sourceScenarioId } },
+    });
   const show = params.show ?? "in_progress";
   const period = params.period ?? "recent";
   if (show !== "all") and.push({ status: show });

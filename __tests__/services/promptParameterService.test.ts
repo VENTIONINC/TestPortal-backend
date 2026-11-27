@@ -2,14 +2,16 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { PromptParameterService } from "@/services/promptParameterService";
-import { developerCodeAssistantPrompt } from "@/mcp/prompts/developer-code-assistant/v1.0.0";
+import { render } from "@/mcp/prompts/tms-workflow-assistant/v1.0.0";
+import { developerCodeAssistantPrompt } from "@/mcp/prompts/developer-code-assistant/v1.1.0";
 import { testPortalAssistantPrompt } from "@/mcp/prompts/test-portal-assistant/v1.0.0";
 import { issueAnalysisAssistantPrompt } from "@/mcp/prompts/issue-analysis-assistant/v1.0.0";
 import { environmentPerformanceAssistantPrompt } from "@/mcp/prompts/environment-performance-assistant/v1.0.0";
 import { softwareDocumentationAssistantPrompt } from "@/mcp/prompts/documentation-architect/v1.0.0";
+import { testUuid } from "@/test-utils/testUuid";
 
 // Mock the prompt functions
-jest.mock("@/mcp/prompts/developer-code-assistant/v1.0.0");
+jest.mock("@/mcp/prompts/developer-code-assistant/v1.1.0");
 jest.mock("@/mcp/prompts/test-portal-assistant/v1.0.0");
 jest.mock("@/mcp/prompts/issue-analysis-assistant/v1.0.0");
 jest.mock("@/mcp/prompts/environment-performance-assistant/v1.0.0");
@@ -30,7 +32,7 @@ describe("PromptParameterService", () => {
     it("should return all available prompts", () => {
       const prompts = PromptParameterService.getAllPrompts();
 
-      expect(prompts).toHaveLength(5);
+      expect(prompts).toHaveLength(6);
 
       const promptNames = prompts.map(p => p.name);
       expect(promptNames).toContain("developer-code-assistant");
@@ -38,6 +40,11 @@ describe("PromptParameterService", () => {
       expect(promptNames).toContain("issue-analysis-assistant");
       expect(promptNames).toContain("environment-performance-assistant");
       expect(promptNames).toContain("software-documentation-assistant");
+      expect(promptNames).toContain("tms-workflow-assistant");
+      expect(
+        PromptParameterService.getPrompt("tms-workflow-assistant")?.parameters
+          .execution_mode?.enum,
+      ).toEqual(["human_guided", "client_executed"]);
 
       // Check developer code assistant
       const devAssistant = prompts.find(p => p.name === "developer-code-assistant");
@@ -97,6 +104,36 @@ describe("PromptParameterService", () => {
   });
 
   describe("generatePrompt", () => {
+    it("validates and renders TMS context using the shared contract", () => {
+      const context = {
+        project_id: testUuid(1),
+        task: "Author a scenario",
+        execution_mode: "human_guided" as const,
+      };
+      expect(
+        PromptParameterService.generatePrompt("tms-workflow-assistant", {
+          ...context,
+          task: "  Author a scenario  ",
+        }),
+      ).toEqual(render(context));
+      expect(
+        PromptParameterService.generatePrompt("tms-workflow-assistant", {}),
+      ).toEqual(render({}));
+
+      for (const invalid of [
+        { project_id: "invalid" },
+        { task: "  " },
+        { execution_mode: "invalid" },
+        { task: 42 },
+      ]) {
+        expect(() =>
+          PromptParameterService.generatePrompt(
+            "tms-workflow-assistant",
+            invalid,
+          ),
+        ).toThrow();
+      }
+    });
     it("should generate prompt with provided parameters", () => {
       const mockResult = {
         messages: [

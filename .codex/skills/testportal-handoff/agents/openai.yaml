@@ -1,6 +1,0 @@
-interface:
-  display_name: "TestPortal Handoff"
-  short_description: "Start the next phase in the same checkout"
-  default_prompt: "Use $testportal-handoff to continue this work in a new visible Codex task."
-policy:
-  allow_implicit_invocation: false

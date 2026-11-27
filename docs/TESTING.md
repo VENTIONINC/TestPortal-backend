@@ -28,7 +28,7 @@ them. The integration command requires `TEST_DATABASE_URL`; it sets
 Use a dedicated branch or CI database. The runner rejects the base database
 name from `.env.example` and requires a database name beginning with that name
 plus `_`. To create the current branch database, run
-`node .codex/skills/create-branch-db/scripts/create_branch_db.mjs`; that helper
+`node .codex/skills/testportal-backend-create-branch-db/scripts/create_branch_db.mjs`; that helper
 drops and recreates the derived branch database before applying migrations, so
 use it only when that database can be reset. Do not point integration tests at
 a shared development or production database.
