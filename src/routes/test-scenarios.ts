@@ -6,9 +6,12 @@ import {
   testScenarioController,
   type TestScenarioCreationRequest,
 } from "@/controllers/testScenarioController";
+import { relatedScenarios } from "@/controllers/scenarioSearchController";
 import { authMiddleware } from "@/middleware/authMiddleware";
 
 const router = Router();
+
+router.post("/internal/v1/scenarios/related", authMiddleware, relatedScenarios);
 
 router.post("/v2/test-scenarios", authMiddleware, (req, res) =>
   testScenarioController.create(req as TestScenarioCreationRequest, res),
