@@ -1,6 +1,8 @@
 // Copyright 2026 VENSOLUTIONSGROUP LTD
 // SPDX-License-Identifier: Apache-2.0
 
+import type { ScenarioTagSummary } from "@/types/testScenarios";
+
 export type ManualTestRunStatus = "in_progress" | "completed";
 export type ManualTestRunScenarioResult =
   | "untested"
@@ -58,6 +60,7 @@ export interface ManualTestRunRequirementContext {
 
 export interface ManualTestRunScenarioResponse {
   id: string;
+  tags: ScenarioTagSummary[];
   sourceScenarioId: string;
   sourceScenarioKey: string;
   title: string;

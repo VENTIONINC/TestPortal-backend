@@ -57,6 +57,7 @@ const projectId = "11111111-1111-1111-1111-111111111111";
 const scenarioId = "22222222-2222-2222-2222-222222222222";
 const stepId = testUuid(4);
 const scenario: TestScenarioResponse = {
+  tags: [],
   id: scenarioId,
   projectId,
   createdById: "33333333-3333-3333-3333-333333333333",
@@ -139,6 +140,7 @@ describe("Test Scenario MCP tools", () => {
   beforeEach(() => {
     jest.clearAllMocks();
     listMock.mockResolvedValue({
+      tagCounts: {},
       scenarios: [],
       total: 0,
       page: 1,
@@ -173,6 +175,7 @@ describe("Test Scenario MCP tools", () => {
     })) as MCPToolResponse;
 
     await expect(responseData(listResponse)).resolves.toEqual({
+      tagCounts: {},
       scenarios: [],
       total: 0,
       page: 1,

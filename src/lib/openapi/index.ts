@@ -26,6 +26,8 @@ import { registerCtrfRoutes } from "./ctrf";
 import { registerUploadApiKeyRoutes } from "./uploadApiKey";
 import { registerAnalysisExportRoutes } from "./analysisExport";
 import { registerPdfExportRoutes } from "./pdfExport";
+import { registerScenarioTagRoutes } from "./scenarioTags";
+
 import { registerTestScenarioRoutes } from "./testScenarios";
 import { registerManualTestRunRoutes } from "./manualTestRuns";
 import { registerManualRunEnvironmentProfileRoutes } from "./manualRunEnvironmentProfiles";
@@ -54,6 +56,8 @@ export function generateOpenAPISpec() {
   registerUploadApiKeyRoutes(registry);
   registerAnalysisExportRoutes(registry);
   registerPdfExportRoutes(registry);
+  registerScenarioTagRoutes(registry);
+
   registerTestScenarioRoutes(registry);
   registerManualTestRunRoutes(registry);
   registerManualRunEnvironmentProfileRoutes(registry);

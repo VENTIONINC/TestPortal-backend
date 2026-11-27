@@ -22,7 +22,10 @@ import type {
   UpdateTestScenarioParams,
   UpdateTestScenarioStepParams,
 } from "@/types/testScenarios";
-import { TestScenarioConflictError } from "@/types/testScenarios";
+import {
+  TestScenarioNotFoundError,
+  TestScenarioConflictError,
+} from "@/types/testScenarios";
 
 import { withScenarioTransaction } from "@/models/testScenarioTransactions";
 import {
@@ -40,7 +43,12 @@ export type UpdateTestScenarioData = Omit<
 >;
 
 const safeAuthorSelect = { id: true, name: true, email: true } as const;
+const tagAssignments = {
+  select: { tag: { select: { id: true, name: true, description: true } } },
+  orderBy: { tag: { position: "asc" as const } },
+};
 const aggregateInclude = {
+  tagAssignments,
   steps: { orderBy: { position: "asc" as const } },
   createdBy: { select: safeAuthorSelect },
   updatedBy: { select: safeAuthorSelect },
@@ -59,6 +67,7 @@ export type ReorderTestScenarioResult =
   | { kind: "success"; scenario: TestScenarioResponse };
 
 const summarySelect = {
+  tagAssignments,
   id: true,
   projectId: true,
   createdById: true,
@@ -91,6 +100,8 @@ type SummaryListParams = Pick<
   | "sort"
   | "folderId"
   | "includeDescendants"
+  | "timeZone"
+  | "tagIds"
   | "suiteId"
   | "sortField"
   | "sortDirection"
@@ -107,6 +118,7 @@ type ScenarioAuthorCountFilters = Pick<
   | "priority"
   | "folderId"
   | "includeDescendants"
+  | "tagIds"
   | "suiteId"
   | "scenarioKey"
   | "title"
@@ -183,6 +195,11 @@ async function buildSummaryPredicate(
     );
   else if (params.createdById)
     where.push(Prisma.sql`s."createdById" = ${params.createdById}::uuid`);
+  if (params.tagIds) {
+    const ids = params.tagIds.split(",").map((id) => Prisma.sql`${id}::uuid`);
+    where.push(Prisma.sql`EXISTS (SELECT 1 FROM "ScenarioTagAssignment" a
+      WHERE a."scenarioId" = s.id AND a."tagId" IN (${Prisma.join(ids)}))`);
+  }
   if (params.priority)
     where.push(
       Prisma.sql`s."priority" IN (${Prisma.join(params.priority.split(",").map((value) => Prisma.sql`${value}::"TestScenarioPriority"`))})`,
@@ -350,6 +367,7 @@ function toResponse(scenario: ScenarioAggregate): TestScenarioResponse {
     revision: scenario.revision,
     createdBy: scenario.createdBy,
     updatedBy: scenario.updatedBy,
+    tags: scenario.tagAssignments.map(({ tag }) => tag),
     suites: scenario.suiteMemberships.map(({ suite }) => suite),
     steps: scenario.steps.map(({ id, position, action, expectedResult }) => ({
       id,
@@ -549,6 +567,21 @@ export const testScenarioModel = {
         });
       }
 
+      if (data.tagIds?.length) {
+        const tagIds = [...new Set(data.tagIds)];
+        const count = await client.scenarioTag.count({
+          where: { projectId: data.projectId, id: { in: tagIds } },
+        });
+        if (count !== tagIds.length)
+          throw new TestScenarioNotFoundError("Tag not found in project");
+        await client.scenarioTagAssignment.createMany({
+          data: tagIds.map((tagId) => ({
+            tagId,
+            projectId: data.projectId,
+            scenarioId: scenario.id,
+          })),
+        });
+      }
       if (data.suiteIds !== undefined || data.newSuites !== undefined) {
         await replaceScenarioSuites(
           client,
@@ -580,18 +613,24 @@ export const testScenarioModel = {
     tx?: Prisma.TransactionClient,
   ): Promise<TestScenarioSummary[]> {
     const client = tx ?? dbClient;
-    return await client.testScenario.findMany({
+    const rows = await client.testScenario.findMany({
       where: summaryWhere({ projectId, page, limit }),
       select: summarySelect,
       skip: (page - 1) * limit,
       take: limit,
       orderBy: summaryOrderBy(),
     });
+    return rows.map(({ tagAssignments, ...row }) => ({
+      ...row,
+      tags: tagAssignments.map(({ tag }) => tag),
+    }));
   },
 
-  async listSummaries(
-    params: SummaryListParams,
-  ): Promise<{ scenarios: TestScenarioSummary[]; total: number }> {
+  async listSummaries(params: SummaryListParams): Promise<{
+    scenarios: TestScenarioSummary[];
+    total: number;
+    tagCounts: Record<string, number>;
+  }> {
     const page = params.page ?? 1;
     const limit = params.limit ?? 30;
     const sortField = params.sortField;
@@ -616,16 +655,23 @@ export const testScenarioModel = {
                     ? Prisma.sql`s."createdAt"`
                     : Prisma.sql`s."title"`;
     const sqlDirection = Prisma.raw(direction.toUpperCase());
+    const zone = params.timeZone ?? "UTC";
+    // PostgreSQL text zones use POSIX signs for offsets. Intervals use ISO signs.
+    const sqlZone = /^[+-]/.test(zone)
+      ? Prisma.sql`${zone}::interval`
+      : Prisma.sql`${zone}::text`;
     const orderBy =
       params.suiteId && !sortField && !params.sort
         ? Prisma.sql`ORDER BY (SELECT sm."position" FROM "TestSuiteMember" sm WHERE sm."suiteId" = ${params.suiteId}::uuid AND sm."testScenarioId" = s."id") ASC, s."id" ASC`
-        : sortField
-          ? Prisma.sql`ORDER BY ${sortColumn} ${sqlDirection}, s."id" ASC`
-          : params.sort === "title_asc"
-            ? Prisma.sql`ORDER BY s."title" ASC, s."id" ASC`
-            : params.sort === "recently_updated"
-              ? Prisma.sql`ORDER BY s."updatedAt" DESC, s."id" DESC`
-              : Prisma.sql`ORDER BY s."createdAt" DESC, s."id" DESC`;
+        : sortField === "updatedAt"
+          ? Prisma.sql`ORDER BY ((s."updatedAt" AT TIME ZONE 'UTC') AT TIME ZONE ${sqlZone})::date ${sqlDirection}, s."scenarioNumber" ASC`
+          : sortField
+            ? Prisma.sql`ORDER BY ${sortColumn} ${sqlDirection}, s."id" ASC`
+            : params.sort === "title_asc"
+              ? Prisma.sql`ORDER BY s."title" ASC, s."id" ASC`
+              : params.sort === "recently_updated"
+                ? Prisma.sql`ORDER BY s."updatedAt" DESC, s."id" DESC`
+                : Prisma.sql`ORDER BY s."createdAt" DESC, s."id" DESC`;
 
     return await dbClient.$transaction(
       async (transaction) => {
@@ -646,10 +692,11 @@ export const testScenarioModel = {
             })
           : [];
         const byId = new Map(
-          rows.map(({ folder, ...row }) => [
+          rows.map(({ folder, tagAssignments, ...row }) => [
             row.id,
             {
               ...row,
+              tags: tagAssignments.map(({ tag }) => tag),
               folderName: folder?.name ?? null,
               matchedSuiteId: params.suiteId ?? null,
             },
@@ -662,7 +709,25 @@ export const testScenarioModel = {
         }
         const total = Number(totalRows[0]?.total ?? 0n);
 
-        return { scenarios, total };
+        const scope = params.tagIds
+          ? await buildSummaryPredicate(transaction, {
+              ...params,
+              tagIds: undefined,
+            })
+          : predicate;
+        const counts = await transaction.$queryRaw<
+          Array<{ tagId: string; count: bigint }>
+        >(Prisma.sql`
+          ${scope.folderCte} SELECT a."tagId", COUNT(*) AS count ${scope.from}
+          JOIN "ScenarioTagAssignment" a ON a."scenarioId"=s.id WHERE ${scope.where} GROUP BY a."tagId"
+        `);
+        return {
+          scenarios,
+          total,
+          tagCounts: Object.fromEntries(
+            counts.map((row) => [row.tagId, Number(row.count)]),
+          ),
+        };
       },
       { isolationLevel: Prisma.TransactionIsolationLevel.RepeatableRead },
     );

@@ -57,6 +57,8 @@ model Project {
   executions                   Execution[]
   specs                        Spec[]
   issues                       Issue[]
+  scenarioTags                 ScenarioTag[]
+  scenarioTagDeletions         ScenarioTagDeletion[]
   testScenarios                TestScenario[]
   testScenarioFolders          TestScenarioFolder[]
   testSuites                   TestSuite[]
@@ -202,6 +204,7 @@ model User {
   analyzeEnabled          Boolean    @default(false)
 
   // Project relationships
+  scenarioTagDeletions         ScenarioTagDeletion[]
   projects                     Project[]
   issuesCreated                Issue[]                       @relation("IssuesCreated")
   issuesUpdated                Issue[]                       @relation("IssuesUpdated")
@@ -278,11 +281,51 @@ model TestScenario {
   steps            TestScenarioStep[]
   suiteMemberships TestSuiteMember[]
 
+  tagAssignments   ScenarioTagAssignment[]
+
+  @@unique([projectId, id])
   @@unique([projectId, scenarioNumber])
   @@index([projectId])
   @@index([projectId, createdAt])
   @@index([projectId, folderId])
   @@index([createdById])
+}
+
+model ScenarioTag {
+  id             String                  @id @default(uuid()) @db.Uuid
+  projectId      String                  @db.Uuid
+  name           String
+  normalizedName String                  @default(dbgenerated())
+  description    String                  @default("")
+  position       Int                     @default(autoincrement())
+  project        Project                 @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  assignments    ScenarioTagAssignment[]
+
+  @@unique([projectId, normalizedName])
+  @@unique([projectId, id])
+}
+
+model ScenarioTagAssignment {
+  projectId  String       @db.Uuid
+  scenarioId String       @db.Uuid
+  tagId      String       @db.Uuid
+  scenario   TestScenario @relation(fields: [projectId, scenarioId], references: [projectId, id], onDelete: Cascade)
+  tag        ScenarioTag  @relation(fields: [projectId, tagId], references: [projectId, id], onDelete: Cascade)
+
+  @@id([scenarioId, tagId])
+  @@index([tagId, scenarioId])
+}
+
+model ScenarioTagDeletion {
+  id         String    @id @default(uuid()) @db.Uuid
+  projectId  String    @db.Uuid
+  actorId    String    @db.Uuid
+  snapshot   Json
+  restoredAt DateTime?
+  project    Project   @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  actor      User      @relation(fields: [actorId], references: [id], onDelete: Cascade)
+
+  @@index([projectId, actorId])
 }
 
 model TestScenarioFolder {

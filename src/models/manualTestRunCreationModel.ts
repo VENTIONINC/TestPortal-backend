@@ -16,6 +16,7 @@ import {
   lockSuites,
   withScenarioTransaction,
 } from "@/models/testScenarioTransactions";
+import type { ScenarioTagSummary } from "@/types/testScenarios";
 import { TestScenarioNotFoundError } from "@/types/testScenarios";
 import type {
   CreateManualTestRunParams,
@@ -70,12 +71,32 @@ async function findDetail(
   });
   if (!record) return null;
   const { intervals, ...run } = record;
+  const assignments = await client.scenarioTagAssignment.findMany({
+    where: {
+      projectId,
+      scenarioId: {
+        in: run.scenarios.map((scenario) => scenario.sourceScenarioId),
+      },
+    },
+    select: {
+      scenarioId: true,
+      tag: { select: { id: true, name: true, description: true } },
+    },
+    orderBy: { tag: { position: "asc" } },
+  });
+  const liveTags = new Map<string, ScenarioTagSummary[]>();
+  for (const { scenarioId, tag } of assignments) {
+    const tags = liveTags.get(scenarioId);
+    if (tags) tags.push(tag);
+    else liveTags.set(scenarioId, [tag]);
+  }
   return {
     ...run,
     hasBeenReopened: mapHasBeenReopened(intervals),
     environmentProperties: mapEnvironmentProperties(run.environmentProperties),
     scenarios: run.scenarios.map((scenario) => ({
       ...scenario,
+      tags: liveTags.get(scenario.sourceScenarioId) ?? [],
       ...mapScenarioEvidence(scenario),
       steps: scenario.steps.map((step) => ({
         ...step,

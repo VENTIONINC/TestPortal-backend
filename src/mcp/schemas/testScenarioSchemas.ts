@@ -102,6 +102,7 @@ export const listTestScenariosSchema = z
       .describe(
         "Ordering: recently_created (default, createdAt DESC then id DESC), recently_updated (updatedAt DESC then id DESC), or title_asc (title ASC then id ASC under database collation)",
       ),
+    timeZone: z.string().optional(),
     sortField: z.enum(TEST_SCENARIO_SORT_FIELDS).optional(),
     sortDirection: z.enum(["asc", "desc"]).optional(),
     scenarioKey: z

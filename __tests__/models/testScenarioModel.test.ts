@@ -93,6 +93,7 @@ const aggregate = {
   },
   updatedBy: null,
   suiteMemberships: [],
+  tagAssignments: [],
 };
 
 describe("testScenarioModel", () => {
@@ -228,6 +229,7 @@ describe("testScenarioModel", () => {
       {
         ...scenario,
         folder: null,
+        tagAssignments: [],
         createdBy: {
           id: scenario.createdById,
           name: "Creator",
@@ -237,7 +239,7 @@ describe("testScenarioModel", () => {
     ]);
     queryRawMock
       .mockResolvedValueOnce([{ id: scenario.id }])
-      .mockResolvedValueOnce([{ total: 1n }]);
+      .mockResolvedValueOnce([{ total: 1n }]).mockResolvedValueOnce([]);
 
     await testScenarioModel.listSummaries({
       projectId: scenario.projectId,
@@ -248,7 +250,7 @@ describe("testScenarioModel", () => {
       sort: "title_asc",
     });
 
-    expect(queryRawMock).toHaveBeenCalledTimes(2);
+    expect(queryRawMock).toHaveBeenCalledTimes(3);
     expect(summaryFindManyMock).toHaveBeenCalledWith(
       expect.objectContaining({
         where: { id: { in: [scenario.id] }, projectId: scenario.projectId },
@@ -282,8 +284,8 @@ describe("testScenarioModel", () => {
 
   it("combines priority, creator, folder, and search before calculating page totals", async () => {
     const folderId = "66666666-6666-6666-6666-666666666666";
-    queryRawMock.mockResolvedValueOnce([{ id: folderId }]).mockResolvedValueOnce([{ id: scenario.id }]).mockResolvedValueOnce([{ total: 42n }]);
-    summaryFindManyMock.mockResolvedValueOnce([{ ...scenario, folder: { name: "Cases" }, createdBy: { id: scenario.createdById, name: "Creator", email: "creator@example.test" } }]);
+    queryRawMock.mockResolvedValueOnce([{ id: folderId }]).mockResolvedValueOnce([{ id: scenario.id }]).mockResolvedValueOnce([{ total: 42n }]).mockResolvedValueOnce([]);
+    summaryFindManyMock.mockResolvedValueOnce([{ ...scenario, tagAssignments: [], folder: { name: "Cases" }, createdBy: { id: scenario.createdById, name: "Creator", email: "creator@example.test" } }]);
     const result = await testScenarioModel.listSummaries({ projectId: scenario.projectId, page: 2, limit: 10, priority: "high", createdById: scenario.createdById, folderId, search: "login" });
     const listQuery = queryRawMock.mock.calls[1]?.[0] as { sql?: string; values?: unknown[] } | undefined;
     expect(listQuery?.sql).toContain('s."priority" IN');

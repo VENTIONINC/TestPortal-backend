@@ -251,6 +251,7 @@ export const testScenarioService = {
       "priority",
       "folderId",
       ...SCENARIO_FIELDS.filter((field) => field !== "title"),
+      "tagIds",
       "steps",
       "suiteIds",
       "newSuites",
@@ -275,6 +276,7 @@ export const testScenarioService = {
         params.priority === undefined ? "medium" : params.priority,
       ),
       relatedIssueUrl: normalizeRelatedIssueUrl(params.relatedIssueUrl ?? null),
+      ...(params.tagIds !== undefined ? { tagIds: params.tagIds } : {}),
       steps: validateCreateSteps(params.steps),
       ...normalizeSuites(params),
     };
@@ -306,6 +308,8 @@ export const testScenarioService = {
       "createdByIds",
       "priority",
       "sort",
+      "tagIds",
+      "timeZone",
       "sortField",
       "sortDirection",
       "scenarioKey",
@@ -359,6 +363,15 @@ export const testScenarioService = {
       throw new TestScenarioValidationError(
         "sort cannot be combined with sortField",
       );
+    let timeZone = params.timeZone;
+    if (timeZone !== undefined) {
+      try {
+        timeZone = new Intl.DateTimeFormat("en", { timeZone }).resolvedOptions()
+          .timeZone;
+      } catch {
+        throw new TestScenarioValidationError("Unknown time zone");
+      }
+    }
     const sort = normalizeSort(params.sort);
     const filters = {
       scenarioKey: normalizeColumnFilter(params.scenarioKey, "scenarioKey"),
@@ -387,37 +400,41 @@ export const testScenarioService = {
       throw new TestScenarioNotFoundError("Suite not found");
     }
 
-    const { scenarios, total } = await testScenarioModel.listSummaries({
-      projectId: params.projectId,
-      page,
-      limit,
-      ...(search !== undefined ? { search } : {}),
-      ...(params.createdById !== undefined
-        ? { createdById: params.createdById }
-        : {}),
-      ...(createdByIds !== undefined ? { createdByIds } : {}),
-      ...(params.priority !== undefined ? { priority: params.priority } : {}),
-      ...(!params.suiteId || params.sort !== undefined ? { sort } : {}),
-      ...(params.sortField !== undefined
-        ? { sortField: params.sortField }
-        : {}),
-      ...(params.sortDirection !== undefined
-        ? { sortDirection: params.sortDirection }
-        : {}),
-      ...(filters.scenarioKey ? { scenarioKey: filters.scenarioKey } : {}),
-      ...(filters.title ? { title: filters.title } : {}),
-      ...(filters.details ? { details: filters.details } : {}),
-      ...(filters.folder ? { folder: filters.folder } : {}),
-      ...(filters.createdBy ? { createdBy: filters.createdBy } : {}),
-      ...(params.folderId !== undefined ? { folderId: params.folderId } : {}),
-      ...(params.includeDescendants !== undefined
-        ? { includeDescendants: params.includeDescendants }
-        : {}),
-      ...(params.suiteId !== undefined ? { suiteId: params.suiteId } : {}),
-    });
+    const { scenarios, total, tagCounts } =
+      await testScenarioModel.listSummaries({
+        projectId: params.projectId,
+        page,
+        limit,
+        ...(params.tagIds !== undefined ? { tagIds: params.tagIds } : {}),
+        ...(search !== undefined ? { search } : {}),
+        ...(params.createdById !== undefined
+          ? { createdById: params.createdById }
+          : {}),
+        ...(createdByIds !== undefined ? { createdByIds } : {}),
+        ...(params.priority !== undefined ? { priority: params.priority } : {}),
+        ...(!params.suiteId || params.sort !== undefined ? { sort } : {}),
+        ...(timeZone !== undefined ? { timeZone } : {}),
+        ...(params.sortField !== undefined
+          ? { sortField: params.sortField }
+          : {}),
+        ...(params.sortDirection !== undefined
+          ? { sortDirection: params.sortDirection }
+          : {}),
+        ...(filters.scenarioKey ? { scenarioKey: filters.scenarioKey } : {}),
+        ...(filters.title ? { title: filters.title } : {}),
+        ...(filters.details ? { details: filters.details } : {}),
+        ...(filters.folder ? { folder: filters.folder } : {}),
+        ...(filters.createdBy ? { createdBy: filters.createdBy } : {}),
+        ...(params.folderId !== undefined ? { folderId: params.folderId } : {}),
+        ...(params.includeDescendants !== undefined
+          ? { includeDescendants: params.includeDescendants }
+          : {}),
+        ...(params.suiteId !== undefined ? { suiteId: params.suiteId } : {}),
+      });
 
     return {
       scenarios,
+      tagCounts,
       total,
       page,
       limit,
@@ -432,6 +449,7 @@ export const testScenarioService = {
   > {
     validateKeys(params as unknown as Record<string, unknown>, [
       "projectId",
+      "tagIds",
       "search",
       "priority",
       "scenarioKey",
@@ -481,6 +499,7 @@ export const testScenarioService = {
         `Project with id '${params.projectId}' not found`,
       );
     return await testScenarioModel.listScenarioAuthors(params.projectId, {
+      ...(params.tagIds !== undefined ? { tagIds: params.tagIds } : {}),
       ...(search !== undefined ? { search } : {}),
       ...(params.priority !== undefined ? { priority: params.priority } : {}),
       ...(filters.scenarioKey ? { scenarioKey: filters.scenarioKey } : {}),
@@ -506,6 +525,7 @@ export const testScenarioService = {
   }> {
     validateKeys(params as unknown as Record<string, unknown>, [
       "projectId",
+      "tagIds",
       "search",
       "scenarioKey",
       "title",
@@ -562,6 +582,7 @@ export const testScenarioService = {
           ? { createdById: params.createdById }
           : {}),
         ...(createdByIds !== undefined ? { createdByIds } : {}),
+        ...(params.tagIds !== undefined ? { tagIds: params.tagIds } : {}),
         ...(search !== undefined ? { search } : {}),
         ...(filters.scenarioKey ? { scenarioKey: filters.scenarioKey } : {}),
         ...(filters.title ? { title: filters.title } : {}),
@@ -625,6 +646,7 @@ export const testScenarioService = {
       );
     const scenarioIds = await testScenarioModel.resolveSelection({
       projectId: params.projectId,
+      ...(params.tagIds !== undefined ? { tagIds: params.tagIds } : {}),
       ...(search !== undefined ? { search } : {}),
       ...(params.createdById !== undefined
         ? { createdById: params.createdById }

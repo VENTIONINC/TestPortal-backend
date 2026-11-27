@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { OpenAPIRegistry } from "@asteasolutions/zod-to-openapi";
+import { tagSummary } from "@/schemas/scenarioTagSchemas";
 import { ErrorResponseSchema } from "./common";
 import { ResultSchema } from "./results";
 import { z } from "./zod";
@@ -35,6 +36,7 @@ const TestScenarioSchema = z
       .object({ id: z.string().uuid(), name: z.string(), email: z.string() })
       .strict()
       .nullable(),
+    tags: z.array(tagSummary),
     suites: z.array(
       z.object({ id: z.string().uuid(), name: z.string() }).strict(),
     ),
@@ -85,6 +87,7 @@ const CreateTestScenarioRequestSchema = z
     priority: testScenarioPrioritySchema.default("medium"),
     relatedIssueUrl: testScenarioRelatedIssueUrlSchema.nullable().optional(),
     steps: z.array(CreateTestScenarioStepSchema).default([]),
+    tagIds: z.array(z.string().uuid()).optional(),
     suiteIds: z.array(z.string().uuid()).optional(),
     newSuites: z
       .array(z.object({ name: z.string().trim().min(1) }).strict())
@@ -116,6 +119,7 @@ const TestScenarioSummarySchema = z
     updatedAt: z.string(),
     folderId: z.string().uuid().nullable(),
     folderName: z.string().nullable(),
+    tags: z.array(tagSummary),
     matchedSuiteId: z.string().uuid().nullable().optional(),
   })
   .strict()
@@ -251,6 +255,9 @@ const TestScenarioListQueryBaseSchema = z.object({
       "Optional creator User UUID filter. It may identify any user; a valid UUID with no matching scenarios returns an empty page.",
     example: "33333333-3333-4333-8333-333333333333",
   }),
+  tagIds: z.string().optional().openapi({
+    description: "Comma-separated tag UUIDs, matching any selected tag.",
+  }),
   createdByIds: z
     .string()
     .regex(
@@ -277,6 +284,7 @@ const TestScenarioListQueryBaseSchema = z.object({
       "Ordering: recently_created (createdAt DESC, id DESC), recently_updated (updatedAt DESC, id DESC), or title_asc (title ASC, id ASC).",
     example: "title_asc",
   }),
+  timeZone: z.string().optional(),
   sortField: z.enum(TEST_SCENARIO_SORT_FIELDS).optional().openapi({
     description:
       "Single sort column. Defaults to createdAt descending when omitted. Cannot be combined with legacy sort.",
@@ -337,6 +345,7 @@ const TestScenarioListQuerySchema = TestScenarioListQueryBaseSchema.superRefine(
 
 const TestScenarioListResponseSchema = z
   .object({
+    tagCounts: z.record(z.number().int().nonnegative()),
     scenarios: z.array(TestScenarioSummarySchema),
     total: z.number().int().nonnegative(),
     page: z.number().int().positive(),
@@ -351,6 +360,7 @@ const TestScenarioSelectionQuerySchema = TestScenarioListQueryBaseSchema.omit({
   sort: true,
   sortField: true,
   sortDirection: true,
+  timeZone: true,
 })
   .strict()
   .superRefine((value, context) => {
@@ -377,6 +387,7 @@ const TestScenarioAuthorsQuerySchema = TestScenarioListQueryBaseSchema.omit({
   sort: true,
   sortField: true,
   sortDirection: true,
+  timeZone: true,
 })
   .strict()
   .openapi("TestScenarioAuthorsQuery");
@@ -388,6 +399,7 @@ const TestScenarioPriorityCountsQuerySchema =
     sort: true,
     sortField: true,
     sortDirection: true,
+    timeZone: true,
   })
     .strict()
     .superRefine((value, context) => {

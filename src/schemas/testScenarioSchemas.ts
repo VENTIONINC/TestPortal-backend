@@ -9,27 +9,32 @@ import {
 
 const uuidSchema = z.string().uuid("Must be a valid UUID");
 const nonBlankText = z.string().trim().min(1, "Value must not be blank");
-export const scenarioCreatorIdsFilterSchema = z
-  .string()
-  .min(1)
-  .superRefine((value, context) => {
-    const ids = value.split(",");
-    ids.forEach((id, index) => {
-      if (!uuidSchema.safeParse(id).success) {
+const commaSeparatedUuidSchema = (duplicateMessage: string) =>
+  z
+    .string()
+    .min(1)
+    .superRefine((value, context) => {
+      const ids = value.split(",");
+      ids.forEach((id, index) => {
+        if (!uuidSchema.safeParse(id).success) {
+          context.addIssue({
+            code: "custom",
+            path: [index],
+            message: "Each value must be a valid UUID",
+          });
+        }
+      });
+      if (new Set(ids.map((id) => id.toLowerCase())).size !== ids.length) {
         context.addIssue({
           code: "custom",
-          path: [index],
-          message: "Each value must be a valid UUID",
+          message: duplicateMessage,
         });
       }
     });
-    if (new Set(ids.map((id) => id.toLowerCase())).size !== ids.length) {
-      context.addIssue({
-        code: "custom",
-        message: "Creator UUIDs must be unique",
-      });
-    }
-  });
+
+export const scenarioCreatorIdsFilterSchema = commaSeparatedUuidSchema(
+  "Creator UUIDs must be unique",
+);
 
 export const testScenarioPrioritySchema = z.enum(["low", "medium", "high"]);
 export const testScenarioRelatedIssueUrlSchema = z
@@ -85,6 +90,7 @@ export const createTestScenarioSchema = z
     priority: testScenarioPrioritySchema.default("medium"),
     relatedIssueUrl: testScenarioRelatedIssueUrlSchema.nullable().optional(),
     steps: z.array(createStepSchema).default([]),
+    tagIds: z.array(uuidSchema).optional(),
     suiteIds: scenarioSuiteIdsSchema.optional(),
     newSuites: scenarioNewSuitesSchema.optional(),
   })
@@ -187,9 +193,11 @@ const testScenarioListQueryBaseSchema = z.object({
   limit: positiveIntegerQuerySchema(30, 100),
   search: z.string().trim().optional(),
   createdById: uuidSchema.optional(),
+  tagIds: commaSeparatedUuidSchema("Tag UUIDs must be unique").optional(),
   createdByIds: scenarioCreatorIdsFilterSchema.optional(),
   priority: z.string().regex(SCENARIO_PRIORITY_FILTER_PATTERN).optional(),
   sort: z.enum(TEST_SCENARIO_SORT_VALUES).optional(),
+  timeZone: z.string().optional(),
   sortField: z.enum(TEST_SCENARIO_SORT_FIELDS).optional(),
   sortDirection: z.enum(["asc", "desc"]).optional(),
   scenarioKey: z
@@ -265,6 +273,7 @@ export const testScenarioSelectionQuerySchema = testScenarioListQueryBaseSchema
     sort: true,
     sortField: true,
     sortDirection: true,
+    timeZone: true,
   })
   .strict()
   .superRefine(validateScenarioAuthorFilter);
@@ -277,6 +286,7 @@ export const testScenarioAuthorsQuerySchema = testScenarioListQueryBaseSchema
     sort: true,
     sortField: true,
     sortDirection: true,
+    timeZone: true,
   })
   .strict();
 export const testScenarioPriorityCountsQuerySchema =
@@ -288,6 +298,7 @@ export const testScenarioPriorityCountsQuerySchema =
       sort: true,
       sortField: true,
       sortDirection: true,
+      timeZone: true,
     })
     .strict()
     .superRefine(validateScenarioAuthorFilter);

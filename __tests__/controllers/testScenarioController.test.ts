@@ -50,6 +50,7 @@ const user = {
   updatedAt: new Date("2026-01-01T00:00:00.000Z"),
 } as const;
 const scenario: TestScenarioResponse = {
+  tags: [],
   id: scenarioId,
   projectId,
   createdById: userId,

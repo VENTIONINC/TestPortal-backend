@@ -757,6 +757,7 @@ describePostgres("test scenario PostgreSQL aggregate integration", () => {
       "priority",
       "projectId",
       "scenarioKey",
+      "tags",
       "title",
       "updatedAt",
     ]);
