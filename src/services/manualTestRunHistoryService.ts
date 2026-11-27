@@ -35,6 +35,7 @@ const SHOW_FILTERS: readonly ManualTestRunShowFilter[] = [
 const ALLOWED_KEYS = [
   "projectId",
   "runId",
+  "sourceScenarioId",
   "page",
   "limit",
   "search",
@@ -66,9 +67,11 @@ function validateListParams(
     "projectId" | "page" | "limit" | "search" | "show" | "period" | "timeZone"
   >
 > &
-  Pick<ListManualTestRunsParams, "dateFrom" | "dateTo"> {
+  Pick<ListManualTestRunsParams, "dateFrom" | "dateTo" | "sourceScenarioId"> {
   validateKeys(params, ALLOWED_KEYS);
   requireUuid(params.projectId, "Project ID");
+  if (params.sourceScenarioId !== undefined)
+    requireUuid(params.sourceScenarioId, "Source scenario ID");
   const page = params.page ?? 1;
   const limit = params.limit ?? 30;
   if (!Number.isInteger(page) || page < 1) {
@@ -123,6 +126,9 @@ function validateListParams(
   }
   return {
     projectId: params.projectId,
+    ...(params.sourceScenarioId !== undefined
+      ? { sourceScenarioId: params.sourceScenarioId }
+      : {}),
     page,
     limit,
     search,

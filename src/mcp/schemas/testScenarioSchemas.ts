@@ -2,6 +2,11 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { z } from "zod/v3";
+import {
+  scenarioCreatorIdsFilterSchema,
+  SCENARIO_PRIORITY_FILTER_PATTERN,
+  validateScenarioAuthorFilter,
+} from "@/schemas/testScenarioSchemas";
 import type { MCPToolSchema } from "@/types";
 import {
   TEST_SCENARIO_SORT_FIELDS,
@@ -47,6 +52,19 @@ const limit = () => z.number().int().min(1).max(100);
 export const listTestScenariosSchema = z
   .object({
     projectId: uuid().describe("The UUID of the project"),
+    folderId: z
+      .union([uuid(), z.literal("unfiled")])
+      .optional()
+      .describe(
+        "Folder UUID or unfiled; folder UUIDs include descendants by default",
+      ),
+    includeDescendants: z
+      .boolean()
+      .optional()
+      .describe("Set false to select direct folder assignments only"),
+    suiteId: uuid()
+      .optional()
+      .describe("Filter to members of this project suite"),
     page: page().default(1),
     limit: limit().default(30),
     search: z
@@ -59,6 +77,24 @@ export const listTestScenariosSchema = z
       .optional()
       .describe(
         "Optional creator User UUID filter; may identify any user, not only the authenticated user",
+      ),
+    createdByIds: z
+      .string()
+      .min(1)
+      .refine(
+        (value) => scenarioCreatorIdsFilterSchema.safeParse(value).success,
+        "Use a comma-separated list of distinct creator UUIDs",
+      )
+      .optional()
+      .describe(
+        "Comma-separated creator UUIDs; matches any listed author. Use instead of createdById.",
+      ),
+    priority: z
+      .string()
+      .regex(SCENARIO_PRIORITY_FILTER_PATTERN)
+      .optional()
+      .describe(
+        "One or more priorities (low, medium, high), separated by commas; matches any listed priority.",
       ),
     sort: z
       .enum(TEST_SCENARIO_SORT_VALUES)
@@ -96,6 +132,7 @@ export const listTestScenariosSchema = z
   })
   .strict()
   .superRefine((value, context) => {
+    validateScenarioAuthorFilter(value, context);
     if (value.sortDirection && !value.sortField)
       context.addIssue({
         code: "custom",
@@ -147,5 +184,46 @@ export const deleteTestScenarioSchema = z
   .object({
     scenarioId: uuid().describe("The UUID of the Test Scenario"),
     projectId: uuid().describe("The UUID of the project"),
+  })
+  .strict() satisfies MCPToolSchema;
+
+export const appendTestScenarioStepSchema = z
+  .object({
+    projectId: uuid().describe("The UUID of the project"),
+    scenarioId: uuid().describe("The UUID of the Test Scenario"),
+    action: z.string().trim().min(1),
+    expectedResult: z.string().trim().min(1).optional(),
+  })
+  .strict() satisfies MCPToolSchema;
+
+export const updateTestScenarioStepSchema = z
+  .object({
+    projectId: uuid().describe("The UUID of the project"),
+    scenarioId: uuid().describe("The UUID of the Test Scenario"),
+    stepId: uuid().describe("The UUID of the scenario step"),
+    action: z.string().trim().min(1).optional(),
+    expectedResult: z.string().trim().min(1).nullable().optional(),
+  })
+  .strict()
+  .refine(
+    (value) => value.action !== undefined || value.expectedResult !== undefined,
+    { message: "At least one step field is required" },
+  ) satisfies MCPToolSchema;
+
+export const deleteTestScenarioStepSchema = z
+  .object({
+    projectId: uuid().describe("The UUID of the project"),
+    scenarioId: uuid().describe("The UUID of the Test Scenario"),
+    stepId: uuid().describe("The UUID of the scenario step"),
+  })
+  .strict() satisfies MCPToolSchema;
+
+export const reorderTestScenarioStepsSchema = z
+  .object({
+    projectId: uuid().describe("The UUID of the project"),
+    scenarioId: uuid().describe("The UUID of the Test Scenario"),
+    stepIds: z
+      .array(uuid())
+      .describe("Every current step UUID exactly once, in the desired order"),
   })
   .strict() satisfies MCPToolSchema;

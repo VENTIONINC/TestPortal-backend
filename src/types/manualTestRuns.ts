@@ -201,6 +201,7 @@ export interface UpdateManualTestRunScenarioEvidenceParams {
 
 export interface ListManualTestRunsParams {
   projectId: string;
+  sourceScenarioId?: string;
   page?: number;
   limit?: number;
   search?: string | undefined;

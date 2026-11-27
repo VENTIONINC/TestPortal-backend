@@ -112,7 +112,7 @@ the catalog-provided `downloadUrl` or directly to
 
 ### Folders and suites
 
-Organization endpoints use the existing bearer JWT authentication and require an explicit `projectId` on every request. `GET` and `POST /api/v2/test-scenario-folders` list or create project folders; `PATCH` and `DELETE /api/v2/test-scenario-folders/{folderId}` rename/move or remove a folder. Folder descriptions are optional and nullable: omit `description` in a patch to preserve the stored value, or send `null`/blank text to clear it. Deletion requires `disposition=parent` or `disposition=unfiled`; direct scenarios are reassigned and child folders are promoted.
+Organization endpoints use the existing bearer JWT authentication and require an explicit `projectId` on every request. `GET` and `POST /api/v2/test-scenario-folders` list or create project folders; `PATCH` and `DELETE /api/v2/test-scenario-folders/{folderId}` rename/move or remove a folder. Folder descriptions are optional and nullable: omit `description` in a patch to preserve the stored value, or send `null`/blank text to clear it. Deletion removes the folder and all its descendants and moves the affected scenarios to Unfiled. The authenticated user is recorded as the updater, and the response includes restoration data.
 
 The lightweight `GET /api/v2/test-scenarios` catalog supports an optional comma-separated `priority` filter (for example `priority=high,medium`); omitting it includes all priorities, including null. `GET /api/v2/test-scenarios/authors?projectId=...` returns stable UUID-identified creators for scenarios in that project, including authors outside the current page and inactive users. `GET /api/v2/test-scenarios/selection` accepts the catalog's matching project, folder, search, creator, priority, and legacy text filters (without pagination or sorting) and returns `{ "scenarioIds": [...], "total": N }`; the count is derived from the returned unique UUID list. Neither endpoint returns Markdown bodies.
 
@@ -282,6 +282,12 @@ result, assignee, bulk mutation, completion, and reopen operations return the
 authoritative updated run detail. Mutations against completed runs return a
 conflict instead of partially applying changes.
 
+REST PATCH still accepts terminal run statuses; MCP requires
+`testportal-complete-manual-test-run` for completion.
+MCP records client-observed outcomes and does not execute browser/API tests or
+create automated Results. See [MCP Tools Documentation](MCP_TOOLS.md#manual-test-runs)
+for the full contract and examples.
+
 ## Related Documentation
 
 - [How to Inspect the MCP Server](INSPECT_MCP_SERVER.md)
@@ -450,7 +456,7 @@ Both route paths are mounted under `/api`, producing the public endpoints
   - Varies based on the MCP request. Typically MCP `Response` JSON objects.
   - `400 Bad Request`: If `mcp-session-id` is invalid or if the request body is not a valid MCP InitializeRequest when no session ID is provided.
 - **Notes:**
-  - Manages MCP sessions and tool registration (e.g., `check-status` tool).
+  - Manages MCP sessions and registers `testportal-find-action` and `testportal-execute-action`. For example, invoke the `testportal-check-status` action through `testportal-execute-action` with `{"actionId":"testportal-check-status","arguments":{}}`.
   - Uses `StreamableHTTPServerTransport` for handling communication.
 
 ### GET `/api/v2/mcp`

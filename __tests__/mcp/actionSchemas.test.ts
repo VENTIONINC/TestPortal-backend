@@ -1,0 +1,69 @@
+// Copyright 2026 VENSOLUTIONSGROUP LTD
+// SPDX-License-Identifier: Apache-2.0
+
+import { parseActionInput } from "@/mcp/actionSchemas";
+import { getIssuesSchema } from "@/mcp/schemas/issueSchemas";
+import {
+  listManualTestRunsSchema,
+  updateManualTestRunSchema,
+  startManualTestRunSchema,
+} from "@/mcp/schemas/manualTestRunSchemas";
+import { testUuid } from "@/test-utils/testUuid";
+
+const projectId = testUuid(1);
+const runId = testUuid(2);
+
+describe("action input normalization", () => {
+  it("preserves raw shape validation and unknown-key stripping", async () => {
+    expect(
+      await parseActionInput(getIssuesSchema, {
+        projectId,
+        page: "2",
+        extra: true,
+      }),
+    ).toMatchObject({ projectId, page: "2" });
+    await expect(
+      parseActionInput(getIssuesSchema, { projectId, page: 2 }),
+    ).rejects.toThrow();
+    expect(await parseActionInput({}, { extra: true })).toEqual({});
+  });
+
+  it("retains numeric pagination, defaults, strictness and refinements", async () => {
+    expect(
+      await parseActionInput(listManualTestRunsSchema, { projectId }),
+    ).toMatchObject({ page: 1, limit: 30 });
+    await expect(
+      parseActionInput(listManualTestRunsSchema, { projectId, page: "2" }),
+    ).rejects.toThrow();
+    await expect(
+      parseActionInput(updateManualTestRunSchema, { projectId, runId }),
+    ).rejects.toThrow();
+    await expect(
+      parseActionInput(updateManualTestRunSchema, {
+        projectId,
+        runId,
+        notes: "ok",
+        status: "passed",
+      }),
+    ).rejects.toThrow();
+
+    await expect(
+      parseActionInput(listManualTestRunsSchema, {
+        projectId,
+        period: "custom",
+        dateFrom: "2026-10-02",
+        dateTo: "2026-10-01",
+      }),
+    ).rejects.toThrow();
+  });
+
+  it("preserves environment transformations", async () => {
+    expect(
+      await parseActionInput(startManualTestRunSchema, {
+        projectId,
+        scenarioIds: [runId],
+        browser: "  ",
+      }),
+    ).toMatchObject({ browser: null });
+  });
+});

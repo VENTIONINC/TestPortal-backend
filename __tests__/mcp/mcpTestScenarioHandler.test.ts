@@ -13,6 +13,10 @@ import type {
   TestScenarioMcpListParams,
   TestScenarioMcpUpdateParams,
   TestScenarioResponse,
+  AppendTestScenarioStepParams,
+  UpdateTestScenarioStepParams,
+  DeleteTestScenarioStepParams,
+  ReorderTestScenarioStepsParams,
   TestScenarioSummaryListResponse,
 } from "@/types/testScenarios";
 
@@ -32,6 +36,22 @@ const updateScenarioMock =
   >();
 const deleteScenarioMock =
   jest.fn<(scenarioId: string, projectId: string) => Promise<void>>();
+const appendStepMock =
+  jest.fn<
+    (params: AppendTestScenarioStepParams) => Promise<TestScenarioResponse>
+  >();
+const updateStepMock =
+  jest.fn<
+    (params: UpdateTestScenarioStepParams) => Promise<TestScenarioResponse>
+  >();
+const deleteStepMock =
+  jest.fn<
+    (params: DeleteTestScenarioStepParams) => Promise<TestScenarioResponse>
+  >();
+const reorderStepsMock =
+  jest.fn<
+    (params: ReorderTestScenarioStepsParams) => Promise<TestScenarioResponse>
+  >();
 const getResultsMock =
   jest.fn<
     (params: {
@@ -57,6 +77,10 @@ jest.mock("@/services/testScenarioService", () => ({
     getScenarioById: getScenarioMock,
     updateScenario: updateScenarioMock,
     deleteScenario: deleteScenarioMock,
+    appendStep: appendStepMock,
+    updateStep: updateStepMock,
+    deleteStep: deleteStepMock,
+    reorderSteps: reorderStepsMock,
   },
 }));
 jest.mock("@/services/testScenarioIntegrationService", () => ({
@@ -67,6 +91,7 @@ jest.mock("@/services/testScenarioIntegrationService", () => ({
 }));
 
 import { mcpTestScenarioHandler } from "@/handlers/mcpTestScenarioHandler";
+import { testUuid } from "@/test-utils/testUuid";
 
 const projectId = "11111111-1111-1111-1111-111111111111";
 const scenarioId = "22222222-2222-2222-2222-222222222222";
@@ -131,6 +156,10 @@ describe("mcpTestScenarioHandler", () => {
     getScenarioMock.mockResolvedValue(scenario);
     updateScenarioMock.mockResolvedValue(scenario);
     deleteScenarioMock.mockResolvedValue(undefined);
+    appendStepMock.mockResolvedValue(scenario);
+    updateStepMock.mockResolvedValue(scenario);
+    deleteStepMock.mockResolvedValue(scenario);
+    reorderStepsMock.mockResolvedValue(scenario);
     getResultsMock.mockResolvedValue(resultEvidence);
     getIssuesMock.mockResolvedValue(issueEvidence);
   });
@@ -227,5 +256,44 @@ describe("mcpTestScenarioHandler", () => {
       mcpTestScenarioHandler.deleteTestScenario(params),
     ).resolves.toEqual({ scenarioId, projectId, deleted: true });
     expect(deleteScenarioMock).toHaveBeenCalledWith(scenarioId, projectId);
+  });
+
+  it("delegates all step operations exactly and preserves omitted fields", async () => {
+    const stepId = testUuid(4);
+    const appendParams = { projectId, scenarioId, action: "Open" };
+    const updateParams = { projectId, scenarioId, stepId, action: "Submit" };
+    const deleteParams = { projectId, scenarioId, stepId };
+    const reorderParams = { projectId, scenarioId, stepIds: [stepId] };
+
+    await expect(
+      mcpTestScenarioHandler.appendTestScenarioStep(appendParams),
+    ).resolves.toBe(scenario);
+    await expect(
+      mcpTestScenarioHandler.updateTestScenarioStep(updateParams),
+    ).resolves.toBe(scenario);
+    await expect(
+      mcpTestScenarioHandler.deleteTestScenarioStep(deleteParams),
+    ).resolves.toBe(scenario);
+    await expect(
+      mcpTestScenarioHandler.reorderTestScenarioSteps(reorderParams),
+    ).resolves.toBe(scenario);
+
+    expect(appendStepMock).toHaveBeenCalledWith(appendParams);
+    expect(updateStepMock).toHaveBeenCalledWith(updateParams);
+    expect(deleteStepMock).toHaveBeenCalledWith(deleteParams);
+    expect(reorderStepsMock).toHaveBeenCalledWith(reorderParams);
+  });
+
+  it("propagates step service failures", async () => {
+    const failure = new Error("step service failed");
+    appendStepMock.mockRejectedValue(failure);
+
+    await expect(
+      mcpTestScenarioHandler.appendTestScenarioStep({
+        projectId,
+        scenarioId,
+        action: "Open",
+      }),
+    ).rejects.toBe(failure);
   });
 });
