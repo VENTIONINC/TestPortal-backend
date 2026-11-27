@@ -267,8 +267,6 @@ export const testScenarioOrganizationService = {
     });
   },
 
-  deleteSingleFolder: testScenarioOrganizationWrites.deleteSingleFolder,
-
   async deleteFolder(input: {
     projectId: string;
     folderId: string;

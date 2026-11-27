@@ -1,7 +1,7 @@
 // Copyright 2026 VENSOLUTIONSGROUP LTD
 // SPDX-License-Identifier: Apache-2.0
 
-import type { Prisma, Spec } from "@prisma/client";
+import { Prisma, type Spec } from "@prisma/client";
 import { dbClient } from "@/prisma/client";
 import type { PrismaSpec } from "@/types";
 
@@ -32,21 +32,25 @@ function listingWhere({
 }
 
 export const specModel = {
-  async list(
+  async listPage(
     filter: SpecListingFilter,
     page: number,
     limit: number,
-  ): Promise<Spec[]> {
-    return await dbClient.spec.findMany({
-      where: listingWhere(filter),
-      orderBy: [{ createdAt: "desc" }, { id: "desc" }],
-      skip: (page - 1) * limit,
-      take: limit,
-    });
-  },
-
-  async count(filter: SpecListingFilter): Promise<number> {
-    return await dbClient.spec.count({ where: listingWhere(filter) });
+  ): Promise<{ specs: Spec[]; total: number }> {
+    const where = listingWhere(filter);
+    const [specs, total] = await dbClient.$transaction(
+      [
+        dbClient.spec.findMany({
+          where,
+          orderBy: [{ createdAt: "desc" }, { id: "desc" }],
+          skip: (page - 1) * limit,
+          take: limit,
+        }),
+        dbClient.spec.count({ where }),
+      ],
+      { isolationLevel: Prisma.TransactionIsolationLevel.RepeatableRead },
+    );
+    return { specs, total };
   },
 
   findById: async (

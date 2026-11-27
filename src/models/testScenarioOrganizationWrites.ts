@@ -691,62 +691,6 @@ async function reorderMembers(
 }
 
 // Folder writes
-// MCP keeps the single-folder disposition contract. REST deletion uses the subtree below.
-async function deleteSingleFolder(input: {
-  projectId: string;
-  folderId: string;
-  disposition: "parent" | "unfiled";
-}): Promise<{ deleted: true }> {
-  return await withScenarioTransaction(async (tx) => {
-    const { projectId, folderId, disposition } = input;
-    await tx.$queryRaw(
-      Prisma.sql`SELECT "id" FROM "Project" WHERE "id" = ${projectId}::uuid FOR UPDATE`,
-    );
-    const folder = await tx.testScenarioFolder.findFirst({
-      where: { id: folderId, projectId },
-      select: { parentId: true, position: true },
-    });
-    if (!folder) throw notFound();
-
-    const assigned = { projectId, folderId };
-    const discovered = await tx.testScenario.findMany({
-      where: assigned,
-      select: { id: true },
-    });
-    const ids = discovered.map(({ id }) => id);
-    const discoveredIds = new Set(ids);
-    await lockScenarios(tx, projectId, ids);
-    const current = await tx.testScenario.findMany({
-      where: assigned,
-      select: { id: true },
-    });
-    if (current.some(({ id }) => !discoveredIds.has(id)))
-      throw new ScenarioTransactionRetryError();
-
-    await tx.testScenario.updateMany({
-      where: { ...assigned, id: { in: ids } },
-      data: {
-        folderId: disposition === "parent" ? folder.parentId : null,
-        revision: { increment: 1 },
-      },
-    });
-
-    const children = await tx.testScenarioFolder.findMany({
-      where: { projectId, parentId: folderId },
-      orderBy: [{ position: "asc" }, { id: "asc" }],
-      select: { id: true },
-    });
-    for (const [index, child] of children.entries()) {
-      await tx.testScenarioFolder.update({
-        where: { id: child.id },
-        data: { parentId: folder.parentId, position: folder.position + index },
-      });
-    }
-    await tx.testScenarioFolder.delete({ where: { id: folderId } });
-    return { deleted: true };
-  });
-}
-
 async function deleteFolder(input: {
   projectId: string;
   folderId: string;
@@ -1128,7 +1072,6 @@ async function restoreScenarioFolders(input: {
 
 export const testScenarioOrganizationWrites = {
   deleteFolder,
-  deleteSingleFolder,
   restoreFolderDeletion,
   mutateMembers,
   reorderMembers,

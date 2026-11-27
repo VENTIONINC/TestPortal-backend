@@ -171,6 +171,59 @@ describePostgres("test scenario PostgreSQL aggregate integration", () => {
     });
   });
 
+  describe("MCP scenario run history", () => {
+    async function historyFor(scenarioId: string): Promise<unknown> {
+      const response = await executeAction(createActionCatalog(userId), {
+        actionId: "testportal-list-test-scenario-manual-runs",
+        arguments: { projectId, scenarioId, show: "all", period: "any_time" },
+      });
+      expect(response.isError).not.toBe(true);
+      const content = response.content[0];
+      if (content?.type !== "text") throw new Error("Expected MCP text content");
+      return JSON.parse(content.text);
+    }
+
+    it("returns the saved run after its source scenario is deleted", async () => {
+      const scenario = await createScenario({ title: "Deleted history source" });
+      const run = await manualTestRunCreationModel.createFromCatalog({
+        projectId,
+        scenarioIds: [scenario.id],
+        executedById: userId,
+      });
+      if (!run) throw new Error("Expected a manual run");
+
+      await testScenarioService.deleteScenario(scenario.id, projectId);
+      expect(await testScenarioModel.findById(scenario.id, projectId)).toBeNull();
+
+      expect(await historyFor(scenario.id)).toMatchObject({
+        runs: [expect.objectContaining({ id: run.id, scenarioCount: 1 })],
+        total: 1,
+        page: 1,
+        limit: 30,
+        totalPages: 1,
+      });
+    });
+
+    it("returns a successful empty page for an unknown source UUID", async () => {
+      const scenario = await createScenario({ title: "Unrelated run source" });
+      await expect(
+        manualTestRunCreationModel.createFromCatalog({
+          projectId,
+          scenarioIds: [scenario.id],
+          executedById: userId,
+        }),
+      ).resolves.not.toBeNull();
+
+      expect(await historyFor(randomUUID())).toEqual({
+        runs: [],
+        total: 0,
+        page: 1,
+        limit: 30,
+        totalPages: 0,
+      });
+    });
+  });
+
   it("discovers Specs and preserves persisted evidence and manual runs across dispatcher unlink", async () => {
     const scenario = await createScenario({
       title: "Automation workflow",
@@ -1655,25 +1708,19 @@ describePostgres("test scenario PostgreSQL aggregate integration", () => {
     ).toBe(false);
     expect(await getDetail(first.id)).toEqual(afterRemove);
 
-    expect(
-      (
-        await call("delete-test-scenario-folder", {
-          folderId: child.id,
-          disposition: "parent",
-        })
-      ).data,
-    ).toEqual({ deleted: true });
-    expect((await getScenario(third.id)).folderId).toBe(root.id);
-
+    const beforeFolderDelete = await getDetail(third.id);
     expect(
       (
         await call("delete-test-scenario-folder", {
           folderId: root.id,
-          disposition: "unfiled",
         })
       ).data,
     ).toEqual({ deleted: true });
-    expect((await getScenario(third.id)).folderId).toBeNull();
+    expect(await getDetail(third.id)).toMatchObject({
+      folderId: null,
+      revision: beforeFolderDelete.revision + 1,
+      updatedBy: { id: otherUserId },
+    });
 
     expect(
       (await call("delete-test-suite", { suiteId: suite.id })).data,
@@ -1764,29 +1811,32 @@ describePostgres("test scenario PostgreSQL aggregate integration", () => {
 
     const grandchild = await organization.createFolder({
       projectId,
-      name: "Promoted child",
+      name: child.name,
       parentId: child.id,
     });
     await call("delete-test-scenario-folder", {
       folderId: child.id,
-      disposition: "parent",
     });
     expect(
-      await dbClient.testScenarioFolder.findUnique({
-        where: { id: grandchild.id },
+      await dbClient.testScenarioFolder.findMany({
+        where: { id: { in: [root.id, child.id, grandchild.id] } },
+        select: { id: true },
       }),
-    ).toMatchObject({ parentId: root.id });
-    expect((await getScenario(scenario.id)).folderId).toBe(root.id);
-    await expectPreserved(memberships);
-
-    await call("delete-test-scenario-folder", {
-      folderId: root.id,
-      disposition: "unfiled",
-    });
+    ).toEqual([{ id: root.id }]);
     expect((await getScenario(scenario.id)).folderId).toBeNull();
     await expectPreserved(memberships);
 
-    await call("delete-test-suite", { suiteId: deletedSuite.id });
+    const beforeSuiteDelete = await getScenario(scenario.id);
+    const suiteDelete = await executeAction(createActionCatalog(otherUserId), {
+      actionId: "testportal-delete-test-suite",
+      arguments: { projectId, suiteId: deletedSuite.id },
+    });
+    expect(suiteDelete.isError).not.toBe(true);
+    expect(await getScenario(scenario.id)).toMatchObject({
+      revision: beforeSuiteDelete.revision + 1,
+      updatedBy: { id: otherUserId },
+      folderId: null,
+    });
     await expectPreserved(
       memberships.filter(({ suiteId }) => suiteId === retainedSuite.id),
     );

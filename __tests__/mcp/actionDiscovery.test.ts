@@ -93,11 +93,6 @@ describe("action discovery", () => {
       response(input).data.actions.map(
         (action: { actionId: string }) => action.actionId,
       );
-    expect(
-      ids({ query: "test cases", area: "tms" }).some((id: string) =>
-        id.includes("test-scenario"),
-      ),
-    ).toBe(true);
     expect(ids({ query: "manual step outcome", area: "tms" })).toContain(
       "testportal-update-manual-test-run-step",
     );
@@ -132,6 +127,17 @@ describe("action discovery", () => {
     expect(
       tiedActions.map((action: { areas: string[] }) => action.areas),
     ).toEqual([["core"], ["tms"]]);
+  });
+
+  it("includes a scenario read action in the default top three for test cases", () => {
+    const { actions } = response({ query: "test cases", area: "tms" }).data;
+    const actionIds: string[] = actions.map(
+      (action: { actionId: string }) => action.actionId,
+    );
+    expect(actionIds).toHaveLength(3);
+    expect(actionIds.join("\n")).toMatch(
+      /^(?:testportal-list-test-scenarios|testportal-get-test-scenario)$/m,
+    );
   });
 
   it("discovers strict organization contracts and reports mutation effects", () => {

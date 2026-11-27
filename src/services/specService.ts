@@ -44,10 +44,7 @@ export const specService = {
       projectId: input.projectId,
       ...(search ? { search } : {}),
     };
-    const [specs, total] = await Promise.all([
-      specModel.list(filter, page, limit),
-      specModel.count(filter),
-    ]);
+    const { specs, total } = await specModel.listPage(filter, page, limit);
     return {
       projectId: input.projectId,
       specs: specs.map((spec) => ({

@@ -41,9 +41,13 @@ export const createOrganizationTools = (updatedById?: string) => [
   ),
   action(
     "delete-test-scenario-folder",
-    "Delete a folder, promote children and reassign direct scenarios to parent or unfiled as specified by disposition.",
+    "Delete a folder and all its descendants. Scenarios from the deleted tree move to Unfiled with the authenticated updater. Suite memberships and run history are preserved.",
     schemas.deleteFolderSchema,
-    handler.deleteFolder,
+    (input: z.infer<typeof schemas.deleteFolderSchema>) =>
+      handler.deleteFolder({
+        ...input,
+        ...(updatedById === undefined ? {} : { updatedById }),
+      }),
   ),
   action(
     "move-test-scenarios-to-folder",
@@ -83,7 +87,8 @@ export const createOrganizationTools = (updatedById?: string) => [
     "delete-test-suite",
     "Delete a suite and memberships while preserving scenarios.",
     schemas.getSuiteSchema,
-    handler.deleteSuite,
+    (input: z.infer<typeof schemas.getSuiteSchema>) =>
+      handler.deleteSuite(input, updatedById),
   ),
   action(
     "add-test-suite-members",

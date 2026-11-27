@@ -47,9 +47,7 @@ export const updateFolderSchema = z
       v.position !== undefined,
     "At least one editable field is required",
   );
-export const deleteFolderSchema = z
-  .object({ ...folder, disposition: z.enum(["parent", "unfiled"]) })
-  .strict();
+export const deleteFolderSchema = z.object(folder).strict();
 export const moveScenariosSchema = z
   .object({ ...project, scenarioIds: ids, folderId: uuid.nullable() })
   .strict();

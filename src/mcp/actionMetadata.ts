@@ -236,8 +236,6 @@ export const describeAction = ([
     constraints.push(
       "Provide every current member exactly once in the desired order.",
     );
-  if (actionId === "testportal-delete-test-scenario-folder")
-    constraints.push("Disposition is required: parent or unfiled.");
   if (actionId === "testportal-list-test-scenarios")
     constraints.push(
       "sortDirection requires sortField; sort and sortField cannot be combined.",

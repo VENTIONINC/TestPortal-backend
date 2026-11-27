@@ -10,7 +10,7 @@ const suiteId = testUuid(3);
 const scenarioIds = [testUuid(4)];
 
 describe("organization MCP schemas", () => {
-  it("enforces folder names, positions, update fields and deletion disposition", () => {
+  it("enforces folder names, positions, update fields and deletion scope", () => {
     expect(
       s.createFolderSchema.parse({
         projectId,
@@ -41,14 +41,21 @@ describe("organization MCP schemas", () => {
 
     expect(
       s.deleteFolderSchema.safeParse({ projectId, folderId }).success,
-    ).toBe(false);
+    ).toBe(true);
     expect(
       s.deleteFolderSchema.safeParse({
         projectId,
         folderId,
         disposition: "parent",
       }).success,
-    ).toBe(true);
+    ).toBe(false);
+    expect(
+      s.deleteFolderSchema.safeParse({
+        projectId,
+        folderId,
+        updatedById: projectId,
+      }).success,
+    ).toBe(false);
   });
   it("bounds distinct move and membership IDs and allows an empty ordering", () => {
     for (const schema of [s.moveScenariosSchema, s.mutateMembersSchema]) {

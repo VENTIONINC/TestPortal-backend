@@ -10,6 +10,7 @@ import {
   StreamableHTTPClientTransport,
 } from "@modelcontextprotocol/client";
 import { generateMcpToken } from "@/lib/mcp-token";
+import { jsonBodyParser } from "@/middleware/json-body";
 import { userModel } from "@/models/userModel";
 import { testUuid } from "@/test-utils/testUuid";
 
@@ -86,12 +87,12 @@ describe("manual run Streamable HTTP MCP transport", () => {
   let transport: StreamableHTTPClientTransport;
 
   beforeEach(async () => {
-    jest.useFakeTimers();
+    jest.useFakeTimers({ doNotFake: ["setImmediate"] });
     jest.clearAllMocks();
     process.env.MCP_SECRET = secret;
     const { default: router } = await import("@/mcp/server");
     const app = express();
-    app.use(express.json());
+    app.use(jsonBodyParser);
     app.use("/api", router);
     server = createServer(app);
     await new Promise<void>((resolve) =>
@@ -137,6 +138,80 @@ describe("manual run Streamable HTTP MCP transport", () => {
       .post("/api/v2/mcp")
       .send({ jsonrpc: "2.0", id: 1, method: "tools/list" });
     expect(unauthenticated.status).toBe(401);
+  });
+
+  it("advertises and enforces the limit of 100 explicit start scenarios over HTTP", async () => {
+    const startAction = "testportal-start-manual-test-run";
+    const found = await client.callTool({
+      name: "testportal-find-action",
+      arguments: { actionId: startAction },
+    });
+    expect(found.isError).not.toBe(true);
+    const schema = found.content[0];
+    expect(
+      JSON.parse(schema?.type === "text" ? schema.text : "{}"),
+    ).toMatchObject({
+      actions: [
+        {
+          actionId: startAction,
+          inputSchema: {
+            anyOf: expect.arrayContaining([
+              expect.objectContaining({
+                properties: expect.objectContaining({
+                  scenarioIds: expect.objectContaining({ maxItems: 100 }),
+                }),
+              }),
+            ]),
+          },
+        },
+      ],
+    });
+
+    mockStart.mockResolvedValue({ id: runId });
+    const scenarioIds = Array.from({ length: 100 }, (_, index) =>
+      testUuid(index + 100),
+    );
+    const start = { projectId, scenarioIds };
+    expect(
+      (await callAction(client, { name: startAction, arguments: start }))
+        .isError,
+    ).not.toBe(true);
+    expect(mockStart).toHaveBeenCalledWith(start, userId);
+
+    const oversized = {
+      projectId,
+      scenarioIds: [...scenarioIds, testUuid(200)],
+    };
+    const rejected = await callAction(client, {
+      name: startAction,
+      arguments: oversized,
+    });
+    expect(rejected.isError).toBe(true);
+    expect(mockStart).toHaveBeenCalledTimes(1);
+
+    const suite = { projectId, suiteId: testUuid(201) };
+    expect(
+      (await callAction(client, { name: startAction, arguments: suite }))
+        .isError,
+    ).not.toBe(true);
+    expect(mockStart).toHaveBeenLastCalledWith(suite, userId);
+
+    mockUpdate.mockResolvedValue({ id: runId });
+    const update = {
+      ...oversized,
+      runId,
+      title: "Expanded run",
+      environmentProperties: [],
+    };
+    expect(
+      (
+        await callAction(client, {
+          name: "testportal-update-manual-test-run",
+          arguments: update,
+        })
+      ).isError,
+    ).not.toBe(true);
+    expect(mockUpdate).toHaveBeenCalledWith(update);
   });
 
   it("discovers profile tools and validates identity and input before mutation", async () => {

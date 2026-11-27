@@ -7,7 +7,7 @@ const service = {
   listFolders: jest.fn(),
   createFolder: jest.fn(),
   updateFolder: jest.fn(),
-  deleteSingleFolder: jest.fn(),
+  deleteFolder: jest.fn(),
   moveScenarios: jest.fn(),
   listSuites: jest.fn(),
   getSuite: jest.fn(),
@@ -20,16 +20,20 @@ const service = {
 jest.mock("@/services/testScenarioOrganizationService", () => ({
   testScenarioOrganizationService: service,
 }));
-import { organizationTools } from "@/mcp/tools/test-scenario-organization";
+import {
+  createOrganizationTools,
+  organizationTools,
+} from "@/mcp/tools/test-scenario-organization";
 import { testUuid } from "@/test-utils/testUuid";
 
 const projectId = testUuid(1);
 const folderId = testUuid(2);
 const suiteId = testUuid(3);
 const scenarioId = testUuid(4);
+const actorId = testUuid(5);
 const scenarioIds = [scenarioId];
-const invoke = async (id: string, args: object) => {
-  const tool = organizationTools.find(([name]) => name === `testportal-${id}`);
+const invoke = async (id: string, args: object, tools = organizationTools) => {
+  const tool = tools.find(([name]) => name === `testportal-${id}`);
   if (!tool) throw new Error(`missing ${id}`);
   return await (
     tool[3] as (
@@ -55,11 +59,6 @@ describe("organization MCP actions", () => {
         "updateFolder",
       ],
       [
-        "delete-test-scenario-folder",
-        { projectId, folderId, disposition: "parent" },
-        "deleteSingleFolder",
-      ],
-      [
         "move-test-scenarios-to-folder",
         { projectId, scenarioIds, folderId: null },
         "moveScenarios",
@@ -76,12 +75,6 @@ describe("organization MCP actions", () => {
         "update-test-suite",
         { projectId, suiteId, release: null },
         "updateSuite",
-      ],
-      [
-        "delete-test-suite",
-        { projectId, suiteId },
-        "deleteSuite",
-        [projectId, suiteId],
       ],
       [
         "add-test-suite-members",
@@ -119,6 +112,47 @@ describe("organization MCP actions", () => {
       );
       expect(service[method]).toHaveBeenLastCalledWith(...expectedArgs);
     }
+  });
+
+  it("passes the session actor when deleting a suite", async () => {
+    service.deleteSuite.mockReturnValueOnce(
+      Promise.resolve({ deleted: true }) as never,
+    );
+    const result = await invoke(
+      "delete-test-suite",
+      { projectId, suiteId },
+      createOrganizationTools(actorId),
+    );
+    expect(JSON.parse(result.content[0]?.text ?? "{}")).toEqual({
+      deleted: true,
+    });
+    expect(service.deleteSuite).toHaveBeenCalledWith(
+      projectId,
+      suiteId,
+      actorId,
+    );
+  });
+
+  it("deletes the folder subtree through the scoped service with the session actor", async () => {
+    service.deleteFolder.mockReturnValueOnce(
+      Promise.resolve({
+        deleted: true,
+        restoreData: { folders: [], scenarios: [] },
+      }) as never,
+    );
+    const result = await invoke(
+      "delete-test-scenario-folder",
+      { projectId, folderId },
+      createOrganizationTools(actorId),
+    );
+    expect(JSON.parse(result.content[0]?.text ?? "{}")).toEqual({
+      deleted: true,
+    });
+    expect(service.deleteFolder).toHaveBeenCalledWith({
+      projectId,
+      folderId,
+      updatedById: actorId,
+    });
   });
   it("maps service failures to MCP errors", async () => {
     service.moveScenarios.mockReturnValueOnce(

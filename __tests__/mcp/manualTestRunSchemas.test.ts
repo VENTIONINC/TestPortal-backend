@@ -13,6 +13,7 @@ import {
   updateManualTestRunStepSchema,
 } from "@/mcp/schemas/manualTestRunSchemas";
 import { testUuid } from "@/test-utils/testUuid";
+import { manualTestRunCreateSchema } from "@/schemas/manualTestRunSchemas";
 
 const projectId = testUuid(1);
 const scenarioId = testUuid(2);
@@ -27,6 +28,30 @@ const details = {
 };
 
 describe("manual run MCP schemas", () => {
+  it("retains the 10,000-scenario limits for REST creation and MCP updates", () => {
+    const scenarioIds = Array.from({ length: 10_000 }, (_, index) =>
+      testUuid(index + 10),
+    );
+    const oversized = [...scenarioIds, testUuid(10_010)];
+    expect(manualTestRunCreateSchema.safeParse({ scenarioIds }).success).toBe(
+      true,
+    );
+    expect(
+      manualTestRunCreateSchema.safeParse({ scenarioIds: oversized }).success,
+    ).toBe(false);
+    expect(
+      updateManualTestRunSchema.safeParse({ ...scope, ...details, scenarioIds })
+        .success,
+    ).toBe(true);
+    expect(
+      updateManualTestRunSchema.safeParse({
+        ...scope,
+        ...details,
+        scenarioIds: oversized,
+      }).success,
+    ).toBe(false);
+  });
+
   it("requires UUID scope, binds start fields to the request and rejects immutable/unknown input", () => {
     expect(startManualTestRunSchema.safeParse(source).success).toBe(true);
     expect(

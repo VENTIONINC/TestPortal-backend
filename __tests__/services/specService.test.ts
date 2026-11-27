@@ -3,16 +3,14 @@
 
 import "@/test-utils/testEnv";
 import { jest } from "@jest/globals";
-const list = jest.fn();
-const count = jest.fn();
-jest.mock("@/models/specModel", () => ({ specModel: { list, count } }));
+const listPage = jest.fn();
+jest.mock("@/models/specModel", () => ({ specModel: { listPage } }));
 import { specService } from "@/services/specService";
 
 describe("listSpecs", () => {
   beforeEach(() => {
     jest.clearAllMocks();
-    list.mockResolvedValue([] as never);
-    count.mockResolvedValue(0 as never);
+    listPage.mockResolvedValue({ specs: [], total: 0 } as never);
   });
 
   it("lists independent Specs with defaults and normalized legacy JSON", async () => {
@@ -27,8 +25,7 @@ describe("listSpecs", () => {
       tags: '["smoke"]',
       annotations: '[{"type":"x"}]',
     };
-    list.mockResolvedValue([spec] as never);
-    count.mockResolvedValue(1 as never);
+    listPage.mockResolvedValue({ specs: [spec], total: 1 } as never);
 
     const result = await specService.listSpecs({
       projectId: "p",
@@ -43,12 +40,11 @@ describe("listSpecs", () => {
       limit: 30,
       totalPages: 1,
     });
-    expect(list).toHaveBeenCalledWith({ projectId: "p" }, 1, 30);
-    expect(count).toHaveBeenCalledWith({ projectId: "p" });
+    expect(listPage).toHaveBeenCalledWith({ projectId: "p" }, 1, 30);
   });
 
   it("preserves totals for empty and beyond-last pages", async () => {
-    count.mockResolvedValue(3 as never);
+    listPage.mockResolvedValueOnce({ specs: [], total: 3 } as never);
     await expect(
       specService.listSpecs({
         projectId: "p",
@@ -64,9 +60,12 @@ describe("listSpecs", () => {
       limit: 2,
       totalPages: 2,
     });
-    expect(list).toHaveBeenCalledWith({ projectId: "p", search: "test" }, 3, 2);
+    expect(listPage).toHaveBeenCalledWith(
+      { projectId: "p", search: "test" },
+      3,
+      2,
+    );
 
-    count.mockResolvedValue(0 as never);
     expect((await specService.listSpecs({ projectId: "p" })).totalPages).toBe(
       0,
     );
@@ -84,14 +83,13 @@ describe("listSpecs", () => {
       tags: [],
       annotations: [],
     };
-    list.mockResolvedValue([spec] as never);
-    count.mockResolvedValue(1 as never);
+    listPage.mockResolvedValue({ specs: [spec], total: 1 } as never);
 
     const result = await specService.listSpecs({ projectId: "p" });
 
     expect(result.specs).toEqual([spec]);
     expect(result.total).toBe(1);
-    expect(list).toHaveBeenCalledTimes(1);
+    expect(listPage).toHaveBeenCalledTimes(1);
   });
 
   it.each([
@@ -104,6 +102,6 @@ describe("listSpecs", () => {
     await expect(
       specService.listSpecs({ projectId: "p", ...pagination }),
     ).rejects.toThrow();
-    expect(list).not.toHaveBeenCalled();
+    expect(listPage).not.toHaveBeenCalled();
   });
 });

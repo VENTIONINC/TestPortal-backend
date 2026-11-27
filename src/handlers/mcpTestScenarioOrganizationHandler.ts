@@ -8,7 +8,12 @@ export const mcpTestScenarioOrganizationHandler = {
     service.listFolders(input.projectId),
   createFolder: service.createFolder,
   updateFolder: service.updateFolder,
-  deleteFolder: service.deleteSingleFolder,
+  async deleteFolder(
+    input: Parameters<typeof service.deleteFolder>[0],
+  ): Promise<{ deleted: true }> {
+    const { deleted } = await service.deleteFolder(input);
+    return { deleted };
+  },
   async moveScenarios(
     input: Parameters<typeof service.moveScenarios>[0],
   ): Promise<{ moved: number }> {
@@ -21,8 +26,10 @@ export const mcpTestScenarioOrganizationHandler = {
     service.getSuite(input.projectId, input.suiteId),
   createSuite: service.createSuite,
   updateSuite: service.updateSuite,
-  deleteSuite: (input: { projectId: string; suiteId: string }) =>
-    service.deleteSuite(input.projectId, input.suiteId),
+  deleteSuite: (
+    input: { projectId: string; suiteId: string },
+    updatedById?: string,
+  ) => service.deleteSuite(input.projectId, input.suiteId, updatedById),
   addMembers: (input: {
     projectId: string;
     suiteId: string;

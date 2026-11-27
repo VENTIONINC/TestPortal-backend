@@ -5,14 +5,15 @@ import { z } from "zod/v3";
 import { environment } from "@/mcp/schemas/manualRunEnvironmentProfileSchemas";
 import { MANUAL_TEST_RUN_SCENARIO_RESULTS } from "@/types/manualTestRuns";
 
-const uniqueScenarioIdsSchema = z
-  .array(z.string().uuid())
-  .min(1)
-  .max(10_000)
-  .refine(
-    (ids) => new Set(ids).size === ids.length,
-    "Scenario IDs must be unique",
-  );
+const uniqueScenarioIdsSchema = (maxItems: number) =>
+  z
+    .array(z.string().uuid())
+    .min(1)
+    .max(maxItems)
+    .refine(
+      (ids) => new Set(ids).size === ids.length,
+      "Scenario IDs must be unique",
+    );
 const manualRunTitleSchema = z.string().trim().min(1).max(200);
 const manualRunEnvironmentPropertiesSchema = z
   .array(
@@ -49,7 +50,9 @@ const startFields = {
 };
 
 export const startManualTestRunSchema = z.union([
-  z.object({ ...startFields, scenarioIds: uniqueScenarioIdsSchema }).strict(),
+  z
+    .object({ ...startFields, scenarioIds: uniqueScenarioIdsSchema(100) })
+    .strict(),
   z.object({ ...startFields, suiteId: z.string().uuid() }).strict(),
 ]);
 
@@ -58,7 +61,7 @@ export const updateManualTestRunSchema = z
   .object({
     ...runScope,
     title: manualRunTitleSchema,
-    scenarioIds: uniqueScenarioIdsSchema,
+    scenarioIds: uniqueScenarioIdsSchema(10_000),
     environmentProperties: manualRunEnvironmentPropertiesSchema,
   })
   .strict();
