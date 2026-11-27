@@ -132,6 +132,34 @@ Open [Swagger UI](http://localhost:3001/api/swagger) to explore the REST API. Po
 
 REST resource endpoints require authentication; report uploads also support upload API keys. See the [API documentation](docs/API_DOCUMENTATION.md), [MCP tools guide](docs/MCP_TOOLS.md), and [MCP inspection guide](docs/INSPECT_MCP_SERVER.md) for details.
 
+## Export a scenario search snapshot
+
+Point `DATABASE_URL` at the Test Portal database and supply the project UUID and a
+new output directory. Its parent directory must already exist.
+
+```sh
+npm run export-scenario-snapshot -- --project-id <uuid> --dir ./project-snapshot
+```
+
+The command publishes `manifest.json` and UTF-8 `scenarios.jsonl` together after
+reading the complete project in one PostgreSQL snapshot. The manifest contains
+the format version, project UUID, database snapshot time, scenario count, and
+SHA-256 of the JSONL bytes. Treat the exported Markdown as project data and
+provide the directory to the TestPortal-search operator import command.
+
+## Configure private related-scenario retrieval
+
+Set `SCENARIO_SEARCH_URL` to the private HTTPS origin of TestPortal Search and
+`SCENARIO_SEARCH_TOKEN` to the search service's `SEARCH_SERVICE_TOKEN`. For local
+Compose verification, put a loopback HTTPS proxy in front of the search API and
+add its CA certificate to the backend process with `NODE_EXTRA_CA_CERTS`.
+
+An authorized internal workflow can call
+`POST /api/internal/v1/scenarios/related` with its Test Portal access token and
+the JSON fields `projectId` and `sourceScenarioId`. The response is a ranked
+array of up to ten objects with `scenarioId`, `revision`, and `excerpt`. An
+empty result is HTTP 200 with `[]`. A search dependency failure is HTTP 503.
+
 ## Development
 
 | Command               | Purpose                                                 |

@@ -18,6 +18,7 @@
     "lint": "eslint .",
     "format": "prettier --write .",
     "format:check": "prettier --check \"src/**/*.{ts,tsx}\"",
+    "export-scenario-snapshot": "node --import tsx scripts/export-scenario-snapshot.ts",
     "seed": "tsx prisma/seed/index.ts",
     "db:generate": "prisma generate",
     "studio": "npx prisma studio",
