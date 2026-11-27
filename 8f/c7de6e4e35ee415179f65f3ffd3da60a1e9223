@@ -1,0 +1,49 @@
+src/services/scenarioSearchService.ts
+  s_45d3c4a5a58d68::t_524bbca8ecee84 1-30
+.env.example
+  s_45d3c4a5a58d68::t_524bbca8ecee84 52-55
+src/routes/test-scenarios.ts
+  s_45d3c4a5a58d68::t_524bbca8ecee84 9,14
+  s_45d3c4a5a58d68::t_295ac131730307 15
+__tests__/routes/test-scenarios.test.ts
+  s_45d3c4a5a58d68::t_5fc92e344561ef 60,70
+src/models/testScenarioSnapshotModel.ts
+  s_45d3c4a5a58d68::t_4882a94423bca0 4-69
+  s_45d3c4a5a58d68::t_4c4e260d9de50e 1-3
+scripts/export-scenario-snapshot.ts
+  s_45d3c4a5a58d68::t_c8e3ffe94cb62d 1-3
+  s_45d3c4a5a58d68::t_5bb90e2bbb8759 4-5,8-34,36-81
+  s_45d3c4a5a58d68::t_72b57ecb3622f9 6-7,35
+__tests__/test-scenarios/scenarioSearchPostgresIntegration.test.ts
+  s_45d3c4a5a58d68::t_524bbca8ecee84 1-3
+  s_45d3c4a5a58d68::t_b56a9236ead63d 4-137
+README.md
+  s_45d3c4a5a58d68::t_5bb90e2bbb8759 135-149
+  s_45d3c4a5a58d68::t_ae32ad2c3222d4 150-162
+__tests__/test-scenarios/testScenarioSnapshotPostgresIntegration.test.ts
+  s_45d3c4a5a58d68::t_4882a94423bca0 4,10-92,128-129
+  s_45d3c4a5a58d68::t_4c4e260d9de50e 1-3
+  s_45d3c4a5a58d68::t_5bb90e2bbb8759 5-9,93-127
+package.json
+  s_45d3c4a5a58d68::t_76acbb3fa78011 21
+src/controllers/scenarioSearchController.ts
+  s_45d3c4a5a58d68::t_524bbca8ecee84 1-59
+src/lib/scenarioSearchClient.ts
+  s_45d3c4a5a58d68::t_524bbca8ecee84 1-62
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "8fc7de6e4e35ee415179f65f3ffd3da60a1e9223",
+  "prompts": {},
+  "sessions": {
+    "s_45d3c4a5a58d68": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a21dc3-6598-70f3-b55b-00ba681c5656",
+        "model": "gpt-6.2-sol"
+      },
+      "human_author": "Ihar Mikailau <ihar.mikailau@ventionteams.com>"
+    }
+  }
+}
