@@ -214,6 +214,58 @@ describe("manual run Streamable HTTP MCP transport", () => {
     expect(mockUpdate).toHaveBeenCalledWith(update);
   });
 
+  it("dispatches start and update requests with large valid run details", async () => {
+    jest.useRealTimers();
+    mockStart.mockResolvedValue({ id: runId });
+    mockUpdate.mockResolvedValue({ id: runId });
+    const environmentProperties = Array.from({ length: 100 }, (_, index) => ({
+      name: `Property ${index + 1}`,
+      value: "環".repeat(2_000),
+    }));
+    const start = {
+      projectId,
+      scenarioIds: [scenarioId],
+      environmentProperties,
+    };
+    const update = {
+      projectId,
+      runId,
+      title: "Expanded run",
+      scenarioIds: Array.from({ length: 10_000 }, (_, index) =>
+        testUuid(index + 100),
+      ),
+      environmentProperties,
+    };
+
+    const address = server.address() as AddressInfo;
+    const endpoint = request(`http://127.0.0.1:${address.port}`);
+    const sessionId = transport.sessionId;
+    if (!sessionId) throw new Error("Expected an initialized MCP session");
+    const actions = [
+      ["testportal-start-manual-test-run", start],
+      ["testportal-update-manual-test-run", update],
+    ] as const;
+    for (const [index, [actionId, args]] of actions.entries()) {
+      await endpoint
+        .post("/api/v2/mcp")
+        .set("Authorization", `Bearer ${credentials.get(userId)}`)
+        .set("mcp-session-id", sessionId)
+        .set("Accept", "application/json, text/event-stream")
+        .send({
+          jsonrpc: "2.0",
+          id: 100 + index,
+          method: "tools/call",
+          params: {
+            name: "testportal-execute-action",
+            arguments: { actionId, arguments: args },
+          },
+        })
+        .expect(200);
+    }
+    expect(mockStart).toHaveBeenCalledWith(start, userId);
+    expect(mockUpdate).toHaveBeenCalledWith(update);
+  });
+
   it("discovers profile tools and validates identity and input before mutation", async () => {
     const found = await client.callTool({
       name: "testportal-find-action",

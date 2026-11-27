@@ -1,7 +1,7 @@
 // Copyright 2026 VENSOLUTIONSGROUP LTD
 // SPDX-License-Identifier: Apache-2.0
 
-import { Router, Response, NextFunction } from "express";
+import { json, Router, Response, NextFunction } from "express";
 import { randomUUID } from "node:crypto";
 import {
   McpServer,
@@ -190,6 +190,7 @@ setInterval(() => {
 router.post(
   "/v2/mcp",
   authenticateMcpToken,
+  json({ limit: "2mb" }),
   async (req: RequestWithMcpUser, res: Response): Promise<void> => {
     try {
       const sessionId = req.headers["mcp-session-id"] as string | undefined;

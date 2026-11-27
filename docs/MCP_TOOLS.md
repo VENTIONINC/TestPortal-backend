@@ -370,6 +370,8 @@ After a move or membership change, read scenario detail to verify the saved fold
 
 These actions save observed results and evidence on run snapshots. Use the run's scenario and step UUIDs for writes. Execution of the application under test happens on the client.
 
+Authenticated MCP POST requests accept JSON bodies up to 2 MiB. The limit applies to the full JSON-RPC request. Start accepts up to 100 explicit scenario UUIDs or a suite UUID. Updates accept up to 10,000 scenario UUIDs.
+
 | Action ID | Required inputs | Behavior |
 | --- | --- | --- |
 | `testportal-start-manual-test-run` | `projectId` and either `scenarioIds` or `suiteId` | Create a run with saved scenario snapshots. Accepts a title, environment properties, and environment fields. The authenticated session user starts the run. |

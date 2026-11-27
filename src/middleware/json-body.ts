@@ -36,6 +36,7 @@ const deferToRoute: RequestHandler = (_req, _res, next) => next("router");
 for (const { method, path } of Object.values(manualTestRunJsonRoutes)) {
   jsonBodyParser[method](`/api${path}`, deferToRoute);
 }
+jsonBodyParser.post("/api/v2/mcp", deferToRoute);
 
 const parseJson = json();
 jsonBodyParser.use((req, res, next) => {
