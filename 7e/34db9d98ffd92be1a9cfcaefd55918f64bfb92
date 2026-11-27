@@ -1,0 +1,68 @@
+__tests__/mcp/testScenarioOrganizationSchemas.test.ts
+  s_5e2bab0da4eed7::t_124f94b15882ee 53-57
+  s_5e2bab0da4eed7::t_4dab433953dc2e 13,44,51-52,58
+src/models/specModel.ts
+  s_5e2bab0da4eed7::t_b90407fa9b6311 4,35,39-53
+docs/API_DOCUMENTATION.md
+  s_5e2bab0da4eed7::t_e1411454f8605e 115
+__tests__/mcp/actionDiscovery.test.ts
+  s_5e2bab0da4eed7::t_dcb00045ccd76c 132-140
+  s_5e2bab0da4eed7::t_8df80c3634554e 141-142
+__tests__/test-scenarios/testScenarioPostgresIntegration.test.ts
+  s_5e2bab0da4eed7::t_f575fbcf579cfb 1711,1719-1723,1814,1821-1823,1825
+  s_5e2bab0da4eed7::t_c1d82275abbf5e 174-226
+  s_5e2bab0da4eed7::t_49d4ada0e50501 1829-1839
+src/mcp/tools/test-scenario-organization.ts
+  s_5e2bab0da4eed7::t_49d4ada0e50501 90-91
+  s_5e2bab0da4eed7::t_37c1693a6131d1 44,46-50
+package.json
+  s_5e2bab0da4eed7::t_0c5924bb832299 3
+src/handlers/mcpTestScenarioOrganizationHandler.ts
+  s_5e2bab0da4eed7::t_49d4ada0e50501 29-32
+  s_5e2bab0da4eed7::t_be2ab1a51a3f66 11-16
+src/services/specService.ts
+  s_5e2bab0da4eed7::t_b90407fa9b6311 47
+__tests__/mcp/manualTestRunMcpTransport.test.ts
+  s_5e2bab0da4eed7::t_d6e90585617a75 13,95,143-150,154-175,178-180,185-193,196-206,213-214
+  s_5e2bab0da4eed7::t_5c29e69ad4d89c 90
+  s_5e2bab0da4eed7::t_bcb4ec0ba15db4 151-153,176-177,181-184,194-195,207-212
+  s_5e2bab0da4eed7::t_cafcdd1760433e 215-216
+__tests__/mcp/manualTestRunSchemas.test.ts
+  s_5e2bab0da4eed7::t_bcb4ec0ba15db4 32-34,36-52
+  s_5e2bab0da4eed7::t_d6e90585617a75 16,31,35,53-54
+__tests__/models/specModel.test.ts
+  s_5e2bab0da4eed7::t_b90407fa9b6311 9-11,13,21,26-29,44-47,52-53
+src/mcp/schemas/manualTestRunSchemas.ts
+  s_5e2bab0da4eed7::t_bcb4ec0ba15db4 53-55
+  s_5e2bab0da4eed7::t_d6e90585617a75 8-16,64
+__tests__/mcp/testScenarioOrganizationTools.test.ts
+  s_5e2bab0da4eed7::t_4dab433953dc2e 10,33,136-137,142
+  s_5e2bab0da4eed7::t_f575fbcf579cfb 35-36
+  s_5e2bab0da4eed7::t_124f94b15882ee 23-26,138-141,143-155
+  s_5e2bab0da4eed7::t_49d4ada0e50501 116-135,156
+__tests__/services/specService.test.ts
+  s_5e2bab0da4eed7::t_b90407fa9b6311 6-7,13,28,43,47,86,92,105
+  s_5e2bab0da4eed7::t_4217502e707af2 63-67
+src/mcp/tools/test-scenarios.ts
+  s_5e2bab0da4eed7::t_ccd670b74b6e5f 51
+package-lock.json
+  s_5e2bab0da4eed7::t_a2183894d9a3c2 3,9
+src/mcp/schemas/testScenarioOrganizationSchemas.ts
+  s_5e2bab0da4eed7::t_28540344992b88 50
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "7e34db9d98ffd92be1a9cfcaefd55918f64bfb92",
+  "prompts": {},
+  "sessions": {
+    "s_5e2bab0da4eed7": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a21c33-bd4f-7fc0-9e53-5aca11a15990",
+        "model": "gpt-6.2-sol"
+      },
+      "human_author": "Ihar Mikailau <ihar.mikailau@ventionteams.com>"
+    }
+  }
+}
